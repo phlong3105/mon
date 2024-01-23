@@ -12,8 +12,10 @@ __all__ = [
 import lightning
 from lightning.pytorch.trainer import *
 
-from mon.core import console
+from mon import core
 from mon.nn import strategy
+
+console = core.console
 
 
 # region Trainer

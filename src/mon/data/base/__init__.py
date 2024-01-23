@@ -9,7 +9,9 @@ datasets. We try to support all possible data types: :class:`torch.Tensor`,
 
 from __future__ import annotations
 
-import mon.vision.data.base.dataset
-import mon.vision.data.base.label
-from mon.vision.data.base.dataset import *
-from mon.vision.data.base.label import *
+import mon.data.base.datamodule
+import mon.data.base.dataset
+import mon.data.base.label
+from mon.data.base.datamodule import *
+from mon.data.base.dataset import *
+from mon.data.base.label import *

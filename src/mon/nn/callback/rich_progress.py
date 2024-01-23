@@ -9,8 +9,6 @@ __all__ = [
    "RichProgressBar",
 ]
 
-from typing import Any
-
 import lightning
 import torch
 from lightning.pytorch.callbacks.progress import rich_progress

@@ -44,10 +44,12 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import misc
 
-from mon.core import math
+from mon import core
 from mon.core.typing import _callable, _size_2_t, _size_any_t
 from mon.globals import LAYERS
 from mon.nn.layer import activation, base, normalization, padding as pad
+
+math = core.math
 
 
 # region Convolution

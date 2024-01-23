@@ -18,8 +18,10 @@ import torch
 from fvcore.nn import FlopCountAnalysis, parameter_count
 from torch import nn
 
-from mon.core import console, image as I
+from mon import core
 from mon.core.typing import _size_2_t
+
+console = core.console
 
 
 # region Efficiency Metric
@@ -33,7 +35,7 @@ def calculate_efficiency_score(
 	verbose   : bool      = False,
 ):
 	# Define input tensor
-	h, w  = I.get_hw(image_size)
+	h, w  = core.get_hw(image_size)
 	input = torch.rand(1, channels, h, w)
 	
 	# Deploy to cuda

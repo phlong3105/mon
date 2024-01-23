@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data augmentation functions by extending
+"""This module implements data augmentation functions by extending
 :mod:`albumentations` package.`
 """
 

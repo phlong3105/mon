@@ -15,9 +15,11 @@ from typing import Any
 
 import torch
 
-from mon.core import console, pathlib
+from mon import core
 from mon.globals import ModelPhase
 from mon.nn import model
+
+console = core.console
 
 
 class Inferrer(ABC):
@@ -25,21 +27,21 @@ class Inferrer(ABC):
     
     def __init__(
         self,
-        source     : pathlib.Path | None = None,
-        root       : pathlib.Path        = pathlib.Path() / "infer",
-        project    : str                 = "",
-        name       : str                 = "exp",
-        max_samples: int | None          = None,
-        batch_size : int                 = 1,
-        image_size : int | list[int]     = 256,
-        device     : int | str           = "cpu",
-        phase      : ModelPhase | str    = "training",
-        tensorrt   : bool                = True,
-        save       : bool                = True,
-        verbose    : bool                = True,
+        source     : core.Path | None = None,
+        root       : core.Path        = core.Path() / "infer",
+        project    : str              = "",
+        name       : str              = "exp",
+        max_samples: int | None       = None,
+        batch_size : int              = 1,
+        image_size : int | list[int]  = 256,
+        device     : int | str        = "cpu",
+        phase      : ModelPhase | str = "training",
+        tensorrt   : bool             = True,
+        save       : bool             = True,
+        verbose    : bool             = True,
     ):
-        self.source      = pathlib.Path(source) if source is not None else source
-        self.root        = pathlib.Path(root)
+        self.source      = core.Path(source) if source is not None else source
+        self.root        = core.Path(root)
         self.project     = project
         self.shape       = image_size
         self.max_samples = max_samples
@@ -57,7 +59,7 @@ class Inferrer(ABC):
         
         if self.project is not None and self.project != "":
             self.root = self.root / self.project
-        next_version    = pathlib.get_next_version(path=self.root, prefix=name)
+        next_version    = core.get_next_version(path=self.root, prefix=name)
         self.name       = f"{name}-{next_version}"
         self.output_dir = self.root / self.name
         
@@ -72,12 +74,12 @@ class Inferrer(ABC):
         self._phase = ModelPhase.from_value(value=phase)
     
     @property
-    def root(self) -> pathlib.Path:
+    def root(self) -> core.Path:
         return self._root
     
     @root.setter
-    def root(self, root: pathlib.Path):
-        self._root = pathlib.Path(root)
+    def root(self, root: core.Path):
+        self._root = core.Path(root)
     
     @abstractmethod
     def init_data_loader(self):
@@ -153,7 +155,7 @@ class Inferrer(ABC):
     def on_run_start(self):
         """Call before :meth:`run` starts."""
         if self.save:
-            pathlib.mkdirs(paths=[self.output_dir], replace=True)
+            core.mkdirs(paths=[self.output_dir], replace=True)
         
         self.init_data_loader()
         self.init_data_writer()

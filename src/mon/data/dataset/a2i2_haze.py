@@ -10,8 +10,8 @@ __all__ = [
 ]
 
 from mon import core
+from mon.data import base
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.vision.data import base
 
 console = core.console
 

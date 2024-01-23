@@ -12,8 +12,16 @@ For transformation operations, we use
 from __future__ import annotations
 
 __all__ = [
+    "ChainDataset",
+    "ConcatDataset",
+    "Dataset",
+    "IterableDataset",
+    "LabeledDataset",
+    "Subset",
+    "TensorDataset",
+    "UnlabeledDataset",
+    "random_split",
     "COCODetectionDataset",
-    "DataModule",
     "ImageClassificationDataset",
     "ImageClassificationDirectoryTree",
     "ImageDetectionDataset",
@@ -40,22 +48,125 @@ import albumentations as A
 import cv2
 import numpy as np
 import torch
+from torch.utils.data import dataset
+from torch.utils.data.dataset import *
 
-from mon import core, nn
+from mon import core
+from mon.data.base import label
+from mon.data.base.label import ClassLabels
 from mon.globals import BBoxFormat
-from mon.vision.data.base import label
 
-console    = core.console
-DataModule = nn.DataModule
+console = core.console
+
+
+# region Base
+
+class Dataset(dataset.Dataset, ABC):
+    """The base class of all datasets.
+    
+    See Also: :mod:`dataset.Dataset`.
+    
+    Args:
+        root: The root directory where the data is stored.
+        split: The data split to use. One of: ``'train'``, ``'val'``,
+            ``'test'``, or ``'predict'``. Default: ``'train'``.
+        transform: Transformations performed on both the input and target.
+        to_tensor: If ``True``, convert input and target to
+            :class:`torch.Tensor`. Default: ``False``.
+        verbose: Verbosity. Default: ``True``.
+    """
+    
+    splits = ["train", "val", "test"]
+    
+    def __init__(
+        self,
+        root      : core.Path,
+        split     : str  = "train",
+        transform : Any  = None,
+        to_tensor : bool = False,
+        verbose   : bool = False,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.root       = core.Path(root)
+        self.split      = split
+        self.transform  = transform
+        self.to_tensor  = to_tensor
+        self.verbose    = verbose
+    
+    def __iter__(self):
+        """Returns an iterator starting at index ``0``."""
+        self.reset()
+        return self
+    
+    @abstractmethod
+    def __len__(self) -> int:
+        """Return the total number of datapoints in the dataset."""
+        pass
+    
+    @abstractmethod
+    def __getitem__(self, index: int) -> Any:
+        """Returns the datapoint and metadata at the given :param:`index`."""
+        pass
+    
+    def __repr__(self) -> str:
+        head = "Dataset " + self.__class__.__name__
+        body = [f"Number of datapoints: {self.__len__()}"]
+        if self.root is not None:
+            body.append(f"Root location: {self.root}")
+        if hasattr(self, "transform") and self.transform is not None:
+            body += [repr(self.transform)]
+        lines = [head]  # + [" " * self._repr_indent + line for line in body]
+        return "\n".join(lines)
+    
+    def __del__(self):
+        self.close()
+    
+    @property
+    def disable_pbar(self) -> bool:
+        return not self.verbose
+    
+    @property
+    def split(self) -> str:
+        return self._split
+    
+    @split.setter
+    def split(self, split: str):
+        if split in self.splits:
+            self._split = split
+        else:
+            console.log(f":param:`split` must be one of {self.splits}, but got {self.split}.")
+            raise ValueError
+    
+    @abstractmethod
+    def reset(self):
+        """Resets and starts over."""
+        pass
+    
+    @abstractmethod
+    def close(self):
+        """Stops and releases."""
+        pass
+
+# endregion
 
 
 # region Unlabeled Dataset
 
-class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
+class UnlabeledDataset(Dataset, ABC):
+    """The base class for all datasets that represent an unlabeled collection of
+    data samples.
+    
+    See Also: :class:`Dataset`.
+    """
+    pass
+
+
+class UnlabeledImageDataset(UnlabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     images. This is mainly used for unsupervised learning tasks.
     
-    See Also: :class:`mon.nn.data.dataset.UnlabeledDataset`.
+    See Also: :class:`UnlabeledDataset`.
     
     Args:
         root: A root directory where the data is stored.
@@ -63,8 +174,9 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
             ``'test'``, ``'predict'``]. Default: ``'train'``.
         image_size: The desired image size in :math:`[H, W]` format. Default:
             ``256``.
-        classlabels: :class:`mon.nn.ClassLabels` object. Default: ``None``.
-        transform: Transformations performing on both the input and target. We
+        classlabels: :class:`mon.data.base.label.ClassLabels` object.
+            Default: ``None``.
+        transform: Transformations performed on both the input and target. We
             use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
         to_tensor: If True, convert input and target to :class:`torch.Tensor`.
             Default: ``False``.
@@ -78,14 +190,14 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -97,7 +209,7 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
             *args, **kwargs
         )
         self.image_size  = core.get_hw(size=image_size)
-        self.classlabels = nn.ClassLabels.from_value(value=classlabels)
+        self.classlabels = ClassLabels.from_value(value=classlabels)
         self.images: list[label.ImageLabel] = []
         
         cache_file = self.root / f"{self.split}.cache"
@@ -188,7 +300,7 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
         list | None
     ]:
         """Collate function used to fused input items together when using
-        :attr:`batch_size` > 1. This is used in the
+        :attr:`batch_size` > 1. This is used in
         :class:`torch.utils.data.DataLoader` wrapper.
         
         Args:
@@ -213,11 +325,11 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
         return input, target, meta
 
 
-class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
+class UnlabeledVideoDataset(UnlabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     videos. This is mainly used for unsupervised learning tasks.
     
-    See Also: :class:`mon.nn.data.dataset.UnlabeledDataset`.
+    See Also: :class:`UnlabeledDataset`.
     
     Args:
         root: A root directory where the data is stored.
@@ -225,7 +337,7 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
             ``'test'``, ``'predict'``]. Default: ``'train'``.
         image_size: The desired image size in :math:`[H, W]` format.
             Default: ``256``.
-        classlabels: :class:`mon.nn.ClassLabels` object. Default: ``None``.
+        classlabels: :class:`mon.data.base.label.ClassLabels` object. Default: ``None``.
         max_samples: Only process a certain number of samples. Default: ``None``.
         transform: Transformations performing on both the input and target. We
             use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
@@ -242,14 +354,14 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
     def __init__(
         self,
         root          : core.Path,
-        split         : str                   = "train",
-        image_size    : int | list[int]       = 256,
-        classlabels   : nn.ClassLabels | None = None,
-        max_samples   : int            | None = None,
-        transform     : A.Compose      | None = None,
-        to_tensor     : bool                  = False,
-        api_preference: int                   = cv2.CAP_FFMPEG,
-        verbose       : bool                  = True,
+        split         : str                = "train",
+        image_size    : int | list[int]    = 256,
+        classlabels   : ClassLabels | None = None,
+        max_samples   : int         | None = None,
+        transform     : A.Compose   | None = None,
+        to_tensor     : bool               = False,
+        api_preference: int                = cv2.CAP_FFMPEG,
+        verbose       : bool               = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -398,14 +510,14 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -447,11 +559,20 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
 
 # region Labeled Dataset
 
-class LabeledImageDataset(nn.LabeledDataset, ABC):
+class LabeledDataset(Dataset, ABC):
+    """The base class for datasets that represent an unlabeled collection of
+    data samples.
+    
+    See Also: :class:`Dataset`.
+    """
+    pass
+
+
+class LabeledImageDataset(LabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     images.
     
-    See Also: :class:`mon.nn.data.dataset.LabeledDataset`.
+    See Also: :class:`LabeledDataset`.
     
     Args:
         root: A root directory where the data is stored.
@@ -459,7 +580,7 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
             ``'test'``, ``'predict'``]. Default: ``'train'``.
         image_size: The desired image size in :math:`[H, W]`  format.
             Default: ``256``.
-        classlabels: :class:`mon.nn.ClassLabels` object. Default: ``None``.
+        classlabels: :class:`mon.data.base.label.ClassLabels` object. Default: ``None``.
         transform: Transformations performed on both the input and target.
         to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
             Default: ``False``.
@@ -473,14 +594,14 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -492,7 +613,7 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
             *args, **kwargs
         )
         self.image_size  = core.get_hw(size=image_size)
-        self.classlabels = nn.ClassLabels.from_value(value=classlabels)
+        self.classlabels = ClassLabels.from_value(value=classlabels)
         self.images: list[label.ImageLabel] = []
         if not hasattr(self, "labels"):
             self.labels = []
@@ -583,11 +704,11 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
         pass
     
 
-class LabeledVideoDataset(nn.LabeledDataset, ABC):
+class LabeledVideoDataset(LabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     videos.
     
-    See Also: :class:`mon.nn.data.dataset.LabeledDataset`.
+    See Also: :class:`LabeledDataset`.
     """
     pass
 
@@ -606,14 +727,14 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         self.labels: list[label.ClassificationLabel] = []
@@ -743,15 +864,15 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        bbox_format : BBoxFormat         = BBoxFormat.XYXY,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         self.bbox_format = BBoxFormat.from_value(value=bbox_format)
@@ -868,15 +989,15 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        bbox_format : BBoxFormat         = BBoxFormat.XYXY,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -959,15 +1080,15 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        bbox_format : BBoxFormat         = BBoxFormat.XYXY,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -1029,15 +1150,15 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        bbox_format : BBoxFormat         = BBoxFormat.XYXY,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -1098,14 +1219,14 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         self.labels: list[label.ImageLabel] = []
@@ -1233,14 +1354,14 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
     def __init__(
         self,
         root        : core.Path,
-        split       : str                   = "train",
-        image_size  : int | list[int]       = 256,
-        classlabels : nn.ClassLabels | None = None,
-        transform   : A.Compose      | None = None,
-        to_tensor   : bool                  = False,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        verbose     : bool                  = True,
+        split       : str                = "train",
+        image_size  : int | list[int]    = 256,
+        classlabels : ClassLabels | None = None,
+        transform   : A.Compose   | None = None,
+        to_tensor   : bool               = False,
+        cache_data  : bool               = False,
+        cache_images: bool               = False,
+        verbose     : bool               = True,
         *args, **kwargs
     ):
         self.labels: list[label.SegmentationLabel] = []

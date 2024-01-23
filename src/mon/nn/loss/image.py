@@ -1091,8 +1091,3 @@ class SpatialConsistencyLoss(base.Loss):
         return loss
 
 # endregion
-
-
-# region Misc
-
-# endregion

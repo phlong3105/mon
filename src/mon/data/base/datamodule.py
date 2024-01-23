@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all data modules."""
+"""This module implements the base class for all datamodules."""
 
 from __future__ import annotations
 
@@ -15,9 +15,11 @@ from typing import Any, Callable
 import lightning
 from torch.utils import data
 
-from mon.core import builtins, console, rich
+from mon import core
+from mon.data.base import dataset, label
 from mon.globals import ModelPhase
-from mon.nn.data import dataset, label
+
+console = core.console
 
 
 # region DataModule
@@ -87,7 +89,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     @devices.setter
     def devices(self, devices: int | str | list[int | str]):
-        self._devices = builtins.to_list(devices)
+        self._devices = core.to_list(devices)
     
     @property
     def verbose(self) -> bool:
@@ -257,7 +259,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     def summarize(self):
         """Print a summary."""
-        table = rich.table.Table(header_style="bold magenta")
+        table = core.rich.table.Table(header_style="bold magenta")
         table.add_column(" ", style="dim")
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Desc")

@@ -1,230 +1,72 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements de-hazing datasets and datamodules."""
+"""This module implements low-light image enhancement (llie) datasets and
+datamodules.
+"""
 
 from __future__ import annotations
 
 __all__ = [
-    "DenseHaze",
-    "DenseHazeDataModule",
-    "IHaze",
-    "IHazeDataModule",
-    "NHHaze",
-    "NHHazeDataModule",
-    "OHaze",
-    "OHazeDataModule",
-    "RESIDEHSTSReal",
-    "RESIDEHSTSRealDataModule",
-    "RESIDEHSTSSyn",
-    "RESIDEHSTSSynDataModule",
-    "RESIDEITS",
-    "RESIDEITSDataModule",
-    "RESIDEITSV2",
-    "RESIDEITSV2DataModule",
-    "RESIDEOTS",
-    "RESIDEOTSDataModule",
-    "RESIDERTTS",
-    "RESIDERTTSDataModule",
-    "RESIDESOTSIndoor",
-    "RESIDESOTSIndoorDataModule",
-    "RESIDESOTSOutdoor",
-    "RESIDESOTSOutdoorDataModule",
-    "RESIDEUHI",
-    "RESIDEUHIDataModule",
-    "SateHaze1K",
-    "SateHaze1KDataModule",
-    "SateHaze1KModerate",
-    "SateHaze1KModerateDataModule",
-    "SateHaze1KThick",
-    "SateHaze1KThickDataModule",
-    "SateHaze1KThin",
-    "SateHaze1KThinDataModule",
+    "DICM",
+    "DICMDataModule",
+    "DarkFace",
+    "DarkFaceDataModule",
+    "ExDark",
+    "ExDarkDataModule",
+    "FiveKC",
+    "FiveKCDataModule",
+    "FiveKE",
+    "FiveKEDataModule",
+    "Fusion",
+    "LIME",
+    "LIMEDataModule",
+    "LLIE",
+    "LLIEDataModule",
+    "LOLV1",
+    "LOLV1DataModule",
+    "LOLV2Real",
+    "LOLV2RealDataModule",
+    "LOLV2Syn",
+    "LOLV2SynDataModule",
+    "MEF",
+    "MEFDataModule",
+    "NPE",
+    "NPEDataModule",
+    "SICEGrad",
+    "SICEGradDataModule",
+    "SICEMix",
+    "SICEMixDataModule",
+    "SICEZeroDCE",
+    "SICEZeroDCEDataModule",
+    "VV",
+    "VVDataModule",
 ]
 
-from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon import core
-from mon.vision.data import base
+from mon.data import base
+from mon.globals import DATAMODULES, DATASETS, ModelPhase
 
 console = core.console
 
 
 # region Dataset
 
-@DATASETS.register(name="dense-haze")
-class DenseHaze(base.ImageEnhancementDataset):
-    """Dense-Haze dataset consists of 33 pairs of real hazy and corresponding
-    haze-free images.
+@DATASETS.register(name="darkface")
+class DarkFace(base.UnlabeledImageDataset):
+    """DarkFace dataset consists of 6490 low-light images.
     
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-
-    splits = ["train", "val", "test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "dense-haze" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-    
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
-
-
-@DATASETS.register(name="i-haze")
-class IHaze(base.ImageEnhancementDataset):
-    """I-Haze dataset consists of 35 pairs of real hazy and corresponding
-    haze-free images.
-    
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-
-    splits = ["train", "val", "test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "i-haze" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-    
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
-
-
-@DATASETS.register(name="nh-haze")
-class NHHaze(base.ImageEnhancementDataset):
-    """NH-Haze dataset consists 55 pairs of real hazy and corresponding
-    haze-free images.
-    
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
     """
     
-    splits = ["train", "val", "test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "nh-haze" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
-
-
-@DATASETS.register(name="o-haze")
-class OHaze(base.ImageEnhancementDataset):
-    """O-Haze dataset consists of 45 pairs of real hazy and corresponding
-    haze-free images.
-    
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-    
-    splits = ["train", "val", "test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "o-haze" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
-
-
-@DATASETS.register(name="reside-hsts-real")
-class RESIDEHSTSReal(base.UnlabeledImageDataset):
-    """RESIDE-HSTS-Real dataset consists of 10 real hazy images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-
     splits = ["test"]
-
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "reside-hsts-real" / "haze"
+            self.root / self.split / "darkface" / "low"
         ]
+
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
@@ -237,20 +79,19 @@ class RESIDEHSTSReal(base.UnlabeledImageDataset):
                         self.images.append(image)
 
 
-@DATASETS.register(name="reside-hsts-syn")
-class RESIDEHSTSSyn(base.ImageEnhancementDataset):
-    """RESIDE-HSTS-Syn dataset consists of 10 pairs of hazy and corresponding
-    haze-free images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+@DATASETS.register(name="dicm")
+class DICM(base.UnlabeledImageDataset):
+    """DICM dataset consists of 64 low-light images.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
     """
-
+    
     splits = ["test"]
-
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "reside-hsts-syn" / "haze"
+            self.root / self.split / "dicm" / "low"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -263,6 +104,59 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
+
+@DATASETS.register(name="exdark")
+class ExDark(base.UnlabeledImageDataset):
+    """ExDark dataset consists of 7363 low-light images.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["test"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "exdark" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
+
+@DATASETS.register(name="fivek-c")
+class FiveKC(base.UnlabeledImageDataset):
+    """MIT Adobe FiveK dataset with Expert C ground-truth. It consists of 5,000
+    low/high image pairs.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["train"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "fivek-c" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+    
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -271,26 +165,65 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/haze/", "/clear/")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
-@DATASETS.register(name="reside-its")
-class RESIDEITS(base.ImageEnhancementDataset):
-    """RESIDE-ITS dataset consists of 13,990 pairs of hazy and corresponding
-    haze-free images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+@DATASETS.register(name="fivek-e")
+class FiveKE(base.UnlabeledImageDataset):
+    """MIT Adobe FiveK dataset with Expert E ground-truth. It consists of 5,000
+    low/high image pairs.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
     """
-
-    splits = ["train", "val"]
-
+    
+    splits = ["train"]
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "reside-its" / "haze"
+            self.root / self.split / "fivek-e" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("/low/", "/high/")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="fusion")
+class Fusion(base.UnlabeledImageDataset):
+    """Fusion dataset consists of 64 low-light images.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["test"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "fusion" / "low"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -303,35 +236,20 @@ class RESIDEITS(base.ImageEnhancementDataset):
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
 
-
-@DATASETS.register(name="reside-its-v2")
-class RESIDEITSV2(base.ImageEnhancementDataset):
-    """RESIDE-ITS-V2 dataset consists of 13,990 pairs of hazy and corresponding
-    haze-free images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+@DATASETS.register(name="lime")
+class LIME(base.UnlabeledImageDataset):
+    """LIME dataset consists of 10 low-light images.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
     """
 
     splits = ["train"]
-
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "reside-its-v2" / "haze"
+            self.root / self.split / "low" / "lime"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -344,35 +262,30 @@ class RESIDEITSV2(base.ImageEnhancementDataset):
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
 
-
-@DATASETS.register(name="reside-ots")
-class RESIDEOTS(base.ImageEnhancementDataset):
-    """RESIDE-OTS dataset consists of 73,135 pairs of hazy and corresponding
-    haze-free images.
-
+@DATASETS.register(name="llie")
+class LLIE(base.UnlabeledImageDataset):
+    """LLIE dataset consists of all other datasets.
+    
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
-
+    
     splits = ["train"]
-
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "reside-ots" / "haze"
+            self.root / "test/dicm/low",
+            self.root / "test/lime/low",
+            self.root / "test/mef/low",
+            self.root / "test/npe/low",
+            self.root / "test/vv/low",
+            self.root / "train/fivek-e/low",
+            self.root / "train/lol-v1/low",
+            self.root / "train/lol-v2-real/low",
+            self.root / "train/lol-v2-syn/low",
+            # self.root / "train/sice-mix/low",
+            self.root / "train/sice-zerodce/low",
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -384,172 +297,24 @@ class RESIDEOTS(base.ImageEnhancementDataset):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
+                
 
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
-
-
-@DATASETS.register(name="reside-rtts")
-class RESIDERTTS(base.UnlabeledImageDataset):
-    """RESIDE-RTTS dataset consists of 4,322 real hazy images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-
-    splits = ["test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "reside-rtts" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-
-
-@DATASETS.register(name="reside-sots-indoor")
-class RESIDESOTSIndoor(base.ImageEnhancementDataset):
-    """RESIDE-SOTS-Indoor dataset consists of 500 pairs of hazy and
-    corresponding haze-free images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-
-    splits = ["test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "reside-sots-indoor" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
-
-
-@DATASETS.register(name="reside-sots-outdoor")
-class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
-    """RESIDE-SOTS-Outdoor dataset consists of 500 pairs of hazy and
-    corresponding haze-free images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-
-    splits = ["test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "reside-sots-outdoor" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
-
-
-@DATASETS.register(name="reside-uhi")
-class RESIDEUHI(base.UnlabeledImageDataset):
-    """RESIDE-UHI dataset consists of 4,809 real hazy images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-
-    splits = ["test"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "reside-uhi" / "haze"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-
-
-@DATASETS.register(name="satehaze1k")
-class SateHaze1K(base.ImageEnhancementDataset):
-    """SateHaze1K dataset consists 1200 pairs of hazy and corresponding
-    haze-free images.
+@DATASETS.register(name="lol-v1")
+class LOLV1(base.ImageEnhancementDataset):
+    """LOL-v1 dataset consists of 500 low-light and normal-light image pairs.
+    They are divided into 485 training pairs and 15 testing pairs. The low-light
+    images contain noise produced during the photo capture process. Most of the
+    images are indoor scenes. All the images have a resolution of 400×600.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
-    splits = ["train", "val", "test"]
-
+    splits = ["train", "test"]
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "satehaze1k-thin" / "haze",
-            self.root / self.split / "satehaze1k-moderate" / "haze",
-            self.root / self.split / "satehaze1k-thick" / "haze",
+            self.root / self.split / "lol-v1" / "low"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -561,7 +326,7 @@ class SateHaze1K(base.ImageEnhancementDataset):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
-
+    
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -570,25 +335,29 @@ class SateHaze1K(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/haze/", "/clear/")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
-@DATASETS.register(name="satehaze1k-thin")
-class SateHaze1KThin(base.ImageEnhancementDataset):
-    """SateHaze1K-Thin dataset.
+@DATASETS.register(name="lol-v2-real")
+class LOLV2Real(base.ImageEnhancementDataset):
+    """LOL-v2 Real (VE-LOL) dataset consists of 500 low-light and normal-light
+    image pairs. They are divided into 400 training pairs and 100 testing pairs.
+    The low-light images contain noise produced during the photo capture
+    process. Most of the images are indoor scenes. All the images have a
+    resolution of 400×600.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
-
-    splits = ["train", "val", "test"]
-
+    
+    splits = ["train", "test"]
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "satehaze1k-thin" / "haze"
+            self.root / self.split / "lol-v2-real" / "low"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -609,25 +378,68 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/haze/", "/clear/")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
-@DATASETS.register(name="satehaze1k-moderate")
-class SateHaze1KModerate(base.ImageEnhancementDataset):
-    """SateHaze1K-Moderate.
+@DATASETS.register(name="lol-v2-syn")
+class LOLV2Syn(base.ImageEnhancementDataset):
+    """LOL-v2 Synthetic (VE-LOL-Syn) dataset consists of 1000 low-light and
+    normal-light image pairs. They are divided into 900 training pairs and 100
+    testing pairs. The low-light images contain noise produced during the photo
+    capture process. Most of the images are indoor scenes. All the images have a
+    resolution of 400×600.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
-    splits = ["train", "val", "test"]
-
+    splits = ["train", "test"]
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "satehaze1k-moderate" / "haze"
+            self.root / self.split / "lol-v2-syn" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("/low/", "/high/")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="mef")
+class MEF(base.UnlabeledImageDataset):
+    """MEF dataset consists 17 low-light images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["test"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "mef" / "low"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -640,33 +452,20 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("/haze/", "/clear/")
-                path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
 
-
-@DATASETS.register(name="satehaze1k-thick")
-class SateHaze1KThick(base.ImageEnhancementDataset):
-    """SateHaze1K-Thick dataset.
+@DATASETS.register(name="npe")
+class NPE(base.UnlabeledImageDataset):
+    """NPE dataset consists 85 low-light images.
     
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
     """
     
-    splits = ["train", "val", "test"]
-
+    splits = ["test"]
+    
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "satehaze1k-thick" / "haze"
+            self.root / self.split / "npe" / "low"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -679,6 +478,32 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
+
+@DATASETS.register(name="sice-grad")
+class SICEGrad(base.ImageEnhancementDataset):
+    """SICEGrad dataset consists of 589 low-light and normal-light image pairs.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+    
+    splits = ["train"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "sice-grad" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+    
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -687,235 +512,115 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/haze/", "/clear/")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
+
+
+@DATASETS.register(name="sice-mix")
+class SICEMix(base.ImageEnhancementDataset):
+    """SICEMix dataset consists of 589 low-light and normal-light image pairs.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+    
+    splits = ["train"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "sice-mix" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("/low/", "/high/")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="sice-zerodce")
+class SICEZeroDCE(base.UnlabeledImageDataset):
+    """Custom SICE dataset for training :class:`mon.vision.enhance.llie.zerodce.ZeroDCE`
+    model.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["train"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "sice-zerodce" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
+
+@DATASETS.register(name="vv")
+class VV(base.UnlabeledImageDataset):
+    """VV dataset consists of 24 low-light images.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["test"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "vv" / "low"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 # endregion
 
 
 # region Datamodule
 
-@DATAMODULES.register(name="dense-haze")
-class DenseHazeDataModule(base.DataModule):
-    """Dense-Haze datamodule.
+@DATAMODULES.register(name="darkface")
+class DarkFaceDataModule(base.DataModule):
+    """DarkFace datamodule.
     
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings:
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-    
-    def setup(self, phase: ModelPhase | str | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = DenseHaze(split="train", **self.dataset_kwargs)
-            self.val   = DenseHaze(split="val",   **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = DenseHaze(split="test",  **self.dataset_kwargs)
-        
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-    
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="i-haze")
-class IHazeDataModule(base.DataModule):
-    """I-Haze datamodule.
-    
-    See Also: :class:`mon.nn.data.datamodule.DataModule`.
-    """
-    
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings:
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-    
-    def setup(self, phase: ModelPhase | str | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = IHaze(split="train", **self.dataset_kwargs)
-            self.val   = IHaze(split="val",   **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = IHaze(split="test",  **self.dataset_kwargs)
-        
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-    
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="nh-haze")
-class NHHazeDataModule(base.DataModule):
-    """NH-Haze datamodule.
-    
-    See Also: :class:`mon.nn.data.datamodule.DataModule`.
-    """
-    
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings:
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-    
-    def setup(self, phase: ModelPhase | str | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = NHHaze(split="train", **self.dataset_kwargs)
-            self.val   = NHHaze(split="val",   **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = NHHaze(split="test",  **self.dataset_kwargs)
-        
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-    
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="o-haze")
-class OHazeDataModule(base.DataModule):
-    """O-Haze datamodule.
-    
-    See Also: :class:`mon.nn.data.datamodule.DataModule`.
-    """
-    
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings:
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-    
-    def setup(self, phase: ModelPhase | str | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = OHaze(split="train", **self.dataset_kwargs)
-            self.val   = OHaze(split="val",   **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = OHaze(split="test",  **self.dataset_kwargs)
-        
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-    
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="reside-hsts-real")
-class RESIDEHSTSRealDataModule(base.DataModule):
-    """RESIDE-HSTS-Real datamodule.
-
-     See Also: :class:`mon.nn.data.datamodule.DataModule`.
-     """
-
     def prepare_data(self, *args, **kwargs):
         """Use this method to do things that might write to disk, or that need
         to be done only from a single GPU in distributed settings.
@@ -924,7 +629,7 @@ class RESIDEHSTSRealDataModule(base.DataModule):
         """
         if self.classlabels is None:
             self.get_classlabels()
-
+    
     def setup(self, phase: ModelPhase | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
@@ -946,92 +651,39 @@ class RESIDEHSTSRealDataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
-            self.val   = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
+            self.train = DarkFace(split="test", **self.dataset_kwargs)
+            self.val   = DarkFace(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
-
+            self.test  = DarkFace(split="test", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
         if self.can_log:
             self.summarize()
-
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
 
 
-@DATAMODULES.register(name="reside-hsts-syn")
-class RESIDEHSTSSynDataModule(base.DataModule):
-    """RESIDE-HSTS-Syn datamodule.
-
-     See Also: :class:`mon.nn.data.datamodule.DataModule`.
-     """
-
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-
-    def setup(self, phase: ModelPhase | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
-            self.val   = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDEHSTSSyn(split="test",  **self.dataset_kwargs)
-
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="reside-its")
-class RESIDEITSDataModule(base.DataModule):
-    """RESIDE-ITS datamodule.
-
+@DATAMODULES.register(name="dicm")
+class DICMDataModule(base.DataModule):
+    """DICM datamodule.
+    
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
-
+    
     def prepare_data(self, *args, **kwargs):
         """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings:
+        to be done only from a single GPU in distributed settings.
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.get_classlabels()
-
-    def setup(self, phase: ModelPhase | str | None = None):
+    
+    def setup(self, phase: ModelPhase | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
@@ -1052,39 +704,39 @@ class RESIDEITSDataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDEITS(split="train", **self.dataset_kwargs)
-            self.val   = RESIDEITS(split="val",   **self.dataset_kwargs)
+            self.train = DICM(split="test", **self.dataset_kwargs)
+            self.val   = DICM(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = RESIDEITS(split="test",  **self.dataset_kwargs)
-
+            self.test  = DICM(split="test", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
         if self.can_log:
             self.summarize()
-
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
 
 
-@DATAMODULES.register(name="reside-its-v2")
-class RESIDEITSV2DataModule(base.DataModule):
-    """RESIDE-ITS-V2 datamodule.
-
+@DATAMODULES.register(name="exdark")
+class ExDarkDataModule(base.DataModule):
+    """ExDark datamodule.
+    
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
-
+    
     def prepare_data(self, *args, **kwargs):
         """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings:
+        to be done only from a single GPU in distributed settings.
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.get_classlabels()
-
-    def setup(self, phase: ModelPhase | str | None = None):
+    
+    def setup(self, phase: ModelPhase | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
@@ -1105,39 +757,39 @@ class RESIDEITSV2DataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDEITSV2(split="train", **self.dataset_kwargs)
-            self.val   =   RESIDEITS(split="val",   **self.dataset_kwargs)
+            self.train = ExDark(split="test", **self.dataset_kwargs)
+            self.val   = ExDark(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  =   RESIDEITS(split="test",  **self.dataset_kwargs)
-
+            self.test  = ExDark(split="test", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
         if self.can_log:
             self.summarize()
-
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
 
 
-@DATAMODULES.register(name="reside-ots")
-class RESIDEOTSDataModule(base.DataModule):
-    """RESIDE-OTS datamodule.
-
+@DATAMODULES.register(name="fivek-c")
+class FiveKCDataModule(base.DataModule):
+    """MIT Adobe FiveK datamodule with Expert C ground-truth.
+    
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
-
+    
     def prepare_data(self, *args, **kwargs):
         """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings:
+        to be done only from a single GPU in distributed settings.
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.get_classlabels()
-
-    def setup(self, phase: ModelPhase | str | None = None):
+    
+    def setup(self, phase: ModelPhase | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
@@ -1155,32 +807,32 @@ class RESIDEOTSDataModule(base.DataModule):
         """
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDEOTS(split="train", **self.dataset_kwargs)
-            self.val   = RESIDEITS(split="val",   **self.dataset_kwargs)
+            self.train = FiveKC(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = RESIDEITS(split="test",  **self.dataset_kwargs)
-
+            self.test  = LOLV1(split="test",  **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
         if self.can_log:
             self.summarize()
-
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
 
 
-@DATAMODULES.register(name="reside-rtts")
-class RESIDERTTSDataModule(base.DataModule):
-    """RESIDE-RTTS datamodule.
-
-     See Also: :class:`mon.nn.data.datamodule.DataModule`.
-     """
-
+@DATAMODULES.register(name="fivek-e")
+class FiveKEDataModule(base.DataModule):
+    """MIT Adobe FiveK datamodule with Expert E ground-truth.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
     def prepare_data(self, *args, **kwargs):
         """Use this method to do things that might write to disk, or that need
         to be done only from a single GPU in distributed settings.
@@ -1189,7 +841,7 @@ class RESIDERTTSDataModule(base.DataModule):
         """
         if self.classlabels is None:
             self.get_classlabels()
-
+    
     def setup(self, phase: ModelPhase | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
@@ -1211,29 +863,29 @@ class RESIDERTTSDataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDERTTS(split="test", **self.dataset_kwargs)
-            self.val   = RESIDERTTS(split="test", **self.dataset_kwargs)
+            self.train = FiveKE(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDERTTS(split="test",  **self.dataset_kwargs)
-
+            self.test  = LOLV1(split="test",  **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
         if self.can_log:
             self.summarize()
-
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
+    
 
-
-@DATAMODULES.register(name="reside-sots-indoor")
-class RESIDESOTSIndoorDataModule(base.DataModule):
-    """RESIDE-SOTS-Indoor datamodule.
-
-     See Also: :class:`mon.nn.data.datamodule.DataModule`.
-     """
-
+@DATAMODULES.register(name="fusion")
+class FusionDataModule(base.DataModule):
+    """Fusion datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
     def prepare_data(self, *args, **kwargs):
         """Use this method to do things that might write to disk, or that need
         to be done only from a single GPU in distributed settings.
@@ -1242,7 +894,60 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
         """
         if self.classlabels is None:
             self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = Fusion(split="test", **self.dataset_kwargs)
+            self.val   = Fusion(split="test", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = Fusion(split="test", **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="lime")
+class LIMEDataModule(base.DataModule):
+    """LIME datamodule.
+     
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
+     """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
     def setup(self, phase: ModelPhase | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
@@ -1264,78 +969,25 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
-            self.val   = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
+            self.train = LIME(split="test", **self.dataset_kwargs)
+            self.val   = LIME(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDESOTSIndoor(split="test",  **self.dataset_kwargs)
-
+            self.test  = LIME(split="test", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
         if self.can_log:
             self.summarize()
-
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
 
 
-@DATAMODULES.register(name="reside-sots-outdoor")
-class RESIDESOTSOutdoorDataModule(base.DataModule):
-    """RESIDE-SOTS-Outdoor datamodule.
-
-     See Also: :class:`mon.nn.data.datamodule.DataModule`.
-     """
-
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-
-    def setup(self, phase: ModelPhase | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
-            self.val   = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
-
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="satehaze1k")
-class SateHaze1KDataModule(base.DataModule):
-    """SateHaze1K datamodule.
+@DATAMODULES.register(name="llie")
+class LLIEDataModule(base.DataModule):
+    """LLIE datamodule.
     
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
@@ -1349,59 +1001,6 @@ class SateHaze1KDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: ModelPhase | str | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = SateHaze1K(split="train", **self.dataset_kwargs)
-            self.val   = SateHaze1K(split="val",   **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1K(split="test",  **self.dataset_kwargs)
-
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-    
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="reside-uhi")
-class RESIDEUHIDataModule(base.DataModule):
-    """RESIDE-UHI datamodule.
-
-     See Also: :class:`mon.nn.data.datamodule.DataModule`.
-     """
-
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-
     def setup(self, phase: ModelPhase | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
@@ -1423,25 +1022,25 @@ class RESIDEUHIDataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RESIDEUHI(split="test", **self.dataset_kwargs)
-            self.val   = RESIDEUHI(split="test", **self.dataset_kwargs)
+            self.train =   LLIE(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = RESIDEUHI(split="test", **self.dataset_kwargs)
-
+            self.test  = LOLV1(split="test",  **self.dataset_kwargs)
+            
         if self.classlabels is None:
             self.get_classlabels()
         
         if self.can_log:
             self.summarize()
-
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
+    
 
-
-@DATAMODULES.register(name="satehaze1k-thin")
-class SateHaze1KThinDataModule(base.DataModule):
-    """SateHaze1K-Thin datamodule.
+@DATAMODULES.register(name="lol-v1")
+class LOLV1DataModule(base.DataModule):
+    """LOLV1 datamodule.
     
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
@@ -1476,11 +1075,11 @@ class SateHaze1KThinDataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = SateHaze1KThin(split="train", **self.dataset_kwargs)
-            self.val   = SateHaze1KThin(split="val",   **self.dataset_kwargs)
+            self.train = LOLV1(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1KThin(split="test",  **self.dataset_kwargs)
-
+            self.test  = LOLV1(split="test", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
@@ -1492,9 +1091,9 @@ class SateHaze1KThinDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="satehaze1k-moderate")
-class SateHaze1KModerateDataModule(base.DataModule):
-    """SateHaze1K-Moderate datamodule.
+@DATAMODULES.register(name="lol-v2-real")
+class LOLV2RealDataModule(base.DataModule):
+    """LOLV2Real datamodule.
     
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
@@ -1529,11 +1128,11 @@ class SateHaze1KModerateDataModule(base.DataModule):
        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = SateHaze1KModerate(split="train", **self.dataset_kwargs)
-            self.val   = SateHaze1KModerate(split="val",   **self.dataset_kwargs)
+            self.train = LOLV2Real(split="train", **self.dataset_kwargs)
+            self.val   = LOLV2Real(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1KModerate(split="test",  **self.dataset_kwargs)
-
+            self.test  = LOLV2Real(split="test", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
@@ -1545,9 +1144,9 @@ class SateHaze1KModerateDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="satehaze1k-thick")
-class SateHaze1KThickDataModule(base.DataModule):
-    """SateHaze1K-Thick datamodule.
+@DATAMODULES.register(name="lol-v2-syn")
+class LOLV2SynDataModule(base.DataModule):
+    """LOLV2Sy datamodule.
     
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
@@ -1582,10 +1181,328 @@ class SateHaze1KThickDataModule(base.DataModule):
         
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = SateHaze1KThick(split="train", **self.dataset_kwargs)
-            self.val   = SateHaze1KThick(split="val",   **self.dataset_kwargs)
+            self.train = LOLV2Syn(split="train", **self.dataset_kwargs)
+            self.val   = LOLV2Syn(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1KThick(split="test",  **self.dataset_kwargs)
+            self.test  = LOLV2Syn(split="test", **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="mef")
+class MEFDataModule(base.DataModule):
+    """MEF datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = MEF(split="test", **self.dataset_kwargs)
+            self.val   = MEF(split="test", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = MEF(split="test", **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="npe")
+class NPEDataModule(base.DataModule):
+    """NPE datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
+                Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = NPE(split="test", **self.dataset_kwargs)
+            self.val   = NPE(split="test", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = NPE(split="test", **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="sice-grad")
+class SICEGradDataModule(base.DataModule):
+    """SICEGrad datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = SICEGrad(split="train", **self.dataset_kwargs)
+            self.val   = SICEGrad(split="train", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = SICEGrad(split="train", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="sice-mix")
+class SICEMixDataModule(base.DataModule):
+    """SICEMix datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = SICEMix(split="train", **self.dataset_kwargs)
+            self.val   = SICEMix(split="train", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = SICEMix(split="train", **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="sice-zerodce")
+class SICEZeroDCEDataModule(base.DataModule):
+    """SICEZeroDCE datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = SICEZeroDCE(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = LOLV1(split="test", **self.dataset_kwargs)
+            
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="vv")
+class VVDataModule(base.DataModule):
+    """VV datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = VV(split="test", **self.dataset_kwargs)
+            self.val   = VV(split="test", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = VV(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

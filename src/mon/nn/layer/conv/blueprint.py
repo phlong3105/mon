@@ -56,11 +56,13 @@ from typing import Any, Callable
 import torch
 from torch import nn
 
-from mon.core import math
+from mon import core
 from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import activation, attention, base
 from mon.nn.layer.conv import base as conv
+
+math = core.math
 
 
 # region Subspace Blueprint Separable Convolution

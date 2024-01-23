@@ -19,8 +19,8 @@ from torchvision.datasets.utils import (
 )
 
 from mon import core, nn
+from mon.data import base
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.vision.data import base
 
 console = core.console
 

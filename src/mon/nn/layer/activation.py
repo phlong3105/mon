@@ -55,7 +55,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon.core import builtins
+from mon import core
 from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import base
@@ -77,7 +77,7 @@ class FReLU(base.PassThroughLayerParsingMixin, nn.Module):
     
     def __init__(self, c1: int, k: int | list[int] = 3, *args, **kwargs):
         super().__init__()
-        k         = builtins.to_2tuple(k)
+        k         = core.to_2tuple(k)
         self.conv = nn.Conv2d(c1, c1, k, 1, 1, groups=c1)
         self.act  = nn.BatchNorm2d(c1)
     

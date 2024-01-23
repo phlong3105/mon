@@ -26,9 +26,9 @@ __all__ = [
     "Snow100KSDataModule",
 ]
 
-from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon import core
-from mon.vision.data import base
+from mon.data import base
+from mon.globals import DATAMODULES, DATASETS, ModelPhase
 
 console = core.console
 

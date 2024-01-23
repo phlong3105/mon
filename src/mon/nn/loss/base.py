@@ -27,7 +27,7 @@ from mon.globals import Reduction
 def reduce_loss(
     loss     : torch.Tensor,
     weight   : torch.Tensor | None = None,
-    reduction: Reduction | str     = "mean",
+    reduction: Reduction    | str  = "mean",
 ) -> torch.Tensor:
     """Reduces the loss tensor.
 

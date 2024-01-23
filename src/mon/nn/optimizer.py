@@ -45,8 +45,11 @@ from torch.optim import lr_scheduler
 # noinspection PyUnresolvedReferences
 from torch.optim.lr_scheduler import _LRScheduler
 
-from mon.core import math
+from mon import core
 from mon.globals import LR_SCHEDULERS, OPTIMIZERS
+
+math = core.math
+
 
 # region Optimizer
 

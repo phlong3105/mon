@@ -12,7 +12,6 @@ interface to all vision functions.
 from __future__ import annotations
 
 import mon.vision.classify  # Image Classification
-import mon.vision.data  # Data
 import mon.vision.detect  # Object Detection
 import mon.vision.draw  # Drawing Functions
 import mon.vision.enhance  # Image Enhancement
@@ -23,7 +22,6 @@ import mon.vision.prior  # Vision Prior
 import mon.vision.track  # Object Tracking
 import mon.vision.view  # Display Functions
 from mon.vision.classify import *
-from mon.vision.data import *
 from mon.vision.detect import *
 from mon.vision.draw import *
 from mon.vision.enhance import *
