@@ -351,7 +351,7 @@ def imshow_enhancement(
     
     assert len(image) == len(header)
     if label is not None:
-        label = builtins.to_list(label)
+        label = core.to_list(label)
         label = label[:max_n]
         assert len(image[0]) == len(label)
     

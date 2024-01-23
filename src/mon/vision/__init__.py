@@ -12,7 +12,7 @@ interface to all vision functions.
 from __future__ import annotations
 
 import mon.vision.classify  # Image Classification
-import mon.vision.core      # Basic Operations (extending :mod:`mon.core`)
+import mon.vision.core      # Basic Operations: read, write, convert, ... (+ extending :mod:`mon.core`)
 import mon.vision.data      # Data
 import mon.vision.detect    # Object Detection
 import mon.vision.draw      # Drawing Functions
@@ -20,7 +20,6 @@ import mon.vision.enhance   # Image Enhancement
 import mon.vision.feature   # Feature Extraction
 import mon.vision.filter    # Image Filtering
 import mon.vision.geometry  # Geometry
-import mon.vision.io        # Image/Video IO
 import mon.vision.nn        # Neural Network Components (extending :mod:`mon.nn`)
 import mon.vision.prior     # Vision Prior
 import mon.vision.track     # Object Tracking
@@ -34,7 +33,6 @@ from mon.vision.enhance import *
 from mon.vision.feature import *
 from mon.vision.filter import *
 from mon.vision.geometry import *
-from mon.vision.io import *
 from mon.vision.nn import *
 from mon.vision.prior import *
 from mon.vision.track import *

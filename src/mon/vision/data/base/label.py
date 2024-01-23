@@ -35,7 +35,7 @@ import uuid
 import numpy as np
 import torch
 
-from mon.vision import core, geometry, io, nn
+from mon.vision import core, geometry, nn
 
 console       = core.console
 error_console = core.error_console
@@ -682,7 +682,7 @@ class ImageLabel(nn.Label):
                 f"but got {self.path}."
             )
         
-        image = io.read_image(
+        image = core.read_image(
             path      = self.path,
             to_rgb    = self.to_rgb,
             to_tensor = self.to_tensor,
@@ -1211,7 +1211,7 @@ class SegmentationLabel(nn.Label):
                 f"but got {path}."
             )
         
-        mask = io.read_image(
+        mask = core.read_image(
             path      = self.path,
             to_rgb    = self.to_rgb,
             to_tensor = self.to_tensor,
