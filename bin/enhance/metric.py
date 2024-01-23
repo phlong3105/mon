@@ -249,13 +249,13 @@ def measure_metric_pyiqa(
 def update_results(results: dict, new_values: dict) -> dict:
     for m, v in new_values.items():
         if m in METRIC_CONFIG:
-            lower_better = METRIC_CONFIG[m]["lower_better"]
+            lower_is_better = METRIC_CONFIG[m]["lower_is_better"]
             if m not in results:
                 results[m] = v
             elif results[m] is None:
                 results[m] = v
             elif v is not None:
-                results[m] = min(results[m], v) if lower_better else max(results[m], v)
+                results[m] = min(results[m], v) if lower_is_better else max(results[m], v)
 
     return results
 

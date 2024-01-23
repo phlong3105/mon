@@ -46,8 +46,8 @@ model = {
 	},          # Loss function for training the model.
 	"metrics"    : {
 	    "train": None,
-		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+		"val"  : [{"name": "lpips"}, {"name": "psnr"}, {"name": "ssim"}],
+		"test" : [{"name": "lpips"}, {"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{
@@ -118,8 +118,8 @@ datamodule = {
 trainer = default.trainer | {
 	"callbacks"        : [
 		default.model_checkpoint | {
-		    "monitor": "val/ssim",  # Quantity to monitor.
-			"mode"   : "max",       # ``'min'`` or ``'max'``.
+		    "monitor": "val/lpips",  # Quantity to monitor.
+			"mode"   : "min",        # ``'min'`` or ``'max'``.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
