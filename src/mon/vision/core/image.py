@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "ImageLoader",
     "add_weighted",
     "blend",
     "check_image_size",
@@ -31,6 +32,7 @@ __all__ = [
     "normalize_image",
     "normalize_image_by_range",
     "normalize_image_mean_std",
+    "read_image",
     "to_3d_image",
     "to_4d_image",
     "to_5d_image",
@@ -39,17 +41,28 @@ __all__ = [
     "to_image_nparray",
     "to_image_tensor",
     "to_list_of_3d_image",
+    "write_image",
+    "write_image_cv",
+    "write_image_torch",
+    "write_images_cv",
+    "write_images_torch",
 ]
 
 import copy
 import functools
-from typing import Any
+import glob
+import multiprocessing
+from typing import Any, Sequence
 
+import cv2
+import joblib
 import numpy as np
 import torch
+import torchvision
 
-from mon import nn
+from mon import nn, core
 from mon.core import error_console, math
+from mon.vision.core import base
 
 
 # region Assert
@@ -926,4 +939,352 @@ def blend(
         gamma  = gamma,
     )
 
+# endregion
+
+
+# region I/O
+
+def read_image(
+    path     : core.Path,
+    to_rgb   : bool = True,
+    to_tensor: bool = False,
+    normalize: bool = False,
+) -> torch.Tensor | np.ndarray:
+    """Read an image from a file path using :mod:`cv2`. Optionally, convert it
+    to RGB format, and :class:`torch.Tensor` type of shape :math:`[1, C, H, W]`.
+
+    Args:
+        path: An image file path.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``True``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``False``.
+        
+    Return:
+        A :class:`numpy.ndarray` image of shape0 :math:`[H, W, C]` with value in
+        range :math:`[0, 255]` or a :class:`torch.Tensor` image of shape
+        :math:`[1, C, H, W]` with value in range :math:`[0.0, 1.0]`.
+    """
+    image = cv2.imread(str(path))  # BGR
+    if to_rgb:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if to_tensor:
+        image = to_image_tensor(input=image, keepdim=False, normalize=normalize)
+    return image
+
+
+def write_image(
+    path       : core.Path,
+    image      : torch.Tensor | np.ndarray,
+    denormalize: bool = False
+):
+    """Write an image to a file path.
+    
+    Args:
+        image: An image to write.
+        path: A directory to write the image to.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(image, torch.Tensor):
+        torchvision.utils.save_image(image, str(path))
+    else:
+        cv2.imwrite(str(path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    
+
+def write_image_cv(
+    image      : torch.Tensor | np.ndarray,
+    dir_path   : core.Path,
+    name       : str,
+    prefix     : str  = "",
+    extension  : str  = ".png",
+    denormalize: bool = False
+):
+    """Write an image to a directory using :mod:`cv2`.
+    
+    Args:
+        image: An image to write.
+        dir_path: A directory to write the image to.
+        name: An image's name.
+        prefix: A prefix to add to the :param:`name`.
+        extension: An extension of the image file. Default: ``'.png'``.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    # Convert image
+    if isinstance(image, torch.Tensor):
+        image = to_image_nparray(input=image, keepdim=True, denormalize=denormalize)
+    image = to_channel_last_image(input=image)
+    if 2 <= image.ndim <= 3:
+        raise ValueError(
+            f"img's number of dimensions must be between ``2`` and ``3``, "
+            f"but got {image.ndim}."
+        )
+    # Write image
+    dir_path  = core.Path(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
+    name      = core.Path(name)
+    stem      = name.stem
+    extension = extension  # name.suffix
+    extension = f"{name.suffix}" if extension == "" else extension
+    extension = f".{extension}"  if "." not in extension else extension
+    stem      = f"{prefix}_{stem}" if prefix != "" else stem
+    name      = f"{stem}{extension}"
+    file_path = dir_path / name
+    cv2.imwrite(str(file_path), image)
+
+
+def write_image_torch(
+    image      : torch.Tensor | np.ndarray,
+    dir_path   : core.Path,
+    name       : str,
+    prefix     : str  = "",
+    extension  : str  = ".png",
+    denormalize: bool = False
+):
+    """Write an image to a directory.
+    
+    Args:
+        image: An image to write.
+        dir_path: A directory to write the image to.
+        name: An image's name.
+        prefix: A prefix to add to the :param:`name`.
+        extension: An extension of the image file. Default: ``'.png'``.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    # Convert image
+    if isinstance(image, np.ndarray):
+        image = torch.from_numpy(image)
+        image = to_channel_first_image(input=image)
+    image = denormalize_image(image=image) if denormalize else image
+    image = image.to(torch.uint8)
+    image = image.cpu()
+    if 2 <= image.ndim <= 3:
+        raise ValueError(
+            f"img's number of dimensions must be between ``2`` and ``3``, "
+            f"but got {image.ndim}."
+        )
+    # Write image
+    dir_path  = core.Path(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
+    name      = core.Path(name)
+    stem      = name.stem
+    extension = extension  # name.suffix
+    extension = f"{name.suffix}" if extension == "" else extension
+    extension = f".{extension}" if "." not in extension else extension
+    stem      = f"{prefix}_{stem}" if prefix != "" else stem
+    name      = f"{stem}{extension}"
+    file_path = dir_path / name
+    if extension in [".jpg", ".jpeg"]:
+        torchvision.io.image.write_jpeg(input=image, filename=str(file_path))
+    elif extension in [".png"]:
+        torchvision.io.image.write_png(input=image, filename=str(file_path))
+
+
+def write_images_cv(
+    images     : list[torch.Tensor | np.ndarray],
+    dir_path   : core.Path,
+    names      : list[str],
+    prefixes   : list[str] = "",
+    extension  : str       = ".png",
+    denormalize: bool      = False
+):
+    """Write a :class:`list` of images to a directory using :mod:`cv2`.
+   
+    Args:
+        images: A :class:`list` of 3-D images.
+        dir_path: A directory to write the images to.
+        names: A :class:`list` of images' names.
+        prefixes: A prefix to add to the :param:`names`.
+        extension: An extension of image files. Default: ``'.png'``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    if isinstance(names, str):
+        names = [names for _ in range(len(images))]
+    if isinstance(prefixes, str):
+        prefixes = [prefixes for _ in range(len(prefixes))]
+    if not len(images) == len(names):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`names` must be the same, "
+            f"but got {len(images)} and {len(names)}."
+        )
+    if not len(images) == len(prefixes):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`prefixes` must be the "
+            f"same, but got {len(images)} and {len(prefixes)}."
+        )
+    num_jobs = multiprocessing.cpu_count()
+    joblib.Parallel(n_jobs=num_jobs)(
+        joblib.delayed(write_image_cv)(
+            image, dir_path, names[i], prefixes[i], extension, denormalize
+        )
+        for i, image in enumerate(images)
+    )
+
+
+def write_images_torch(
+    images     : Sequence[torch.Tensor | np.ndarray],
+    dir_path   : core.Path,
+    names      : list[str],
+    prefixes   : list[str] = "",
+    extension  : str       = ".png",
+    denormalize: bool      = False
+):
+    """Write a :class:`list` of images to a directory using :mod:`torchvision`.
+   
+    Args:
+        images: A :class:`list` of 3-D images.
+        dir_path: A directory to write the images to.
+        names: A :class:`list` of images' names.
+        prefixes: A prefix to add to the :param:`names`.
+        extension: An extension of image files. Default: ``'.png'``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    if isinstance(names, str):
+        names = [names for _ in range(len(images))]
+    if isinstance(prefixes, str):
+        prefixes = [prefixes for _ in range(len(prefixes))]
+    if not len(images) == len(names):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`names` must be the same, "
+            f"but got {len(images)} and {len(names)}."
+        )
+    if not len(images) == len(prefixes):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`prefixes` must be the "
+            f"same, but got {len(images)} and {len(prefixes)}."
+        )
+    num_jobs = multiprocessing.cpu_count()
+    joblib.Parallel(n_jobs=num_jobs)(
+        joblib.delayed(write_image_torch)(
+            image, dir_path, names[i], prefixes[i], extension, denormalize
+        )
+        for i, image in enumerate(images)
+    )
+
+
+class ImageLoader(base.Loader):
+    """An image loader that retrieves and loads image(s) from a file path,
+    file path pattern, or directory.
+    
+    Notes:
+        We don't need to define the image shape since images in a directory can
+        have different shapes.
+    
+    Args:
+        source: A data source. It can be a file path, a file path pattern, or a
+            directory.
+        max_samples: The maximum number of datapoints from the given
+            :param:`source` to process. Default: ``None``.
+        batch_size: The number of samples in a single forward pass.
+            Default: ``1``.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``False``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``True``.
+        verbose: Verbosity mode of video loader backend. Default: ``False``.
+    """
+    
+    def __init__(
+        self,
+        source     : core.Path,
+        max_samples: int | None = None,
+        batch_size : int        = 1,
+        to_rgb     : bool       = True,
+        to_tensor  : bool       = False,
+        normalize  : bool       = False,
+        verbose    : bool       = False,
+        *args, **kwargs
+    ):
+        self.images = []
+        super().__init__(
+            source      = source,
+            max_samples = max_samples,
+            batch_size  = batch_size,
+            to_rgb      = to_rgb,
+            to_tensor   = to_tensor,
+            normalize   = normalize,
+            verbose     = verbose
+        )
+    
+    def __next__(self) -> tuple[torch.Tensor | np.ndarray, list, list, list]:
+        """Load the next batch of images from the disk.
+        
+        Examples:
+            >>> images = ImageLoader("cam_1.mp4")
+            >>> for index, image in enumerate(images):
+        
+        Return:
+            Images of shape :math:`[H, W, C]` or :math:`[B, H, W, C]`.
+            A :class"`list` of image indexes
+            A :class:`list` of image files.
+            A :class:`list` of images' relative paths corresponding to data.
+        """
+        if self.index >= self.num_images:
+            raise StopIteration
+        else:
+            images    = []
+            indexes   = []
+            files     = []
+            rel_paths = []
+            
+            for i in range(self.batch_size):
+                if self.index >= self.num_images:
+                    break
+                
+                file     = self.images[self.index]
+                rel_path = str(file).replace(str(self.source) + "/", "")
+                image    = read_image(
+                    path      = self.images[self.index],
+                    to_rgb    = self.to_rgb,
+                    to_tensor = self.to_tensor,
+                    normalize = self.normalize,
+                )
+                images.append(image)
+                indexes.append(self.index)
+                files.append(file)
+                rel_paths.append(rel_path)
+                self.index += 1
+            
+            if self.to_tensor:
+                images = torch.stack(images, dim=1)
+                images = torch.squeeze(images, dim=0)
+            else:
+                images = np.stack(images, axis=0)
+            return images, indexes, files, rel_paths
+    
+    def init(self):
+        """Initialize the data source."""
+        if self.source.is_image_file():
+            images = [self.source]
+        elif self.source.is_dir():
+            images = [i for i in self.source.rglob("*") if i.is_image_file()]
+        elif isinstance(self.source, str):
+            images = [core.Path(i) for i in glob.glob(self.source)]
+            images = [i for i in images if i.is_image_file()]
+        else:
+            raise IOError(f"Error when listing image files.")
+        self.images = sorted(images)
+        
+        if self.num_images == 0:
+            self.num_images = len(self.images)
+        if self.max_samples is not None and self.num_images > self.max_samples:
+            self.num_images = self.max_samples
+    
+    def reset(self):
+        """Reset and start over."""
+        self.index = 0
+    
+    def close(self):
+        """Stop and release."""
+        pass
+    
 # endregion

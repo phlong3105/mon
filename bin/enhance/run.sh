@@ -446,6 +446,7 @@ if [ "$run" == "train" ]; then
           --fullname "${fullname}" \
           --max-epochs "$epochs" \
           --strategy "ddp_find_unused_parameters_true"
+
       # LES
       # Jin2022
       elif [ "${model[i]}" == "jin2022" ]; then
@@ -1065,14 +1066,23 @@ if [ "$run" == "predict" ]; then
               --verbose
           # UFormer
           elif [ "${model[i]}" == "uformer" ]; then
-            cd "${universal_dir}/${model[i]}" || exit
-            if [ "${run}" == "derain" ]; then
-              python -W ignore test/test_derain.py \
-                --input-dir "${input_dirs[k]}" \
-                --output-dir "${output_dir}" \
-                --weights "${weights}" \
-                --image-size 512
-            fi
+            cd "${current_dir}" || exit
+            python -W ignore predict.py \
+              --input-dir "${input_dirs[k]}" \
+              --output-dir "${output_dir}" \
+              --name "${model[i]}" \
+              --variant "${variant[j]}" \
+              --data "${train[0]}" \
+              --root "${output_dir}" \
+              --project "${project}/${model[i]}" \
+              --fullname "${fullname}" \
+              --weights "${weights}" \
+              --image-size 128 \
+              --resize \
+              --devices "cuda:0" \
+              --benchmark \
+              --save-image \
+              --verbose
           fi
         done
       fi

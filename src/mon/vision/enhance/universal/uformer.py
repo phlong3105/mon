@@ -14,14 +14,14 @@ __all__ = [
     "UformerT",
 ]
 
-from abc import ABC
 from typing import Any
 
 import torch
 import torch.utils.checkpoint as checkpoint
 from einops import rearrange
+import skimage
 
-from mon.globals import MODELS
+from mon.globals import MODELS, ModelPhase
 from mon.vision import core, nn
 from mon.vision.enhance.universal import base
 from mon.vision.nn import functional as F, _callable, _size_2_t
@@ -816,7 +816,7 @@ class Uformer(base.UniversalImageEnhancementModel):
             token_mlp        = self.token_mlp,
             shift_flag       = self.shift_flag,
         )
-        self.dowsample_0    = downsample(self.embed_channels, self.embed_channels * 2)
+        self.downsample_0    = downsample(self.embed_channels, self.embed_channels * 2)
         self.encoderlayer_1 = BasicUformerLayer(
             in_channels      = self.embed_channels * 2,
             out_channels     = self.embed_channels * 2,
@@ -836,7 +836,7 @@ class Uformer(base.UniversalImageEnhancementModel):
             token_mlp        = self.token_mlp,
             shift_flag       = self.shift_flag,
         )
-        self.dowsample_1    = downsample(self.embed_channels * 2, self.embed_channels * 4)
+        self.downsample_1    = downsample(self.embed_channels * 2, self.embed_channels * 4)
         self.encoderlayer_2 = BasicUformerLayer(
             in_channels      = self.embed_channels * 4,
             out_channels     = self.embed_channels * 4,
@@ -856,7 +856,7 @@ class Uformer(base.UniversalImageEnhancementModel):
             token_mlp        = self.token_mlp,
             shift_flag       = self.shift_flag,
         )
-        self.dowsample_2    = downsample(self.embed_channels * 4, self.embed_channels * 8)
+        self.downsample_2    = downsample(self.embed_channels * 4, self.embed_channels * 8)
         self.encoderlayer_3 = BasicUformerLayer(
             in_channels      = self.embed_channels * 8,
             out_channels     = self.embed_channels * 8,
@@ -876,7 +876,7 @@ class Uformer(base.UniversalImageEnhancementModel):
             token_mlp        = self.token_mlp,
             shift_flag       = self.shift_flag,
         )
-        self.dowsample_3 = downsample(self.embed_channels * 8, self.embed_channels * 16)
+        self.downsample_3 = downsample(self.embed_channels * 8, self.embed_channels * 16)
 
         # Bottleneck
         self.conv = BasicUformerLayer(
@@ -1025,10 +1025,10 @@ class Uformer(base.UniversalImageEnhancementModel):
         # Input Projection
         flops += self.input_proj.flops(self.reso, self.reso)
         # Encoder
-        flops += self.encoderlayer_0.flops() + self.dowsample_0.flops(self.reso,           self.reso)
-        flops += self.encoderlayer_1.flops() + self.dowsample_1.flops(self.reso // 2,      self.reso // 2)
-        flops += self.encoderlayer_2.flops() + self.dowsample_2.flops(self.reso // 2 ** 2, self.reso // 2 ** 2)
-        flops += self.encoderlayer_3.flops() + self.dowsample_3.flops(self.reso // 2 ** 3, self.reso // 2 ** 3)
+        flops += self.encoderlayer_0.flops() + self.downsample_0.flops(self.reso,           self.reso)
+        flops += self.encoderlayer_1.flops() + self.downsample_1.flops(self.reso // 2,      self.reso // 2)
+        flops += self.encoderlayer_2.flops() + self.downsample_2.flops(self.reso // 2 ** 2, self.reso // 2 ** 2)
+        flops += self.encoderlayer_3.flops() + self.downsample_3.flops(self.reso // 2 ** 3, self.reso // 2 ** 3)
         # Bottleneck
         flops += self.conv.flops()
         # Decoder
@@ -1040,6 +1040,60 @@ class Uformer(base.UniversalImageEnhancementModel):
         flops += self.output_proj.flops(self.reso, self.reso)
         return flops
     
+    def expand2square(
+        self,
+        input : torch.Tensor,
+        factor: float        = 16.0
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Crop the input tensor. Used in inference pass."""
+        _, _, h, w = input.size()
+        x     = int(math.ceil(max(h, w) / float(factor)) * factor)
+        image = torch.zeros(1, 3, x, x).type_as(input)  # 3, h, w
+        mask  = torch.zeros(1, 1, x, x).type_as(input)
+        image[:, :, ((x - h)//2):((x - h)//2 + h), ((x - w)//2):((x - w)//2 + w)] = input
+        mask[:, :, ((x - h)//2):((x - h)//2 + h), ((x - w)//2):((x - w)//2 + w)].fill_(1)
+        return image, mask
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : bool = False,
+        profile  : bool = False,
+        out_index: int  = -1,
+        *args, **kwargs
+    ) -> torch.Tensor:
+        """Forward pass. This is the primary :meth:`forward` function of the
+        model. It supports augmented inference. In this function, we perform
+        test-time augmentation and pass the transformed input to
+        :meth:`forward_once()`.
+
+        Args:
+            input: An input of shape :math`[B, C, H, W]`.
+            augment: If ``True``, perform test-time augmentation. Default:
+                ``False``.
+            profile: If ``True``, Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: -1 means the last layer.
+            
+        Return:
+            Predictions.
+        """
+        if self.phase == ModelPhase.INFERENCE:
+            _, _, h, w  = input.shape
+            input, mask = self.expand2square(input, factor=self.image_size[0])
+            output      = self.forward_once(input=input, profile=profile, *args, **kwargs)
+            output      = torch.masked_select(output, mask.bool()).reshape(1, 3, h, w)
+            output      = torch.clamp(output, 0, 1).cpu().numpy().squeeze().transpose((1, 2, 0))
+            output      = skimage.util.img_as_ubyte(output)
+            return output
+        else:
+            if augment:
+                # For now just forward the input. Later, we will implement the
+                # test-time augmentation.
+                return self.forward_once(input=input, profile=profile, *args, **kwargs)
+            else:
+                return self.forward_once(input=input, profile=profile, *args, **kwargs)
+            
     def forward_once(
         self,
         input    : torch.Tensor,
@@ -1066,13 +1120,13 @@ class Uformer(base.UniversalImageEnhancementModel):
         y = self.pos_drop(y)
         # Encoder
         conv0 = self.encoderlayer_0(y, mask=mask)
-        pool0 = self.dowsample_0(conv0)
+        pool0 = self.downsample_0(conv0)
         conv1 = self.encoderlayer_1(pool0, mask=mask)
-        pool1 = self.dowsample_1(conv1)
+        pool1 = self.downsample_1(conv1)
         conv2 = self.encoderlayer_2(pool1, mask=mask)
-        pool2 = self.dowsample_2(conv2)
+        pool2 = self.downsample_2(conv2)
         conv3 = self.encoderlayer_3(pool2, mask=mask)
-        pool3 = self.dowsample_3(conv3)
+        pool3 = self.downsample_3(conv3)
         # Bottleneck
         conv4 = self.conv(pool3, mask=mask)
         # Decoder
@@ -1229,7 +1283,12 @@ class UformerB(Uformer):
             "num_classes": None,
             "image_size" : 128,
             "dd_in"      : 3,
-            "map": {},
+            "map": {
+                "dowsample_0": "downsample_0",
+                "dowsample_1": "downsample_1",
+                "dowsample_2": "downsample_2",
+                "dowsample_3": "downsample_3",
+            },
         },
         "gtrain": {
             "url"        : None,
@@ -1237,7 +1296,12 @@ class UformerB(Uformer):
             "num_classes": None,
             "image_size" : 128,
             "dd_in"      : 3,
-            "map": {},
+            "map": {
+                "dowsample_0": "downsample_0",
+                "dowsample_1": "downsample_1",
+                "dowsample_2": "downsample_2",
+                "dowsample_3": "downsample_3",
+            },
         },
         "sidd": {
             "url"        : None,
@@ -1245,7 +1309,12 @@ class UformerB(Uformer):
             "num_classes": None,
             "image_size" : 128,
             "dd_in"      : 3,
-            "map": {},
+            "map": {
+                "dowsample_0": "downsample_0",
+                "dowsample_1": "downsample_1",
+                "dowsample_2": "downsample_2",
+                "dowsample_3": "downsample_3",
+            },
         },
     }
     

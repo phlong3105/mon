@@ -1,25 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""UformerS model trained on MIPIFlare dataset."""
+"""UformerB model trained on MIPIFlare dataset."""
 
 from __future__ import annotations
 
-import albumentations as A
-
 from config import default
 from mon import DATA_DIR, RUN_DIR
+from mon.vision.data import augment as A
 
 # region Basic
 
 root         = RUN_DIR / "train"
 project      = "uformer"
-model_name   = "uformer_s"
+model_name   = "uformer_b"
 model_config = None
 data_name    = "mipiflare"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
-image_size   = [128, 128]
+image_size   = [256, 256]
 seed	     = 1234
 verbose 	 = True
 
@@ -95,7 +94,8 @@ datamodule = {
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose(
 		transforms=[
-			A.Resize(width=image_size[0], height=image_size[1]),
+			# A.Resize(width=image_size[0], height=image_size[1]),
+			A.CropPatch(image_size[0], True, 1),
 			A.Flip(),
 			A.Rotate(),
     	],
@@ -104,7 +104,7 @@ datamodule = {
     "to_tensor"   : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data"  : False,        # If ``True``, cache data to disk for faster loading next time.
     "cache_images": False,        # If ``True``, cache images into memory for faster training.
-    "batch_size"  : 16,           # The number of samples in one forward pass.
+    "batch_size"  : 8,            # The number of samples in one forward pass.
     "devices"     : 0,            # A list of devices to use. Default: ``0``.
     "shuffle"     : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"     : verbose,      # Verbosity.

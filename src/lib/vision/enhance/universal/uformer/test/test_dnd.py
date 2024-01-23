@@ -76,27 +76,29 @@ print("===>Testing using weights: ", args.weights)
 model_restoration.cuda()
 model_restoration.eval()
 
-def expand2square(timg,factor=16.0):
+
+def expand2square(timg, factor=16.0):
     _, _, h, w = timg.size()
+    
+    X = int(math.ceil(max(h, w) / float(factor)) * factor)
 
-    X = int(math.ceil(max(h,w)/float(factor))*factor)
-
-    img = torch.zeros(1,3,X,X).type_as(timg) # 3, h,w
-    mask = torch.zeros(1,1,X,X).type_as(timg)
+    img  = torch.zeros(1, 3, X, X).type_as(timg)  # 3, h,w
+    mask = torch.zeros(1, 1, X, X).type_as(timg)
 
     # print(img.size(),mask.size())
     # print((X - h)//2, (X - h)//2+h, (X - w)//2, (X - w)//2+w)
-    img[:,:, ((X - h)//2):((X - h)//2 + h),((X - w)//2):((X - w)//2 + w)] = timg
-    mask[:,:, ((X - h)//2):((X - h)//2 + h),((X - w)//2):((X - w)//2 + w)].fill_(1)
+    img[:, :, ((X - h)//2):((X - h)//2 + h),((X - w)//2):((X - w)//2 + w)] = timg
+    mask[:, :, ((X - h)//2):((X - h)//2 + h),((X - w)//2):((X - w)//2 + w)].fill_(1)
     
     return img, mask
+
 
 with torch.no_grad():
     psnr_val_rgb = []
     for ii, data_test in enumerate(tqdm(test_loader), 0):
-        rgb_noisy = data_test[0].cuda()
+        rgb_noisy  = data_test[0].cuda()
         _, _, h, w = rgb_noisy.shape
-        filenames = data_test[1]
+        filenames  = data_test[1]
         rgb_noisy, mask = expand2square(rgb_noisy, factor=128) 
         rgb_restored = model_restoration(rgb_noisy)
         rgb_restored = torch.masked_select(rgb_restored,mask.bool()).reshape(1,3,h,w)
