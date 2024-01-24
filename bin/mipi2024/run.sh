@@ -269,7 +269,7 @@ if [ "$run" == "predict" ]; then
             --project "${project}/${model[i]}" \
             --fullname "${fullname}" \
             --weights "${weights}" \
-            --image-size 256 \
+            --image-size 128 \
             --devices "cuda:0" \
             --benchmark \
             --save-image \

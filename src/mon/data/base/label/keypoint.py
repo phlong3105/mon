@@ -22,7 +22,7 @@ console = core.console
 class KeypointLabel(base.Label):
     """A list keypoints label for a single object in an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         id_: The class ID of the polyline data. Default: ``-1`` means unknown.
@@ -84,7 +84,7 @@ class KeypointLabel(base.Label):
 class KeypointsLabel(list[KeypointLabel], base.Label):
     """A list of keypoint labels for multiple objects in an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         seq: A list of :class:`KeypointLabel` objects.

@@ -12,8 +12,8 @@ datasets:
   test:  # the 1st test dataset
     name: test
     mode: video_samesize_lol2
-    dataroot_GT: path_to_datasets/LOLv2/Real_captured/Test/Normal
-    dataroot_LQ: path_to_datasets/LOLv2/Real_captured/Test/Low
+    dataroot_GT: /home/longpham/10-workspace/11-code/mon/data/llie/test/lol-v2-real/high
+    dataroot_LQ: /home/longpham/10-workspace/11-code/mon/data/llie/test/lol-v2-real/low
     train_size: [600, 400]
     cache_data: true
     N_frames: 5

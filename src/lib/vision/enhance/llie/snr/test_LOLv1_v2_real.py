@@ -29,7 +29,7 @@ opt = option.dict_to_nonedict(opt)
 def main():
     save_imgs = True
     model = create_model(opt)
-    save_folder = '/mnt/proj3/xgxu/SNR-Low-Light-Enhance/results/{}'.format(opt['name'])
+    save_folder = 'results/{}'.format(opt['name'])
     GT_folder = osp.join(save_folder, 'images/GT')
     output_folder = osp.join(save_folder, 'images/output')
     input_folder = osp.join(save_folder, 'images/input')
