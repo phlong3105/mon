@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "CriticalSuccessIndex",
     "ErrorRelativeGlobalDimensionlessSynthesis",
     "LearnedPerceptualImagePatchSimilarity",
     "MemorizationInformedFrechetInceptionDistance",
@@ -32,7 +31,6 @@ from mon.globals import METRICS
 
 # region Image Metric
 
-CriticalSuccessIndex                         = torchmetrics.image.CriticalSuccessIndex
 ErrorRelativeGlobalDimensionlessSynthesis    = torchmetrics.image.ErrorRelativeGlobalDimensionlessSynthesis
 LearnedPerceptualImagePatchSimilarity        = torchmetrics.image.LearnedPerceptualImagePatchSimilarity
 MemorizationInformedFrechetInceptionDistance = torchmetrics.image.MemorizationInformedFrechetInceptionDistance
@@ -51,7 +49,6 @@ TotalVariation                               = torchmetrics.image.TotalVariation
 UniversalImageQualityIndex                   = torchmetrics.image.UniversalImageQualityIndex
 VisualInformationFidelity                    = torchmetrics.image.VisualInformationFidelity
 
-METRICS.register(name="critical_success_index",                           module=CriticalSuccessIndex)
 METRICS.register(name="error_relative_global_dimensionless_synthesis",    module=ErrorRelativeGlobalDimensionlessSynthesis)
 METRICS.register(name="learned_perceptual_image_patch_similarity",        module=LearnedPerceptualImagePatchSimilarity)
 METRICS.register(name="lpips",                                            module=LearnedPerceptualImagePatchSimilarity)

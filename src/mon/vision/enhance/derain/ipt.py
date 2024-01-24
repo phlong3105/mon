@@ -12,131 +12,320 @@ __all__ = [
     "IPT",
 ]
 
-from typing import Any, Literal
+from functools import partial
+from typing import Any
 
 import kornia
 import torch
+from torch import Tensor
 
 import mon
+from mon.globals import MODELS, LAYERS
 from mon import core, nn
-from mon.globals import ModelPhase, MODELS
+from mon.core.typing import _callable, _size_2_t
 from mon.nn import functional as F
-from mon.vision import prior
 from mon.vision.enhance.derain import base
+from mon.vision.feature import OPEmbedder
+from mon.vision.enhance.derain.modules.ipt_layers import MeanShift, default_conv, ResBlock, Upsampler
+import copy
 
-math         = core.math
-console      = core.console
+math = core.math
+console = core.console
 _current_dir = core.Path(__file__).absolute().parent
 
 
 # region Loss
+class Loss(nn.Loss):
 
-class ZeroReferenceLoss(nn.Loss):
-    
     def __init__(
-        self,
-        bri_gamma      : float = 2.8,
-        exp_patch_size : int   = 16,
-        exp_mean_val   : float = 0.6,
-        spa_num_regions: Literal[4, 8, 16, 24] = 4,  # 4
-        spa_patch_size : int   = 4,     # 4
-        weight_bri     : float = 1,
-        weight_col     : float = 5,
-        weight_crl     : float = 1,     # 20
-        weight_edge    : float = 5,
-        weight_exp     : float = 10,
-        weight_kl      : float = 5,     # 5
-        weight_spa     : float = 1,
-        weight_tvA     : float = 1600,  # 200
-        reduction      : str   = "mean",
-        verbose        : bool  = False,
-        *args, **kwargs
+            self,
+            weight_L1: float = 1,
+            weight_MSE: float = 0.1,
+            reduction: str = "mean",
+            verbose: bool = False,
+            *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.weight_bri  = weight_bri
-        self.weight_col  = weight_col
-        self.weight_crl  = weight_crl
-        self.weight_edge = weight_edge
-        self.weight_exp  = weight_exp
-        self.weight_kl   = weight_kl
-        self.weight_spa  = weight_spa
-        self.weight_tvA  = weight_tvA
-        self.verbose     = verbose
-        
-        self.loss_bri  = nn.BrightnessConstancyLoss(reduction=reduction, gamma=bri_gamma)
-        self.loss_col  = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_crl  = nn.ChannelRatioConsistencyLoss(reduction=reduction)
-        self.loss_kl   = nn.ChannelConsistencyLoss(reduction=reduction)
-        self.loss_edge = nn.EdgeConstancyLoss(reduction=reduction)
-        self.loss_exp  = nn.ExposureControlLoss(
-            reduction  = reduction,
-            patch_size = exp_patch_size,
-            mean_val   = exp_mean_val,
-        )
-        self.loss_spa  = nn.SpatialConsistencyLoss(
-            num_regions = spa_num_regions,
-            patch_size  = spa_patch_size,
-            reduction   = reduction,
-        )
-        self.loss_tvA  = nn.IlluminationSmoothnessLoss(reduction=reduction)
-    
+        self.verbose = verbose
+        self.weight_L1 = weight_L1
+        self.weight_MSE = weight_MSE
+        self.loss_l1 = nn.L1Loss(reduction=reduction)
+        self.loss_mse = nn.MSELoss(reduction=reduction)
+
     def __str__(self) -> str:
-        return f"zero-reference loss"
-    
+        return f"loss"
+
     def forward(
-        self,
-        input   : torch.Tensor | list[torch.Tensor],
-        target  : list[torch.Tensor],
-        previous: torch.Tensor = None,
-        **_
+            self,
+            pred: torch.Tensor | list[torch.Tensor],
+            target: torch.Tensor | list[torch.Tensor],
+            **_
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        if isinstance(target, list | tuple):
-            if len(target) == 2:
-                a       = target[-2]
-                enhance = target[-1]
-            elif len(target) == 3:
-                a       = target[-3]
-                g       = target[-2]
-                enhance = target[-1]
-        else:
-            raise TypeError
-        loss_bri  = self.loss_bri(input=g, target=input)              if self.weight_bri  > 0 else 0
-        loss_col  = self.loss_col(input=enhance)                      if self.weight_col  > 0 else 0
-        loss_edge = self.loss_edge(input=enhance, target=input)       if self.weight_edge > 0 else 0
-        loss_exp  = self.loss_exp(input=enhance)                      if self.weight_exp  > 0 else 0
-        loss_kl   = self.loss_kl(input=enhance, target=input)         if self.weight_kl   > 0 else 0
-        loss_spa  = self.loss_spa(input=enhance, target=input)        if self.weight_spa  > 0 else 0
-        loss_tvA  = self.loss_tvA(input=a)                            if self.weight_tvA  > 0 else 0
-        if previous is not None and (enhance.shape == previous.shape):
-            loss_crl = self.loss_crl(input=enhance, target=previous)  if self.weight_crl  > 0 else 0
-        else:                                                                             
-            loss_crl = self.loss_crl(input=enhance, target=input)     if self.weight_crl  > 0 else 0
-        
+        loss_l1 = self.loss_l1(input=pred, target=target) if self.weight_L1 > 0 else 0
+        loss_mse = self.loss_mse(input=pred, target=target) if self.weight_MSE > 0 else 0
+
         loss = (
-              self.weight_bri  * loss_bri
-            + self.weight_col  * loss_col
-            + self.weight_crl  * loss_crl
-            + self.weight_edge * loss_edge
-            + self.weight_exp  * loss_exp
-            + self.weight_tvA  * loss_tvA
-            + self.weight_kl   * loss_kl
-            + self.weight_spa  * loss_spa
+                self.weight_L1 * loss_l1
+                + self.weight_MSE * loss_mse
         )
-        
+
         if self.verbose:
-            console.log(f"{self.loss_bri.__str__():<30} : {loss_bri}")
-            console.log(f"{self.loss_col.__str__():<30} : {loss_col}")
-            console.log(f"{self.loss_edge.__str__():<30}: {loss_edge}")
-            console.log(f"{self.loss_exp.__str__():<30} : {loss_exp}")
-            console.log(f"{self.loss_kl.__str__():<30}  : {loss_kl}")
-            console.log(f"{self.loss_spa.__str__():<30} : {loss_spa}")
-            console.log(f"{self.loss_tvA.__str__():<30} : {loss_tvA}")
-        return loss, enhance
-        
+            console.log(f"{self.loss_l1.__str__():<30} : {loss_l1}")
+            console.log(f"{self.loss_mse.__str__():<30} : {loss_mse}")
+        return loss, pred
 # endregion
 
 
 # region Model
+
+class LearnedPositionalEncoding(nn.Module):
+    def __init__(self, max_position_embeddings, embedding_dim, seq_length):
+        super(LearnedPositionalEncoding, self).__init__()
+        self.pe = nn.Embedding(max_position_embeddings, embedding_dim)
+        self.seq_length = seq_length
+
+        self.register_buffer(
+            "position_ids", torch.arange(self.seq_length).expand((1, -1))
+        )
+
+    def forward(self, x, position_ids=None):
+        if position_ids is None:
+            position_ids = self.position_ids[:, : self.seq_length]
+
+        position_embeddings = self.pe(position_ids)
+        return position_embeddings
+
+class TransformerEncoder(nn.Module):
+
+    def __init__(self, encoder_layer, num_layers):
+        super().__init__()
+        self.layers = _get_clones(encoder_layer, num_layers)
+        self.num_layers = num_layers
+
+    def forward(self, src, pos=None):
+        output = src
+
+        for layer in self.layers:
+            output = layer(output, pos=pos)
+
+        return output
+
+
+class TransformerEncoderLayer(nn.Module):
+
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, no_norm=False,
+                 activation="relu"):
+        super().__init__()
+        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, bias=False)
+        # Implementation of Feedforward model
+        self.linear1 = nn.Linear(d_model, dim_feedforward)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(dim_feedforward, d_model)
+
+        self.norm1 = nn.LayerNorm(d_model) if not no_norm else nn.Identity()
+        self.norm2 = nn.LayerNorm(d_model) if not no_norm else nn.Identity()
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+
+        self.activation = _get_activation_fn(activation)
+
+        nn.init.kaiming_uniform_(self.self_attn.in_proj_weight, a=math.sqrt(5))
+
+    def with_pos_embed(self, tensor, pos):
+        return tensor if pos is None else tensor + pos
+
+    def forward(self, src, pos=None):
+        src2 = self.norm1(src)
+        q = k = self.with_pos_embed(src2, pos)
+        src2 = self.self_attn(q, k, src2)
+        src = src + self.dropout1(src2[0])
+        src2 = self.norm2(src)
+        src2 = self.linear2(self.dropout(self.activation(self.linear1(src2))))
+        src = src + self.dropout2(src2)
+        return src
+
+
+class TransformerDecoder(nn.Module):
+
+    def __init__(self, decoder_layer, num_layers):
+        super().__init__()
+        self.layers = _get_clones(decoder_layer, num_layers)
+        self.num_layers = num_layers
+
+    def forward(self, tgt, memory, pos=None, query_pos=None):
+        output = tgt
+
+        for layer in self.layers:
+            output = layer(output, memory, pos=pos, query_pos=query_pos)
+
+        return output
+
+
+class TransformerDecoderLayer(nn.Module):
+
+    def __init__(self, d_model, nhead, dim_feedforward=2048, dropout=0.1, no_norm=False,
+                 activation="relu"):
+        super().__init__()
+        self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, bias=False)
+        self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, bias=False)
+        # Implementation of Feedforward model
+        self.linear1 = nn.Linear(d_model, dim_feedforward)
+        self.dropout = nn.Dropout(dropout)
+        self.linear2 = nn.Linear(dim_feedforward, d_model)
+
+        self.norm1 = nn.LayerNorm(d_model) if not no_norm else nn.Identity()
+        self.norm2 = nn.LayerNorm(d_model) if not no_norm else nn.Identity()
+        self.norm3 = nn.LayerNorm(d_model) if not no_norm else nn.Identity()
+        self.dropout1 = nn.Dropout(dropout)
+        self.dropout2 = nn.Dropout(dropout)
+        self.dropout3 = nn.Dropout(dropout)
+
+        self.activation = _get_activation_fn(activation)
+
+    def with_pos_embed(self, tensor, pos):
+        return tensor if pos is None else tensor + pos
+
+    def forward(self, tgt, memory, pos=None, query_pos=None):
+        tgt2 = self.norm1(tgt)
+        q = k = self.with_pos_embed(tgt2, query_pos)
+        tgt2 = self.self_attn(q, k, value=tgt2)[0]
+        tgt = tgt + self.dropout1(tgt2)
+        tgt2 = self.norm2(tgt)
+        tgt2 = self.multihead_attn(query=self.with_pos_embed(tgt2, query_pos),
+                                   key=self.with_pos_embed(memory, pos),
+                                   value=memory)[0]
+        tgt = tgt + self.dropout2(tgt2)
+        tgt2 = self.norm3(tgt)
+        tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt2))))
+        tgt = tgt + self.dropout3(tgt2)
+        return tgt
+
+
+class VisionTransformer(nn.Module):
+    def __init__(
+            self,
+            img_dim,
+            patch_dim,
+            num_channels,
+            embedding_dim,
+            num_heads,
+            num_layers,
+            hidden_dim,
+            num_queries,
+            positional_encoding_type="learned",
+            dropout_rate=0,
+            no_norm=False,
+            mlp=False,
+            pos_every=False,
+            no_pos=False
+    ):
+        super(VisionTransformer, self).__init__()
+
+        assert embedding_dim % num_heads == 0
+        assert img_dim % patch_dim == 0
+        self.no_norm = no_norm
+        self.mlp = mlp
+        self.embedding_dim = embedding_dim
+        self.num_heads = num_heads
+        self.patch_dim = patch_dim
+        self.num_channels = num_channels
+
+        self.img_dim = img_dim
+        self.pos_every = pos_every
+        self.num_patches = int((img_dim // patch_dim) ** 2)
+        self.seq_length = self.num_patches
+        self.flatten_dim = patch_dim * patch_dim * num_channels
+
+        self.out_dim = patch_dim * patch_dim * num_channels
+
+        self.no_pos = no_pos
+
+        if not self.mlp:
+            self.linear_encoding = nn.Linear(self.flatten_dim, embedding_dim)
+            self.mlp_head = nn.Sequential(
+                nn.Linear(embedding_dim, hidden_dim),
+                nn.Dropout(dropout_rate),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, self.out_dim),
+                nn.Dropout(dropout_rate)
+            )
+
+            self.query_embed = nn.Embedding(num_queries, embedding_dim * self.seq_length)
+
+        encoder_layer = TransformerEncoderLayer(embedding_dim, num_heads, hidden_dim, dropout_rate, self.no_norm)
+        self.encoder = TransformerEncoder(encoder_layer, num_layers)
+
+        decoder_layer = TransformerDecoderLayer(embedding_dim, num_heads, hidden_dim, dropout_rate, self.no_norm)
+        self.decoder = TransformerDecoder(decoder_layer, num_layers)
+
+        if not self.no_pos:
+            self.position_encoding = LearnedPositionalEncoding(
+                self.seq_length, self.embedding_dim, self.seq_length
+            )
+
+        self.dropout_layer1 = nn.Dropout(dropout_rate)
+
+        if no_norm:
+            for m in self.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.normal_(m.weight, std=1 / m.weight.size(1))
+
+    def forward(self, x, query_idx, con=False):
+
+        x = torch.nn.functional.unfold(x, self.patch_dim, stride=self.patch_dim).transpose(1, 2).transpose(0,
+                                                                                                           1).contiguous()
+
+        if not self.mlp:
+            x = self.dropout_layer1(self.linear_encoding(x)) + x
+
+            query_embed = self.query_embed.weight[query_idx].view(-1, 1, self.embedding_dim).repeat(1, x.size(1), 1)
+        else:
+            query_embed = None
+
+        if not self.no_pos:
+            pos = self.position_encoding(x).transpose(0, 1)
+
+        if self.pos_every:
+            x = self.encoder(x, pos=pos)
+            x = self.decoder(x, x, pos=pos, query_pos=query_embed)
+        elif self.no_pos:
+            x = self.encoder(x)
+            x = self.decoder(x, x, query_pos=query_embed)
+        else:
+            x = self.encoder(x + pos)
+            x = self.decoder(x, x, query_pos=query_embed)
+
+        if self.mlp == False:
+            x = self.mlp_head(x) + x
+
+        x = x.transpose(0, 1).contiguous().view(x.size(1), -1, self.flatten_dim)
+
+        if con:
+            con_x = x
+            x = torch.nn.functional.fold(x.transpose(1, 2).contiguous(), int(self.img_dim), self.patch_dim,
+                                         stride=self.patch_dim)
+            return x, con_x
+
+        x = torch.nn.functional.fold(x.transpose(1, 2).contiguous(), int(self.img_dim), self.patch_dim,
+                                     stride=self.patch_dim)
+
+        return x
+
+
+def _get_clones(module, N):
+    return nn.ModuleList([copy.deepcopy(module) for i in range(N)])
+
+
+def _get_activation_fn(activation):
+    """Return an activation function given a string"""
+    if activation == "relu":
+        return F.relu
+    if activation == "gelu":
+        return F.gelu
+    if activation == "glu":
+        return F.glu
+    raise RuntimeError(F"activation should be relu/gelu, not {activation}.")
+
 
 @MODELS.register(name="ipt")
 class IPT(base.DerainingModel):
@@ -146,280 +335,70 @@ class IPT(base.DerainingModel):
     """
 
     zoo = {}
-    
+
     def __init__(
-        self,
-        config       : Any                = None,
-        loss         : Any                = ZeroReferenceLoss(),
-        variant      :         str | None = None,
-        num_channels : int   | str        = 32,
-        scale_factor : float | str        = 1.0,
-        gamma        : float | str | None = 2.8,
-        num_iters    : int   | str        = 8,
-        unsharp_sigma: int   | str | None = None,
-        *args, **kwargs
+            self,
+            n_feats: int = 64,
+            patch_size: int = 48,
+            shift_mean: bool = True,
+            loss: Any = Loss(),
+            transformer_config: dict[str, Any] = None,
+            n_colors: int = 3,
+            rgb_range: int = 255,
+            scale: list[int] = 1,
+            conv=default_conv,
+            name: str = "ipt",
+            *args, **kwargs
     ):
+        transformer_config = transformer_config if transformer_config is not None else {}
+
+        self.name = name
         super().__init__(
-            config = config,
-            loss   = loss,
             *args, **kwargs
         )
-        variant            = mon.to_int(variant)
-        self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
-        self.num_channels  = mon.to_int(num_channels)    or 32
-        self.scale_factor  = mon.to_float(scale_factor)  or 1.0
-        self.gamma         = mon.to_float(gamma)         or 2.8
-        self.num_iters     = mon.to_int(num_iters)       or 8
-        self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
-        self.previous      = None
+        self.loss = loss
+        self.scale_idx = 0
+        self.n_feats = n_feats
+        kernel_size = 3
+        act = nn.ReLU(inplace=True)
+        self.sub_mean = MeanShift(rgb_range)
+        self.add_mean = MeanShift(rgb_range, sign=1)
 
-        if variant is None:  # Default model
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-            self.conv1        = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7        = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn         = nn.Identity()
-            self.act          = nn.ReLU(inplace=True)
-            self.upsample     = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.loss         = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 8,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0.1,
-                weight_edge     = 1,
-                weight_exp      = 10,
-                weight_kl       = 0.1,
-                weight_spa      = 1,
-                weight_tvA      = 1600,
-                reduction       = "mean",
-            )
-            self.apply(self.init_weights)
-        else:
-            self.config_model_variant()
+        self.head = nn.ModuleList([
+            nn.Sequential(
+                conv(n_colors, n_feats, kernel_size),
+                ResBlock(conv, n_feats, 5, act=act),
+                ResBlock(conv, n_feats, 5, act=act),
+            ) for _ in scale
+        ])
 
-    def config_model_variant(self):
-        """Config the model based on ``self.variant``.
-        Mainly used in ablation study.
-        """
-        # self.gamma         = 2.8
-        # self.num_iters     = 9
-        # self.unsharp_sigma = 2.5
-        self.previous      = None
-        self.out_channels  = 3
+        self.body = VisionTransformer(
+            img_dim=patch_size,
+            patch_dim=transformer_config.get("patch_dim", 3),
+            num_channels=n_feats,
+            embedding_dim=n_feats * transformer_config.get("patch_dim", 3) * transformer_config.get("patch_dim", 3),
+            num_heads=transformer_config.get("num_heads", 12),
+            num_layers=transformer_config.get("num_layers", 12),
+            hidden_dim=n_feats * transformer_config.get("patch_dim", 3) * transformer_config.get("patch_dim", 3) * 4,
+            num_queries=transformer_config.get("num_queries", 1),
+            dropout_rate=transformer_config.get("dropout_rate", 0),
+            mlp=transformer_config.get("no_mlp", False),
+            pos_every=transformer_config.get("pos_every", False),
+            no_pos=transformer_config.get("no_pos", False),
+            no_norm=transformer_config.get("no_norm", False)
+        )
 
-        # Variant code: [aa][l][i]
-        # i: inference mode
-        if self.variant[3] == "0":
-            self.gamma        = None
-            self.out_channels = 3
-        elif self.variant[3] == "1":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        elif self.variant[3] == "2":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        elif self.variant[3] == "3":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        else:
-            raise ValueError
-
-        # Variant code: [aa][l][i]
-        # aa: architecture
-        if self.variant[0:2] == "00":  # Zero-DCE (baseline)
-            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
-        elif self.variant[0:2] == "01":  # Zero-DCE++ (baseline)
-            self.conv1    = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
-        elif self.variant[0:2] == "02":
-            self.conv1    = nn.BSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5    = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.BSConv2dS(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
-        elif self.variant[0:2] == "03":
-            self.conv1    = nn.BSConv2dU(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5    = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.BSConv2dU(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
-        #
-        elif self.variant[0:2] == "10":
-            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            # Curve Enhancement Map (A)
-            self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            # Guided Brightness Enhancement Map (G)
-            self.conv8    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv9    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv10   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
-        elif self.variant[0:2] == "11":
-            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            # Curve Enhancement Map (A)
-            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv8    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv9    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            # Guided Brightness Enhancement Map (G)
-            self.conv10   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv11   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv12   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv13   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
-        #
-        elif self.variant[0:2] == "20":
-            self.conv1    = nn.Conv2d(self.channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            # knot points
-            self.conv5    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv8    = nn.Conv2d(self.num_channels, 24, 3, 1, 1, bias=True)
-            # curve parameter
-            self.conv9    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv10   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv11   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.pool     = nn.MaxPool2d(2, 1)
-            self.apply(self.init_weights)
-        else:
-            raise ValueError
-
-        # Variant code: [aa][l][i]
-        # l: loss function
-        weight_tvA = 1600 if self.out_channels == 3 else 200
-        if self.variant[2] == "0":  # Zero-DCE Loss
-            # NOT WORKING: over-exposed artifacts, enhance noises
-            self.loss = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 4,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0,
-                weight_edge     = 0,
-                weight_exp      = 10,
-                weight_kl       = 0,
-                weight_spa      = 1,
-                weight_tvA      = weight_tvA,
-                reduction       = "mean",
-            )
-        elif self.variant[2] == "1":  # New Loss
-            self.loss = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 8,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0,
-                weight_edge     = 1,
-                weight_exp      = 10,
-                weight_kl       = 0.1,
-                weight_spa      = 1,
-                weight_tvA      = weight_tvA,
-                reduction       = "mean",
-            )
-        elif self.variant[2] == "2":
-            self.loss = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 8,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0.1,
-                weight_edge     = 1,
-                weight_exp      = 10,
-                weight_kl       = 0.1,
-                weight_spa      = 1,
-                weight_tvA      = weight_tvA,
-                reduction       = "mean",
-            )
-        elif self.variant[2] == "9":
-            self.gamma = self.gamma or 2.5
-            self.loss  = ZeroReferenceLoss(
-                bri_gamma       = self.gamma,
-                exp_patch_size  = 16,   # 16
-                exp_mean_val    = 0.6,  # 0.6
-                spa_num_regions = 8,    # 8
-                spa_patch_size  = 4,    # 4
-                weight_bri      = 10,   # 10
-                weight_col      = 5,    # 5
-                weight_crl      = 0.1,  # 0.1
-                weight_edge     = 1,    # 1
-                weight_exp      = 10,   # 10
-                weight_kl       = 0.1,  # 0.1
-                weight_spa      = 1,    # 1
-                weight_tvA      = weight_tvA,  # weight_tvA,
-                reduction       = "mean",
-            )
-        else:
-            raise ValueError
+        self.tail = nn.ModuleList([
+            nn.Sequential(
+                Upsampler(conv, s, n_feats, act=False),
+                conv(n_feats, n_colors, kernel_size)
+            ) for s in scale
+        ])
 
     @property
     def config_dir(self) -> core.Path:
         return core.Path(__file__).absolute().parent / "config"
-    
+
     def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -431,12 +410,12 @@ class IPT(base.DerainingModel):
                 m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
             elif hasattr(m, "weight"):
                 m.weight.data.normal_(0.0, 0.02)  # 0.02
-    
+
     def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
+            self,
+            input: torch.Tensor,
+            target: torch.Tensor | None,
+            *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         """Forward pass with loss value. Loss function may need more arguments
         beside the ground-truth and prediction values. For calculating the
@@ -449,19 +428,19 @@ class IPT(base.DerainingModel):
         Return:
             Predictions and loss value.
         """
-        pred  = self.forward(input=input, *args, **kwargs)
+        pred = self.forward(input=input, *args, **kwargs)
         loss, self.previous = self.loss(input, pred, self.previous) if self.loss else (None, None)
         loss += self.regularization_loss(alpha=0.1)
         return pred[-1], loss
 
     def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : bool = False,
-        profile  : bool = False,
-        out_index: int  = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+            self,
+            input: torch.Tensor,
+            augment: bool = False,
+            profile: bool = False,
+            out_index: int = -1,
+            *args, **kwargs
+    ) -> Tensor:
         """Forward pass. This is the primary :meth:`forward` function of the
         model. It supports augmented inference. In this function, we perform
         test-time augmentation and pass the transformed input to
@@ -481,23 +460,17 @@ class IPT(base.DerainingModel):
         if augment:
             # For now just forward the input. Later, we will implement the
             # test-time augmentation.
-            if self.variant is not None:
-                return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
-            else:
-                return self.forward_once(input=input, profile=profile, *args, **kwargs)
+            return self.forward_once(input=input, profile=profile, *args, **kwargs)
         else:
-            if self.variant is not None:
-                return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
-            else:
-                return self.forward_once(input=input, profile=profile, *args, **kwargs)
+            return self.forward_once(input=input, profile=profile, *args, **kwargs)
 
     def forward_once(
-        self,
-        input    : torch.Tensor,
-        profile  : bool = False,
-        out_index: int = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+            self,
+            input: torch.Tensor,
+            profile: bool = False,
+            out_index: int = -1,
+            *args, **kwargs
+    ):
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
@@ -510,265 +483,15 @@ class IPT(base.DerainingModel):
             Predictions.
         """
         x = input
+        x = self.sub_mean(x)
+        x = self.head[self.scale_idx](x)
 
-        # Downsampling
-        x_down = x
-        if self.scale_factor != 1:
-            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+        res = self.body(x, self.scale_idx)
+        res += x
 
-        f1 = self.act(self.conv1(x_down))
-        f2 = self.act(self.conv2(f1))
-        f3 = self.act(self.conv3(f2))
-        f4 = self.act(self.conv4(f3))
-        f4 = self.attn(f4)
-        f5 = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-        f6 = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-        a  =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
-        
-        # Upsampling
-        if self.scale_factor != 1:
-            a = self.upsample(a)
-
-        # Enhancement
-        if self.out_channels == 3:
-            if self.phase == ModelPhase.TRAINING:
-                y = x
-                for _ in range(self.num_iters):
-                    y = y + a * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for _ in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + a * (torch.pow(d, 2) - d)
-        else:
-            if self.phase == ModelPhase.TRAINING:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                for i in range(self.num_iters):
-                    y = y + A[i] * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + A[i] * (torch.pow(d, 2) - d)
-
-        # Unsharp masking
-        if self.unsharp_sigma is not None:
-            y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
-
-        return a, y
-
-    def forward_once_variant(
-        self,
-        input    : torch.Tensor,
-        profile  : bool = False,
-        out_index: int  = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Forward pass once. Implement the logic for a single forward pass. Mainly used for ablation study.
-
-        Args:
-            input: An input of shape :math:`[N, C, H, W]`.
-            profile: Measure processing time. Default: ``False``.
-            out_index: Return specific layer's output from :param:`out_index`.
-                Default: ``-1`` means the last layer.
-
-        Return:
-            Predictions.
-        """
-        x = input
-
-        # Downsampling
-        x_down = x
-        if self.scale_factor != 1:
-            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
-
-        # Variant code: [aa][l][e]
-        if self.variant[0:2] in ["10", "12"]:
-            f1  = self.act(self.conv1(x_down))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
-            f4  = self.attn(f4)
-            # Curve Enhancement Map (A)
-            f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-            f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-            a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
-            # Guided Brightness Enhancement Map (GBEM)
-            f8  = self.act(self.conv8(torch.cat([f3, f4], dim=1)))
-            f9  = self.act(self.conv9(torch.cat([f2, f8], dim=1)))
-            g   =  F.tanh(self.conv10(torch.cat([f1, f9], dim=1)))
-        elif self.variant[0:2] in ["11"]:
-            f1  = self.act(self.conv1(x_down))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
-            f5  = self.act(self.conv5(f4))
-            f5  = self.attn(f5)
-            # Curve Enhancement Map (A)
-            f6  = self.act(self.conv6(torch.cat([f4, f5], dim=1)))
-            f7  = self.act(self.conv7(torch.cat([f3, f6], dim=1)))
-            f8  = self.act(self.conv8(torch.cat([f2, f7], dim=1)))
-            a   =   F.tanh(self.conv9(torch.cat([f1, f8], dim=1)))
-            # Guided Brightness Enhancement Map (GBEM)
-            f9  = self.act(self.conv10(torch.cat([f4,  f5], dim=1)))
-            f10 = self.act(self.conv11(torch.cat([f3,  f9], dim=1)))
-            f11 = self.act(self.conv12(torch.cat([f2, f10], dim=1)))
-            g   =   F.tanh(self.conv13(torch.cat([f1, f11], dim=1)))
-        elif self.variant[0:2] in ["20"]:
-            f1  = self.act(self.conv1(x_down))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
-            # knot points
-            f5  = self.pool(self.pool(self.act(self.conv5(f4))))
-            f6  = self.pool(self.pool(self.act(self.conv6(f5))))
-            f7  = self.pool(self.pool(self.act(self.conv7(f6))))
-            k   = F.adaptive_avg_pool2d(self.conv8(f7), (1, 1))
-            # curve parameters
-            f9  = self.act(self.conv9(torch.cat([f3, f4],   dim=1)))
-            f10 = self.act(self.conv10(torch.cat([f2, f9],  dim=1)))
-            a   =   F.tanh(self.conv11(torch.cat([f1, f10], dim=1)))
-        else:
-            f1  = self.act(self.conv1(x_down))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
-            f4  = self.attn(f4)
-            f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-            f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-            a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
-
-        # Upsampling
-        if self.scale_factor != 1:
-            a = self.upsample(a)
-
-        # Enhancement
-        if "1" in self.variant[0:1]:
-            if self.out_channels == 3:
-                y = x
-                for _ in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                for i in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Piece-wise
-        elif "2" in self.variant[0:1]:
-            K = torch.split(k, 3, dim=1)
-            # A = torch.split(a, 3, dim=1)
-            y = x  # K[0]
-            for m in range(0, 7):
-                k_m1 = K[m + 1]
-                k_m  = K[m]
-                # a_m  = A[m]
-                S    = y
-                for n in range(0, 4):
-                    S = S + a * (torch.pow(S, 2) - S)
-                y = y + (k_m1 - k_m) * S
-        # Default
-        elif self.variant[3] == "0":
-            if self.out_channels == 3:
-                y = x
-                for _ in range(self.num_iters):
-                    y = y + a * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                for i in range(self.num_iters):
-                    y = y + A[i] * (torch.pow(y, 2) - y)
-        # Global G
-        elif self.variant[3] == "1":
-            if self.out_channels == 3:
-                y = x
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for _ in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Global G Inference Only
-        elif self.variant[3] == "2":
-            if self.out_channels == 3:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    for _ in range(self.num_iters):
-                        y = y + a * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                    for _ in range(self.num_iters):
-                        b = y * (1 - g)
-                        d = y * g
-                        y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        y = y + A[i] * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                    for i in range(self.num_iters):
-                        b = y * (1 - g)
-                        d = y * g
-                        y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Iterative G Inference Only
-        elif self.variant[3] == "3":
-            if self.out_channels == 3:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    for _ in range(self.num_iters):
-                        y = y + a * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    for _ in range(self.num_iters):
-                        g = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
-                        b = y * (1 - g)
-                        d = y * g
-                        y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        y = y + A[i] * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        g = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
-                        b = y * (1 - g)
-                        d = y * g
-                        y = b + d + A[i] * (torch.pow(d, 2) - d)
-
-        # Unsharp masking
-        if self.unsharp_sigma is not None:
-            y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
-
-        #
-        if "1" in self.variant[0:1]:
-            return a, g, y
-        return a, y
+        x = self.tail[self.scale_idx](res)
+        x = self.add_mean(x)
+        return x
 
     def regularization_loss(self, alpha: float = 0.1):
         loss = 0.0

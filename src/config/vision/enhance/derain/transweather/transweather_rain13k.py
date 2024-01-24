@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""TransWeather model trained on Rain100L dataset."""
+"""TransWeather model trained on Rain13K dataset."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ root         = RUN_DIR / "train"
 project      = "transweather"
 model_name   = "transweather"
 model_config = None
-data_name    = "rain100l"
+data_name    = "rain13k"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]

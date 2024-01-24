@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "CriticalSuccessIndex",
     "ConcordanceCorrCoef",
     "CosineSimilarity",
     "ExplainedVariance",
@@ -32,6 +33,7 @@ from mon.globals import METRICS
 
 # region Regression Metric
 
+CriticalSuccessIndex                 = torchmetrics.regression.CriticalSuccessIndex
 ConcordanceCorrCoef                  = torchmetrics.regression.ConcordanceCorrCoef
 CosineSimilarity                     = torchmetrics.regression.CosineSimilarity
 ExplainedVariance                    = torchmetrics.regression.ExplainedVariance
@@ -51,6 +53,7 @@ SymmetricMeanAbsolutePercentageError = torchmetrics.regression.SymmetricMeanAbso
 TweedieDevianceScore                 = torchmetrics.regression.TweedieDevianceScore
 WeightedMeanAbsolutePercentageError  = torchmetrics.regression.WeightedMeanAbsolutePercentageError
 
+METRICS.register(name="critical_success_index",                   module=CriticalSuccessIndex)
 METRICS.register(name="concordance_corr_coef",                    module=ConcordanceCorrCoef)
 METRICS.register(name="cosine_similarity",                        module=CosineSimilarity)
 METRICS.register(name="explained_variance",                       module=ExplainedVariance)

@@ -32,6 +32,7 @@ model = {
 	"config"     : model_config,   # The model's configuration that is used to build the model.
 	"hparams"    : None,           # Model's hyperparameters.
 	"channels"   : 3,              # The first layer's input channel.
+	"image_size" : image_size,     # The desired image size in HW format.
 	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
 	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
 	"weights"    : None,           # The model's weights.

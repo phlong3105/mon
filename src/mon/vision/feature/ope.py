@@ -76,6 +76,7 @@ class OPEmbedder(base.Embedder, nn.Module):
             stride       = stride,
             padding      = (patch_size  // 2, patch_size // 2)
         )
+        self.in_channels = in_channels
         self.norm = nn.LayerNorm(embed_dim)
         self.apply(self.init_weights)
 
