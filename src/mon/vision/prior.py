@@ -20,10 +20,8 @@ import kornia
 import numpy as np
 import torch
 
-from mon.vision import core
-
-console      = core.console
-_current_dir = core.Path(__file__).absolute().parent
+from mon import core
+from mon.core.typing import _size_2_t
 
 
 # region Image Feature Prior: Intensity & Gradient
@@ -104,7 +102,7 @@ def get_atmosphere_prior(
 
 def get_bright_channel_prior(
     input      : torch.Tensor | np.ndarray,
-    kernel_size: int | tuple[int, int],
+    kernel_size: _size_2_t,
 ) -> torch.Tensor | np.ndarray:
     """Get the bright channel prior from an image.
     
@@ -132,7 +130,7 @@ def get_bright_channel_prior(
 
 def get_dark_channel_prior(
     input      : torch.Tensor | np.ndarray,
-    kernel_size: int | tuple[int, int],
+    kernel_size: _size_2_t,
 ) -> torch.Tensor | np.ndarray:
     """Get the dark channel prior from an image.
     
@@ -160,7 +158,7 @@ def get_dark_channel_prior(
 
 def get_dark_channel_prior_02(
     input      : torch.Tensor | np.ndarray,
-    kernel_size: int | tuple[int, int],
+    kernel_size: _size_2_t,
 ) -> np.ndarray:
     """Get the dark channel prior from an image.
 
@@ -186,8 +184,8 @@ def get_dark_channel_prior_02(
 
 def get_guided_brightness_enhancement_map_prior(
     input        : torch.Tensor | np.ndarray,
-    gamma        : float      = 2.5,
-    denoise_ksize: int | None = None,
+    gamma        : float            = 2.5,
+    denoise_ksize: _size_2_t | None = None,
 ) -> torch.Tensor | np.ndarray:
     """Get the Guided Brightness Enhancement Map (G) prior from an RGB image.
     

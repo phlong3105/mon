@@ -23,8 +23,11 @@ import lightning.pytorch as pl
 import torch
 from lightning.pytorch import callbacks
 
-from mon.core import console, error_console, pathlib
+from mon import core
 from mon.globals import CALLBACKS
+
+console       = core.console
+error_console = core.error_console
 
 
 # region Model Checkpoint
@@ -44,7 +47,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
     
     def __init__(
         self,
-        dirpath                : pathlib.Path,
+        dirpath                : core.Path,
         filename               : str | None       = None,
         monitor                : str | None       = None,
         verbose                : bool             = False,
@@ -103,7 +106,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         pl_module: "pl.LightningModule",
         stage    : str
     ) -> None:
-        dirpath = pathlib.Path(self.__resolve_ckpt_dir(trainer))
+        dirpath = core.Path(self.__resolve_ckpt_dir(trainer))
         dirpath = trainer.strategy.broadcast(dirpath)
         if dirpath != self.dirpath:
             self.dirpath  = dirpath
@@ -193,14 +196,14 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         
         if self.dirpath == dirpath_from_ckpt:
             self.best_model_score    = state_dict["best_model_score"]
-            self.kth_best_model_path = pathlib.Path(state_dict.get("kth_best_model_path", self.kth_best_model_path))
+            self.kth_best_model_path = core.Path(state_dict.get("kth_best_model_path", self.kth_best_model_path))
             self.kth_value           = (state_dict.get("kth_value", self.kth_value))
             self.best_k_models       = state_dict.get("best_k_models", self.best_k_models)
-            self.last_model_path     = pathlib.Path(state_dict.get("last_model_path", self.last_model_path))
+            self.last_model_path     = core.Path(state_dict.get("last_model_path", self.last_model_path))
             
             # Our extension
-            self.kth_best_model_path = pathlib.Path(self.kth_best_model_path)
-            self.last_model_path     = pathlib.Path(self.last_model_path)
+            self.kth_best_model_path = core.Path(self.kth_best_model_path)
+            self.last_model_path     = core.Path(self.last_model_path)
         else:
             error_console.log(
                 f"The dirpath has changed from {dirpath_from_ckpt!r} to "
@@ -210,16 +213,16 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 f"will be reloaded."
             )
         
-        self.best_model_path         = pathlib.Path(state_dict["best_model_path"])
+        self.best_model_path         = core.Path(state_dict["best_model_path"])
         self.last_epoch_saved        = state_dict.get("last_epoch_saved",       self.last_epoch_saved)
         self._last_global_step_saved = state_dict.get("last_global_step_saved", self._last_global_step_saved)
     
     def _save_checkpoint(
         self,
         trainer : "pl.Trainer",
-        filepath: pathlib.Path | str
+        filepath: core.Path | str
     ):
-        trainer.save_checkpoint(pathlib.Path(filepath), self.save_weights_only)
+        trainer.save_checkpoint(core.Path(filepath), self.save_weights_only)
         self.last_epoch_saved        = trainer.current_epoch
         self._last_global_step_saved = trainer.global_step
         # Notify loggers
@@ -255,7 +258,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         metrics : dict[str, torch.Tensor],
         filename: str | None = None,
         ver     : int | None = None
-    ) -> pathlib.Path | str:
+    ) -> core.Path | str:
         """Generates a file_name according to the defined template."""
         filename = filename or self.filename
         filename = self._format_checkpoint_name(
@@ -270,7 +273,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         # Our extension
         return (self.ckpt_dir / ckpt_name) if self.ckpt_dir else ckpt_name
     
-    def __resolve_ckpt_dir(self, trainer: "pl.Trainer") -> pathlib.Path | str:
+    def __resolve_ckpt_dir(self, trainer: "pl.Trainer") -> core.Path | str:
         """Determines model checkpoint save directory at runtime. Reference
         attributes from the trainer's logger to determine where to save
         checkpoints. The path for saving weights is set in this priority:
@@ -298,7 +301,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
             }
         return set()
     
-    def __warn_if_dir_not_empty(self, dirpath: pathlib.Path | str) -> None:
+    def __warn_if_dir_not_empty(self, dirpath: core.Path | str) -> None:
         if self.save_top_k != 0 \
             and self._fs.isdir(dirpath) \
             and len(self._fs.ls(dirpath)) > 0:
@@ -377,10 +380,10 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         if is_new_best:
             # Our extension
             trainer.save_checkpoint(
-                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.ckpt",
+                filepath     = core.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.ckpt",
             )
             trainer.save_checkpoint(
-                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.pt",
+                filepath     = core.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.pt",
                 weights_only = True
             )
             if self.verbose and trainer.is_global_zero:
@@ -391,10 +394,10 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 # self._log(data=self.keys)
         # Our extension
         trainer.save_checkpoint(
-            filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.ckpt",
+            filepath     = core.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.ckpt",
         )
         trainer.save_checkpoint(
-            filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.pt",
+            filepath     = core.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.pt",
             weights_only = True
         )
         

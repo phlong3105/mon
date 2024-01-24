@@ -15,7 +15,8 @@ from typing import Any
 import numpy as np
 import torch
 
-from mon.vision import core, nn, track
+from mon import core, nn
+from mon.vision import track
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
@@ -65,7 +66,7 @@ class Detector(ABC):
         self.conf_threshold = conf_threshold
         self.iou_threshold  = iou_threshold
         self.max_detections = max_detections
-        self.device         = nn.select_device(device=device)
+        self.device         = core.select_device(device=device)
         self.to_instance    = to_instance
         # Load model
         self.model = None

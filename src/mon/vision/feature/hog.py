@@ -14,8 +14,8 @@ __all__ = [
 import cv2
 import numpy as np
 
+from mon import core
 from mon.globals import EMBEDDERS
-from mon.vision import core
 from mon.vision.feature import base
 
 console      = core.console

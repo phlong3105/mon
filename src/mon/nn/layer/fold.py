@@ -16,11 +16,19 @@ from mon.globals import LAYERS
 from mon.nn.layer import base
 
 
+# region Fold
+
 @LAYERS.register()
 class Fold(base.PassThroughLayerParsingMixin, nn.Fold):
 	pass
 
+# endregion
+
+
+# region Unfold
 
 @LAYERS.register()
 class Unfold(base.PassThroughLayerParsingMixin, nn.Unfold):
 	pass
+
+# endregion

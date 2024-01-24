@@ -40,8 +40,8 @@ __all__ = [
 import numpy as np
 import torch
 
+from mon import core, nn
 from mon.globals import ShapeCode
-from mon.vision import core, nn
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

@@ -6,16 +6,14 @@
 from __future__ import annotations
 
 __all__ = [
-    "draw_bbox", "draw_contour", "draw_segment", "draw_trajectory",
+    "draw_bbox",
+    "draw_contour",
+    "draw_segment",
+    "draw_trajectory",
 ]
 
 import cv2
 import numpy as np
-
-from mon.vision import core
-
-console      = core.console
-_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Geometry

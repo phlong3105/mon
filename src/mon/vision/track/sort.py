@@ -11,8 +11,9 @@ __all__ = [
 
 import numpy as np
 
+from mon import core
 from mon.globals import TRACKERS
-from mon.vision import core, geometry
+from mon.vision import geometry
 from mon.vision.track import base, motion as mmotion
 
 console      = core.console

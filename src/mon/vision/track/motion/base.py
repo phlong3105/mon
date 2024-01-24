@@ -32,7 +32,7 @@ __all__ = [
 from abc import ABC, abstractmethod
 from typing import Any
 
-from mon.vision import core
+from mon import core
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

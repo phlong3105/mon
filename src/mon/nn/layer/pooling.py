@@ -46,10 +46,10 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon.core import builtins
+from mon import core
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import base, padding as pad
-from mon.nn.typing import _size_2_t
 
 
 # region Adaptive Pool
@@ -157,12 +157,12 @@ class AdaptivePool2d(base.PassThroughLayerParsingMixin, nn.Module):
         pool_type  : str  = "fast",
         flatten    : bool = False,
     ):
-        from mon.nn.layer import linear, transform
+        from mon.nn.layer import linear, flatten
         
         super().__init__()
         self.pool_type = pool_type or ""
         
-        self.flatten = transform.Flatten(1) \
+        self.flatten = flatten.Flatten(1) \
             if flatten else linear.Identity()
         if pool_type == "":
             self.pool = linear.Identity()  # pass through
@@ -256,8 +256,8 @@ class AvgPool2dSame(base.PassThroughLayerParsingMixin, nn.AvgPool2d):
         ceil_mode        : bool             = False,
         count_include_pad: bool             = True,
     ):
-        kernel_size = builtins.to_2tuple(kernel_size)
-        stride      = builtins.to_2tuple(stride)
+        kernel_size = core.to_2tuple(kernel_size)
+        stride      = core.to_2tuple(stride)
         super().__init__(
             kernel_size       = kernel_size,
             stride            = stride,
@@ -410,9 +410,9 @@ class MaxPool2dSame(base.PassThroughLayerParsingMixin, nn.MaxPool2d):
         dilation   : _size_2_t        = (1, 1),
         ceil_mode  : bool             = False,
     ):
-        kernel_size = builtins.to_2tuple(kernel_size)
-        stride      = builtins.to_2tuple(stride)
-        dilation    = builtins.to_2tuple(dilation)
+        kernel_size = core.to_2tuple(kernel_size)
+        stride      = core.to_2tuple(stride)
+        dilation    = core.to_2tuple(dilation)
         super().__init__(
             kernel_size = kernel_size,
             stride      = stride,
@@ -484,9 +484,9 @@ class MedianPool2d(base.PassThroughLayerParsingMixin, nn.Module):
         same       : bool            = False,
     ):
         super().__init__()
-        self.kernel_size = builtins.to_2tuple(kernel_size)
-        self.stride      = builtins.to_2tuple(stride)
-        self.padding     = builtins.to_4tuple(padding)  # convert to ll, r, t, b
+        self.kernel_size = core.to_2tuple(kernel_size)
+        self.stride      = core.to_2tuple(stride)
+        self.padding     = core.to_4tuple(padding)  # convert to ll, r, t, b
         self.same        = same
     
     def _padding(self, input: torch.Tensor):

@@ -12,8 +12,10 @@ __all__ = [
 from lightning.pytorch import callbacks
 from lightning.pytorch.utilities import model_summary
 
-from mon.core import console, rich
+from mon import core
 from mon.globals import CALLBACKS
+
+console = core.console
 
 
 # region Rich Model Summary
@@ -35,7 +37,7 @@ class RichModelSummary(callbacks.RichModelSummary):
         trainable_parameters: int,
         model_size          : float,
     ):
-        table = rich.table.Table(header_style="bold magenta")
+        table = core.rich.table.Table(header_style="bold magenta")
         table.add_column(" ", style="dim")
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Type")
@@ -62,7 +64,7 @@ class RichModelSummary(callbacks.RichModelSummary):
         ]:
             parameters.append("{:<{}}".format(model_summary.get_human_readable_count(int(param)), 10))
         
-        grid = rich.table.Table.grid(expand=True)
+        grid = core.rich.table.Table.grid(expand=True)
         grid.add_column()
         grid.add_column()
         

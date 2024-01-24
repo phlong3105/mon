@@ -15,9 +15,9 @@ from typing import Any
 import torch
 from torch import nn
 
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import activation as act, base, conv
-from mon.nn.typing import _size_2_t
 
 
 # region Pixel Attention Module

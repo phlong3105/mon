@@ -27,7 +27,7 @@ __all__ = [
 
 import os
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Callable, TYPE_CHECKING
 from urllib.parse import urlparse  # noqa: F401
 
 import humps
@@ -41,12 +41,16 @@ from mon import core
 from mon.globals import (
     LOSSES, LR_SCHEDULERS, METRICS, ModelPhase, MODELS, OPTIMIZERS, ZOO_DIR,
 )
-from mon.nn import data as mdata, loss as mloss, metric as mmetric, parsing
+from mon.nn import parsing
 
-StepOutput    = lightning.pytorch.utilities.types.STEP_OUTPUT
-EpochOutput   = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
+if TYPE_CHECKING:
+    from mon.nn.loss import Loss
+    from mon.nn.metric import Metric
+
 console       = core.console
 error_console = core.error_console
+StepOutput    = lightning.pytorch.utilities.types.STEP_OUTPUT
+EpochOutput   = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
 
 
 # region Checkpoint
@@ -65,9 +69,7 @@ def extract_weight_from_checkpoint(
     """
     ckpt = core.Path(ckpt)
     if not ckpt.is_ckpt_file():
-        raise ValueError(
-            f"ckpt must be a valid path to .ckpt file, but got {ckpt}."
-        )
+        raise ValueError(f":param:`ckpt` must be a valid path to ``.ckpt`` file, but got {ckpt}.")
     
     state_dict = load_state_dict_from_path(ckpt)
     if state_dict is None:
@@ -607,38 +609,38 @@ class Model(lightning.LightningModule, ABC):
     """
 
     zoo = {}  # A dictionary containing all pretrained weights of the model.
-
+    
     def __init__(
         self,
         # For model architecture
-        config     : Any                      = None,
-        channels   : int                      = 3,
-        num_classes: int               | None = None,
-        classlabels: mdata.ClassLabels | None = None,
-        weights    : Any                      = None,
+        config     : Any               = None,
+        channels   : int               = 3,
+        num_classes: int        | None = None,
+        classlabels: Any               = None,
+        weights    : Any               = None,
         # For saving/loading
-        name       : str               | None = None,
-        variant    : int | str         | None = None,
-        fullname   : str               | None = None,
-        root       : core.Path                = core.Path(),
-        project    : str               | None = None,
+        name       : str        | None = None,
+        variant    : int | str  | None = None,
+        fullname   : str        | None = None,
+        root       : core.Path      = core.Path(),
+        project    : str        | None = None,
         # For training
-        hparams    : dict              | None = None,
-        phase      : ModelPhase | str         = ModelPhase.TRAINING,
-        loss       : Any                      = None,
-        metrics    : Any                      = None,
-        optimizers : Any                      = None,
-        debug      : dict              | None = None,
-        verbose    : bool                     = True,
-        *args, **kwargs
+        hparams    : dict       | None = None,
+        phase      : ModelPhase | str  = ModelPhase.TRAINING,
+        loss       : Any               = None,
+        metrics    : Any               = None,
+        optimizers : Any               = None,
+        debug      : dict       | None = None,
+        verbose    : bool              = True,
+        *args      , **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.config        = config
-        self.channels      = channels or None
+        self.channels      = channels
         self.num_classes   = num_classes
-        self.classlabels   = mdata.ClassLabels.from_value(classlabels) if classlabels is not None else None
-        self.name          = name    or None
-        self.variant       = variant or None
+        self.classlabels   = classlabels
+        self.name          = name
+        self.variant       = variant
         self.fullname      = fullname
         self.project       = project
         self.root          = root
@@ -655,14 +657,12 @@ class Model(lightning.LightningModule, ABC):
         
         # Define model
         if self.config is None:
-            console.log(f"No ``config`` has been provided. Model must be manually defined.")
+            console.log(f"No :param:`config` has been provided. Model will be manually defined.")
             self.model            = None
             self.save: list[int]  = []
             self.info: list[dict] = []
         else:
             self.model, self.save, self.info = self.parse_model()
-            # Load weights (WE ONLY ATTEMPT TO LOAD WEIGHTS IF WE CAN BUILD
-            # MODEL FROM ``config``).
             if self.weights:
                 self.load_weights()
             else:
@@ -825,12 +825,12 @@ class Model(lightning.LightningModule, ABC):
             self.freeze()
     
     @property
-    def loss(self) -> mloss.Loss | None:
+    def loss(self) -> Loss | None:
         return self._loss
     
     @loss.setter
     def loss(self, loss: Any):
-        if isinstance(loss, mloss.Loss | nn.Module):
+        if isinstance(loss, nn.Module | Callable):
             self._loss = loss
         elif isinstance(loss, str):
             self._loss = LOSSES.build(name=loss)
@@ -844,7 +844,7 @@ class Model(lightning.LightningModule, ABC):
             # self._loss.cuda()
     
     @property
-    def train_metrics(self) -> list[mmetric.Metric] | None:
+    def train_metrics(self) -> list[Metric] | None:
         return self._train_metrics
     
     @train_metrics.setter
@@ -878,7 +878,7 @@ class Model(lightning.LightningModule, ABC):
                 setattr(self, name, metric)
     
     @property
-    def val_metrics(self) -> list[mmetric.Metric] | None:
+    def val_metrics(self) -> list[Metric] | None:
         return self._val_metrics
     
     @val_metrics.setter
@@ -894,7 +894,7 @@ class Model(lightning.LightningModule, ABC):
                 setattr(self, name, metric)
     
     @property
-    def test_metrics(self) -> list[mmetric.Metric] | None:
+    def test_metrics(self) -> list[Metric] | None:
         return self._test_metrics
     
     @test_metrics.setter
@@ -911,20 +911,14 @@ class Model(lightning.LightningModule, ABC):
     
     @staticmethod
     def create_metrics(metrics: Any):
-        if isinstance(metrics, mmetric.Metric):
+        if isinstance(metrics, nn.Module | Callable):
             if getattr(metrics, "name", None) is None:
-                metrics.name = humps.depascalize(
-                    humps.pascalize(metrics.__class__.__name__)
-                )
+                metrics.name = humps.depascalize(humps.pascalize(metrics.__class__.__name__))
             return [metrics]
         elif isinstance(metrics, dict):
             return [METRICS.build(config=metrics)]
         elif isinstance(metrics, list | tuple):
-            return [
-                METRICS.build(config=metric)
-                if isinstance(metric, dict) else metric
-                for metric in metrics
-            ]
+            return [METRICS.build(config=m) if isinstance(m, dict) else m for m in metrics]
         else:
             return None
     
@@ -988,11 +982,11 @@ class Model(lightning.LightningModule, ABC):
             console.log(f"No :param:`config` has been provided. Model must be manually defined.")
             return None, None, None
         if not isinstance(self.config, dict):
-            raise TypeError(f"config must be a dictionary, but got {self.config}.")
+            raise TypeError(f":param:`config` must be a :class:`dict`, but got {self.config}.")
         if "backbone" not in self.config and "head" not in self.config:
-            raise ValueError("config must contain 'backbone' and 'head' keys.")
+            raise ValueError(":param:`config` must contain ``'backbone'`` and ``'head'`` keys.")
         
-        console.log(f"Parsing model from config.")
+        console.log(f"Parsing model from :param:`config`.")
         
         # Name
         if "name" in self.config:
@@ -1014,9 +1008,9 @@ class Model(lightning.LightningModule, ABC):
                     f"channels={self.channels}."
                 )
         
-        # Num_classes
+        # num_classes
         num_classes = self.num_classes
-        if isinstance(self.classlabels, mdata.ClassLabels):
+        if self.classlabels is not None and hasattr(self.classlabels, "num_classes"):
             num_classes = num_classes or self.classlabels.num_classes()
         if isinstance(self.weights, dict) and "num_classes" in self.weights:
             num_classes = num_classes or self.weights["num_classes"]
@@ -1494,9 +1488,9 @@ class Model(lightning.LightningModule, ABC):
     
     def export_to_onnx(
         self,
-        input_dims   : list[int] | None = None,
+        input_dims   : list[int]    | None = None,
         file_path    : core.Path | None = None,
-        export_params: bool             = True
+        export_params: bool                = True
     ):
         """Export the model to ``onnx`` format.
 
@@ -1526,9 +1520,9 @@ class Model(lightning.LightningModule, ABC):
     
     def export_to_torchscript(
         self,
-        input_dims: list[int] | None = None,
+        input_dims: list[int]    | None = None,
         file_path : core.Path | None = None,
-        method    : str              = "script"
+        method    : str                 = "script"
     ):
         """Export the model to TorchScript format.
 
@@ -1559,7 +1553,7 @@ class Model(lightning.LightningModule, ABC):
         input        : torch.Tensor | None = None,
         target       : torch.Tensor | None = None,
         pred         : torch.Tensor | None = None,
-        file_path    : core.Path    | None = None,
+        file_path    : core.Path | None = None,
         image_quality: int                 = 95,
         max_n        : int          | None = 8,
         nrow         : int          | None = 8,
@@ -1592,7 +1586,7 @@ class Model(lightning.LightningModule, ABC):
     def print_info(self):
         if self.verbose and self.model is not None:
             console.log(f"[red]{self.fullname}")
-            core.print_table(self.info)
+            core.rich.print_table(self.info)
             console.log(f"Save indexes: {self.save}")
     
 # endregion

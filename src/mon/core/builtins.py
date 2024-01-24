@@ -51,8 +51,6 @@ from typing import Any, Callable, Iterable
 
 import multipledispatch
 
-from mon.core.rich import console
-
 
 # region Object
 

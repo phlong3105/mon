@@ -12,8 +12,9 @@ __all__ = [
 import numpy as np
 import torch
 
+from mon import core
 from mon.globals import DETECTORS
-from mon.vision import core, track
+from mon.vision import track
 from mon.vision.detect import base
 from ultralytics.nn import tasks
 from ultralytics.yolo.data import augment

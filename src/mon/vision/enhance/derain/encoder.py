@@ -1,18 +1,9 @@
-from typing import Any, Sequence, Tuple, Optional
-
-import torch
-from torch import nn
-from torch.nn import functional
-from torchvision.ops import misc as torchvision_misc
 from functools import partial
 
-from mon.globals import LAYERS
-from mon.nn.layer import (
-    activation, base, conv, linear, normalization, pooling, dropout
-)
-from mon.nn.typing import _size_2_t
-from mon.vision import core, nn, prior
+import torch
 
+from mon import core, nn
+from mon.nn.layer import (activation, conv, dropout, linear, normalization)
 from .drop import DropPath
 
 math = core.math

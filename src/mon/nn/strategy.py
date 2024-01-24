@@ -34,8 +34,10 @@ import torch.cuda
 from lightning.pytorch import accelerators, strategies
 from torch import distributed
 
-from mon.core import console
+from mon import core
 from mon.globals import ACCELERATORS, STRATEGIES
+
+console = core.console
 
 
 # region Accelerator

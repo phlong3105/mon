@@ -41,9 +41,11 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision.ops import misc
 
-from mon.core import math
+from mon import core
 from mon.globals import LAYERS
 from mon.nn.layer import activation, base, linear
+
+math = core.math
 
 
 # region Batch Normalization

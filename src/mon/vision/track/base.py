@@ -14,8 +14,8 @@ from typing import Any, Callable
 
 import numpy as np
 
+from mon import core
 from mon.globals import MOTIONS, OBJECTS
-from mon.vision import core
 from mon.vision.track import motion as mmotion, obj
 
 console      = core.console

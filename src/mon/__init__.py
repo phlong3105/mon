@@ -7,12 +7,14 @@ from __future__ import annotations
 
 # Order-specific import. DO NOT CHANGE!!!
 import mon.core
+import mon.data
 import mon.globals
 import mon.nn
 import mon.vision
 from mon.core import *
+from mon.data import *
 from mon.globals import *
 from mon.nn import *
 from mon.vision import *
 
-__version__ = "1.3.3"
+__version__ = "1.4.0"

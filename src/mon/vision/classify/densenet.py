@@ -20,10 +20,10 @@ from typing import Any
 import torch
 import torch.utils.checkpoint as cp
 
+from mon import core, nn
 from mon.globals import MODELS
-from mon.vision import core, nn
+from mon.nn import functional as F
 from mon.vision.classify import base
-from mon.vision.nn import functional as F
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

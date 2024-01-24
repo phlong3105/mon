@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all callbacks, and the
+"""This module implements the base classes for all callbacks, and the
 corresponding helper functions.
 """
 

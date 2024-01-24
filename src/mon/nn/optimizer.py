@@ -40,16 +40,15 @@ __all__ = [
     "StepLR",
 ]
 
-from mon import core
 from torch import optim
 from torch.optim import lr_scheduler
 # noinspection PyUnresolvedReferences
 from torch.optim.lr_scheduler import _LRScheduler
 
+from mon import core
 from mon.globals import LR_SCHEDULERS, OPTIMIZERS
 
-console = core.console
-math    = core.math
+math = core.math
 
 
 # region Optimizer

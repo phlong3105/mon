@@ -16,14 +16,13 @@ from functools import partial
 from typing import Any
 
 import kornia
-from torchvision.models import VGG16_Weights
-from torchvision.models import vgg16
+from torchvision.models import vgg16, VGG16_Weights
 
 import mon
-from mon.globals import MODELS, LAYERS
-from mon.vision import core, nn
+from mon import core, nn
+from mon.globals import LAYERS, MODELS
+from mon.nn import ContradictChannelLoss, PerceptualL1Loss
 from mon.vision.enhance.derain import base
-from mon.vision.nn.loss import PerceptualL1Loss, ContradictChannelLoss
 from .decoder import Block_dec
 # from mon.vision.feature import OPEmbedder
 from .encoder import Transformer_Block

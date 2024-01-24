@@ -26,10 +26,9 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from mon.core import builtins
+from mon import core
 from mon.globals import LAYERS
-from mon.nn.layer import base
-from mon.nn.layer import normalization as norm
+from mon.nn.layer import base, normalization as norm
 
 
 # region Concat
@@ -137,7 +136,7 @@ class InterpolateConcat(base.ConcatLayerParsingMixin, nn.Module):
 				y.append(F.interpolate(input=x_i, size=(h, w)))
 			else:
 				y.append(x_i)
-		y = torch.cat(builtins.to_list(y), dim=self.dim)
+		y = torch.cat(core.to_list(y), dim=self.dim)
 		return y
 
 # endregion
@@ -176,7 +175,7 @@ class Join(base.MergingLayerParsingMixin, nn.Module):
 	
 	def forward(self, input: Sequence[torch.Tensor]) -> list[torch.Tensor]:
 		x = input
-		y = builtins.to_list(x)
+		y = core.to_list(x)
 		return y
 
 

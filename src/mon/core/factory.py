@@ -128,7 +128,7 @@ class Factory(dict):
         """
         if not inspect.isclass(module_cls):
             raise ValueError(
-                f"module_cls must be a class interface, but got "
+                f":param:`module_cls` must be a class interface, but got "
                 f"{type(module_name)}."
             )
         

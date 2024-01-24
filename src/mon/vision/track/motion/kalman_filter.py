@@ -15,7 +15,7 @@ import numpy as np
 from filterpy import kalman
 
 from mon.globals import MOTIONS
-from mon.vision import core
+from mon import core
 from mon.vision.track.motion import base
 
 console      = core.console

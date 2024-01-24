@@ -18,9 +18,11 @@ from einops import repeat
 from torch import nn
 from torch.nn import functional as F
 
-from mon.core import math
+from mon import core
 from mon.globals import LAYERS
 from mon.nn.layer import activation as act, dropout as drop, linear, projection
+
+math = core.math
 
 
 # region Spatial Attention

@@ -13,8 +13,8 @@ __all__ = [
 
 import numpy as np
 
+from mon import core
 from mon.globals import TRACKERS
-from mon.vision import core
 from mon.vision.track import base
 
 console      = core.console

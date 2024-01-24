@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from config import default
 from mon import DATA_DIR, RUN_DIR
-from mon.vision.data import augment as A
+from mon.data import augment as A
 
 # region Basic
 
@@ -18,7 +18,7 @@ model_config = None
 data_name    = "mipiflare"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
-image_size   = [256, 256]
+image_size   = [128, 128]
 seed	     = 1234
 verbose 	 = True
 
