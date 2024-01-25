@@ -40,7 +40,7 @@ class DetectionLabel(base.Label):
     bounding boxes (for an object with multiple parts created by an occlusion),
     and an instance mask.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         id_: A class ID of the detection data. Default: ``-1`` means unknown.
@@ -171,7 +171,7 @@ class DetectionLabel(base.Label):
 class DetectionsLabel(list[DetectionLabel], base.Label):
     """A list of object detection labels in an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         seq: A list of :class:`DetectionLabel` objects.
@@ -449,7 +449,7 @@ class TemporalDetectionLabel(base.Label):
     an object with multiple parts created by an occlusion), and an instance
     mask.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     """
     
     @property

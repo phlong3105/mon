@@ -23,11 +23,10 @@ console = core.console
 class ClassificationLabel(base.Label):
     """A classification label for an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
-        id_: A class ID of the classification data. Default: ``-1`` means
-            unknown.
+        id_: A class ID of the classification data. Default: ``-1`` means unknown.
         label: A label string. Default: ``''``.
         confidence: A confidence value for the data. Default: ``1.0``.
         logits: Logits associated with the labels. Default: ``None``.
@@ -82,7 +81,7 @@ class ClassificationsLabel(list[ClassificationLabel], base.Label):
     """A list of classification labels for an image. It is used for multi-labels
     or multi-classes classification tasks.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         seq: A list of :class:`ClassificationLabel` objects.
@@ -115,7 +114,5 @@ class ClassificationsLabel(list[ClassificationLabel], base.Label):
     @property
     def labels(self) -> list[str]:
         return [i.label for i in self]  
-
-# endregion
 
 # endregion

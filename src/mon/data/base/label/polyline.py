@@ -30,7 +30,7 @@ class PolylineLabel(base.Label):
     """A set of semantically related polylines or polygons for a single object
     in an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         id_: The class ID of the polyline data. Default: ``-1`` means unknown.
@@ -184,7 +184,7 @@ class PolylineLabel(base.Label):
 class PolylinesLabel(list[PolylineLabel], base.Label):
     """A list of polylines or polygon labels for multiple objects in an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         seq: A list of :class:`PolylineLabel` objects.

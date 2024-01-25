@@ -24,7 +24,7 @@ console = core.console
 class SegmentationLabel(base.Label):
     """A semantic segmentation label in an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         id_: The ID of the image. This can be an integer or a string. This

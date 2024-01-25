@@ -1133,6 +1133,7 @@ if [ "$run" == "evaluate" ]; then
               --result-file "${current_dir}" \
               --name "${fullname}" \
               --image-size 256 \
+              --resize \
               --test-y-channel \
               --backend "piqa" \
               --backend "pyiqa" \

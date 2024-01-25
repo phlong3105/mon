@@ -94,7 +94,6 @@ datamodule = {
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose(
 		transforms=[
-			# A.Resize(width=image_size[0], height=image_size[1]),
 			A.CropPatch(image_size[0], True, 1),
 			A.Flip(),
 			A.Rotate(),
@@ -118,8 +117,8 @@ datamodule = {
 trainer = default.trainer | {
 	"callbacks"        : [
 		default.model_checkpoint | {
-		    "monitor": "val/lpips",  # Quantity to monitor.
-			"mode"   : "min",        # ``'min'`` or ``'max'``.
+		    "monitor": "val/ssim",   # Quantity to monitor.
+			"mode"   : "max",        # ``'min'`` or ``'max'``.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,

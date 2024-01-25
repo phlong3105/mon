@@ -20,7 +20,7 @@ console = core.console
 class HeatmapLabel(base.Label):
     """A heatmap label in an image.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         map: A 2D numpy array.

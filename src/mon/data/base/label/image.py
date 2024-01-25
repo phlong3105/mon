@@ -24,11 +24,6 @@ console = core.console
 class ImageLabel(base.Label):
     """A ground-truth image label for an image.
     
-    See Also: :class:`Label`.
-    
-    References:
-        `<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
-    
     Args:
         id_: An ID of the image. This can be an integer or a string. This
             attribute is useful for batch processing where you want to keep the
@@ -40,6 +35,11 @@ class ImageLabel(base.Label):
             the object is created. Default: ``False``.
         keep_in_memory: If ``True``, the image will be loaded into memory and
             kept there. Default: ``False``.
+
+    References:
+        `<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
+        
+     See Also: :class:`mon.data.base.label.base.Label`.
     """
     
     to_rgb   : bool = True

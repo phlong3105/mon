@@ -20,7 +20,7 @@ console = core.console
 class RegressionLabel(base.Label):
     """A single regression value.
     
-    See Also: :class:`Label`.
+    See Also: :class:`mon.data.base.label.base.Label`.
     
     Args:
         value: The regression value.
