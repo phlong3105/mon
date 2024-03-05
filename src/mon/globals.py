@@ -739,27 +739,27 @@ MODELS_EXTRA        = {
     },
     "yolov8n"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
         "torch_distributed_launch": False,
     },
     "yolov8s"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
         "torch_distributed_launch": False,
     },
     "yolov8m"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
         "torch_distributed_launch": False,
     },
     "yolov8l"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
         "torch_distributed_launch": False,
     },
     "yolov8x"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
         "torch_distributed_launch": False,
     },
     "yolov9_c"   : {

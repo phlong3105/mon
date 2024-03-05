@@ -29,6 +29,6 @@ class MultiTaskImageEnhancementModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "universal" / self.name
+        return ZOO_DIR / "vision" / "enhance" / "multitask" / self.name
     
 # endregion
