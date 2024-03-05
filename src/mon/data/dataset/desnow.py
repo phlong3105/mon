@@ -30,9 +30,10 @@ from typing import Literal
 
 from mon import core
 from mon.data import base
-from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Task, Split
+from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console = core.console
+console           = core.console
+_default_root_dir = DATA_DIR / "desnow"
 
 
 # region Dataset
@@ -48,7 +49,7 @@ class GTSnow(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN]
     _has_test_label = False
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -92,7 +93,7 @@ class KITTISnow(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN]
     _has_test_label = False
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -134,7 +135,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -177,7 +178,7 @@ class KITTISnowM(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -219,7 +220,7 @@ class KITTISnowL(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -261,7 +262,7 @@ class Snow100K(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN]
     _has_test_label = False
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -303,7 +304,7 @@ class Snow100KS(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -345,7 +346,7 @@ class Snow100KM(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -387,7 +388,7 @@ class Snow100KL(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "desnow", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):

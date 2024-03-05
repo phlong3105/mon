@@ -33,8 +33,9 @@ from mon.data import base
 from mon.data.augment import transform
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console     = core.console
-ClassLabels = base.ClassLabels
+console           = core.console
+ClassLabels       = base.ClassLabels
+_default_root_dir = DATA_DIR / "les"
 
 
 # region Dataset
@@ -52,7 +53,7 @@ class Flare7KPP(base.UnlabeledImageDataset):
     
     def __init__(
         self,
-        root           : core.Path = DATA_DIR / "les",
+        root           : core.Path = _default_root_dir,
         split          : Split              = Split.TRAIN,
         image_size     : int                = 256,
         classlabels    : ClassLabels | None = None,
@@ -213,7 +214,7 @@ class Flare7KPPReal(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "les", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -255,7 +256,7 @@ class Flare7KPPSyn(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "les", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -297,7 +298,7 @@ class FlareReal800(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.VAL]
     _has_test_label = False
     
-    def __init__(self, root: core.Path = DATA_DIR / "les", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -339,7 +340,7 @@ class LEDLight(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "les", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -381,7 +382,7 @@ class LightEffect(base.UnlabeledImageDataset):
     _splits         = [Split.TRAIN]
     _has_test_label = False
     
-    def __init__(self, root: core.Path = DATA_DIR / "les", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):

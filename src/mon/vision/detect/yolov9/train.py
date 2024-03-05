@@ -32,7 +32,6 @@ import val as validate  # for end-of-epoch mAP
 from models.experimental import attempt_load
 from models.yolo import Model
 from mon import core, nn
-from mon.globals import RUN_DIR
 from utils.autobatch import check_train_batch_size
 from utils.callbacks import Callbacks
 from utils.dataloaders import create_dataloader
@@ -581,7 +580,7 @@ def main(
         opt.project = str(opt.project) 
         assert len(opt.model) or len(opt.weights), "either --cfg or --weights must be specified"
         if opt.evolve:
-            opt.save_dir = RUN_DIR / "evolve" / project / fullname
+            opt.save_dir = root / "run" / "evolve" / project / fullname
             opt.exist_ok, opt.resume = opt.resume, False  # pass resume to exist_ok and disable resume
         if opt.name == "cfg":
             opt.name = core.Path(opt.model).stem  # use model.yaml as name

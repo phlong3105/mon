@@ -32,9 +32,10 @@ from typing import Literal
 
 from mon import core
 from mon.data import base
-from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Task, Split
+from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console = core.console
+console           = core.console
+_default_root_dir = DATA_DIR / "derain"
 
 
 # region Dataset
@@ -50,7 +51,7 @@ class GTRain(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -97,7 +98,7 @@ class Rain100(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -140,7 +141,7 @@ class Rain100H(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -183,7 +184,7 @@ class Rain100L(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
 
     def _get_images(self):
@@ -225,7 +226,7 @@ class Rain12(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN]
     _has_test_label = False
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -268,7 +269,7 @@ class Rain1200(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -317,7 +318,7 @@ class Rain13K(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -377,7 +378,7 @@ class Rain1400(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -419,7 +420,7 @@ class Rain2800(base.ImageEnhancementDataset):
     _splits         = [Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -461,7 +462,7 @@ class Rain800(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "derain", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):

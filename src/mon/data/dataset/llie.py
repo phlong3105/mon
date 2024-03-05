@@ -43,7 +43,8 @@ from mon import core
 from mon.data import base
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console = core.console
+console           = core.console
+_default_root_dir = DATA_DIR / "llie"
 
 
 # region Dataset
@@ -58,7 +59,7 @@ class DarkFace(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def _get_images(self):
@@ -88,7 +89,7 @@ class DICM(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def _get_images(self):
@@ -117,7 +118,7 @@ class ExDark(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def _get_images(self):
@@ -147,7 +148,7 @@ class FiveKC(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TRAIN]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def _get_images(self):
@@ -189,7 +190,7 @@ class FiveKE(base.ImageEnhancementDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TRAIN]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def _get_images(self):
@@ -230,7 +231,7 @@ class Fusion(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -259,7 +260,7 @@ class LIME(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -292,7 +293,7 @@ class LOLV1(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -338,7 +339,7 @@ class LOLV2Real(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -384,7 +385,7 @@ class LOLV2Syn(base.ImageEnhancementDataset):
     _splits         = [Split.TRAIN, Split.TEST]
     _has_test_label = True
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -425,7 +426,7 @@ class MEF(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -454,7 +455,7 @@ class NPE(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -485,7 +486,7 @@ class SICEMix(base.UnlabeledImageDataset):
     _splits         = [Split.TRAIN]
     _has_test_label = False
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):
@@ -514,7 +515,7 @@ class VV(base.UnlabeledImageDataset):
     _tasks  = [Task.LLIE]
     _splits = [Split.TEST]
     
-    def __init__(self, root: core.Path = DATA_DIR / "llie", *args, **kwargs):
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def _get_images(self):

@@ -18,8 +18,8 @@ from mon import core
 from mon.data import base
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Task, Split
 
-console     = core.console
-ClassLabels = base.ClassLabels
+console           = core.console
+_default_root_dir = DATA_DIR / "ntire"
 
 
 # region Dataset
@@ -37,7 +37,7 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 	_splits         = [Split.TRAIN, Split.VAL, Split.TEST]
 	_has_test_label = False
 	
-	def __init__(self, root: core.Path = DATA_DIR / "ntire", *args, **kwargs):
+	def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
 		super().__init__(root=root, *args, **kwargs)
 	
 	def _get_images(self):

@@ -9,19 +9,18 @@ __all__ = [
 	"parse_io_worker",
 ]
 
-from typing import Any
-
 from mon import core
 from mon.data import base
-from mon.globals import DATASETS, Split
+from mon.globals import DATA_DIR, DATASETS, Split
 
 
 # region Utils
 
 def parse_io_worker(
-	src        : Any,
+	src        : core.Path | str,
 	dst        : core.Path | str,
 	denormalize: bool = False,
+	data_root  : core.Path | str = None
 ) -> tuple[str, base.Dataset, base.DataWriter]:
 	"""Parse the :param:`src` and :param:`dst` to get the correct I/O worker.
 	
@@ -30,6 +29,7 @@ def parse_io_worker(
 		dst: The destination path.
 		denormalize: If ``True``, denormalize the image to :math:`[0, 255]`.
 			Default: ``False``.
+		data_root: The root directory of all datasets, i.e., :file:`data/`.
 		
 	Return:
 		A input loader and an output writer
@@ -39,8 +39,19 @@ def parse_io_worker(
 	data_writer: base.DataWriter = None
 	
 	if isinstance(src, str) and src in DATASETS:
+		dataset_defaults = DATASETS[src].__init__.__defaults__
+		root = dataset_defaults.get("root", DATA_DIR)
+		if (
+			root      not in [None, "None", ""] and
+			data_root not in [None, "None", ""] and
+			core.Path(data_root).is_dir() and
+			str(root) != str(data_root)
+		):
+			root = data_root
+		
 		config = {
 			"name"     : src,
+			"root"     : root,
 			"split"	   : Split.TEST,
 			"to_tensor": True,
 			"verbose"  : False,

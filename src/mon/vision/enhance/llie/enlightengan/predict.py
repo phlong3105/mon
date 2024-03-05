@@ -15,7 +15,7 @@ import torch
 
 import mon
 from enlighten_inference import EnlightenOnnxModel
-from mon import ZOO_DIR, RUN_DIR
+from mon import ZOO_DIR
 
 console      = mon.console
 _current_dir = mon.Path(__file__).absolute().parent

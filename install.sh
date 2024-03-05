@@ -125,15 +125,12 @@ case "$OSTYPE" in
 esac
 
 echo -e "\nInstall third-party library"
-rm -rf poetry.lock
-rm -rf $CONDA_PREFIX/lib/python3.10/site-packages/cv2/qt/plugins
 eval "$(conda shell.bash hook)"
 conda activate mon
+rm -rf poetry.lock
+rm -rf $CONDA_PREFIX/lib/python3.10/site-packages/cv2/qt/plugins
 poetry install --extras "dev"
-# poetry install --with dev
-# pip install -U openmim
-# mim install mmcv-full==1.7.0
-# conda install cudatoolkit=11.8 --y
+rm -rf poetry.lock
 conda update --a --y
 conda clean --a --y
 
