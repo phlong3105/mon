@@ -21,6 +21,7 @@ TASKS = [
 # List all models that are used in this project.
 MODELS = [
     "yolor_d6",
+    "yolor_e6",
     "yolor_p6",
     "yolor_w6",
     "yolov7_e6e",

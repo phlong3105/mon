@@ -56,8 +56,7 @@ __all__ = [
 import os
 from typing import Any
 
-from mon.core import dtype as DT, error_console, factory, pathlib
-
+from mon.core import dtype as DT, factory, pathlib
 
 # region Directory
 
@@ -74,13 +73,13 @@ for i, parent in enumerate(_current_file.parents):
     if i >= 5:
         break
 if ZOO_DIR is None:
-    error_console(f"Cannot locate the ``zoo`` directory.")
+    raise Warning(f"Cannot locate the ``zoo`` directory.")
 
 DATA_DIR = pathlib.Path(os.getenv("DATA_DIR", None))
 DATA_DIR = DATA_DIR or pathlib.Path("/data")
 DATA_DIR = DATA_DIR if DATA_DIR.is_dir() else ROOT_DIR / "data"
 if not DATA_DIR.is_dir():
-    error_console(f"Cannot locate the ``data`` directory.")
+    raise Warning(f"Cannot locate the ``data`` directory.")
 
 # endregion
 
@@ -604,8 +603,7 @@ class Split(DT.Enum):
 CONFIG_FILE_FORMATS = [".config", ".cfg", ".yaml", ".yml", ".py", ".json", ".names", ".txt"]
 IMAGE_FILE_FORMATS  = [".arw", ".bmp", ".dng", ".jpg", ".jpeg", ".png", ".ppm", ".raf", ".tif", ".tiff"]
 VIDEO_FILE_FORMATS  = [".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv"]
-
-METRICS_EXTRA  = {
+METRICS_EXTRA       = {
     # FR
     "ahiq"               : {"metric_mode": "FR", "lower_is_better": False, },
     "ckdn"               : {"metric_mode": "FR", "lower_is_better": False, },
@@ -677,7 +675,7 @@ METRICS_EXTRA  = {
     "tv"                 : {"metric_mode": "NR", "lower_is_better": False, },
     "uranker"            : {"metric_mode": "NR", "lower_is_better": False, },
 }
-MODELS_EXTRA   = {
+MODELS_EXTRA        = {
     # region detect
     "gelan_c"    : {
         "tasks"    : [Task.DETECT],
@@ -741,27 +739,27 @@ MODELS_EXTRA   = {
     },
     "yolov8n"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "ultralytics" / "main",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
         "torch_distributed_launch": False,
     },
     "yolov8s"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "ultralytics" / "main",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
         "torch_distributed_launch": False,
     },
     "yolov8m"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "ultralytics" / "main",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
         "torch_distributed_launch": False,
     },
     "yolov8l"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "ultralytics" / "main",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
         "torch_distributed_launch": False,
     },
     "yolov8x"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "ultralytics" / "main",
+        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8.1.18",
         "torch_distributed_launch": False,
     },
     "yolov9_c"   : {
@@ -775,7 +773,6 @@ MODELS_EXTRA   = {
         "torch_distributed_launch": True,
     },
     # endregion
-    
     # region enhance
     "lime"         : {
         "tasks"    : [Task.LLIE],
@@ -794,7 +791,7 @@ MODELS_EXTRA   = {
     },
     "restormer"    : {
         "tasks"    : [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "universal" / "restormer",
+        "model_dir": MON_DIR / "vision" / "enhance" / "multitask" / "restormer",
         "torch_distributed_launch": True,
     },
     "retinexdip"   : {
@@ -849,7 +846,7 @@ MODELS_EXTRA   = {
     },
     # endregion
 }
-DATASETS_EXTRA = {
+DATASETS_EXTRA      = {
     # region detect
     "aic24_fisheye8k": {
         "tasks"         : [Task.DETECT],

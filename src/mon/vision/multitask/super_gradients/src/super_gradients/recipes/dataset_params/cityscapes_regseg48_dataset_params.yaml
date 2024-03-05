@@ -1,0 +1,45 @@
+defaults:
+  - cityscapes_dataset_params
+  - _self_
+
+train_dataset_params:
+  transforms:
+    # for more options see common.factories.transforms_factory.py
+    - SegColorJitter:
+        brightness: 0.1
+        contrast: 0.1
+        saturation: 0.1
+
+    - SegRandomFlip:
+        prob: 0.5
+
+    - SegRandomRescale:
+        scales: [ 0.4, 1.6 ]
+
+    - SegPadShortToCropSize:
+        crop_size: 1024
+        fill_image: [ 19, 0, 0 ]
+        fill_mask: 19                     # ignored label idx
+
+    - SegCropImageAndMask:
+        crop_size: 1024
+        mode: random
+
+    - SegStandardize:
+        max_value: 255
+
+    - SegNormalize:
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+
+    - SegConvertToTensor:
+        mask_output_dtype: long
+
+
+train_dataloader_params:
+  batch_size: 4
+  num_workers: 0
+
+val_dataloader_params:
+  batch_size: 4
+  num_workers: 0
