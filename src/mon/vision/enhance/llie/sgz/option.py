@@ -1,0 +1,27 @@
+import argparse
+
+from mon import RUN_DIR, ZOO_DIR
+
+parser = argparse.ArgumentParser(description="Train_Test")
+parser.add_argument("--input-dir",        type=str,   default="data/train_data/")
+parser.add_argument("--output-dir",       type=str,   default=RUN_DIR / "predict/vision/enhance/llie/sgz")
+parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/sgz/sgz-lol.pt")
+parser.add_argument("--load-pretrain",    type=bool,  default=False)
+parser.add_argument("--image-size",       type=int,   default=512)
+parser.add_argument("--lr",               type=float, default=0.0001)
+parser.add_argument("--weight-decay",     type=float, default=0.0001)
+parser.add_argument("--grad-clip-norm",   type=float, default=0.1)
+parser.add_argument("--epochs",           type=int,   default=100)
+parser.add_argument("--train-batch-size", type=int,   default=6)
+parser.add_argument("--val-batch-size",   type=int,   default=8)
+parser.add_argument("--num-workers",      type=int,   default=4)
+parser.add_argument("--display-iter",     type=int,   default=10)
+parser.add_argument("--scale-factor",     type=int,   default=1)
+parser.add_argument("--num-of-SegClass",  type=int,   default=21,    help="Number of Segmentation Classes, default VOC = 21")
+parser.add_argument("--conv-type",        type=str,   default="dsc", choices=["dsc", "dc", "tc"])
+parser.add_argument("--patch-size",       type=int,   default=4,     choices=[3, 4, 5])
+parser.add_argument("--exp-level",        type=float, default=0.6,   choices=[0.5, 0.6, 0.7])
+parser.add_argument("--checkpoints-iter", type=int,   default=10)
+parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/sgz")
+parser.add_argument("--benchmark",        action="store_true")
+args = parser.parse_args()

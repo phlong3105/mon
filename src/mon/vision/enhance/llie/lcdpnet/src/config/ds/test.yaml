@@ -1,0 +1,8 @@
+# @package ds
+class: img_dataset
+name: lcdp_data.test
+input:
+  - ../../../../../../data/llie/test/darkcityscapes/low/*
+#   - ../../../../../../data/lol/val/low/lol/*
+GT:
+#   - ../../../../../../data/llie/test/darkface/high/*

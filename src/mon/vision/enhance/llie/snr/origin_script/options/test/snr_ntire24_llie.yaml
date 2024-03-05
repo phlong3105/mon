@@ -1,0 +1,37 @@
+### must be same as 
+
+name       : snr-ntire24-llie
+suffix     : ~  # add suffix to saved images
+model      : video_base4_m
+distortion : sr
+scale      : 1
+crop_border: ~  # crop border when evaluation. If None(~), crop the scale pixels
+gpu_ids    : [0]
+
+datasets:
+  test:  # the 1st test dataset
+    name       : test
+    mode       : video_samesize_lol2
+    dataroot_GT: /home/longpham/10-workspace/11-code/mon/data/nire24-llie/train/high
+    dataroot_LQ: /home/longpham/10-workspace/11-code/mon/data/nire24-llie/train//low
+    train_size : [600, 400]
+    cache_data : true
+    N_frames   : 5
+    padding    : new_info
+
+#### network structures
+network_G:
+  which_model_G: low_light_transformer
+  nf           : 64
+  nframes      : 5     # must be same as N_frames in dataset.
+  groups       : 8
+  front_RBs    : 1
+  back_RBs     : 1
+  predeblur    : true  # default false
+  HR_in        : true
+  w_TSA        : true
+
+#### path
+path:
+  root            : ./
+  pretrain_model_G: snr-ntire24-llie/weights/latest_G.pth

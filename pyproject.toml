@@ -1,0 +1,98 @@
+#
+#     /\_____/\
+#    /  o   o  \
+#   ( ==  ^  == )
+#    )         (
+#   (           )
+#  ( (  )   (  ) )
+# (__(__)___(__)__)
+#
+[tool.poetry]
+name          = "mon"
+version       = "1.5.4"
+description   = "MON covers a wide range of research topics in computer vision, machine learning, and deep learning."
+license       = "MIT"
+authors       = [
+    "Long H. Pham <longpham3105@gmail.com>",
+]
+maintainers   = [
+    "Long H. Pham <longpham3105@gmail.com>",
+]
+readme        = "README.md"
+repository    = "https://github.com/phlong3105/one"
+documentation = "https://github.com/phlong3105/one/docs"
+keywords      = [
+    "computer vision",
+    "image processing",
+    "deep learning",
+    "research",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+]
+packages = [
+    {include="mon", from="src"},
+]
+include = [
+    "LICENSE",
+    "env/IgnoreList",
+    "env/README.md",
+    "env/docker.txt",
+    "env/dockerfile",
+    "env/linux_cmd.yaml",
+    "env/linux_ui.yaml",
+    "env/mac.yaml",
+    "install.sh",
+    "mkdocs.yml",
+    "pyproject.toml",
+]
+exclude = []
+
+[tool.poetry.dependencies]
+python                = ">=3.11, <3.12"
+cog                   = {version="*", optional=true}
+easydict              = {version="*", optional=true}
+guided-filter-pytorch = {version="*", optional=true}
+hydra-core            = {version="*", optional=true}
+mediapipe             = {version="*", optional=true}
+pandas                = {version="*", optional=true}
+tensorflow            = {version="*", optional=true}
+torchfile             = {version="*", optional=true}
+# ultralytics           = {path="src/mon/vision/ultralytics/main", develop=true}
+
+[tool.poetry.extras]
+dev = [
+    "ultralytics",
+]
+aic = [
+    "cog",
+    "guided-filter-pytorch",
+    "hydra-core",
+    "mediapipe",
+    "pandas",
+    "tensorflow",
+    "torchfile",
+    # "ultralytics",
+]
+
+# [tool.poetry.group.dev]
+# optional = true
+
+# [tool.poetry.group.dev.dependencies]
+# ultralytics = {path="src/lib/yolov8", develop=true}
+
+[build-system]
+requires      = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+# Comments
+#
+# 1. Fix thop error: AttributeError: 'some_object' object has no attribute 'total_ops'
+# pip install --upgrade git+https://github.com/sile/pytorch-OpCounter.git@8f115d4aeaee787d7347b75f30be28164b02ccaa
