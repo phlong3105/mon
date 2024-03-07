@@ -1,0 +1,75 @@
+# Default training settings
+
+# Train settings -------------------------------------------------------------------------------------------------------
+model          : yolov9.yaml            # model.yaml path
+data           : coco.yaml              # dataset.yaml path
+hyp            : hyp.scratch_high.yaml  # (str) hyperparameters path
+weights        : yolov9.pt              # (str) initial weights path
+epochs         : 300                    # (int) total training epochs
+batch_size     : 16                     # (int) total batch size for all GPUs, -1 for autobatch
+imgsz          : 640                    # (int | list) train, val image size (pixels)
+rect           : False                  # (bool) rectangular training
+resume         : False                  # (bool) resume most recent training
+nosave         : False                  # (bool) only save final checkpoint
+noval          : False                  # (bool) only validate final epoch
+noautoanchor   : False                  # (bool) disable AutoAnchor
+noplots        : False                  # (bool) save no plot files
+evolve         : False                  # (bool) evolve hyperparameters for x generations
+bucket         :                        # (str, optional) gsutil bucket
+cache          : False                  # (bool) image --cache ram/disk
+image_weights  : False                  # (bool) use weighted image selection for training
+device         :                        # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
+multi_scale    : False                  # (bool) vary img-size +/- 50%%
+single_cls     : False                  # (bool) train multi-class data as single-class
+optimizer      : False                  # (bool) optimizer ['SGD', 'Adam', 'AdamW', 'LION']
+sync_bn        : False                  # (bool) use SyncBatchNorm, only available in DDP mode
+workers        : 8                      # (int) max dataloader workers (per RANK in DDP mode)
+project        :                        # (str, optional) project name
+name           :                        # (str, optional) experiment name, results saved to 'project/name' directory
+exist_ok       : False                  # (bool) existing project/name ok, do not increment
+quad           : False                  # (bool) quad dataloader
+cos_lr         : False                  # (bool) cosine LR scheduler
+flat_cos_lr    : False                  # (bool) flat cosine LR scheduler
+fixed_lr       : False                  # (bool) fixed LR scheduler
+label_smoothing: 0.0                    # (float) Label smoothing epsilon
+patience       : 300                    # (int) EarlyStopping patience (epochs without improvement)
+freeze         : [0]                    # (int) Freeze layers: backbone of yolov7=50, first3=0 1 2
+save_period    : -1                     # (int) Save checkpoint every x epochs (disabled if < 1)
+seed           : 0                      # (int) global training seed
+local_rank     : -1                     # (int, optional) DDP parameter, do not modify
+min_items      : 0                      # (int) experimental
+close_mosaic   : 0                      # (int) experimental
+entity         :                        # (str, optional) W&B entity
+upload_dataset : False                  # (bool) upload dataset as W&B artifact
+artifact_alias : latest                 # (str) version of dataset artifact to be use
+bbox_interval  : -1                     # (int) Set bounding-box image logging interval
+verbose        : True                   # (bool) whether to print verbose output
+
+# Val/Test settings ----------------------------------------------------------------------------------------------------
+task           : val                    # (str) 'train, val, test, speed or study'
+conf_thres     : 0.001                  # (float) confidence threshold
+iou_thres      : 0.45                   # (float) NMS IoU threshold
+max_det        : 1000                   # (int) maximum detections per image
+half           : False                  # (bool) use FP16 half-precision inference
+dnn            : False                  # (bool) use OpenCV DNN for ONNX inference
+
+# Predict settings -----------------------------------------------------------------------------------------------------
+source         :                        # (str, optional) source directory for images or videos
+augment        : False                  # (bool) augmented inference
+agnostic_nms   : False                  # (bool) class-agnostic NMS
+classes        :                        # (int | list[int], optional) filter results by class, i.e. classes=0, or classes=[0,2,3]
+update         : False                  # (bool) update all models
+
+# Visualize settings ---------------------------------------------------------------------------------------------------
+visualize      : False                  # (bool) visualize features
+view_img       : False                  # (bool) display results
+save_txt       : True                   # (bool) save results as .txt file
+save_hybrid    : False                  # (bool) save label+prediction hybrid results to *.txt
+save_conf      : True                   # (bool) save results with confidence scores
+save_crop      : False                  # (bool) save cropped prediction boxes
+save_json      : False                  # (bool) save a COCO-JSON results file
+nosave_img     : False                  # (bool) do not save images/videos
+line_thickness : 3                      # (int) bounding box thickness (pixels)
+hide_labels    : False                  # (bool) hide labels
+hide_conf      : False                  # (bool) hide confidences
+vid_stride     : 1                      # (int) video frame-rate stride

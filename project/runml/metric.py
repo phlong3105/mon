@@ -21,14 +21,15 @@ console = mon.console
 # region Function
 
 def measure_metric_piqa(
-    input_dir  : mon.Path,
-    target_dir : mon.Path | None,
-    result_file: mon.Path | str,
-    imgsz      : int,
-    resize     : bool,
-    metric     : list[str],
-    save_txt   : bool,
-    verbose    : bool,
+    input_dir     : mon.Path,
+    target_dir    : mon.Path | None,
+    result_file   : mon.Path | str,
+    imgsz         : int,
+    resize        : bool,
+    metric        : list[str],
+    test_y_channel: bool,
+    save_txt      : bool,
+    verbose       : bool,
 ) -> dict:
     """Measure metrics."""
     _METRICS = {
@@ -127,14 +128,15 @@ def measure_metric_piqa(
 
 
 def measure_metric_pyiqa(
-    input_dir  : mon.Path,
-    target_dir : mon.Path | None,
-    result_file: mon.Path | str,
-    imgsz      : int,
-    resize     : bool,
-    metric     : list[str],
-    save_txt   : bool,
-    verbose    : bool,
+    input_dir     : mon.Path,
+    target_dir    : mon.Path | None,
+    result_file   : mon.Path | str,
+    imgsz         : int,
+    resize        : bool,
+    metric        : list[str],
+    test_y_channel: bool,
+    save_txt      : bool,
+    verbose       : bool,
 ) -> dict:
     """Measure metrics using :mod:`pyiqa` package."""
     _METRICS = list(pyiqa.DEFAULT_CONFIGS.keys())
@@ -178,7 +180,7 @@ def measure_metric_pyiqa(
             metric_f[m] = pyiqa.InferenceModel(
                 metric_name    = m,
                 as_loss        = False,
-                # test_y_channel = test_y_channel,
+                test_y_channel = test_y_channel,
                 device         = device,
             )
         else:
@@ -289,26 +291,28 @@ def main(
     for b in backend:
         if b in ["piqa"]:
             new_values = measure_metric_piqa(
-                input_dir   = input_dir,
-                target_dir  = target_dir,
-                result_file = result_file,
-                imgsz       = imgsz,
-                resize      = resize,
-                metric      = metric,
-                save_txt    = save_txt,
-                verbose     = verbose,
+                input_dir      = input_dir,
+                target_dir     = target_dir,
+                result_file    = result_file,
+                imgsz          = imgsz,
+                resize         = resize,
+                test_y_channel = test_y_channel,
+                metric         = metric,
+                save_txt       = save_txt,
+                verbose        = verbose,
             )
             results = update_results(results, new_values)
         elif b in ["pyiqa"]:
             new_values = measure_metric_pyiqa(
-                input_dir   = input_dir,
-                target_dir  = target_dir,
-                result_file = result_file,
-                imgsz       = imgsz,
-                resize      = resize,
-                metric      = metric,
-                save_txt    = save_txt,
-                verbose     = verbose,
+                input_dir      = input_dir,
+                target_dir     = target_dir,
+                result_file    = result_file,
+                imgsz          = imgsz,
+                resize         = resize,
+                metric         = metric,
+                test_y_channel = test_y_channel,
+                save_txt       = save_txt,
+                verbose        = verbose,
             )
             results = update_results(results, new_values)
         else:

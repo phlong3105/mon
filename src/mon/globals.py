@@ -675,101 +675,114 @@ METRICS_EXTRA       = {
     "tv"                 : {"metric_mode": "NR", "lower_is_better": False, },
     "uranker"            : {"metric_mode": "NR", "lower_is_better": False, },
 }
-MODELS_EXTRA        = {
+DATASETS_EXTRA      = {
     # region detect
-    "gelan_c"    : {
+    "aic24_fisheye8k": {
+        "tasks"         : [Task.DETECT],
+        "splits"        : [Split.TRAIN, Split.VAL, Split.TEST],
+        "has_test_label": False,
+    },
+    # endregion
+}
+
+# Models
+_yolov8_dir  = MON_DIR / "vision" / "multitask" / "ultralytics" / "v8_1_18"
+_yolov9_dir  = MON_DIR / "vision" / "detect" / "yolov9" / "v0_1"
+MODELS_EXTRA = {
+    # region detect
+    "gelan_c"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov9",
+        "model_dir": _yolov9_dir,
         "torch_distributed_launch": True,
     },
-    "gelan_e"    : {
+    "gelan_e"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov9",
+        "model_dir": _yolov9_dir,
         "torch_distributed_launch": True,
     },
-    "yolor_d6"   : {
+    "yolor_d6"  : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
-    "yolor_e6"   : {
+    "yolor_e6"  : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
-    "yolor_p6"   : {
+    "yolor_p6"  : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
-    "yolor_w6"   : {
+    "yolor_w6"  : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
-    "yolov7"     : {
+    "yolov7"    : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
-    "yolov7_d6"  : {
+    "yolov7_d6" : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
-    "yolov7_e6"  : {
+    "yolov7_e6" : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
-    "yolov7_e6e" : {
+    "yolov7_e6e": {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
-    "yolov7_w6"  : {
+    "yolov7_w6" : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
-    "yolov7x"    : {
+    "yolov7x"   : {
         "tasks"    : [Task.DETECT],
         "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
-    "yolov8n"    : {
+    "yolov8n"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
+        "model_dir": _yolov8_dir,
         "torch_distributed_launch": False,
     },
-    "yolov8s"    : {
+    "yolov8s"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
+        "model_dir": _yolov8_dir,
         "torch_distributed_launch": False,
     },
-    "yolov8m"    : {
+    "yolov8m"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
+        "model_dir": _yolov8_dir,
         "torch_distributed_launch": False,
     },
-    "yolov8l"    : {
+    "yolov8l"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
+        "model_dir": _yolov8_dir,
         "torch_distributed_launch": False,
     },
-    "yolov8x"    : {
+    "yolov8x"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "multitask" / "ultralytics" / "8_1_18",
+        "model_dir": _yolov8_dir,
         "torch_distributed_launch": False,
     },
-    "yolov9_c"   : {
+    "yolov9_c"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov9",
+        "model_dir": _yolov9_dir,
         "torch_distributed_launch": True,
     },
-    "yolov9_e"   : {
+    "yolov9_e"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov9",
+        "model_dir": _yolov9_dir,
         "torch_distributed_launch": True,
     },
     # endregion
@@ -843,15 +856,6 @@ MODELS_EXTRA        = {
         "tasks"    : [Task.LLIE],
         "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "utvnet",
         "torch_distributed_launch": True,
-    },
-    # endregion
-}
-DATASETS_EXTRA      = {
-    # region detect
-    "aic24_fisheye8k": {
-        "tasks"         : [Task.DETECT],
-        "splits"        : [Split.TRAIN, Split.VAL, Split.TEST],
-        "has_test_label": False,
     },
     # endregion
 }

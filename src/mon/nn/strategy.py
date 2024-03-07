@@ -12,16 +12,19 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "FSDPStrategy",
+    # Accelerator
+    "Accelerator",
     "CPUAccelerator",
     "CUDAAccelerator",
-    "ParallelStrategy",
-    "SingleDeviceStrategy",
-    "DDPStrategy",
-    "DeepSpeedStrategy",
-    "Strategy",
     "MPSAccelerator",
     "XLAAccelerator",
+    # Strategy
+    "DDPStrategy",
+    "DeepSpeedStrategy",
+    "FSDPStrategy",
+    "ParallelStrategy",
+    "SingleDeviceStrategy",
+    "Strategy",
     "XLAStrategy",
 ]
 
@@ -42,6 +45,7 @@ console = core.console
 
 # region Accelerator
 
+Accelerator     = accelerators.Accelerator
 CPUAccelerator  = accelerators.CPUAccelerator
 CUDAAccelerator = accelerators.CUDAAccelerator
 MPSAccelerator  = accelerators.MPSAccelerator
@@ -58,22 +62,20 @@ ACCELERATORS.register(name="xla" , module=XLAAccelerator)
 
 # region Strategy
 
-DDPStrategy             = strategies.DDPStrategy
-DeepSpeedStrategy       = strategies.DeepSpeedStrategy
-FSDPStrategy            = strategies.FSDPStrategy
-ParallelStrategy        = strategies.ParallelStrategy
-SingleDeviceStrategy    = strategies.SingleDeviceStrategy
-SingleDeviceXLAStrategy = strategies.SingleDeviceXLAStrategy
-Strategy                = strategies.Strategy
-XLAStrategy             = strategies.XLAStrategy
+Strategy             = strategies.Strategy
+DDPStrategy          = strategies.DDPStrategy
+DeepSpeedStrategy    = strategies.DeepSpeedStrategy
+FSDPStrategy         = strategies.FSDPStrategy
+ParallelStrategy     = strategies.ParallelStrategy
+SingleDeviceStrategy = strategies.SingleDeviceStrategy
+XLAStrategy          = strategies.XLAStrategy
 
-STRATEGIES.register(name="ddp"                       , module=DDPStrategy)
-STRATEGIES.register(name="deepspeed"                 , module=DeepSpeedStrategy)
-STRATEGIES.register(name="fsdp"                      , module=FSDPStrategy)
-STRATEGIES.register(name="parallel"                  , module=ParallelStrategy)
-STRATEGIES.register(name="single_device"             , module=SingleDeviceStrategy)
-STRATEGIES.register(name="single_device_xla_strategy", module=SingleDeviceXLAStrategy)
-STRATEGIES.register(name="xla"                       , module=XLAStrategy)
+STRATEGIES.register(name = "ddp"          , module = DDPStrategy)
+STRATEGIES.register(name = "deepspeed"    , module = DeepSpeedStrategy)
+STRATEGIES.register(name = "fsdp"         , module = FSDPStrategy)
+STRATEGIES.register(name = "parallel"     , module = ParallelStrategy)
+STRATEGIES.register(name = "single_device", module = SingleDeviceStrategy)
+STRATEGIES.register(name = "xla"          , module = XLAStrategy)
 
 # endregion
 

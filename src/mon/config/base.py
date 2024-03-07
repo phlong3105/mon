@@ -10,11 +10,9 @@ __all__ = [
     "parse_config_file",
 ]
 
-import importlib
 import importlib.util
-from typing import Any
 
-from mon.core import file, humps, pathlib, rich
+from mon.core import file, pathlib, rich
 
 console       = rich.console
 error_console = rich.error_console
@@ -47,7 +45,7 @@ def parse_config_file(
 
 # region Load
 
-def load_config(config: Any) -> dict | None:
+def load_config(config: str | pathlib.Path | dict) -> dict | None:
     if config is None:
         data = None
     elif isinstance(config, dict):

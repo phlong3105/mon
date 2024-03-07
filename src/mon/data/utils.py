@@ -39,8 +39,10 @@ def parse_io_worker(
 	data_writer: base.DataWriter = None
 	
 	if isinstance(src, str) and src in DATASETS:
-		dataset_defaults = DATASETS[src].__init__.__defaults__
-		root = dataset_defaults.get("root", DATA_DIR)
+		defaults_dict = dict(
+			zip(DATASETS[src].__init__.__code__.co_varnames[1:], DATASETS[src].__init__.__defaults__)
+		)
+		root = defaults_dict.get("root", DATA_DIR)
 		if (
 			root      not in [None, "None", ""] and
 			data_root not in [None, "None", ""] and
@@ -48,8 +50,7 @@ def parse_io_worker(
 			str(root) != str(data_root)
 		):
 			root = data_root
-		
-		config = {
+		config      = {
 			"name"     : src,
 			"root"     : root,
 			"split"	   : Split.TEST,
