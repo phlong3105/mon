@@ -690,7 +690,7 @@ DATASETS_EXTRA      = {
 
 # Models
 _ultralytics_dir = MON_LIB_DIR / "vision" / "multitask" / "ultralytics"
-_yolov9_dir      = MON_LIB_DIR / "vision" / "detect" / "yolov9"
+_yolov9_dir      = MON_LIB_DIR / "vision" / "detect"    / "yolov9"
 MODELS_EXTRA = {
     # region detect
     "gelan_c"   : {
