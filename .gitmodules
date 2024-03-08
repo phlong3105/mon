@@ -1,6 +1,9 @@
-[submodule "src/mon_lib/vision/detect/yolov9"]
-	path = src/mon_lib/vision/detect/yolov9
-	url  = https://github.com/phlong3105/yolov9
+[submodule "src/mon_lib/vision/multitask/supergradients"]
+	path = src/mon_lib/vision/multitask/supergradients
+	url  = https://github.com/phlong3105/supergradients
 [submodule "src/mon_lib/vision/multitask/ultralytics"]
 	path = src/mon_lib/vision/multitask/ultralytics
 	url  = https://github.com/phlong3105/ultralytics
+[submodule "src/mon_lib/vision/detect/yolov9"]
+	path = src/mon_lib/vision/detect/yolov9
+	url  = https://github.com/phlong3105/yolov9
