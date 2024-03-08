@@ -1,23 +1,44 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import annotations
+
 import argparse
 import glob
 import json
 import os
-from pathlib import Path
+import socket
 
+import click
 import numpy as np
 import torch
 import yaml
 from tqdm import tqdm
 
-import mon
 from models.experimental import attempt_load
+from mon import core, DATA_DIR
 from utils.datasets import create_dataloader
-from utils.general import coco80_to_coco91_class, check_dataset, check_file, check_img_size, box_iou, \
-    non_max_suppression, scale_coords, xyxy2xywh, xywh2xyxy, clip_coords, set_logging, increment_path
+from utils.general import (
+    box_iou, check_dataset, check_file, check_img_size, clip_coords, coco80_to_coco91_class,
+    non_max_suppression, scale_coords, set_logging, xywh2xyxy, xyxy2xywh,
+)
 from utils.loss import compute_loss
 from utils.metrics import ap_per_class
-from utils.plots import plot_images, output_to_target
+from utils.plots import output_to_target, plot_images
 from utils.torch_utils import select_device, time_synchronized
+
+console       = core.console
+_current_file = core.Path(__file__).absolute()
+_current_dir  = _current_file.parents[0]
+
+
+# region Test
+
+def load_classes(path):
+    # Loads *.names file at 'path'
+    with open(path, "r") as f:
+        names = f.read().split("\n")
+    return list(filter(None, names))  # filter removes empty strings (such as last line)
 
 
 def test(
@@ -28,18 +49,18 @@ def test(
     imgsz      = 640,
     conf_thres = 0.001,
     iou_thres  = 0.5,       # 0.6: for NMS
-    max_det    = 1000,
+    max_det    = 300,
     save_json  = False,
     single_cls = False,
     augment    = False,
     verbose    = False,
     model      = None,
     dataloader = None,
-    save_dir   = Path(""),  # for saving images
-    save_txt   = False,     # for auto-labelling
+    save_dir   = core.Path(""),  # for saving images
+    save_txt   = False,          # for auto-labelling
     save_conf  = False,
     plots      = True,
-    log_imgs   = 0,         # number of logged images
+    log_imgs   = 0,              # number of logged images
 ):
     # Initialize/load model and set device
     training = model is not None
@@ -52,12 +73,15 @@ def test(
         save_txt = opt.save_txt  # save *.txt labels
 
         # Directories
-        save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
-        (Path(save_dir) / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)    # make dir
-
+        # save_dir = core.Path(increment_path(core.Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
+        # (core.Path(save_dir) / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)    # make dir
+        (save_dir / "images" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
+        (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
+        
         # Load model
-        model = attempt_load(weights, map_location=device)  # load FP32 model
-        imgsz = check_img_size(imgsz, s=model.stride.max())  # check img_size
+        weights = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+        model   = attempt_load(weights, map_location=device)  # load FP32 model
+        imgsz   = check_img_size(imgsz, s=model.stride.max())  # check img_size
 
     # Half
     half = device.type != "cpu"  # half precision only supported on CUDA
@@ -73,17 +97,17 @@ def test(
         _val   = data["val"]
         _test  = data["test"]
         if isinstance(_train, list):
-            _train = [str(mon.DATA_DIR / t) for t in _train]
+            _train = [str(DATA_DIR / t) for t in _train]
         elif _train:
-            _train = str(mon.DATA_DIR / _train)
+            _train = str(DATA_DIR / _train)
         if isinstance(_val, list):
-            _val   = [str(mon.DATA_DIR / t) for t in _val]
+            _val   = [str(DATA_DIR / t) for t in _val]
         elif _val:
-            _val   = str(mon.DATA_DIR / _val)
-        if isinstance(test, list):
-            _test  = [str(mon.DATA_DIR / t) for t in _test]
+            _val   = str(DATA_DIR / _val)
+        if isinstance(_test, list):
+            _test  = [str(DATA_DIR / t) for t in _test]
         elif _test:
-            _test  = str(mon.DATA_DIR / _test)
+            _test  = str(DATA_DIR / _test)
         data["train"] = _train
         data["val"]   = _val
         data["test"]  = _test
@@ -156,7 +180,7 @@ def test(
                 continue
 
             # Append to text file
-            path = Path(paths[si])
+            path = core.Path(paths[si])
             if save_txt:
                 gn       = torch.tensor(shapes[si][0])[[1, 0, 1, 0]]  # normalization gain whwh
                 x        = pred.clone()
@@ -278,7 +302,7 @@ def test(
 
     # Save JSON
     if save_json and len(jdict):
-        w         = Path(weights[0] if isinstance(weights, list) else weights).stem if weights is not None else ""  # weights
+        w         = core.Path(weights[0] if isinstance(weights, list) else weights).stem if weights is not None else ""  # weights
         anno_json = glob.glob("../coco/annotations/instances_val*.json")[0]  # annotations json
         pred_json = str(save_dir / f"{w}_predictions.json")  # predictions json
         print("\nEvaluating pycocotools mAP... saving %s..." % pred_json)
@@ -293,7 +317,7 @@ def test(
             pred = anno.loadRes(pred_json)  # init predictions api
             eval = COCOeval(anno, pred, "bbox")
             if is_coco:
-                eval.params.imgIds = [int(Path(x).stem) for x in dataloader.dataset.img_files]  # image IDs to evaluate
+                eval.params.imgIds = [int(core.Path(x).stem) for x in dataloader.dataset.img_files]  # image IDs to evaluate
             eval.evaluate()
             eval.accumulate()
             eval.summarize()
@@ -310,41 +334,94 @@ def test(
         maps[c] = ap[i]
     return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
 
+# endregion
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='test.py')
-    parser.add_argument('--weights', nargs='+', type=str, default='yolor-p6.pt', help='model.pt path(s)')
-    parser.add_argument('--data', type=str, default='data/coco.yaml', help='*.data path')
-    parser.add_argument('--batch-size', type=int, default=16, help='size of each image batch')
-    parser.add_argument('--img-size', type=int, default=1280, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.50, help='IOU threshold for NMS')
-    parser.add_argument('--max-det', type=float, default=1000)
-    parser.add_argument('--task', default='val', help="'val', 'test', 'study'")
-    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--single-cls', action='store_true', help='treat as single-class dataset')
-    parser.add_argument('--augment', action='store_true', help='augmented inference')
-    parser.add_argument('--verbose', action='store_true', help='report mAP by class')
-    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
-    parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
-    parser.add_argument('--project', default='runs/test', help='save to project/name')
-    parser.add_argument('--name', default='exp', help='save to project/name')
-    parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
-    opt = parser.parse_args()
-    opt.save_json |= opt.data.endswith('coco.yaml')
-    opt.data = check_file(opt.data)  # check file
-    print(opt)
 
-    if opt.task in ['val', 'test']:  # run normally
+# region Main
+
+@click.command(name="test", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
+@click.option("--root",       type=str, default=None, help="Project root.")
+@click.option("--config",     type=str, default=None, help="Model config.")
+@click.option("--weights",    type=str, default=None, help="Weights paths.")
+@click.option("--model",      type=str, default=None, help="Model name.")
+@click.option("--data",       type=str, default=None, help="Source data directory.")
+@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
+@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
+@click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
+@click.option("--resize",     is_flag=True)
+@click.option("--benchmark",  is_flag=True)
+@click.option("--save-image", is_flag=True)
+@click.option("--verbose",    is_flag=True)
+def main(
+    root      : str,
+    config    : str,
+    weights   : str,
+    model     : str,
+    data      : str,
+    fullname  : str,
+    save_dir  : str,
+    device    : str,
+    imgsz     : int,
+    resize    : bool,
+    benchmark : bool,
+    save_image: bool,
+    verbose   : bool,
+) -> str:
+    hostname = socket.gethostname().lower()
+    
+    # Get config args
+    config = core.parse_config_file(project_root=_current_dir / "config", config=config)
+    args   = core.load_config(config)
+    
+    # Prioritize input args --> config file args
+    root     = root      or args["root"]
+    root     = core.Path(root)
+    weights  = weights   or args["weights"]
+    model    = core.Path(model or args["model"])
+    model    = model if model.exists() else _current_dir / "config"  / model.name
+    model    = model.config_file()
+    data     = core.Path(args["data"])
+    data     = data  if data.exists() else _current_dir / "data"  / data.name
+    data     = data.config_file()
+    project  = root.name or args["project"]
+    fullname = fullname  or args["name"]
+    save_dir = save_dir  or root / "run" / "test" / fullname
+    save_dir = core.Path(save_dir)
+    device   = device    or args["device"]
+    imgsz    = imgsz     or args["imgsz"]
+    names    = core.Path(args["names"])
+    names    = names if names.exists() else _current_dir / "data" / names.name
+    names    = names.config_file()
+    verbose  = verbose   or args["verbose"]
+    
+    # Update arguments
+    args["root"]     = root
+    args["config"]   = config
+    args["weights"]  = core.to_list(weights)
+    args["model"]    = str(model)
+    args["data"]     = str(data)
+    args["project"]  = project
+    args["name"]     = fullname
+    args["save_dir"] = save_dir
+    args["device"]   = device
+    args["imgsz"]    = core.to_list(imgsz)
+    args["names"]    = str(names)
+    args["verbose"]  = verbose
+
+    opt            = argparse.Namespace(**args)
+    opt.save_json |= opt.data.endswith("coco.yaml")
+    opt.data       = check_file(opt.data)  # check file
+    
+    if opt.task in ["val", "test"]:  # run normally
         test(
             opt        = opt,
             data       = opt.data,
             weights    = opt.weights,
             batch_size = opt.batch_size,
-            imgsz      = opt.img_size,
-            conf_thres = opt.conf_thres,
-            iou_thres  = opt.iou_thres,
+            imgsz      = opt.imgsz,
+            conf_thres = opt.conf,
+            iou_thres  = opt.iou,
             max_det    = opt.max_det,
             save_json  = opt.save_json,
             single_cls = opt.single_cls,
@@ -354,16 +431,33 @@ if __name__ == '__main__':
             save_txt   = opt.save_txt,
             save_conf  = opt.save_conf,
         )
-
-    elif opt.task == 'study':  # run over a range of settings and save/plot
-        for weights in ['yolor-p6.pt', 'yolor-w6.pt', 'yolor-e6.pt', 'yolor-d6.pt']:
-            f = 'study_%s_%s.txt' % (Path(opt.data).stem, Path(weights).stem)  # filename to save to
+    elif opt.task == "study":  # run over a range of settings and save/plot
+        for weights in ["yolor_p6.pt", "yolor_w6.pt"]:
+            f = "study_%s_%s.txt" % (core.Path(opt.data).stem, core.Path(weights).stem)  # filename to save to
             x = list(range(320, 800, 64))  # x axis
             y = []  # y axis
             for i in x:  # img-size
-                print('\nRunning %s point %s...' % (f, i))
-                r, _, t = test(opt.data, weights, opt.batch_size, i, opt.conf_thres, opt.iou_thres, opt.save_json)
+                print("\nRunning %s point %s..." % (f, i))
+                r, _, t = test(
+                    opt        = opt,
+                    data       = opt.data,
+                    weights    = weights,
+                    batch_size = opt.batch_size,
+                    imgsz      = i,
+                    conf_thres = opt.conf,
+                    iou_thres  = opt.iou,
+                    max_det    = opt.max_det,
+                    save_json  = opt.save_json,
+                )
                 y.append(r + t)  # results and times
-            np.savetxt(f, y, fmt='%10.4g')  # save
-        os.system('zip -r study.zip study_*.txt')
+            np.savetxt(f, y, fmt="%10.4g")  # save
+        os.system("zip -r study.zip study_*.txt")
         # utils.general.plot_study_txt(f, x)  # plot
+    
+    return str(opt.save_dir)
+
+
+if __name__ == "__main__":
+    main()
+
+# endregion

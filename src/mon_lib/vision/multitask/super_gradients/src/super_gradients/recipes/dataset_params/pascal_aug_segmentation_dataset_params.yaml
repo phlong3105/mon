@@ -1,8 +1,0 @@
-defaults:
-  - pascal_voc_segmentation_dataset_params
-  - _self_
-
-train_dataset_params:
-  list_file:
-  samples_sub_directory:
-  targets_sub_directory:

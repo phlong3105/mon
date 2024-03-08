@@ -1,1 +1,0 @@
-python -m flake8 --statistics --config scripts/flake8-config setup.py $(git diff --diff-filter ACM origin/master --name-only | grep 'py$')

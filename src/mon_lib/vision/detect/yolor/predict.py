@@ -1,71 +1,36 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-from __future__ import annotations
-
 import argparse
-import pathlib
-import socket
-import sys
 import time
+from pathlib import Path
 
-import click
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
 from numpy import random
 
-_root = pathlib.Path(__file__).resolve().parents[0]  # root directory
-if str(_root) not in sys.path:
-    sys.path.append(str(_root))  # add ROOT to PATH
-
 from models.experimental import attempt_load
-from mon import core
-from utils.datasets import LoadImages, LoadStreams
-from utils.general import (
-    apply_classifier, check_img_size, non_max_suppression, scale_coords, set_logging,
-    strip_optimizer, xyxy2xywh,
-)
+from utils.datasets import LoadStreams, LoadImages
+from utils.general import check_img_size, non_max_suppression, apply_classifier, scale_coords, xyxy2xywh, \
+    strip_optimizer, set_logging, increment_path
 from utils.plots import plot_one_box
-from utils.torch_utils import load_classifier, select_device, time_synchronized
-
-console       = core.console
-_current_file = core.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+from utils.torch_utils import select_device, load_classifier, time_synchronized
 
 
-# region Predict
+def detect(save_img=False):
+    source, weights, view_img, save_txt, imgsz = opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
+    webcam = source.isnumeric() or source.endswith('.txt') or source.lower().startswith(
+        ('rtsp://', 'rtmp://', 'http://'))
 
-def load_classes(path):
-    # Loads *.names file at "path"
-    with open(path, "r") as f:
-        names = f.read().split("\n")
-    return list(filter(None, names))  # filter removes empty strings (such as last line)
-
-
-def predict(opt, save_img: bool = False):
-    weights  = opt.weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    source   = opt.source
-    save_dir = core.Path(opt.save_dir)
-    view_img = opt.view_img
-    save_txt = opt.save_txt
-    imgsz    = opt.imgsz
-    names    = opt.names
-    webcam   = source == "0" or source.startswith("rtsp") or source.startswith("http") or source.endswith(".txt")
-    
     # Directories
-    (save_dir / "images" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
-    (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
-    
+    save_dir = Path(increment_path(Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
+    (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
+
     # Initialize
     set_logging()
     device = select_device(opt.device)
-    half   = device.type != "cpu"  # half precision only supported on CUDA
-    
+    half = device.type != 'cpu'  # half precision only supported on CUDA
+
     # Load model
     model = attempt_load(weights, map_location=device)  # load FP32 model
-    imgsz = imgsz[0] if isinstance(imgsz, list | tuple) else imgsz
     imgsz = check_img_size(imgsz, s=model.stride.max())  # check img_size
     if half:
         model.half()  # to FP16
@@ -73,62 +38,41 @@ def predict(opt, save_img: bool = False):
     # Second-stage classifier
     classify = False
     if classify:
-        modelc = load_classifier(name="resnet101", n=2)  # initialize
-        modelc.load_state_dict(torch.load("weights/resnet101.pt", map_location=device)["model"]).to(device).eval()
-    
+        modelc = load_classifier(name='resnet101', n=2)  # initialize
+        modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=device)['model']).to(device).eval()
+
     # Set Dataloader
     vid_path, vid_writer = None, None
     if webcam:
-        view_img        = True
+        view_img = True
         cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset         = LoadStreams(source, img_size=imgsz)
+        dataset = LoadStreams(source, img_size=imgsz)
     else:
         save_img = True
-        dataset  = LoadImages(source, img_size=imgsz, auto_size=64)
+        dataset = LoadImages(source, img_size=imgsz, auto_size=64)
 
     # Get names and colors
-    if hasattr(model, "module"):
-        _module = model.module
-        if hasattr(_module, "names"):
-            names = _module.names
-        elif hasattr(_module, "nc"):
-            names = [i for i in range(_module.nc)]
-        else:
-            names = None
-    elif hasattr(model, "names"):
-        names = model.names
-    elif hasattr(model, "nc"):
-        names = [i for i in range(model.nc)]
-    else:
-        # names = None
-        names = [i for i in range(5)]
+    names = model.module.names if hasattr(model, 'module') else model.names
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
 
     # Run inference
-    t0  = time.time()
+    t0 = time.time()
     img = torch.zeros((1, 3, imgsz, imgsz), device=device)  # init img
-    _   = model(img.half() if half else img) if device.type != "cpu" else None  # run once
+    _ = model(img.half() if half else img) if device.type != 'cpu' else None  # run once
     for path, img, im0s, vid_cap in dataset:
-        img  = torch.from_numpy(img).to(device)
-        img  = img.half() if half else img.float()  # uint8 to fp16/32
+        img = torch.from_numpy(img).to(device)
+        img = img.half() if half else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
         if img.ndimension() == 3:
             img = img.unsqueeze(0)
 
         # Inference
-        t1   = time_synchronized()
+        t1 = time_synchronized()
         pred = model(img, augment=opt.augment)[0]
 
         # Apply NMS
-        pred = non_max_suppression(
-            prediction = pred,
-            conf_thres = opt.conf,
-            iou_thres  = opt.iou,
-            max_det    = opt.max_det,
-            classes    = opt.classes,
-            agnostic   = opt.agnostic_nms,
-        )
-        t2   = time_synchronized()
+        pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
+        t2 = time_synchronized()
 
         # Apply Classifier
         if classify:
@@ -137,50 +81,47 @@ def predict(opt, save_img: bool = False):
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             if webcam:  # batch_size >= 1
-                p, s, im0 = path[i], "%g: " % i, im0s[i].copy()
+                p, s, im0 = Path(path[i]), '%g: ' % i, im0s[i].copy()
             else:
-                p, s, im0 = path, "", im0s
+                p, s, im0 = Path(path), '', im0s
 
-            save_path  = str(save_dir / "images" / f"{core.Path(p).stem}.jpg")
-            txt_path   = str(save_dir / "labels" / core.Path(p).stem) + ("_%g" % dataset.frame if dataset.mode == "video" else "")
-            s         += "%gx%g " % img.shape[2:]  # print string
-            gn         = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
-            if det is not None and len(det):
+            save_path = str(save_dir / p.name)
+            txt_path = str(save_dir / 'labels' / p.stem) + ('_%g' % dataset.frame if dataset.mode == 'video' else '')
+            s += '%gx%g ' % img.shape[2:]  # print string
+            gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+            if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
 
                 # Print results
                 for c in det[:, -1].unique():
-                    n  = (det[:, -1] == c).sum()  # detections per class
-                    s += "%g %ss, " % (n, names[int(c)])  # add to string
+                    n = (det[:, -1] == c).sum()  # detections per class
+                    s += '%g %ss, ' % (n, names[int(c)])  # add to string
 
                 # Write results
-                for *xyxy, conf, cls in det:
+                for *xyxy, conf, cls in reversed(det):
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                        # xywh     = (xyxy2xywh(torch.tensor(xyxy).view(1, 4))).view(-1).tolist()  # xywh
-                        # xywh[0] -= (xywh[2] / 2)  # xy center to top-left corner
-                        # xywh[1] -= (xywh[3] / 2)  # xy center to top-left corner
                         line = (cls, *xywh, conf) if opt.save_conf else (cls, *xywh)  # label format
-                        with open(txt_path + ".txt", "a") as f:
-                            f.write(("%g " * len(line)).rstrip() % line + "\n")
+                        with open(txt_path + '.txt', 'a') as f:
+                            f.write(('%g ' * len(line)).rstrip() % line + '\n')
 
                     if save_img or view_img:  # Add bbox to image
-                        label = "%s %.2f" % (names[int(cls)], conf)
+                        label = '%s %.2f' % (names[int(cls)], conf)
                         plot_one_box(xyxy, im0, label=label, color=colors[int(cls)], line_thickness=3)
 
             # Print time (inference + NMS)
-            print("%sDone. (%.3fs)" % (s, t2 - t1))
+            print('%sDone. (%.3fs)' % (s, t2 - t1))
 
             # Stream results
             if view_img:
                 cv2.imshow(p, im0)
-                if cv2.waitKey(1) == ord("q"):  # q to quit
+                if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
 
             # Save results (image with detections)
             if save_img:
-                if dataset.mode == "images":
+                if dataset.mode == 'images':
                     cv2.imwrite(save_path, im0)
                 else:
                     if vid_path != save_path:  # new video
@@ -188,105 +129,44 @@ def predict(opt, save_img: bool = False):
                         if isinstance(vid_writer, cv2.VideoWriter):
                             vid_writer.release()  # release previous video writer
 
-                        fourcc = "mp4v"  # output video codec
-                        fps    = vid_cap.get(cv2.CAP_PROP_FPS)
-                        w      = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                        h      = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        fourcc = 'mp4v'  # output video codec
+                        fps = vid_cap.get(cv2.CAP_PROP_FPS)
+                        w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                         vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*fourcc), fps, (w, h))
                     vid_writer.write(im0)
-    
+
     if save_txt or save_img:
-        print("Results saved to %s" % save_dir)
-    
-    print("Done. (%.3fs)" % (time.time() - t0))
+        print('Results saved to %s' % save_dir)
 
-# endregion
+    print('Done. (%.3fs)' % (time.time() - t0))
 
 
-# region Main
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--weights', nargs='+', type=str, default='yolor-p6.pt', help='model.pt path(s)')
+    parser.add_argument('--source', type=str, default='inference/images', help='source')  # file/folder, 0 for webcam
+    parser.add_argument('--img-size', type=int, default=1280, help='inference size (pixels)')
+    parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
+    parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--view-img', action='store_true', help='display results')
+    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
+    parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
+    parser.add_argument('--augment', action='store_true', help='augmented inference')
+    parser.add_argument('--update', action='store_true', help='update all models')
+    parser.add_argument('--project', default='runs/detect', help='save results to project/name')
+    parser.add_argument('--name', default='exp', help='save results to project/name')
+    parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
+    opt = parser.parse_args()
+    print(opt)
 
-@click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Get config args
-    config = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args   = core.load_config(config)
-    
-    # Prioritize input args --> config file args
-    root     = root      or args["root"]
-    root     = core.Path(root)
-    weights  = weights   or args["weights"]
-    model    = core.Path(model or args["model"])
-    model    = model if model.exists() else _current_dir / "config"  / model.name
-    model    = model.config_file()
-    data_    = core.Path(args["data"])
-    data_    = data_ if data_.exists() else _current_dir / "data" / data_.name
-    data_    = data_.config_file()
-    data     = data      or args["source"]
-    project  = root.name or args["project"]
-    fullname = fullname  or args["name"]
-    save_dir = save_dir  or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    device   = device    or args["device"]
-    imgsz    = imgsz     or args["imgsz"]
-    verbose  = verbose   or args["verbose"]
-    
-    # Update arguments
-    args["root"]     = root
-    args["config"]   = config
-    args["weights"]  = core.to_list(weights)
-    args["model"]    = str(model)
-    args["data"]     = str(data_)
-    args["source"]   = data
-    args["project"]  = project
-    args["name"]     = fullname
-    args["save_dir"] = save_dir
-    args["device"]   = device
-    args["imgsz"]    = core.to_list(imgsz)
-    args["verbose"]  = verbose
-    
-    opt = argparse.Namespace(**args)
-    
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
-            for opt.weights in ["yolor-p6.pt", "yolor-w6.pt", "yolor-e6.pt", "yolor-d6.pt"]:
-                predict(opt)
+            for opt.weights in ['yolor-p6.pt', 'yolor-w6.pt', 'yolor-e6.pt', 'yolor-d6.pt']:
+                detect()
                 strip_optimizer(opt.weights)
         else:
-            predict(opt)
-    
-    return str(opt.save_dir)
-    
-
-if __name__ == "__main__":
-    main()
-
-# endregion
+            detect()

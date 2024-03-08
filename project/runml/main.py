@@ -62,7 +62,7 @@ def run_train(args: dict):
         python_call = ["python"]
     elif model in mon.MODELS_EXTRA:
         torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-        script_file = mon.MODELS_EXTRA[model]["model_dir"] / "train.py"
+        script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_train.py"
         devices     = mon.parse_device(device)
         if isinstance(devices, list) and torch_distributed_launch:
             python_call = [
@@ -159,7 +159,7 @@ def run_predict(args: dict):
             python_call = ["python"]
         elif model in mon.MODELS_EXTRA:
             torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "predict.py"
+            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_predict.py"
             python_call = ["python"]
         else:
             raise ValueError(f"Cannot find Python training script file.")

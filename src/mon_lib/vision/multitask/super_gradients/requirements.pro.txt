@@ -1,1 +1,0 @@
-deci-platform-client>=5.0.0
