@@ -6,12 +6,9 @@
 from __future__ import annotations
 
 import argparse
-import os
-import socket
 import sys
 import time
 
-import click
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
@@ -19,16 +16,13 @@ import torch.utils
 from PIL import Image
 from torch.autograd import Variable
 
+import mon
 from model import Network
-from mon import core, data as d, nn
-from mon.globals import ZOO_DIR
+from mon import DATA_DIR, ZOO_DIR, RUN_DIR
+from multi_read_data import MemoryFriendlyLoader
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+console = mon.console
 
-
-# region Predict
 
 def save_images(tensor, path):
     image_numpy = tensor[0].cpu().float().numpy()
@@ -37,44 +31,39 @@ def save_images(tensor, path):
     im.save(path, 'png')
 
 
-def predict(args: argparse.Namespace):
-    weights   = args.weights
-    weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    data      = args.data
-    save_dir  = args.save_dir
-    device    = args.device
-    seed      = args.seed
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+def test(args):
+    args.output_dir = mon.Path(args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    # (args.output_dir / "lol").mkdir(parents=True, exist_ok=True)
+    # (args.output_dir / "dark").mkdir(parents=True, exist_ok=True)
     
-    device = device[0] if isinstance(device, list) else device
     if not torch.cuda.is_available():
         console.log("No gpu device available")
         sys.exit(1)
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
-    
-    np.random.seed(seed)
-    torch.cuda.set_device(device)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+
+    np.random.seed(args.seed)
+    torch.cuda.set_device(args.gpu)
     cudnn.benchmark = True
+    torch.manual_seed(args.seed)
     cudnn.enabled   = True
+    torch.cuda.manual_seed(args.seed)
+    # print("GPU device = %d" % args.gpu)
+    # print("args = %s", args)
+    console.log(f"Data: {args.input_dir}")
     
-    # Load model
     model      = Network()
-    model      = model.to(device)
-    model_dict = torch.load(str(weights))
+    model      = model.cuda()
+    model_dict = torch.load(str(args.weights))
     model.load_state_dict(model_dict)
     for p in model.parameters():
         p.requires_grad = False
     
-    # Benchmark
-    if benchmark:
-        flops, params, avg_time = nn.calculate_efficiency_score(
+    # Measure efficiency score
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
             model      = model,
-            image_size = imgsz,
+            image_size = args.image_size,
             channels   = 3,
             runs       = 100,
             use_cuda   = True,
@@ -84,35 +73,37 @@ def predict(args: argparse.Namespace):
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
     
-    # Data I/O
-    console.log(f"{data}")
-    data_name, data_loader, data_writer = d.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # Prepare DataLoader
+    # test_low_data_names = r"H:\CVPR2021\LOL-700\input-100/*.png"
+    # test_low_data_names = r"H:\image-enhance\LLIECompared\DarkFace1000\input/*.png"
+    test_low_data_names = args.input_dir
+    test_dataset = MemoryFriendlyLoader(img_dir=test_low_data_names, task="test")
+    test_loader  = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size  = 1,
+        pin_memory  = True,
+        num_workers = 0
+    )
     
-    # Predicting
     with torch.no_grad():
         sum_time = 0
-        with core.get_progress_bar() as pbar:
-            for images, target, meta in pbar.track(
-                sequence    = data_loader,
-                total       = len(data_loader),
+        with mon.get_progress_bar() as pbar:
+            for _, (input, image_name) in pbar.track(
+                sequence    = enumerate(test_loader),
+                total       = len(test_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path      = meta["image_path"]
-                # input           = Variable(images, volatile=True).to(device)
-                input           = images.to(device)
-                image_name      = image_name[0].split(".")[0]
-                u_name          = f"{image_name}.png"
+                input          = Variable(input, volatile=True).cuda()
+                image_name     = image_name[0].split(".")[0]
+                u_name         = f"{image_name}.png"
                 # console.log(f"Processing {u_name}")
 
-                start_time      = time.time()
-                u_list, r_list  = model(input)
-                run_time        = (time.time() - start_time)
-                sum_time       += run_time
+                start_time     = time.time()
+                u_list, r_list = model(input)
+                run_time       = (time.time() - start_time)
+                sum_time      += run_time
                 
-                output_path     = save_dir / image_path.name
-                save_images(u_list[-1], str(output_path))
+                save_images(u_list[-1], str(args.output_dir / u_name))
                 # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
                 # save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
                 """
@@ -121,81 +112,23 @@ def predict(args: argparse.Namespace):
                 elif args.model == "upe" or args.model == "dark":
                     save_images(u_list[-2], u_path)
                 """
-        avg_time = float(sum_time / len(data_loader))
+        avg_time = sum_time / len(test_dataset)
         console.log(f"Average time: {avg_time}")
 
-# endregion
 
-
-# region Main
-
-@click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Prioritize input args --> config file args
-    root     = core.Path(root)
-    weights  = weights or ZOO_DIR / "vision/enhance/llie/ruas/ruas_lol.pt"
-    project  = root.name
-    save_dir = save_dir  or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
-    # imgsz    = core.str_to_int_list(imgsz)
-    # imgsz    = [int(i) for i in imgsz]
-    imgsz    = core.parse_hw(imgsz)[0]
-    
-    # Update arguments
-    args = {
-        "root"      : root,
-        "config"    : config,
-        "weights"   : weights,
-        "model"     : model,
-        "data"      : data,
-        "project"   : project,
-        "name"      : fullname,
-        "save_dir"  : save_dir,
-        "device"    : device,
-        "imgsz"     : imgsz,
-        "resize"    : resize,
-        "benchmark" : benchmark,
-        "save_image": save_image,
-        "verbose"   : verbose,
-        "seed"      : 2,
-    }
-    args = argparse.Namespace(**args)
-    
-    predict(args)
-    return str(args.save_dir)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser("ruas")
+    parser.add_argument("--input-dir",  type=str, default=DATA_DIR)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/ruas/ruas-lol.pt")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--gpu",        type=int, default=0)
+    parser.add_argument("--seed",       type=int, default=2)
+    parser.add_argument("--benchmark",  action="store_true")
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == "__main__":
-    main()
-
-# endregion
+    args = parse_args()
+    test(args)

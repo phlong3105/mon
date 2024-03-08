@@ -67,11 +67,11 @@ if [ "$mode" == "train" ]; then
 
 # Predict
 elif [ "$mode" == "predict" ]; then
-    save_dir="${current_dir}/run/predict/aic24-fisheye8k/submission"
+    save_dir="${current_dir}/run/predict/aic24_fisheye8k/submission"
     declare -a cameras=("${test_cameras[@]}")
     predict=""
     for ((i=0; i < ${#cameras[@]}; i++)); do
-        predict+="${data_dir}/aic/aic24-fisheye8k/${cameras[i]}/images"
+        predict+="${data_dir}/aic/aic24_fisheye8k/${cameras[i]}/images"
         if ((i < ${#cameras[@]} - 1)); then
             predict+=","
         fi
@@ -94,8 +94,8 @@ elif [ "$mode" == "predict" ]; then
 
 # Metric
 elif [ "$mode" == "metric" ]; then
-    result_file="${current_dir}/run/predict/aic24-fisheye8k/submission/results.json"
-    gt_file="${data_dir}/aic/aic24-fisheye8k/val/val.json"
+    result_file="${current_dir}/run/predict/aic24_fisheye8k/submission/results.json"
+    gt_file="${data_dir}/aic/aic24_fisheye8k/val/val.json"
     cd "${current_dir}" || exit
     python -W ignore metric.py \
         --result-file "${result_file}" \
@@ -106,9 +106,9 @@ elif [ "$mode" == "visualize" ]; then
     declare -a cameras=("${train_cameras[@]}")
     for ((i=0; i < ${#cameras[@]}; i++)); do
         python -W ignore visualize_bbox.py \
-            --image-dir "${data_dir}/aic/aic24-fisheye8k/${cameras[i]}/images" \
-            --label-dir "${data_dir}/aic/aic24-fisheye8k/${cameras[i]}/labels" \
-            --output-dir "${data_dir}/aic/aic24-fisheye8k/${cameras[i]}/visualize" \
+            --image-dir "${data_dir}/aic/aic24_fisheye8k/${cameras[i]}/images" \
+            --label-dir "${data_dir}/aic/aic24_fisheye8k/${cameras[i]}/labels" \
+            --output-dir "${data_dir}/aic/aic24_fisheye8k/${cameras[i]}/visualize" \
             --format "yolo" \
             --ext "jpg" \
             --thickness 1 \

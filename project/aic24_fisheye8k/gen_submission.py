@@ -11,6 +11,8 @@ import numpy as np
 
 import mon
 
+_current_file = mon.Path(__file__).absolute()
+_current_dir  = _current_file.parents[0]
 _bbox_formats = ["voc", "coco", "yolo"]
 
 
@@ -28,7 +30,7 @@ def get_image_id(image_name: str):
 
 
 @click.command(name="main", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--predict-dir", type=click.Path(exists=True),  default=mon.RUN_DIR/"aic24-fisheye8k",   help="Prediction results directory.")
+@click.option("--predict-dir", type=click.Path(exists=True),  default=_current_dir / "run/predict",    help="Prediction results directory.")
 @click.option("--output-file", type=click.Path(exists=False), default=None,                            help="Output .json file.")
 @click.option("--format",      type=click.Choice(_bbox_formats, case_sensitive=False), default="yolo", help="Bounding bbox format.")
 @click.option("--verbose",     is_flag=True)
