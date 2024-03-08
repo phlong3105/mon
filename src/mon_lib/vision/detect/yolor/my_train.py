@@ -26,7 +26,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-import my_test  # import test.py to get mAP after each epoch
+import my_test as test  # import test.py to get mAP after each epoch
 from models.yolo import Model
 from mon import core, DATA_DIR
 from utils.datasets import create_dataloader

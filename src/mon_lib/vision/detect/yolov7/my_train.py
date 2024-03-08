@@ -27,7 +27,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-import my_test  # import test.py to get mAP after each epoch
+import my_test as test  # import test.py to get mAP after each epoch
 from models.experimental import attempt_load
 from models.yolo import Model
 from mon import core, DATA_DIR
@@ -131,8 +131,8 @@ def train(hyp, opt, device, tb_writer=None):
         logger.info("Transferred %g/%g items from %s" % (len(state_dict), len(model.state_dict()), weights))  # report
     else:
         model = Model(opt.model, ch=3, nc=nc, anchors=hyp.get("anchors")).to(device)  # create
-    with torch_distributed_zero_first(rank):
-        check_dataset(data_dict)  # check
+    # with torch_distributed_zero_first(rank):
+        # check_dataset(data_dict)  # check
     train_path = data_dict["train"]
     test_path  = data_dict["val"]
 

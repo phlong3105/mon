@@ -690,7 +690,9 @@ DATASETS_EXTRA      = {
 
 # Models
 _ultralytics_dir = MON_LIB_DIR / "vision" / "multitask" / "ultralytics"
+_yolov7_dir      = MON_LIB_DIR / "vision" / "detect"    / "yolov7"
 _yolov9_dir      = MON_LIB_DIR / "vision" / "detect"    / "yolov9"
+_yolor_dir       = MON_LIB_DIR / "vision" / "detect"    / "yolor"
 MODELS_EXTRA = {
     # region detect
     "gelan_c"   : {
@@ -705,52 +707,52 @@ MODELS_EXTRA = {
     },
     "yolor_d6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+        "model_dir": _yolor_dir,
         "torch_distributed_launch": True,
     },
     "yolor_e6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+        "model_dir": _yolor_dir,
         "torch_distributed_launch": True,
     },
     "yolor_p6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+        "model_dir": _yolor_dir,
         "torch_distributed_launch": True,
     },
     "yolor_w6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+        "model_dir": _yolor_dir,
         "torch_distributed_launch": True,
     },
     "yolov7"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": _yolov7_dir,
         "torch_distributed_launch": True,
     },
     "yolov7_d6" : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": _yolov7_dir,
         "torch_distributed_launch": True,
     },
     "yolov7_e6" : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": _yolov7_dir,
         "torch_distributed_launch": True,
     },
     "yolov7_e6e": {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": _yolov7_dir,
         "torch_distributed_launch": True,
     },
     "yolov7_w6" : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": _yolov7_dir,
         "torch_distributed_launch": True,
     },
     "yolov7x"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": _yolov7_dir,
         "torch_distributed_launch": True,
     },
     "yolov8n"   : {
