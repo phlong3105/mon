@@ -1,0 +1,3 @@
+[submodule "src/yolov9"]
+	path = src/yolov9
+	url = https://github.com/phlong3105/yolov9
