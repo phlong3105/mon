@@ -8,14 +8,15 @@
 # (__(__)___(__)__)
 #
 [tool.poetry]
-name        = "abc"
+name        = "yolor"
 version     = "0.1.0"
-description = "An abstract package"
+description = "YOLOR"
 license     = "MIT License"
 authors     = [
 ]
 packages = [
-    {include="*", "from"="."},
+    {include="*"},
+    # {include="utils"},
 ]
 include  = []
 exclude  = []
