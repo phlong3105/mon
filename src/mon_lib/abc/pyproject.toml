@@ -1,0 +1,44 @@
+#
+#     /\_____/\
+#    /  o   o  \
+#   ( ==  ^  == )
+#    )         (
+#   (           )
+#  ( (  )   (  ) )
+# (__(__)___(__)__)
+#
+[tool.poetry]
+name        = "abc"
+version     = "0.1.0"
+description = "An abstract package"
+license     = "MIT License"
+authors     = [
+]
+packages = [
+    {include="*", "from"="."},
+]
+include  = []
+exclude  = []
+
+# [tool.poetry.dependencies]
+# Pillow         = "*"
+# PyYAML         = "*"
+# albumentations = "*"
+# clearml        = "*"
+# comet          = "*"
+# ipython        = "*"
+# matplotlib     = "*"
+# numpy          = "*"
+# opencv-python  = "*"
+# pandas         = "*"
+# psutil         = "*"
+# pycocotools    = "*"
+# requests       = "*"
+# scipy          = "*"
+# seaborn        = "*"
+# thop           = "*"
+# tqdm           = "*"
+
+[build-system]
+requires      = ["poetry-core>=1.2.0"]
+build-backend = "poetry.core.masonry.api"

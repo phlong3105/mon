@@ -32,6 +32,8 @@ __all__ = [
     "METRICS_EXTRA",
     "MODELS",
     "MODELS_EXTRA",
+    "MON_DIR",
+    "MON_LIB_DIR",
     "MOTIONS",
     "OBJECTS",
     "OPTIMIZERS",
@@ -61,9 +63,10 @@ from mon.core import dtype as DT, factory, pathlib
 # region Directory
 
 _current_file = pathlib.Path(__file__).absolute()
-MON_DIR       = _current_file.parents[0]
-SRC_DIR       = _current_file.parents[1]
 ROOT_DIR      = _current_file.parents[2]
+SRC_DIR       = _current_file.parents[1]
+MON_DIR       = _current_file.parents[0]
+MON_LIB_DIR   = SRC_DIR / "mon_lib"
 
 ZOO_DIR = None
 for i, parent in enumerate(_current_file.parents):
@@ -686,8 +689,8 @@ DATASETS_EXTRA      = {
 }
 
 # Models
-_yolov8_dir  = MON_DIR / "vision" / "multitask" / "ultralytics" / "v8_1_18"
-_yolov9_dir  = MON_DIR / "vision" / "detect" / "yolov9" / "v0_1"
+_ultralytics_dir = MON_LIB_DIR / "vision" / "multitask" / "ultralytics"
+_yolov9_dir      = MON_LIB_DIR / "vision" / "detect" / "yolov9"
 MODELS_EXTRA = {
     # region detect
     "gelan_c"   : {
@@ -702,77 +705,77 @@ MODELS_EXTRA = {
     },
     "yolor_d6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolor",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
     "yolor_e6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolor",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
     "yolor_p6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolor",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
     "yolor_w6"  : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolor",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
         "torch_distributed_launch": True,
     },
     "yolov7"    : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
     "yolov7_d6" : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
     "yolov7_e6" : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
     "yolov7_e6e": {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
     "yolov7_w6" : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
     "yolov7x"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": MON_DIR / "vision" / "detect" / "yolov7",
+        "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
         "torch_distributed_launch": True,
     },
     "yolov8n"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": _yolov8_dir,
+        "model_dir": _ultralytics_dir,
         "torch_distributed_launch": False,
     },
     "yolov8s"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": _yolov8_dir,
+        "model_dir": _ultralytics_dir,
         "torch_distributed_launch": False,
     },
     "yolov8m"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": _yolov8_dir,
+        "model_dir": _ultralytics_dir,
         "torch_distributed_launch": False,
     },
     "yolov8l"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": _yolov8_dir,
+        "model_dir": _ultralytics_dir,
         "torch_distributed_launch": False,
     },
     "yolov8x"   : {
         "tasks"    : [Task.DETECT],
-        "model_dir": _yolov8_dir,
+        "model_dir": _ultralytics_dir,
         "torch_distributed_launch": False,
     },
     "yolov9_c"  : {
@@ -789,72 +792,72 @@ MODELS_EXTRA = {
     # region enhance
     "lime"         : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "lime",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "lime",
         "torch_distributed_launch": True,
     },
     "llflow"       : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "llflow",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "llflow",
         "torch_distributed_launch": True,
     },
     "pie"          : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "pie",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "pie",
         "torch_distributed_launch": True,
     },
     "restormer"    : {
         "tasks"    : [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "multitask" / "restormer",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "multitask" / "restormer",
         "torch_distributed_launch": True,
     },
     "retinexdip"   : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "retinexdip",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "retinexdip",
         "torch_distributed_launch": True,
     },
     "retinexformer": {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "retinexformer",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "retinexformer",
         "torch_distributed_launch": True,
     },
     "retinexnet"   : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "retinexnet",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "retinexnet",
         "torch_distributed_launch": True,
     },
     "ruas"         : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "ruas",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "ruas",
         "torch_distributed_launch": True,
     },
     "sci"          : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "sci",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "sci",
         "torch_distributed_launch": True,
     },
     "sgz"          : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "sgz",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "sgz",
         "torch_distributed_launch": True,
     },
     "snr"          : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "snr",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "snr",
         "torch_distributed_launch": True,
     },
     "stablellve"   : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "stablellve",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "stablellve",
         "torch_distributed_launch": True,
     },
     "uretinexnet"  : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "uretinexnet",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "uretinexnet",
         "torch_distributed_launch": True,
     },
     "utvnet"       : {
         "tasks"    : [Task.LLIE],
-        "model_dir": MON_DIR / "vision" / "enhance" / "llie" / "utvnet",
+        "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "utvnet",
         "torch_distributed_launch": True,
     },
     # endregion
