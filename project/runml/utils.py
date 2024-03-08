@@ -175,7 +175,7 @@ def list_weights_files(
     if project_root not in [None, "None", ""]:
         project_root = mon.Path(project_root)
         train_dir    = project_root / "run" / "train"
-        files        = sorted(list(train_dir.rglob(f"*/weights/*")))
+        files        = sorted(list(train_dir.rglob(f"*{model}*/*")))
         files        = [f for f in files if f.is_weights_file()]
         if config not in [None, "None", ""]:
             config = mon.Path(config).stem
@@ -188,6 +188,17 @@ def list_weights_files(
     files = mon.unique(files)
     files = sorted(files)
     return files
+
+# endregion
+
+
+# region Save Dir
+
+def list_train_save_dirs(project_root: str | mon.Path) -> list[mon.Path]:
+    project_root = mon.Path(project_root)
+    train_dir    = project_root / "run" / "train"
+    save_dirs    = sorted(list(train_dir.dirs()))
+    return save_dirs
 
 # endregion
 

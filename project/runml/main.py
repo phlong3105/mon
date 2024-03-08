@@ -24,9 +24,10 @@ def run_train(args: dict):
     root     = mon.Path(args["root"])
     task     = args["task"]
     mode     = args["mode"]
-    model    = args["model"]
     config   = args["config"]
     weights  = args["weights"]
+    model    = args["model"]
+    fullname = args["fullname"]
     save_dir = args["save_dir"]
     device   = args["device"]
     epochs   = args["epochs"]
@@ -39,7 +40,7 @@ def run_train(args: dict):
     
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
-    fullname = config.stem
+    fullname = fullname if fullname in [None, "None", ""] else config.stem
     save_dir = save_dir or root / "run" / "train" / fullname
     
     kwargs   = {
@@ -116,6 +117,7 @@ def run_predict(args: dict):
     config       = args["config"]
     weights	     = args["weights"]
     data         = args["data"]
+    fullname     = args["fullname"]
     save_dir     = args["save_dir"]
     device       = args["device"]
     imgsz        = args["imgsz"]
@@ -130,7 +132,7 @@ def run_predict(args: dict):
     
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
-    fullname = config.stem
+    fullname = fullname if fullname in [None, "None", ""] else config.stem
     
     for d in data:
         if use_data_dir:
@@ -224,24 +226,24 @@ def main(
     click.echo(click.style(f"\nInput Prompt:", fg="white", bg="red", bold=True))
     
     # Task
-    tasks_        = utils.list_tasks(project_root=root)
-    tasks_str_    = utils.parse_menu_string(tasks_)
-    task          = click.prompt(click.style(f"Task {tasks_str_}", fg="bright_green", bold=True), default=task)
-    task          = tasks_[int(task)] if mon.is_int(task) else task
+    tasks_     = utils.list_tasks(project_root=root)
+    tasks_str_ = utils.parse_menu_string(tasks_)
+    task       = click.prompt(click.style(f"Task {tasks_str_}", fg="bright_green", bold=True), default=task)
+    task       = tasks_[int(task)] if mon.is_int(task) else task
     # Mode
-    mode          = click.prompt(click.style(f"Mode {utils.parse_menu_string(modes_)}", fg="bright_green", bold=True), default=mode)
-    mode          = modes_[int(mode)] if mon.is_int(mode) else mode
+    mode       = click.prompt(click.style(f"Mode {utils.parse_menu_string(modes_)}", fg="bright_green", bold=True), default=mode)
+    mode       = modes_[int(mode)] if mon.is_int(mode) else mode
     
     if mode in ["train", "predict"]:
         # Model
-        models_     = utils.list_models(project_root=root, task=task)
-        models_str_ = utils.parse_menu_string(models_)
-        model	    = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
-        model 	    = models_[int(model)] if mon.is_int(model) else model
-        # Config
+        models_       = utils.list_models(project_root=root, task=task)
+        models_str_   = utils.parse_menu_string(models_)
+        model	      = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
+        model 	      = models_[int(model)] if mon.is_int(model) else model
+        # Config      
         configs_      = utils.list_configs(project_root=root, model=model)
-        configs__str_ = utils.parse_menu_string(configs_)
-        config	      = click.prompt(click.style(f"Config {configs__str_}", fg="bright_green", bold=True), type=str, default="")
+        configs_str_  = utils.parse_menu_string(configs_)
+        config	      = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
         config        = configs_[int(config)] if mon.is_int(config) else config
         # Weights
         weights_      = utils.list_weights_files(project_root=root, model=model, config=config)
@@ -261,6 +263,9 @@ def main(
             data	  = click.prompt(click.style(f"Predict(s) {data_str_}", fg="bright_green", bold=True), type=str, default=data)
             data 	  = mon.str_to_list(data)
             data 	  = [data_[int(d)] if mon.is_int(d) else d for d in data]
+        # Fullname
+        fullname = mon.Path(config).stem
+        fullname = click.prompt(click.style(f"Save name: {fullname}", fg="bright_green", bold=True), type=str, default=fullname)
         # Device
         devices_    = mon.list_devices()
         devices_str = utils.parse_menu_string(devices_)
@@ -300,9 +305,10 @@ def main(
             "root"    : root,
             "task"    : task,
             "mode"    : mode,
-            "model"   : model,
             "config"  : config,
             "weights" : weights,
+            "model"   : model,
+            "fullname": fullname,
             "save_dir": save_dir,
             "device"  : device,
             "epochs"  : epochs,
@@ -316,10 +322,11 @@ def main(
             "root"        : root,
             "task"        : task,
             "mode"        : mode,
-            "model"       : model,
             "config"      : config,
             "weights"     : weights,
+            "model"       : model,
             "data"        : data,
+            "fullname"    : fullname,
             "save_dir"    : save_dir,
             "device"      : device,
             "imgsz"       : imgsz,
