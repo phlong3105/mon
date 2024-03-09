@@ -90,12 +90,6 @@ aic = [
     # "ultralytics",
 ]
 
-# [tool.poetry.group.dev]
-# optional = true
-
-# [tool.poetry.group.dev.dependencies]
-# ultralytics = {path="src/lib/yolov8", develop=true}
-
 [build-system]
 requires      = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

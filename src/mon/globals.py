@@ -689,10 +689,11 @@ DATASETS_EXTRA      = {
 }
 
 # Models
-_ultralytics_dir = MON_LIB_DIR / "vision" / "multitask" / "ultralytics"
-_yolov7_dir      = MON_LIB_DIR / "vision" / "detect"    / "yolov7"
-_yolov9_dir      = MON_LIB_DIR / "vision" / "detect"    / "yolov9"
-_yolor_dir       = MON_LIB_DIR / "vision" / "detect"    / "yolor"
+_supergradient_dir = MON_LIB_DIR / "vision" / "multitask" / "supergradients" / "src/super_gradients"
+_ultralytics_dir   = MON_LIB_DIR / "vision" / "multitask" / "ultralytics"
+_yolov7_dir        = MON_LIB_DIR / "vision" / "detect"    / "yolov7"
+_yolov9_dir        = MON_LIB_DIR / "vision" / "detect"    / "yolov9"
+_yolor_dir         = MON_LIB_DIR / "vision" / "detect"    / "yolor"
 MODELS_EXTRA = {
     # region detect
     "gelan_c"   : {
@@ -704,6 +705,21 @@ MODELS_EXTRA = {
         "tasks"    : [Task.DETECT],
         "model_dir": _yolov9_dir,
         "torch_distributed_launch": True,
+    },
+    "yolo_nas_s": {
+        "tasks"    : [Task.DETECT],
+        "model_dir": _supergradient_dir,
+        "torch_distributed_launch": False,
+    },
+    "yolo_nas_m": {
+        "tasks"    : [Task.DETECT],
+        "model_dir": _supergradient_dir,
+        "torch_distributed_launch": False,
+    },
+    "yolo_nas_l": {
+        "tasks"    : [Task.DETECT],
+        "model_dir": _supergradient_dir,
+        "torch_distributed_launch": False,
     },
     "yolor_d6"  : {
         "tasks"    : [Task.DETECT],

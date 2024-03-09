@@ -40,7 +40,7 @@ def run_train(args: dict):
     
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
-    fullname = fullname if fullname in [None, "None", ""] else config.stem
+    fullname = fullname if fullname not in [None, "None", ""] else config.stem
     save_dir = save_dir or root / "run" / "train" / fullname
     
     kwargs   = {
@@ -132,7 +132,7 @@ def run_predict(args: dict):
     
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
-    fullname = fullname if fullname in [None, "None", ""] else config.stem
+    fullname = fullname if fullname not in [None, "None", ""] else config.stem
     
     for d in data:
         if use_data_dir:

@@ -1,3 +1,8 @@
+# project
+[submodule "project/XAnyLabeling"]
+	path = project/XAnyLabeling
+	url = https://github.com/phlong3105/XAnyLabeling
+# src/mon_lib
 [submodule "src/mon_lib/vision/multitask/supergradients"]
 	path = src/mon_lib/vision/multitask/supergradients
 	url  = https://github.com/phlong3105/supergradients
