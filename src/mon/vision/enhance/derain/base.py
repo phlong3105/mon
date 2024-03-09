@@ -31,6 +31,6 @@ class DerainingModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "derain" / self.name
+        return ZOO_DIR / "vision" / "enhance" / "derain"
     
 # endregion

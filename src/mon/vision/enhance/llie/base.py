@@ -31,6 +31,6 @@ class LowLightImageEnhancementModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "llie" / self.name
+        return ZOO_DIR / "vision" / "enhance" / "llie"
     
 # endregion

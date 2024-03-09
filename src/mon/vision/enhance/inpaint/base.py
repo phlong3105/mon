@@ -29,6 +29,6 @@ class InpaintingModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "inpaint" / self.name
+        return ZOO_DIR / "vision" / "enhance" / "inpaint"
     
 # endregion

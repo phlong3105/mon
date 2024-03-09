@@ -342,9 +342,9 @@ class ResNet18(ResNet):
     """
     
     _zoo: dict = {
-        "imagenet1k-v1": {
+        "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet18-f37072fd.pth",
-            "path"       : "resnet18-imagenet1k-v1.pth",
+            "path"       : "resnet/resnet18_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -369,7 +369,7 @@ class ResNet34(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet34-b627a593.pth",
-            "path"       : "resnet34_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet34_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -395,13 +395,13 @@ class ResNet50(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet50-11ad3fa6.pth",
-            "path"       : "resnet50_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet50_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/resnet50-0676ba61.pth",
-            "path"       : "resnet50_imagenet1k_v2.pth",
+            "path"       : "resnet/resnet50_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -427,13 +427,13 @@ class ResNet101(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet101-63fe2227.pth",
-            "path"       : "resnet101_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet101_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/resnet101-cd907fc2.pth",
-            "path"       : "resnet101_imagenet1k_v2.pth",
+            "path"       : "resnet/resnet101_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -459,13 +459,13 @@ class ResNet152(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet152-394f9c45.pth",
-            "path"       : "resnet152_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet152_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/resnet152-f82ba261.pth",
-            "path"       : "resnet152_imagenet1k_v2.pth",
+            "path"       : "resnet/resnet152_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },

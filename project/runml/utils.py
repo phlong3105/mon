@@ -181,7 +181,7 @@ def list_weights_files(
             config = mon.Path(config).stem
             files  = [f for f in files if config in str(f)]
     #
-    for path in sorted(list(mon.ZOO_DIR.rglob(f"*/{model}/*"))):
+    for path in sorted(list(mon.ZOO_DIR.rglob(f"*{model}*"))):
         if path.is_weights_file():
             files.append(path)
     #

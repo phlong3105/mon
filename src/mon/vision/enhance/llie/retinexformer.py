@@ -392,7 +392,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 	_zoo: dict = {
 		"fivek" : {
 			"url"         : None,
-			"path"        : "retinexformer_fivek",
+			"path"        : "retinexformer/retinexformer_fivek",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,
@@ -402,7 +402,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		},
 		"lol_v1": {
 			"url"         : None,
-			"path"        : "retinexformer_lol_v1",
+			"path"        : "retinexformer/retinexformer_lol_v1",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,
@@ -412,7 +412,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		},
 		"lol_v2_real" : {
 			"url"         : None,
-			"path"        : "retinexformer_lol_v2_real",
+			"path"        : "retinexformer/retinexformer_lol_v2_real",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,
@@ -422,7 +422,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		},
 		"lol_v2_syn"  : {
 			"url"         : None,
-			"path"        : "retinexformer_lol_v2_syn",
+			"path"        : "retinexformer/retinexformer_lol_v2_syn",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,
@@ -432,7 +432,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		},
 		"sdsd_indoor" : {
 			"url"         : None,
-			"path"        : "retinexformer_sdsd_indoor",
+			"path"        : "retinexformer/retinexformer_sdsd_indoor",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,
@@ -442,7 +442,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		},
 		"sdsd_outdoor": {
 			"url"         : None,
-			"path"        : "retinexformer_sdsd_outdoor",
+			"path"        : "retinexformer/retinexformer_sdsd_outdoor",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,
@@ -452,7 +452,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		},
 		"sid" : {
 			"url"         : None,
-			"path"        : "retinexformer_sid",
+			"path"        : "retinexformer/retinexformer_sid",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,
@@ -462,7 +462,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		},
 		"smid": {
 			"url"         : None,
-			"path"        : "retinexformer_smid",
+			"path"        : "retinexformer/retinexformer_smid",
 			"channels"    : 3,
 			"num_channels": 40,
 			"stage"	      : 1,

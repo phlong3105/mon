@@ -31,6 +31,6 @@ class DenoisingModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "denoise" / self.name
+        return ZOO_DIR / "vision" / "enhance" / "denoise"
     
 # endregion

@@ -30,6 +30,6 @@ class DehazingModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "dehaze" / self.name
+        return ZOO_DIR / "vision" / "enhance" / "dehaze"
     
 # endregion

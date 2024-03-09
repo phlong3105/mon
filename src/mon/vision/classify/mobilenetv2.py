@@ -100,13 +100,13 @@ class MobileNetV2(base.ImageClassificationModel):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
-            "path"       : "mobilenetv2_imagenet1k_v1.pth",
+            "path"       : "mobilenetv2/mobilenetv2_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v2-7ebf99e0.pth",
-            "path"       : "mobilenetv2_imagenet1k_v2.pth",
+            "path"       : "mobilenetv2/mobilenetv2_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },

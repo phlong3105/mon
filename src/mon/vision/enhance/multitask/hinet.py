@@ -219,7 +219,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
     _zoo   = {
         "gopro": {
             "url"         : None,
-            "path"        : "hinet_gopro.pth",
+            "path"        : "hinet/hinet_gopro.pth",
             "channels"    : 3,
             "num_classes" : None,
             "num_channels": 64,
@@ -229,7 +229,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
         },
         "reds": {
             "url"         : None,
-            "path"        : "hinet_reds.pth",
+            "path"        : "hinet/hinet_reds.pth",
             "channels"    : 3,
             "num_classes" : None,
             "num_channels": 64,
@@ -239,7 +239,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
         },
         "sidd": {
             "url"         : None,
-            "path"        : "hinet_sidd_x1.0.pth",
+            "path"        : "hinet/hinet_sidd_x1.0.pth",
             "channels"    : 3,
             "num_classes" : None,
             "num_channels": 64,
@@ -249,7 +249,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
         },
         "rain13k": {
             "url"         : None,
-            "path"        : "hinet_rain13k.pth",
+            "path"        : "hinet/hinet_rain13k.pth",
             "channels"    : 3,
             "num_classes" : None,
             "num_channels": 64,

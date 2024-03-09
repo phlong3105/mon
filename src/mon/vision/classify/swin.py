@@ -301,7 +301,7 @@ class Swin_T(SwinTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_t-704ceda3.pth",
-            "path"       : "swin_t_imagenet1k_v1.pth",
+            "path"       : "swin/swin_t_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -332,7 +332,7 @@ class Swin_S(SwinTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_s-5e29d889.pth",
-            "path"       : "swin_s_imagenet1k_v1.pth",
+            "path"       : "swin/swin_s_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -363,7 +363,7 @@ class Swin_B(SwinTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_b-68c6b09e.pth",
-            "path"       : "swin_b_imagenet1k_v1.pth",
+            "path"       : "swin_v2/swin_b_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -394,7 +394,7 @@ class Swin_V2_T(SwinTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_v2_t-b137f0e2.pth",
-            "path"       : "swin_v2_t_imagenet1k_v1.pth",
+            "path"       : "swin_v2/swin_v2_t_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -427,7 +427,7 @@ class Swin_V2_S(SwinTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_v2_s-637d8ceb.pth",
-            "path"       : "swin_v2_s_imagenet1k_v1.pth",
+            "path"       : "swin_v2/swin_v2_s_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -460,7 +460,7 @@ class Swin_V2_B(SwinTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_v2_b-781e5279.pth",
-            "path"       : "swin_v2_b_imagenet1k_v1.pth",
+            "path"       : "swin_v2/swin_v2_b_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

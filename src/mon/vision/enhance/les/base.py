@@ -31,6 +31,6 @@ class LightEffectSuppressionModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "les" / self.name
+        return ZOO_DIR / "vision" / "enhance" / "les"
     
 # endregion

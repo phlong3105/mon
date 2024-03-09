@@ -167,9 +167,9 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
     """
     
     _zoo: dict = {
-        "sice_zerodce": {
+        "sice_mix": {
             "url"         : None,
-            "path"        : "best.pth",
+            "path"        : "zerodce/zerodce_best.pth",
             "channels"    : 3,
             "num_channels": 32,
             "num_iters"   : 8,

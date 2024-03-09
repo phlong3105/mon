@@ -371,15 +371,7 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 	"""
 	
 	_tasks: list[Task] = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW]
-	_zoo  : dict = {
-		"gopro": {
-			"url"        : None,
-			"path"       : "hinet_deblur_gopro.pth",
-			"channels"   : 3,
-			"num_classes": None,
-			"map": {},
-		}
-	}
+	_zoo  : dict = {}
 	
 	def __init__(
 		self,

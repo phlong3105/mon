@@ -1211,7 +1211,7 @@ class UformerB(Uformer):
     _zoo: dict = {
         "gopro" : {
             "url"        : None,
-            "path"       : "uformer_b_gopro",
+            "path"       : "uformer_b/uformer_b_gopro",
             "num_classes": None,
             "image_size" : 128,
             "dd_in"      : 3,
@@ -1224,7 +1224,7 @@ class UformerB(Uformer):
         },
         "gtrain": {
             "url"        : None,
-            "path"       : "uformer_b_gtrain",
+            "path"       : "uformer_b/uformer_b_gtrain",
             "num_classes": None,
             "image_size" : 128,
             "dd_in"      : 3,
@@ -1237,7 +1237,7 @@ class UformerB(Uformer):
         },
         "sidd"  : {
             "url"        : None,
-            "path"       : "uformer_b_sidd",
+            "path"       : "uformer_b/uformer_b_sidd",
             "num_classes": None,
             "image_size" : 128,
             "dd_in"      : 3,

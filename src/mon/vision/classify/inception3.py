@@ -276,7 +276,7 @@ class Inception3(base.ImageClassificationModel):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/inception_v3_google-0cc3c7bd.pth",
-            "path"       : "inception3_imagenet1k_v1.pth",
+            "path"       : "inception3/inception3_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

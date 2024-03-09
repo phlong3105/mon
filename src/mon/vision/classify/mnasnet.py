@@ -241,7 +241,7 @@ class MNASNet0_5(MNASNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet0.5_top1_67.823-3ffadce67e.pth",
-            "path"       : "mnasnet0_5_imagenet1k_v1.pth",
+            "path"       : "mnasnet/mnasnet0_5_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -267,7 +267,7 @@ class MNASNet0_75(MNASNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet0_75-7090bc5f.pth",
-            "path"       : "mnasnet0_75_imagenet1k_v1.pth",
+            "path"       : "mnasnet/mnasnet0_75_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -293,7 +293,7 @@ class MNASNet1_0(MNASNet):
     _zoo: dict = {
         "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet1.0_top1_73.512-f206786ef8.pth",
-            "path"       : "mnasnet1_0-imagenet1k-v1.pth",
+            "path"       : "mnasnet/mnasnet1_0-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -319,7 +319,7 @@ class MNASNet1_3(MNASNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet1_3-a4c69d6f.pth",
-            "path"       : "mnasnet1_3_imagenet1k_v1.pth",
+            "path"       : "mnasnet/mnasnet1_3_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

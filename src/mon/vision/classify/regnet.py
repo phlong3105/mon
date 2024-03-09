@@ -436,13 +436,13 @@ class RegNet_Y_400MF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_400mf-c65dace8.pth",
-            "path"       : "regnet_y_400mf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_400mf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_y_400mf-e6988f5f.pth",
-            "path"       : "regnet_y_400mf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_y_400mf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -470,13 +470,13 @@ class RegNet_Y_800MF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_800mf-1b27b58c.pth",
-            "path"       : "regnet_y_800mf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_800mf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_y_800mf-58fc7688.pth",
-            "path"       : "regnet_y_800mf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_y_800mf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -504,13 +504,13 @@ class RegNet_Y_1_6GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_1_6gf-b11a554e.pth",
-            "path"       : "regnet_y_1_6gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_1_6gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_y_1_6gf-0d7bc02a.pth",
-            "path"       : "regnet_y_1_6gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_y_1_6gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -538,13 +538,13 @@ class RegNet_Y_3_2GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_3_2gf-b5a9779c.pth",
-            "path"       : "regnet_y_3_2gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_3_2gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_y_3_2gf-9180c971.pth",
-            "path"       : "regnet_y_3_2gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_y_3_2gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -572,13 +572,13 @@ class RegNet_Y_8GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_8gf-d0d0e4a8.pth",
-            "path"       : "regnet_y_8gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_8gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_y_8gf-dc2b1b54.pth",
-            "path"       : "regnet_y_8gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_y_8gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -606,13 +606,13 @@ class RegNet_Y_16GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_16gf-9e6ed7dd.pth",
-            "path"       : "regnet_y_16gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_16gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_y_16gf-3e4a00f9.pth",
-            "path"       : "regnet_y_16gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_y_16gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -652,25 +652,25 @@ class RegNet_Y_32GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_32gf-4dee3f7a.pth",
-            "path"       : "regnet_y_32gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_32gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_y_32gf-8db6d4b5.pth",
-            "path"       : "regnet_y_32gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_y_32gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_32gf_swag-04fdfa75.pth",
-            "path"       : "regnet_y_32gf_swag_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_32gf_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_lc_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_32gf_lc_swag-e1583746.pth",
-            "path"       : "regnet_y_32gf_lc_swag_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_32gf_lc_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -698,13 +698,13 @@ class RegNet_Y_128GF(RegNet):
     _zoo: dict = {
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_128gf_swag-c8ce3e52.pth",
-            "path"       : "regnet_y_128gf_swag_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_128gf_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_lc_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_128gf_lc_swag-cbe8ce12.pth",
-            "path"       : "regnet_y_128gf_lc_swag_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_y_128gf_lc_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -732,13 +732,13 @@ class RegNet_X_400MF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_400mf-adf1edd5.pth",
-            "path"       : "regnet_x_400mf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_x_400mf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_x_400mf-62229a5f.pth",
-            "path"       : "regnet_x_400mf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_x_400mf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -766,13 +766,13 @@ class RegNet_X_800MF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_800mf-ad17e45c.pth",
-            "path"       : "regnet_x_800mf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_x_800mf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_x_800mf-94a99ebd.pth",
-            "path"       : "regnet_x_800mf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_x_800mf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -800,13 +800,13 @@ class RegNet_X_1_6GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_1_6gf-e3633e7f.pth",
-            "path"       : "regnet_x_1_6gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_x_1_6gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_x_1_6gf-a12f2b72.pth",
-            "path"       : "regnet_x_1_6gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_x_1_6gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -834,13 +834,13 @@ class RegNet_X_3_2GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_3_2gf-f342aeae.pth",
-            "path"       : "regnet_x_3_2gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_x_3_2gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_x_3_2gf-7071aa85.pth",
-            "path"       : "regnet_x_3_2gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_x_3_2gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -868,13 +868,13 @@ class RegNet_X_8GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_8gf-03ceed89.pth",
-            "path"       : "regnet_x_8gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_x_8gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_x_8gf-2b70d774.pth",
-            "path"       : "regnet_x_8gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_x_8gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -902,13 +902,13 @@ class RegNet_X_16GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_16gf-2007eb11.pth",
-            "path"       : "regnet_x_16gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_x_16gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_x_16gf-ba3796d7.pth",
-            "path"       : "regnet_x_16gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_x_16gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -936,13 +936,13 @@ class RegNetX_32GF(RegNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_32gf-9d47f8d0.pth",
-            "path"       : "regnet_x32gf_imagenet1k_v1.pth",
+            "path"       : "regnet/regnet_x32gf_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/regnet_x_32gf-6eb8fdc6.pth",
-            "path"       : "regnet_x32gf_imagenet1k_v2.pth",
+            "path"       : "regnet/regnet_x32gf_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
