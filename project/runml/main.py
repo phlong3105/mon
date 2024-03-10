@@ -254,6 +254,7 @@ def main(
             if isinstance(weights, str):
                 weights = mon.str_to_list(weights)
             weights = [weights_[int(w)] if mon.is_int(w) else w for w in weights]
+            weights = [w.replace("'", "") for w in weights]
             weights = weights[0] if len(weights) == 1 else weights
         # Predict data
         if mode in ["predict"]:

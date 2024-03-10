@@ -118,8 +118,7 @@ class KITTISnow(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -161,8 +160,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -203,8 +201,7 @@ class KITTISnowM(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -245,8 +242,7 @@ class KITTISnowL(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -287,8 +283,7 @@ class Snow100K(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -329,8 +324,7 @@ class Snow100KS(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -371,8 +365,7 @@ class Snow100KM(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -413,8 +406,7 @@ class Snow100KL(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 

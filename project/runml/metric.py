@@ -58,7 +58,7 @@ def measure_metric_piqa(
     input_dir   = mon.Path(input_dir)
     target_dir  = mon.Path(target_dir) \
         if target_dir is not None \
-        else mon.Path(str(input_dir).replace("low", "high"))
+        else input_dir.replace("low", "high")
     
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():
@@ -153,7 +153,7 @@ def measure_metric_pyiqa(
     input_dir  = mon.Path(input_dir)
     target_dir = mon.Path(target_dir) \
         if target_dir is not None \
-        else mon.Path(str(input_dir).replace("low", "high"))
+        else input_dir.replace("low", "high")
     
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():

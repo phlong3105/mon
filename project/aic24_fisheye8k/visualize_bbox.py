@@ -97,8 +97,7 @@ def visualize_bbox(
 				lineType  = cv2.LINE_AA,
 			)
 			if save:
-				output_file = str(image_files[i]).replace("images", "visualize")
-				output_file = mon.Path(output_file)
+				output_file = image_files[i].replace("images", "visualize")
 				output_file = output_file.parent / f"{image_files[i].stem}.jpg"
 				output_file.parent.mkdir(parents=True, exist_ok=True)
 				# output_file = output_dir / f"{image_files[i].stem}.{ext}"

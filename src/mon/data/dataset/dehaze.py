@@ -91,8 +91,7 @@ class DenseHaze(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -134,8 +133,7 @@ class IHaze(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -177,8 +175,7 @@ class NHHaze(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -220,8 +217,7 @@ class OHaze(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -293,8 +289,7 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -337,8 +332,8 @@ class RESIDEITS(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                path  = img.path.replace("/lq/", "/hq/")
+                path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -381,8 +376,8 @@ class RESIDEITSV2(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                path  = img.path.replace("/lq/", "/hq/")
+                path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -425,8 +420,8 @@ class RESIDEOTS(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                path  = img.path.replace("/lq/", "/hq/")
+                path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -499,8 +494,8 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                path  = img.path.replace("/lq/", "/hq/")
+                path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -543,8 +538,8 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                path  = img.path.replace("/lq/", "/hq/")
+                path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -618,8 +613,7 @@ class SateHaze1K(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -660,8 +654,7 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -702,8 +695,7 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -744,8 +736,7 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 

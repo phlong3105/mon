@@ -119,7 +119,7 @@ def measure_metric(
     model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
     console.rule(f"[bold red] {model_variant}")
 
-    input_dir = str(input_dir).replace("MODEL", model_variant)
+    input_dir = input_dir.replace("MODEL", model_variant)
 
     assert input_dir is not None and mon.Path(input_dir).is_dir()
     assert target_dir is not None and mon.Path(target_dir).is_dir()
@@ -133,7 +133,7 @@ def measure_metric(
     input_dir  = mon.Path(input_dir)
     target_dir = mon.Path(target_dir) \
         if target_dir is not None \
-        else mon.Path(str(input_dir).replace("low", "labels"))
+        else input_dir.replace("low", "labels")
 
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():
@@ -156,7 +156,7 @@ def measure_metric(
             image = color_to_gray(path=str(image_file))
 
             target_file = None
-            stem        = str(image_file.stem)
+            stem        = image_file.stem
             stem        = stem.replace("_leftImg8bit", "_gtFine_color")
             for ext in mon.IMAGE_FILE_FORMATS:
                 temp = target_dir / f"{stem}{ext}"

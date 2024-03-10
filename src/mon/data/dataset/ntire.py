@@ -76,8 +76,7 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 				self._images,
 				description=f"Listing {self.__class__.__name__} {self.split} labels"
 			):
-				path  = str(img.path).replace("/lq/", "/hq/")
-				path  = core.Path(path)
+				path  = img.path.replace("/lq/", "/hq/")
 				label = base.ImageLabel(path=path.image_file())
 				self._labels.append(label)
 				

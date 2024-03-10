@@ -71,7 +71,7 @@ def visualize_image(
             crop    = image[y:y + s, x:x + s]
 
             # output_file = output_dir / f"{image_files[i].stem}.{extension}"
-            output_file = str(image_files[i])
+            output_file = image_files[i]
             output_file = output_file.replace("predict", "predict-crop")
             mon.Path(output_file).parent.mkdir(parents=True, exist_ok=True)
             cv2.imwrite(output_file, crop)

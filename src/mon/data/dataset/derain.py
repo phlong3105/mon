@@ -123,8 +123,7 @@ class Rain100(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -166,8 +165,7 @@ class Rain100H(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -209,8 +207,7 @@ class Rain100L(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -251,8 +248,7 @@ class Rain12(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -301,8 +297,7 @@ class Rain1200(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -360,8 +355,7 @@ class Rain13K(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -403,8 +397,7 @@ class Rain1400(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -445,8 +438,7 @@ class Rain2800(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
@@ -487,8 +479,7 @@ class Rain800(base.ImageEnhancementDataset):
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("/lq/", "/hq/")
-                path  = core.Path(path)
+                path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
                 self._labels.append(label)
 
