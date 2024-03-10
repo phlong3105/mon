@@ -1,0 +1,16 @@
+# A2I2 dataset
+
+# Train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train:
+    - ug2+/ug2+23_a2i2_haze/train/detection/haze/images
+    - ug2+/ug2+23_a2i2_haze/train/detection/hazefree/images
+val  : ug2+/ug2+23_a2i2_haze/a2i2_haze/dry_run/2023/images  # 60
+test : ug2+/ug2+23_a2i2_haze/a2i2_haze/test/images          # 50
+
+# number of classes
+nc: 1
+
+# class names
+names: [
+    "vehicle"
+]
