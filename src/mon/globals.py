@@ -796,6 +796,16 @@ MODELS_EXTRA = {
         "model_dir": _ultralytics_dir,
         "torch_distributed_launch": False,
     },
+    "yolov9c_ultralytics": {
+        "tasks"    : [Task.DETECT],
+        "model_dir": _ultralytics_dir,
+        "torch_distributed_launch": True,
+    },
+    "yolov9e_ultralytics": {
+        "tasks"    : [Task.DETECT],
+        "model_dir": _ultralytics_dir,
+        "torch_distributed_launch": True,
+    },
     "yolov9_c"  : {
         "tasks"    : [Task.DETECT],
         "model_dir": _yolov9_dir,

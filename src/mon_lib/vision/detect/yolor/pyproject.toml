@@ -15,8 +15,7 @@ license     = "MIT License"
 authors     = [
 ]
 packages = [
-    {include="*"},
-    # {include="utils"},
+    {include="yolor", from=".."},
 ]
 include  = []
 exclude  = []

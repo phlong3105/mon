@@ -29,6 +29,7 @@ MODELS = [
     "yolov8x",
     "yolov9_c",
     "yolov9_e",
+    "yolov9e_ultralytics",
 ]
 # If unsure, run the following script:
 # mon.print_table(mon.MODELS | mon.MODELS_EXTRA)

@@ -620,6 +620,8 @@ def main(
     exist_ok = exist_ok  or args["exist_ok"]
     verbose  = verbose   or args["verbose"]
     
+    print(device)
+    
     # Update arguments
     args["root"]       = root
     args["config"]     = config
