@@ -19,9 +19,9 @@ data=(
     "mef"
     "npe"
     "vv"
-    "lol-v1"
-    "lol-v2-real"
-    "lol-v2-syn"
+    "lol_v1"
+    "lol_v2_real"
+    "lol_v2_synthetic"
 )
 
 # Run

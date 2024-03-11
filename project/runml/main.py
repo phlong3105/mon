@@ -240,7 +240,7 @@ def main(
         models_str_   = utils.parse_menu_string(models_)
         model	      = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	      = models_[int(model)] if mon.is_int(model) else model
-        # Config      
+        # Config
         configs_      = utils.list_configs(project_root=root, model=model)
         configs_str_  = utils.parse_menu_string(configs_)
         config	      = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")

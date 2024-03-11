@@ -65,11 +65,11 @@ mediapipe             = {version="*", optional=true}
 pandas                = {version="*", optional=true}
 tensorflow            = {version="*", optional=true}
 torchfile             = {version="*", optional=true}
-super_gradients       = {path="src/mon_lib/vision/multitask/supergradients",   develop=true}
-ultralytics           = {path="src/mon_lib/vision/multitask/ultralytics",      develop=true}
-yolor                 = {path="src/mon_lib/vision/detect/yolor",               develop=true}
-yolov7                = {path="src/mon_lib/vision/detect/yolov7",              develop=true}
-yolov9                = {path="src/mon_lib/vision/detect/yolov9",              develop=true}
+super_gradients       = {path="src/mon_lib/vision/multitask/supergradients", develop=true}
+ultralytics           = {path="src/mon_lib/vision/multitask/ultralytics",    develop=true}
+yolor                 = {path="src/mon_lib/vision/detect/yolor",             develop=true}
+yolov7                = {path="src/mon_lib/vision/detect/yolov7",            develop=true}
+yolov9                = {path="src/mon_lib/vision/detect/yolov9",            develop=true}
 
 [tool.poetry.extras]
 dev = [
