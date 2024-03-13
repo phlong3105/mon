@@ -16,6 +16,7 @@ build/
 data/*/
 dist/
 env/anaconda3.sh
+env/anaconda3_arm64.sh
 project/*/data/*/
 project/*/run/*/
 project/supr
