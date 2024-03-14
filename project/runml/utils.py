@@ -62,7 +62,7 @@ def list_tasks(project_root: str | mon.Path) -> list[str]:
 def list_mon_models(task: str) -> list[str]:
     task   = mon.Task(task)
     models = mon.MODELS
-    return sorted([m for m in models if task in models[m]._tasks])
+    return sorted([m for m in models if task in models[m].tasks])
 
 
 def list_extra_models(task: str) -> list[str]:
@@ -81,7 +81,7 @@ def list_models(
         project_models = [mon.snakecase(m) for m in default_configs["MODELS"]]
         if len(project_models) > 0:
             models = [m for m in models if mon.snakecase(m) in project_models]
-    return models
+    return sorted(models)
 
 # endregion
 
@@ -175,17 +175,18 @@ def list_weights_files(
     if project_root not in [None, "None", ""]:
         project_root = mon.Path(project_root)
         train_dir    = project_root / "run" / "train"
-        files        = sorted(list(train_dir.rglob(f"*{model}*/*")))
+        files        = sorted(list(train_dir.rglob(f"*")))
         files        = [f for f in files if f.is_weights_file()]
-        if config not in [None, "None", ""]:
-            config = mon.Path(config).stem
-            files  = [f for f in files if config in str(f)]
+        # if config not in [None, "None", ""]:
+        #     config = str(mon.Path(config).stem)
+        #     files  = [f for f in files if config in str(f)]
     #
-    for path in sorted(list(mon.ZOO_DIR.rglob(f"*{model}*"))):
+    for path in sorted(list(mon.ZOO_DIR.rglob(f"*"))):
         if path.is_weights_file():
             files.append(path)
     #
     files = mon.unique(files)
+    files = [f for f in files if model in str(f)]
     files = sorted(files)
     return files
 

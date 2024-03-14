@@ -1,16 +1,16 @@
 # Default training settings
 
 # Train settings -------------------------------------------------------------------------------------------------------
-model        : yolor_p6.yaml            # *.cfg path (yolor_p6.yaml, yolor_e6.yaml, yolor_p6.yaml, yolor_w6.yaml)
+model        : yolor_d6.yaml            # *.cfg path (yolor_p6.yaml, yolor_e6.yaml, yolor_p6.yaml, yolor_w6.yaml)
 data         : aic24_fisheye8k_of.yaml  # data.yaml path
 project      :                          # (str, optional) project name
 name         :                          # (str, optional) experiment name, results saved to 'project/name' directory
-weights      : yolo_p6_coco.pt          # Initial weights path
+weights      : yolo_d6_coco.pt          # Initial weights path
 device       : cuda:0,1,2,3             # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
 hyp          : hyp.finetune.1280.yaml   # path to hyperparameters file
 epochs       : 500                      # (int) number of epochs to train for
-batch_size   : 4                        # (int) number of images per batch (-1 for AutoBatch)
-imgsz        : 1280                     # (int | list) input images size as int for train and val modes, or list[w,h] for predict and export modes
+batch_size   : 12                       # (int) number of images per batch (-1 for AutoBatch)
+imgsz        : 1920                     # (int | list) input images size as int for train and val modes, or list[w,h] for predict and export modes
 cache_images : False                    # (bool) True/ram, disk or False. Use cache for data loading
 rect         : False                    # (bool) rectangular training if mode='train' or rectangular validation if mode='val'
 noautoanchor : False                    # (bool) disable autoanchor check

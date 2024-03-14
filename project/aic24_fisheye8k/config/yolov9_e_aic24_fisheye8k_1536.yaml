@@ -6,8 +6,8 @@ data           : aic24_fisheye8k_of.yaml  # dataset.yaml path
 hyp            : hyp.scratch-high.yaml    # (str) hyperparameters path
 weights        : yolov9_e_coco.pt         # (str) initial weights path
 epochs         : 500                      # (int) total training epochs
-batch_size     : 12                       # (int) total batch size for all GPUs, -1 for autobatch
-imgsz          : 1280                     # (int | list) train, val image size (pixels)
+batch_size     : 8                        # (int) total batch size for all GPUs, -1 for autobatch
+imgsz          : 1536                     # (int | list) train, val image size (pixels)
 rect           : False                    # (bool) rectangular training
 resume         : False                    # (bool) resume most recent training
 nosave         : False                    # (bool) only save final checkpoint

@@ -6,10 +6,13 @@
 from __future__ import annotations
 
 __all__ = [
+    "add_noise_to_image",
     "add_weighted",
     "adjust_gamma",
     "blend",
 ]
+
+from typing import Literal
 
 import cv2
 import multipledispatch
@@ -143,5 +146,34 @@ def adjust_gamma(image: np.ndarray, gamma: float = 1.0, gain: float = 1.0) -> np
     table.astype("uint8")
     # Apply gamma correction using the lookup table
     return cv2.LUT(image, table)
+
+# endregion
+
+
+# region Noise
+
+def add_noise_to_image(
+    image      : torch.Tensor,
+    noise_level: int = 25,
+    noise_type : Literal["gaussian", "poisson"] = "gaussian"
+) -> torch.Tensor:
+    """Add noise to an image.
+    
+    Args:
+        image: The input image.
+        noise_level: The noise level.
+        noise_type: The type of noise to add. Default: ``"gaussian"``.
+        
+    Returns:
+        A noisy image.
+    """
+    if noise_type == "gaussian":
+        noisy = image + torch.normal(0, noise_level / 255, image.shape)
+        noisy = torch.clamp(noisy, 0, 1)
+    elif noise_type == "poisson":
+        noisy = torch.poisson(noise_level * image) / noise_level
+    else:
+        raise ValueError(f"Unknown noise type: {noise_type}")
+    return noisy
 
 # endregion

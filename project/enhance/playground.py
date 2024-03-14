@@ -7,13 +7,16 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
+import torch
 
 import mon
 
 console = mon.console
 
 
-def main():
+# region Function
+
+def run():
     path       = mon.Path("./data/10.jpg")
     image      = cv2.imread(str(path))
 
@@ -60,9 +63,28 @@ def main():
     cv2.waitKey(0)
     
 
+def run_zsn2n():
+    path   = mon.Path("./data/00691.png")
+    image  = cv2.imread(str(path))
+    device = torch.device("cuda:0")
+    net = mon.ZSN2N(
+        channels     = 3,
+        num_channels = 64,
+        max_epochs   = 5000,
+        lr           = 0.0001,
+    ).to(device)
+    denoised = net.fit_one_instance(image)
+    denoised = mon.to_image_nparray(denoised, False, True)
+    cv2.imshow("Image",    image)
+    cv2.imshow("Denoised", denoised)
+    cv2.waitKey(0)
+    
+# endregion
+
+
 # region Main
 
 if __name__ == "__main__":
-    main()
+    run_zsn2n()
 
 # endregion

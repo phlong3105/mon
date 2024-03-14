@@ -199,7 +199,10 @@ class GCENet(base.LowLightImageEnhancementModel):
         self.attn     = nn.Identity()
         self.act      = nn.ReLU(inplace=True)
         self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+        #
+        from mon.vision.enhance import denoise
         self._loss    = ZeroReferenceLoss()
+        self.zsn2n    = denoise.ZSN2N()
         
         # Load weights
         if self.weights:
@@ -477,11 +480,12 @@ class GCENet(base.LowLightImageEnhancementModel):
                 b = y * (1 - g)
                 d = y * g
                 y = b + d + a * (torch.pow(d, 2) - d)
-
+            y = self.zsn2n.fit_one_instance(input=y)
+            
         # Unsharp masking
         if self.unsharp_sigma is not None:
             y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
-
+        
         return a, y
     
     '''

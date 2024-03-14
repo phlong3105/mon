@@ -282,7 +282,7 @@ class Model(lightning.LightningModule, ABC):
         loss       : Any        = None,
         metrics    : Any        = None,
         optimizers : Any        = None,
-        #                       
+        # Misc
         verbose    : bool       = True,
         *args, **kwargs
     ):
@@ -309,12 +309,13 @@ class Model(lightning.LightningModule, ABC):
         self._val_metrics   = None
         self._test_metrics  = None
         self.optims         = optimizers
+        self._epoch_step    = 0
         self._set_loss(loss=loss)
         self._set_train_metrics(metrics=metrics)
         self._set_val_metrics(metrics=metrics)
         self._set_test_metrics(metrics=metrics)
-        
-        self._epoch_step = 0
+    
+    # region Properties
     
     # region Model Metadata
     
@@ -441,6 +442,8 @@ class Model(lightning.LightningModule, ABC):
         
         # endregion
     
+    # endregion
+    
     # region Training Properties
     
     @property
@@ -559,6 +562,8 @@ class Model(lightning.LightningModule, ABC):
     
     # endregion
     
+    # endregion
+    
     # region Initialize Model
     
     def _create_dir(self):
@@ -660,6 +665,8 @@ class Model(lightning.LightningModule, ABC):
                 optim.pop("frequency")
         
         # Re-assign optims
+        if isinstance(optims, list | tuple) and len(optims) == 1:
+            optims = optims[0]
         self.optims = optims
         return self.optims
     
@@ -722,6 +729,20 @@ class Model(lightning.LightningModule, ABC):
     # endregion
     
     # region Training
+    def fit_one(self, *args, **kwargs) -> Any:
+        """Train the model with a single sample. This method is used for any
+        learning scheme performed on one single instance such as online learning,
+        zero-shot learning, one-shot learning, etc.
+        
+        Note:
+            In order to use this method, the model must implement the optimizer
+            and/or scheduler.
+        
+        Returns:
+            Return ``None`` by default if the model does not support this feature.
+        """
+        error_console.log(f"[yellow]The {self.__class__.__name__} does not support this feature.")
+        return None
     
     def on_fit_start(self):
         """Called at the beginning of fit."""
@@ -733,7 +754,7 @@ class Model(lightning.LightningModule, ABC):
     
     def training_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
         """Here you compute and return the training loss, and some additional
-        metrics for e.g. the progress bar or logger.
+        metrics for e.g., the progress bar or logger.
 
         Args:
             batch: The output of :class:`~torch.utils.data.DataLoader`. It can

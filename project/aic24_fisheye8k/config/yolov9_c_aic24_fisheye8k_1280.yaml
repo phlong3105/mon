@@ -5,7 +5,7 @@ model          : yolov9_c.yaml            # model.yaml path
 data           : aic24_fisheye8k_of.yaml  # dataset.yaml path
 hyp            : hyp.scratch_high.yaml    # (str) hyperparameters path
 weights        : yolov9_c_coco.pt         # (str) initial weights path
-epochs         : 600                      # (int) total training epochs
+epochs         : 500                      # (int) total training epochs
 batch_size     : 16                       # (int) total batch size for all GPUs, -1 for autobatch
 imgsz          : 1280                     # (int | list) train, val image size (pixels)
 rect           : False                    # (bool) rectangular training
@@ -32,7 +32,7 @@ cos_lr         : False                    # (bool) cosine LR scheduler
 flat_cos_lr    : False                    # (bool) flat cosine LR scheduler
 fixed_lr       : False                    # (bool) fixed LR scheduler
 label_smoothing: 0.0                      # (float) Label smoothing epsilon
-patience       : 600                      # (int) EarlyStopping patience (epochs without improvement)
+patience       : 500                      # (int) EarlyStopping patience (epochs without improvement)
 freeze         : [0]                      # (int) Freeze layers: backbone of yolov7=50, first3=0 1 2
 save_period    : -1                       # (int) Save checkpoint every x epochs (disabled if < 1)
 seed           : 0                        # (int) global training seed
@@ -47,15 +47,15 @@ verbose        : True                     # (bool) whether to print verbose outp
 
 # Val/Test settings ----------------------------------------------------------------------------------------------------
 task           : val                    # (str) 'train, val, test, speed or study'
-conf_thres     : 0.0001                 # (float) confidence threshold
+conf_thres     : 0.00001                # (float) confidence threshold
 iou_thres      : 0.50                   # (float) NMS IoU threshold
-max_det        : 1000                   # (int) maximum detections per image
+max_det        : 3000                   # (int) maximum detections per image
 half           : False                  # (bool) use FP16 half-precision inference
 dnn            : False                  # (bool) use OpenCV DNN for ONNX inference
 
 # Predict settings -----------------------------------------------------------------------------------------------------
 source         :                        # (str, optional) source directory for images or videos
-augment        : False                  # (bool) augmented inference
+augment        : True                   # (bool) augmented inference
 agnostic_nms   : True                   # (bool) class-agnostic NMS
 classes        :                        # (int | list[int], optional) filter results by class, i.e. classes=0, or classes=[0,2,3]
 update         : False                  # (bool) update all models
