@@ -45,14 +45,14 @@ task           : val                    # (str) 'val', 'test', 'study'
 names          : aic24_fisheye8k.names  # (str) class names
 save_hybrid    : False                  # (bool) save hybrid model
 save_json      : False                  # (bool) save results to JSON file
-conf           : 0.0001                 # (float, optional) object confidence threshold for detection (default 0.25 predict, 0.001 val)
-iou            : 0.5                    # (float) intersection over union (IoU) threshold for NMS
-max_det        : 3000                   # (int) maximum number of detections per image
+conf           : 0.30                   # (float, optional) object confidence threshold for detection (default 0.25 predict, 0.001 val)
+iou            : 0.50                   # (float) intersection over union (IoU) threshold for NMS
+max_det        : 1000                   # (int) maximum number of detections per image
 no_trace       : False                  # (bool) don`t trace model
 
 # Predict settings -----------------------------------------------------------------------------------------------------
 source         :                        # (str, optional) source directory for images or videos
-augment        : True                   # (bool) apply image augmentation to prediction sources
+augment        : False                  # (bool) apply image augmentation to prediction sources
 agnostic_nms   : True                   # (bool) class-agnostic NMS
 classes        :                        # (int | list[int], optional) filter results by class, i.e. classes=0, or classes=[0,2,3]
 update         : False                  # (bool) update all models

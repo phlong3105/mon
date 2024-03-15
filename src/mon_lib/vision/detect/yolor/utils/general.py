@@ -18,7 +18,7 @@ import torch
 import yaml
 
 from utils.google_utils import gsutil_getsize
-from utils.metrics import fitness, fitness_p, fitness_r, fitness_ap50, fitness_ap, fitness_f   
+from utils.metrics import fitness, fitness_p50, fitness_r50, fitness_f50, fitness_ap50, fitness_p, fitness_r, fitness_f, fitness_ap
 from utils.torch_utils import init_torch_seeds
 
 # Set printoptions

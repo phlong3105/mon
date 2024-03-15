@@ -142,20 +142,18 @@ def attempt_load(weights, map_location=None):
     for w in weights if isinstance(weights, list) else [weights]:
         attempt_download(w)
         ckpt   = torch.load(w, map_location=map_location)
-
         config = ckpt.get("config", None)
         nc     = ckpt.get("nc", 5)
         if config is None or not mon.Path(config).is_yaml_file():
-            config = _root_dir / "cfg" / "yolor-d6.yaml"  # config.name
+            config = _root_dir / "config" / "yolor_d6.yaml"  # config.name
         from models.yolo import Model
-        _model = Model(str(config), ch=3, nc=nc).to(map_location)  # create
-
+        _model     = Model(str(config), ch=3, nc=nc).to(map_location)  # create
         state_dict = ckpt["model"]  # to FP32
         state_dict = intersect_dicts(state_dict, _model.state_dict(), exclude=[])  # intersect
         _model.load_state_dict(state_dict, strict=False)  # load
         # model.append(torch.load(w, map_location=map_location)["model"].float().fuse().eval())  # load FP32 model
         model.append(_model.float().fuse().eval())
-
+    
     # Compatibility updates
     for m in model.modules():
         if type(m) in [nn.Hardswish, nn.LeakyReLU, nn.ReLU, nn.ReLU6]:

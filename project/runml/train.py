@@ -113,23 +113,25 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config = mon.parse_config_file(project_root=root, config=config)
-    args   = mon.load_config(config)
+    config   = mon.parse_config_file(project_root=root, config=config)
+    args     = mon.load_config(config)
     
     # Prioritize input args --> config file args
-    root     = root      or args["root"]
+    root     = root     or args["root"]
+    weights  = weights  or args["model"]["weights"]
+    project  = args["project"]
+    fullname = fullname or args["fullname"]
+    device   = device   or args["trainer"]["devices"]
+    epochs   = epochs   or args["trainer"]["max_epochs"]
+    steps    = steps    or args["trainer"]["max_steps"]
+    
+    # Parse arguments
     root     = mon.Path(root)
-    weights  = weights   or args["model"]["weights"]
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    project  = root.name or args["project"]
-    fullname = fullname  or args["fullname"]
-    save_dir = save_dir   or root / "run" / "train" / fullname
+    weights  = mon.to_list(weights)
+    weights  = weights[0] if isinstance(weights, list | tuple) else weights
+    project  = root.name or project
+    save_dir = save_dir  or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    device   = device    or args["trainer"]["devices"]
-    epochs   = epochs    or args["model"]["max_epochs"]
-    steps    = steps     or args["model"]["max_steps"]
-    exist_ok = exist_ok
-    verbose  = verbose
     
     # Update arguments
     args["hostname"]  = hostname

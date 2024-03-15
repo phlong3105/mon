@@ -182,7 +182,8 @@ class RRDNet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _zoo: dict = {}
+    _zoo   : dict = {}
+    _online: bool = True
     
     def __init__(
         self,

@@ -24,9 +24,6 @@ __all__ = [
     "iter_to_tuple",
     "shuffle_dict",
     "split_list",
-    "str_to_float_list",
-    "str_to_int_list",
-    "str_to_list",
     "to_1list",
     "to_1tuple",
     "to_2list",
@@ -40,13 +37,16 @@ __all__ = [
     "to_6list",
     "to_6tuple",
     "to_float",
+    "to_float_list",
     "to_int",
+    "to_int_list",
     "to_list",
     "to_nlist",
     "to_ntuple",
     "to_pair",
     "to_quadruple",
     "to_single",
+    "to_str",
     "to_triple",
     "to_tuple",
     "unique",
@@ -280,18 +280,46 @@ def split_list(x: list, n: int | list[int]) -> list[list]:
     return y
 
 
-def to_list(x: Any) -> list:
-    """Convert an arbitrary value into a :class:`list`."""
+def to_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list:
+    """Convert an arbitrary value into a :class:`list`.
+    
+    Args:
+        x: An arbitrary value.
+        sep: A :class:`list` of delimiters to split a string.
+    """
     if isinstance(x, list):
-        return x
+        x = x
     elif isinstance(x, tuple):
         x = list(x)
     elif isinstance(x, dict):
         x = list(x.values())
+    elif isinstance(x, str):
+        x = re.sub(r"^\s+|\s+$", "", x)
+        x = re.sub(r"\s",        "", x)
+        for s in sep:
+            if s in x:
+                x = x.split(s)
+                break
+        x = [x] if not isinstance(x, list) else x
     elif x is not None:
         x = [x]
+        return x
     elif x is None:
-        return []
+        x = []
+    return x
+
+
+def to_int_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list[int]:
+    """Convert a string into a :class:`list` of :class:`int`."""
+    x = to_list(x, sep=sep)
+    x = [int(i) for i in x]
+    return x
+
+
+def to_float_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list[float]:
+    """Convert a string into a :class:`list` of :class:`float`."""
+    x = to_list(x, sep=sep)
+    x = [float(i) for i in x]
     return x
 
 
@@ -390,29 +418,16 @@ def unique(x: tuple) -> tuple:
 
 # region String
 
-def str_to_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list:
-    """Convert a string into a :class:`list`."""
-    x = re.sub(r"^\s+|\s+$", "", x)
-    x = re.sub(r"\s", "", x)
-    for s in sep:
-        if s in x:
-            x = x.split(s)
-            break
-    x = [x] if not isinstance(x, list) else x
-    return x
-
-
-def str_to_int_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list[int]:
-    """Convert a string into a :class:`list` of :class:`int`."""
-    x = str_to_list(x, sep=sep)
-    x = [int(i) for i in x]
-    return x
-
-
-def str_to_float_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list[float]:
-    """Convert a string into a :class:`list` of :class:`float`."""
-    x = str_to_list(x, sep=sep)
-    x = [float(i) for i in x]
-    return x
-
+def to_str(x: Any, sep: str = ",") -> str:
+    if isinstance(x, dict):
+        x = [str(xi) for xi in x.values()]
+    if not isinstance(x, list | tuple):
+        x = [x]
+    # Must be a list or tuple at this point
+    x = [str(xi) for xi in x]
+    if len(x) == 1:
+        return f"{x[0]}"
+    else:
+        return sep.join(x)
+    
 # endregion

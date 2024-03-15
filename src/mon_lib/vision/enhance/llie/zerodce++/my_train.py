@@ -138,21 +138,25 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args   = core.load_config(config)
+    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
+    args     = core.load_config(config)
+    
+    # Parse arguments
+    weights  = weights  or args["weights"]
+    project  = args["project"]
+    fullname = fullname or args["name"]
+    device   = device   or args["device"]
+    epochs   = epochs   or args["epochs"]
+    exist_ok = exist_ok or args["exist_ok"]
+    verbose  = verbose  or args["verbose"]
     
     # Prioritize input args --> config file args
     root     = core.Path(root)
-    weights  = weights   or args["weights"]
-    project  = root.name or args["project"]
-    fullname = fullname  or args["name"]
+    weights  = core.to_list(weights)
+    project  = root.name or project
     save_dir = save_dir  or root / "run" / "train" / fullname
     save_dir = core.Path(save_dir)
-    device   = device    or args["device"]
     device   = core.parse_device(device)
-    epochs   = epochs    or args["epochs"]
-    exist_ok = exist_ok  or args["exist_ok"]
-    verbose  = verbose   or args["verbose"]
     
     # Update arguments
     args["root"]       = root

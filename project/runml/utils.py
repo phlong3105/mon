@@ -59,23 +59,30 @@ def list_tasks(project_root: str | mon.Path) -> list[str]:
 
 # region Models
 
-def list_mon_models(task: str) -> list[str]:
+def list_mon_models(task: str, mode: str) -> list[str]:
     task   = mon.Task(task)
     models = mon.MODELS
-    return sorted([m for m in models if task in models[m].tasks])
+    models = [m for m in models if task in models[m]._tasks]
+    if mode in ["online"]:
+        models = [m for m in models if models[m]._online]
+    return sorted(models)
 
 
-def list_extra_models(task: str) -> list[str]:
-    task 	     = mon.Task(task)
-    models_extra = mon.MODELS_EXTRA
-    return sorted([m for m in models_extra if task in models_extra[m]["tasks"]])
+def list_extra_models(task: str, mode: str) -> list[str]:
+    task   = mon.Task(task)
+    models = mon.MODELS_EXTRA
+    models = [m for m in models if task in models[m]["tasks"]]
+    if mode in ["online"]:
+        models = [m for m in models if models[m]["online"]]
+    return sorted(models)
 
 
 def list_models(
     task        : str,
+    mode        : str,
     project_root: str | mon.Path | None = None
 ) -> list[str]:
-    models          = sorted(list_mon_models(task) + list_extra_models(task))
+    models          = sorted(list_mon_models(task, mode) + list_extra_models(task, mode))
     default_configs = get_project_default_config(project_root=project_root)
     if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
         project_models = [mon.snakecase(m) for m in default_configs["MODELS"]]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements prediction pipeline."""
+"""This module implements online learning pipeline."""
 
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ import mon
 console = mon.console
 
 
-# region Predict
+# region Online Learning
 
-def predict(args: dict) -> str:
+def online_learning(args: dict) -> str:
     # Get arguments
     fullname   = args["fullname"]
     imgsz      = args["image_size"]
@@ -79,40 +79,10 @@ def predict(args: dict) -> str:
                     h0, w0 = mon.get_image_size(images)
                     input  = mon.resize(input=input, size=imgsz)
                 
-                # TTA (Pre)
-                for aug in augment:
-                    input = aug(input=input)
-               
                 # Forward
                 start_time = time.time()
-                if isinstance(input, torch.Tensor):
-                    output = model(input=input, augment=None, profile=False, out_index=-1)
-                elif isinstance(input, list | tuple):
-                    output = []
-                    for i in input:
-                        o = model(input=i, augment=None, profile=False, out_index=-1)
-                        o = o[-1] if isinstance(o, list | tuple) else o
-                        output.append(o)
-                else:
-                    raise TypeError()
-                ''' Debug code for GCENet paper.
-                output       = model(input=input, augment=False, profile=False)
-                a, p, output = output[0], output[1], output[2]
-                a = (-1 * a)
-                a = mon.to_image_nparray(a, False, True)
-                p = mon.to_image_nparray(p, False, True)
-                (B, G, R) = cv2.split(a)
-                zeros = np.zeros(a.shape[:2], dtype=a.dtype)
-                R = cv2.merge([zeros, zeros, R])
-                G = cv2.merge([zeros, G, zeros])
-                B = cv2.merge([B, zeros, zeros])
-                '''
-                run_time = time.time() - start_time
-                
-                # TTA (Post)
-                for aug in augment:
-                    if aug.requires_post:
-                        output = aug.postprocess(input=images, output=output)
+                output     = model.fit_one(input=input)
+                run_time   = time.time() - start_time
                 
                 # Post-process
                 output = output[-1] if isinstance(output, list | tuple) else output
@@ -123,18 +93,6 @@ def predict(args: dict) -> str:
                 if save_image:
                     output_path = save_dir / f"{meta['stem']}.png"
                     mon.write_image(output_path, output, denormalize=True)
-                    '''
-                    a_path = output_dir / f"{files[0].stem}-a.png"
-                    B_path = output_dir / f"{files[0].stem}-b.png"
-                    G_path = output_dir / f"{files[0].stem}-g.png"
-                    R_path = output_dir / f"{files[0].stem}-r.png"
-                    p_path = output_dir / f"{files[0].stem}-p.png"
-                    cv2.imwrite(str(a_path), a)
-                    cv2.imwrite(str(B_path), B)
-                    cv2.imwrite(str(G_path), G)
-                    cv2.imwrite(str(R_path), R)
-                    cv2.imwrite(str(p_path), p)
-                    '''
                     if data_writer is not None:
                         data_writer.write_batch(data=output)
                 sum_time += run_time
@@ -157,6 +115,8 @@ def predict(args: dict) -> str:
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
 @click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--epochs",     type=int, default=None, help="Stop training once this number of epochs is reached.")
+@click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -171,6 +131,8 @@ def main(
     fullname  : str,
     save_dir  : str,
     device    : int | list[int] | str,
+    epochs    : int,
+    steps     : int,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -190,6 +152,8 @@ def main(
     fullname = fullname or args["fullname"]
     save_dir = save_dir or args["predictor"]["default_root_dir"]
     device   = device   or args["predictor"]["devices"]
+    epochs   = epochs   or args["trainer"]["max_epochs"]
+    steps    = steps    or args["trainer"]["max_steps"]
     imgsz    = imgsz    or args["image_size"]
     
     # Parse arguments
@@ -212,6 +176,12 @@ def main(
         "weights" : weights,
         "verbose" : verbose,
     }
+    args["trainer"]    |= {
+        "default_root_dir": save_dir,
+        "devices"         : device,
+        "max_epochs"      : epochs if steps is not None else None,
+        "max_steps"       : steps,
+    }
     args["predictor"]  |= {
         "default_root_dir": save_dir,
         "source"          : data,
@@ -222,7 +192,7 @@ def main(
         "verbose"         : verbose,
     }
     
-    return predict(args=args)
+    return online_learning(args=args)
 
 
 if __name__ == "__main__":

@@ -191,18 +191,18 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config = core.parse_config_file(project_root=_current_dir / "config", config=config)
+    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
     
-    # Prioritize input args --> config file args
+    # Parse arguments
     root     = core.Path(root)
+    weights  = core.to_list(weights)
     project  = root.name
     save_dir = save_dir  or root / "run" / "predict" / model
     save_dir = core.Path(save_dir)
     device   = core.parse_device(device)
-    # imgsz    = core.str_to_int_list(imgsz)
-    # imgsz    = [int(i) for i in imgsz]
     imgsz    = core.parse_hw(imgsz)[0]
     
+    # Update arguments
     args = {
         "root"      : root,
         "config"    : config,

@@ -14,7 +14,7 @@ import utils
 
 _current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
-modes_ 	      = ["train", "predict", "metric", "plot"]
+modes_ 	      = ["train", "predict", "online", "metric", "plot"]
 
 
 # region Train
@@ -42,6 +42,7 @@ def run_train(args: dict):
     config   = mon.parse_config_file(project_root=root, config=config)
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
     save_dir = save_dir or root / "run" / "train" / fullname
+    weights  = mon.to_str(weights, ",")
     
     kwargs   = {
         "--root"    : str(root),
@@ -133,6 +134,7 @@ def run_predict(args: dict):
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
+    weights  = mon.to_str(weights, ",")
     
     for d in data:
         if use_data_dir:
@@ -194,6 +196,97 @@ def run_predict(args: dict):
 # endregion
 
 
+# region Online
+
+def run_online(args: dict):
+    # Get user input
+    root         = mon.Path(args["root"])
+    task         = args["task"]
+    mode         = args["mode"]
+    model        = args["model"]
+    config       = args["config"]
+    weights	     = args["weights"]
+    data         = args["data"]
+    fullname     = args["fullname"]
+    save_dir     = args["save_dir"]
+    device       = args["device"]
+    epochs       = args["epochs"]
+    steps        = args["steps"]
+    imgsz        = args["imgsz"]
+    resize       = args["resize"]
+    benchmark    = args["benchmark"]
+    save_image   = args["save_image"]
+    use_data_dir = args["use_data_dir"]
+    verbose      = args["verbose"]
+    
+    assert root.exists()
+    assert config not in [None, "None", ""]
+    
+    # Parse arguments
+    config   = mon.parse_config_file(project_root=root, config=config)
+    fullname = fullname if fullname not in [None, "None", ""] else config.stem
+    weights  = mon.to_str(weights, ",")
+    
+    for d in data:
+        if use_data_dir:
+            save_dir = save_dir or mon.DATA_DIR / task.value / "#predict" / model
+        else:
+            save_dir = save_dir or root / "run" / "predict" / model
+        kwargs  = {
+            "--root"    : str(root),
+            "--config"  : config,
+            "--weights" : weights,
+            "--data"    : d,
+            "--model"   : model,
+            "--fullname": fullname,
+            "--save-dir": str(save_dir),
+            "--device"  : device,
+            "--imgsz"   : imgsz,
+        }
+        flags   = ["--resize"]     if resize     else []
+        flags  += ["--benchmark"]  if benchmark  else []
+        flags  += ["--save-image"] if save_image else []
+        flags  += ["--verbose"]    if verbose    else []
+        
+        # Parse script file
+        if model in mon.MODELS:
+            script_file = _current_dir / "online.py"
+            python_call = ["python"]
+        elif model in mon.MODELS_EXTRA:
+            torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
+            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_predict.py"
+            python_call = ["python"]
+        else:
+            raise ValueError(f"Cannot find Python online learning script file.")
+        
+        # Parse arguments
+        args_call: list[str] = []
+        for k, v in kwargs.items():
+            if v is None:
+                continue
+            elif isinstance(v, list | tuple):
+                args_call_ = [f"{k}={v_}" for v_ in v]
+            else:
+                args_call_ = [f"{k}={v}"]
+            args_call += args_call_
+        
+        # Run prediction
+        if script_file.is_py_file():
+            print("\n")
+            command = (
+                python_call +
+                [script_file] +
+                args_call +
+                flags
+            )
+            result = subprocess.run(command, cwd=_current_dir)
+            print(result)
+        else:
+            raise ValueError(f"Cannot find Python predicting script file at: {script_file}.")
+
+# endregion
+
+
 # region Main
 
 @click.command(name="main", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
@@ -202,9 +295,9 @@ def run_predict(args: dict):
 @click.option("--mode",     type=str, default="predict",  help="Running mode.")
 @click.option("--model",    type=str, default=None,       help="Running model.")
 @click.option("--config",   type=str, default=None,   	  help="Running config.")
-@click.option("--data",     type=str, default=None,   	  help="Predict dataset.")
-@click.option("--save-dir", type=str, default=None,    	  help="Optional saving directory.")
-@click.option("--weights",  type=str, default=None,	      help="Weights paths.")
+@click.option("--data",     type=str, default=None,       help="Predict dataset.")
+@click.option("--save-dir", type=str, default=None,       help="Optional saving directory.")
+@click.option("--weights",  type=str, default=None,       help="Weights paths.")
 @click.option("--device",   type=str, default=None,       help="Running devices.")
 @click.option("--epochs",   type=int, default=-1,   	  help="Training epochs.")
 @click.option("--steps",    type=int, default=-1,   	  help="Training steps.")
@@ -234,9 +327,9 @@ def main(
     mode       = click.prompt(click.style(f"Mode {utils.parse_menu_string(modes_)}", fg="bright_green", bold=True), default=mode)
     mode       = modes_[int(mode)] if mon.is_int(mode) else mode
     
-    if mode in ["train", "predict"]:
+    if mode in ["train", "predict", "online"]:
         # Model
-        models_       = utils.list_models(project_root=root, task=task)
+        models_       = utils.list_models(project_root=root, mode=mode, task=task)
         models_str_   = utils.parse_menu_string(models_)
         model	      = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	      = models_[int(model)] if mon.is_int(model) else model
@@ -252,17 +345,17 @@ def main(
         weights       = weights if weights not in [None, ""] else None
         if weights is not None:
             if isinstance(weights, str):
-                weights = mon.str_to_list(weights)
+                weights = mon.to_list(weights)
             weights = [weights_[int(w)] if mon.is_int(w) else w for w in weights]
             weights = [w.replace("'", "") for w in weights]
-            weights = weights[0] if len(weights) == 1 else weights
+            # weights = weights[0] if len(weights) == 1 else weights
         # Predict data
-        if mode in ["predict"]:
+        if mode in ["predict", "online"]:
             data_     = utils.list_datasets(project_root=root, task=task, mode="predict")
             data_str_ = utils.parse_menu_string(data_)
             data      = data.replace(",", ",\n    ") if isinstance(data, str) else data
             data	  = click.prompt(click.style(f"Predict(s) {data_str_}", fg="bright_green", bold=True), type=str, default=data)
-            data 	  = mon.str_to_list(data)
+            data 	  = mon.to_list(data)
             data 	  = [data_[int(d)] if mon.is_int(d) else d for d in data]
         # Fullname
         fullname = mon.Path(config).stem
@@ -273,15 +366,15 @@ def main(
         device      = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=device or "cuda:0")
         device 	    = devices_[int(device)] if mon.is_int(device) else device
         # Training Flags
-        if mode in ["train"]:
+        if mode in ["train", "online"]:
             epochs = click.prompt(click.style(f"Epochs              ", fg="bright_yellow", bold=True), type=int, default=epochs)
             steps  = click.prompt(click.style(f"Steps               ", fg="bright_yellow", bold=True), type=int, default=steps)
         # Predict Flags
-        if mode in ["predict"]:
+        if mode in ["predict", "online"]:
             # Image size
             imgsz_       = imgsz
             imgsz        = click.prompt(click.style(f"Image size          ", fg="bright_yellow", bold=True), type=str, default=imgsz)
-            imgsz        = mon.str_to_int_list(imgsz)
+            imgsz        = mon.to_int_list(imgsz)
             imgsz        = imgsz[0] if len(imgsz) == 1 else imgsz
             # Resize
             resize       = "yes" if imgsz != imgsz_ else "no"
@@ -338,6 +431,28 @@ def main(
             "verbose"     : verbose,
         }
         run_predict(args=args)
+    elif mode in ["online"]:
+        args = {
+            "root"        : root,
+            "task"        : task,
+            "mode"        : mode,
+            "config"      : config,
+            "weights"     : weights,
+            "model"       : model,
+            "data"        : data,
+            "fullname"    : fullname,
+            "save_dir"    : save_dir,
+            "device"      : device,
+            "epochs"      : epochs,
+            "steps"       : steps,
+            "imgsz"       : imgsz,
+            "resize" 	  : resize,
+            "benchmark"   : benchmark,
+            "save_image"  : save_image,
+            "use_data_dir": use_data_dir,
+            "verbose"     : verbose,
+        }
+        run_online(args=args)
     else:
         raise ValueError(
             f":param:`mode` must be one of ``'train'``, ``'predict'``, "

@@ -185,18 +185,16 @@ def main(
 ) -> str:
     hostname = socket.gethostname().lower()
     
-    # Prioritize input args --> config file args
+    # Parse arguments
     root     = core.Path(root)
     decom_model_low_weights = ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_init_low.pth"
     unfolding_model_weights = ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_unfolding.pth"
     adjust_model_weights    = ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_L_adjust.pth"
     project  = root.name
-    save_dir = save_dir  or root / "run" / "predict" / model
+    save_dir = save_dir or root / "run" / "predict" / model
     save_dir = core.Path(save_dir)
     device   = core.parse_device(device)
     ratio    = 5
-    # imgsz    = core.str_to_int_list(imgsz)
-    # imgsz    = [int(i) for i in imgsz]
     imgsz    = core.parse_hw(imgsz)[0]
     
     # Update arguments

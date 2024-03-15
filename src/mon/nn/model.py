@@ -264,8 +264,9 @@ class Model(lightning.LightningModule, ABC):
             >>> )
     """
     
-    _tasks: list[Task] = []  # A list of tasks that the model can perform.
-    _zoo  : dict       = {}  # A dictionary containing all pretrained weights of the model.
+    _tasks : list[Task] = []     # A list of tasks that the model can perform.
+    _zoo   : dict       = {}     # A dictionary containing all pretrained weights of the model.
+    _online: bool       = False  # Whether the model support online learning.
     
     def __init__(
         self,
@@ -328,6 +329,11 @@ class Model(lightning.LightningModule, ABC):
     @property
     def zoo(cls) -> dict:
         return cls._zoo
+    
+    @classmethod
+    @property
+    def online(cls) -> bool:
+        return cls._online
     
     # endregion
     
