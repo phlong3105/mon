@@ -51,7 +51,7 @@ test_cameras=(
 
 # Read User Inputs
 host=$HOSTNAME
-mode=${1:-""}
+mode=${1:-"predict"}
 # echo "Mode [train, predict, metric, visualize]: "
 # read mode
 read -e -i "$mode" -p "Mode [train, predict, metric, visualize]: " mode

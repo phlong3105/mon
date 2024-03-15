@@ -32,9 +32,9 @@ from mon import core, DATA_DIR
 from utils.datasets import create_dataloader
 from utils.general import (
     check_dataset, check_file, check_git_status, check_img_size, fitness, fitness_ap,
-    fitness_ap50, fitness_f50, fitness_f, fitness_p, fitness_p50, fitness_r50, fitness_r,
-    get_latest_run, increment_path, init_seeds, labels_to_class_weights,
-    labels_to_image_weights, print_mutation, set_logging, strip_optimizer,
+    fitness_ap50, fitness_f1, fitness_p, fitness_r, get_latest_run, increment_path,
+    init_seeds, labels_to_class_weights, labels_to_image_weights, print_mutation,
+    set_logging, strip_optimizer,
 )
 from utils.google_utils import attempt_download
 from utils.loss import compute_loss
@@ -199,13 +199,10 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     # Resume
     start_epoch       = 0
     best_fitness      = 0.0
-    best_fitness_p50  = 0.0
-    best_fitness_r50  = 0.0
-    best_fitness_f50  = 0.0
-    best_fitness_ap50 = 0.0
     best_fitness_p    = 0.0
     best_fitness_r    = 0.0
-    best_fitness_f    = 0.0
+    best_fitness_f1   = 0.0
+    best_fitness_ap50 = 0.0
     best_fitness_ap   = 0.0
     
     if pretrained:
@@ -213,13 +210,10 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         if ckpt["optimizer"] is not None:
             optimizer.load_state_dict(ckpt["optimizer"])
             best_fitness      = ckpt["best_fitness"]
-            best_fitness_p50  = ckpt["best_fitness_p50"]
-            best_fitness_r50  = ckpt["best_fitness_r50"]
-            best_fitness_f50  = ckpt["best_fitness_f50"]
-            best_fitness_ap50 = ckpt["best_fitness_ap50"]
             best_fitness_p    = ckpt["best_fitness_p"]
             best_fitness_r    = ckpt["best_fitness_r"]
-            best_fitness_f    = ckpt["best_fitness_f"]
+            best_fitness_f1   = ckpt["best_fitness_f1"]
+            best_fitness_ap50 = ckpt["best_fitness_ap50"]
             best_fitness_ap   = ckpt["best_fitness_ap"]
         
         # Results
@@ -456,19 +450,40 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 f.write(s + "%10.4g" * 7 % results + "\n")  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls)
             if len(opt.name) and opt.bucket:
                 os.system("gsutil cp %s gs://%s/results/results%s.txt" % (results_file, opt.bucket, opt.name))
-
+            
+            # Update best mAP
+            fi      = fitness(np.array(results).reshape(1, -1))         # weighted combination of [P, R, F1, mAP@0.5, mAP@0.5:0.95]
+            fi_p    = fitness_p(np.array(results).reshape(1, -1))       # weighted combination of [P, R, F1, mAP@0.5, mAP@0.5:0.95]
+            fi_r    = fitness_r(np.array(results).reshape(1, -1))       # weighted combination of [P, R, F1, mAP@0.5, mAP@0.5:0.95]
+            if (fi_p > 0.0) or (fi_r > 0.0):
+                fi_f1 = fitness_f1(np.array(results).reshape(1, -1))    # weighted combination of [P, R, F1, mAP@0.5, mAP@0.5:0.95]
+            else:
+                fi_f1 = 0.0
+            fi_ap50 = fitness_ap50(np.array(results).reshape(1, -1))    # weighted combination of [P, R, F1, mAP@0.5, mAP@0.5:0.95]
+            fi_ap   = fitness_ap(np.array(results).reshape(1, -1))      # weighted combination of [P, R, F1, mAP@0.5, mAP@0.5:0.95]
+            
+            if fi > best_fitness:
+                best_fitness      = fi
+            if fi_p > best_fitness_p:
+                best_fitness_p    = fi_p
+            if fi_r > best_fitness_r:
+                best_fitness_r    = fi_r
+            if fi_f1 > best_fitness_f1:
+                best_fitness_f1   = fi_f1
+            if fi_ap50 > best_fitness_ap50:
+                best_fitness_ap50 = fi_ap50
+            if fi_ap > best_fitness_ap:
+                best_fitness_ap   = fi_ap
+            
             # Log
             tags = [
                 "train/box_loss",
                 "train/obj_loss",
                 "train/cls_loss",  # train loss
-                "metrics/precision@0.5(B)",
-                "metrics/recall@0.5(B)",
-                "metrics/f1@0.5(B)",
+                "metrics/precision(B)",
+                "metrics/recall(B)",
+                "metrics/f1(B)",
                 "metrics/map@0.5(B)",
-                "metrics/precision@0.5-0.95(B)",
-                "metrics/recall@0.5-0.95(B)",
-                "metrics/f1@0.5-0.95(B)",
                 "metrics/map@0.5-0.95(B)",
                 "val/box_loss",
                 "val/obj_loss",
@@ -477,47 +492,13 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 "x/lr1",
                 "x/lr2"
             ]  # params
+            results = list(results)
+            results.insert(2, fi_f1)
             for x, tag in zip(list(mloss[:-1]) + list(results) + lr, tags):
                 if tb_writer:
                     tb_writer.add_scalar(tag, x, epoch)  # tensorboard
                 if wandb:
                     wandb.log({tag: x})  # W&B
-
-            # Update best mAP
-            fi      = fitness(np.array(results).reshape(1, -1))         # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            fi_p50  = fitness_p50(np.array(results).reshape(1, -1))     # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            fi_r50  = fitness_r50(np.array(results).reshape(1, -1))     # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            if (fi_p50 > 0.0) or (fi_r50 > 0.0):
-                fi_f50 = fitness_f50(np.array(results).reshape(1, -1))  # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            else:
-                fi_f50 = 0.0
-            fi_ap50 = fitness_ap50(np.array(results).reshape(1, -1))    # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            fi_p    = fitness_p(np.array(results).reshape(1, -1))       # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            fi_r    = fitness_r(np.array(results).reshape(1, -1))       # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            if (fi_p > 0.0) or (fi_r > 0.0):
-                fi_f = fitness_f(np.array(results).reshape(1, -1))      # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            else:
-                fi_f = 0.0
-            fi_ap   = fitness_ap(np.array(results).reshape(1, -1))      # weighted combination of [mP@0.5, mR@0.5, mF1@0.5, mAP@0.5, mP@0.5:0.95, mR@0.5:0.95, mF1@0.5:0.95, mAP@0.5:0.95]
-            
-            if fi > best_fitness:
-                best_fitness      = fi
-            if fi_p50 > best_fitness_p50:
-                best_fitness_p50  = fi_p50
-            if fi_r50 > best_fitness_r50:
-                best_fitness_r50  = fi_r50
-            if fi_f50 > best_fitness_f50:
-                best_fitness_f50  = fi_f50
-            if fi_ap50 > best_fitness_ap50:
-                best_fitness_ap50 = fi_ap50
-            if fi_p > best_fitness_p:
-                best_fitness_p    = fi_p
-            if fi_r > best_fitness_r:
-                best_fitness_r    = fi_r
-            if fi_f > best_fitness_f:
-                best_fitness_f    = fi_f
-            if fi_ap > best_fitness_ap:
-                best_fitness_ap   = fi_ap
 
             # Save model
             save = (not opt.nosave) or (final_epoch and not opt.evolve)
@@ -526,13 +507,10 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                     ckpt = {
                         "epoch"            : epoch,
                         "best_fitness"     : best_fitness,
-                        "best_fitness_p50" : best_fitness_p50,
-                        "best_fitness_r50" : best_fitness_r50,
-                        "best_fitness_f50" : best_fitness_f50,
-                        "best_fitness_ap50": best_fitness_ap50,
                         "best_fitness_p"   : best_fitness_p,
                         "best_fitness_r"   : best_fitness_r,
-                        "best_fitness_f"   : best_fitness_f,
+                        "best_fitness_f1"  : best_fitness_f1,
+                        "best_fitness_ap50": best_fitness_ap50,
                         "best_fitness_ap"  : best_fitness_ap,
                         "training_results" : f.read(),
                         "config"           : opt.model,
@@ -550,20 +528,14 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                 #     torch.save(ckpt, wdir / "best_{:03d}.pt".format(epoch))
                 if best_fitness == fi:
                     torch.save(ckpt, wdir / "best_overall.pt")
-                if best_fitness_p50 == fi_p50:
-                    torch.save(ckpt, wdir / "best_p50.pt")
-                if best_fitness_r50 == fi_r50:
-                    torch.save(ckpt, wdir / "best_r50.pt")
-                if best_fitness_f50 == fi_f50:
-                    torch.save(ckpt, wdir / "best_f50.pt")
-                if best_fitness_ap50 == fi_ap50:
-                    torch.save(ckpt, wdir / "best_ap50.pt")
                 if best_fitness_p == fi_p:
                     torch.save(ckpt, wdir / "best_p.pt")
                 if best_fitness_r == fi_r:
                     torch.save(ckpt, wdir / "best_r.pt")
-                if best_fitness_f == fi_f:
-                    torch.save(ckpt, wdir / "best_f.pt")
+                if best_fitness_f1 == fi_f1:
+                    torch.save(ckpt, wdir / "best_f1.pt")
+                if best_fitness_ap50 == fi_ap50:
+                    torch.save(ckpt, wdir / "best_ap50.pt")
                 if best_fitness_ap == fi_ap:
                     torch.save(ckpt, wdir / "best_ap.pt")
                 # if epoch == 0:
