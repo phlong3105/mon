@@ -53,6 +53,6 @@ DfsrPrivate
 
 *.cache
 *.lock
-data/*/
+data/*
 poetry.lock
-project/*/data/*/
+project/*/data/*

@@ -260,7 +260,7 @@ def bbox_cxcywhn_to_xywh(bbox: np.ndarray, height: int, width: int) -> np.ndarra
     cx_norm, cy_norm, w_norm, h_norm, *_ = bbox.T
     w    = w_norm * width
     h    = h_norm * height
-    x    = (cx_norm * width) - (w / 2.0)
+    x    = (cx_norm * width)  - (w / 2.0)
     y    = (cy_norm * height) - (h / 2.0)
     bbox = np.stack((x, y, w, h), axis=-1)
     return bbox

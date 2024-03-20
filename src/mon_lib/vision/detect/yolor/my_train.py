@@ -10,6 +10,7 @@ import os
 import random
 import socket
 import time
+from collections import OrderedDict
 from warnings import warn
 
 import click
@@ -120,7 +121,10 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             ckpt["model"].yaml["anchors"] = round(hyp["anchors"])  # force autoanchor
         model      = Model(opt.model or ckpt["model"].yaml, ch=3, nc=nc).to(device)  # create
         exclude    = ["anchor"] if opt.model or hyp.get("anchors") else []  # exclude keys
-        state_dict = ckpt["model"].float().state_dict()  # to FP32
+        # state_dict = ckpt["model"].float().state_dict()  # to FP32
+        state_dict = ckpt["model"]
+        if not isinstance(state_dict, OrderedDict):
+            state_dict = state_dict.float().state_dict()  # to FP32
         state_dict = intersect_dicts(state_dict, model.state_dict(), exclude=exclude)  # intersect
         model.load_state_dict(state_dict, strict=False)  # load
         logger.info("Transferred %g/%g items from %s" % (len(state_dict), len(model.state_dict()), weights))  # report
@@ -209,12 +213,12 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         # Optimizer
         if ckpt["optimizer"] is not None:
             optimizer.load_state_dict(ckpt["optimizer"])
-            best_fitness      = ckpt["best_fitness"]
-            best_fitness_p    = ckpt["best_fitness_p"]
-            best_fitness_r    = ckpt["best_fitness_r"]
-            best_fitness_f1   = ckpt["best_fitness_f1"]
-            best_fitness_ap50 = ckpt["best_fitness_ap50"]
-            best_fitness_ap   = ckpt["best_fitness_ap"]
+            best_fitness      = ckpt.get("best_fitness",      0.0)
+            best_fitness_p    = ckpt.get("best_fitness_p",    0.0)
+            best_fitness_r    = ckpt.get("best_fitness_r",    0.0)
+            best_fitness_f1   = ckpt.get("best_fitness_f1",   0.0)
+            best_fitness_ap50 = ckpt.get("best_fitness_ap50", 0.0)
+            best_fitness_ap   = ckpt.get("best_fitness_ap",   0.0)
         
         # Results
         if ckpt.get("training_results") is not None:

@@ -20,7 +20,7 @@ model_name = "retinexformer"
 data_name  = "lol_v2_real"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [128, 128]
+image_size = [256, 256]
 seed	   = 1234
 verbose    = True
 

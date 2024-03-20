@@ -49,7 +49,7 @@ test_cameras=(
     "test/camera28_a"
     "test/camera29_a_n"
 )
-iou_threholds=(
+conf_thresholds=(
     0.5
     0.5
     0.5
@@ -66,29 +66,29 @@ iou_threholds=(
 # Predict
 cd "${yolor_dir}" || exit
 save_dir="${current_dir}/run/predict/aic24_fisheye8k/submission"
-if [ -d "${save_dir}" ]; then rm -Rf "${save_dir}"; fi
+# if [ -d "${save_dir}" ]; then rm -Rf "${save_dir}"; fi
 for ((i=0; i < ${#test_cameras[@]}; i++)); do
     source="${data_dir}/aic/aic24_fisheye8k/${test_cameras[i]}/images"
     python -W ignore my_predict.py \
       --root "${current_dir}" \
       --config "${current_dir}/config/yolor_d6_aic24_fisheye8k_1920.yaml" \
       --weights \
-        "${current_dir}/run/train/yolor_d6_aic24_fisheye8k_of_1920_01/weights/best_f1.pt,
-         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_of_1920_02/weights/best_f1.pt,
-         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_of_1536_01/weights/best_f1.pt,
-         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_of_1280_01/weights/best_f1.pt,
-         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_of_1280_02/weights/best_f1.pt"\
+        "${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1920/weights/best_f1.pt,
+         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1536/weights/best_f1.pt,
+         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1280/weights/best_f1.pt"\
       --model "yolor_d6" \
       --data "${source}" \
       --save-dir "${save_dir}" \
       --imgsz 2560 \
-      --conf "${iou_threholds[i]}"
+      --conf "${conf_thresholds[i]}" \
+      --iou 0.5
 done
 
 # Generation submission file
 cd "${current_dir}" || exit
 python -W ignore gen_submission.py \
-    --predict-dir "${save_dir}"
+    --predict-dir "${save_dir}" \
+    --enlarge-ratio 0.0
 
 # Done
 cd "${current_dir}" || exit
