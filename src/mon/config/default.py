@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+	"log_training_progress",
     "datamodule",
     "dataset",
     "learning_rate_monitor",
@@ -27,20 +28,31 @@ learning_rate_monitor = {
     "log_momentum"    : False,  # Log the momentum values of the optimizer.
 }
 
+log_training_progress = {
+	"name"                  : "log_training_progress",
+	"dirpath"               : None,             # Directory to save the log file.
+	"filename"              : "train_log.csv",  # Log filename.
+	"every_n_epochs"        : 1,                # Log every n epochs.
+	"every_n_train_steps"   : None,             # Log every n training steps.
+	"train_time_interval"   : None,             # Log every n seconds.
+	"log_on_train_epoch_end": None,             # Log on train epoch end.
+	"verbose"               : True,             # Verbosity mode.
+}
+
 model_checkpoint = {
     "name"                   : "model_checkpoint",
-    "auto_insert_metric_name": True,        # The checkpoints filenames will contain the metric name.
-    "dirpath"                : None,        # Directory to save the model file.
+	"dirpath"                : None,        # Directory to save the model file.
+	"filename"               : None,        # Checkpoint filename.
+	"monitor"                : "loss/val",  # Quantity to monitor.
+	"mode"                   : "min",       # ``'min'`` or ``'max'``.
+	"save_last"              : False,       # Save an exact copy of the checkpoint to a file `last.pt`.
+	"save_top_k"             : 1,           # Save the best k models.
+	"save_weights_only"      : False,       # Only the model's weights will be saved.
     "every_n_epochs"         : 1,           # Number of epochs between checkpoints.
     "every_n_train_steps"    : 0,           # Number of training steps between checkpoints (0 = disable).
-    "filename"               : None,        # Checkpoint filename.
-    "mode"                   : "min",       # ``'min'`` or ``'max'``.
-    "monitor"                : "loss/val",  # Quantity to monitor.
-    "save_last"              : True,        # Save an exact copy of the checkpoint to a file `last.ckpt`.
-    "save_on_train_epoch_end": None,        # Run checkpointing at the end of the training epoch.
-    "save_top_k"             : 1,           # Save the best k models.
-    "save_weights_only"      : False,       # Only the model's weights will be saved.
-    "train_time_interval"    : None,        # Checkpoints are monitored at the specified time interval.
+	"train_time_interval"    : None,        # Checkpoints are monitored at the specified time interval.
+    "save_on_train_epoch_end": True,        # Run checkpointing at the end of the training epoch.
+	"auto_insert_metric_name": True,        # The checkpoints filenames will contain the metric name.
     "verbose"                : True,        # Verbosity mode.
 }
 

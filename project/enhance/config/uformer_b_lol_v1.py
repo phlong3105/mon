@@ -108,10 +108,9 @@ datamodule = {
 
 trainer = default.trainer | {
 	"callbacks"        : [
-		default.model_checkpoint | {
-		    "monitor": "val/psnr",  # Quantity to monitor.
-			"mode"   : "max",       # ``'min'`` or ``'max'``.
-		},
+		default.log_training_progress,
+		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
+		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
 		default.rich_progress_bar,

@@ -15,7 +15,7 @@ import torch
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.enhance.denoise import base
 
@@ -35,7 +35,8 @@ class ZSN2N(base.DenoisingModel):
     See Also: :class:`base.DenoisingModel`.
     """
     
-    _zoo: dict = {}
+    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
+    _zoo   : dict = {}
     
     def __init__(
         self,

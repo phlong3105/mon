@@ -15,7 +15,7 @@ import torch
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.enhance.llie import base
 
@@ -167,8 +167,9 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
 
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
-
-    _zoo: dict = {
+    
+    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    _zoo   : dict = {
         "sice_mix" : {
             "url"         : None,
             "path"        : "zerodce++/zerodce++_best.pth",

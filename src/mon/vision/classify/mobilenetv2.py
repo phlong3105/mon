@@ -16,7 +16,7 @@ from torchvision.models import _utils
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.vision.classify import base
 
 console = core.console
@@ -97,7 +97,8 @@ class MobileNetV2(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _zoo: dict = {
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
             "path"       : "mobilenetv2/mobilenetv2_imagenet1k_v1.pth",

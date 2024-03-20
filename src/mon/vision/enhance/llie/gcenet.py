@@ -19,7 +19,7 @@ import torch
 
 from mon import core, nn, proc
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.enhance.llie import base
 
@@ -151,7 +151,8 @@ class GCENet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _zoo: dict = {}
+    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    _zoo   : dict = {}
 
     def __init__(
         self,
@@ -480,7 +481,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 b = y * (1 - g)
                 d = y * g
                 y = b + d + a * (torch.pow(d, 2) - d)
-            y = self.zsn2n.fit_one_instance(input=y)
+            y = self.zsn2n.fit_one(input=y)
             
         # Unsharp masking
         if self.unsharp_sigma is not None:

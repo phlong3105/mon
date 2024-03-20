@@ -40,7 +40,7 @@ def train(args: dict) -> str:
     # Trainer
     if mon.is_rank_zero():
         console.rule("[bold red]2. SETUP TRAINER")
-        mon.copy_file(src=args["config_file"], dst=model.root/"config.py")
+        mon.copy_file(src=args["config"], dst=model.root/"config.py")
     
     ckpt      = mon.get_latest_checkpoint(dirpath=model.ckpt_dir) if model.ckpt_dir.exists() else None
     callbacks = mon.CALLBACKS.build_instances(configs=args["trainer"]["callbacks"])
@@ -119,7 +119,6 @@ def main(
     # Prioritize input args --> config file args
     root     = root     or args["root"]
     weights  = weights  or args["model"]["weights"]
-    project  = args["project"]
     fullname = fullname or args["fullname"]
     device   = device   or args["trainer"]["devices"]
     epochs   = epochs   or args["trainer"]["max_epochs"]
@@ -129,7 +128,6 @@ def main(
     root     = mon.Path(root)
     weights  = mon.to_list(weights)
     weights  = weights[0] if isinstance(weights, list | tuple) else weights
-    project  = root.name or project
     save_dir = save_dir  or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
     

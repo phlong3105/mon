@@ -17,7 +17,7 @@ from cv2.ximgproc import guidedFilter
 
 from mon import core, nn, proc
 from mon.core import _callable, _size_2_t
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.vision.enhance.dehaze import base
 
 console = core.console
@@ -319,8 +319,9 @@ class ZID(base.DehazingModel):
     
     See Also: :class:`base.Dehazing`
     """
-
-    _zoo: dict = {}
+    
+    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    _zoo   : dict = {}
     
     def __init__(
         self,
@@ -328,12 +329,13 @@ class ZID(base.DehazingModel):
         clip      : bool      = True,
         save_image: bool      = False,
         weights   : Any       = None,
+        loss      : Any       = None,
         *args, **kwargs
     ):
         super().__init__(
             name    = "zid",
             weights = weights,
-            loss    = None,
+            loss    = loss,
             *args, **kwargs
         )
         self.image_size = core.parse_hw(size=image_size or [512, 512])

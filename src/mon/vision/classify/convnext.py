@@ -22,7 +22,7 @@ from torchvision import ops
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.classify import base
 
@@ -107,7 +107,8 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _zoo: dict = {}
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {}
     
     def __init__(
         self,

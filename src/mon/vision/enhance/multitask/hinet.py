@@ -15,7 +15,7 @@ import torch
 
 from mon import core, nn
 from mon.core import _callable, _size_2_t
-from mon.globals import MODELS, Task
+from mon.globals import MODELS, Scheme, Task
 from mon.vision.enhance.multitask import base
 
 console = core.console
@@ -215,8 +215,9 @@ class HINet(base.MultiTaskImageEnhancementModel):
     See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
-    _tasks: list[Task] = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES]
-    _zoo   = {
+    _tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES]
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {
         "gopro": {
             "url"         : None,
             "path"        : "hinet/hinet_gopro.pth",

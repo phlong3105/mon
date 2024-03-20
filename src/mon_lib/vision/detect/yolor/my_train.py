@@ -579,16 +579,19 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 # region Main
 
 @click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/train/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--local-rank", type=int, default=-1,   help="DDP parameter, do not modify.")
-@click.option("--epochs",     type=int, default=None, help="Stop training once this number of epochs is reached.")
-@click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
+@click.option("--root",       type=str,   default=None, help="Project root.")
+@click.option("--config",     type=str,   default=None, help="Model config.")
+@click.option("--weights",    type=str,   default=None, help="Weights paths.")
+@click.option("--model",      type=str,   default=None, help="Model name.")
+@click.option("--fullname",   type=str,   default=None, help="Save results to root/run/train/fullname.")
+@click.option("--save-dir",   type=str,   default=None, help="Optional saving directory.")
+@click.option("--device",     type=str,   default=None, help="Running devices.")
+@click.option("--local-rank", type=int,   default=-1,   help="DDP parameter, do not modify.")
+@click.option("--epochs",     type=int,   default=None, help="Stop training once this number of epochs is reached.")
+@click.option("--steps",      type=int,   default=None, help="Stop training once this number of steps is reached.")
+@click.option("--conf",       type=float, default=None, help="Confidence threshold.")
+@click.option("--iou",        type=float, default=None, help="IoU threshold.")
+@click.option("--max-det",    type=int,   default=None, help="Max detections per image.")
 @click.option("--exist-ok",   is_flag=True)
 @click.option("--verbose",    is_flag=True)
 def main(
@@ -602,6 +605,9 @@ def main(
     device    : str,
     epochs    : int,
     steps     : int,
+    conf      : float,
+    iou       : float,
+    max_det   : int,
     exist_ok  : bool,
     verbose   : bool,
 ) -> str:
@@ -621,6 +627,9 @@ def main(
     device   = device   or args["device"]
     hyp      = args["hyp"]
     epochs   = epochs   or args["epochs"]
+    conf     = conf     or args["conf"]
+    iou      = iou      or args["iou"]
+    max_det  = max_det  or args["max_det"]
     exist_ok = exist_ok or args["exist_ok"]
     verbose  = verbose  or args["verbose"]
     
@@ -655,6 +664,9 @@ def main(
     args["hyp"]        = str(hyp)
     args["epochs"]     = epochs
     args["steps"]      = steps
+    args["conf"]       = conf
+    args["iou"]        = iou
+    args["max_det"]    = max_det
     args["exist_ok"]   = exist_ok
     args["verbose"]    = verbose
     

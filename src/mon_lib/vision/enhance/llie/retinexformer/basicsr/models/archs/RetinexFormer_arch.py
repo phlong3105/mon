@@ -242,8 +242,7 @@ class Denoiser(nn.Module):
         dim_level = dim
         for i in range(level):
             self.encoder_layers.append(nn.ModuleList([
-                IGAB(
-                    dim=dim_level, num_blocks=num_blocks[i], dim_head=dim, heads=dim_level // dim),
+                IGAB(dim=dim_level, num_blocks=num_blocks[i], dim_head=dim, heads=dim_level // dim),
                 nn.Conv2d(dim_level, dim_level * 2, 4, 2, 1, bias=False),
                 nn.Conv2d(dim_level, dim_level * 2, 4, 2, 1, bias=False)
             ]))

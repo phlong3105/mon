@@ -23,7 +23,7 @@ from einops import rearrange
 
 from mon import core, nn
 from mon.core import _callable, _size_2_t
-from mon.globals import MODELS, Task
+from mon.globals import MODELS, Scheme, Task
 from mon.nn import functional as F
 from mon.vision.enhance.multitask import base
 
@@ -708,8 +708,9 @@ class Uformer(base.MultiTaskImageEnhancementModel):
     See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
-    _tasks: list[Task] = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES, Task.LLIE]
-    _zoo   = {}
+    _tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES, Task.LLIE]
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {}
     
     def __init__(
         self,

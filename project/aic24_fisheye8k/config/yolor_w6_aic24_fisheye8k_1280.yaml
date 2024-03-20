@@ -9,7 +9,7 @@ weights      : yolo_w6_coco.pt          # Initial weights path
 device       : cuda:0,1,2,3             # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
 hyp          : hyp.finetune.1280.yaml   # path to hyperparameters file
 epochs       : 500                      # (int) number of epochs to train for
-batch_size   : 32                       # (int) number of images per batch (-1 for AutoBatch)
+batch_size   : 8                       # (int) number of images per batch (-1 for AutoBatch)
 imgsz        : 1280                     # (int | list) input images size as int for train and val modes, or list[w,h] for predict and export modes
 cache_images : False                    # (bool) True/ram, disk or False. Use cache for data loading
 rect         : False                    # (bool) rectangular training if mode='train' or rectangular validation if mode='val'
@@ -34,7 +34,7 @@ verbose      : True                     # (bool) whether to print verbose output
 task         : val                    # (str) 'val', 'test', 'study'
 names        : aic24_fisheye8k.names  # (str) class names
 save_json    : True                   # (bool) save results to JSON file
-conf         : 0.30                   # (float, optional) object confidence threshold for detection (default 0.25 predict, 0.001 val)
+conf         : 0.60                   # (float, optional) object confidence threshold for detection (default 0.25 predict, 0.001 val)
 iou          : 0.50                   # (float) intersection over union (IoU) threshold for NMS
 max_det      : 1000                   # (int) maximum number of detections per image
 

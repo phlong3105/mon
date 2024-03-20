@@ -25,8 +25,8 @@ __all__ = [
     "LOLV1DataModule",
     "LOLV2Real",
     "LOLV2RealDataModule",
-    "LOLV2Syn",
-    "LOLV2SynDataModule",
+    "LOLV2Synthetic",
+    "LOLV2SyntheticDataModule",
     "MEF",
     "MEFDataModule",
     "NPE",
@@ -366,8 +366,8 @@ class LOLV2Real(base.ImageEnhancementDataset):
                 self._labels.append(label)
 
 
-@DATASETS.register(name="lol_v2_syn")
-class LOLV2Syn(base.ImageEnhancementDataset):
+@DATASETS.register(name="lol_v2_synthetic")
+class LOLV2Synthetic(base.ImageEnhancementDataset):
     """LOL-v2 Synthetic (VE-LOL-Syn) dataset consists of 1000 low-light and
     normal-light image pairs. They are divided into 900 training pairs and 100
     testing pairs. The low-light images contain noise produced during the photo
@@ -386,7 +386,7 @@ class LOLV2Syn(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "lol_v2_syn" / self.split / "lq"
+            self.root / "lol_v2_synthetic" / self.split / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -830,9 +830,9 @@ class LOLV2RealDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="lol_v2_syn")
-class LOLV2SynDataModule(base.DataModule):
-    """LOLV2Syn datamodule.
+@DATAMODULES.register(name="lol_v2_synthetic")
+class LOLV2SyntheticDataModule(base.DataModule):
+    """LOL-v2 Synthetic datamodule.
     
     See Also: :class:`base.DataModule`.
     """
@@ -848,10 +848,10 @@ class LOLV2SynDataModule(base.DataModule):
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
         if phase in [None, "training"]:
-            self.train = LOLV2Syn(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = LOLV2Syn(split=Split.TEST,  **self.dataset_kwargs)
+            self.train = LOLV2Synthetic(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = LOLV2Synthetic(split=Split.TEST,  **self.dataset_kwargs)
         if phase in [None, "testing"]:
-            self.test  = LOLV2Syn(split=Split.TEST, **self.dataset_kwargs)
+            self.test  = LOLV2Synthetic(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

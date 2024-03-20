@@ -16,7 +16,7 @@ import torch
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.classify import base
 
@@ -273,7 +273,8 @@ class Inception3(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _zoo: dict = {
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/inception_v3_google-0cc3c7bd.pth",
             "path"       : "inception3/inception3_imagenet1k_v1.pth",

@@ -18,7 +18,7 @@ import torch
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.vision.classify import base
 
 console = core.console
@@ -67,7 +67,8 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _zoo: dict = {}
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {}
 
     def __init__(
         self,

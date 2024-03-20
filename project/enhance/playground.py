@@ -78,13 +78,27 @@ def run_zsn2n():
     cv2.imshow("Image",    image)
     cv2.imshow("Denoised", denoised)
     cv2.waitKey(0)
-    
+
+
+def run_dceformerv1():
+    path   = mon.Path("./data/10.jpg")
+    image  = cv2.imread(str(path))
+    device = torch.device("cuda:0")
+    input  = mon.to_image_tensor(image, False, True, device)
+    net    = mon.DCEFormerV1().to(device)
+    pred   = net(input)
+    pred   = pred[-1]
+    pred   = mon.to_image_nparray(pred, False, True)
+    cv2.imshow("Image",   image)
+    cv2.imshow("Relight", pred)
+    cv2.waitKey(0)
+
 # endregion
 
 
 # region Main
 
 if __name__ == "__main__":
-    run_zsn2n()
+    run_dceformerv1()
 
 # endregion

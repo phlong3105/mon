@@ -63,8 +63,9 @@ def list_mon_models(task: str, mode: str) -> list[str]:
     task   = mon.Task(task)
     models = mon.MODELS
     models = [m for m in models if task in models[m]._tasks]
-    if mode in ["online"]:
-        models = [m for m in models if models[m]._online]
+    if mode in ["online", "instance"]:
+        mode   = mon.Scheme(mode)
+        models = [m for m in models if mode in models[m]._schemes]
     return sorted(models)
 
 
@@ -72,8 +73,9 @@ def list_extra_models(task: str, mode: str) -> list[str]:
     task   = mon.Task(task)
     models = mon.MODELS_EXTRA
     models = [m for m in models if task in models[m]["tasks"]]
-    if mode in ["online"]:
-        models = [m for m in models if models[m]["online"]]
+    if mode in ["online", "instance"]:
+        mode   = mon.Scheme(mode)
+        models = [m for m in models if mode in models[m]["schemes"]]
     return sorted(models)
 
 

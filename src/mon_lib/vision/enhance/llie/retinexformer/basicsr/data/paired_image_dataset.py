@@ -79,21 +79,20 @@ class Dataset_PairedImage(data.Dataset):
 
     def __getitem__(self, index):
         if self.file_client is None:
-            self.file_client = FileClient(
-                self.io_backend_opt.pop('type'), **self.io_backend_opt)
+            self.file_client = FileClient(self.io_backend_opt.pop('type'), **self.io_backend_opt)
 
         scale = self.opt['scale']
         index = index % len(self.paths)
         # Load gt and lq images. Dimension order: HWC; channel order: BGR;
         # image range: [0, 1], float32.
-        gt_path = self.paths[index]['gt_path']
+        gt_path   = self.paths[index]['gt_path']
         img_bytes = self.file_client.get(gt_path, 'gt')
         try:
             img_gt = imfrombytes(img_bytes, float32=True)
         except:
             raise Exception("gt path {} not working".format(gt_path))
 
-        lq_path = self.paths[index]['lq_path']
+        lq_path   = self.paths[index]['lq_path']
         img_bytes = self.file_client.get(lq_path, 'lq')
         try:
             img_lq = imfrombytes(img_bytes, float32=True)
@@ -107,17 +106,14 @@ class Dataset_PairedImage(data.Dataset):
             img_gt, img_lq = padding(img_gt, img_lq, gt_size)
 
             # random crop
-            img_gt, img_lq = paired_random_crop(img_gt, img_lq, gt_size, scale,
-                                                gt_path)
+            img_gt, img_lq = paired_random_crop(img_gt, img_lq, gt_size, scale, gt_path)
 
             # flip, rotation augmentations
             if self.geometric_augs:
                 img_gt, img_lq = random_augmentation(img_gt, img_lq)
             
         # BGR to RGB, HWC to CHW, numpy to tensor
-        img_gt, img_lq = img2tensor([img_gt, img_lq],
-                                    bgr2rgb=True,
-                                    float32=True)
+        img_gt, img_lq = img2tensor([img_gt, img_lq], bgr2rgb=True, float32=True)
         # normalize
         if self.mean is not None or self.std is not None:
             normalize(img_lq, self.mean, self.std, inplace=True)

@@ -16,7 +16,7 @@ import torch
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.classify import base
 
@@ -137,7 +137,8 @@ class GoogleNet(base.ImageClassificationModel):
     
     constants = ["aux_logits", "transform_input"]
     
-    _zoo: dict = {
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/googlenet-1378be20.pth",
             "path"       : "googlenet/googlenet_imagenet1k_v1.pth",

@@ -30,22 +30,25 @@ verbose    = True
 # region Model
 
 model = {
-	"name"       : model_name,     # The model's name.
-	"root"       : root,           # The root directory of the model.
-	"fullname"   : fullname,       # A full model name to save the checkpoint or weight.
-	"channels"   : 3,              # The first layer's input channel.
-	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
-	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
-	"weights"    : None,           # The model's weights.
-	"loss"       : {
+	"name"        : model_name,     # The model's name.
+	"root"        : root,           # The root directory of the model.
+	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
+	"channels"    : 3,              # The first layer's input channel.
+	"num_channels": 40,
+	"stage"       : 1,
+	"num_blocks"  : [1, 2, 2],
+	"num_classes" : None,           # A number of classes, which is also the last layer's output channels.
+	"classlabels" : None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
+	"weights"     : None,           # The model's weights.
+	"loss"        : {
 		"name": "l1_loss",
 	},          # Loss function for training the model.
-	"metrics"    : {
+	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
 		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
-	"optimizers" : [
+	"optimizers"  : [
 		{
             "optimizer"   : {
 	            # "name"        : "adam",
@@ -75,7 +78,7 @@ model = {
 			},
         }
     ],          # Optimizer(s) for training model.
-	"verbose"    : verbose,        # Verbosity.
+	"verbose"     : verbose,        # Verbosity.
 }
 
 # endregion
@@ -87,13 +90,14 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
     "transform" : A.Compose(transforms=[
-		A.Resize(width=image_size[0], height=image_size[1]),
+		A.CropPatch(patch_size=image_size[0], always_apply=True, p=1.0),
+		# A.Resize(width=image_size[0], height=image_size[1]),
 		A.Flip(),
 		A.Rotate(),
     ]),  # Transformations performing on both the input and target.
     "to_tensor" : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,        # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 1,            # The number of samples in one forward pass.
+    "batch_size": 8,            # The number of samples in one forward pass.
     "devices"   : 0,            # A list of devices to use. Default: ``0``.
     "shuffle"   : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,      # Verbosity.
@@ -106,10 +110,9 @@ datamodule = {
 
 trainer = default.trainer | {
 	"callbacks"        : [
-		default.model_checkpoint | {
-		    "monitor": "val/psnr",  # Quantity to monitor.
-			"mode"   : "max",       # ``'min'`` or ``'max'``.
-		},
+		default.log_training_progress,
+		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
+		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
 		default.rich_progress_bar,

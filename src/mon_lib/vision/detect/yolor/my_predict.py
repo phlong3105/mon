@@ -206,33 +206,43 @@ def predict(opt, save_img: bool = False):
 # region Main
 
 @click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
+@click.option("--root",         type=str,   default=None, help="Project root.")
+@click.option("--config",       type=str,   default=None, help="Model config.")
+@click.option("--weights",      type=str,   default=None, help="Weights paths.")
+@click.option("--model",        type=str,   default=None, help="Model name.")
+@click.option("--data",         type=str,   default=None, help="Source data directory.")
+@click.option("--fullname",     type=str,   default=None, help="Save results to root/run/predict/fullname.")
+@click.option("--save-dir",     type=str,   default=None, help="Optional saving directory.")
+@click.option("--device",       type=str,   default=None, help="Running devices.")
+@click.option("--imgsz",        type=int,   default=None, help="Image sizes.")
+@click.option("--conf",         type=float, default=None, help="Confidence threshold.")
+@click.option("--iou",          type=float, default=None, help="IoU threshold.")
+@click.option("--max-det",      type=int,   default=None, help="Max detections per image.")
+@click.option("--resize",       is_flag=True)
+@click.option("--augment",      is_flag=True)
+@click.option("--agnostic-nms", is_flag=True)
+@click.option("--benchmark",    is_flag=True)
+@click.option("--save-image",   is_flag=True)
+@click.option("--verbose",      is_flag=True)
 def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
+    root        : str,
+    config      : str,
+    weights     : str,
+    model       : str,
+    data        : str,
+    fullname    : str,
+    save_dir    : str,
+    device      : str,
+    imgsz       : int,
+    conf        : float,
+    iou         : float,
+    max_det     : int,
+    resize      : bool,
+    augment     : bool,
+    agnostic_nms: bool,
+    benchmark   : bool,
+    save_image  : bool,
+    verbose     : bool,
 ) -> str:
     hostname = socket.gethostname().lower()
     
@@ -241,15 +251,20 @@ def main(
     args     = core.load_config(config)
     
     # Prioritize input args --> config file args
-    root     = root     or args["root"]
-    weights  = weights  or args["weights"]
-    model    = model    or args["model"]
-    source   = data     or args["source"]
-    project  = args["project"]
-    fullname = fullname or args["name"]
-    device   = device   or args["device"]
-    imgsz    = imgsz    or args["imgsz"]
-    verbose  = verbose  or args["verbose"]
+    root         = root         or args["root"]
+    weights      = weights      or args["weights"]
+    model        = model        or args["model"]
+    source       = data         or args["source"]
+    project      = args["project"]
+    fullname     = fullname     or args["name"]
+    device       = device       or args["device"]
+    imgsz        = imgsz        or args["imgsz"]
+    conf         = conf         or args["conf"]
+    iou          = iou          or args["iou"]
+    max_det      = max_det      or args["max_det"]
+    augment      = augment      or args["augment"]
+    agnostic_nms = agnostic_nms or args["agnostic_nms"]
+    verbose      = verbose      or args["verbose"]
     
     # Parse arguments
     root     = core.Path(root)
@@ -266,24 +281,32 @@ def main(
     imgsz    = core.to_list(imgsz)
     
     # Update arguments
-    args["root"]     = root
-    args["config"]   = config
-    args["weights"]  = weights
-    args["model"]    = model
-    args["data"]     = data_
-    args["source"]   = source
-    args["project"]  = project
-    args["name"]     = fullname
-    args["save_dir"] = save_dir
-    args["device"]   = device
-    args["imgsz"]    = imgsz
-    args["verbose"]  = verbose
+    args["root"]         = root
+    args["config"]       = config
+    args["weights"]      = weights
+    args["model"]        = model
+    args["data"]         = data_
+    args["source"]       = source
+    args["project"]      = project
+    args["name"]         = fullname
+    args["save_dir"]     = save_dir
+    args["device"]       = device
+    args["imgsz"]        = imgsz
+    args["conf"]         = conf
+    args["iou"]          = iou
+    args["max_det"]      = max_det
+    args["augment"]      = augment
+    args["agnostic_nms"] = agnostic_nms
+    args["verbose"]      = verbose
     
     opt = argparse.Namespace(**args)
     
     with torch.no_grad():
         if opt.update:  # update all models (to fix SourceChangeWarning)
-            for opt.weights in ["yolor-p6.pt", "yolor-w6.pt", "yolor-e6.pt", "yolor-d6.pt"]:
+            for opt.weights in [
+                "yolor_p6.pt", "yolor_w6.pt", "yolor_e6.pt", "yolor_d6.pt",
+                "yolor-p6.pt", "yolor-w6.pt", "yolor-e6.pt", "yolor-d6.pt"
+            ]:
                 predict(opt)
                 strip_optimizer(opt.weights)
         else:

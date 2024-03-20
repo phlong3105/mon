@@ -30,7 +30,7 @@ from torch import nn
 
 from mon import core
 from mon.core import _callable
-from mon.globals import LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Task, ZOO_DIR
+from mon.globals import LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task, ZOO_DIR
 from mon.nn import loss as L, metric as M
 
 console       = core.console
@@ -264,9 +264,9 @@ class Model(lightning.LightningModule, ABC):
             >>> )
     """
     
-    _tasks : list[Task] = []     # A list of tasks that the model can perform.
-    _zoo   : dict       = {}     # A dictionary containing all pretrained weights of the model.
-    _online: bool       = False  # Whether the model support online learning.
+    _tasks : list[Task]   = []  # A list of tasks that the model can perform.
+    _scheme: list[Scheme] = []  # A list of learning schemes that the model can perform.
+    _zoo   : dict         = {}  # A dictionary containing all pretrained weights of the model.
     
     def __init__(
         self,
@@ -322,18 +322,18 @@ class Model(lightning.LightningModule, ABC):
     
     @classmethod
     @property
-    def tasks(cls) -> list[str]:
+    def tasks(cls) -> list[Task]:
         return cls._tasks
+    
+    @classmethod
+    @property
+    def schemes(cls) -> list[Scheme]:
+        return cls._schemes
     
     @classmethod
     @property
     def zoo(cls) -> dict:
         return cls._zoo
-    
-    @classmethod
-    @property
-    def online(cls) -> bool:
-        return cls._online
     
     # endregion
     
@@ -787,7 +787,7 @@ class Model(lightning.LightningModule, ABC):
             value          = loss,
             prog_bar       = False,
             logger         = True,
-            on_step        = True,
+            on_step        = False,
             on_epoch       = True,
             sync_dist      = True,
             rank_zero_only = False,
@@ -802,7 +802,7 @@ class Model(lightning.LightningModule, ABC):
                     value          = value,
                     prog_bar       = False,
                     logger         = True,
-                    on_step        = True,
+                    on_step        = False,
                     on_epoch       = True,
                     sync_dist      = True,
                     rank_zero_only = False,
@@ -877,12 +877,13 @@ class Model(lightning.LightningModule, ABC):
             value          = loss,
             prog_bar       = False,
             logger         = True,
-            on_step        = True,
+            on_step        = False,
             on_epoch       = True,
             sync_dist      = True,
             rank_zero_only = False,
             batch_size     = 1,
         )
+        
         # Metric
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
@@ -892,7 +893,7 @@ class Model(lightning.LightningModule, ABC):
                     value          = value,
                     prog_bar       = False,
                     logger         = True,
-                    on_step        = True,
+                    on_step        = False,
                     on_epoch       = True,
                     sync_dist      = True,
                     rank_zero_only = False,
@@ -943,7 +944,7 @@ class Model(lightning.LightningModule, ABC):
             value          = loss,
             prog_bar       = False,
             logger         = True,
-            on_step        = True,
+            on_step        = False,
             on_epoch       = True,
             sync_dist      = True,
             rank_zero_only = False,
@@ -958,7 +959,7 @@ class Model(lightning.LightningModule, ABC):
                     value          = value,
                     prog_bar       = False,
                     logger         = True,
-                    on_step        = True,
+                    on_step        = False,
                     on_epoch       = True,
                     sync_dist      = True,
                     rank_zero_only = False,

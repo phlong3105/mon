@@ -14,7 +14,7 @@ import utils
 
 _current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
-modes_ 	      = ["train", "predict", "online", "metric", "plot"]
+modes_ 	      = ["train", "predict", "online", "instance", "metric", "plot"]
 
 
 # region Train
@@ -254,7 +254,7 @@ def run_online(args: dict):
             python_call = ["python"]
         elif model in mon.MODELS_EXTRA:
             torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_predict.py"
+            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_online.py"
             python_call = ["python"]
         else:
             raise ValueError(f"Cannot find Python online learning script file.")
@@ -327,30 +327,29 @@ def main(
     mode       = click.prompt(click.style(f"Mode {utils.parse_menu_string(modes_)}", fg="bright_green", bold=True), default=mode)
     mode       = modes_[int(mode)] if mon.is_int(mode) else mode
     
-    if mode in ["train", "predict", "online"]:
+    if mode in ["train", "predict", "online", "instance"]:
         # Model
-        models_       = utils.list_models(project_root=root, mode=mode, task=task)
-        models_str_   = utils.parse_menu_string(models_)
-        model	      = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
-        model 	      = models_[int(model)] if mon.is_int(model) else model
-        # Config
-        configs_      = utils.list_configs(project_root=root, model=model)
-        configs_str_  = utils.parse_menu_string(configs_)
-        config	      = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
-        config        = configs_[int(config)] if mon.is_int(config) else config
-        # Weights
-        weights_      = utils.list_weights_files(project_root=root, model=model, config=config)
-        weights_str_  = utils.parse_menu_string(weights_)
-        weights       = click.prompt(click.style(f"Weights {weights_str_}", fg="bright_green", bold=True), type=str, default=weights or "")
-        weights       = weights if weights not in [None, ""] else None
+        models_      = utils.list_models(project_root=root, mode=mode, task=task)
+        models_str_  = utils.parse_menu_string(models_)
+        model	     = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
+        model 	     = models_[int(model)] if mon.is_int(model) else model
+        # Config     
+        configs_     = utils.list_configs(project_root=root, model=model)
+        configs_str_ = utils.parse_menu_string(configs_)
+        config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
+        config       = configs_[int(config)] if mon.is_int(config) else config
+        # Weights    
+        weights_     = utils.list_weights_files(project_root=root, model=model, config=config)
+        weights_str_ = utils.parse_menu_string(weights_)
+        weights      = click.prompt(click.style(f"Weights {weights_str_}", fg="bright_green", bold=True), type=str, default=weights or "")
+        weights      = weights if weights not in [None, ""] else None
         if weights is not None:
             if isinstance(weights, str):
                 weights = mon.to_list(weights)
             weights = [weights_[int(w)] if mon.is_int(w) else w for w in weights]
             weights = [w.replace("'", "") for w in weights]
-            # weights = weights[0] if len(weights) == 1 else weights
         # Predict data
-        if mode in ["predict", "online"]:
+        if mode in ["predict", "online", "instance"]:
             data_     = utils.list_datasets(project_root=root, task=task, mode="predict")
             data_str_ = utils.parse_menu_string(data_)
             data      = data.replace(",", ",\n    ") if isinstance(data, str) else data
@@ -358,19 +357,20 @@ def main(
             data 	  = mon.to_list(data)
             data 	  = [data_[int(d)] if mon.is_int(d) else d for d in data]
         # Fullname
-        fullname = mon.Path(config).stem
-        fullname = click.prompt(click.style(f"Save name: {fullname}", fg="bright_green", bold=True), type=str, default=fullname)
+        fullname    = mon.Path(config).stem
+        fullname    = click.prompt(click.style(f"Save name: {fullname}", fg="bright_green", bold=True), type=str, default=fullname)
         # Device
         devices_    = mon.list_devices()
         devices_str = utils.parse_menu_string(devices_)
+        device      = "auto" if model in utils.list_mon_models(mode=mode, task=task) and mode == "train" else device
         device      = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=device or "cuda:0")
         device 	    = devices_[int(device)] if mon.is_int(device) else device
         # Training Flags
-        if mode in ["train", "online"]:
+        if mode in ["train", "online", "instance"]:
             epochs = click.prompt(click.style(f"Epochs              ", fg="bright_yellow", bold=True), type=int, default=epochs)
             steps  = click.prompt(click.style(f"Steps               ", fg="bright_yellow", bold=True), type=int, default=steps)
         # Predict Flags
-        if mode in ["predict", "online"]:
+        if mode in ["predict", "online", "instance"]:
             # Image size
             imgsz_       = imgsz
             imgsz        = click.prompt(click.style(f"Image size          ", fg="bright_yellow", bold=True), type=str, default=imgsz)
@@ -378,19 +378,19 @@ def main(
             imgsz        = imgsz[0] if len(imgsz) == 1 else imgsz
             # Resize
             resize       = "yes" if imgsz != imgsz_ else "no"
-            resize       = click.prompt(click.style(f"Resize?     [yes/no]", fg="bright_yellow",  bold=True), type=str, default=resize)
+            resize       = click.prompt(click.style(f"Resize?     [yes/no]", fg="bright_yellow", bold=True), type=str, default=resize)
             # Other Flags
-            benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow",  bold=True), type=str, default="no")
-            save_image   = click.prompt(click.style(f"Save image? [yes/no]", fg="bright_yellow",  bold=True), type=str, default="yes")
-            use_data_dir = click.prompt(click.style(f"Data dir?   [yes/no]", fg="bright_yellow",  bold=True), type=str, default="no")
+            benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
+            save_image   = click.prompt(click.style(f"Save image? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
+            use_data_dir = click.prompt(click.style(f"Data dir?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
             resize       = True if resize       == "yes" else False
             benchmark    = True if benchmark    == "yes" else False
             save_image   = True if save_image   == "yes" else False
             use_data_dir = True if use_data_dir == "yes" else False
         # Common Flags
-        exist_ok = click.prompt(click.style(f"Exist OK?   [yes/no]", fg="bright_yellow",  bold=True), type=str, default="yes")
+        exist_ok = click.prompt(click.style(f"Exist OK?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
         exist_ok = True if exist_ok == "yes" else False
-        verbose  = click.prompt(click.style(f"Verbosity?  [yes/no]", fg="bright_yellow",  bold=True), type=str, default="yes")
+        verbose  = click.prompt(click.style(f"Verbosity?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
         verbose  = True if verbose  == "yes" else False
     
     # Run
@@ -431,7 +431,7 @@ def main(
             "verbose"     : verbose,
         }
         run_predict(args=args)
-    elif mode in ["online"]:
+    elif mode in ["online", "instance"]:
         args = {
             "root"        : root,
             "task"        : task,
@@ -456,7 +456,8 @@ def main(
     else:
         raise ValueError(
             f":param:`mode` must be one of ``'train'``, ``'predict'``, "
-            f"``'metric'``, or ``'plot'``, but got {mode}."
+            f"``'online'``, ``'instance'``, ``'metric'``, or ``'plot'``, "
+            f"but got {mode}."
         )
         
 

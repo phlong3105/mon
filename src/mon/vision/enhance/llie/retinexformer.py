@@ -17,7 +17,7 @@ from einops import rearrange
 
 from mon import core, nn
 from mon.core import _callable, _size_2_t
-from mon.globals import MODELS
+from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.enhance.llie import base
 
@@ -155,7 +155,8 @@ class IlluminationEstimator(nn.Module):
 		return illu_fea, illu_map
 
 
-class IG_MSA(nn.Module):
+class IGMSA(nn.Module):
+	"""Illumination-Guided Multi-head Self-Attention."""
 	
 	def __init__(
 		self,
@@ -239,7 +240,7 @@ class IGAB(nn.Module):
 		for _ in range(num_blocks):
 			self.blocks.append(
 				nn.ModuleList([
-					IG_MSA(in_channels=in_channels, head_channels=head_channels, heads=heads),
+					IGMSA(in_channels=in_channels, head_channels=head_channels, heads=heads),
 					PreNorm(in_channels, FeedForward(in_channels=in_channels))
 				])
 			)
@@ -332,12 +333,12 @@ class Denoiser(nn.Module):
 			illu_fea = IlluFeaDownsample(illu_fea)
 		
 		# Bottleneck
-		fea = self.bottleneck(fea,illu_fea)
+		fea = self.bottleneck(fea, illu_fea)
 		
 		# Decoder
-		for i, (FeaUpSample, Fution, LeWinBlock) in enumerate(self.decoder_layers):
+		for i, (FeaUpSample, FeaFusion, LeWinBlock) in enumerate(self.decoder_layers):
 			fea 	 = FeaUpSample(fea)
-			fea		 = Fution(torch.cat([fea, fea_encoder[self.level - 1 - i]], dim=1))
+			fea		 = FeaFusion(torch.cat([fea, fea_encoder[self.level - 1 - i]], dim=1))
 			illu_fea = illu_fea_list[self.level-1-i]
 			fea 	 = LeWinBlock(fea, illu_fea)
 		
@@ -358,7 +359,7 @@ class RetinexFormerSingleStage(nn.Module):
 	):
 		super().__init__()
 		self.estimator = IlluminationEstimator(num_channels)
-		self.denoiser = Denoiser(
+		self.denoiser  = Denoiser(
 			in_channels  = in_channels,
 			out_channels = out_channels,
 			num_channels = num_channels,
@@ -389,7 +390,8 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 	See Also: :class:`base.LowLightImageEnhancementModel`
 	"""
 	
-	_zoo: dict = {
+	_scheme: list[Scheme] = [Scheme.SUPERVISED]
+	_zoo   : dict = {
 		"fivek" : {
 			"url"         : None,
 			"path"        : "retinexformer/retinexformer_fivek",
@@ -500,7 +502,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		self.stage        = stage
 		self.num_blocks   = num_blocks
 		
-		modules_body = [
+		self.body = nn.Sequential(*[
 			RetinexFormerSingleStage(
 				in_channels  = self.channels,
 				out_channels = self.channels,
@@ -509,8 +511,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 				num_blocks   = self.num_blocks,
 			)
 			for _ in range(stage)
-		]
-		self.body = nn.Sequential(*modules_body)
+		])
 		
 		# Load weights
 		if self.weights:
