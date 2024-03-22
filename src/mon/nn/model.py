@@ -784,8 +784,9 @@ class Model(lightning.LightningModule, ABC):
         
         # Log
         log_dict = {
-            f"step"      : self.current_epoch,
-            f"train/loss": loss,
+            f"step"       : self.current_epoch,
+            f"global_step": self.global_step,
+            f"train/loss" : loss,
         }
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
@@ -867,8 +868,9 @@ class Model(lightning.LightningModule, ABC):
         
         # Log
         log_dict = {
-            f"step"    : self.current_epoch,
-            f"val/loss": loss,
+            f"step"       : self.current_epoch,
+            f"global_step": self.global_step,
+            f"val/loss"   : loss,
         }
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
@@ -926,8 +928,9 @@ class Model(lightning.LightningModule, ABC):
         
         # Log
         log_dict = {
-            f"step"     : self.current_epoch,
-            f"test/loss": loss,
+            f"step"       : self.current_epoch,
+            f"global_step": self.global_step,
+            f"test/loss"  : loss,
         }
         if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):

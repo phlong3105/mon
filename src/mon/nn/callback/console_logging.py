@@ -224,6 +224,7 @@ class LogTrainingProgress(callbacks.Callback):
         for c, v in monitor_candidates.items():
             if c in candidates:
                 candidates[c] = v
+        candidates["step"] = monitor_candidates.get("global_step", monitor_candidates["step"])
         return candidates
     
     def _get_monitor_candidates(self, trainer: "pl.Trainer") -> dict[str, torch.Tensor]:
@@ -231,10 +232,12 @@ class LogTrainingProgress(callbacks.Callback):
         # Cast to int if necessary because `self.log("epoch", 123)` will convert
         # it to float. if it is not a tensor or does not exist, we overwrite it
         # as it is likely an error.
-        epoch = monitor_candidates.get("epoch")
-        step  = monitor_candidates.get("step")
-        monitor_candidates["epoch"] = epoch.int() if isinstance(epoch, torch.Tensor) else torch.tensor(trainer.current_epoch)
-        monitor_candidates["step"]  = step.int()  if isinstance(step,  torch.Tensor) else torch.tensor(trainer.global_step)
+        epoch        = monitor_candidates.get("epoch")
+        step         = monitor_candidates.get("step")
+        global_step  = monitor_candidates.get("global_step")
+        monitor_candidates["epoch"]       = epoch.int()       if isinstance(epoch,       torch.Tensor) else torch.tensor(trainer.current_epoch)
+        monitor_candidates["step"]        = step.int()        if isinstance(step,        torch.Tensor) else torch.tensor(trainer.global_step)
+        monitor_candidates["global_step"] = global_step.int() if isinstance(global_step, torch.Tensor) else torch.tensor(trainer.global_step)
         return monitor_candidates
     
     def _should_skip_logging(self, trainer: "pl.Trainer") -> bool:
