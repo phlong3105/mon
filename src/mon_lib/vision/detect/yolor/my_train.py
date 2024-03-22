@@ -71,6 +71,11 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     wdir.mkdir(parents=True, exist_ok=True)  # make dir
     last         = wdir     / "last.pt"
     best         = wdir     / "best.pt"
+    best_p       = wdir     / "best_p.pt"
+    best_r       = wdir     / "best_r.pt"
+    best_f1      = wdir     / "best_f1.pt"
+    best_ap50    = wdir     / "best_ap50.pt"
+    best_ap      = wdir     / "best_ap.pt"
     results_file = save_dir / "results.txt"
     
     # Save run settings
@@ -531,18 +536,18 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                     torch.save(ckpt, best)
                 # if (best_fitness == fi) and (epoch >= 200):
                 #     torch.save(ckpt, wdir / "best_{:03d}.pt".format(epoch))
-                if best_fitness == fi:
-                    torch.save(ckpt, wdir / "best_overall.pt")
+                # if best_fitness == fi:
+                #     torch.save(ckpt, wdir / "best_overall.pt")
                 if best_fitness_p == fi_p:
-                    torch.save(ckpt, wdir / "best_p.pt")
+                    torch.save(ckpt, best_p)
                 if best_fitness_r == fi_r:
-                    torch.save(ckpt, wdir / "best_r.pt")
+                    torch.save(ckpt, best_r)
                 if best_fitness_f1 == fi_f1:
-                    torch.save(ckpt, wdir / "best_f1.pt")
+                    torch.save(ckpt, best_f1)
                 if best_fitness_ap50 == fi_ap50:
-                    torch.save(ckpt, wdir / "best_ap50.pt")
+                    torch.save(ckpt, best_ap50)
                 if best_fitness_ap == fi_ap:
-                    torch.save(ckpt, wdir / "best_ap.pt")
+                    torch.save(ckpt, best_ap)
                 # if epoch == 0:
                 #     torch.save(ckpt, wdir / "epoch_{:03d}.pt".format(epoch))
                 # if ((epoch+1) % 25) == 0:
@@ -558,8 +563,18 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     if rank in [-1, 0]:
         # Strip optimizers
         n = opt.name if opt.name.isnumeric() else ""
-        fresults, flast, fbest = save_dir / f"results{n}.txt", wdir / f"last{n}.pt", wdir / f"best{n}.pt"
-        for f1, f2 in zip([wdir / "last.pt", wdir / "best.pt", results_file], [flast, fbest, fresults]):
+        fresults   = save_dir / f"results{n}.txt"
+        flast      =  wdir    / f"last{n}.pt"
+        fbest      =  wdir    / f"best{n}.pt"
+        fbest_p    =  wdir    / f"best_p{n}.pt"
+        fbest_r    =  wdir    / f"best_r{n}.pt"
+        fbest_f1   =  wdir    / f"best_f1{n}.pt"
+        fbest_ap50 =  wdir    / f"best_ap50{n}.pt"
+        fbest_ap   =  wdir    / f"best_ap{n}.pt"
+        for f1, f2 in zip(
+            [last,  best,  best_p,  best_r,  best_f1,  best_ap,    best_ap,  results_file],
+            [flast, fbest, fbest_p, fbest_r, fbest_f1, fbest_ap50, fbest_ap, fresults]
+        ):
             if f1.exists():
                 os.rename(f1, f2)  # rename
                 if str(f2).endswith(".pt"):  # is *.pt

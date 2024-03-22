@@ -354,7 +354,6 @@ class DCEFormer(base.LowLightImageEnhancementModel):
         
         # Construct model
         self.upsample  = nn.UpsamplingBilinear2d(self.scale_factor)
-        
         # Light-up Map
         self.l_conv1   = nn.Conv2d(self.channels + 1,     self.num_channels, 3, 1, 1, bias=True)
         self.l_conv2   = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -371,8 +370,8 @@ class DCEFormer(base.LowLightImageEnhancementModel):
         self.igedb     = IGEDB(in_channels=self.channels, out_channels=channels, num_channels=self.num_channels, num_blocks=self.num_blocks)
     
         # Loss
-        self._loss      = Loss()
-        self._mae_loss  = nn.MAELoss(reduction="mean")
+        self._loss     = Loss()
+        self._mae_loss = nn.MAELoss(reduction="mean")
         
         # Load weights
         if self.weights:
@@ -400,8 +399,8 @@ class DCEFormer(base.LowLightImageEnhancementModel):
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         pred = self.forward(input=input, *args, **kwargs)
         if target is not None:
-            # loss = self._mae_loss(pred[-1], target)
-            loss = self._loss(input, pred)
+            loss = self._mae_loss(pred[-1], target)
+            # loss = self._loss(input, pred)
         else:
             loss = self._loss(input, pred)
         return pred[-1], loss

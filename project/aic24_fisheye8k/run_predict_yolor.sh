@@ -50,17 +50,17 @@ test_cameras=(
     "test/camera29_a_n"
 )
 conf_thresholds=(
-    0.5
-    0.5
-    0.5
-    0.5
-    0.5
-    0.5
-    0.5
-    0.5
-    0.5
-    0.5
-    0.5
+    0.50
+    0.50
+    0.50
+    0.50
+    0.50
+    0.50
+    0.50
+    0.50
+    0.50
+    0.50
+    0.50
 )
 
 # Predict
@@ -81,7 +81,7 @@ for ((i=0; i < ${#test_cameras[@]}; i++)); do
       --save-dir "${save_dir}" \
       --imgsz 2560 \
       --conf "${conf_thresholds[i]}" \
-      --iou 0.5
+      --iou 0.50
 done
 
 # Generation submission file

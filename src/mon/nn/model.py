@@ -781,35 +781,28 @@ class Model(lightning.LightningModule, ABC):
             target = target,
             *args, **kwargs
         )
-        # Loss
-        self.log(
-            name           = f"train/loss",
-            value          = loss,
+        
+        # Log
+        log_dict = {
+            f"step"      : self.current_epoch,
+            f"train/loss": loss,
+        }
+        if self.train_metrics:
+            for i, metric in enumerate(self.train_metrics):
+                log_dict[f"train/{metric.name}"] = metric(pred, target)
+        self.log_dict(
+            dictionary     = log_dict,
             prog_bar       = False,
             logger         = True,
             on_step        = False,
             on_epoch       = True,
             sync_dist      = True,
             rank_zero_only = False,
-            batch_size     = 1,
         )
-        # Metric
-        if self.train_metrics:
-            for i, metric in enumerate(self.train_metrics):
-                value = metric(pred, target)
-                self.log(
-                    name           = f"train/{metric.name}",
-                    value          = value,
-                    prog_bar       = False,
-                    logger         = True,
-                    on_step        = False,
-                    on_epoch       = True,
-                    sync_dist      = True,
-                    rank_zero_only = False,
-                    batch_size     = 1,
-                )
+        
         # Debug
         self._epoch_step += 1
+        
         return loss
 
     def on_train_epoch_end(self):
@@ -871,36 +864,28 @@ class Model(lightning.LightningModule, ABC):
             target = target,
             *args, **kwargs
         )
-        # Loss
-        self.log(
-            name           = f"val/loss",
-            value          = loss,
+        
+        # Log
+        log_dict = {
+            f"step"    : self.current_epoch,
+            f"val/loss": loss,
+        }
+        if self.val_metrics:
+            for i, metric in enumerate(self.val_metrics):
+                log_dict[f"val/{metric.name}"] = metric(pred, target)
+        self.log_dict(
+            dictionary     = log_dict,
             prog_bar       = False,
             logger         = True,
             on_step        = False,
             on_epoch       = True,
             sync_dist      = True,
             rank_zero_only = False,
-            batch_size     = 1,
         )
         
-        # Metric
-        if self.val_metrics:
-            for i, metric in enumerate(self.val_metrics):
-                value = metric(pred, target)
-                self.log(
-                    name           = f"val/{metric.name}",
-                    value          = value,
-                    prog_bar       = False,
-                    logger         = True,
-                    on_step        = False,
-                    on_epoch       = True,
-                    sync_dist      = True,
-                    rank_zero_only = False,
-                    batch_size     = 1,
-                )
         # Debug
         self._epoch_step += 1
+        
         return loss
 
     def on_validation_epoch_end(self):
@@ -938,35 +923,28 @@ class Model(lightning.LightningModule, ABC):
             target = target,
             *args, **kwargs
         )
-        # Loss
-        self.log(
-            name           = f"test/loss",
-            value          = loss,
+        
+        # Log
+        log_dict = {
+            f"step"     : self.current_epoch,
+            f"test/loss": loss,
+        }
+        if self.test_metrics:
+            for i, metric in enumerate(self.test_metrics):
+                log_dict[f"test/{metric.name}"] = metric(pred, target)
+        self.log_dict(
+            dictionary     = log_dict,
             prog_bar       = False,
             logger         = True,
             on_step        = False,
             on_epoch       = True,
             sync_dist      = True,
             rank_zero_only = False,
-            batch_size     = 1,
         )
-        # Metric
-        if self.test_metrics:
-            for i, metric in enumerate(self.test_metrics):
-                value = metric(pred, target)
-                self.log(
-                    name           = f"test/{metric.name}",
-                    value          = value,
-                    prog_bar       = False,
-                    logger         = True,
-                    on_step        = False,
-                    on_epoch       = True,
-                    sync_dist      = True,
-                    rank_zero_only = False,
-                    batch_size     = 1,
-                )
+        
         # Debug
         self._epoch_step += 1
+       
         return loss
     
     def on_test_epoch_end(self):
