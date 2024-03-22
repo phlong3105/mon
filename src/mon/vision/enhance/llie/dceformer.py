@@ -8,12 +8,12 @@ Transformer) models.
 from __future__ import annotations
 
 __all__ = [
-    "DCEFormerV1",
+    "DCEFormer",
 ]
 
+import math
 from typing import Any, Literal
 
-import cv2
 import torch
 from einops import rearrange
 
@@ -23,11 +23,39 @@ from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.enhance.llie import base
 
-console = core.console
+console       = core.console
+error_console = core.error_console
 
 
 # region Module
 
+def trunc_normal_(
+    tensor: torch.Tensor,
+    mean  : float = 0.0,
+    std   : float = 1.0,
+    a     : float = -2.0,
+    b     : float = 2.0,
+) -> torch.Tensor:
+    def norm_cdf(x):
+        return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
+    
+    if (mean < a - 2 * std) or (mean > b + 2 * std):
+        error_console.log(
+            f":param:`mean` is more than 2 std from [a, b] in "
+            f":func:`torch.nn.init.trunc_normal_`. "
+            f"The distribution of values may be incorrect.",
+        )
+    with torch.no_grad():
+        l = norm_cdf((a - mean) / std)
+        u = norm_cdf((b - mean) / std)
+        tensor.uniform_(2 * l - 1, 2 * u - 1)
+        tensor.erfinv_()
+        tensor.mul_(std * math.sqrt(2.))
+        tensor.add_(mean)
+        tensor.clamp_(min=a, max=b)
+        return tensor
+    
+    
 class PreNorm(nn.Module):
     
     def __init__(self, normalized_shape: int | list[int], fn: _callable):
@@ -139,6 +167,41 @@ class IGAB(nn.Module):
             x = ff(x) + x
         y = x.permute(0, 3, 1, 2)
         return y
+
+
+class IGEDB(nn.Module):
+    """Illumination-Guided Enhancement and Denoising Block."""
+    
+    def __init__(
+        self,
+        in_channels : int = 3,
+        out_channels: int = 3,
+        num_channels: int = 32,
+        num_blocks  : int = 1,
+    ):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channels,  num_channels, 3, 1, 1, bias=False)
+        self.igab  = IGAB(in_channels=num_channels, num_blocks=num_blocks, head_channels=num_channels, heads=1)
+        self.conv2 = nn.Conv2d(num_channels, out_channels, 3, 1, 1, bias=False)
+        
+        self.apply(self._init_weights)
+        
+    def _init_weights(self, m: nn.Module):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=0.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                torch.nn.init.constant_(m.bias, 0)
+        elif isinstance(m, nn.LayerNorm):
+            torch.nn.init.constant_(m.bias,   0)
+            torch.nn.init.constant_(m.weight, 1.0)
+            
+    def forward(self, input: torch.Tensor, illu_fea: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.conv1(x)
+        y = self.igab(y, illu_fea)
+        y = self.conv2(y)
+        y = y + x
+        return y
     
 # endregion
 
@@ -201,6 +264,10 @@ class Loss(nn.Loss):
             if len(target) == 2:
                 a       = target[-2]
                 enhance = target[-1]
+            elif len(target) == 3:
+                a       = target[-3]
+                f       = target[-2]
+                enhance = target[-1]
             else:
                 raise ValueError
         else:
@@ -236,8 +303,8 @@ class Loss(nn.Loss):
 
 # region DCEFormer
 
-@MODELS.register(name="dceformerv1")
-class DCEFormerV1(base.LowLightImageEnhancementModel):
+@MODELS.register(name="dceformer")
+class DCEFormer(base.LowLightImageEnhancementModel):
     """DCEFormer (Zero-Reference Deep Curve Estimation Transformer) models.
     
     Args:
@@ -256,16 +323,16 @@ class DCEFormerV1(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        channels    : int       = 3,
-        num_channels: int       = 32,
-        num_blocks  : list[int] = [2, 4, 4],
-        num_iters   : int       = 8,
-        scale_factor: int       = 1,
-        weights     : Any       = None,
+        channels    : int = 3,
+        num_channels: int = 32,
+        num_blocks  : int = 1,
+        num_iters   : int = 8,
+        scale_factor: int = 1,
+        weights     : Any = None,
         *args, **kwargs
     ):
         super().__init__(
-            name     = "dceformerv1",
+            name     = "dceformer",
             channels = channels,
             weights  = weights,
             *args, **kwargs
@@ -286,21 +353,23 @@ class DCEFormerV1(base.LowLightImageEnhancementModel):
         self.scale_factor = scale_factor
         
         # Construct model
-        self.illu_conv1 = nn.Conv2d(self.channels + 1,     self.num_channels, 1, 1, 1, bias=True)
-        self.illu_conv2 = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 0, bias=True, groups=self.channels + 1)
-        self.conv1      = nn.Conv2d(self.channels + 1,     self.num_channels, 3, 1, 1, bias=True)
-        self.conv2      = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.conv3      = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.conv4      = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.conv5      = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.conv6      = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.conv7      = nn.Conv2d(self.num_channels * 2, self.channels,     3, 1, 1, bias=True)
-        self.igab4      = IGAB(in_channels=self.num_channels, num_blocks=self.num_blocks[0], head_channels=self.num_channels, heads=1)
-        # self.igab5      = IGAB(in_channels=self.num_channels, num_blocks=self.num_blocks[1], head_channels=self.num_channels, heads=1)
-        # self.igab6      = IGAB(in_channels=self.num_channels, num_blocks=self.num_blocks[2], head_channels=self.num_channels, heads=1)
-        self.act        = nn.PReLU()
-        self.upsample   = nn.UpsamplingBilinear2d(self.scale_factor)
+        self.upsample  = nn.UpsamplingBilinear2d(self.scale_factor)
         
+        # Light-up Map
+        self.l_conv1   = nn.Conv2d(self.channels + 1,     self.num_channels, 3, 1, 1, bias=True)
+        self.l_conv2   = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+        self.l_conv3   = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+        self.l_conv4   = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+        self.l_conv5   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+        self.l_conv6   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+        self.l_conv7   = nn.Conv2d(self.num_channels * 2, self.channels,     3, 1, 1, bias=True)
+        self.l_act     = nn.PReLU()
+        # Light-up Feature
+        self.fea_conv1 = nn.Conv2d(self.channels + 1,     self.num_channels, 1, 1, 1, bias=True)
+        self.fea_conv2 = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 0, bias=True, groups=self.channels + 1)
+        # Denoiser
+        self.igedb     = IGEDB(in_channels=self.channels, out_channels=channels, num_channels=self.num_channels, num_blocks=self.num_blocks)
+    
         # Loss
         self._loss      = Loss()
         self._mae_loss  = nn.MAELoss(reduction="mean")
@@ -331,8 +400,8 @@ class DCEFormerV1(base.LowLightImageEnhancementModel):
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         pred = self.forward(input=input, *args, **kwargs)
         if target is not None:
-            loss = self._mae_loss(pred[-1], target)
-            # loss = self._loss(input, pred)
+            # loss = self._mae_loss(pred[-1], target)
+            loss = self._loss(input, pred)
         else:
             loss = self._loss(input, pred)
         return pred[-1], loss
@@ -356,69 +425,29 @@ class DCEFormerV1(base.LowLightImageEnhancementModel):
         if self.scale_factor != 1:
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
         
-        # Illumination features
-        illu_fea = self.illu_conv2(self.illu_conv1(x_down))
-        # Encoder
-        f1   = self.act(self.conv1(x_down))
-        f2   = self.act(self.conv2(f1))
-        f3   = self.act(self.conv3(f2))
-        f4   = self.act(self.conv4(f3))
-        # Attentive Decoder
-        f4_a = self.igab4(f4, illu_fea)
-        f5   = self.act(self.conv5(torch.cat([f3, f4_a], dim=1)))
-        # f5   = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-        # f5_a = self.igab5(f5, illu_fea)
-        # f6   = self.act(self.conv6(torch.cat([f2, f5_a], dim=1)))
-        f6   = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-        # f6_a = self.igab6(f6, illu_fea)
-        # a    =   F.tanh(self.conv7(torch.cat([f1, f6_a], dim=1)))
-        a    =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
+        # Light-up Feature
+        f  = self.fea_conv2(self.fea_conv1(x_down))
+        
+        # Light-up Map
+        l1 = self.l_act(self.l_conv1(x_down))
+        l2 = self.l_act(self.l_conv2(l1))
+        l3 = self.l_act(self.l_conv3(l2))
+        l4 = self.l_act(self.l_conv4(l3))
+        l5 = self.l_act(self.l_conv5(torch.cat([l3, l4], dim=1)))
+        l6 = self.l_act(self.l_conv6(torch.cat([l2, l5], dim=1)))
+        l  =     F.tanh(self.l_conv7(torch.cat([l1, l6], dim=1)))
         
         # Up-sampling
         if self.scale_factor != 1:
-            a = self.upsample(a)
+            l = self.upsample(l)
+            f = self.upsample(f)
         
-        # Enhancement
+        # Enhancement and Denoising
         y = x
         for _ in range(self.num_iters):
-            y = y + a * (torch.pow(y, 2) - y)
-        
-        """
-        if not self.predicting:
-            y = x
-            for _ in range(self.num_iters):
-                y = y + a * (torch.pow(y, 2) - y)
-        else:
-            y = x
-            g = proc.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-            for _ in range(self.num_iters):
-                b = y * (1 - g)
-                d = y * g
-                y = b + d + a * (torch.pow(d, 2) - d)
-        """
-        
-        return a, y
+            y = y + l * (torch.pow(y, 2) - y)
+            y = self.igedb(y, f)
+            
+        return l, f, y
     
-# endregion
-
-
-# region Main
-
-def run_dceformerv1():
-    path   = core.Path("/home/longpham/10-workspace/11-code/mon/project/enhance/data/10.jpg")
-    image  = cv2.imread(str(path))
-    device = torch.device("cuda:0")
-    input  = core.to_image_tensor(image, False, True, device)
-    net    = DCEFormerV1().to(device)
-    pred   = net(input)
-    pred   = pred[-1]
-    pred   = core.to_image_nparray(pred, False, True)
-    cv2.imshow("Image", image)
-    cv2.imshow("Relight", pred)
-    cv2.waitKey(0)
-
-
-if __name__ == "__main__":
-    run_dceformerv1()
-
 # endregion

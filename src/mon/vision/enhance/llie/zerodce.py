@@ -147,7 +147,7 @@ class CombinedLoss02(nn.Loss):
 # endregion
 
 
-# region Zero-DCE
+# region Model
 
 @MODELS.register(name="zerodce")
 class ZeroDCE(base.LowLightImageEnhancementModel):
