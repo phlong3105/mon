@@ -12,30 +12,6 @@ data_dir="${mon_dir}/data"
 yolor_dir="${mon_dir}/src/mon_lib/vision/detect/yolor"
 
 # Constants
-train_cameras=(
-    "train/camera3_a"
-    "train/camera3_n"
-    "train/camera5_a"
-    "train/camera6_a"
-    "train/camera8_a"
-    "train/camera9_a"
-    "train/camera10_a"
-    "train/camera11_m"
-    "train/camera12_a"
-    "train/camera13_a_500"
-    "train/camera13_a_779"
-    "train/camera14_a"
-    "train/camera15_a"
-    "train/camera16_a"
-    "train/camera17_a"
-    "train/camera18_a"
-)
-val_cameras=(
-    "val/camera1_a_test"
-    "val/camera2_a_test"
-    "val/camera4_a_e_m_n_test"
-    "val/camera7_a_test"
-)
 test_cameras=(
     "test/camera19_a"
     "test/camera20_a"
@@ -50,23 +26,37 @@ test_cameras=(
     "test/camera29_a_n"
 )
 conf_thresholds=(
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
+    0.60
+    0.60
+    0.60
+    0.60
+    0.60
+    0.60
+    0.60
+    0.60
+    0.60
+    0.60
+    0.60
+)
+image_sizes=(
+    1760
+    1760
+    1920
+    1920
+    1920
+    2592
+    1280
+    1280
+    1920
+    1592
+    1944
+    1920
 )
 
 # Predict
 cd "${yolor_dir}" || exit
 save_dir="${current_dir}/run/predict/aic24_fisheye8k/submission"
-# if [ -d "${save_dir}" ]; then rm -Rf "${save_dir}"; fi
+if [ -d "${save_dir}" ]; then rm -Rf "${save_dir}"; fi
 for ((i=0; i < ${#test_cameras[@]}; i++)); do
     source="${data_dir}/aic/aic24_fisheye8k/${test_cameras[i]}/images"
     python -W ignore my_predict.py \
@@ -80,7 +70,7 @@ for ((i=0; i < ${#test_cameras[@]}; i++)); do
       --data "${source}" \
       --save-dir "${save_dir}" \
       --device "cuda:0" \
-      --imgsz 2560 \
+      --imgsz "${image_sizes[i]}" \
       --conf "${conf_thresholds[i]}" \
       --iou 0.50
 done

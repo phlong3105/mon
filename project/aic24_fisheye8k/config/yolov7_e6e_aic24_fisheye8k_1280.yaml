@@ -53,7 +53,7 @@ no_trace       : True                   # (bool) don`t trace model
 # Predict settings -----------------------------------------------------------------------------------------------------
 source         :                        # (str, optional) source directory for images or videos
 augment        : False                  # (bool) apply image augmentation to prediction sources
-agnostic_nms   : True                   # (bool) class-agnostic NMS
+agnostic_nms   : False                  # (bool) class-agnostic NMS
 classes        :                        # (int | list[int], optional) filter results by class, i.e. classes=0, or classes=[0,2,3]
 update         : False                  # (bool) update all models
 

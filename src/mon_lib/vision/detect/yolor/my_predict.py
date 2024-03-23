@@ -13,6 +13,7 @@ import click
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
+import yaml
 from numpy import random
 
 _root = pathlib.Path(__file__).resolve().parents[0]  # root directory
@@ -102,7 +103,11 @@ def predict(opt, save_img: bool = False):
     else:
         # names = None
         names = [i for i in range(5)]
+    
     colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
+    with open(opt.data, encoding="utf-8") as f:
+        data_dict = yaml.load(f, Loader=yaml.FullLoader)  # data dict
+        colors    = data_dict.get("colors", colors)
 
     # Run inference
     t0  = time.time()
