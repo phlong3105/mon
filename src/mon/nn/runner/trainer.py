@@ -25,9 +25,20 @@ class Trainer(lightning.Trainer):
     """The trainer class extends the :class:`lightning.Trainer` with several
     methods and properties.
     
+    Args:
+        log_image_every_n_epochs: Log debugging images every n epochs.
+        
     See Also: :class:`lightning.Trainer`.
     """
     
+    def __init__(
+        self,
+        log_image_every_n_epochs: int = 0,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.log_image_every_n_epochs = log_image_every_n_epochs
+        
     @lightning.Trainer.current_epoch.setter
     def current_epoch(self, current_epoch: int):
         self.fit_loop.current_epoch = current_epoch

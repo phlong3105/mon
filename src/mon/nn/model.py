@@ -19,7 +19,7 @@ __all__ = [
 
 import copy
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Sequence
 from urllib.parse import urlparse  # noqa: F401
 
 import humps
@@ -310,7 +310,6 @@ class Model(lightning.LightningModule, ABC):
         self._val_metrics   = None
         self._test_metrics  = None
         self.optims         = optimizers
-        self._epoch_step    = 0
         self._set_loss(loss=loss)
         self._set_train_metrics(metrics=metrics)
         self._set_val_metrics(metrics=metrics)
@@ -383,24 +382,6 @@ class Model(lightning.LightningModule, ABC):
             self._debug_dir = self.root / "debug"
         return self._debug_dir
     
-    @property
-    def debug_subdir(self) -> core.Path:
-        """The debug subdir path located at: <debug_dir>/<phase>_<epoch>."""
-        debug_dir = self.debug_dir / f"{self.phase.value}_{(self.current_epoch + 1):03d}"
-        debug_dir.mkdir(parents=True, exist_ok=True)
-        return debug_dir
-    
-    @property
-    def debug_image_file_path(self) -> core.Path:
-        """The debug image file path located at: <debug_dir>/"""
-        save_dir = self.debug_subdir \
-            if self.debug["save_to_subdir"] \
-            else self.debug_dir
-        
-        return save_dir / f"{self.phase.value}_" \
-                          f"{(self.current_epoch + 1):03d}_" \
-                          f"{(self._epoch_step + 1):06}.jpg"
-        
     @property
     def zoo_dir(self) -> core.Path:
         """Specify the path of the model's pretrained weights directory in
@@ -754,10 +735,6 @@ class Model(lightning.LightningModule, ABC):
         """Called at the beginning of fit."""
         self._create_dir()
 
-    def on_train_epoch_start(self):
-        """Called in the training loop at the beginning of the epoch."""
-        self._epoch_step = 0
-    
     def training_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
         """Here you compute and return the training loss, and some additional
         metrics for e.g., the progress bar or logger.
@@ -784,9 +761,8 @@ class Model(lightning.LightningModule, ABC):
         
         # Log
         log_dict = {
-            f"step"       : self.current_epoch,
-            f"global_step": self.global_step,
-            f"train/loss" : loss,
+            f"step"      : self.current_epoch,
+            f"train/loss": loss,
         }
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
@@ -800,10 +776,7 @@ class Model(lightning.LightningModule, ABC):
             sync_dist      = True,
             rank_zero_only = False,
         )
-        
-        # Debug
-        self._epoch_step += 1
-        
+
         return loss
 
     def on_train_epoch_end(self):
@@ -842,10 +815,6 @@ class Model(lightning.LightningModule, ABC):
                     self.tb_log_scalar(f"{metric.name}/train_epoch", value, "epoch")
         """
 
-    def on_validation_epoch_start(self):
-        """Called in the validation loop at the beginning of the epoch."""
-        self._epoch_step = 0
-    
     def validation_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
         """Operates on a single batch of data from the validation set. In this
         step, you might generate examples or calculate anything of interest like
@@ -868,9 +837,8 @@ class Model(lightning.LightningModule, ABC):
         
         # Log
         log_dict = {
-            f"step"       : self.current_epoch,
-            f"global_step": self.global_step,
-            f"val/loss"   : loss,
+            f"step"    : self.current_epoch,
+            f"val/loss": loss,
         }
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
@@ -885,8 +853,8 @@ class Model(lightning.LightningModule, ABC):
             rank_zero_only = False,
         )
         
-        # Debug
-        self._epoch_step += 1
+        if self._should_save_image():
+            self._log_image(input, target, pred, self.current_epoch, self.global_step)
         
         return loss
 
@@ -900,11 +868,7 @@ class Model(lightning.LightningModule, ABC):
     def on_test_start(self) -> None:
         """Called at the very beginning of testing."""
         self._create_dir()
-    
-    def on_test_epoch_start(self):
-        """Called in the test loop at the very beginning of the epoch."""
-        self._epoch_step = 0
-    
+
     def test_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
         """Operates on a single batch of data from the test set. In this step
         you'd normally generate examples or calculate anything of interest such
@@ -928,9 +892,8 @@ class Model(lightning.LightningModule, ABC):
         
         # Log
         log_dict = {
-            f"step"       : self.current_epoch,
-            f"global_step": self.global_step,
-            f"test/loss"  : loss,
+            f"step"     : self.current_epoch,
+            f"test/loss": loss,
         }
         if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
@@ -945,9 +908,6 @@ class Model(lightning.LightningModule, ABC):
             rank_zero_only = False,
         )
         
-        # Debug
-        self._epoch_step += 1
-       
         return loss
     
     def on_test_epoch_end(self):
@@ -1023,5 +983,26 @@ class Model(lightning.LightningModule, ABC):
         torch.jit.save(script, file_path)
     
     # endregion
-  
+    
+    # region Logging
+    
+    def _should_save_image(self) -> bool:
+        return (
+            self.trainer.is_global_zero
+            and self.trainer.log_image_every_n_epochs > 0
+            and self.current_epoch % self.trainer.log_image_every_n_epochs == 0
+        )
+    
+    def _log_image(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor,
+        pred  : torch.Tensor | Sequence[torch.Tensor],
+        epoch : int,
+        step  : int,
+    ):
+        pass
+
+    # endregion
+    
 # endregion

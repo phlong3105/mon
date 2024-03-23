@@ -79,6 +79,7 @@ for ((i=0; i < ${#test_cameras[@]}; i++)); do
       --model "yolor_d6" \
       --data "${source}" \
       --save-dir "${save_dir}" \
+      --device "cuda:0" \
       --imgsz 2560 \
       --conf "${conf_thresholds[i]}" \
       --iou 0.50

@@ -143,6 +143,7 @@ trainer = {
     "limit_train_batches"              : 1.0,     # How much of training dataset to check (float = fraction, int = num_batches).
     "limit_val_batches"                : 1.0,     # How much of validation dataset to check (float = fraction, int = num_batches).
     "log_every_n_steps"                : 1,       # How often to log within steps.
+	"log_image_every_n_epochs"         : 0,       # Log debugging images every n epochs (0 = don't log).
     "logger"                           : True,    # Logger (or iterable collection of loggers) for experiment tracking (True = `TensorBoardLogger`).
     "max_epochs"                       : 500,     # -1: infinite training.
     "max_steps"                        : -1,      # -1: infinite training.

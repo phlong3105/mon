@@ -6,7 +6,7 @@ data           : aic24_fisheye8k_of.yaml  # data.yaml path
 project        :                          # (str, optional) project name
 name           :                          # (str, optional) experiment name, results saved to 'project/name' directory
 weights        : yolov7_e6e_coco.pt       # (str) initial weights path
-device         : 0,1,2,3                  # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
+device         : cuda:0,1,2,3             # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
 hyp            : hyp.scratch.p6.yaml      # path to hyperparameters file
 epochs         : 500                      # (int) number of epochs to train for
 batch_size     : 12                       # (int) number of images per batch (-1 for AutoBatch)
@@ -48,7 +48,7 @@ save_json      : False                  # (bool) save results to JSON file
 conf           : 0.50                   # (float, optional) object confidence threshold for detection (default 0.25 predict, 0.001 val)
 iou            : 0.50                   # (float) intersection over union (IoU) threshold for NMS
 max_det        : 1000                   # (int) maximum number of detections per image
-no_trace       : False                  # (bool) don`t trace model
+no_trace       : True                   # (bool) don`t trace model
 
 # Predict settings -----------------------------------------------------------------------------------------------------
 source         :                        # (str, optional) source directory for images or videos

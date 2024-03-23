@@ -154,7 +154,7 @@ def model_info(model, verbose=False, img_size=640):
     try:  # FLOPS
         from thop import profile
         stride = int(model.stride.max())
-        flops = profile(deepcopy(model), inputs=(torch.zeros(1, 3, stride, stride),), verbose=False)[0] / 1E9 * 2
+        flops  = profile(deepcopy(model), inputs=(torch.zeros(1, 3, stride, stride),), verbose=False)[0] / 1E9 * 2
         img_size = img_size if isinstance(img_size, list) else [img_size, img_size]  # expand if int/float
         fs = ', %.1f GFLOPS' % (flops * img_size[0] / stride * img_size[1] / stride)  # 640x640 FLOPS
     except (ImportError, Exception):
@@ -175,9 +175,9 @@ def load_classifier(name='resnet101', n=2):
     # std = [0.229, 0.224, 0.225]
 
     # Reshape output to n classes
-    filters = model.fc.weight.shape[1]
-    model.fc.bias = nn.Parameter(torch.zeros(n), requires_grad=True)
-    model.fc.weight = nn.Parameter(torch.zeros(n, filters), requires_grad=True)
+    filters               = model.fc.weight.shape[1]
+    model.fc.bias         = nn.Parameter(torch.zeros(n), requires_grad=True)
+    model.fc.weight       = nn.Parameter(torch.zeros(n, filters), requires_grad=True)
     model.fc.out_features = n
     return model
 

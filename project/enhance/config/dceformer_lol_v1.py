@@ -34,8 +34,8 @@ model = {
 	"root"        : root,           # The root directory of the model.
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"channels"    : 3,              # The first layer's input channel.
-	"num_channels": 32,
-	"num_blocks"  : 1,
+	"num_channels": 40,
+	"num_blocks"  : [1, 2, 2],
 	"num_classes" : None,           # A number of classes, which is also the last layer's output channels.
 	"classlabels" : None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
 	"weights"     : None,           # The model's weights.

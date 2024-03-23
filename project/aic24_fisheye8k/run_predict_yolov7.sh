@@ -50,17 +50,17 @@ test_cameras=(
     "test/camera29_a_n"
 )
 conf_thresholds=(
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
-    0.50
+    0.65
+    0.65
+    0.65
+    0.65
+    0.65
+    0.65
+    0.65
+    0.65
+    0.65
+    0.65
+    0.65
 )
 
 # Predict
@@ -73,12 +73,14 @@ for ((i=0; i < ${#test_cameras[@]}; i++)); do
       --root "${current_dir}" \
       --config "${current_dir}/config/yolov7_e6e_aic24_fisheye8k_1920.yaml" \
       --weights \
-        "${current_dir}/run/train/yolov7_e6e_aic24_fisheye8k_1920/weights/best_f1.pt,
+        "${current_dir}/run/train/yolov7_e6e_fisheye8k_1280_best.pt,
+         ${current_dir}/run/train/yolov7_e6e_aic24_fisheye8k_1920/weights/best_f1.pt,
          ${current_dir}/run/train/yolov7_e6e_aic24_fisheye8k_1536/weights/best_f1.pt,
          ${current_dir}/run/train/yolov7_e6e_aic24_fisheye8k_1280/weights/best_f1.pt"\
       --model "yolov7_e6e" \
       --data "${source}" \
       --save-dir "${save_dir}" \
+      --device "cuda:0" \
       --imgsz 2560 \
       --conf "${conf_thresholds[i]}" \
       --iou 0.50
