@@ -63,9 +63,9 @@ for ((i=0; i < ${#test_cameras[@]}; i++)); do
       --root "${current_dir}" \
       --config "${current_dir}/config/yolor_d6_aic24_fisheye8k_1920.yaml" \
       --weights \
-        "${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1920/weights/best_f1.pt,
-         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1536/weights/best_f1.pt,
-         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1280/weights/best_f1.pt"\
+        "${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/best_f1.pt,
+         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_250/weights/best_f1.pt,
+         ${current_dir}/run/train/yolor_d6_aic24_fisheye8k_1280_epoch_250/weights/best_f1.pt"\
       --model "yolor_d6" \
       --data "${source}" \
       --save-dir "${save_dir}" \

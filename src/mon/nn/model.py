@@ -783,7 +783,6 @@ class Model(lightning.LightningModule, ABC):
         """Called in the training loop at the very end of the epoch."""
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
-                # value = metric.compute()
                 metric.reset()
         """
         # Loss
@@ -862,7 +861,6 @@ class Model(lightning.LightningModule, ABC):
         """Called in the validation loop at the very end of the epoch."""
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
-                # value = metric.compute()
                 metric.reset()
 
     def on_test_start(self) -> None:
@@ -914,7 +912,6 @@ class Model(lightning.LightningModule, ABC):
         """Called in the test loop at the very end of the epoch."""
         if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
-                # value = metric.compute()
                 metric.reset()
     
     # endregion

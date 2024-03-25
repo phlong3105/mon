@@ -9,7 +9,7 @@ weights      : yolo_d6_coco.pt          # Initial weights path
 device       : cuda:0,1,2,3             # (int | str | list, optional) device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
 hyp          : hyp.finetune.1280.yaml   # path to hyperparameters file
 epochs       : 500                      # (int) number of epochs to train for
-batch_size   : 16                       # (int) number of images per batch (-1 for AutoBatch)
+batch_size   : 8                        # (int) number of images per batch (-1 for AutoBatch)
 imgsz        : 1536                     # (int | list) input images size as int for train and val modes, or list[w,h] for predict and export modes
 cache_images : False                    # (bool) True/ram, disk or False. Use cache for data loading
 rect         : False                    # (bool) rectangular training if mode='train' or rectangular validation if mode='val'

@@ -501,7 +501,7 @@ class DCEFormer(base.LowLightImageEnhancementModel):
 	) -> tuple[torch.Tensor, torch.Tensor | None]:
 		pred = self.forward(input=input, *args, **kwargs)
 		if target is not None:
-			loss = self._mae_loss(pred[-1], target) + self._loss(input, pred)
+			loss = self._mae_loss(pred[-1], target)  # + 0.3 * self._loss(input, pred)
 			# loss = self._loss(input, pred)
 		else:
 			loss = self._loss(input, pred)
