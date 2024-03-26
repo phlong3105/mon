@@ -218,7 +218,6 @@ class RRDNet(base.LowLightImageEnhancementModel):
             nn.Conv2d(64, 32, 3, 1, 1),
             nn.ReLU(),
             nn.Conv2d(32, 1, 3, 1, 1),
-        
         )
         self.reflectance_net = nn.Sequential(
             nn.Conv2d(self.channels, 16, 3, 1, 1),
@@ -242,6 +241,8 @@ class RRDNet(base.LowLightImageEnhancementModel):
             nn.ReLU(),
             nn.Conv2d(32, 3, 3, 1, 1)
         )
+       
+        # Loss
         self._loss = Loss()
         
         # Load weights
@@ -306,7 +307,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
         x     = input
         s     = torch.sigmoid(self.illumination_net(x))
         r     = torch.sigmoid(self.reflectance_net(x))
-        n     = torch.tanh(self.noise_net(x))
+        n     =    torch.tanh(self.noise_net(x))
         s_hat = torch.pow(s, self.gamma)
         y     = s_hat * ((x - n) / s)
         if self.predicting:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""DCEFormer model trained on LOL-v1 dataset."""
+"""CERDNet model trained on SICEMix dataset."""
 
 from __future__ import annotations
 
@@ -16,11 +16,11 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "dceformer"
-data_name  = "lol_v1"
+model_name = "cerdnet"
+data_name  = "sice_mix"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [128, 128]
+image_size = [512, 512]
 seed	   = 100
 verbose    = True
 
@@ -30,46 +30,31 @@ verbose    = True
 # region Model
 
 model = {
-	"name"        : model_name,     # The model's name.
-	"root"        : root,           # The root directory of the model.
-	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
-	"channels"    : 3,              # The first layer's input channel.
-	"num_channels": 40,
-	"num_blocks"  : [1, 2, 2],
-	"num_classes" : None,           # A number of classes, which is also the last layer's output channels.
-	"classlabels" : None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
-	"weights"     : None,           # The model's weights.
-	"metrics"     : {
+	"name"       : model_name,     # The model's name.
+	"root"       : root,           # The root directory of the model.
+	"fullname"   : fullname,       # A full model name to save the checkpoint or weight.
+	"channels"   : 3,              # The first layer's input channel.
+	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
+	"pretrain"   : True,
+	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
+	"weights"    : None,           # The model's weights.
+	"metrics"    : {
 	    "train": None,  # [{"name": "psnr"}],
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+		"test" : None,  # [{"name": "psnr"}],
     },          # A list metrics for validating and testing model.
-	"optimizers"  : [
+	"optimizers" : [
 		{
             "optimizer"   : {
 	            "name"        : "adam",
 	            "lr"          : 0.00005,
 	            "weight_decay": 0.00001,
-	            "betas"       : [0.9, 0.999],
-	            "eps"		  : 1e-8,
+	            "betas"       : [0.9, 0.99],
 			},
-			"lr_scheduler": {
-				"scheduler": {
-					"name"      	 : "cosine_annealing_restart_cyclic_lr",
-					"periods"   	 : [46000, 104000],
-					"restart_weights": [1, 1],
-					"eta_mins"		 : [0.0003, 0.000001],
-				},
-				# REQUIRED: The scheduler measurement
-				"interval" : "epoch",     # Unit of the scheduler's step size. One of ['step', 'epoch'].
-				"frequency": 1,           # How many epochs/steps should pass between calls to `scheduler.step()`.
-				"monitor"  : "val_loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
-				"strict"   : True,
-				"name"     : None,
-			},
+			"lr_scheduler": None,
         }
     ],          # Optimizer(s) for training model.
-	"verbose"     : verbose,        # Verbosity.
+	"verbose"    : verbose,        # Verbosity.
 }
 
 # endregion
@@ -81,8 +66,7 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
-		A.CropPatch(patch_size=image_size[0], always_apply=True, p=1.0),
-		# A.Resize(width=image_size[0], height=image_size[1]),
+		A.Resize(width=image_size[0], height=image_size[1]),
 		A.Flip(),
 		A.Rotate(),
 	]),  # Transformations performing on both the input and target.
@@ -100,7 +84,7 @@ datamodule = {
 # region Training
 
 trainer = default.trainer | {
-	"callbacks"        : [
+	"callbacks"       : [
 		default.log_training_progress,
 		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
 		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
@@ -113,7 +97,6 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_steps"        : 150000,
 }
 
 # endregion

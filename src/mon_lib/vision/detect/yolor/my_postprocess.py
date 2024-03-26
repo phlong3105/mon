@@ -26,13 +26,13 @@ except ImportError:
 
 def main():
     for f in [
-        "/home/longpham/10-workspace/11-code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/best_p.pt",
-        "/home/longpham/10-workspace/11-code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/best_r.pt",
-        "/home/longpham/10-workspace/11-code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/best_f1.pt",
-        "/home/longpham/10-workspace/11-code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/best_ap50.pt",
-        "/home/longpham/10-workspace/11-code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/best_ap.pt",
-        "/home/longpham/10-workspace/11-code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/best.pt",
-        "/home/longpham/10-workspace/11-code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1920_epoch_250/weights/last.pt",
+        "/home/longpham/10_workspace/11_code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_100/weights/best_p.pt",
+        "/home/longpham/10_workspace/11_code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_100/weights/best_r.pt",
+        "/home/longpham/10_workspace/11_code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_100/weights/best_f1.pt",
+        "/home/longpham/10_workspace/11_code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_100/weights/best_ap50.pt",
+        "/home/longpham/10_workspace/11_code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_100/weights/best_ap.pt",
+        "/home/longpham/10_workspace/11_code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_100/weights/best.pt",
+        "/home/longpham/10_workspace/11_code/mon/project/aic24_fisheye8k/run/train/yolor_d6_aic24_fisheye8k_1536_epoch_100/weights/last.pt",
     ]:
         f = core.Path(f)
         if f.exists():

@@ -59,6 +59,8 @@ class ZSN2N(base.DenoisingModel):
         self.conv2 = nn.Conv2d(self.num_channels, self.num_channels, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(self.num_channels, self.channels,     kernel_size=1)
         self.act   = nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        
+        # Loss
         self._loss = None
         
         # Load weights
@@ -133,7 +135,7 @@ class ZSN2N(base.DenoisingModel):
         lr           : float = 0.001,
         step_size    : int   = 1000,
         gamma        : float = 0.5,
-        reset_weights: bool = True,
+        reset_weights: bool  = True,
     ) -> torch.Tensor:
         """Train the model with a single sample. This method is used for any
         learning scheme performed on one single instance such as online learning,
@@ -172,15 +174,23 @@ class ZSN2N(base.DenoisingModel):
         assert input.shape[0] == 1
         
         # Training loop
-        with core.get_progress_bar() as pbar:
-            for _ in pbar.track(
-                sequence    = range(max_epochs),
-                total       = max_epochs,
-                description = f"[bright_yellow] Training"
-            ):
+        if self.verbose:
+            with core.get_progress_bar() as pbar:
+                for _ in pbar.track(
+                    sequence    = range(max_epochs),
+                    total       = max_epochs,
+                    description = f"[bright_yellow] Training"
+                ):
+                    _, loss = self.forward_loss(input=input, target=None)
+                    optimizer.zero_grad()
+                    loss.backward(retain_graph=True)
+                    optimizer.step()
+                    scheduler.step()
+        else:
+            for _ in range(max_epochs):
                 _, loss = self.forward_loss(input=input, target=None)
                 optimizer.zero_grad()
-                loss.backward()
+                loss.backward(retain_graph=True)
                 optimizer.step()
                 scheduler.step()
         

@@ -11,7 +11,9 @@ import torch
 
 import mon
 
-console = mon.console
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
+_current_dir  = _current_file.parents[0]
 
 
 # region Function
@@ -70,35 +72,125 @@ def run_zsn2n():
     net = mon.ZSN2N(
         channels     = 3,
         num_channels = 64,
-        max_epochs   = 5000,
-        lr           = 0.0001,
     ).to(device)
-    denoised = net.fit_one_instance(image)
+    denoised = net.fit_one(
+        image,
+        max_epochs = 5000,
+        lr         = 0.0001,
+    )
     denoised = mon.to_image_nparray(denoised, False, True)
     cv2.imshow("Image",    image)
     cv2.imshow("Denoised", denoised)
     cv2.waitKey(0)
 
 
-def run_dceformerv1():
-    path   = mon.Path("./data/10.jpg")
-    image  = cv2.imread(str(path))
-    device = torch.device("cuda:0")
-    input  = mon.to_image_tensor(image, False, True, device)
-    net    = mon.DCEFormerV1().to(device)
-    pred   = net(input)
-    pred   = pred[-1]
-    pred   = mon.to_image_nparray(pred, False, True)
-    cv2.imshow("Image",   image)
-    cv2.imshow("Relight", pred)
+def run_rrdnet():
+    path    = mon.Path("./data/Madison.png")
+    image   = cv2.imread(str(path))
+    #
+    device  = torch.device("cuda:0")
+    net     = mon.RRDNet().to(device)
+    zerodce = mon.ZeroDCE(
+        num_iters = 4,
+        weights   = _current_dir / "run/train/zerodce_sice_mix/weights/last.pt"
+    ).to(device)
+    zsn2n   = mon.ZSN2N(
+        channels     = 3,
+        num_channels = 64,
+    ).to(device)
+    #
+    with torch.no_grad():
+        input            = mon.to_image_tensor(image, False, True)
+        input            = input.to(device)
+        lightup, enhance = zerodce(input)
+    #
+    pred                  = net.fit_one(enhance)
+    illumination          = pred[0]
+    adjusted_illumination = pred[1]
+    reflectance           = pred[2]
+    noise                 = pred[3]
+    relight               = pred[4]
+    #
+    relight2 = relight.clone().detach().requires_grad_(True)
+    denoised = zsn2n.fit_one(relight2)
+    #
+    illumination          = torch.concat([illumination, illumination, illumination], dim=1)
+    adjusted_illumination = torch.concat([adjusted_illumination, adjusted_illumination, adjusted_illumination], dim=1)
+    #
+    lightup = list(torch.split(lightup, 3, dim=1))
+    for i, l in enumerate(lightup):
+        lightup[i] = mon.to_image_nparray(lightup[i], False, True)
+    enhance               = mon.to_image_nparray(enhance              , False, True)
+    illumination          = mon.to_image_nparray(illumination         , False, True)
+    adjusted_illumination = mon.to_image_nparray(adjusted_illumination, False, True)
+    reflectance           = mon.to_image_nparray(reflectance          , False, True)
+    noise                 = mon.to_image_nparray(noise                , False, True)
+    relight               = mon.to_image_nparray(relight              , False, True)
+    denoised              = mon.to_image_nparray(denoised             , False, True)
+    cv2.imshow("Image"                , image)
+    # cv2.imshow("Light-up 0"           , lightup[0])
+    # cv2.imshow("Light-up 1"           , lightup[1])
+    # cv2.imshow("Light-up 2"           , lightup[2])
+    # cv2.imshow("Light-up 3"           , lightup[3])
+    # cv2.imshow("Light-up 4"           , lightup[4])
+    # cv2.imshow("Light-up 5"           , lightup[5])
+    # cv2.imshow("Light-up 6"           , lightup[6])
+    cv2.imshow("Light-up 7"           , lightup[7])
+    cv2.imshow("Enhance"              , enhance)
+    cv2.imshow("Illumination"         , illumination)
+    cv2.imshow("Adjusted Illumination", adjusted_illumination)
+    cv2.imshow("Reflectance"          , reflectance)
+    cv2.imshow("Noise"                , noise)
+    cv2.imshow("Relight"              , relight)
+    cv2.imshow("Denoised"             , denoised)
     cv2.waitKey(0)
 
+
+def run_cerdnet():
+    path    = mon.Path("./data/02.jpg")
+    image   = cv2.imread(str(path))
+    #
+    device  = torch.device("cuda:0")
+    net     = mon.CERDNet().to(device)
+    #
+    pred             = net.fit_one(image)
+    lightup          = pred[0]
+    lightup_image    = pred[1]
+    illumination     = pred[2]
+    illumination_hat = pred[3]
+    reflectance      = pred[4]
+    noise            = pred[5]
+    relight          = pred[6]
+    denoised         = pred[7]
+    #
+    illumination     = torch.concat([illumination,     illumination,     illumination],     dim=1)
+    illumination_hat = torch.concat([illumination_hat, illumination_hat, illumination_hat], dim=1)
+    #
+    lightup          = mon.to_image_nparray(lightup         , False, True)
+    lightup_image    = mon.to_image_nparray(lightup_image   , False, True)
+    illumination     = mon.to_image_nparray(illumination    , False, True)
+    illumination_hat = mon.to_image_nparray(illumination_hat, False, True)
+    reflectance      = mon.to_image_nparray(reflectance     , False, True)
+    noise            = mon.to_image_nparray(noise           , False, True)
+    relight          = mon.to_image_nparray(relight         , False, True)
+    denoised         = mon.to_image_nparray(denoised        , False, True)
+    cv2.imshow("Image"                , image)
+    cv2.imshow("Light-up"             , lightup)
+    cv2.imshow("Light-up Image"       , lightup_image)
+    cv2.imshow("Illumination"         , illumination)
+    cv2.imshow("Adjusted Illumination", illumination_hat)
+    cv2.imshow("Reflectance"          , reflectance)
+    cv2.imshow("Noise"                , noise)
+    cv2.imshow("Relight"              , relight)
+    cv2.imshow("Denoised"             , denoised)
+    cv2.waitKey(0)
+    
 # endregion
 
 
 # region Main
 
 if __name__ == "__main__":
-    run_dceformerv1()
+    run_cerdnet()
 
 # endregion

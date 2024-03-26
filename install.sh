@@ -136,13 +136,10 @@ conda clean --a --y
 
 # Set environment variables
 # shellcheck disable=SC2162
-echo -e "\nSetting DATA_DIR"
-data_dir="/data"
-if [ ! -d "$data_dir" ]; then
-    data_dir="${root_dir}/data"
-fi
 export PYTHONDONTWRITEBYTECODE=1
 
+echo -e "\nSetting DATA_DIR"
+data_dir="${root_dir}/data"
 read -e -i "$data_dir" -p "Enter DATA_DIR=" input
 data_dir="${input:-$data_dir}"
 if [ "$data_dir" != "" ]; then

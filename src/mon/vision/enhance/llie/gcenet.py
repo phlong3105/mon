@@ -28,7 +28,7 @@ console = core.console
 
 # region Loss
 
-class ZeroReferenceLoss(nn.Loss):
+class Loss(nn.Loss):
     
     def __init__(
         self,
@@ -133,7 +133,7 @@ class ZeroReferenceLoss(nn.Loss):
 # endregion
 
 
-# region GCENet
+# region Model
 
 @MODELS.register(name="gcenet")
 class GCENet(base.LowLightImageEnhancementModel):
@@ -198,12 +198,15 @@ class GCENet(base.LowLightImageEnhancementModel):
         self.conv6    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
         self.conv7    = nn.DSConv2d(self.num_channels * 2, self.channels,     3, 1, 1, bias=True)
         self.attn     = nn.Identity()
-        self.act      = nn.ReLU(inplace=True)
+        self.act      = nn.PReLU()
         self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-        #
+        
+        # Los
+        self._loss     = Loss()
+        self._mae_loss = nn.MAELoss(reduction="mean")
+        
         from mon.vision.enhance import denoise
-        self._loss    = ZeroReferenceLoss()
-        self.zsn2n    = denoise.ZSN2N()
+        self.zsn2n     = denoise.ZSN2N(verbose=False)
         
         # Load weights
         if self.weights:
@@ -311,7 +314,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         weight_tvA = 1600 if out_channels == 3 else 200
         if self.variant[2] == "0":  # Zero-DCE Loss
             # NOT WORKING: over-exposed artifacts, enhance noises
-            self.loss = ZeroReferenceLoss(
+            self.loss = Loss(
                 exp_patch_size  = 16,
                 exp_mean_val    = 0.6,
                 spa_num_regions = 4,
@@ -327,7 +330,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 reduction       = "mean",
             )
         elif self.variant[2] == "1":  # New Loss
-            self.loss = ZeroReferenceLoss(
+            self.loss = Loss(
                 exp_patch_size  = 16,
                 exp_mean_val    = 0.6,
                 spa_num_regions = 8,
@@ -343,7 +346,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 reduction       = "mean",
             )
         elif self.variant[2] == "2":
-            self.loss = ZeroReferenceLoss(
+            self.loss = Loss(
                 exp_patch_size  = 16,
                 exp_mean_val    = 0.6,
                 spa_num_regions = 8,
@@ -360,7 +363,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             )
         elif self.variant[2] == "9":
             self.gamma = self.gamma or 2.5
-            self.loss  = ZeroReferenceLoss(
+            self.loss  = Loss(
                 bri_gamma       = self.gamma,
                 exp_patch_size  = 16,   # 16
                 exp_mean_val    = 0.6,  # 0.6
@@ -399,7 +402,10 @@ class GCENet(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         pred = self.forward(input=input, *args, **kwargs)
-        loss, self.previous = self._loss(input, pred, self.previous)
+        if target is not None:
+            loss = self._mae_loss(pred[-1], target)
+        else:
+            loss, self.previous = self._loss(input, pred, self.previous)
         return pred[-1], loss
     
     '''
@@ -481,7 +487,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 b = y * (1 - g)
                 d = y * g
                 y = b + d + a * (torch.pow(d, 2) - d)
-            y = self.zsn2n.fit_one(input=y)
+            # y = self.zsn2n.fit_one(input=y)
             
         # Unsharp masking
         if self.unsharp_sigma is not None:
@@ -697,5 +703,6 @@ class GCENet(base.LowLightImageEnhancementModel):
             return a, g, y
         return a, y
     '''
-    
+
+
 # endregion

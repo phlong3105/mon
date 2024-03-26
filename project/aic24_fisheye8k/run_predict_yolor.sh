@@ -70,7 +70,7 @@ for ((i=0; i < ${#test_cameras[@]}; i++)); do
       --data "${source}" \
       --save-dir "${save_dir}" \
       --device "cuda:0" \
-      --imgsz "${image_sizes[i]}" \
+      --imgsz 2560 \
       --conf "${conf_thresholds[i]}" \
       --iou 0.50
 done
