@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""CERDNet model trained on SICEMix dataset."""
+"""CENet model trained on SICEMix dataset."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "cerdnet"
+model_name = "cenet"
 data_name  = "sice_mix"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -34,14 +34,14 @@ model = {
 	"root"       : root,           # The root directory of the model.
 	"fullname"   : fullname,       # A full model name to save the checkpoint or weight.
 	"channels"   : 3,              # The first layer's input channel.
-	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
 	"pretrain"   : True,
+	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
 	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
 	"weights"    : None,           # The model's weights.
 	"metrics"    : {
 	    "train": None,  # [{"name": "psnr"}],
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : None,  # [{"name": "psnr"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{

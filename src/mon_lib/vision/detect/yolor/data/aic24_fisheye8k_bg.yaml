@@ -19,6 +19,7 @@ train:
     - aic/aic24_fisheye8k/train/camera16_a/images
     - aic/aic24_fisheye8k/train/camera17_a/images
     - aic/aic24_fisheye8k/train/camera18_a/images
+    - aic/aic24_fisheye8k/coco/images
 val:
     - aic/aic24_fisheye8k/val/camera1_a_test/images
     - aic/aic24_fisheye8k/val/camera2_a_test/images

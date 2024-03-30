@@ -2,7 +2,7 @@
 
 # Train settings -------------------------------------------------------------------------------------------------------
 model        : yolor_d6.yaml            # *.cfg path (yolor_p6.yaml, yolor_e6.yaml, yolor_p6.yaml, yolor_w6.yaml)
-data         : aic24_fisheye8k_of.yaml  # data.yaml path
+data         : aic24_fisheye8k_of2.yaml # data.yaml path
 project      :                          # (str, optional) project name
 name         :                          # (str, optional) experiment name, results saved to 'project/name' directory
 weights      : yolo_d6_coco.pt          # Initial weights path

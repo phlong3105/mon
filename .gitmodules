@@ -15,3 +15,6 @@
 [submodule "src/mon_lib/vision/detect/yolov9"]
 	path = src/mon_lib/vision/detect/yolov9
 	url  = https://github.com/phlong3105/yolov9
+[submodule "src/mon_lib/vision/detect/automl"]
+	path = src/mon_lib/vision/detect/automl
+	url = https://github.com/phlong3105/automl

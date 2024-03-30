@@ -8,6 +8,7 @@ Network) models.
 from __future__ import annotations
 
 __all__ = [
+    "CENet",
     "CERDNet",
 ]
 
@@ -17,7 +18,7 @@ import cv2
 import numpy as np
 import torch
 
-from mon import core, nn
+from mon import core, nn, proc
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
@@ -29,50 +30,390 @@ console = core.console
 
 # region Module
 
-class LightUpNet(nn.Module):
+@MODELS.register(name="cenet")
+class CENet(base.LowLightImageEnhancementModel):
+    """CENet (Curve Estimation Network) model.
+    
+    Args:
+        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        num_channels: The number of input and output channels for subsequent
+            layers. Default: ``32``.
+        num_iters: The number of convolutional layers in the model.
+            Default: ``8``.
+        scale_factor: Downsampling/upsampling ratio. Defaults: ``1``.
+        
+    References:
+        `<https://github.com/Li-Chongyi/Zero-DCE_extension>`__
+
+    See Also: :class:`base.LowLightImageEnhancementModel`
+    """
+    
+    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    _zoo   : dict = {}
     
     def __init__(
         self,
-        in_channels : int = 3,
-        num_channels: int = 32,
-        out_channels: int = 3,
+        channels    : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 8,
+        scale_factor: float = 1.0,
+        gamma       : float = 2.8,
+        pretrain    : bool  = False,
+        weights     : Any   = None,
+        *args, **kwargs
     ):
-        super().__init__()
-        self.conv1 = nn.Conv2d(in_channels,      num_channels, 3, 1, 1, bias=True)
-        self.conv2 = nn.Conv2d(num_channels,     num_channels, 3, 1, 1, bias=True)
-        self.conv3 = nn.Conv2d(num_channels,     num_channels, 3, 1, 1, bias=True)
-        self.conv4 = nn.Conv2d(num_channels,     num_channels, 3, 1, 1, bias=True)
-        self.conv5 = nn.Conv2d(num_channels * 2, num_channels, 3, 1, 1, bias=True)
-        self.conv6 = nn.Conv2d(num_channels * 2, num_channels, 3, 1, 1, bias=True)
-        self.conv7 = nn.Conv2d(num_channels * 2, out_channels, 3, 1, 1, bias=True)
-        self.attn  = nn.Identity()
-        self.act   = nn.PReLU()
-
+        super().__init__(
+            name     = "cenet",
+            channels = channels,
+            weights  = weights,
+            *args, **kwargs
+        )
+        assert num_iters <= 8
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            channels     = self.weights.get("channels",     channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+            num_iters    = self.weights.get("num_iters",    num_iters)
+            scale_factor = self.weights.get("scale_factor", scale_factor)
+            gamma        = self.weights.get("gamma",        gamma)
+        
+        self._channels    = channels
+        self.num_channels = num_channels
+        self.num_iters    = num_iters
+        self.scale_factor = scale_factor
+        self.gamma        = gamma
+        self.pretrain     = pretrain
+        
+        # Construct model
+        self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
+        self.relu     = nn.PReLU()
+        self.e_conv1  = nn.Conv2d(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv2  = nn.Conv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv3  = nn.Conv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv4  = nn.Conv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv5  = nn.Conv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv6  = nn.Conv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv7  = nn.Conv2d(in_channels=self.num_channels * 2, out_channels=24,                kernel_size=3, stride=1, padding=1)
+        
+        # Loss
+        self.loss_spa = nn.SpatialConsistencyLoss(reduction="mean")
+        self.loss_exp = nn.ExposureControlLoss(reduction="mean", patch_size=16, mean_val=0.6)
+        self.loss_col = nn.ColorConstancyLoss(reduction="mean")
+        self.loss_tv  = nn.IlluminationSmoothnessLoss(reduction="mean")
+        
         # Load weights
-        self.apply(self._init_weights)
-
-    def _init_weights(self, m: nn.Module):
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self._init_weights)
+    
+    def _init_weights(self, m: torch.nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):
-                m.conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "dw_conv"):
-                m.dw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "pw_conv"):
-                m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "weight"):
-                m.weight.data.normal_(0.0, 0.02)  # 0.02
+                m.conv.weight.data.normal_(0.0, 0.02)
+            else:
+                m.weight.data.normal_(0.0, 0.02)
+        elif classname.find("BatchNorm") != -1:
+            m.weight.data.normal_(1.0, 0.02)
+            m.bias.data.fill_(0)
+    
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        lightup, lightup_image = self.forward(input=input, *args, **kwargs)
+        loss_spa = self.loss_spa(input=lightup_image, target=input)
+        loss_exp = self.loss_exp(input=lightup_image)
+        loss_col = self.loss_col(input=lightup_image)
+        loss_tv  = self.loss_tv(input=lightup)
+        loss = (
+              1.0   * loss_spa
+            + 10.0  * loss_exp
+            + 5.0   * loss_col
+            + 200.0 * loss_tv
+        )
+        return lightup_image, loss
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        x = input
 
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x  = input
-        l1 = self.act(self.conv1(x))
-        l2 = self.act(self.conv2(l1))
-        l3 = self.act(self.conv3(l2))
-        l4 = self.act(self.conv4(l3))
-        l5 = self.act(self.conv5(torch.cat([l3, l4], dim=1)))
-        l6 = self.act(self.conv6(torch.cat([l2, l5], dim=1)))
-        l  =   F.tanh(self.conv7(torch.cat([l1, l6], dim=1)))
-        return l
+        x_down = x
+        if self.scale_factor != 1:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+        
+        l1 = self.relu(self.e_conv1(x_down))
+        l2 = self.relu(self.e_conv2(l1))
+        l3 = self.relu(self.e_conv3(l2))
+        l4 = self.relu(self.e_conv4(l3))
+        l5 = self.relu(self.e_conv5(torch.cat([l3, l4], 1)))
+        l6 = self.relu(self.e_conv6(torch.cat([l2, l5], 1)))
+        l  =    F.tanh(self.e_conv7(torch.cat([l1, l6], 1)))
+       
+        if self.scale_factor != 1:
+            l = self.upsample(l)
+        
+        ls = torch.split(l, 3, dim=1)
+        if self.pretrain:
+            y = x
+            for i in range(0, self.num_iters):
+                y = y + ls[i] * (torch.pow(y, 2) - y)
+        else:
+            y = x
+            g = proc.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            for i in range(0, self.num_iters):
+                b = y * (1 - g)
+                d = y * g
+                y = b + d + ls[i] * (torch.pow(d, 2) - d)
+        return l, y
+    
+
+class RDNet(base.LowLightImageEnhancementModel):
+    """RDNet (Retinex Decomposition Network) model.
+    
+    Args:
+        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        gamma: The gamma value for the illumination. Default: ``0.4``.
+        
+    References:
+        `<https://github.com/aaaaangel/RRDNet>`__
+
+    See Also: :class:`base.LowLightImageEnhancementModel`
+    """
+    
+    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
+    _zoo   : dict = {}
+    
+    def __init__(
+        self,
+        channels    : int   = 3,
+        num_channels: int   = 16,
+        scale_factor: float = 1.0,
+        gamma       : float = 0.4,
+        weights     : Any   = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name     = "rdnet",
+            channels = channels,
+            weights  = weights,
+            *args, **kwargs
+        )
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            channels     = self.weights.get("channels",     channels)
+            scale_factor = self.weights.get("scale_factor", scale_factor)
+            gamma        = self.weights.get("gamma",        gamma)
+        
+        self._channels    = channels
+        self.scale_factor = scale_factor
+        self.gamma        = gamma
+        
+        # Construct model
+        self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
+        self.illumination_net = nn.Sequential(
+            nn.Conv2d(self.channels + 1, num_channels * 2, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 2, num_channels * 3, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 3, num_channels * 4, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 4, num_channels * 2, 3, 1, 1),
+            nn.PReLU(),
+            # nn.Conv2d(num_channels * 3, num_channels * 2, 3, 1, 1),
+            # nn.PReLU(),
+            nn.Conv2d(num_channels * 2, 1, 3, 1, 1),
+        )
+        self.reflectance_net = nn.Sequential(
+            nn.Conv2d(self.channels + 1, num_channels * 2, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 2, num_channels * 3, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 3, num_channels * 4, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 4, num_channels * 2, 3, 1, 1),
+            nn.PReLU(),
+            # nn.Conv2d(num_channels * 3, num_channels * 2, 3, 1, 1),
+            # nn.PReLU(),
+            nn.Conv2d(num_channels * 2, 3, 3, 1, 1),
+        )
+        self.noise_net = nn.Sequential(
+            nn.Conv2d(self.channels + 1, num_channels * 2, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 2, num_channels * 3, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 3, num_channels * 4, 3, 1, 1),
+            nn.PReLU(),
+            nn.Conv2d(num_channels * 4, num_channels * 2, 3, 1, 1),
+            nn.PReLU(),
+            # nn.Conv2d(num_channels * 3, num_channels * 2, 3, 1, 1),
+            # nn.PReLU(),
+            nn.Conv2d(num_channels * 2, 3, 3, 1, 1),
+        )
+        
+        # Loss
+        self._loss = RDLoss()
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self._init_weights)
+        self.initial_state_dict = self.state_dict()
+    
+    def _init_weights(self, m: nn.Module):
+        pass
+    
+    # region Forward Pass
+    
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        pred = self.forward(input=input, *args, **kwargs)
+        illumination     = pred[0]
+        illumination_hat = pred[1]
+        reflectance      = pred[2]
+        noise            = pred[3]
+        relight          = pred[4]
+        loss = self.loss(
+            image        = input,
+            illumination = illumination,
+            reflectance  = reflectance,
+            noise        = noise,
+        ) if self.loss else None
+        return relight, loss
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass. This is the primary :meth:`forward` function of the
+        model. It supports augmented inference. In this function, we perform
+        test-time augmentation and pass the transformed input to
+        :meth:`forward_once()`.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            augment: If ``True``, perform test-time augmentation. Usually used
+                in predicting phase. Default: ``False``.
+            profile: If ``True``, measure processing time. Usually used in
+                predicting phase. Default: ``False``.
+            out_index: If the model produces multiple outputs, return the one
+                with the index :param:`out_index`. Usually used in predicting
+                phase. Default: ``-1`` means the last one.
+            
+        Return:
+            A tuple including: illumination, adjusted illumination, reflectance,
+                noise, and relighted image.
+        """
+        x 	   = input
+
+        x_down = x
+        if self.scale_factor != 1:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+
+        mean_c = x_down.mean(dim=1).unsqueeze(1)
+        x_cat  = torch.cat([x_down, mean_c], dim=1)
+
+        s = torch.sigmoid(self.illumination_net(x_cat))
+        r = torch.sigmoid(self.reflectance_net(x_cat))
+        n =    torch.tanh(self.noise_net(x_cat))
+
+        if self.scale_factor != 1:
+            s = self.upsample(s)
+            r = self.upsample(r)
+            n = self.upsample(n)
+
+        s_hat  = torch.pow(s, self.gamma)
+        y      = s_hat * ((x - n) / s)
+        if self.predicting:
+            n = self.normalize(n)
+            y = torch.clamp(y, min=0, max=1)
+        return s, s_hat, r, n, y
+    
+    def normalize(self, image: torch.Tensor) -> torch.Tensor:
+        min_value = image.min()
+        max_value = image.max()
+        return (image - min_value) / (max_value - min_value)
+    
+    # endregion
+    
+    # region Training
+    
+    def fit_one(
+        self,
+        input        : torch.Tensor | np.ndarray,
+        max_epochs   : int   = 1000,
+        lr           : float = 0.001,
+        reset_weights: bool  = True,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Train the model with a single sample. This method is used for any
+        learning scheme performed on one single instance such as online learning,
+        zero-shot learning, one-shot learning, etc.
+        
+        Note:
+            In order to use this method, the model must implement the optimizer
+            and/or scheduler.
+        
+        Args:
+            input: The input image tensor.
+            max_epochs: Maximum number of epochs. Default: ``3000``.
+            lr: Learning rate. Default: ``0.001``.
+            reset_weights: Whether to reset the weights before training. Default: ``True``.
+        """
+        # Initialize training components
+        self.train()
+        if reset_weights:
+            self.load_state_dict(self.initial_state_dict)
+        if isinstance(self.optims, dict):
+            optimizer = self.optims.get("optimizer", None)
+        else:
+            optimizer = nn.Adam(self.parameters(), lr=lr)
+        
+        # Prepare input
+        if isinstance(input, np.ndarray):
+            input = core.to_image_tensor(input, False, True)
+        input = input.to(self.device)
+        assert input.shape[0] == 1
+        
+        # Training loop
+        with core.get_progress_bar() as pbar:
+            for _ in pbar.track(
+                sequence    = range(max_epochs),
+                total       = max_epochs,
+                description = f"[bright_yellow] Training"
+            ):
+                _, loss = self.forward_loss(input=input, target=None)
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+        
+        # Post-processing
+        self.eval()
+        pred = self.forward(input=input)
+        self.train()
+        
+        return pred
+    
+    # endregion
 
 
 class ZSN2N(denoise.DenoisingModel):
@@ -109,6 +450,7 @@ class ZSN2N(denoise.DenoisingModel):
         self.conv2 = nn.Conv2d(self.num_channels, self.num_channels, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(self.num_channels, self.channels,     kernel_size=1)
         self.act   = nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        # self.act   = nn.PReLU()
         
         # Loss
         self._loss = None
@@ -139,7 +481,7 @@ class ZSN2N(denoise.DenoisingModel):
         noisy_denoised       = self.forward(input)
         denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
         # Loss
-        mse_loss  = nn.MSELoss()
+        mse_loss  = nn.MSELoss(reduction="mean")
         loss_res  = 0.5 * (mse_loss(noisy1, pred2)    + mse_loss(noisy2, pred1))
         loss_cons = 0.5 * (mse_loss(pred1, denoised1) + mse_loss(pred2, denoised2))
         loss      = loss_res + loss_cons
@@ -253,113 +595,56 @@ class ZSN2N(denoise.DenoisingModel):
         return pred
     
     # endregion
-    
+
 # endregion
 
 
 # region Loss
 
-class Loss(nn.Loss):
+class RDLoss(nn.Loss):
     
     def __init__(
         self,
-        exp_patch_size      : int   = 16,
-        exp_mean_val        : float = 0.6,
-        spa_num_regions     : Literal[4, 8, 16, 24] = 8,
-        spa_patch_size      : int   = 4,
         gaussian_kernel_size: int   = 5,
         gaussian_padding    : int   = 2,
         gaussian_sigma      : float = 3,
-        weight_col          : float = 5,
-        weight_exp          : float = 10,
-        weight_spa          : float = 1,
-        weight_tvA          : float = 1600,
-        weight_illumination : float = 1,
-        weight_reflectance  : float = 1,
-        weight_noise        : float = 1,
-        reduction           : str   = "mean",
-        verbose             : bool  = False,
+        illumination_weight : float = 1,
+        reflectance_weight  : float = 1,
+        noise_weight        : float = 5000,
+        reduction           : Literal["none", "mean", "sum"] = "mean",
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(reduction=reduction, *args, **kwargs)
         kx     = cv2.getGaussianKernel(gaussian_kernel_size, gaussian_sigma)
         ky     = cv2.getGaussianKernel(gaussian_kernel_size, gaussian_sigma)
         kernel = np.multiply(kx, np.transpose(ky))
         kernel = torch.FloatTensor(kernel).unsqueeze(0).unsqueeze(0)
-        
         self.gaussian_kernel     = kernel
         self.gaussian_padding    = gaussian_padding
-        self.verbose             = verbose
-        
-        self.weight_col          = weight_col
-        self.weight_exp          = weight_exp
-        self.weight_spa          = weight_spa
-        self.weight_tvA          = weight_tvA
-        self.weight_illumination = weight_illumination
-        self.weight_reflectance  = weight_reflectance
-        self.weight_noise        = weight_noise
-        
-        self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_exp = nn.ExposureControlLoss(
-            reduction  = reduction,
-            patch_size = exp_patch_size,
-            mean_val   = exp_mean_val,
-        )
-        self.loss_spa = nn.SpatialConsistencyLoss(
-            num_regions = spa_num_regions,
-            patch_size  = spa_patch_size,
-            reduction   = reduction,
-        )
-        self.loss_tvA = nn.IlluminationSmoothnessLoss(reduction=reduction)
-
+        self.illumination_weight = illumination_weight
+        self.reflectance_weight  = reflectance_weight
+        self.noise_weight        = noise_weight
+    
     def forward(
         self,
-        input       : torch.Tensor,
-        target      : torch.Tensor,
-        lightup     : torch.Tensor = None,
-        illumination: torch.Tensor = None,
-        reflectance : torch.Tensor = None,
-        noise       : torch.Tensor = None,
-        **_
+        image       : torch.Tensor,
+        illumination: torch.Tensor,
+        reflectance : torch.Tensor,
+        noise       : torch.Tensor,
     ) -> torch.Tensor:
-        if self.gaussian_kernel.device != input.device:
-            self.gaussian_kernel = self.gaussian_kernel.to(input.device)
+        if self.gaussian_kernel.device != image.device:
+            self.gaussian_kernel = self.gaussian_kernel.to(image.device)
         
-        if lightup is not None:
-            loss_col  = self.loss_col(input=target)               if self.weight_col > 0 else 0
-            loss_exp  = self.loss_exp(input=target)               if self.weight_exp > 0 else 0
-            loss_spa  = self.loss_spa(input=target, target=input) if self.weight_spa > 0 else 0
-            loss_tvA  = self.loss_tvA(input=lightup)              if self.weight_tvA > 0 else 0
-            loss = (
-                  self.weight_col * loss_col
-                + self.weight_exp * loss_exp
-                + self.weight_tvA * loss_tvA
-                + self.weight_spa * loss_spa
-            )
-            if self.verbose:
-                console.log(f"{self.loss_col.__str__():<30}: {loss_col}")
-                console.log(f"{self.loss_exp.__str__():<30}: {loss_exp}")
-                console.log(f"{self.loss_spa.__str__():<30}: {loss_spa}")
-                console.log(f"{self.loss_tvA.__str__():<30}: {loss_tvA}")
-        elif illumination is not None and reflectance is not None and noise is not None:
-            loss_reconstruction = self.reconstruction_loss(input, illumination, reflectance, noise)
-            loss_illumination   = self.illumination_smooth_loss(input, illumination)
-            loss_reflectance    = self.reflectance_smooth_loss(input, illumination, reflectance)
-            loss_noise          = self.noise_loss(illumination, noise)
-            loss = (
-                loss_reconstruction
-                + self.weight_illumination * loss_illumination
-                + self.weight_reflectance  * loss_reflectance
-                + self.weight_noise        * loss_noise
-            )
-            if self.verbose:
-                console.log(f"{'reconstruction loss':<30}: {loss_reconstruction}")
-                console.log(f"{'illumination smooth loss':<30}: {loss_illumination}")
-                console.log(f"{'reflectance smooth loss':<30}: {loss_reflectance}")
-                console.log(f"{'noise loss':<30}: {loss_noise}")
-        else:
-            raise ValueError
-        
+        loss_reconstruction = self.reconstruction_loss(image, illumination, reflectance, noise)
+        loss_illumination   = self.illumination_smooth_loss(image, illumination)
+        loss_reflectance    = self.reflectance_smooth_loss(image, illumination, reflectance)
+        loss_noise          = self.noise_loss(illumination, noise)
+        loss = (
+            loss_reconstruction
+            + self.illumination_weight * loss_illumination
+            + self.reflectance_weight  * loss_reflectance
+            + self.noise_weight        * loss_noise
+        )
         return loss
     
     def reconstruction_loss(
@@ -371,7 +656,6 @@ class Loss(nn.Loss):
     ) -> torch.Tensor:
         reconstructed_image = illumination * reflectance + noise
         loss = torch.norm(image - reconstructed_image, 1)
-        # loss = nn.MAELoss()(input=reconstructed_image, target=image)
         return loss
     
     def illumination_smooth_loss(
@@ -392,7 +676,6 @@ class Loss(nn.Loss):
         loss_w   = weight_w * gradient_illu_w
         max_rgb.detach()
         loss     = loss_h.sum() + loss_w.sum() + torch.norm(illumination - max_rgb, 1)
-        # loss = loss_h.sum() + loss_w.sum() + nn.MAELoss()(input=illumination, target=max_rgb)
         return loss
     
     def reflectance_smooth_loss(
@@ -412,9 +695,8 @@ class Loss(nn.Loss):
         reference_reflectance = image / illumination
         reference_reflectance.detach()
         loss   = loss_h.sum() + loss_w.sum() + 1.0 * torch.norm(reference_reflectance - reflectance, 1)
-        # loss = loss_h.sum() + loss_w.sum() + 1.0 * nn.MAELoss()(input=reflectance, target=reference_reflectance)
         return loss
-        
+    
     def noise_loss(
         self,
         illumination: torch.Tensor,
@@ -425,7 +707,7 @@ class Loss(nn.Loss):
         loss = weight_illu * noise
         loss = torch.norm(loss, 2)
         return loss
-        
+    
     def gradient(self, image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         height      = image.size(2)
         width       = image.size(3)
@@ -438,7 +720,7 @@ class Loss(nn.Loss):
         gradient2_h = F.pad(gradient2_h, [0, 0, 2, 2], "replicate")
         gradient2_w = F.pad(gradient2_w, [2, 2, 0, 0], "replicate")
         return gradient_h * gradient2_h, gradient_w * gradient2_w
-        
+    
     def normalize(self, image: torch.Tensor) -> torch.Tensor:
         min_value = image.min()
         max_value = image.max()
@@ -481,15 +763,16 @@ class CERDNet(base.LowLightImageEnhancementModel):
         num_channels: int   = 32,
         num_iters   : int   = 8,
         scale_factor: int   = 1,
-        gamma       : float = 0.4,
-        pretrain    : bool  = False,
+        ce_gamma    : float = 2.8,
+        rd_gamma    : float = 0.4,
+        zns_gamma   : float = 0.5,
         weights     : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
-            name     = "rdcenet",
+            name     = "cerdnet",
             channels = channels,
-            weights  = weights,
+            weights  = None,
             *args, **kwargs
         )
         
@@ -499,60 +782,42 @@ class CERDNet(base.LowLightImageEnhancementModel):
             num_channels = self.weights.get("num_channels", num_channels)
             num_iters    = self.weights.get("num_iters"   , num_iters)
             scale_factor = self.weights.get("scale_factor", scale_factor)
-            gamma        = self.weights.get("gamma"       , gamma)
+            ce_gamma     = self.weights.get("ce_gamma"    , ce_gamma)
+            rd_gamma     = self.weights.get("rd_gamma"    , rd_gamma)
+            zns_gamma    = self.weights.get("zns_gamma"   , zns_gamma)
         
-        self._channels     = channels
-        self.num_channels  = num_channels
-        self.num_iters     = num_iters
-        self.scale_factor  = scale_factor
-        self.gamma         = gamma
-        self.pretrain      = pretrain
+        self._channels    = channels
+        self.num_channels = num_channels
+        self.num_iters    = num_iters
+        self.scale_factor = scale_factor
+        self.ce_gamma     = ce_gamma
+        self.rd_gamma     = rd_gamma
+        self.zns_gamma    = zns_gamma
         
         # Construct model
         self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-        # Light-up Net
-        self.lightup_net = LightUpNet(in_channels=self.channels, num_channels=self.num_channels, out_channels=3)
-        # Illumination Net
-        self.illumination_net = nn.Sequential(
-            nn.Conv2d(self.channels, 16, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(64, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 1, 3, 1, 1),
+        self.cenet    = CENet(
+            channels     = self.channels,
+            num_channels = self.num_channels,
+            num_iters    = self.num_iters,
+            scale_factor = self.scale_factor,
+            gamma        = self.ce_gamma,
+            pretrain     = False,
+            weights      = weights,
+            verbose      = self.verbose,
         )
-        # Reflectance Net
-        self.reflectance_net = nn.Sequential(
-            nn.Conv2d(self.channels, 16, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(64, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 3, 3, 1, 1)
+        self.cenet.eval()
+        self.rdnet = RDNet(
+            channels     = self.channels,
+            num_channels = 16,
+            scale_factor = 1,
+            gamma        = self.rd_gamma,
+            verbose      = self.verbose,
         )
-        # Noise Net
-        self.noise_net = nn.Sequential(
-            nn.Conv2d(self.channels, 16, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(16, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 64, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(64, 32, 3, 1, 1),
-            nn.ReLU(),
-            nn.Conv2d(32, 3, 3, 1, 1)
+        self.zsn2n = ZSN2N(
+            channels     = self.channels,
+            num_channels = 64,
         )
-        # Denoise Net
-        self.zsn2n = ZSN2N(channels=self.channels, num_channels=48)
-        
-        # Loss
-        self._loss = Loss()
         
         # Load weights
         if self.weights:
@@ -562,16 +827,7 @@ class CERDNet(base.LowLightImageEnhancementModel):
         self.initial_state_dict = self.state_dict()
         
     def _init_weights(self, m: nn.Module):
-        classname = m.__class__.__name__
-        if classname.find("Conv") != -1:
-            if hasattr(m, "conv"):
-                m.conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "dw_conv"):
-                m.dw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "pw_conv"):
-                m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "weight"):
-                m.weight.data.normal_(0.0, 0.02)  # 0.02
+        pass
     
     def forward_loss(
         self,
@@ -579,23 +835,8 @@ class CERDNet(base.LowLightImageEnhancementModel):
         target: torch.Tensor | None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        pred             = self.forward(input=input, *args, **kwargs)
-        lightup          = pred[0]
-        illumination     = pred[1]
-        illumination_hat = pred[2]
-        reflectance      = pred[3]
-        noise            = pred[4]
-        target           = pred[5]
-        loss = self._loss(
-            input        = input,
-            target       = target,
-            lightup      = lightup,
-            illumination = illumination,
-            reflectance  = reflectance,
-            noise        = noise,
-        )
-        return target, loss
-        
+        pass
+    
     def forward(
         self,
         input    : torch.Tensor,
@@ -603,165 +844,68 @@ class CERDNet(base.LowLightImageEnhancementModel):
         profile  : bool      = False,
         out_index: int       = -1,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x = input
-        
-        # Downsampling
-        x_down = x
-        if self.scale_factor != 1:
-            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
-        
-        if self.pretrain:
-            l = self.lightup_net(x_down)
-            # Upsampling
-            if self.scale_factor != 1:
-                l = self.upsample(l)
-            # Enhancement
-            y = x
-            for _ in range(self.num_iters):
-                y = y + l * (torch.pow(y, 2) - y)
-            return l, None, None, None, None, y
-        else:
-            # Illumination Map
-            i = self.illumination_net(x_down)
-            # Reflectance Map
-            r = self.reflectance_net(x_down)
-            # Noise Map
-            n = self.noise_net(x_down)
-            # Upsampling
-            if self.scale_factor != 1:
-                i = self.upsample(i)
-                r = self.upsample(r)
-                n = self.upsample(n)
-            # Enhancement
-            i_hat = torch.pow(i, self.gamma)
-            y     = i_hat * ((x - n) / i)
-            return None, i, i_hat, r, n, y
+    ) -> torch.Tensor:
+        pass
     
     # region Training
     
     def fit_one(
         self,
-        input        : torch.Tensor | np.ndarray,
-        max_epochs   : int   = 1000,
-        lr           : float = 0.001,
-        step_size    : int   = 1000,
-        gamma        : float = 0.5,
-        reset_weights: bool  = True,
+        input         : torch.Tensor,
+        rd_max_epochs : int   = 1000,
+        zns_max_epochs: int   = 3000,
+        rd_lr         : float = 0.001,
+        zsn_lr        : float = 0.001,
+        reset_weights : bool  = True,
+        convert_output: bool  = False,
+        *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor,
                torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Train the model with a single sample. This method is used for any
-        learning scheme performed on one single instance such as online learning,
-        zero-shot learning, one-shot learning, etc.
-        
-        Note:
-            To use this method, the model must implement the optimizer and/or scheduler.
-        
-        Args:
-            input: The input image tensor.
-            max_epochs: Maximum number of epochs. Default: ``3000``.
-            lr: Learning rate. Default: ``0.001``.
-            step_size: Period of learning rate decay. Default: ``1000``.
-            gamma: A multiplicative factor of learning rate decay. Default: ``0.5``.
-            reset_weights: Whether to reset the weights before training. Default: ``True``.
-        """
-        # Initialize training components
-        if reset_weights:
-            self.load_state_dict(self.initial_state_dict)
-        if isinstance(self.optims, dict):
-            optimizer1 = self.optims.get("optimizer", None)
-            optimizer2 = self.optims.get("optimizer", None)
-            scheduler2 = self.optims.get("scheduler", None)
-        else:
-            optimizer1 = nn.Adam(
-                list(self.illumination_net.parameters())
-                + list(self.reflectance_net.parameters())
-                + list(self.noise_net.parameters()),
-                lr=lr
-            )
-            optimizer2 = nn.Adam(self.zsn2n.parameters(), lr=lr)
-            scheduler2 = nn.StepLR(optimizer1, step_size=step_size, gamma=gamma)
-        
-        # Prepare input
+        #
         if isinstance(input, np.ndarray):
             input = core.to_image_tensor(input, False, True)
         input = input.to(self.device)
         assert input.shape[0] == 1
+        #
+        with torch.no_grad():
+            lightup, lightup_image = self.cenet(input)
+        #
+        pred = self.rdnet.fit_one(
+            input         = lightup_image,
+            max_epochs    = rd_max_epochs,
+            lr            = rd_lr,
+            reset_weights = reset_weights,
+        )
+        illumination     = pred[0]
+        illumination_hat = pred[1]
+        reflectance      = pred[2]
+        noise            = pred[3]
+        relight          = pred[4]
+        #
+        denoised = self.zsn2n.fit_one(
+            input         = relight.clone().detach().requires_grad_(True),
+            max_epochs    = zns_max_epochs,
+            lr            = zsn_lr,
+            gamma         = self.zns_gamma,
+            reset_weights = reset_weights,
+        )
+        #
+        illumination     = torch.concat([illumination,     illumination,     illumination    ], dim=1)
+        illumination_hat = torch.concat([illumination_hat, illumination_hat, illumination_hat], dim=1)
+        #
+        if convert_output:
+            lightup          = core.to_image_nparray(lightup         , False, True)
+            lightup_image    = core.to_image_nparray(lightup_image   , False, True)
+            illumination     = core.to_image_nparray(illumination    , False, True)
+            illumination_hat = core.to_image_nparray(illumination_hat, False, True)
+            reflectance      = core.to_image_nparray(reflectance     , False, True)
+            noise            = core.to_image_nparray(noise           , False, True)
+            relight          = core.to_image_nparray(relight         , False, True)
+            denoised         = core.to_image_nparray(denoised        , False, True)
         
-        # Pre-processing
-        lightup       = self.lightup_net(input)
-        lightup_input = input
-        for _ in range(self.num_iters):
-            lightup_input = lightup_input + lightup * (torch.pow(lightup_input, 2) - lightup_input)
-        
-        # Training loop 1
-        self.pretrain = False
-        self.train()
-        self.lightup_net.eval()
-        self.illumination_net.train()
-        self.reflectance_net.train()
-        self.noise_net.train()
-        self.zsn2n.eval()
-        if self.verbose:
-            with core.get_progress_bar() as pbar:
-                for _ in pbar.track(
-                    sequence    = range(max_epochs),
-                    total       = max_epochs,
-                    description = f"[bright_yellow] Training"
-                ):
-                    _, loss = self.forward_loss(input=lightup_input, target=None)
-                    optimizer1.zero_grad()
-                    loss.backward(retain_graph=True)
-                    optimizer1.step()
-        else:
-            for _ in range(max_epochs):
-                _, loss = self.forward_loss(input=lightup_input, target=None)
-                optimizer1.zero_grad()
-                loss.backward(retain_graph=True)
-                optimizer1.step()
-
-        self.eval()
-        pred             = self.forward(input=lightup_input)
-        illumination     = pred[1]
-        illumination_hat = pred[2]
-        reflectance      = pred[3]
-        noise            = pred[4]
-        relight          = pred[5]
-
-        # Training loop 2
-        self.train()
-        self.lightup_net.eval()
-        self.illumination_net.eval()
-        self.reflectance_net.eval()
-        self.noise_net.eval()
-        self.zsn2n.train()
-        if self.verbose:
-            with core.get_progress_bar() as pbar:
-                for _ in pbar.track(
-                    sequence    = range(max_epochs),
-                    total       = max_epochs,
-                    description = f"[bright_yellow] Training"
-                ):
-                    _, loss = self.zsn2n.forward_loss(input=relight, target=None)
-                    optimizer2.zero_grad()
-                    loss.backward(retain_graph=True)
-                    optimizer2.step()
-                    scheduler2.step()
-        else:
-            for _ in range(max_epochs):
-                _, loss = self.zsn2n.forward_loss(input=relight, target=None)
-                optimizer2.zero_grad()
-                loss.backward(retain_graph=True)
-                optimizer2.step()
-                scheduler2.step()
-        
-        # Post-processing
-        self.eval()
-        denoised = self.zsn2n(input=input)
-
         return (
             lightup,
-            lightup_input,
+            lightup_image,
             illumination,
             illumination_hat,
             reflectance,
@@ -769,7 +913,7 @@ class CERDNet(base.LowLightImageEnhancementModel):
             relight,
             denoised
         )
-    
+
     # endregion
     
 # endregion
