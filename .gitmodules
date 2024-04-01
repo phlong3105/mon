@@ -11,7 +11,7 @@
 	url  = https://github.com/phlong3105/yolov9
 [submodule "src/mon_lib/vision/multitask/automl"]
 	path = src/mon_lib/vision/multitask/automl
-	url = https://github.com/phlong3105/automl
+	url  = https://github.com/phlong3105/automl
 [submodule "src/mon_lib/vision/multitask/supergradients"]
 	path = src/mon_lib/vision/multitask/supergradients
 	url  = https://github.com/phlong3105/supergradients

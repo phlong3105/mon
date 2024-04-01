@@ -46,11 +46,11 @@ from mon.globals import MemoryUnit
 
 def get_terminal_size() -> tuple[int, int]:
     """Get the size of the terminal window in columns and rows."""
-    size = shutil.get_terminal_size(fallback=(80, 40))
+    size = shutil.get_terminal_size(fallback=(100, 40))
     return size.columns, size.lines
 
 
-def set_terminal_size(rows: int = 40, cols: int = 150):
+def set_terminal_size(rows: int = 40, cols: int = 100):
     # File descriptor for stdout
     fd   = sys.stdout.fileno()
     # Get terminal size struct
@@ -89,7 +89,7 @@ console = rich.console.Console(
     color_system    = "auto",
     log_time_format = "[%m/%d/%Y %H:%M:%S]",
     soft_wrap       = True,
-    width           = 150,
+    width           = get_terminal_size()[0],  # 150
     theme           = rich_console_theme,
 )
 
@@ -97,7 +97,7 @@ error_console = rich.console.Console(
     color_system    = "auto",
     log_time_format = "[%m/%d/%Y %H:%M:%S]",
     soft_wrap       = False,
-    width           = 150,
+    width           = get_terminal_size()[0],  # 150
     stderr          = True,
     style           = "bold red",
     theme           = rich_console_theme,

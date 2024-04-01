@@ -40,6 +40,14 @@ def measure_metric(
     coco_eval.evaluate()
     coco_eval.accumulate()
     coco_eval.summarize()
+    print("----------------------------------------")
+    print("AP_0.5-0.95: ", coco_eval.stats[0])
+    print("AP_0.5     : ", coco_eval.stats[1])
+    print("AP_S       : ", coco_eval.stats[3])
+    print("AP_M       : ", coco_eval.stats[4])
+    print("AP_L       : ", coco_eval.stats[5])
+    print("f1_score   : ", coco_eval.stats[20])
+    print("----------------------------------------")
 
 
 if __name__ == "__main__":

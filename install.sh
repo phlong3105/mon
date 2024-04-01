@@ -62,6 +62,7 @@ case "$OSTYPE" in
                 apt-get install gcc g++
             fi
             conda env create -f "${env_yml_path}"
+            echo "conda activate mon" >> ~/.bashrc
             echo -e "... Done"
         fi
 
@@ -88,6 +89,7 @@ case "$OSTYPE" in
         else
             echo -e "\nCreating 'mon' environment:"
             conda env create -f "${env_yml_path}"
+            echo "conda activate mon" >> ~/.bash_profile
             echo -e "... Done"
         fi
         # Install FFMPEG

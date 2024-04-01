@@ -68,7 +68,7 @@ if [ "$mode" == "train" ]; then
 # Predict
 elif [ "$mode" == "predict" ]; then
     save_dir="${current_dir}/run/predict/aic24_fisheye8k/submission"
-    declare -a cameras=("${test_cameras[@]}")
+    declare -a cameras=("${val_cameras[@]}")
     predict=""
     for ((i=0; i < ${#cameras[@]}; i++)); do
         predict+="${data_dir}/aic/aic24_fisheye8k/${cameras[i]}/images"

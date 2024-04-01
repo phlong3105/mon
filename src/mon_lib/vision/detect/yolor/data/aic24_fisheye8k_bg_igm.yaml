@@ -19,7 +19,6 @@ train:
     - aic/aic24_fisheye8k/train/camera16_a/images
     - aic/aic24_fisheye8k/train/camera17_a/images
     - aic/aic24_fisheye8k/train/camera18_a/images
-    - aic/aic24_fisheye8k/coco/images
     - aic/aic24_fisheye8k/train_syn/camera3_e/images
     - aic/aic24_fisheye8k/train_syn/camera5_e/images
     - aic/aic24_fisheye8k/train_syn/camera6_e/images
@@ -33,6 +32,7 @@ train:
     - aic/aic24_fisheye8k/train_syn/camera16_e/images
     - aic/aic24_fisheye8k/train_syn/camera17_e/images
     - aic/aic24_fisheye8k/train_syn/camera18_e/images
+    - aic/aic24_fisheye8k/coco/images
 val:
     - aic/aic24_fisheye8k/val/camera1_a_test/images
     - aic/aic24_fisheye8k/val/camera2_a_test/images
