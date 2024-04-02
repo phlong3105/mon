@@ -103,7 +103,7 @@ elif [ "$mode" == "metric" ]; then
 
 # Visualize
 elif [ "$mode" == "visualize" ]; then
-    declare -a cameras=("${train_cameras[@]}")
+    declare -a cameras=("${val_cameras[@]}")
     for ((i=0; i < ${#cameras[@]}; i++)); do
         python -W ignore visualize_bbox.py \
             --image-dir "${data_dir}/aic/aic24_fisheye8k/${cameras[i]}/images" \
@@ -111,7 +111,7 @@ elif [ "$mode" == "visualize" ]; then
             --output-dir "${data_dir}/aic/aic24_fisheye8k/${cameras[i]}/visualize" \
             --format "yolo" \
             --ext "jpg" \
-            --thickness 1 \
+            --thickness 3 \
             --save
     done
 fi

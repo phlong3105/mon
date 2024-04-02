@@ -38,6 +38,19 @@ conf_thresholds=(
     0.60
     0.60
 )
+iou_thresholds=(
+    0.5
+    0.5
+    0.5
+    0.5
+    0.5
+    0.5
+    0.5
+    0.5
+    0.5
+    0.5
+    0.5
+)
 image_sizes=(
     1760
     1760
@@ -72,7 +85,7 @@ for ((i=0; i < ${#test_cameras[@]}; i++)); do
       --device "cuda:0" \
       --imgsz 2560 \
       --conf "${conf_thresholds[i]}" \
-      --iou 0.50
+      --iou "${iou_thresholds[i]}"
 done
 
 # Generation submission file

@@ -18,15 +18,15 @@ _extensions   = ["jpg", "png"]
 # region Function
 
 @click.command(name="main", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--image-dir",  type=click.Path(exists=True),  default=mon.DATA_DIR/"aic/aic24-fisheye8k/train", help="Image directory.")
-@click.option("--label-dir",  type=click.Path(exists=True),  default=mon.DATA_DIR/"aic/aic24-fisheye8k/train", help="Bounding bbox directory.")
+@click.option("--image-dir",  type=click.Path(exists=True),  default=mon.DATA_DIR/"aic/aic24_fisheye8k/val", help="Image directory.")
+@click.option("--label-dir",  type=click.Path(exists=True),  default=mon.DATA_DIR/"aic/aic24_fisheye8k/val", help="Bounding bbox directory.")
 @click.option("--output-dir", type=click.Path(exists=False), default=None,                                     help="Output directory.")
 @click.option("--format",     type=click.Choice(_bbox_formats, case_sensitive=False), default="voc",           help="Bounding bbox format.")
 @click.option("--ext",        type=click.Choice(_extensions,   case_sensitive=False), default="jpg",           help="Image extension.")
 @click.option("--thickness",  type=int,                      default=1,                                        help="The thickness of the bounding box border line in px.")
 @click.option("--fill",       is_flag=True,                                                                    help="Fill the region inside the bounding box with transparent color.")
 @click.option("--show-label", is_flag=True)
-@click.option("--save",       is_flag=True, default=True)
+@click.option("--save",       is_flag=True)
 @click.option("--verbose",    is_flag=True)
 def visualize_bbox(
 	image_dir : mon.Path,
@@ -51,7 +51,14 @@ def visualize_bbox(
 	# if save:
 		# output_dir.mkdir(parents=True, exist_ok=True)
 	
-	code = mon.ShapeCode.from_value(value=f"{format}_to_voc")
+	code   = mon.ShapeCode.from_value(value=f"{format}_to_voc")
+	colors = [
+		[  0,   0, 255],
+		[255,   0,   0],
+		[  0, 255,   0],
+		[  0, 255, 255],
+		[255,   0, 255],
+	]
 	
 	image_files = list(image_dir.rglob("*"))
 	image_files = [f for f in image_files if f.is_image_file()]
@@ -74,14 +81,12 @@ def visualize_bbox(
 				b = np.array([list(map(float, x[1:])) for x in l])
 				b = mon.convert_bbox(bbox=b, code=code, height=h, width=w)
 				
-				colors = mon.RGB.values()
-				n      = len(colors)
 				for j, x in enumerate(b):
 					image = mon.draw_bbox(
 						image     = image,
 						bbox      = x,
 						label     = l[j] if show_label else None,
-						color     = colors[abs(hash(l[j][0])) % n],
+						color     = colors[int(l[j][0])],
 						thickness = thickness,
 						fill      = fill,
 					)
