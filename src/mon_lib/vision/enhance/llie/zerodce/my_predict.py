@@ -94,7 +94,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path = meta["image_path"]
+                image_path = meta["path"]
                 enhanced_image, run_time = run_infer(weights, image_path)
                 output_path = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
@@ -143,12 +143,12 @@ def main(
     args     = core.load_config(config)
     
     # Prioritize input args --> config file args
-    weights  = weights  or args["weights"]
-    project  = args["project"]
-    fullname = fullname or args["name"]
-    device   = device   or args["device"]
-    imgsz    = imgsz    or args["imgsz"]
-    verbose  = verbose  or args["verbose"]
+    weights  = weights  or args.get("weights")
+    project  = args.get("project")
+    fullname = fullname or args.get("name")
+    device   = device   or args.get("device")
+    imgsz    = imgsz    or args.get("imgsz")
+    verbose  = verbose  or args.get("verbose")
     
     # Parse arguments
     root     = core.Path(root)

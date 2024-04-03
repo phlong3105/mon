@@ -141,7 +141,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path   = meta["image_path"]
+                image_path   = meta["path"]
                 enhanced_image, run_time = model.run(image_path)
                 output_path  = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))

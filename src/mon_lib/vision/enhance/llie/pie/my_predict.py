@@ -43,7 +43,7 @@ def predict(args: argparse.Namespace):
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
-            image_path     = meta["image_path"]
+            image_path     = meta["path"]
             image          = cv2.imread(str(image_path))
             start_time     = time.time()
             enhanced_image = pie.PIE(image)

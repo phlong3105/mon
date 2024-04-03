@@ -1,0 +1,8 @@
+project:
+name:
+weights:
+device  : 0
+imgsz   : 512
+epochs  : 400
+exist_ok: True
+verbose : True

@@ -872,7 +872,7 @@ class SSIMLoss(base.Loss):
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         # Compute the ssim map
-        ssim_map = self.ssim(input=input, target=target)
+        ssim_map = self.ssim(input, target)
         # Compute and reduce the loss
         loss = torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
         loss = base.reduce_loss(loss=loss, reduction=self.reduction)

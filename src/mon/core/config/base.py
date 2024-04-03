@@ -10,11 +10,10 @@ __all__ = [
     "parse_config_file",
 ]
 
-import importlib
 import importlib.util
 from typing import Any
 
-from mon.core import file, humps, pathlib, rich
+from mon.core import file, pathlib, rich
 
 console       = rich.console
 error_console = rich.error_console
@@ -25,8 +24,11 @@ error_console = rich.error_console
 def parse_config_file(
     config      : str | pathlib.Path,
     project_root: str | pathlib.Path
-) -> pathlib.Path:
-    assert config not in [None, "None", ""]
+) -> pathlib.Path | None:
+    # assert config not in [None, "None", ""]
+    if config in [None, "None", ""]:
+        error_console.log(f"No configuration given.")
+        return None
     #
     config = pathlib.Path(config).config_file()
     if config.is_config_file():
@@ -40,14 +42,16 @@ def parse_config_file(
         config_ = (config_dir / config.name).config_file()
         if config_.is_config_file():
             return config_
-    return config
+    #
+    error_console.log(f"No configuration is found at {config}.")
+    return None  # config
 
 # endregion
 
 
 # region Load
 
-def load_config(config: Any) -> dict | None:
+def load_config(config: Any) -> dict:
     if config is None:
         data = None
     elif isinstance(config, dict):
@@ -65,7 +69,8 @@ def load_config(config: Any) -> dict | None:
         data = None
     
     if data is None:
-        raise IOError(f"No configuration is found at {config}.")
+        error_console.log(f"No configuration is found at {config}. Setting an empty dictionary.")
+        data = {}
     return data
-    
+
 # endregion

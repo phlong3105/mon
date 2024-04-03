@@ -87,7 +87,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path  = meta["image_path"]
+                image_path  = meta["path"]
                 input       = Variable(images).to(device)
                 start_time  = time.time()
                 i, r        = model(input)

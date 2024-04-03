@@ -25,10 +25,10 @@ conf_thresholds=(
     0.50
 )
 iou_thresholds=(
-    0.5
-    0.5
-    0.5
-    0.5
+    0.50
+    0.50
+    0.50
+    0.50
 )
 image_sizes=(
     1245
@@ -47,12 +47,12 @@ for ((i=0; i < ${#val_cameras[@]}; i++)); do
       --root "${current_dir}" \
       --config "${current_dir}/config/yolor_d6_aic24_fisheye8k_1920.yaml" \
       --weights \
-        "${current_dir}/run/train/yolor_d6_ablation_aic24_fisheye8k_igm_1280/weights/best_f1.pt" \
+        "${current_dir}/run/train/yolor_d6_ablation_aic24_fisheye8k_bg_igm_ovpl_1920/weights/best_f1.pt" \
       --model "yolor_d6" \
       --data "${source}" \
       --save-dir "${save_dir}" \
       --device "cuda:0" \
-      --imgsz 1280 \
+      --imgsz 1920 \
       --conf "${conf_thresholds[i]}" \
       --iou "${iou_thresholds[i]}"
 done

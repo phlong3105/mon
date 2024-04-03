@@ -370,7 +370,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path   = meta["image_path"]
+                image_path   = meta["path"]
                 image        = Image.open(image_path).convert("RGB")
                 enhanced_image, run_time = lowlight_enhancer(output_path, image)
                 output_path  = save_dir / image_path.name

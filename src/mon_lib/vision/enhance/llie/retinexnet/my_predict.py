@@ -52,7 +52,7 @@ def predict(args: argparse.Namespace):
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
-            image_path  = meta["image_path"]
+            image_path  = meta["path"]
             image_paths.append(image_path)
     
     start_time = time.time()

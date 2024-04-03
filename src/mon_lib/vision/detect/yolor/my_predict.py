@@ -256,20 +256,20 @@ def main(
     args     = core.load_config(config)
     
     # Prioritize input args --> config file args
-    root         = root         or args["root"]
-    weights      = weights      or args["weights"]
-    model        = model        or args["model"]
-    source       = data         or args["source"]
-    project      = args["project"]
-    fullname     = fullname     or args["name"]
-    device       = device       or args["device"]
-    imgsz        = imgsz        or args["imgsz"]
-    conf         = conf         or args["conf"]
-    iou          = iou          or args["iou"]
-    max_det      = max_det      or args["max_det"]
-    augment      = augment      or args["augment"]
-    agnostic_nms = agnostic_nms or args["agnostic_nms"]
-    verbose      = verbose      or args["verbose"]
+    root         = root         or args.get("root")
+    weights      = weights      or args.get("weights")
+    model        = model        or args.get("model")
+    source       = data         or args.get("data")
+    project      = args.get("project")
+    fullname     = fullname     or args.get("name")
+    device       = device       or args.get("device")
+    imgsz        = imgsz        or args.get("imgsz")
+    conf         = conf         or args.get("conf")
+    iou          = iou          or args.get("iou")
+    max_det      = max_det      or args.get("max_det")
+    augment      = augment      or args.get("augment")
+    agnostic_nms = agnostic_nms or args.get("agnostic_nms")
+    verbose      = verbose      or args.get("verbose")
     
     # Parse arguments
     root     = core.Path(root)
@@ -277,7 +277,7 @@ def main(
     model    = core.Path(model)
     model    = model if model.exists() else _current_dir / "config" / model.name
     model    = str(model.config_file())
-    data_    = core.Path(args["data"])
+    data_    = core.Path(args.get("data"))
     data_    = data_ if data_.exists() else _current_dir / "data" / data_.name
     data_    = str(data_.config_file())
     project  = root.name or project

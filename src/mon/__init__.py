@@ -7,14 +7,12 @@ from __future__ import annotations
 
 # Order-specific import. DO NOT CHANGE!!!
 import mon.core
-import mon.config
 import mon.data
 import mon.globals
 import mon.nn
 import mon.proc
 import mon.vision
 from mon.core import *
-from mon.config import *
 from mon.data import *
 from mon.globals import *
 from mon.nn import *

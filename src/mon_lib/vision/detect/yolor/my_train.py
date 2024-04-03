@@ -637,20 +637,20 @@ def main(
     args     = core.load_config(config)
     
     # Prioritize input args --> config file args
-    root     = root     or args["root"]
-    weights  = weights  or args["weights"]
-    model    = model    or args["model"]
-    data     = args["data"]
-    project  = args["project"]
-    fullname = fullname or args["name"]
-    device   = device   or args["device"]
-    hyp      = args["hyp"]
-    epochs   = epochs   or args["epochs"]
-    conf     = conf     or args["conf"]
-    iou      = iou      or args["iou"]
-    max_det  = max_det  or args["max_det"]
-    exist_ok = exist_ok or args["exist_ok"]
-    verbose  = verbose  or args["verbose"]
+    root     = root     or args.get("root")
+    weights  = weights  or args.get("weights")
+    model    = model    or args.get("model")
+    data     = args.get("data")
+    project  = args.get("project")
+    fullname = fullname or args.get("name")
+    device   = device   or args.get("device")
+    hyp      = args.get("hyp")
+    epochs   = epochs   or args.get("epochs")
+    conf     = conf     or args.get("conf")
+    iou      = iou      or args.get("iou")
+    max_det  = max_det  or args.get("max_det")
+    exist_ok = exist_ok or args.get("exist_ok")
+    verbose  = verbose  or args.get("verbose")
     
     # Parse arguments
     root     = core.Path(root)

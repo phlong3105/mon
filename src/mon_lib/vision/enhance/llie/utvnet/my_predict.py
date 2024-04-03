@@ -95,7 +95,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path     = meta["image_path"]
+                image_path     = meta["path"]
                 image          = Image.open(image_path).convert("RGB")
                 image          = (np.asarray(image) / 255.0)
                 image          = torch.from_numpy(image).float()

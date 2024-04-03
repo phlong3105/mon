@@ -235,7 +235,7 @@ def main(
     args     = core.load_config(config)
     
     # Prioritize input args --> config file args
-    root     = root or args["root"]
+    root     = root or args.get("root")
     
     # Parse arguments
     root     = core.Path(root)

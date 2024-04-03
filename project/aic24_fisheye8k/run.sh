@@ -34,6 +34,9 @@ val_cameras=(
     "val/camera2_a_test"
     "val/camera4_a_e_m_n_test"
     "val/camera7_a_test"
+    "val_syn/camera1"
+    "val_syn/camera2"
+    "val_syn/camera7"
 )
 test_cameras=(
     "test/camera19_a"

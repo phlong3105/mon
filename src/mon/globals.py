@@ -871,6 +871,12 @@ MODELS_EXTRA = {
     
     # region enhance
         # region llie
+        "dccnet"           : {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "dccnet",
+            "torch_distributed_launch": True,
+        },
         "lime"             : {
             "tasks"    : [Task.LLIE],
             "schemes"  : [Scheme.TRADITIONAL],

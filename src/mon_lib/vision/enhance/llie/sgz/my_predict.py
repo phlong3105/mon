@@ -79,7 +79,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path    = meta["image_path"]
+                image_path    = meta["path"]
                 data_lowlight = utils.image_from_path(str(image_path))
                 # Scale image to have the resolution of multiple of 4
                 data_lowlight = utils.scale_image(data_lowlight, scale_factor, device) if scale_factor != 1 else data_lowlight

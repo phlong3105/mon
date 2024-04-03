@@ -139,13 +139,13 @@ def main(
     args     = core.load_config(config)
     
     # Parse arguments
-    weights  = weights  or args["weights"]
-    project  = args["project"]
-    fullname = fullname or args["name"]
-    device   = device   or args["device"]
-    epochs   = epochs   or args["epochs"]
-    exist_ok = exist_ok or args["exist_ok"]
-    verbose  = verbose  or args["verbose"]
+    weights  = weights  or args.get("weights")
+    project  = args.get("project")
+    fullname = fullname or args.get("name")
+    device   = device   or args.get("device")
+    epochs   = epochs   or args.get("epochs")
+    exist_ok = exist_ok or args.get("exist_ok")
+    verbose  = verbose  or args.get("verbose")
     
     # Prioritize input args --> config file args
     root     = core.Path(root)

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import mon
 from mon import albumentation as A
-from mon.config import default
+from mon.core.config import default
 
 _current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
@@ -17,7 +17,7 @@ _root_dir     = _current_file.parents[1]
 # region Basic
 
 model_name = "zerodce"
-data_name  = "sice-mix"
+data_name  = "sice_mix"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
 image_size = [512, 512]

@@ -99,7 +99,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path      = meta["image_path"]
+                image_path      = meta["path"]
                 # input           = Variable(images, volatile=True).to(device)
                 input           = images.to(device)
                 image_name      = image_name[0].split(".")[0]

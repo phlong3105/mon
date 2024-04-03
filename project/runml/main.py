@@ -36,10 +36,10 @@ def run_train(args: dict):
     verbose  = args["verbose"]
     
     assert root.exists()
-    assert config not in [None, "None", ""]
     
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
+    assert config not in [None, "None", ""]
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
     save_dir = save_dir or root / "run" / "train" / fullname
     weights  = mon.to_str(weights, ",")
@@ -129,11 +129,12 @@ def run_predict(args: dict):
     verbose      = args["verbose"]
     
     assert root.exists()
-    assert config not in [None, "None", ""]
     
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
-    fullname = fullname if fullname not in [None, "None", ""] else config.stem
+    config   = config or "default"
+    # assert config not in [None, "None", ""]
+    fullname = fullname if fullname not in [None, "None", ""] else model
     weights  = mon.to_str(weights, ",")
     
     for d in data:
@@ -220,10 +221,10 @@ def run_online(args: dict):
     verbose      = args["verbose"]
     
     assert root.exists()
-    assert config not in [None, "None", ""]
     
     # Parse arguments
     config   = mon.parse_config_file(project_root=root, config=config)
+    assert config not in [None, "None", ""]
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
     weights  = mon.to_str(weights, ",")
     

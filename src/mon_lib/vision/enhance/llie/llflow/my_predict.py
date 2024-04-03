@@ -129,7 +129,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path = meta["image_path"]
+                image_path = meta["path"]
                 lr         = imread(str(image_path))
                 raw_shape  = lr.shape
                 
