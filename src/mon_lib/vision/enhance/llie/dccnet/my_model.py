@@ -50,7 +50,7 @@ class Loss(nn.Loss):
         self.ssim_weight = ssim_weight
         self.tv_weight   = tv_weight
         self.loss_ssim   = nn.SSIMLoss(reduction=reduction)
-        self.loss_tv     = nn.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_tv     = nn.TotalVariationALoss(reduction=reduction)
         self.gray_transform = transforms.Grayscale(1)
     
     def forward(

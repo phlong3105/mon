@@ -14,41 +14,67 @@ __all__ = [
     "EdgeCharbonnierLoss",
     "EdgeConstancyLoss",
     "EdgeLoss",
-    "ExclusionLoss",
     "ExposureControlLoss",
     "GradientLoss",
-    "GrayLoss",
-    "IlluminationSmoothnessLoss",
-    "LPIPSCharbonnierLoss",
-    "LPIPSLoss",
-    "NonBlurryLoss",
     "PSNRLoss",
     "PerceptualL1Loss",
     "PerceptualLoss",
     "SSIMLoss",
     "SpatialConsistencyLoss",
     "StdLoss",
+    "TVALoss",
+    "TVLoss",
+    "TotalVariationALoss",
+    "TotalVariationLoss",
     "VGGCharbonnierLoss",
     "VGGLoss",
 ]
 
+import math
 from typing import Literal
 
 import numpy as np
-import piqa
 import torch
 import torchvision
 from torch import nn
+from torch.autograd import Variable
 from torch.nn import functional as F
 
 from mon import proc
 from mon.core import _size_2_t
 from mon.globals import LOSSES
-from mon.nn import metric
 from mon.nn.loss import base
 
 
-# region Channel Loss
+# region Loss
+
+@LOSSES.register(name="brightness_constancy_loss")
+class BrightnessConstancyLoss(base.Loss):
+    """Brightness Constancy Loss"""
+    
+    def __init__(
+        self,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean",
+        gamma      : float      = 2.5,
+        ksize      : int | None = 9,
+        eps        : float      = 1e-3
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.gamma = gamma
+        self.ksize = ksize
+        self.eps   = eps
+    
+    def __str__(self) -> str:
+        return f"brightness_consistency_loss"
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        target = proc.get_guided_brightness_enhancement_map_prior(target, self.gamma, self.ksize)
+        loss   = torch.sqrt((target - input) ** 2 + (self.eps * self.eps))
+        loss   = base.reduce_loss(loss=loss, reduction=self.reduction)
+        loss   = self.loss_weight * loss
+        return loss
+
 
 @LOSSES.register(name="channel_consistency_loss")
 class ChannelConsistencyLoss(base.Loss):
@@ -134,13 +160,13 @@ class ChannelRatioConsistencyLoss(base.Loss):
         loss       = self.loss_weight * loss
         return loss
 
-    
+
 @LOSSES.register(name="color_constancy_loss")
 class ColorConstancyLoss(base.Loss):
     """Color Constancy Loss :math:`\mathcal{L}_{col}` corrects the potential
     color deviations in the enhanced image and builds the relations among the
     three adjusted channels.
-
+    
     References:
         `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L9>`__
     """
@@ -151,9 +177,6 @@ class ColorConstancyLoss(base.Loss):
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-    
-    def __str__(self) -> str:
-        return f"color_constancy_loss"
     
     def forward(
         self,
@@ -171,29 +194,9 @@ class ColorConstancyLoss(base.Loss):
         return loss
 
 
-@LOSSES.register(name="grayscale_loss")
-class GrayscaleLoss(base.Loss):
-
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.mse = base.MSELoss()
-    
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        x_g  = torch.mean(input,  1, keepdim=True)
-        y_g  = torch.mean(target, 1, keepdim=True)
-        loss = self.mse(x_g, y_g)
-        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
-        return loss
-    
-
 @LOSSES.register(name="contradict_channel_loss")
 class ContradictChannelLoss(base.Loss):
-    """Contradic Channel Loss :math:`\mathcal{L}_{con}` measures the distance
+    """Contradict Channel Loss :math:`\mathcal{L}_{con}` measures the distance
     between the average intensity value of a local region to the
     well-exposedness level E.
 
@@ -205,7 +208,7 @@ class ContradictChannelLoss(base.Loss):
     References:
         `<https://openaccess.thecvf.com/content/ICCV2021/papers/Chen_ALL_Snow_Removed_Single_Image_Desnowing_Algorithm_Using_Hierarchical_Dual-Tree_ICCV_2021_paper.pdf>`__
     """
-        
+    
     def __init__(
         self,
         loss_weight: float = 1.0,
@@ -232,59 +235,125 @@ class ContradictChannelLoss(base.Loss):
         y_pred = torch.min(input, dim=1, keepdim=True)
         y_pred = torch.squeeze(y_pred[0])
         y_pred = self.pool(y_pred)
-
+        
         y_true = torch.min(target, dim=1, keepdim=True)
         y_true = torch.squeeze(y_true[0])
         y_true = self.pool(y_true)
-
+        
         loss   = self.mae(y_pred, y_true)
         loss   = base.reduce_loss(loss=loss, reduction=self.reduction)
         loss   = self.sigmoid(loss)
         loss   = self.loss_weight * loss
         return loss
 
-# endregion
 
-
-# region Exposure Loss
-
-@LOSSES.register(name="brightness_constancy_loss")
-class BrightnessConstancyLoss(base.Loss):
-    """Brightness Constancy Loss
-
-    Args:
-        patch_size: Kernel size for pooling layer.
-        mean_val: The :math:`E` value proposed in the paper. Default: ``0.6``.
-        reduction: Specifies the reduction to apply to the output.
+@LOSSES.register(name="edge_loss")
+class EdgeLoss(base.Loss):
     
-    References:
-        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74>`__
-    """
+    def __init__(
+        self,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        k = torch.Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
+        self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
+        if torch.cuda.is_available():
+            self.kernel = self.kernel.cuda()
+        self.loss = base.CharbonnierLoss()
+
+    def conv_gauss(self, image: torch.Tensor) -> torch.Tensor:
+        n_channels, _, kw, kh = self.kernel.shape
+        image = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode='replicate')
+        return F.conv2d(image, self.kernel, groups=n_channels)
+    
+    def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
+        filtered   = self.conv_gauss(image)       # filter
+        down       = filtered[:, :, ::2, ::2]     # downsample
+        new_filter = torch.zeros_like(filtered)
+        new_filter[:, :, ::2, ::2] = down * 4     # upsample
+        filtered   = self.conv_gauss(new_filter)  # filter
+        diff       = image - filtered
+        return diff
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        x    = input
+        y    = target
+        loss = self.loss(self.laplacian_kernel(x), self.laplacian_kernel(y))
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        loss = self.loss_weight * loss
+        return loss
+
+
+@LOSSES.register(name="edge_constancy_loss")
+class EdgeConstancyLoss(base.Loss):
+    """Edge Constancy Loss :math:`\mathcal{L}_{edge}`."""
     
     def __init__(
         self,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        gamma      : float      = 2.5,
-        ksize      : int | None = 9,
-        eps        : float      = 1e-3
+        eps        : float = 1e-3
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.gamma = gamma
-        self.ksize = ksize
-        self.eps   = eps
+        self.eps    = eps
+        k           = torch.Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
+        self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
     
-    def __str__(self) -> str:
-        return f"brightness_consistency_loss"
+    def gauss_conv(self, image: torch.Tensor) -> torch.Tensor:
+        if self.kernel.device != image.device:
+            self.kernel = self.kernel.to(image.device)
+        n, c, w, h = self.kernel.shape
+        image = F.pad(image, (w // 2, h // 2, w // 2, h // 2), mode="replicate")
+        gauss = F.conv2d(image, self.kernel, groups=n)
+        return gauss
     
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        target = proc.get_guided_brightness_enhancement_map_prior(target, self.gamma, self.ksize)
-        # loss    = torch.abs(target - input)
-        loss   = torch.sqrt((target - input) ** 2 + (self.eps * self.eps))
-        loss   = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss   = self.loss_weight * loss
+    def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
+        filtered   = self.gauss_conv(image)       # filter
+        down       = filtered[:, :, ::2, ::2]     # downsample
+        new_filter = torch.zeros_like(filtered)
+        new_filter[:, :, ::2, ::2] = down * 4     # upsample
+        filtered   = self.gauss_conv(new_filter)  # filter
+        laplacian  = image - filtered
+        return laplacian
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        assert input.shape == target.shape
+        edge1 = self.laplacian_kernel(input)
+        edge2 = self.laplacian_kernel(target)
+        loss  = torch.sqrt((edge1 - edge2) ** 2 + (self.eps * self.eps))
+        loss  = base.reduce_loss(loss=loss, reduction=self.reduction)
+        loss  = self.loss_weight * loss
         return loss
+
+
+@LOSSES.register(name="edge_charbonnier_loss")
+class EdgeCharbonnierLoss(base.Loss):
+    """A combination of Charbonnier Loss and Edge Loss."""
     
+    def __init__(
+        self,
+        edge_loss_weight: float = 1.0,
+        char_loss_weight: float = 1.0,
+        reduction       : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(reduction=reduction)
+        self.edge_loss_weight = edge_loss_weight
+        self.char_loss_weight = char_loss_weight
+        self.edge_loss        = EdgeLoss()
+        self.char_loss        = base.CharbonnierLoss()
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor, **_) -> torch.Tensor:
+        edge_loss = self.edge_loss(input, target)
+        char_loss = self.char_loss(input, target)
+        loss 	  = self.char_loss_weight * char_loss + self.edge_loss_weight * edge_loss
+        loss 	  = base.reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
 
 @LOSSES.register(name="exposure_control_loss")
 class ExposureControlLoss(base.Loss):
@@ -313,9 +382,6 @@ class ExposureControlLoss(base.Loss):
         self.mean_val   = mean_val
         self.pool       = nn.AvgPool2d(self.patch_size)
     
-    def __str__(self) -> str:
-        return f"exposure_control_loss"
-    
     def forward(
         self,
         input : torch.Tensor,
@@ -329,187 +395,49 @@ class ExposureControlLoss(base.Loss):
         loss = self.loss_weight * loss
         return loss
 
-# endregion
 
-
-# region Perceptual Loss
-
-@LOSSES.register(name="edge_constancy_loss")
-class EdgeConstancyLoss(base.Loss):
-    """Edge Constancy Loss :math:`\mathcal{L}_{edge}`."""
+@LOSSES.register(name="gradient_loss")
+class GradientLoss(base.Loss):
+    """L1 loss on the gradient of the image."""
     
     def __init__(
         self,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        eps        : float = 1e-3
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.eps    = eps
-        k           = torch.Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
-        self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
-    
-    def __str__(self) -> str:
-        return f"edge_constancy_loss"
-    
-    def gauss_conv(self, image: torch.Tensor) -> torch.Tensor:
-        if self.kernel.device != image.device:
-            self.kernel = self.kernel.to(image.device)
-        n, c, w, h = self.kernel.shape
-        image = F.pad(image, (w // 2, h // 2, w // 2, h // 2), mode="replicate")
-        gauss = F.conv2d(image, self.kernel, groups=n)
-        return gauss
-        
-    def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
-        filtered   = self.gauss_conv(image)       # filter
-        down       = filtered[:, :, ::2, ::2]     # downsample
-        new_filter = torch.zeros_like(filtered)
-        new_filter[:, :, ::2, ::2] = down * 4     # upsample
-        filtered   = self.gauss_conv(new_filter)  # filter
-        laplacian  = image - filtered
-        return laplacian
     
     def forward(
         self,
         input : torch.Tensor,
         target: torch.Tensor | None = None
     ) -> torch.Tensor:
-        assert input.shape == target.shape
-        edge1 = self.laplacian_kernel(input)
-        edge2 = self.laplacian_kernel(target)
-        loss  = torch.sqrt((edge1 - edge2) ** 2 + (self.eps * self.eps))
-        loss  = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss  = self.loss_weight * loss
-        return loss
-    
-    
-@LOSSES.register(name="edge_loss")
-class EdgeLoss(base.Loss):
-    
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        k = torch.Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
-        self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
-        if torch.cuda.is_available():
-            self.kernel = self.kernel.cuda()
-        self.loss = base.CharbonnierLoss()
-    
-    def __str__(self) -> str:
-        return f"edge_loss"
-    
-    def conv_gauss(self, image: torch.Tensor) -> torch.Tensor:
-        n_channels, _, kw, kh = self.kernel.shape
-        image = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode='replicate')
-        return F.conv2d(image, self.kernel, groups=n_channels)
-    
-    def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
-        filtered   = self.conv_gauss(image)       # filter
-        down       = filtered[:, :, ::2, ::2]     # downsample
-        new_filter = torch.zeros_like(filtered)
-        new_filter[:, :, ::2, ::2] = down * 4     # upsample
-        filtered   = self.conv_gauss(new_filter)  # filter
-        diff       = image - filtered
-        return diff
-    
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        x    = input
-        y    = target
-        loss = self.loss(self.laplacian_kernel(x), self.laplacian_kernel(y))
-        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
-        return loss
-
-
-@LOSSES.register(name="edge_charbonnier_loss")
-class EdgeCharbonnierLoss(base.Loss):
-    """A combination of Charbonnier Loss and Edge Loss."""
-    
-    def __init__(
-        self,
-        edge_loss_weight: float = 1.0,
-        char_loss_weight: float = 1.0,
-        reduction       : Literal["none", "mean", "sum"] = "mean"
-    ):
-        super().__init__(reduction=reduction)
-        self.edge_loss_weight = edge_loss_weight
-        self.char_loss_weight = char_loss_weight
-        self.edge_loss        = EdgeLoss()
-        self.char_loss        = base.CharbonnierLoss()
-        
-    def forward(self, input: torch.Tensor, target: torch.Tensor, **_) -> torch.Tensor:
-        edge_loss = self.edge_loss(input, target)
-        char_loss = self.char_loss(input, target)
-        loss 	  = self.char_loss_weight * char_loss + self.edge_loss_weight * edge_loss
-        loss 	  = base.reduce_loss(loss=loss, reduction=self.reduction)
-        return loss
-    
-
-@LOSSES.register(name="lpips_loss")
-class LPIPSLoss(base.Loss):
-    """LPIPS Loss.
-    
-    See Also:
-        :class:`torchmetrics.image.LearnedPerceptualImagePatchSimilarity`.
-    """
-    
-    def __init__(
-        self,
-        net        : str = "alex",
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.lpips = metric.LearnedPerceptualImagePatchSimilarity(
-            net_type  = net,
-            reduction = "mean"
+        gradient_a_x = torch.abs(input[:, :, :, :-1] - input[:, :, :, 1:])
+        gradient_a_y = torch.abs(input[:, :, :-1, :] - input[:, :, 1:, :])
+        loss = base.reduce_loss(
+            loss      = torch.mean(gradient_a_x) + torch.mean(gradient_a_y),
+            reduction = self.reduction
         )
-    
-    def __str__(self) -> str:
-        return f"lpips_loss"
-    
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        if self.lpips.device != input.device:
-            self.lpips = self.lpips.to(input.device)
-        self.lpips.update(input, target)
-        loss = self.lpips.compute()
-        # loss = reduce_loss(loss=loss, reduction=self.reduction)
         loss = self.loss_weight * loss
         return loss
-    
 
-@LOSSES.register(name="lpips_charbonnier_loss")
-class LPIPSCharbonnierLoss(base.Loss):
-    """LPIPS Charbonnier Loss.
-    
-    See Also:
-        :class:`torchmetrics.image.LearnedPerceptualImagePatchSimilarity`.
-    """
+
+@LOSSES.register(name="grayscale_loss")
+class GrayscaleLoss(base.Loss):
     
     def __init__(
         self,
-        net              : str = "alex",
-        lpips_loss_weight: float = 1.0,
-        char_loss_weight : float = 1.0,
-        reduction        : Literal["none", "mean", "sum"] = "mean"
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
-        super().__init__(reduction=reduction)
-        self.lpips_loss_weight = lpips_loss_weight
-        self.char_loss_weight  = char_loss_weight
-        self.lpips_loss        = LPIPSLoss(net=net, reduction=reduction)
-        self.char_loss         = base.CharbonnierLoss(reduction=reduction)
-    
-    def __str__(self) -> str:
-        return f"lpips_charbonnier_loss"
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.l1 = base.L1Loss(reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        lpips_loss = self.lpips_loss(input=input, target=target)
-        char_loss  =  self.char_loss(input=input, target=target)
-        loss       = self.lpips_loss_weight * lpips_loss + self.char_loss_weight * char_loss
-        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        x_g  = torch.mean(input,  1, keepdim=True)
+        y_g  = torch.mean(target, 1, keepdim=True)
+        loss = self.l1(x_g, y_g)
+        loss = self.loss_weight * loss
         return loss
 
 
@@ -570,243 +498,6 @@ class PerceptualL1Loss(base.Loss):
         return loss
 
 
-@LOSSES.register(name="vgg_loss")
-class VGGLoss(base.Loss):
-    
-    class VGG19(nn.Module):
-    
-        def __init__(self, requires_grad: bool = False):
-            super().__init__()
-            vgg_pretrained_features = torchvision.models.vgg19(pretrained=True).features
-            self.slice1 = nn.Sequential()
-            self.slice2 = nn.Sequential()
-            self.slice3 = nn.Sequential()
-            self.slice4 = nn.Sequential()
-            self.slice5 = nn.Sequential()
-            for x in range(2):
-                self.slice1.add_module(str(x), vgg_pretrained_features[x])
-            for x in range(2, 7):
-                self.slice2.add_module(str(x), vgg_pretrained_features[x])
-            for x in range(7, 12):
-                self.slice3.add_module(str(x), vgg_pretrained_features[x])
-            for x in range(12, 21):
-                self.slice4.add_module(str(x), vgg_pretrained_features[x])
-            for x in range(21, 30):
-                self.slice5.add_module(str(x), vgg_pretrained_features[x])
-            if not requires_grad:
-                for param in self.parameters():
-                    param.requires_grad = False
-        
-        def forward(self, input: torch.Tensor):
-            x       = input
-            h_relu1 = self.slice1(x)
-            h_relu2 = self.slice2(h_relu1)
-            h_relu3 = self.slice3(h_relu2)
-            h_relu4 = self.slice4(h_relu3)
-            h_relu5 = self.slice5(h_relu4)
-            out     = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
-            return out
-    
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "sum",
-    ):
-        super().__init__(reduction=reduction)
-        self.vgg       = self.VGG19()
-        # self.criterion = nn.L1Loss()
-        self.criterion = nn.L1Loss(reduction="sum")
-        self.weights   = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
-    
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        input_vgg  = self.vgg(input)
-        target_vgg = self.vgg(target)
-        loss       = 0
-        for i in range(len(input_vgg)):
-            # print(x_vgg[i].shape, y_vgg[i].shape)
-            loss += self.weights[i] * self.criterion(input_vgg[i].detach(), target_vgg[i].detach())
-        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
-        return loss
-
-
-@LOSSES.register(name="vgg_charbonnier_loss")
-class VGGCharbonnierLoss(base.Loss):
-    """VGG Charbonnier Loss.
-    
-    See Also:
-        :class:`torchmetrics.image.LearnedPerceptualImagePatchSimilarity`.
-    """
-    
-    def __init__(
-        self,
-        vgg_loss_weight : float = 1.0,
-        char_loss_weight: float = 1.0,
-        reduction       : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(reduction=reduction)
-        self.vgg_loss_weight  = vgg_loss_weight
-        self.char_loss_weight = char_loss_weight
-        self.vgg_loss         = VGGLoss(reduction=reduction)
-        self.char_loss        = base.CharbonnierLoss(reduction=reduction)
-    
-    def __str__(self) -> str:
-        return f"vgg_charbonnier_loss"
-    
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        vgg_loss  =  self.vgg_loss(input=input, target=target)
-        char_loss = self.char_loss(input=input, target=target)
-        # vgg_loss  = base.reduce_loss(loss=vgg_loss,  reduction=self.reduction)
-        # char_loss = base.reduce_loss(loss=char_loss, reduction=self.reduction)
-        loss      = vgg_loss * self.vgg_loss_weight + char_loss * self.char_loss_weight
-        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        return loss
-
-# endregion
-
-
-# region Reconstruction Loss
-
-@LOSSES.register(name="exclusion_loss")
-class ExclusionLoss(base.Loss):
-    """Loss on the gradient.
-
-    References:
-    `<http://openaccess.thecvf.com/content_cvpr_2018/papers/Zhang_Single_Image_Reflection_CVPR_2018_paper.pdf>`__
-    """
-
-    def __init__(
-        self,
-        level      : int = 3,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.level    = level
-        self.avg_pool = nn.AvgPool2d(2, stride=2).type(torch.cuda.FloatTensor)
-        self.sigmoid  = nn.Sigmoid().type(torch.cuda.FloatTensor)
-    
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor | float:
-        grad_x_loss, grad_y_loss = self.get_gradients(input, target)
-        loss_grad_xy = sum(grad_x_loss) / (self.level * 9) + sum(grad_y_loss) / (self.level * 9)
-        loss = loss_grad_xy / 2.0
-        # loss = reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
-        return loss
-    
-    def get_gradients(self, input: torch.Tensor, target: torch.Tensor) -> tuple[list, list]:
-        grad_x_loss = []
-        grad_y_loss = []
-
-        for l in range(self.level):
-            grad_x1, grad_y1 = self.compute_gradient(input)
-            grad_x2, grad_y2 = self.compute_gradient(target)
-            # alpha_x = 2.0 * torch.mean(torch.abs(grad_x1)) / torch.mean(torch.abs(grad_x2))
-            # alpha_y = 2.0 * torch.mean(torch.abs(grad_y1)) / torch.mean(torch.abs(grad_y2))
-            alpha_y   = 1
-            alpha_x   = 1
-            grad_x1_s = (self.sigmoid(grad_x1) * 2) - 1
-            grad_y1_s = (self.sigmoid(grad_y1) * 2) - 1
-            grad_x2_s = (self.sigmoid(grad_x2  * alpha_x) * 2) - 1
-            grad_y2_s = (self.sigmoid(grad_y2  * alpha_y) * 2) - 1
-            # grad_x_loss.append(torch.mean(((grad_x1_s ** 2) * (grad_x2_s ** 2))) ** 0.25)
-            # grad_y_loss.append(torch.mean(((grad_y1_s ** 2) * (grad_y2_s ** 2))) ** 0.25)
-            grad_x_loss += self._all_comb(grad_x1_s, grad_x2_s)
-            grad_y_loss += self._all_comb(grad_y1_s, grad_y2_s)
-            input        = self.avg_pool(input)
-            target        = self.avg_pool(target)
-        return grad_x_loss, grad_y_loss
-
-    def _all_comb(self, grad1_s: torch.Tensor, grad2_s: torch.Tensor) -> torch.Tensor:
-        v = []
-        for i in range(3):
-            for j in range(3):
-                v.append(torch.mean(((grad1_s[:, j, :, :] ** 2) * (grad2_s[:, i, :, :] ** 2))) ** 0.25)
-        return v
-
-    def compute_gradient(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        grad_x = input[:, :, 1:, :] - input[:, :, :-1, :]
-        grad_y = input[:, :, :, 1:] - input[:, :, :, :-1]
-        return grad_x, grad_y
-
-
-@LOSSES.register(name="gradient_loss")
-class GradientLoss(base.Loss):
-    """L1 loss on the gradient of the image."""
-    
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-    
-    def __str__(self) -> str:
-        return f"gradient_l1_loss"
-    
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None = None
-    ) -> torch.Tensor:
-        gradient_a_x = torch.abs(input[:, :, :, :-1] - input[:, :, :, 1:])
-        gradient_a_y = torch.abs(input[:, :, :-1, :] - input[:, :, 1:, :])
-        loss = base.reduce_loss(
-            loss      = torch.mean(gradient_a_x) + torch.mean(gradient_a_y),
-            reduction = self.reduction
-        )
-        loss = self.loss_weight * loss
-        return loss
-
-
-@LOSSES.register(name="gray_loss")
-class GrayLoss(base.Loss):
-
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.mae = base.MAELoss()
-
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None = None,
-    ) -> torch.Tensor:
-        x = input
-        y = torch.ones_like(x) / 2.0
-        loss = 1 / self.mae(x, y)
-        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
-        return loss
-
-
-@LOSSES.register(name="non_blurry_loss")
-class NonBlurryLoss(base.Loss):
-    """Loss on the distance to 0.5."""
-
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.mse = base.MSELoss()
-
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None = None,
-    ) -> torch.Tensor:
-        x    = input
-        loss = 1 - self.mse(x, torch.ones_like(x) * 0.5)
-        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
-        return loss
-
-
 @LOSSES.register(name="psnr_loss")
 class PSNRLoss(base.Loss):
     """PSNR loss. Modified from BasicSR: `<https://github.com/xinntao/BasicSR>`__
@@ -823,7 +514,7 @@ class PSNRLoss(base.Loss):
         self.to_y  = to_y
         self.coef  = torch.tensor([65.481, 128.553, 24.966]).reshape(1, 3, 1, 1)
         self.first = True
-
+    
     def __str__(self) -> str:
         return f"psnr_loss"
     
@@ -833,99 +524,55 @@ class PSNRLoss(base.Loss):
             if self.first:
                 self.coef  = self.coef.to(input.device)
                 self.first = False
-
+            
             input  = (input  * self.coef).sum(dim=1).unsqueeze(dim=1) + 16.0
             target = (target * self.coef).sum(dim=1).unsqueeze(dim=1) + 16.0
             input  = input  / 255.0
             target = target / 255.0
-
+        
         psnr = torch.log(((input - target) ** 2).mean(dim=(1, 2, 3)) + 1e-8).mean()
         # loss = reduce_loss(loss=loss, reduction=self.reduction)
         loss = self.loss_weight * self.scale * psnr
         return loss
 
 
-@LOSSES.register(name="ssim_loss")
-class SSIMLoss(base.Loss):
-    """SSIM Loss. Modified from BasicSR: https://github.com/xinntao/BasicSR"""
+@LOSSES.register(name="tv_loss")
+@LOSSES.register(name="total_variation_loss")
+class TotalVariationLoss(base.Loss):
+    """Total Variation Loss (Total Variation Regularization). It is mainly used
+    to create spatial smoothness.
+    
+    Calculate and sum up the variation between neighboring pixels for each
+    vertical and horizontal axis of a single image.
+    """
     
     def __init__(
         self,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        window_size: int   = 11,
-        sigma      : float = 1.5,
-        n_channels : int   = 3,
-        value_range: float = 1.0,
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.ssim = piqa.SSIM(
-            window_size = window_size,
-            sigma       = sigma,
-            n_channels  = n_channels,
-            value_range = value_range,
-            reduction   = self.reduction,
-        )
     
-    def __str__(self) -> str:
-        return f"ssim_loss"
-    
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        # Compute the ssim map
-        ssim_map = self.ssim(input, target)
-        # Compute and reduce the loss
-        loss = torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
-        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
-        return loss
-
-
-@LOSSES.register(name="std_loss")
-class StdLoss(base.Loss):
-    """Loss on the variance of the image. Works in the grayscale. If the image
-    is smooth, gets zero.
-    """
-
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        blur      = (1 / 25) * np.ones((5, 5))
-        blur      = blur.reshape(1, 1, blur.shape[0], blur.shape[1])
-        self.blur = nn.Parameter(data=torch.cuda.FloatTensor(blur), requires_grad=False)
-        self.mse  = base.MSELoss()
-
-        image       = np.zeros((5, 5))
-        image[2, 2] = 1
-        image       = image.reshape(1, 1, image.shape[0], image.shape[1])
-        self.image  = nn.Parameter(data=torch.cuda.FloatTensor(image), requires_grad=False)
-
     def forward(
         self,
         input : torch.Tensor,
         target: torch.Tensor | None = None
     ) -> torch.Tensor:
         x    = input
-        x    = torch.mean(x, 1, keepdim=True)
-        if self.image.device != x.device:
-            self.image = self.image.to(x.device)
-        loss = self.mse(F.conv2d(x, self.image), F.conv2d(x, self.blur))
-        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        h_tv = torch.mean(torch.abs(x[:, :, 1:, :] - x[:, :, :x.size(2) - 1, :]))
+        w_tv = torch.mean(torch.abs(x[:, :, :, 1:] - x[:, :, :, :x.size(3) - 1]))
+        loss = h_tv + w_tv
         loss = self.loss_weight * loss
         return loss
 
-# endregion
 
-
-# region Smoothness Loss
-
-@LOSSES.register(name="illumination_smoothness_loss")
-class IlluminationSmoothnessLoss(base.Loss):
-    """Illumination Smoothness Loss :math:`\mathcal{L}_{tvA}` preserve the
-    monotonicity relations between neighboring pixels. It is used to avoid
-    aggressive and sharp changes between neighboring pixels.
+@LOSSES.register(name="tva_loss")
+@LOSSES.register(name="total_variation_a_loss")
+class TotalVariationALoss(base.Loss):
+    """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
+    :math:`\mathcal{L}_{tvA}` preserve the monotonicity relations between
+    neighboring pixels. It is used to avoid aggressive and sharp changes between
+    neighboring pixels.
     
     References:
         `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
@@ -961,11 +608,81 @@ class IlluminationSmoothnessLoss(base.Loss):
         loss    = self.loss_weight * loss
         return loss
 
-# endregion
 
-
-# region Spatial Loss
-
+@LOSSES.register(name="ssim_loss")
+class SSIMLoss(base.Loss):
+    """SSIM Loss. Modified from BasicSR: https://github.com/xinntao/BasicSR"""
+    
+    def __init__(
+        self,
+        loss_weight : float = 1.0,
+        reduction   : Literal["none", "mean", "sum"] = "mean",
+        window_size : int   = 11,
+        size_average: bool  = True
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self._window_size  = window_size
+        self._size_average = size_average
+        self._channel      = 1
+        self._window       = self.create_window(self._window_size, self._channel)
+    
+    @staticmethod
+    def gaussian(window_size: int, sigma: float) -> torch.Tensor:
+        gauss = torch.Tensor([math.exp(-(x - window_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(window_size)])
+        return gauss / gauss.sum()
+    
+    def create_window(self, window_size: int, channel: int) -> torch.Tensor:
+        _1d_window = self.gaussian(window_size, 1.5).unsqueeze(1)
+        _2d_window = _1d_window.mm(_1d_window.t()).float().unsqueeze(0).unsqueeze(0)
+        window     = Variable(_2d_window.expand(channel, 1, window_size, window_size).contiguous())
+        return window
+    
+    @staticmethod
+    def _ssim(
+        img1        : torch.Tensor,
+        img2        : torch.Tensor,
+        window      : torch.Tensor,
+        window_size : int,
+        channel     : int,
+        size_average: bool = True
+    ) -> torch.Tensor:
+        mu1     = F.conv2d(img1, window, padding=window_size // 2, groups=channel)
+        mu2     = F.conv2d(img2, window, padding=window_size // 2, groups=channel)
+        
+        mu1_sq  = mu1.pow(2)
+        mu2_sq  = mu2.pow(2)
+        mu1_mu2 = mu1*mu2
+        
+        sigma1_sq = F.conv2d(img1 * img1, window, padding = window_size // 2, groups=channel) - mu1_sq
+        sigma2_sq = F.conv2d(img2 * img2, window, padding = window_size // 2, groups=channel) - mu2_sq
+        sigma12   = F.conv2d(img1 * img2, window, padding = window_size // 2, groups=channel) - mu1_mu2
+        
+        c1 = 0.01 ** 2
+        c2 = 0.03 ** 2
+        ssim_map = ((2 * mu1_mu2 + c1) * (2 * sigma12 + c2)) / ((mu1_sq + mu2_sq + c1) * (sigma1_sq + sigma2_sq + c2))
+        
+        if size_average:
+            return ssim_map.mean()
+        else:
+            return ssim_map.mean(1).mean(1).mean(1)
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        b, c, h, w = input.shape
+        
+        if c == self._channel and self._window.data.type() == input.data.type():
+            window = self._window
+        else:
+            window        = self.create_window(self._window_size, c)
+            window        = window.to(input.device)
+            window        = window.type_as(input)
+            self._window  = window
+            self._channel = c
+        
+        loss = 1.0 - self._ssim(input, target, window, self._window_size, c, self._size_average)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+    
+    
 @LOSSES.register(name="spatial_consistency_loss")
 class SpatialConsistencyLoss(base.Loss):
     """Spatial Consistency Loss :math:`\mathcal{L}_{spa}` encourages spatial
@@ -1333,5 +1050,139 @@ class SpatialConsistencyLoss(base.Loss):
         loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         loss = self.loss_weight * loss
         return loss
+
+
+@LOSSES.register(name="std_loss")
+class StdLoss(base.Loss):
+    """Loss on the variance of the image. Works in the grayscale. If the image
+    is smooth, gets zero.
+    """
+    
+    def __init__(
+        self,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        blur      = (1 / 25) * np.ones((5, 5))
+        blur      = blur.reshape(1, 1, blur.shape[0], blur.shape[1])
+        self.blur = nn.Parameter(data=torch.cuda.FloatTensor(blur), requires_grad=False)
+        self.mse  = base.MSELoss()
+        
+        image       = np.zeros((5, 5))
+        image[2, 2] = 1
+        image       = image.reshape(1, 1, image.shape[0], image.shape[1])
+        self.image  = nn.Parameter(data=torch.cuda.FloatTensor(image), requires_grad=False)
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        x    = input
+        x    = torch.mean(x, 1, keepdim=True)
+        if self.image.device != x.device:
+            self.image = self.image.to(x.device)
+        loss = self.mse(F.conv2d(x, self.image), F.conv2d(x, self.blur))
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        loss = self.loss_weight * loss
+        return loss
+
+
+@LOSSES.register(name="vgg_loss")
+class VGGLoss(base.Loss):
+    
+    class VGG19(nn.Module):
+        
+        def __init__(self, requires_grad: bool = False):
+            super().__init__()
+            vgg_pretrained_features = torchvision.models.vgg19(pretrained=True).features
+            self.slice1 = nn.Sequential()
+            self.slice2 = nn.Sequential()
+            self.slice3 = nn.Sequential()
+            self.slice4 = nn.Sequential()
+            self.slice5 = nn.Sequential()
+            for x in range(2):
+                self.slice1.add_module(str(x), vgg_pretrained_features[x])
+            for x in range(2, 7):
+                self.slice2.add_module(str(x), vgg_pretrained_features[x])
+            for x in range(7, 12):
+                self.slice3.add_module(str(x), vgg_pretrained_features[x])
+            for x in range(12, 21):
+                self.slice4.add_module(str(x), vgg_pretrained_features[x])
+            for x in range(21, 30):
+                self.slice5.add_module(str(x), vgg_pretrained_features[x])
+            if not requires_grad:
+                for param in self.parameters():
+                    param.requires_grad = False
+        
+        def forward(self, input: torch.Tensor):
+            x       = input
+            h_relu1 = self.slice1(x)
+            h_relu2 = self.slice2(h_relu1)
+            h_relu3 = self.slice3(h_relu2)
+            h_relu4 = self.slice4(h_relu3)
+            h_relu5 = self.slice5(h_relu4)
+            out     = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
+            return out
+    
+    def __init__(
+        self,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "sum",
+    ):
+        super().__init__(reduction=reduction)
+        self.vgg       = self.VGG19()
+        # self.criterion = nn.L1Loss()
+        self.criterion = nn.L1Loss(reduction="sum")
+        self.weights   = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        input_vgg  = self.vgg(input)
+        target_vgg = self.vgg(target)
+        loss       = 0
+        for i in range(len(input_vgg)):
+            # print(x_vgg[i].shape, y_vgg[i].shape)
+            loss += self.weights[i] * self.criterion(input_vgg[i].detach(), target_vgg[i].detach())
+        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        loss = self.loss_weight * loss
+        return loss
+
+
+@LOSSES.register(name="vgg_charbonnier_loss")
+class VGGCharbonnierLoss(base.Loss):
+    """VGG Charbonnier Loss.
+    
+    See Also:
+        :class:`torchmetrics.image.LearnedPerceptualImagePatchSimilarity`.
+    """
+    
+    def __init__(
+        self,
+        vgg_loss_weight : float = 1.0,
+        char_loss_weight: float = 1.0,
+        reduction       : Literal["none", "mean", "sum"] = "mean",
+    ):
+        super().__init__(reduction=reduction)
+        self.vgg_loss_weight  = vgg_loss_weight
+        self.char_loss_weight = char_loss_weight
+        self.vgg_loss         = VGGLoss(reduction=reduction)
+        self.char_loss        = base.CharbonnierLoss(reduction=reduction)
+    
+    def __str__(self) -> str:
+        return f"vgg_charbonnier_loss"
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        vgg_loss  =  self.vgg_loss(input=input, target=target)
+        char_loss = self.char_loss(input=input, target=target)
+        # vgg_loss  = base.reduce_loss(loss=vgg_loss,  reduction=self.reduction)
+        # char_loss = base.reduce_loss(loss=char_loss, reduction=self.reduction)
+        loss      = vgg_loss * self.vgg_loss_weight + char_loss * self.char_loss_weight
+        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
+
+TVLoss  = TotalVariationLoss
+TVALoss = TotalVariationALoss
 
 # endregion

@@ -9,7 +9,7 @@ __all__ = [
     "ZeroDCE",
 ]
 
-from typing import Any
+from typing import Any, Literal
 
 import torch
 
@@ -24,12 +24,7 @@ console = core.console
 # region Loss
 
 class Loss(nn.Loss):
-    """Loss = SpatialConsistencyLoss
-              + ExposureControlLoss
-              + ColorConstancyLoss
-              + IlluminationSmoothnessLoss
-    """
-    
+
     def __init__(
         self,
         spa_weight    : float = 1.0,
@@ -37,15 +32,15 @@ class Loss(nn.Loss):
         exp_mean_val  : float = 0.6,
         exp_weight    : float = 10.0,
         col_weight    : float = 5.0,
-        tv_weight     : float = 200.0,
-        reduction     : str   = "mean",
+        tva_weight    : float = 200.0,
+        reduction     : Literal["none", "mean", "sum"] = "mean",
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.spa_weight = spa_weight
         self.exp_weight = exp_weight
         self.col_weight = col_weight
-        self.tv_weight  = tv_weight
+        self.tva_weight = tva_weight
         
         self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
         self.loss_exp = nn.ExposureControlLoss(
@@ -54,30 +49,28 @@ class Loss(nn.Loss):
             mean_val   = exp_mean_val,
         )
         self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv  = nn.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_tva = nn.TotalVariationALoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
     
     def forward(
         self,
-        input : torch.Tensor | list[torch.Tensor],
-        target: list[torch.Tensor],
+        input  : torch.Tensor,
+        adjust : torch.Tensor,
+        enhance: torch.Tensor,
         **_
     ) -> torch.Tensor:
-        if isinstance(target, list | tuple):
-            a       = target[-2]
-            enhance = target[-1]
-        else:
-            raise TypeError()
         loss_spa = self.loss_spa(input=enhance, target=input)
         loss_exp = self.loss_exp(input=enhance)
         loss_col = self.loss_col(input=enhance)
-        loss_tv  = self.loss_tv(input=a)
-        loss     = self.spa_weight * loss_spa \
-                   + self.exp_weight * loss_exp \
-                   + self.col_weight * loss_col \
-                   + self.tv_weight * loss_tv
+        loss_tva = self.loss_tva(input=adjust)
+        loss     = (
+              self.spa_weight * loss_spa
+            + self.exp_weight * loss_exp
+            + self.col_weight * loss_col
+            + self.tva_weight * loss_tva
+        )
         return loss
 
 # endregion
@@ -179,8 +172,9 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         pred = self.forward(input=input, *args, **kwargs)
-        loss = self.loss(input, pred) if self.loss else None
-        return pred[-1], loss
+        adjust, enhance = pred
+        loss = self.loss(input, adjust, enhance)
+        return enhance, loss
 
     def forward(
         self,
