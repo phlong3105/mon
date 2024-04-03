@@ -62,7 +62,7 @@ def load_config(config: Any) -> dict:
             spec   = importlib.util.spec_from_file_location(str(config.stem), str(config))
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            data  = {key: value for key, value in module.__dict__.items() if not key.startswith('__')}
+            data  = {key: value for key, value in module.__dict__.items() if not key.startswith("__")}
         else:
             data = file.read_from_file(path=config)
     else:

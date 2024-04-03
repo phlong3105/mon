@@ -16,7 +16,7 @@ import torchvision
 from PIL import Image
 
 import src.model as mmodel
-from mon import core, data as d, nn
+from mon import core, data as d, nn, proc
 
 console       = core.console
 _current_file = core.Path(__file__).absolute()
@@ -82,11 +82,19 @@ def predict(args: argparse.Namespace):
                 data_lowlight = torch.from_numpy(data_lowlight).float()
                 data_lowlight = data_lowlight.permute(2, 0, 1)
                 data_lowlight = data_lowlight.cuda().unsqueeze(0)
-               
+                
+                if resize:
+                    h0, w0        = core.get_image_size(images)
+                    data_lowlight = proc.resize(input=data_lowlight, size=imgsz)
+                    # print(data_lowlight.shape)
+                    
                 start_time = time.time()
                 gray, color_hist, enhanced_image = color_net(data_lowlight)
                 run_time   = (time.time() - start_time)
                 
+                if resize:
+                    enhanced_image = proc.resize(input=enhanced_image, size=[h0, w0])
+                    
                 output_path = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time += run_time
@@ -148,7 +156,7 @@ def main(
     save_dir = save_dir  or root / "run" / "predict" / model
     save_dir = core.Path(save_dir)
     device   = core.parse_device(device)
-    imgsz    = core.parse_hw(imgsz)[0]
+    imgsz    = core.parse_hw(imgsz)
     
     # Update arguments
     args["root"]       = root

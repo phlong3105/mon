@@ -358,7 +358,7 @@ def main(
             data 	  = mon.to_list(data)
             data 	  = [data_[int(d)] if mon.is_int(d) else d for d in data]
         # Fullname
-        fullname    = mon.Path(config).stem
+        fullname    = mon.Path(config).stem if config not in [None, "None", ""] else model
         fullname    = click.prompt(click.style(f"Save name: {fullname}", fg="bright_green", bold=True), type=str, default=fullname)
         # Device
         devices_    = mon.list_devices()
