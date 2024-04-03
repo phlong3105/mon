@@ -19,9 +19,9 @@ def get_timestamp():
 
 
 def parse(args):
-    phase    = args.phase
+    phase = args.phase
     opt_path = args.config
-    gpu_ids  = args.gpu_ids
+    gpu_ids = args.gpu_ids
     # remove comments starting with '//'
     json_str = ''
     with open(opt_path, 'r') as f:

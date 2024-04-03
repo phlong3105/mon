@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# https://github.com/Ian0926/DCC-Net
+
 from __future__ import annotations
 
 import argparse
