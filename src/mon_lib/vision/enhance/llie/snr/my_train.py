@@ -54,7 +54,7 @@ def train(args: argparse.Namespace):
     
     # Override options with args
     opt = option.parse(args.opt, is_train=True)
-
+    
     experiments_root = save_dir
     opt["path"]["experiments_root"] = str(experiments_root)
     opt["path"]["models"]           = str(experiments_root / "weights")

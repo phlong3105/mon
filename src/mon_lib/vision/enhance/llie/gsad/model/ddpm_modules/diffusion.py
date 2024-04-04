@@ -17,6 +17,7 @@ from sklearn.cluster import SpectralClustering
 
 transform = transforms.Lambda(lambda t: (t + 1) / 2)
 
+
 def _warmup_beta(linear_start, linear_end, n_timestep, warmup_frac):
     betas = linear_end * np.ones(n_timestep, dtype=np.float64)
     warmup_time = int(n_timestep * warmup_frac)
@@ -192,7 +193,8 @@ class GaussianDiffusion(nn.Module):
             shape = x_in
             img = torch.randn(shape, device=device)
             ret_img = img
-            for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
+            for i in reversed(range(0, self.num_timesteps)):
+            # for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
                 img = self.p_sample(img, i)
                 if i % sample_inter == 0:
                     ret_img = torch.cat([ret_img, img], dim=0)
@@ -201,7 +203,8 @@ class GaussianDiffusion(nn.Module):
             shape = x.shape
             img = torch.randn(shape, device=device)
             ret_img = x
-            for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
+            for i in reversed(range(0, self.num_timesteps)):
+            # for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
                 img = self.p_sample(img, i, condition_x=x)
                 if i % sample_inter == 0:
                     ret_img = torch.cat([ret_img, img], dim=0)
@@ -226,7 +229,6 @@ class GaussianDiffusion(nn.Module):
             continuous_sqrt_alpha_cumprod * x_start +
             (1 - continuous_sqrt_alpha_cumprod**2).sqrt() * noise
         )
-
 
     def draw_features(self, x, savename):
         img = x[0, 0, :, :]
@@ -256,14 +258,12 @@ class GaussianDiffusion(nn.Module):
 
         return model_mean + noise_z * (0.5 * model_log_variance).exp()       
 
-
     def to_patches(sefl, data, kernel_size):
 
         patches = nn.Unfold(kernel_size=kernel_size, stride=kernel_size)(torch.mean(data, dim=1, keepdim=True))
         patches = patches.transpose(2,1)
 
         return patches
-
 
     def calcu_kmeans(self, data, num_clusters):
 

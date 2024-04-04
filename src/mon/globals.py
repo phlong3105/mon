@@ -41,8 +41,10 @@ __all__ = [
     "ROOT_DIR",
     "STRATEGIES",
     "ShapeCode",
+    "TORCH_FILE_FORMATS",
     "TRACKERS",
     "VIDEO_FILE_FORMATS",
+    "WEIGHTS_FILE_FORMATS",
     "ZOO_DIR",
     # Enum
     "AppleRGB",
@@ -626,10 +628,12 @@ class Split(DT.Enum):
 
 # region Constants
 
-CONFIG_FILE_FORMATS = [".config", ".cfg", ".yaml", ".yml", ".py", ".json", ".names", ".txt"]
-IMAGE_FILE_FORMATS  = [".arw", ".bmp", ".dng", ".jpg", ".jpeg", ".png", ".ppm", ".raf", ".tif", ".tiff"]
-VIDEO_FILE_FORMATS  = [".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv"]
-METRICS_EXTRA       = {
+CONFIG_FILE_FORMATS  = [".config", ".cfg", ".yaml", ".yml", ".py", ".json", ".names", ".txt"]
+IMAGE_FILE_FORMATS   = [".arw", ".bmp", ".dng", ".jpg", ".jpeg", ".png", ".ppm", ".raf", ".tif", ".tiff"]
+VIDEO_FILE_FORMATS   = [".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv"]
+TORCH_FILE_FORMATS   = [".pt", ".pth", ".weights", ".ckpt", ".tar", ".onnx"]
+WEIGHTS_FILE_FORMATS = [".pt", ".pth", ".onnx"]
+METRICS_EXTRA        = {
     # FR
     "ahiq"               : {"metric_mode": "FR", "lower_is_better": False, },
     "ckdn"               : {"metric_mode": "FR", "lower_is_better": False, },
@@ -701,9 +705,9 @@ METRICS_EXTRA       = {
     "tv"                 : {"metric_mode": "NR", "lower_is_better": False, },
     "uranker"            : {"metric_mode": "NR", "lower_is_better": False, },
 }
-DATASETS_EXTRA      = {
+DATASETS_EXTRA       = {
     # region detect
-    "aic24_fisheye8k": {
+        "aic24_fisheye8k": {
         "tasks"         : [Task.DETECT],
         "splits"        : [Split.TRAIN, Split.VAL, Split.TEST],
         "has_test_label": False,
@@ -880,6 +884,12 @@ MODELS_EXTRA = {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.UNSUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "enlightengan",
+                "torch_distributed_launch": True,
+            },
+            "gsad"             : {
+                "tasks"    : [Task.LLIE],
+                "schemes"  : [Scheme.SUPERVISED],
+                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "gsad",
                 "torch_distributed_launch": True,
             },
             "kind"             : {

@@ -1,19 +1,27 @@
 import logging
+import os
+import time
 from collections import OrderedDict
+
+import model.networks as networks
 import torch
 import torch.nn as nn
-import os
-import model.networks as networks
-from .base_model import BaseModel
+from thop import profile
 from torch.nn.parallel import DistributedDataParallel as DDP
+
+import mon
+from .base_model import BaseModel
 
 logger = logging.getLogger('base')
 
 
 class DDPM(BaseModel):
+    
     def __init__(self, opt):
         super(DDPM, self).__init__(opt)
-
+        
+        self.training = False
+        
         if opt['dist']:
             self.local_rank = torch.distributed.get_rank()
             torch.cuda.set_device(self.local_rank)
@@ -22,22 +30,20 @@ class DDPM(BaseModel):
         self.netG = self.set_device(networks.define_G(opt))
         if opt['dist']:
             self.netG.to(device)
-       
+        
         # self.netG.to(device)
         if not opt['uncertainty_train']:
-            self.netGU = self.set_device(networks.define_G(opt)) # uncertainty model
+            self.netGU = self.set_device(networks.define_G(opt))  # uncertainty model
             if opt['dist']:
                 self.netGU.to(device)
-       
 
         self.schedule_phase = None
         self.opt = opt
-
+        
         # set loss and load resume state
         self.set_loss()
-
-        self.set_new_noise_schedule(
-            opt['model']['beta_schedule']['train'], schedule_phase='train')
+        
+        self.set_new_noise_schedule(opt['model']['beta_schedule']['train'], schedule_phase='train')
         if self.opt['phase'] == 'train':
             self.netG.train()
             # find the parameters to optimize
@@ -49,17 +55,15 @@ class DDPM(BaseModel):
                         v.requires_grad = True
                         v.data.zero_()
                         optim_params.append(v)
-                        logger.info(
-                            'Params [{:s}] initialized to 0 and will optimize.'.format(k))
+                        logger.info('Params [{:s}] initialized to 0 and will optimize.'.format(k))
             else:
                 optim_params = list(self.netG.parameters())
 
-            self.optG = torch.optim.Adam(
-                optim_params, lr=opt['train']["optimizer"]["lr"])
+            self.optG = torch.optim.Adam(optim_params, lr=opt['train']["optimizer"]["lr"])
             self.log_dict = OrderedDict()
 
         if not opt['uncertainty_train'] and self.opt['phase'] == 'train':
-            self.netGU.load_state_dict(torch.load(self.opt['path']['resume_state']+'_gen.pth'), strict=True) # use uncertainty model for initialization 
+            self.netGU.load_state_dict(torch.load(self.opt['path']['resume_state']+'_gen.pth'), strict=True)  # use uncertainty model for initialization
             if opt['dist']:
                 self.netGU = DDP(self.netGU, device_ids=[self.local_rank], output_device=self.local_rank, find_unused_parameters=True)
 
@@ -72,13 +76,11 @@ class DDPM(BaseModel):
         else:
             self.load_network()
             if opt['dist']:
-                self.netG = DDP(self.netG, device_ids=[self.local_rank], output_device=self.local_rank,find_unused_parameters=True)
-        self.print_network()
+                self.netG = DDP(self.netG, device_ids=[self.local_rank], output_device=self.local_rank, find_unused_parameters=True)
+        # self.print_network()
 
     def feed_data(self, data):
-
         dic = {}
-
         if self.opt['dist']:
             dic = {}
             dic['LQ'] = data['LQ'].to(self.local_rank)
@@ -87,7 +89,6 @@ class DDPM(BaseModel):
         else:
             dic['LQ'] = data['LQ']
             dic['GT'] = data['GT']
-
             self.data = self.set_device(dic)
 
     def optimize_parameters(self):
@@ -104,29 +105,28 @@ class DDPM(BaseModel):
             b, c, h, w = self.data['LQ'].shape
 
             num_clusters = 6
-            l_pix = l_pix.sum()/int(b*c*h*w)
-            l_gsad = l_gsad.sum()/int(b*num_clusters)
+            l_pix  = l_pix.sum()  / int(b * c * h * w)
+            l_gsad = l_gsad.sum() / int(b * num_clusters)
             # l_svd = l_svd.sum()/int(b*c*h*w)
-            loss = l_pix + l_gsad
+            loss   = l_pix + l_gsad
             loss.backward()
             self.optG.step()
 
             # set log
             self.log_dict['total_loss'] = loss.item()
-            self.log_dict['l_1'] = l_pix.item()
-            self.log_dict['l_gsad'] = l_gsad.item()
+            self.log_dict['l_1']        = l_pix.item()
+            self.log_dict['l_gsad']     = l_gsad.item()
         else:
             l_pix = self.netG(self.data)
 
             b, c, h, w = self.data['LQ'].shape
 
-            l_pix = l_pix.sum()/int(b*c*h*w)
+            l_pix = l_pix.sum() / int(b * c * h * w)
             l_pix.backward()
             self.optG.step()
 
             # set log
             self.log_dict['l_u'] = l_pix.item()
-
 
     def test(self, continous=False):
         self.netG.eval()
@@ -134,7 +134,6 @@ class DDPM(BaseModel):
             if isinstance(self.netG, nn.DataParallel):
                 self.SR = self.netG.module.super_resolution(
                     self.data['LQ'], continous)
-                
             else:
                 if self.opt['dist']:
                     self.SR = self.netG.module.super_resolution(self.data['LQ'], continous)
@@ -218,8 +217,7 @@ class DDPM(BaseModel):
     def print_network(self):
         s, n = self.get_network_description(self.netG)
         if isinstance(self.netG, nn.DataParallel):
-            net_struc_str = '{} - {}'.format(self.netG.__class__.__name__,
-                                             self.netG.module.__class__.__name__)
+            net_struc_str = '{} - {}'.format(self.netG.__class__.__name__, self.netG.module.__class__.__name__)
         else:
             net_struc_str = '{}'.format(self.netG.__class__.__name__)
 
@@ -243,29 +241,24 @@ class DDPM(BaseModel):
             state_dict[key] = param.cpu()
         torch.save(state_dict, gen_path)
         # opt
-        opt_state = {'epoch': epoch, 'iter': iter_step,
-                     'scheduler': None, 'optimizer': None}
+        opt_state = {'epoch': epoch, 'iter': iter_step, 'scheduler': None, 'optimizer': None}
         opt_state['optimizer'] = self.optG.state_dict()
         torch.save(opt_state, opt_path)
 
         if self.opt['uncertainty_train']:
             uncertainty_save_dir = './checkpoints/uncertainty/'
             os.makedirs(uncertainty_save_dir, exist_ok=True)
-            ut_gen_path = os.path.join(
-                './checkpoints/uncertainty/', 'latest_gen.pth'.format(iter_step, epoch))
-            ut_opt_path = os.path.join(
-                './checkpoints/uncertainty/', 'latest_opt.pth'.format(iter_step, epoch))
+            ut_gen_path = os.path.join('./checkpoints/uncertainty/', 'latest_gen.pth'.format(iter_step, epoch))
+            ut_opt_path = os.path.join('./checkpoints/uncertainty/', 'latest_opt.pth'.format(iter_step, epoch))
             torch.save(state_dict, ut_gen_path)
             torch.save(opt_state, ut_opt_path)
 
-        logger.info(
-            'Saved model in [{:s}] ...'.format(gen_path))
+        logger.info('Saved model in [{:s}] ...'.format(gen_path))
 
     def load_network(self):
         load_path = self.opt['path']['resume_state']
         if load_path is not None:
-            logger.info(
-                'Loading pretrained model for G [{:s}] ...'.format(load_path))
+            logger.info('Loading pretrained model for G [{:s}] ...'.format(load_path))
             gen_path = '{}_gen.pth'.format(load_path)
             opt_path = '{}_opt.pth'.format(load_path)
             # gen
@@ -275,15 +268,34 @@ class DDPM(BaseModel):
 
             # network = nn.DataParallel(network).cuda()
 
-            network.load_state_dict(torch.load(
-                gen_path), strict=(not self.opt['model']['finetune_norm']))
-            # network.load_state_dict(torch.load(
-            #     gen_path), strict=False)
+            network.load_state_dict(torch.load(gen_path), strict=(not self.opt['model']['finetune_norm']))
+            # network.load_state_dict(torch.load(gen_path), strict=False)
             if self.opt['phase'] == 'train':
                 # optimizer
                 # opt = torch.load(opt_path)
                 # self.optG.load_state_dict(opt['optimizer'])
                 # self.begin_step = opt['iter']
                 # self.begin_epoch = opt['epoch']
-                self.begin_step = 0
+                self.begin_step  = 0
                 self.begin_epoch = 0
+    
+    def forward(self):
+        self.test()
+    
+    def measure_efficiency_score(self, image_size=512, channels=3, runs=100):
+        h, w  = mon.parse_hw(image_size)
+        input = torch.rand(1, channels, h, w).cuda()
+        data  = {
+            "LQ" : input,
+            "GT" : input,
+        }
+        self.feed_data(data)
+        flops, params = profile(self, inputs=(), verbose=False)
+        g_flops       = flops  * 1e-9
+        m_params      = params * 1e-6
+        start_time    = time.time()
+        # for i in range(runs):
+        #    _ = self.get_sr(input)
+        runtime  = time.time() - start_time
+        avg_time = runtime / runs
+        return flops, params, avg_time

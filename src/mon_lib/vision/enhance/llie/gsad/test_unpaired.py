@@ -23,7 +23,7 @@ def main():
     #### options
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, help='Path to option YMAL file.',
+    parser.add_argument('--dataset', type=str, help='Path to option YAML file.',
                             default='./config/dataset.yml') # 
     parser.add_argument('--input', type=str, help='testing the unpaired image',
                             default='images/unpaired/')
@@ -54,7 +54,7 @@ def main():
     #### distributed training settings
     opt['dist'] = False
     rank = -1
-    print('Disabled distributed training.')
+    # print('Disabled distributed training.')
 
     #### mkdir and loggers
     if rank <= 0:  # normal training (rank -1) OR distributed training (rank 0)
@@ -111,13 +111,13 @@ def main():
         val_data['GT'] = raw_img
         diffusion.feed_data(val_data)
         diffusion.test(continous=False)
-
+        
         visuals = diffusion.get_current_visuals()
         
         normal_img = Metrics.tensor2img(visuals['HQ']) 
         normal_img = cv2.resize(normal_img, (img_w, img_h))
         ll_img = Metrics.tensor2img(visuals['LQ']) 
-
+        
         llie_img_mode = 'single'
         if llie_img_mode == 'single':
             # util.save_img(

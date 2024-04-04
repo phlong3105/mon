@@ -5,11 +5,15 @@ import torch.nn.functional as F
 from inspect import isfunction
 import cv2
 import numpy as np
+
+
 def exists(x):
     return x is not None
 
+
 # PositionalEncoding Source： https://github.com/lmnt-com/wavegrad/blob/master/src/wavegrad/model.py
 class PositionalEncoding(nn.Module):
+    
     def __init__(self, dim):
         super().__init__()
         self.dim = dim
@@ -24,7 +28,9 @@ class PositionalEncoding(nn.Module):
             [torch.sin(encoding), torch.cos(encoding)], dim=-1)
         return encoding
 
+
 class FeatureWiseAffine(nn.Module):
+    
     def __init__(self, in_channels, out_channels, use_affine_level=False):
         super(FeatureWiseAffine, self).__init__()
         self.use_affine_level = use_affine_level
@@ -42,18 +48,22 @@ class FeatureWiseAffine(nn.Module):
             x = x + self.noise_func(noise_embed).view(batch, -1, 1, 1)
         return x
 
+
 def default(val, d):
     if exists(val):
         return val
     return d() if isfunction(d) else d
 
+
 # model
 class Swish(nn.Module):
+    
     def forward(self, x):
         return x * torch.sigmoid(x)
 
 
 class Upsample(nn.Module):
+    
     def __init__(self, dim):
         super().__init__()
         self.up = nn.Upsample(scale_factor=2, mode="nearest")
@@ -64,6 +74,7 @@ class Upsample(nn.Module):
 
 
 class Downsample(nn.Module):
+    
     def __init__(self, dim):
         super().__init__()
         self.conv = nn.Conv2d(dim, dim, 3, 2, 1)
@@ -74,6 +85,7 @@ class Downsample(nn.Module):
 
 # building block modules
 class Block(nn.Module):
+    
     def __init__(self, dim, dim_out, groups=32, dropout=0):
         super().__init__()
         self.block = nn.Sequential(
@@ -88,6 +100,7 @@ class Block(nn.Module):
 
 
 class ResnetBlock(nn.Module):
+    
     def __init__(self, dim, dim_out, time_emb_dim=None, dropout=0, norm_groups=32):
         super().__init__()
         self.mlp = nn.Sequential(
@@ -110,6 +123,7 @@ class ResnetBlock(nn.Module):
 
 
 class SelfAttention(nn.Module):
+    
     def __init__(self, in_channel, n_head=1, norm_groups=32):
         super().__init__()
 
@@ -142,6 +156,7 @@ class SelfAttention(nn.Module):
 
 
 class ResnetBlocWithAttn(nn.Module):
+    
     def __init__(self, dim, dim_out, *, time_emb_dim=None, norm_groups=32, dropout=0, with_attn=False):
         super().__init__()
         self.with_attn = with_attn
@@ -158,6 +173,7 @@ class ResnetBlocWithAttn(nn.Module):
 
 
 class UNet(nn.Module):
+    
     def __init__(
         self,
         in_channel=6,
@@ -183,7 +199,6 @@ class UNet(nn.Module):
         else:
             noise_level_channel = None
             self.noise_level_mlp = None
-
 
         num_mults = len(channel_mults)
         pre_channel = inner_channel
@@ -239,6 +254,7 @@ class UNet(nn.Module):
             nn.ELU()
         ])
         # self.swish = Swish()
+        
     def default_conv(in_channels, out_channels, kernel_size, bias=True):
         return nn.Conv2d(
             in_channels, out_channels, kernel_size,

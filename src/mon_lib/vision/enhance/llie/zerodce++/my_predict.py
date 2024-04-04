@@ -31,18 +31,19 @@ def run_infer(weights, image_path: str):
     data_lowlight = Image.open(image_path).convert("RGB")
     data_lowlight = (np.asarray(data_lowlight) / 255.0)
     data_lowlight = torch.from_numpy(data_lowlight).float()
-    h = (data_lowlight.shape[0] // scale_factor) * scale_factor
-    w = (data_lowlight.shape[1] // scale_factor) * scale_factor
-    data_lowlight = data_lowlight[0:h, 0:w, :]
+    h0, w0 = data_lowlight.shape[0], data_lowlight.shape[1]
+    h1     = (h0 // scale_factor) * scale_factor
+    w1     = (w0 // scale_factor) * scale_factor
+    data_lowlight = data_lowlight[0:h1, 0:w1, :]
     data_lowlight = data_lowlight.permute(2, 0, 1)
     data_lowlight = data_lowlight.cuda().unsqueeze(0)
 
-    DCE_net    = model.enhance_net_nopool(scale_factor).cuda()
+    DCE_net = model.enhance_net_nopool(scale_factor).cuda()
     DCE_net.load_state_dict(torch.load(weights))
-    start_time = time.time()
+    start_time     = time.time()
     enhanced_image, params_maps = DCE_net(data_lowlight)
-    run_time   = (time.time() - start_time)
-    # print(run_time)
+    run_time       = (time.time() - start_time)
+    enhanced_image = mon.resize(input=enhanced_image, size=[h0, w0])
     '''
     image_path  = image_path.replace("test_data", "result_Zero_DCE++")
     result_path = image_path

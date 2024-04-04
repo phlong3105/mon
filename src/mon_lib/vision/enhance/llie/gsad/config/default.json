@@ -1,10 +1,9 @@
 {
-    "name"   : "lol_v1_test",
+    "name"   : "test_unpaired",
     "phase"  : "test",
     "gpu_ids": [
         0
     ],
-    "seed": 4088,
     "path": {
         "log"         : "logs",
         "tb_logger"   : "tb_logger",
@@ -15,7 +14,7 @@
     "model": {
         "which_model_G": "ddpm",
         "finetune_norm": false,
-        "unet"         : {
+        "unet": {
             "in_channel"        : 6,
             "out_channel"       : 3,
             "inner_channel"     : 64,
@@ -41,9 +40,9 @@
             },
             "val": {
                 "schedule"    : "linear",
-                "n_timestep"  : 20,
-                "linear_start": 6e-4,
-                "linear_end"  : 8.8e-1
+                "n_timestep"  : 10,
+                "linear_start": 2e-3,
+                "linear_end"  : 9e-1
             }
         },
         "diffusion": {

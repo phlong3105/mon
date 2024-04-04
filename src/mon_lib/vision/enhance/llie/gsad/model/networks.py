@@ -82,7 +82,7 @@ def init_weights(net, init_type='kaiming', scale=1, std=0.02):
 # Generator
 def define_G(opt):
     model_opt = opt['model']
-    print(model_opt['which_model_G'])
+    # print(model_opt['which_model_G'])
     if model_opt['which_model_G'] == 'ddpm':
         from .ddpm_modules import diffusion, unet, diffusion_Pt
     if ('norm_groups' not in model_opt['unet']) or model_opt['unet']['norm_groups'] is None:
@@ -128,7 +128,7 @@ def define_G(opt):
 # Generator
 def define_GGG(opt):
     model_opt = opt['model']
-    print(model_opt['which_model_G'])
+    # print(model_opt['which_model_G'])
     if model_opt['which_model_G'] == 'ddpm':
         from .ddpm_modules import diffusion, unet
     if ('norm_groups' not in model_opt['unet']) or model_opt['unet']['norm_groups'] is None:

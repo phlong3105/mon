@@ -87,7 +87,6 @@ def predict(args: argparse.Namespace):
                 image       = np.asarray(image, np.float32).transpose((2, 0, 1)) / 255.0
                 image       = torch.from_numpy(image).float()
                 image       = image.cuda().unsqueeze(0)
-                
                 start_time  = time.time()
                 bright_low  = torch.mean(image)
                 bright_high = torch.ones_like(bright_low) * target_b + 0.5 * bright_low
@@ -95,10 +94,9 @@ def predict(args: argparse.Namespace):
                 _, _, enhanced_image = model(L=image, ratio=ratio)
                 # enhanced_image = enhanced_image.detach().cpu()[0]
                 run_time    = (time.time() - start_time)
-                
                 output_path = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time      += run_time
+                sum_time   += run_time
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")
     

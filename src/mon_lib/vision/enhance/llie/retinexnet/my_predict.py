@@ -57,8 +57,8 @@ def predict(args: argparse.Namespace):
     start_time = time.time()
     model.predict(
         image_paths,
-        res_dir=str(save_dir),
-        ckpt_dir=str(weights),
+        res_dir  = str(save_dir),
+        ckpt_dir = str(weights),
     )
     run_time   = (time.time() - start_time)
     avg_time   = float(run_time / len(image_paths))

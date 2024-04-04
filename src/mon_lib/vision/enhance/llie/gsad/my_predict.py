@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# https://github.com/jinnh/GSAD
+
 from __future__ import annotations
 
 import argparse
@@ -8,11 +10,12 @@ import logging
 import os
 import random
 import socket
+import time
 
 import click
 import cv2
 import torch
-import torchvision.transforms.functional as TF
+import torchvision.transforms.functional as F
 from PIL import Image
 from torchvision import transforms
 
@@ -29,149 +32,171 @@ _current_dir  = _current_file.parents[0]
 transform     = transforms.Lambda(lambda t: (t * 2) - 1)
 
 
-def predict():
-    #### options
+def predict(args: argparse.Namespace):
+    '''
     parser = argparse.ArgumentParser()
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, help='Path to option YMAL file.',
-                            default='./config/dataset.yml') # 
-    parser.add_argument('--input', type=str, help='testing the unpaired image',
-                            default='images/unpaired/')
-    parser.add_argument('--launcher', choices=['none', 'pytorch'], default='none',
-                        help='job launcher')
+    parser.add_argument('--dataset', type=str, help='Path to option YAML file.',  default='./config/dataset.yml')
+    parser.add_argument('--input',   type=str, help='testing the unpaired image', default='images/unpaired/')
+    parser.add_argument('--launcher', choices=['none', 'pytorch'], default='none', help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
     parser.add_argument('--tfboard', action='store_true')
-    parser.add_argument('-c', '--config', type=str, default='config/test_unpaired.json',
-                        help='JSON file for configuration')
-    parser.add_argument('-p', '--phase', type=str, choices=['train', 'val'],
-                        help='Run either train(training) or val(generation)', default='train')
+    parser.add_argument('-c', '--config', type=str, default='config/test_unpaired.json', help='JSON file for configuration')
+    parser.add_argument('-p', '--phase', type=str, choices=['train', 'val'], help='Run either train(training) or val(generation)', default='train')
     parser.add_argument('-gpu', '--gpu_ids', type=str, default="0")
     parser.add_argument('-debug', '-d', action='store_true')
     parser.add_argument('-enable_wandb', action='store_true')
     parser.add_argument('-log_wandb_ckpt', action='store_true')
     parser.add_argument('-log_eval', action='store_true')
-
     # parse configs
     args = parser.parse_args()
-    opt = Logger.parse(args)
-    # Convert to NoneDict, which return None for missing key.
-    opt = Logger.dict_to_nonedict(opt)
-
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-    opt['phase'] = 'test'
-
-    #### distributed training settings
-    opt['dist'] = False
+    '''
+    weights   = args.weights
+    weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    data      = args.data
+    save_dir  = args.save_dir
+    device    = args.device
+    launcher  = args.launcher
+    imgsz     = args.imgsz
+    resize    = args.resize
+    benchmark = args.benchmark
+    
+    device = device[0] if isinstance(device, list) else device
+    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
+    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+    
+    # Override options with args
+    opt           = Logger.parse(args)
+    opt           = Logger.dict_to_nonedict(opt)  # Convert to NoneDict, which return None for missing key.
+    opt["phase"]  = "test"
+    opt["device"] = device
+    
+    # Distributed training settings
+    opt["dist"] = False
     rank = -1
-    print('Disabled distributed training.')
-
-    #### mkdir and loggers
+    # print("Disabled distributed training.")
+    
+    # mkdir and loggers
     if rank <= 0:  # normal training (rank -1) OR distributed training (rank 0)
         # config loggers. Before it, the log will not work
-        util.setup_logger('val', opt['path']['log'], 'val_' + opt['name'], level=logging.INFO,
-                          screen=True, tofile=True)
-        logger = logging.getLogger('base')
-        logger.info(option.dict2str(opt))
-
-
-    util.setup_logger('base', opt['path']['log'], 'train', level=logging.INFO, screen=True)
-    logger = logging.getLogger('base')
-
+        util.setup_logger("val", opt["path"]["log"], "val_" + opt["name"], level=logging.INFO, screen=True, tofile=True)
+        logger = logging.getLogger("base")
+        # logger.info(option.dict2str(opt))
+    util.setup_logger("base", opt["path"]["log"], "train", level=logging.INFO, screen=True)
+    logger = logging.getLogger("base")
+    
     # convert to NoneDict, which returns None for missing keys
     opt = option.dict_to_nonedict(opt)
-
-    #### random seed
-    seed = opt['train']['manual_seed']
+    
+    # Random seed
+    seed = opt["train"]["manual_seed"]
     if seed is None:
         seed = random.randint(1, 10000)
-    if rank <= 0:
-        logger.info('Random seed: {}'.format(seed))
+    # if rank <= 0:
+        # logger.info("Random seed: {}".format(seed))
     util.set_random_seed(seed)
-
+    
     torch.backends.cudnn.benchmark = True
     # torch.backends.cudnn.deterministic = True
-
-
-    # model
+    
+    # Create model
+    opt["path"]["resume_state"] = str(weights)
     diffusion = Model.create_model(opt)
-    logger.info('Initial Model Finished')
-
-    result_path = '{}'.format(opt['path']['results'])
-    os.makedirs(result_path, exist_ok=True)
-
-    diffusion.set_new_noise_schedule(
-        opt['model']['beta_schedule']['val'], schedule_phase='val')
-
-    InputPath = args.input
-    Image_names = natsort.natsorted(os.listdir(InputPath), alg=natsort.ns.PATH)
-
-    for i in range(len(Image_names)):
-
-        path = InputPath + Image_names[i]
-        raw_img = Image.open(path).convert('RGB')
-        img_w = raw_img.size[0]
-        img_h = raw_img.size[1]
-        raw_img = transforms.Resize((img_h // 16 * 16, img_w // 16 * 16))(raw_img)
-
-        raw_img = transform(TF.to_tensor(raw_img)).unsqueeze(0).cuda()
-
-        val_data = {}
-        val_data['LQ'] = raw_img
-        val_data['GT'] = raw_img
-        diffusion.feed_data(val_data)
-        diffusion.test(continous=False)
-
-        visuals = diffusion.get_current_visuals()
-        
-        normal_img = Metrics.tensor2img(visuals['HQ']) 
-        normal_img = cv2.resize(normal_img, (img_w, img_h))
-        ll_img = Metrics.tensor2img(visuals['LQ']) 
-
-        llie_img_mode = 'single'
-        if llie_img_mode == 'single':
-            # util.save_img(
-            #     ll_img, '{}/{}_input.png'.format(result_path, idx))
-            util.save_img(
-                normal_img, '{}/{}_normal.png'.format(result_path, i+1))
-        else:
-            util.save_img(
-                normal_img, '{}/{}_{}_normal_process.png'.format(result_path, i))
-            util.save_img(
-                Metrics.tensor2img(visuals['HQ'][-1]), '{}/{}_normal.png'.format(result_path, i))
-            normal_img = Metrics.tensor2img(visuals['HQ'][-1])
+    diffusion.set_new_noise_schedule(opt["model"]["beta_schedule"]["val"], schedule_phase="val")
+    # logger.info("Initial Model Finished")
+    
+    # Measure efficiency score
+    if benchmark:
+        flops, params, avg_time = diffusion.measure_efficiency_score(image_size=imgsz)
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
+    
+    # Data I/O
+    console.log(f"{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Predicting
+    with torch.no_grad():
+        sum_time = 0
+        with mon.get_progress_bar() as pbar:
+            for images, target, meta in pbar.track(
+                sequence    = data_loader,
+                total       = len(data_loader),
+                description = f"[bright_yellow] Predicting"
+            ):
+                image_path  = meta["path"]
+                raw_img     = Image.open(image_path).convert("RGB")
+                w, h        = raw_img.size[0], raw_img.size[1]
+                raw_img     = transforms.Resize((h // 16 * 16, w // 16 * 16))(raw_img)
+                # raw_img     = transforms.Resize(((h // 16 * 16) // 2, (w // 16 * 16) // 2))(raw_img)  # For large image
+                raw_img     = transform(F.to_tensor(raw_img)).unsqueeze(0).cuda()
+                start_time  = time.time()
+                diffusion.feed_data(
+                    data = {
+                        "LQ": raw_img,
+                        "GT": raw_img,
+                    }
+                )
+                diffusion.test(continous=False)
+                run_time    = (time.time() - start_time)
+                visuals     = diffusion.get_current_visuals()
+                normal_img  = Metrics.tensor2img(visuals["HQ"])
+                normal_img  = cv2.resize(normal_img, (w, h))
+                output_path = save_dir / image_path.name
+                util.save_img(normal_img, str(output_path))
+                sum_time   += run_time
+        avg_time = float(sum_time / len(data_loader))
+        console.log(f"Average time: {avg_time}")
 
 
 # region Main
 
 @click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
+@click.option("--root",           type=str, default=None, help="Project root.")
+@click.option("--config",         type=str, default=None, help="Model config.")
+@click.option("--weights",        type=str, default=None, help="Weights paths.")
+@click.option("--model",          type=str, default=None, help="Model name.")
+@click.option("--data",           type=str, default=None, help="Source data directory.")
+@click.option("--fullname",       type=str, default=None, help="Save results to root/run/predict/fullname.")
+@click.option("--save-dir",       type=str, default=None, help="Optional saving directory.")
+@click.option("--device",         type=str, default=None, help="Running devices.")
+@click.option("--local-rank",     type=int, default=0)
+@click.option("--launcher",       type=click.Choice(["none", "pytorch"]), default="none", help="Job launcher.")
+@click.option("--phase",          type=click.Choice(["train", "val"]), default="train", help="Run either train(training) or val(generation).")
+@click.option("--imgsz",          type=int, default=None, help="Image sizes.")
+@click.option("--resize",         is_flag=True)
+@click.option("--benchmark",      is_flag=True)
+@click.option("--save-image",     is_flag=True)
+@click.option("--tfboard",        is_flag=True)
+@click.option("--debug",          is_flag=True)
+@click.option("--enable_wandb",   is_flag=True)
+@click.option("--log-wandb-ckpt", is_flag=True)
+@click.option("--log-eval",       is_flag=True)
+@click.option("--verbose",        is_flag=True)
 def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
+    root          : str,
+    config        : str,
+    weights       : str,
+    model         : str,
+    data          : str,
+    fullname      : str,
+    save_dir      : str,
+    device        : str,
+    local_rank    : int,
+    launcher      : str,
+    phase         : str,
+    imgsz         : int,
+    resize        : bool,
+    benchmark     : bool,
+    save_image    : bool,
+    tfboard       : bool,
+    debug         : bool,
+    enable_wandb  : bool,
+    log_wandb_ckpt: bool,
+    log_eval      : bool,
+    verbose       : bool,
 ) -> str:
     hostname = socket.gethostname().lower()
     
@@ -197,20 +222,28 @@ def main(
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
-    args["root"]       = root
-    args["config"]     = config
-    args["weights"]    = weights
-    args["model"]      = model
-    args["data"]       = data
-    args["project"]    = project
-    args["name"]       = fullname
-    args["save_dir"]   = save_dir
-    args["device"]     = device
-    args["imgsz"]      = imgsz
-    args["resize"]     = resize
-    args["benchmark"]  = benchmark
-    args["save_image"] = save_image
-    args["verbose"]    = verbose
+    args["root"]           = root
+    args["config"]         = config
+    args["weights"]        = weights
+    args["model"]          = model
+    args["data"]           = data
+    args["project"]        = project
+    args["name"]           = fullname
+    args["save_dir"]       = save_dir
+    args["device"]         = device
+    args["local_rank"]     = local_rank
+    args["launcher"]       = launcher
+    args["phase"]          = phase
+    args["imgsz"]          = imgsz
+    args["resize"]         = resize
+    args["benchmark"]      = benchmark
+    args["save_image"]     = save_image
+    args["tfboard"]        = tfboard
+    args["debug"]          = debug
+    args["enable_wandb"]   = enable_wandb
+    args["log_wandb_ckpt"] = log_wandb_ckpt
+    args["log_eval"]       = log_eval
+    args["verbose"]        = verbose
     args = argparse.Namespace(**args)
     
     predict(args)

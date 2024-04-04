@@ -33,8 +33,7 @@ def parse(args):
     # set log directory
     if args.debug:
         opt['name'] = 'debug_{}'.format(opt['name'])
-    experiments_root = os.path.join(
-        'experiments', '{}_{}'.format(opt['name'], get_timestamp()))
+    experiments_root = os.path.join('experiments', '{}_{}'.format(opt['name'], get_timestamp()))
     opt['path']['experiments_root'] = experiments_root
     for key, path in opt['path'].items():
         if 'resume' not in key and 'experiments' not in key:
@@ -45,13 +44,16 @@ def parse(args):
     opt['phase'] = phase
 
     # export CUDA_VISIBLE_DEVICES
-    if gpu_ids is not None:
+    if isinstance(gpu_ids, str):
         opt['gpu_ids'] = [int(id) for id in gpu_ids.split(',')]
-        gpu_list = gpu_ids
+        gpu_list = opt['gpu_ids']
+    elif isinstance(gpu_ids, list):
+        opt['gpu_ids'] = [int(id) for id in gpu_ids]
+        gpu_list = opt['gpu_ids']
     else:
         gpu_list = ','.join(str(x) for x in opt['gpu_ids'])
-    os.environ['CUDA_VISIBLE_DEVICES'] = gpu_list
-    print('export CUDA_VISIBLE_DEVICES=' + gpu_list)
+    os.environ['CUDA_VISIBLE_DEVICES'] = ','.join(str(x) for x in opt['gpu_ids'])
+    # print('export CUDA_VISIBLE_DEVICES=' + ','.join(str(x) for x in opt['gpu_ids']))
     if len(gpu_list) > 1:
         opt['distributed'] = True
     else:

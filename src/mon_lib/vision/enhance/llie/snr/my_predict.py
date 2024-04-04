@@ -53,14 +53,7 @@ def predict(args: argparse.Namespace):
     
     # Measure efficiency score
     if benchmark:
-        flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = model,
-            image_size = imgsz,
-            channels   = 3,
-            runs       = 100,
-            use_cuda   = True,
-            verbose    = False,
-        )
+        flops, params, avg_time = model.measure_efficiency_score(image_size=imgsz)
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
@@ -83,8 +76,9 @@ def predict(args: argparse.Namespace):
                 image_path = meta["path"]
                 image      = dutil.read_img(None, str(image_path))
                 image      = image[:, :, ::-1]
-                h, w, c    = image.shape
-                image      = cv2.resize(image, (600, 400))
+                h, w       = mon.get_image_size(image)
+                # image      = cv2.resize(image, (600, 400))
+                image      = mon.resize_divisible(image=image, divisor=32)
                 image_nf   = cv2.blur(image, (5, 5))
                 image_nf   = image_nf * 1.0 / 255.0
                 image_nf   = torch.from_numpy(np.ascontiguousarray(np.transpose(image_nf, (2, 0, 1)))).float()

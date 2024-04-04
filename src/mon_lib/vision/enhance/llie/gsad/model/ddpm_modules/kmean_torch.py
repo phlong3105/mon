@@ -7,6 +7,7 @@ import math
 CUDA = torch.cuda.is_available()
 
 class kmeans_core:
+    
     def __init__(self, k, data_array, batch_size=8e5, epochs=200, all_cuda=True):
         """
         kmeans by batch
@@ -37,7 +38,6 @@ class kmeans_core:
         self.batch_size = int(batch_size)
         self.iters = math.ceil(self.data_array.shape[0]/self.batch_size)
         self.index = 0
-        
 
     def get_data(self,index):
         return self.tensor[index:index+self.batch_size,...]
@@ -115,7 +115,9 @@ class kmeans_core:
         self.cent = cent_sum / ct
         self.k = self.cent.size()[0]
 
+
 class iou_km(kmeans_core):
+    
     def __init__(self, k, data_array, batch_size=1000, epochs=200):
         super(iou_km, self).__init__(k, data_array, batch_size=batch_size, epochs=epochs)
 

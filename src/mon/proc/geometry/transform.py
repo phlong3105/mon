@@ -5,7 +5,11 @@
 
 from __future__ import annotations
 
+import cv2
+import numpy as np
 import PIL
+import torch
+from mon import core
 # noinspection PyUnresolvedReferences
 from kornia.geometry.transform import *
 
@@ -58,6 +62,7 @@ __all__ = [
     "remap",
     "rescale",
     "resize",
+    "resize_divisible",
     "rot180",
     "rotate",
     "rotate3d",
@@ -81,9 +86,9 @@ console = core.console
 
 # region Crop
 
-def crop_divisible(image: PIL.Image, d: int = 32):
-    """Make dimensions divisible by :param:`d`."""
-    new_size = (image.size[0] - image.size[0] % d, image.size[1] - image.size[1] % d)
+def crop_divisible(image: PIL.Image, divisor: int = 32):
+    """Make dimensions divisible by :param:`divisor`."""
+    new_size = (image.size[0] - image.size[0] % divisor, image.size[1] - image.size[1] % divisor)
     box      = [
         int((image.size[0] - new_size[0]) / 2),
         int((image.size[1] - new_size[1]) / 2),
@@ -92,5 +97,22 @@ def crop_divisible(image: PIL.Image, d: int = 32):
     ]
     image_cropped = image.crop(box=box)
     return image_cropped
+
+# endregion
+
+
+# region Resize
+
+def resize_divisible(image: torch.Tensor | np.ndarray, divisor: int = 32) -> torch.Tensor | np.ndarray:
+    """Resize an image to a size that is divisible by :param:`divisor`."""
+    h, w = core.get_image_size(image)
+    h, w = core.make_divisible((h, w), divisor)
+    if isinstance(image, torch.Tensor):
+        image = resize(image, size=(h, w))
+    elif isinstance(image, np.ndarray):
+        image = cv2.resize(image, dsize=(w, h))
+    else:
+        raise TypeError(f"Unsupported type {type(image)}")
+    return image
 
 # endregion

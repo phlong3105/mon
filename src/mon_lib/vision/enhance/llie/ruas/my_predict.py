@@ -101,12 +101,10 @@ def predict(args: argparse.Namespace):
                 # input           = Variable(images, volatile=True).to(device)
                 input           = images.to(device)
                 # console.log(f"Processing {u_name}")
-
                 start_time      = time.time()
                 u_list, r_list  = model(input)
                 run_time        = (time.time() - start_time)
                 sum_time       += run_time
-                
                 output_path     = save_dir / image_path.name
                 save_images(u_list[-1], str(output_path))
                 # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))

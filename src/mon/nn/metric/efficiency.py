@@ -42,6 +42,9 @@ def calculate_efficiency_score(
 	if use_cuda:
 		input = input.cuda()
 		model = model.cuda()
+		# device = torch.device("cuda:0")
+		# input  = input.to(device)
+		# model  = model.to(device)
 	
 	# Get FLOPs and Params
 	flops, params = thop.profile(deepcopy(model), inputs=(input, ), verbose=verbose)

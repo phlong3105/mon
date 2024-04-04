@@ -60,7 +60,7 @@ def main():
     #### distributed training settings
     opt['dist'] = False
     rank = -1
-    print('Disabled distributed training.')
+    # print('Disabled distributed training.')
 
     #### mkdir and loggers
     if rank <= 0:  # normal training (rank -1) OR distributed training (rank 0)

@@ -31,9 +31,27 @@ from mon.globals import MemoryUnit
 
 # region Parsing Ops
 
+def make_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]:
+    """Make an image divisible by a given stride.
+    
+    Args:
+        input: An image size, size, or shape.
+        divisor: The divisor. Default: ``32``.
+    
+    Returns:
+        A new image size.
+    """
+    h, w = parse_hw(input)
+    h    = int(math.ceil(h / divisor) * divisor)
+    w    = int(math.ceil(w / divisor) * divisor)
+    return h, w
+
+
+'''
 def make_divisible(x: int, divisor: int) -> int:
     """Make a number :param:`x` evenly divisible by a :param:`divisor`."""
     return math.ceil(x / divisor) * divisor
+'''
 
 
 def upcast(input: torch.Tensor | np.ndarray, keep_type: bool = False) -> torch.Tensor | np.ndarray:

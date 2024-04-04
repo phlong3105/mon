@@ -78,7 +78,7 @@ class Path(type(pathlib.Path())):
         """Return ``True`` if the current path is an ``.config`` or ``.cfg`` file.
         Otherwise, return ``False``.
         """
-        from mon import CONFIG_FILE_FORMATS
+        from mon.globals import CONFIG_FILE_FORMATS
         return (
             (self.is_file() if exist else True) and
             self.suffix.lower() in CONFIG_FILE_FORMATS
@@ -96,7 +96,7 @@ class Path(type(pathlib.Path())):
         """Return ``True`` if the current path is an image file. Otherwise,
         return ``False``.
         """
-        from mon import IMAGE_FILE_FORMATS
+        from mon.globals import IMAGE_FILE_FORMATS
         return (
             (self.is_file() if exist else True) and
             self.suffix.lower() in IMAGE_FILE_FORMATS
@@ -136,11 +136,13 @@ class Path(type(pathlib.Path())):
             - ``.pth.tar``
             - ``.weights``
             - ``.ckpt``
+            - ``.onnx``
             - Otherwise, return ``False``.
         """
+        from mon.globals import TORCH_FILE_FORMATS
         return (
             (self.is_file() if exist else True) and
-            self.suffix.lower() in [".pt", ".pth", ".weights", ".ckpt", ".tar", ".onnx"]
+            self.suffix.lower() in TORCH_FILE_FORMATS
         )
     
     def is_txt_file(self, exist: bool = True) -> bool:
@@ -166,7 +168,7 @@ class Path(type(pathlib.Path())):
         """Return ``True`` if the current path is a video file. Otherwise,
         return ``False``.
         """
-        from mon import VIDEO_FILE_FORMATS
+        from mon.globals import VIDEO_FILE_FORMATS
         return (
             (self.is_file() if exist else True) and
             self.suffix.lower() in VIDEO_FILE_FORMATS.values()
@@ -182,7 +184,11 @@ class Path(type(pathlib.Path())):
         """Return ``True`` if the current path is an ```.pt``` or ``.pth`` file.
         Otherwise, return ``False``.
         """
-        return (self.is_file() if exist else True) and self.suffix.lower() in [".pt", ".pth", ".onnx"]
+        from mon.globals import WEIGHTS_FILE_FORMATS
+        return (
+            (self.is_file() if exist else True) and
+            self.suffix.lower() in WEIGHTS_FILE_FORMATS
+        )
     
     def is_xml_file(self, exist: bool = True) -> bool:
         """Return ``True`` if the current path is an ``.xml`` file. Otherwise,
@@ -305,7 +311,7 @@ def get_files(regex: str, recursive: bool = False) -> list[Path]:
 
 def get_image_file(path: Path) -> Path:
     """Get the image of arbitrary extension from the given path."""
-    from mon import IMAGE_FILE_FORMATS
+    from mon.globals import IMAGE_FILE_FORMATS
     for ext in IMAGE_FILE_FORMATS:
         temp = path.parent / f"{path.stem}{ext}"
         if temp.is_image_file():
@@ -349,7 +355,7 @@ def get_config_file(path: Path) -> Path:
     """Get the configuration file of an arbitrary extension from the given path.
     Most common extensions are: [``.config``, ``.cfg``, ``.json``, ``.yaml``, or ``.yml``].
     """
-    from mon import CONFIG_FILE_FORMATS
+    from mon.globals import CONFIG_FILE_FORMATS
     for ext in CONFIG_FILE_FORMATS:
         temp           = path.parent / f"{path.stem}{ext}"
         temp_snakecase = path.parent / f"{humps.snakecase(path.stem)}{ext}"

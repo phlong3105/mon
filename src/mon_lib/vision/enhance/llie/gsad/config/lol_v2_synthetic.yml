@@ -1,25 +1,21 @@
-
-dataset: LOLv2
+dataset: lol_v2_synthetic
 
 #### datasets
 datasets:
   train:
-    dist: False
-    root: ./dataset/LOLv2
+    dist       : False
+    root       : llie/lol_v2_synthetic
     use_shuffle: true
-    n_workers: 1  
-    batch_size: 8
-    use_flip: true
-    use_crop: true
-    patch_size: 96
-    sub_data: Synthetic
+    n_workers  : 1
+    batch_size : 8
+    use_flip   : true
+    use_crop   : true
+    patch_size : 96
+    sub_data   : train
 
   val:
-    dist: False
-    root: ./dataset/LOLv2
-    n_workers: 1
-    batch_size: 1 
-    sub_data: Synthetic
-
-
-
+    dist      : False
+    root      : llie/lol_v2_synthetic
+    n_workers : 1
+    batch_size: 1
+    sub_data  : test

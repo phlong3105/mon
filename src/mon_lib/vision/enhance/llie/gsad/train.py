@@ -71,7 +71,7 @@ def main():
     if args.launcher == 'none':  # disabled distributed training
         opt['dist'] = False
         rank = -1
-        print('Disabled distributed training.')
+        # print('Disabled distributed training.')
     else:
         opt['dist'] = True
         # init_dist()

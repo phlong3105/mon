@@ -13,7 +13,6 @@ import torch
 import torch.nn as nn
 from models.loss import CharbonnierLoss, VGGLoss
 from thop import profile
-from torch.nn.parallel import DataParallel, DistributedDataParallel
 
 import mon
 from .base_model import BaseModel
@@ -268,7 +267,7 @@ class VideoBaseModel(BaseModel):
         self.test()
     
     def measure_efficiency_score(self, image_size=512, channels=3, runs=100):
-        h, w  = mon.get_hw(image_size)
+        h, w  = mon.parse_hw(image_size)
         input = torch.rand(1, channels, h, w).cuda()
         data  = {
             "idx": 0,
