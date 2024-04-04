@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 import my_test as test  # import test.py to get mAP after each epoch
 from models.yolo import Model
-from mon import core, DATA_DIR
+import mon
 from utils.datasets import create_dataloader
 from utils.general import (
     check_dataset, check_file, check_git_status, check_img_size, fitness, fitness_ap,
@@ -43,8 +43,8 @@ from utils.plots import plot_evolution, plot_images, plot_labels, plot_results
 from utils.torch_utils import intersect_dicts, ModelEMA, select_device, torch_distributed_zero_first
 
 logger        = logging.getLogger(__name__)
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 try:
@@ -60,7 +60,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     logger.info(f"Hyperparameters {hyp}")
     weights          = opt.weights
     weights          = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    save_dir         = core.Path(opt.save_dir)
+    save_dir         = mon.Path(opt.save_dir)
     epochs           = opt.epochs
     batch_size       = opt.batch_size
     total_batch_size = opt.total_batch_size
@@ -94,17 +94,17 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         val_      = data_dict["val"]
         test_     = data_dict["test"]
         if isinstance(train_, list):
-            train_ = [str(DATA_DIR / t) for t in train_]
+            train_ = [str(mon.DATA_DIR / t) for t in train_]
         elif train_:
-            train_ = str(DATA_DIR / train_)
+            train_ = str(mon.DATA_DIR / train_)
         if isinstance(val_, list):
-            val_   = [str(DATA_DIR / t) for t in val_]
+            val_   = [str(mon.DATA_DIR / t) for t in val_]
         elif val_:
-            val_   = str(DATA_DIR / val_)
+            val_   = str(mon.DATA_DIR / val_)
         if isinstance(test_, list):
-            test_  = [str(DATA_DIR / t) for t in test_]
+            test_  = [str(mon.DATA_DIR / t) for t in test_]
         elif test_:
-            test_  = str(DATA_DIR / test_)
+            test_  = str(mon.DATA_DIR / test_)
         data_dict["train"] = train_
         data_dict["val"]   = val_
         data_dict["test"]  = test_
@@ -200,7 +200,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
         wandb_run = wandb.init(
             config  = opt,
             resume  = "allow",
-            project = "YOLOR" if opt.project == "runs/train" else core.Path(opt.project).stem,
+            project = "YOLOR" if opt.project == "runs/train" else mon.Path(opt.project).stem,
             name    = save_dir.stem,
             id      = ckpt.get("wandb_id") if "ckpt" in locals() else None
         )
@@ -633,8 +633,8 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = core.load_config(config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args     = mon.load_config(config)
     
     # Prioritize input args --> config file args
     root     = root     or args.get("root")
@@ -653,18 +653,18 @@ def main(
     verbose  = verbose  or args.get("verbose")
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
-    model    = core.Path(model)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
+    model    = mon.Path(model)
     model    = model if model.exists() else _current_dir / "config" / model.name
     model    = str(model.config_file())
-    data     = core.Path(data)
+    data     = mon.Path(data)
     data     = data  if data.exists() else _current_dir / "data" / data.name
     data     = str(data.config_file())
     project  = root.name or project
     save_dir = save_dir  or root / "run" / "train" / fullname
-    save_dir = core.Path(save_dir)
-    hyp      = core.Path(hyp)
+    save_dir = mon.Path(save_dir)
+    hyp      = mon.Path(hyp)
     hyp      = hyp if hyp.exists() else _current_dir / "data" / hyp.name
     hyp      = hyp.yaml_file()
     
@@ -692,8 +692,8 @@ def main(
     opt = argparse.Namespace(**args)
     
     if not exist_ok:
-        core.delete_dir(paths=core.Path(opt.save_dir))
-    core.Path(opt.save_dir).mkdir(parents=True, exist_ok=True)
+        mon.delete_dir(paths=mon.Path(opt.save_dir))
+    mon.Path(opt.save_dir).mkdir(parents=True, exist_ok=True)
     
     # Set DDP variables
     opt.total_batch_size = opt.batch_size
@@ -708,7 +708,7 @@ def main(
     if opt.resume:  # resume an interrupted run
         ckpt = opt.resume if isinstance(opt.resume, str) else get_latest_run()  # specified or most recent path
         assert os.path.isfile(ckpt), "ERROR: --resume checkpoint does not exist"
-        with open(core.Path(ckpt).parent.parent / "opt.yaml") as f:
+        with open(mon.Path(ckpt).parent.parent / "opt.yaml") as f:
             opt = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))  # replace
         opt.model, opt.weights, opt.resume = "", ckpt, True
         logger.info("Resuming training from %s" % ckpt)
@@ -718,10 +718,10 @@ def main(
         opt.model    = check_file(opt.model)  # check files
         opt.hyp      = check_file(opt.hyp)    # check files
         assert len(opt.model) or len(opt.weights), "either --config or --weights must be specified"
-        opt.imgsz    = core.to_list(opt.imgsz)
+        opt.imgsz    = mon.to_list(opt.imgsz)
         opt.imgsz.extend([opt.imgsz[-1]] * (2 - len(opt.imgsz)))  # extend to 2 sizes (train, test)
         opt.name     = "evolve" if opt.evolve else opt.name
-        opt.save_dir = increment_path(core.Path(opt.save_dir), exist_ok=opt.exist_ok | opt.evolve)  # increment run
+        opt.save_dir = increment_path(mon.Path(opt.save_dir), exist_ok=opt.exist_ok | opt.evolve)  # increment run
     
     # DDP mode
     device = select_device(opt.device, batch_size=opt.batch_size)
@@ -789,12 +789,12 @@ def main(
         assert opt.local_rank == -1, "DDP mode not implemented for --evolve"
         opt.notest, opt.nosave = True, True  # only test/save final epoch
         # ei = [isinstance(x, (int, float)) for x in hyp.values()]  # evolvable indices
-        yaml_file = core.Path(opt.save_dir) / "hyp_evolved.yaml"  # save best result here
+        yaml_file = mon.Path(opt.save_dir) / "hyp_evolved.yaml"  # save best result here
         if opt.bucket:
             os.system("gsutil cp gs://%s/evolve.txt ." % opt.bucket)  # download evolve.txt if exists
         
         for _ in range(300):  # generations to evolve
-            if core.Path("evolve.txt").exists():  # if evolve.txt exists: select best hyps and mutate
+            if mon.Path("evolve.txt").exists():  # if evolve.txt exists: select best hyps and mutate
                 # Select parent(s)
                 parent = "single"  # parent selection method: 'single' or 'weighted'
                 x      = np.loadtxt("evolve.txt", ndmin=2)

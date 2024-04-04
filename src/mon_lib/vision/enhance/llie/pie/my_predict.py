@@ -12,11 +12,11 @@ import time
 import click
 import cv2
 
+import mon
 import pie
-from mon import core, data as d
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -31,13 +31,13 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"{data}")
-    data_name, data_loader, data_writer = d.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
     #
     sum_time = 0
-    with core.get_progress_bar() as pbar:
+    with mon.get_progress_bar() as pbar:
         for images, target, meta in pbar.track(
             sequence    = data_loader,
             total       = len(data_loader),
@@ -91,12 +91,12 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
     project  = root.name
     save_dir = save_dir  or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    imgsz    = core.parse_hw(imgsz)[0]
+    save_dir = mon.Path(save_dir)
+    imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
     args = {

@@ -17,6 +17,7 @@ import click
 import numpy as np
 import torch
 
+import mon
 from basicsr.data import create_dataloader, create_dataset
 from basicsr.data.data_sampler import EnlargedSampler
 from basicsr.data.prefetch_dataloader import CPUPrefetcher, CUDAPrefetcher
@@ -28,11 +29,9 @@ from basicsr.utils import (
 from basicsr.utils.dist_util import get_dist_info, init_dist
 from basicsr.utils.misc import mkdir_and_rename2
 from basicsr.utils.options import dict2str, parse
-from mon import core
-from mon.globals import DATA_DIR
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -122,7 +121,7 @@ def create_train_val_dataloader(opt, logger):
 def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    save_dir = core.Path(args.save_dir)
+    save_dir = mon.Path(args.save_dir)
     device   = args.device
     launcher = args.launcher
     
@@ -144,10 +143,10 @@ def train(args: argparse.Namespace):
     opt["path"]["visualization"]      = str(experiments_root / "visualization")
     opt["path"]["pretrain_network_g"] = str(weights)
     
-    opt["datasets"]["train"]["dataroot_gt"] = DATA_DIR / opt["datasets"]["train"]["dataroot_gt"]
-    opt["datasets"]["train"]["dataroot_lq"] = DATA_DIR / opt["datasets"]["train"]["dataroot_lq"]
-    opt["datasets"]["val"]["dataroot_gt"]   = DATA_DIR / opt["datasets"]["val"]["dataroot_gt"]
-    opt["datasets"]["val"]["dataroot_lq"]   = DATA_DIR / opt["datasets"]["val"]["dataroot_lq"]
+    opt["datasets"]["train"]["dataroot_gt"] = mon.DATA_DIR / opt["datasets"]["train"]["dataroot_gt"]
+    opt["datasets"]["train"]["dataroot_lq"] = mon.DATA_DIR / opt["datasets"]["train"]["dataroot_lq"]
+    opt["datasets"]["val"]["dataroot_gt"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_gt"]
+    opt["datasets"]["val"]["dataroot_lq"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_lq"]
     
     opt["device"] = device
     
@@ -421,15 +420,15 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
     project  = root.name
     save_dir = save_dir  or root / "run" / "train" / fullname
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
     
     # Update arguments
     args = {
@@ -452,7 +451,7 @@ def main(
     args = argparse.Namespace(**args)
     
     if not exist_ok:
-        core.delete_dir(paths=core.Path(args.save_dir))
+        mon.delete_dir(paths=mon.Path(args.save_dir))
     
     train(args)
     return str(args.save_dir)

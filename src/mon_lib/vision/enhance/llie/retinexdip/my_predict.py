@@ -16,15 +16,15 @@ import click
 import cv2
 from torchvision import transforms
 
-from mon import core, data as d, nn
-from mon.globals import ZOO_DIR
+import mon
+from mon import nn
 from net import *
 from net.losses import ExclusionLoss, GradientLoss, TVLoss
 from net.noise import get_noise
 from utils.image_io import *
 
-console           = core.console
-_current_file     = core.Path(__file__).absolute()
+console           = mon.console
+_current_file     = mon.Path(__file__).absolute()
 _current_dir      = _current_file.parents[0]
 EnhancementResult = namedtuple("EnhancementResult", ["reflection", "illumination"])
 
@@ -298,7 +298,7 @@ class Enhancement(object):
         G = G / ini_illumination
         B = B / ini_illumination
         self.best_result = np.clip(cv2.merge([B, G, R]) * 255, 0.02, 255).astype(np.uint8)
-        cv2.imwrite(str(self.image_name), self.best_result)
+        # cv2.imwrite(str(self.image_name), self.best_result)
     
     def calculate_efficiency_score(
         self,
@@ -306,7 +306,7 @@ class Enhancement(object):
         channels  : int             = 8,
         runs      : int             = 100,
     ):
-        flops_1, params_1, avg_time_1 = nn.calculate_efficiency_score(
+        flops_1, params_1, avg_time_1 = mon.calculate_efficiency_score(
             model      = self.illumination_net,
             image_size = image_size,
             channels   = channels,
@@ -314,7 +314,7 @@ class Enhancement(object):
             use_cuda   = True,
             verbose    = False,
         )
-        flops_2, params_2, avg_time_2 = nn.calculate_efficiency_score(
+        flops_2, params_2, avg_time_2 = mon.calculate_efficiency_score(
             model      = self.reflection_net,
             image_size = image_size,
             channels   = channels,
@@ -342,8 +342,8 @@ def lowlight_enhancer(image_name, image):
 
 
 def predict(args: argparse.Namespace):
-    weights   = args.weights
-    weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    # weights   = args.weights
+    # weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
     device    = args.device
@@ -357,14 +357,14 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"{data}")
-    data_name, data_loader, data_writer = d.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():
         sum_time = 0
-        with core.get_progress_bar() as pbar:
+        with mon.get_progress_bar() as pbar:
             for i, (images, target, meta) in pbar.track(
                 sequence    = enumerate(data_loader),
                 total       = len(data_loader),
@@ -372,7 +372,7 @@ def predict(args: argparse.Namespace):
             ):
                 image_path   = meta["path"]
                 image        = Image.open(image_path).convert("RGB")
-                enhanced_image, run_time = lowlight_enhancer(output_path, image)
+                enhanced_image, run_time = lowlight_enhancer(str(image_path), image)
                 output_path  = save_dir / image_path.name
                 # torchvision.utils.save_image(enhanced_image, str(output_path))
                 cv2.imwrite(str(output_path), enhanced_image)
@@ -430,13 +430,14 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = weights or ZOO_DIR / "vision/enhance/llie/retinexdip/retinexdip_lol.pt"
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    # weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/retinexdip/retinexdip_lol_v1.pt"
+    weights  = mon.to_list(weights)
     project  = root.name
     save_dir = save_dir  or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    imgsz    = core.parse_hw(imgsz)[0]
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
+    imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
     args = {

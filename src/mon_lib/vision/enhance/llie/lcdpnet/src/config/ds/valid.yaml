@@ -1,7 +1,0 @@
-# @package ds
-class: img_dataset
-name: lcdp_data.valid
-input:
-  - ../../../../../../data/lol/val/low/lol/*
-GT:
-  - ../../../../../../data/lol/val/high/lol/*

@@ -15,14 +15,14 @@ import cv2
 import numpy as np
 import torch
 
-import data.util as dutil
 import config.options as option
+import data.util as dutil
+import mon
 import utils.util as util
 from models import create_model
-from mon import core, data as d
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -32,7 +32,7 @@ def predict(args: argparse.Namespace):
     weights   = args.weights
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
-    save_dir  = core.Path(args.save_dir)
+    save_dir  = mon.Path(args.save_dir)
     device    = args.device
     imgsz     = args.imgsz
     resize    = args.resize
@@ -53,68 +53,28 @@ def predict(args: argparse.Namespace):
     
     # Measure efficiency score
     if benchmark:
-        flops, params, avg_time = model.measure_efficiency_score(image_size=imgsz)
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = model,
+            image_size = imgsz,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
-        
-    # Predicting
-    '''
-    data = mon.DATA_DIR / opt["datasets"]["test"]["dataroot_LQ"]
-    with torch.no_grad():
-        image_paths = list(data.rglob("*"))
-        image_paths = [path for path in image_paths if path.is_image_file()]
-        sum_time    = 0
-        with mon.get_progress_bar() as pbar:
-            for i, image_path in pbar.track(
-                sequence    = enumerate(image_paths),
-                total       = len(image_paths),
-                description = f"[bright_yellow] Predicting"
-            ):
-                image    = dutil.read_img(None, str(image_path))
-                image    = image[:, :, ::-1]
-                h, w, c  = image.shape
-                image    = cv2.resize(image, (600, 400))
-                image_nf = cv2.blur(image, (5, 5))
-                image_nf = image_nf * 1.0 / 255.0
-                image_nf = torch.from_numpy(np.ascontiguousarray(np.transpose(image_nf, (2, 0, 1)))).float()
-                image    = torch.from_numpy(np.ascontiguousarray(np.transpose(image,    (2, 0, 1)))).float()
-                image    = image.unsqueeze(0).cuda()
-                image_nf = image_nf.unsqueeze(0).cuda()
-                
-                start_time = time.time()
-                model.feed_data(
-                    data = {
-                        "idx": i,
-                        "LQs": image,
-                        "nf" : image_nf,
-                    },
-                    need_GT=False
-                )
-                model.test()
-                run_time   = (time.time() - start_time)
-                
-                visuals        = model.get_current_visuals(need_GT=False)
-                enhanced_image = util.tensor2img(visuals["rlt"])  # uint8
-                enhanced_image = cv2.resize(enhanced_image, (w, h))
-                output_path    = save_dir / image_path.name
-                cv2.imwrite(str(output_path), enhanced_image)
-                # torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time += run_time
-        avg_time = float(sum_time / len(image_paths))
-        console.log(f"Average time: {avg_time}")
-    '''
     
     # Data I/O
     console.log(f"{data}")
-    data_name, data_loader, data_writer = d.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
-    # Predicting 2
+    # Predicting
     with torch.no_grad():
         sum_time = 0
-        with core.get_progress_bar() as pbar:
+        with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
@@ -191,16 +151,16 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
     project  = root.name
     save_dir = save_dir  or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
-    imgsz    = core.parse_hw(imgsz)[0]
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
+    imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
     args = {

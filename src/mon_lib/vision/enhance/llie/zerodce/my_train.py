@@ -13,11 +13,11 @@ import torch.optim
 
 import dataloader
 import model as mmodel
+import mon
 import myloss
-from mon import core
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -35,8 +35,8 @@ def weights_init(m):
 def train(args: argparse.Namespace):
     weights          = args.weights
     weights          = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    input_dir        = core.Path(args.train)
-    save_dir         = core.Path(args.save_dir)
+    input_dir        = mon.Path(args.train)
+    save_dir         = mon.Path(args.save_dir)
     device           = args.device
     epochs           = args.epochs
     train_batch_size = args.train_batch_size
@@ -55,7 +55,7 @@ def train(args: argparse.Namespace):
     
     DCE_net = mmodel.enhance_net_nopool().to(device)
     DCE_net.apply(weights_init)
-    if core.Path(weights).is_weights_file():
+    if mon.Path(weights).is_weights_file():
         DCE_net.load_state_dict(torch.load(weights))
    
     train_dataset = dataloader.lowlight_loader(input_dir)
@@ -74,7 +74,7 @@ def train(args: argparse.Namespace):
     optimizer = torch.optim.Adam(DCE_net.parameters(), lr=lr, weight_decay=weight_decay)
     DCE_net.train()
     
-    with core.get_progress_bar() as pbar:
+    with mon.get_progress_bar() as pbar:
         for _ in pbar.track(
             sequence    = range(epochs),
             total       = epochs,
@@ -135,8 +135,8 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = core.load_config(config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args     = mon.load_config(config)
     
     # Parse arguments
     weights  = weights  or args.get("weights")
@@ -148,12 +148,12 @@ def main(
     verbose  = verbose  or args.get("verbose")
     
     # Prioritize input args --> config file args
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
     project  = root.name or project
     save_dir = save_dir  or root / "run" / "train" / fullname
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
     
     # Update arguments
     args["root"]       = root
@@ -172,7 +172,7 @@ def main(
     args = argparse.Namespace(**args)
     
     if not exist_ok:
-        core.delete_dir(paths=core.Path(args.save_dir))
+        mon.delete_dir(paths=mon.Path(args.save_dir))
         
     train(args)
     return str(args.save_dir)

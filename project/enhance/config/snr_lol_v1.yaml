@@ -1,5 +1,5 @@
 #### general settings
-name         : snr-lol-v1
+name         : snr_lol_v1
 use_tb_logger: true
 model        : video_base4_m
 distortion   : sr
@@ -14,8 +14,8 @@ datasets:
     interval_list : [1]
     random_reverse: false
     border_mode   : false
-    dataroot_GT   : llie/train/lol-v1/high
-    dataroot_LQ   : llie/train/lol-v1/low
+    dataroot_GT   : llie/lol_v1/train/hq
+    dataroot_LQ   : llie/lol_v1/train/lq
     train_size    : [600, 400]
     cache_keys    : ~
     cache_data    : true
@@ -33,8 +33,8 @@ datasets:
   val:
     name       : REDS4
     mode       : video_samesize_lol
-    dataroot_GT: llie/train/lol-v1/high
-    dataroot_LQ: llie/train/lol-v1/low 
+    dataroot_GT: llie/lol_v1/test/hq
+    dataroot_LQ: llie/lol_v1/test/lq
     cache_data : true
     N_frames   : 5
     padding    : new_info

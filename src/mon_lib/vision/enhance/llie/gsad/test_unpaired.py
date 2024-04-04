@@ -132,8 +132,5 @@ def main():
             normal_img = Metrics.tensor2img(visuals['HQ'][-1])
 
 
-
-
-
 if __name__ == '__main__':
     main()

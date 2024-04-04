@@ -28,6 +28,143 @@ from mon.vision.enhance.llie import base
 console = core.console
 
 
+# region Loss
+
+class RDLoss(nn.Loss):
+    
+    def __init__(
+        self,
+        gaussian_kernel_size: int   = 5,
+        gaussian_padding    : int   = 2,
+        gaussian_sigma      : float = 3,
+        illumination_weight : float = 1,
+        reflectance_weight  : float = 1,
+        noise_weight        : float = 5000,
+        reduction           : Literal["none", "mean", "sum"] = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(reduction=reduction, *args, **kwargs)
+        kx     = cv2.getGaussianKernel(gaussian_kernel_size, gaussian_sigma)
+        ky     = cv2.getGaussianKernel(gaussian_kernel_size, gaussian_sigma)
+        kernel = np.multiply(kx, np.transpose(ky))
+        kernel = torch.FloatTensor(kernel).unsqueeze(0).unsqueeze(0)
+        self.gaussian_kernel     = kernel
+        self.gaussian_padding    = gaussian_padding
+        self.illumination_weight = illumination_weight
+        self.reflectance_weight  = reflectance_weight
+        self.noise_weight        = noise_weight
+    
+    def forward(
+        self,
+        image       : torch.Tensor,
+        illumination: torch.Tensor,
+        reflectance : torch.Tensor,
+        noise       : torch.Tensor,
+    ) -> torch.Tensor:
+        if self.gaussian_kernel.device != image.device:
+            self.gaussian_kernel = self.gaussian_kernel.to(image.device)
+        
+        loss_reconstruction = self.reconstruction_loss(image, illumination, reflectance, noise)
+        loss_illumination   = self.illumination_smooth_loss(image, illumination)
+        loss_reflectance    = self.reflectance_smooth_loss(image, illumination, reflectance)
+        loss_noise          = self.noise_loss(illumination, noise)
+        loss = (
+            loss_reconstruction
+            + self.illumination_weight * loss_illumination
+            + self.reflectance_weight  * loss_reflectance
+            + self.noise_weight        * loss_noise
+        )
+        return loss
+    
+    def reconstruction_loss(
+        self,
+        image       : torch.Tensor,
+        illumination: torch.Tensor,
+        reflectance : torch.Tensor,
+        noise       : torch.Tensor,
+    ) -> torch.Tensor:
+        reconstructed_image = illumination * reflectance + noise
+        loss = torch.norm(image - reconstructed_image, 1)
+        return loss
+    
+    def illumination_smooth_loss(
+        self,
+        image       : torch.Tensor,
+        illumination: torch.Tensor,
+    ) -> torch.Tensor:
+        gray_tensor = 0.299 * image[0, 0, :, :] + 0.587 * image[0, 1, :, :] + 0.114 * image[0, 2, :, :]
+        max_rgb, _  = torch.max(image, 1)
+        max_rgb     = max_rgb.unsqueeze(1)
+        gradient_gray_h, gradient_gray_w = self.gradient(gray_tensor.unsqueeze(0).unsqueeze(0))
+        gradient_illu_h, gradient_illu_w = self.gradient(illumination)
+        weight_h = 1 / (F.conv2d(gradient_gray_h, weight=self.gaussian_kernel, padding=self.gaussian_padding) + 0.0001)
+        weight_w = 1 / (F.conv2d(gradient_gray_w, weight=self.gaussian_kernel, padding=self.gaussian_padding) + 0.0001)
+        weight_h.detach()
+        weight_w.detach()
+        loss_h   = weight_h * gradient_illu_h
+        loss_w   = weight_w * gradient_illu_w
+        max_rgb.detach()
+        loss     = loss_h.sum() + loss_w.sum() + torch.norm(illumination - max_rgb, 1)
+        return loss
+    
+    def reflectance_smooth_loss(
+        self,
+        image       : torch.Tensor,
+        illumination: torch.Tensor,
+        reflectance : torch.Tensor
+    ) -> torch.Tensor:
+        gray_tensor = 0.299 * image[0, 0, :, :] + 0.587 * image[0, 1, :, :] + 0.114 * image[0, 2, :, :]
+        gradient_gray_h,    gradient_gray_w    = self.gradient(gray_tensor.unsqueeze(0).unsqueeze(0))
+        gradient_reflect_h, gradient_reflect_w = self.gradient(reflectance)
+        weight = 1 / (illumination * gradient_gray_h * gradient_gray_w + 0.0001)
+        weight = self.normalize(weight)
+        weight.detach()
+        loss_h = weight * gradient_reflect_h
+        loss_w = weight * gradient_reflect_w
+        reference_reflectance = image / illumination
+        reference_reflectance.detach()
+        loss   = loss_h.sum() + loss_w.sum() + 1.0 * torch.norm(reference_reflectance - reflectance, 1)
+        return loss
+    
+    def noise_loss(
+        self,
+        illumination: torch.Tensor,
+        noise       : torch.Tensor
+    ) -> torch.Tensor:
+        weight_illu = illumination
+        weight_illu.detach()
+        loss = weight_illu * noise
+        loss = torch.norm(loss, 2)
+        return loss
+    
+    def gradient(self, image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        height      = image.size(2)
+        width       = image.size(3)
+        gradient_h  = (image[:, :, 2:, :] - image[:, :, :height - 2, :]).abs()
+        gradient_w  = (image[:, :, :, 2:] - image[:, :, :, :width - 2]).abs()
+        gradient_h  = F.pad(gradient_h, [0, 0, 1, 1], "replicate")
+        gradient_w  = F.pad(gradient_w, [1, 1, 0, 0], "replicate")
+        gradient2_h = (image[:, :, 4:, :] - image[:, :, :height - 4, :]).abs()
+        gradient2_w = (image[:, :, :, 4:] - image[:, :, :, :width - 4]).abs()
+        gradient2_h = F.pad(gradient2_h, [0, 0, 2, 2], "replicate")
+        gradient2_w = F.pad(gradient2_w, [2, 2, 0, 0], "replicate")
+        return gradient_h * gradient2_h, gradient_w * gradient2_w
+    
+    def normalize(self, image: torch.Tensor) -> torch.Tensor:
+        min_value = image.min()
+        max_value = image.max()
+        return (image - min_value) / (max_value - min_value)
+    
+    def gaussian_blur3(self, image: torch.Tensor) -> torch.Tensor:
+        slice1 = F.conv2d(image[:, 0, :, :].unsqueeze(1), weight=self.gaussian_kernel, padding=self.gaussian_padding)
+        slice2 = F.conv2d(image[:, 1, :, :].unsqueeze(1), weight=self.gaussian_kernel, padding=self.gaussian_padding)
+        slice3 = F.conv2d(image[:, 2, :, :].unsqueeze(1), weight=self.gaussian_kernel, padding=self.gaussian_padding)
+        x      = torch.cat([slice1, slice2, slice3], dim=1)
+        return x
+
+# endregion
+
+
 # region Module
 
 @MODELS.register(name="cenet")
@@ -596,143 +733,6 @@ class ZSN2N(denoise.DenoisingModel):
     
     # endregion
 
-# endregion
-
-
-# region Loss
-
-class RDLoss(nn.Loss):
-    
-    def __init__(
-        self,
-        gaussian_kernel_size: int   = 5,
-        gaussian_padding    : int   = 2,
-        gaussian_sigma      : float = 3,
-        illumination_weight : float = 1,
-        reflectance_weight  : float = 1,
-        noise_weight        : float = 5000,
-        reduction           : Literal["none", "mean", "sum"] = "mean",
-        *args, **kwargs
-    ):
-        super().__init__(reduction=reduction, *args, **kwargs)
-        kx     = cv2.getGaussianKernel(gaussian_kernel_size, gaussian_sigma)
-        ky     = cv2.getGaussianKernel(gaussian_kernel_size, gaussian_sigma)
-        kernel = np.multiply(kx, np.transpose(ky))
-        kernel = torch.FloatTensor(kernel).unsqueeze(0).unsqueeze(0)
-        self.gaussian_kernel     = kernel
-        self.gaussian_padding    = gaussian_padding
-        self.illumination_weight = illumination_weight
-        self.reflectance_weight  = reflectance_weight
-        self.noise_weight        = noise_weight
-    
-    def forward(
-        self,
-        image       : torch.Tensor,
-        illumination: torch.Tensor,
-        reflectance : torch.Tensor,
-        noise       : torch.Tensor,
-    ) -> torch.Tensor:
-        if self.gaussian_kernel.device != image.device:
-            self.gaussian_kernel = self.gaussian_kernel.to(image.device)
-        
-        loss_reconstruction = self.reconstruction_loss(image, illumination, reflectance, noise)
-        loss_illumination   = self.illumination_smooth_loss(image, illumination)
-        loss_reflectance    = self.reflectance_smooth_loss(image, illumination, reflectance)
-        loss_noise          = self.noise_loss(illumination, noise)
-        loss = (
-            loss_reconstruction
-            + self.illumination_weight * loss_illumination
-            + self.reflectance_weight  * loss_reflectance
-            + self.noise_weight        * loss_noise
-        )
-        return loss
-    
-    def reconstruction_loss(
-        self,
-        image       : torch.Tensor,
-        illumination: torch.Tensor,
-        reflectance : torch.Tensor,
-        noise       : torch.Tensor,
-    ) -> torch.Tensor:
-        reconstructed_image = illumination * reflectance + noise
-        loss = torch.norm(image - reconstructed_image, 1)
-        return loss
-    
-    def illumination_smooth_loss(
-        self,
-        image       : torch.Tensor,
-        illumination: torch.Tensor,
-    ) -> torch.Tensor:
-        gray_tensor = 0.299 * image[0, 0, :, :] + 0.587 * image[0, 1, :, :] + 0.114 * image[0, 2, :, :]
-        max_rgb, _  = torch.max(image, 1)
-        max_rgb     = max_rgb.unsqueeze(1)
-        gradient_gray_h, gradient_gray_w = self.gradient(gray_tensor.unsqueeze(0).unsqueeze(0))
-        gradient_illu_h, gradient_illu_w = self.gradient(illumination)
-        weight_h = 1 / (F.conv2d(gradient_gray_h, weight=self.gaussian_kernel, padding=self.gaussian_padding) + 0.0001)
-        weight_w = 1 / (F.conv2d(gradient_gray_w, weight=self.gaussian_kernel, padding=self.gaussian_padding) + 0.0001)
-        weight_h.detach()
-        weight_w.detach()
-        loss_h   = weight_h * gradient_illu_h
-        loss_w   = weight_w * gradient_illu_w
-        max_rgb.detach()
-        loss     = loss_h.sum() + loss_w.sum() + torch.norm(illumination - max_rgb, 1)
-        return loss
-    
-    def reflectance_smooth_loss(
-        self,
-        image       : torch.Tensor,
-        illumination: torch.Tensor,
-        reflectance : torch.Tensor
-    ) -> torch.Tensor:
-        gray_tensor = 0.299 * image[0, 0, :, :] + 0.587 * image[0, 1, :, :] + 0.114 * image[0, 2, :, :]
-        gradient_gray_h,    gradient_gray_w    = self.gradient(gray_tensor.unsqueeze(0).unsqueeze(0))
-        gradient_reflect_h, gradient_reflect_w = self.gradient(reflectance)
-        weight = 1 / (illumination * gradient_gray_h * gradient_gray_w + 0.0001)
-        weight = self.normalize(weight)
-        weight.detach()
-        loss_h = weight * gradient_reflect_h
-        loss_w = weight * gradient_reflect_w
-        reference_reflectance = image / illumination
-        reference_reflectance.detach()
-        loss   = loss_h.sum() + loss_w.sum() + 1.0 * torch.norm(reference_reflectance - reflectance, 1)
-        return loss
-    
-    def noise_loss(
-        self,
-        illumination: torch.Tensor,
-        noise       : torch.Tensor
-    ) -> torch.Tensor:
-        weight_illu = illumination
-        weight_illu.detach()
-        loss = weight_illu * noise
-        loss = torch.norm(loss, 2)
-        return loss
-    
-    def gradient(self, image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        height      = image.size(2)
-        width       = image.size(3)
-        gradient_h  = (image[:, :, 2:, :] - image[:, :, :height - 2, :]).abs()
-        gradient_w  = (image[:, :, :, 2:] - image[:, :, :, :width - 2]).abs()
-        gradient_h  = F.pad(gradient_h, [0, 0, 1, 1], "replicate")
-        gradient_w  = F.pad(gradient_w, [1, 1, 0, 0], "replicate")
-        gradient2_h = (image[:, :, 4:, :] - image[:, :, :height - 4, :]).abs()
-        gradient2_w = (image[:, :, :, 4:] - image[:, :, :, :width - 4]).abs()
-        gradient2_h = F.pad(gradient2_h, [0, 0, 2, 2], "replicate")
-        gradient2_w = F.pad(gradient2_w, [2, 2, 0, 0], "replicate")
-        return gradient_h * gradient2_h, gradient_w * gradient2_w
-    
-    def normalize(self, image: torch.Tensor) -> torch.Tensor:
-        min_value = image.min()
-        max_value = image.max()
-        return (image - min_value) / (max_value - min_value)
-    
-    def gaussian_blur3(self, image: torch.Tensor) -> torch.Tensor:
-        slice1 = F.conv2d(image[:, 0, :, :].unsqueeze(1), weight=self.gaussian_kernel, padding=self.gaussian_padding)
-        slice2 = F.conv2d(image[:, 1, :, :].unsqueeze(1), weight=self.gaussian_kernel, padding=self.gaussian_padding)
-        slice3 = F.conv2d(image[:, 2, :, :].unsqueeze(1), weight=self.gaussian_kernel, padding=self.gaussian_padding)
-        x      = torch.cat([slice1, slice2, slice3], dim=1)
-        return x
-    
 # endregion
 
 

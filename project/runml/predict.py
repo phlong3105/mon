@@ -21,7 +21,7 @@ console = mon.console
 def predict(args: dict) -> str:
     # Get arguments
     fullname   = args["fullname"]
-    imgsz      = args["image_size"]
+    imgsz      = mon.parse_hw(args["image_size"])
     seed       = args["seed"]
     save_dir   = args["predictor"]["default_root_dir"]
     source     = args["predictor"]["source"]

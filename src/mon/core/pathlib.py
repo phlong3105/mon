@@ -140,7 +140,7 @@ class Path(type(pathlib.Path())):
         """
         return (
             (self.is_file() if exist else True) and
-            self.suffix.lower() in [".pt", ".pth", ".weights", ".ckpt", ".tar"]
+            self.suffix.lower() in [".pt", ".pth", ".weights", ".ckpt", ".tar", ".onnx"]
         )
     
     def is_txt_file(self, exist: bool = True) -> bool:
@@ -182,7 +182,7 @@ class Path(type(pathlib.Path())):
         """Return ``True`` if the current path is an ```.pt``` or ``.pth`` file.
         Otherwise, return ``False``.
         """
-        return (self.is_file() if exist else True) and self.suffix.lower() in [".pt", ".pth"]
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".pt", ".pth", ".onnx"]
     
     def is_xml_file(self, exist: bool = True) -> bool:
         """Return ``True`` if the current path is an ``.xml`` file. Otherwise,

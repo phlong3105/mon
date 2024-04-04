@@ -114,8 +114,7 @@ def list_config_files(
         )
     ]
     if model not in [None, "None", ""]:
-        model        = f"{model}_"
-        config_files = [cf for cf in config_files if model in cf.name]
+        config_files = [cf for cf in config_files if f"{model}_" in cf.name]
     config_files = sorted(config_files)
     return config_files
 
@@ -195,7 +194,7 @@ def list_weights_files(
             files.append(path)
     #
     files = mon.unique(files)
-    files = [f for f in files if model in str(f)]
+    files = [f for f in files if f"{model}_" in str(f)]
     files = sorted(files)
     return files
 

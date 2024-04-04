@@ -12,11 +12,10 @@ import click
 import torch
 
 from model import RetinexNet
-from mon import core, data as d
-from mon.globals import ZOO_DIR
+import mon
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -41,12 +40,12 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"{data}")
-    data_name, data_loader, data_writer = d.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
     image_paths = []
-    with core.get_progress_bar() as pbar:
+    with mon.get_progress_bar() as pbar:
         for images, target, meta in pbar.track(
             sequence    = data_loader,
             total       = len(data_loader),
@@ -56,7 +55,11 @@ def predict(args: argparse.Namespace):
             image_paths.append(image_path)
     
     start_time = time.time()
-    model.predict(image_paths, res_dir=str(save_dir), ckpt_dir=weights)
+    model.predict(
+        image_paths,
+        res_dir=str(save_dir),
+        ckpt_dir=str(weights),
+    )
     run_time   = (time.time() - start_time)
     avg_time   = float(run_time / len(image_paths))
     console.log(f"Average time: {avg_time}")
@@ -98,14 +101,14 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = weights or ZOO_DIR / "vision/enhance/llie/retinexnet"
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    weights  = mon.ZOO_DIR / "vision/enhance/llie/retinexnet"
+    weights  = mon.to_list(weights)
     project  = root.name
     save_dir = save_dir  or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
-    imgsz    = core.parse_hw(imgsz)[0]
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
+    imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
     args = {

@@ -381,7 +381,7 @@ def main(
             resize       = "yes" if imgsz != imgsz_ else "no"
             resize       = click.prompt(click.style(f"Resize?     [yes/no]", fg="bright_yellow", bold=True), type=str, default=resize)
             # Other Flags
-            benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
+            benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
             save_image   = click.prompt(click.style(f"Save image? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
             use_data_dir = click.prompt(click.style(f"Data dir?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
             resize       = True if resize       == "yes" else False
@@ -393,6 +393,8 @@ def main(
         exist_ok = True if exist_ok == "yes" else False
         verbose  = click.prompt(click.style(f"Verbosity?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
         verbose  = True if verbose  == "yes" else False
+    
+    print("\n")
     
     # Run
     if mode in ["train"]:

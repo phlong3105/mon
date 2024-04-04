@@ -15,8 +15,8 @@ import torch
 import yaml
 from tqdm import tqdm
 
+import mon
 from models.experimental import attempt_load
-from mon import core, DATA_DIR
 from utils.datasets import create_dataloader
 from utils.general import (
     box_iou, check_dataset, check_file, check_img_size, clip_coords, coco80_to_coco91_class,
@@ -27,8 +27,8 @@ from utils.metrics import ap_per_class
 from utils.plots import output_to_target, plot_images
 from utils.torch_utils import select_device, time_synchronized
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -56,7 +56,7 @@ def test(
     verbose    = False,
     model      = None,
     dataloader = None,
-    save_dir   = core.Path(""),  # for saving images
+    save_dir   = mon.Path(""),  # for saving images
     save_txt   = False,          # for auto-labelling
     save_conf  = False,
     plots      = True,
@@ -73,8 +73,8 @@ def test(
         save_txt = opt.save_txt  # save *.txt labels
 
         # Directories
-        # save_dir = core.Path(increment_path(core.Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
-        # (core.Path(save_dir) / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)    # make dir
+        # save_dir = mon.Path(increment_path(mon.Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
+        # (mon.Path(save_dir) / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)    # make dir
         (save_dir / "images" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
         (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
         
@@ -97,17 +97,17 @@ def test(
         _val   = data["val"]
         _test  = data["test"]
         if isinstance(_train, list):
-            _train = [str(DATA_DIR / t) for t in _train]
+            _train = [str(mon.DATA_DIR / t) for t in _train]
         elif _train:
-            _train = str(DATA_DIR / _train)
+            _train = str(mon.DATA_DIR / _train)
         if isinstance(_val, list):
-            _val   = [str(DATA_DIR / t) for t in _val]
+            _val   = [str(mon.DATA_DIR / t) for t in _val]
         elif _val:
-            _val   = str(DATA_DIR / _val)
+            _val   = str(mon.DATA_DIR / _val)
         if isinstance(_test, list):
-            _test  = [str(DATA_DIR / t) for t in _test]
+            _test  = [str(mon.DATA_DIR / t) for t in _test]
         elif _test:
-            _test  = str(DATA_DIR / _test)
+            _test  = str(mon.DATA_DIR / _test)
         data["train"] = _train
         data["val"]   = _val
         data["test"]  = _test
@@ -180,7 +180,7 @@ def test(
                 continue
 
             # Append to text file
-            path = core.Path(paths[si])
+            path = mon.Path(paths[si])
             if save_txt:
                 gn       = torch.tensor(shapes[si][0])[[1, 0, 1, 0]]  # normalization gain whwh
                 x        = pred.clone()
@@ -302,7 +302,7 @@ def test(
 
     # Save JSON
     if save_json and len(jdict):
-        w         = core.Path(weights[0] if isinstance(weights, list) else weights).stem if weights is not None else ""  # weights
+        w         = mon.Path(weights[0] if isinstance(weights, list) else weights).stem if weights is not None else ""  # weights
         anno_json = glob.glob("../coco/annotations/instances_val*.json")[0]  # annotations json
         pred_json = str(save_dir / f"{w}_predictions.json")  # predictions json
         print("\nEvaluating pycocotools mAP... saving %s..." % pred_json)
@@ -317,7 +317,7 @@ def test(
             pred = anno.loadRes(pred_json)  # init predictions api
             eval = COCOeval(anno, pred, "bbox")
             if is_coco:
-                eval.params.imgIds = [int(core.Path(x).stem) for x in dataloader.dataset.img_files]  # image IDs to evaluate
+                eval.params.imgIds = [int(mon.Path(x).stem) for x in dataloader.dataset.img_files]  # image IDs to evaluate
             eval.evaluate()
             eval.accumulate()
             eval.summarize()
@@ -377,8 +377,8 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = core.load_config(config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args     = mon.load_config(config)
     
     # Prioritize input args --> config file args
     root     = root     or args.get("root")
@@ -396,19 +396,19 @@ def main(
     verbose  = verbose  or args.get("verbose")
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
-    model    = core.Path(model)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
+    model    = mon.Path(model)
     model    = model if model.exists() else _current_dir / "config"  / model.name
     model    = str(model.config_file())
-    data     = core.Path(data)
+    data     = mon.Path(data)
     data     = data  if data.exists() else _current_dir / "data"  / data.name
     data     = str(data.config_file())
     project  = root.name or project
     save_dir = save_dir  or root / "run" / "test" / fullname
-    save_dir = core.Path(save_dir)
-    imgsz    = core.to_list(imgsz)
-    names    = core.Path(names)
+    save_dir = mon.Path(save_dir)
+    imgsz    = mon.to_list(imgsz)
+    names    = mon.Path(names)
     names    = names if names.exists() else _current_dir / "data" / names.name
     names    = str(names.config_file())
     
@@ -453,7 +453,7 @@ def main(
         )
     elif opt.task == "study":  # run over a range of settings and save/plot
         for weights in ["yolor_p6.pt", "yolor_w6.pt"]:
-            f = "study_%s_%s.txt" % (core.Path(opt.data).stem, core.Path(weights).stem)  # filename to save to
+            f = "study_%s_%s.txt" % (mon.Path(opt.data).stem, mon.Path(weights).stem)  # filename to save to
             x = list(range(320, 800, 64))  # x axis
             y = []  # y axis
             for i in x:  # img-size

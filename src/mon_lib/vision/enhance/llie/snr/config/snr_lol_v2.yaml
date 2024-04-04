@@ -14,8 +14,8 @@ datasets:
     interval_list : [1]
     random_reverse: false
     border_mode   : false
-    dataroot_GT   : llie/train/lol_v2/high
-    dataroot_LQ   : llie/train/lol_v2/low
+    dataroot_GT   : llie/lol_v2_real/train/hq
+    dataroot_LQ   : llie/lol_v2_real/train/lq
     train_size    : [600, 400]
     cache_keys    : ~
     cache_data    : true
@@ -32,8 +32,8 @@ datasets:
   val:
     name       : REDS4
     mode       : video_samesize_lol2
-    dataroot_GT: llie/train/lol_v2/high
-    dataroot_LQ: llie/train/lol_v2/low 
+    dataroot_GT: llie/lol_v2_real/test/hq
+    dataroot_LQ: llie/lol_v2_real/test/lq
     cache_data : true
     N_frames   : 5
     padding    : new_info

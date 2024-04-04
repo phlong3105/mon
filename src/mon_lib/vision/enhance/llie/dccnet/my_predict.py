@@ -17,11 +17,11 @@ import torch.optim
 import torchvision
 from PIL import Image
 
+import mon
 import src.model as mmodel
-from mon import core, data as d, nn, proc
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -44,9 +44,7 @@ def predict(args: argparse.Namespace):
     # Benchmark
     if benchmark:
         color_net = mmodel.color_net().to(device)
-        color_net = nn.DataParallel(color_net)
-        color_net.load_state_dict(torch.load(weights))
-        flops, params, avg_time = nn.calculate_efficiency_score(
+        flops, params, avg_time = mon.calculate_efficiency_score(
             model      = color_net,
             image_size = imgsz,
             channels   = 3,
@@ -60,19 +58,19 @@ def predict(args: argparse.Namespace):
     
     # Model
     color_net = mmodel.color_net().to(device)
-    color_net = nn.DataParallel(color_net)
+    color_net = mon.DataParallel(color_net)
     color_net.load_state_dict(torch.load(weights))
     
     # Data I/O
     console.log(f"{data}")
-    data_name, data_loader, data_writer = d.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():
         sum_time = 0
-        with core.get_progress_bar() as pbar:
+        with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
@@ -86,8 +84,8 @@ def predict(args: argparse.Namespace):
                 data_lowlight = data_lowlight.cuda().unsqueeze(0)
                 
                 if resize:
-                    h0, w0        = core.get_image_size(images)
-                    data_lowlight = proc.resize(input=data_lowlight, size=imgsz)
+                    h0, w0        = mon.get_image_size(images)
+                    data_lowlight = mon.resize(input=data_lowlight, size=imgsz)
                     # print(data_lowlight.shape)
                     
                 start_time = time.time()
@@ -95,7 +93,7 @@ def predict(args: argparse.Namespace):
                 run_time   = (time.time() - start_time)
                 
                 if resize:
-                    enhanced_image = proc.resize(input=enhanced_image, size=[h0, w0])
+                    enhanced_image = mon.resize(input=enhanced_image, size=[h0, w0])
                     
                 output_path = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
@@ -140,8 +138,8 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = core.load_config(config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args     = mon.load_config(config)
     
     # Prioritize input args --> config file args
     weights  = weights  or args.get("weights")
@@ -152,13 +150,13 @@ def main(
     verbose  = verbose  or args.get("verbose")
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
     project  = root.name or project
     save_dir = save_dir  or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
-    imgsz    = core.parse_hw(imgsz)
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
+    imgsz    = mon.parse_hw(imgsz)
     
     # Update arguments
     args["root"]       = root

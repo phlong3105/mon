@@ -21,12 +21,11 @@ import config.options as option
 from data import create_dataloader, create_dataset
 from data.data_sampler import DistIterSampler
 from models import create_model
-from mon import core
-from mon.globals import DATA_DIR
+import mon
 from utils import util
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -45,7 +44,7 @@ def init_dist(backend="nccl", **kwargs):
 def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    save_dir = core.Path(args.save_dir)
+    save_dir = mon.Path(args.save_dir)
     device   = args.device
     launcher = args.launcher
     
@@ -65,10 +64,10 @@ def train(args: argparse.Namespace):
     opt["path"]["val_images"]       = str(experiments_root / "val_images")
     opt["path"]["pretrain_model_G"] = str(weights)
     
-    opt["datasets"]["train"]["dataroot_GT"] = DATA_DIR / opt["datasets"]["train"]["dataroot_GT"]
-    opt["datasets"]["train"]["dataroot_LQ"] = DATA_DIR / opt["datasets"]["train"]["dataroot_LQ"]
-    opt["datasets"]["val"]["dataroot_GT"]   = DATA_DIR / opt["datasets"]["val"]["dataroot_GT"]
-    opt["datasets"]["val"]["dataroot_LQ"]   = DATA_DIR / opt["datasets"]["val"]["dataroot_LQ"]
+    opt["datasets"]["train"]["dataroot_GT"] = mon.DATA_DIR / opt["datasets"]["train"]["dataroot_GT"]
+    opt["datasets"]["train"]["dataroot_LQ"] = mon.DATA_DIR / opt["datasets"]["train"]["dataroot_LQ"]
+    opt["datasets"]["val"]["dataroot_GT"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_GT"]
+    opt["datasets"]["val"]["dataroot_LQ"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_LQ"]
     
     opt["device"] = device
     
@@ -390,15 +389,15 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
     
     # Prioritize input args --> config file args
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
     project  = root.name
     save_dir = save_dir or root / "run" / "train" / fullname
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
     
     # Update arguments
     args = {
@@ -421,7 +420,7 @@ def main(
     args = argparse.Namespace(**args)
     
     if not exist_ok:
-        core.delete_dir(paths=core.Path(args.save_dir))
+        mon.delete_dir(paths=mon.Path(args.save_dir))
         
     train(args)
     return str(args.save_dir)

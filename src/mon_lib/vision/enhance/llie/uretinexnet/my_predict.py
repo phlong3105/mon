@@ -12,14 +12,14 @@ import time
 import click
 import torchvision.transforms as transforms
 
-from mon import core, data as d, nn
-from mon.globals import ZOO_DIR
+import mon
+from mon import nn
 from network.decom import Decom
 from network.Math_Module import P, Q
 from utils import *
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -114,7 +114,7 @@ def predict(args: argparse.Namespace):
     
     # Benchmark
     if benchmark:
-        flops, params, avg_time = nn.calculate_efficiency_score(
+        flops, params, avg_time = mon.calculate_efficiency_score(
             model      = model,
             image_size = imgsz,
             channels   = 3,
@@ -128,14 +128,14 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"{data}")
-    data_name, data_loader, data_writer = d.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():
         sum_time = 0
-        with core.get_progress_bar() as pbar:
+        with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
@@ -186,16 +186,16 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Parse arguments
-    root     = core.Path(root)
-    decom_model_low_weights = ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_init_low.pth"
-    unfolding_model_weights = ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_unfolding.pth"
-    adjust_model_weights    = ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_L_adjust.pth"
+    root     = mon.Path(root)
+    decom_model_low_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_init_low.pth"
+    unfolding_model_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_unfolding.pth"
+    adjust_model_weights    = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet_L_adjust.pth"
     project  = root.name
     save_dir = save_dir or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    device   = core.parse_device(device)
+    save_dir = mon.Path(save_dir)
+    device   = mon.parse_device(device)
     ratio    = 5
-    imgsz    = core.parse_hw(imgsz)[0]
+    imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
     args = {

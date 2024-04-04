@@ -21,7 +21,7 @@ if str(_root) not in sys.path:
     sys.path.append(str(_root))  # add ROOT to PATH
 
 from models.experimental import attempt_load
-from mon import core
+import mon
 from utils.datasets import LoadImages, LoadStreams
 from utils.general import (
     apply_classifier, check_img_size, non_max_suppression, scale_coords, set_logging,
@@ -30,8 +30,8 @@ from utils.general import (
 from utils.plots import plot_one_box
 from utils.torch_utils import load_classifier, select_device, time_synchronized
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
 
@@ -48,7 +48,7 @@ def predict(opt, save_img: bool = False):
     weights  = opt.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     source   = opt.source
-    save_dir = core.Path(opt.save_dir)
+    save_dir = mon.Path(opt.save_dir)
     view_img = opt.view_img
     save_txt = opt.save_txt
     imgsz    = opt.imgsz
@@ -146,8 +146,8 @@ def predict(opt, save_img: bool = False):
             else:
                 p, s, im0 = path, "", im0s
 
-            save_path  = str(save_dir / "images" / f"{core.Path(p).stem}.jpg")
-            txt_path   = str(save_dir / "labels" / core.Path(p).stem) + ("_%g" % dataset.frame if dataset.mode == "video" else "")
+            save_path  = str(save_dir / "images" / f"{mon.Path(p).stem}.jpg")
+            txt_path   = str(save_dir / "labels" / mon.Path(p).stem) + ("_%g" % dataset.frame if dataset.mode == "video" else "")
             s         += "%gx%g " % img.shape[2:]  # print string
             gn         = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if det is not None and len(det):
@@ -252,8 +252,8 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = core.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = core.load_config(config)
+    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args     = mon.load_config(config)
     
     # Prioritize input args --> config file args
     root         = root         or args.get("root")
@@ -272,18 +272,18 @@ def main(
     verbose      = verbose      or args.get("verbose")
     
     # Parse arguments
-    root     = core.Path(root)
-    weights  = core.to_list(weights)
-    model    = core.Path(model)
+    root     = mon.Path(root)
+    weights  = mon.to_list(weights)
+    model    = mon.Path(model)
     model    = model if model.exists() else _current_dir / "config" / model.name
     model    = str(model.config_file())
-    data_    = core.Path(args.get("data"))
+    data_    = mon.Path(args.get("data"))
     data_    = data_ if data_.exists() else _current_dir / "data" / data_.name
     data_    = str(data_.config_file())
     project  = root.name or project
     save_dir = save_dir or root / "run" / "predict" / model
-    save_dir = core.Path(save_dir)
-    imgsz    = core.to_list(imgsz)
+    save_dir = mon.Path(save_dir)
+    imgsz    = mon.to_list(imgsz)
     
     # Update arguments
     args["root"]         = root

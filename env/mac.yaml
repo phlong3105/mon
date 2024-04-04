@@ -38,7 +38,7 @@ dependencies:
       - opencv-python         # Computer vision and machine learning software library.
       - opencv-contrib-python
       - newrawpy              # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
-      # Network
+      # Networking
       - requests              # Requests is an elegant and simple HTTP library for Python, built with ♥
       # Plot
       - matplotlib            # Publication quality figures in Python.
@@ -46,7 +46,7 @@ dependencies:
       # PyTorch
       - einops                # A new flavour of deep learning operations.
       - lightning>=2.2.1      #
-      # - pytorch-lightning==1.9.2
+      - onnxruntime           # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
       - torch>=2.2.1          # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio            # Simple audio I/O for pytorch.
       - torchvision           # Image and video datasets and models for torch deep learning.

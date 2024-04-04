@@ -3,6 +3,8 @@ from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+import mon
 from operations import *
 from torch.autograd import Variable
 from genotypes import PRIMITIVES
@@ -194,7 +196,7 @@ class Network(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        model_dict = torch.load('./model/denoise.pt')
+        model_dict = torch.load(mon.ZOO_DIR / "vision/enhance/llie/ruas/denoise.pt")
         self.denoise_net.load_state_dict(model_dict)
 
     def forward(self, input):
