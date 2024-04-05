@@ -84,12 +84,19 @@ def list_models(
     mode        : str,
     project_root: str | mon.Path | None = None
 ) -> list[str]:
-    models          = sorted(list_mon_models(task, mode) + list_extra_models(task, mode))
+    models          =   list_mon_models(task, mode)
+    extra_models    = list_extra_models(task, mode)
     default_configs = get_project_default_config(project_root=project_root)
     if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
         project_models = [mon.snakecase(m) for m in default_configs["MODELS"]]
         if len(project_models) > 0:
-            models = [m for m in models if mon.snakecase(m) in project_models]
+            models       = [m for m in models       if mon.snakecase(m) in project_models]
+            extra_models = [m for m in extra_models if mon.snakecase(m) in project_models]
+    #
+    for i, m in enumerate(extra_models):
+        if m in models:
+            extra_models[i] = f"{m} (mon_lib)"
+    models = models + extra_models
     return sorted(models)
 
 # endregion

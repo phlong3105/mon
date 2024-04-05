@@ -14,7 +14,6 @@ __all__ = [
 
 from typing import Any, Literal
 
-import kornia
 import torch
 
 from mon import core, nn, proc
@@ -32,91 +31,61 @@ class Loss(nn.Loss):
     
     def __init__(
         self,
-        bri_gamma      : float = 2.8,
         exp_patch_size : int   = 16,
         exp_mean_val   : float = 0.6,
-        spa_num_regions: Literal[4, 8, 16, 24] = 8,
+        spa_num_regions: Literal[4, 8, 16, 24] = 16,
         spa_patch_size : int   = 4,
-        weight_bri     : float = 0,
         weight_col     : float = 5,
-        weight_crl     : float = 0.1,
         weight_edge    : float = 1,
         weight_exp     : float = 10,
-        weight_kl      : float = 0.1,
         weight_spa     : float = 1,
         weight_tva     : float = 1600,
         reduction      : Literal["none", "mean", "sum"] = "mean",
-        verbose        : bool  = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        # self.weight_bri  = weight_bri
         self.weight_col  = weight_col
-        self.weight_crl  = weight_crl
         self.weight_edge = weight_edge
         self.weight_exp  = weight_exp
-        self.weight_kl   = weight_kl
         self.weight_spa  = weight_spa
         self.weight_tva  = weight_tva
-        self.verbose     = verbose
         
-        # self.loss_bri  = nn.BrightnessConstancyLoss(reduction=reduction, gamma=bri_gamma)
-        self.loss_col  = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_crl  = nn.ChannelRatioConsistencyLoss(reduction=reduction)
-        self.loss_kl   = nn.ChannelConsistencyLoss(reduction=reduction)
-        self.loss_edge = nn.EdgeConstancyLoss(reduction=reduction)
-        self.loss_exp  = nn.ExposureControlLoss(
+        self.loss_col    = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_edge   = nn.EdgeConstancyLoss(reduction=reduction)
+        self.loss_exp    = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_spa  = nn.SpatialConsistencyLoss(
+        self.loss_spa    = nn.SpatialConsistencyLoss(
             num_regions = spa_num_regions,
             patch_size  = spa_patch_size,
             reduction   = reduction,
         )
-        self.loss_tva  = nn.TotalVariationALoss(reduction=reduction)
+        self.loss_tva    = nn.TotalVariationALoss(reduction=reduction)
     
     def forward(
         self,
         input   : torch.Tensor,
         adjust  : torch.Tensor,
         enhance : torch.Tensor,
-        previous: torch.Tensor = None,
         **_
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        # loss_bri  = self.loss_bri(input=g, target=input)              if self.weight_bri  > 0 else 0
-        loss_col  = self.loss_col(input=enhance)                      if self.weight_col  > 0 else 0
-        loss_edge = self.loss_edge(input=enhance, target=input)       if self.weight_edge > 0 else 0
-        loss_exp  = self.loss_exp(input=enhance)                      if self.weight_exp  > 0 else 0
-        loss_kl   = self.loss_kl(input=enhance, target=input)         if self.weight_kl   > 0 else 0
-        loss_spa  = self.loss_spa(input=enhance, target=input)        if self.weight_spa  > 0 else 0
-        loss_tva  = self.loss_tva(input=adjust)                       if self.weight_tvA  > 0 else 0
-        if previous is not None and (enhance.shape == previous.shape):
-            loss_crl = self.loss_crl(input=enhance, target=previous)  if self.weight_crl  > 0 else 0
-        else:                                                                             
-            loss_crl = self.loss_crl(input=enhance, target=input)     if self.weight_crl  > 0 else 0
+        loss_col  = self.loss_col(input=enhance)                if self.weight_col  > 0 else 0
+        loss_edge = self.loss_edge(input=enhance, target=input) if self.weight_edge > 0 else 0
+        loss_exp  = self.loss_exp(input=enhance)                if self.weight_exp  > 0 else 0
+        loss_spa  = self.loss_spa(input=enhance, target=input)  if self.weight_spa  > 0 else 0
+        loss_tva  = self.loss_tva(input=adjust)                 if self.weight_tva  > 0 else 0
         
         loss = (
-            #   self.weight_bri  * loss_bri
               self.weight_col  * loss_col
-            + self.weight_crl  * loss_crl
             + self.weight_edge * loss_edge
             + self.weight_exp  * loss_exp
             + self.weight_tva  * loss_tva
-            + self.weight_kl   * loss_kl
             + self.weight_spa  * loss_spa
         )
         
-        if self.verbose:
-            # console.log(f"{self.loss_bri.__str__():<30} : {loss_bri}")
-            console.log(f"{self.loss_col.__str__():<30} : {loss_col}")
-            console.log(f"{self.loss_edge.__str__():<30}: {loss_edge}")
-            console.log(f"{self.loss_exp.__str__():<30} : {loss_exp}")
-            console.log(f"{self.loss_kl.__str__():<30}  : {loss_kl}")
-            console.log(f"{self.loss_spa.__str__():<30} : {loss_spa}")
-            console.log(f"{self.loss_tva.__str__():<30} : {loss_tva}")
-        return loss, enhance
+        return loss
         
 # endregion
 
@@ -144,13 +113,12 @@ class GCENet(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        channels     : int        = 3,
-        num_channels : int        = 32,
-        num_iters    : int        = 8,
-        scale_factor : int        = 1,
-        gamma        : float      = 2.8,
-        unsharp_sigma: int | None = None,
-        weights      : Any        = None,
+        channels    : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 8,
+        scale_factor: int   = 1,
+        gamma       : float = 2.8,
+        weights     : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -162,20 +130,17 @@ class GCENet(base.LowLightImageEnhancementModel):
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels      = self.weights.get("channels"     , channels)
-            num_channels  = self.weights.get("num_channels" , num_channels)
-            num_iters     = self.weights.get("num_iters"    , num_iters)
-            scale_factor  = self.weights.get("scale_factor" , scale_factor)
-            gamma         = self.weights.get("gamma"        , gamma)
-            unsharp_sigma = self.weights.get("unsharp_sigma", unsharp_sigma)
+            channels     = self.weights.get("channels"    , channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+            num_iters    = self.weights.get("num_iters"   , num_iters)
+            scale_factor = self.weights.get("scale_factor", scale_factor)
+            gamma        = self.weights.get("gamma"       , gamma)
         
-        self._channels     = channels
-        self.num_channels  = num_channels
-        self.num_iters     = num_iters
-        self.scale_factor  = scale_factor
-        self.gamma         = gamma
-        self.unsharp_sigma = unsharp_sigma
-        self.previous      = None
+        self._channels    = channels
+        self.num_channels = num_channels
+        self.num_iters    = num_iters
+        self.scale_factor = scale_factor
+        self.gamma        = gamma
         
         # Construct model
         self.conv1    = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
@@ -385,9 +350,9 @@ class GCENet(base.LowLightImageEnhancementModel):
         target: torch.Tensor | None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        pred                = self.forward(input=input, *args, **kwargs)
-        adjust, enhance     = pred
-        loss, self.previous = self._loss(input, adjust, enhance, self.previous)
+        pred            = self.forward(input=input, *args, **kwargs)
+        adjust, enhance = pred
+        loss            = self.loss(input, adjust, enhance)
         return enhance, loss
     
     '''
@@ -469,10 +434,6 @@ class GCENet(base.LowLightImageEnhancementModel):
                 b = y * (1 - g)
                 d = y * g
                 y = b + d + a * (torch.pow(d, 2) - d)
-                
-        # Unsharp masking
-        if self.unsharp_sigma is not None:
-            y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
         
         return a, y
     
@@ -684,6 +645,5 @@ class GCENet(base.LowLightImageEnhancementModel):
             return a, g, y
         return a, y
     '''
-
 
 # endregion

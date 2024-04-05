@@ -128,9 +128,6 @@ class CharbonnierLoss(Loss):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.eps = eps
     
-    def __str__(self) -> str:
-        return f"charbonnier_loss"
-    
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         # loss = torch.sqrt((input - target) ** 2 + (self.eps * self.eps))
         diff = input - target
@@ -151,9 +148,6 @@ class L1Loss(Loss):
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
     
-    def __str__(self) -> str:
-        return f"l1_loss"
-    
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         loss = F.l1_loss(input=input, target=target, reduction=self.reduction)
         loss = self.loss_weight * loss
@@ -170,9 +164,6 @@ class L2Loss(Loss):
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight, reduction=reduction)
-    
-    def __str__(self) -> str:
-        return f"l2_loss"
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         loss = F.mse_loss(input=input, target=target, reduction=self.reduction)
@@ -191,9 +182,6 @@ class ExtendedL1Loss(Loss):
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self._l1_loss = L1Loss()
-    
-    def __str__(self) -> str:
-        return f"extended_l1_loss"
     
     # noinspection PyMethodOverriding
     def forward(

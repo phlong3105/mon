@@ -38,6 +38,10 @@ def run_train(args: dict):
     assert root.exists()
     
     # Parse arguments
+    is_extra_model = "(mon_lib)" in model
+    model          = model.replace(" (mon_lib)", "")
+    is_extra_model = is_extra_model and model in mon.MODELS_EXTRA
+    
     config   = mon.parse_config_file(project_root=root, config=config)
     assert config not in [None, "None", ""]
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
@@ -59,10 +63,7 @@ def run_train(args: dict):
     flags   += ["--verbose"]  if verbose  else []
     
     # Parse script file
-    if model in mon.MODELS:
-        script_file = _current_dir / "train.py"
-        python_call = ["python"]
-    elif model in mon.MODELS_EXTRA:
+    if is_extra_model:
         torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
         script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_train.py"
         devices     = mon.parse_device(device)
@@ -77,7 +78,8 @@ def run_train(args: dict):
         else:
             python_call = ["python"]
     else:
-        raise ValueError(f"Cannot find Python training script file.")
+        script_file = _current_dir / "train.py"
+        python_call = ["python"]
     
     # Parse arguments
     args_call: list[str] = []
@@ -131,6 +133,10 @@ def run_predict(args: dict):
     assert root.exists()
     
     # Parse arguments
+    is_extra_model = "(mon_lib)" in model
+    model          = model.replace(" (mon_lib)", "")
+    is_extra_model = is_extra_model and model in mon.MODELS_EXTRA
+    
     config   = mon.parse_config_file(project_root=root, config=config)
     config   = config or "default"
     # assert config not in [None, "None", ""]
@@ -159,15 +165,13 @@ def run_predict(args: dict):
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
-        if model in mon.MODELS:
-            script_file = _current_dir / "predict.py"
-            python_call = ["python"]
-        elif model in mon.MODELS_EXTRA:
+        if is_extra_model:
             torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
             script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_predict.py"
             python_call = ["python"]
         else:
-            raise ValueError(f"Cannot find Python training script file.")
+            script_file = _current_dir / "predict.py"
+            python_call = ["python"]
         
         # Parse arguments
         args_call: list[str] = []
@@ -223,6 +227,10 @@ def run_online(args: dict):
     assert root.exists()
     
     # Parse arguments
+    is_extra_model = "(mon_lib)" in model
+    model          = model.replace(" (mon_lib)", "")
+    is_extra_model = is_extra_model and model in mon.MODELS_EXTRA
+    
     config   = mon.parse_config_file(project_root=root, config=config)
     assert config not in [None, "None", ""]
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
@@ -250,15 +258,13 @@ def run_online(args: dict):
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
-        if model in mon.MODELS:
-            script_file = _current_dir / "online.py"
-            python_call = ["python"]
-        elif model in mon.MODELS_EXTRA:
+        if is_extra_model:
             torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
             script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_online.py"
             python_call = ["python"]
         else:
-            raise ValueError(f"Cannot find Python online learning script file.")
+            script_file = _current_dir / "online.py"
+            python_call = ["python"]
         
         # Parse arguments
         args_call: list[str] = []
@@ -334,13 +340,14 @@ def main(
         models_str_  = utils.parse_menu_string(models_)
         model	     = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	     = models_[int(model)] if mon.is_int(model) else model
+        model_       = model.replace(" (mon_lib)", "")
         # Config     
-        configs_     = utils.list_configs(project_root=root, model=model)
+        configs_     = utils.list_configs(project_root=root, model=model_)
         configs_str_ = utils.parse_menu_string(configs_)
         config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
         config       = configs_[int(config)] if mon.is_int(config) else config
         # Weights    
-        weights_     = utils.list_weights_files(project_root=root, model=model, config=config)
+        weights_     = utils.list_weights_files(project_root=root, model=model_, config=config)
         weights_str_ = utils.parse_menu_string(weights_)
         weights      = click.prompt(click.style(f"Weights {weights_str_}", fg="bright_green", bold=True), type=str, default=weights or "")
         weights      = weights if weights not in [None, ""] else None
@@ -358,12 +365,12 @@ def main(
             data 	  = mon.to_list(data)
             data 	  = [data_[int(d)] if mon.is_int(d) else d for d in data]
         # Fullname
-        fullname    = mon.Path(config).stem if config not in [None, "None", ""] else model
+        fullname    = mon.Path(config).stem if config not in [None, "None", ""] else model_
         fullname    = click.prompt(click.style(f"Save name: {fullname}", fg="bright_green", bold=True), type=str, default=fullname)
         # Device
         devices_    = mon.list_devices()
         devices_str = utils.parse_menu_string(devices_)
-        device      = "auto" if model in utils.list_mon_models(mode=mode, task=task) and mode == "train" else device
+        device      = "auto" if model_ in utils.list_mon_models(mode=mode, task=task) and mode == "train" else device
         device      = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=device or "cuda:0")
         device 	    = devices_[int(device)] if mon.is_int(device) else device
         # Training Flags

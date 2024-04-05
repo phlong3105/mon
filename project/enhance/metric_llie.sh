@@ -12,7 +12,7 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-model="retinexformer"
+model="rapidlight_v01"
 data=(
     "dicm"
     "lime"

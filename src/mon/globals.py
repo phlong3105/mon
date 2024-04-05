@@ -874,112 +874,118 @@ MODELS_EXTRA = {
     # endregion
     # region enhance
         # region llie
-            "dccnet"           : {
+            "dccnet"       : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "dccnet",
                 "torch_distributed_launch": True,
             },
-            "enlightengan"     : {
+            "enlightengan" : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.UNSUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "enlightengan",
                 "torch_distributed_launch": True,
             },
-            "gsad"             : {
+            "gsad"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "gsad",
                 "torch_distributed_launch": True,
             },
-            "kind"             : {
+            "kind"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "kind",
                 "torch_distributed_launch": True,
             },
-            "lime"             : {
+            "lime"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.TRADITIONAL],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "lime",
                 "torch_distributed_launch": True,
             },
-            "llflow"           : {
+            "llflow"       : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "llflow",
                 "torch_distributed_launch": True,
             },
-            "pie"              : {
+            "pie"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.TRADITIONAL],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "pie",
                 "torch_distributed_launch": True,
             },
-            "retinexformer_lib": {
+            "retinexformer": {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "retinexformer",
                 "torch_distributed_launch": True,
             },
-            "retinexnet"       : {
+            "retinexnet"   : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "retinexnet",
                 "torch_distributed_launch": True,
             },
-            "ruas"             : {
+            "ruas"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "ruas",
                 "torch_distributed_launch": True,
             },
-            "sci"              : {
+            "sci"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "sci",
                 "torch_distributed_launch": True,
             },
-            "sgz"              : {
+            "sgz"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "sgz",
                 "torch_distributed_launch": True,
             },
-            "snr"              : {
+            "snr"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "snr",
                 "torch_distributed_launch": True,
             },
-            "stablellve"       : {
+            "stablellve"   : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "stablellve",
                 "torch_distributed_launch": True,
             },
-            "uretinexnet"      : {
+            "uretinexnet"  : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "uretinexnet",
                 "torch_distributed_launch": True,
             },
-            "utvnet"           : {
+            "utvnet"       : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "utvnet",
                 "torch_distributed_launch": True,
             },
-            "zerodce_lib"      : {
+            "zero_dce"     : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zerodce",
+                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zero_dce",
                 "torch_distributed_launch": True,
             },
-            "zerodce++_lib"    : {
+            "zero_dce++"   : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zerodce++",
+                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zero_dce++",
+                "torch_distributed_launch": True,
+            },
+            "zero_didce"   : {
+                "tasks"    : [Task.LLIE],
+                "schemes"  : [Scheme.ZEROSHOT],
+                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zero_didce",
                 "torch_distributed_launch": True,
             },
         # endregion

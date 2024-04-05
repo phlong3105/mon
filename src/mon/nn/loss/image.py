@@ -65,9 +65,6 @@ class BrightnessConstancyLoss(base.Loss):
         self.ksize = ksize
         self.eps   = eps
     
-    def __str__(self) -> str:
-        return f"brightness_consistency_loss"
-    
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         target = proc.get_guided_brightness_enhancement_map_prior(target, self.gamma, self.ksize)
         loss   = torch.sqrt((target - input) ** 2 + (self.eps * self.eps))
@@ -96,9 +93,6 @@ class ChannelConsistencyLoss(base.Loss):
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.log_target = log_target
-    
-    def __str__(self) -> str:
-        return f"channel_consistency_loss"
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         assert input.shape == target.shape
@@ -144,9 +138,6 @@ class ChannelRatioConsistencyLoss(base.Loss):
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-    
-    def __str__(self) -> str:
-        return f"channel_ratio_consistency_loss"
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         assert input.shape == target.shape
@@ -223,9 +214,6 @@ class ContradictChannelLoss(base.Loss):
         )
         self.mae     = base.MAELoss()
         self.sigmoid = nn.Sigmoid()
-    
-    def __str__(self) -> str:
-        return f"contradict_channel_loss"
     
     def forward(
         self,
@@ -456,9 +444,6 @@ class PerceptualLoss(base.Loss):
         self.net = net
         self.net.eval()
     
-    def __str__(self) -> str:
-        return f"perceptual_loss"
-    
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         if self.net.device != input.device:
             self.net = self.net.to(input.device)
@@ -487,9 +472,6 @@ class PerceptualL1Loss(base.Loss):
         self.per_loss        = PerceptualLoss(net=net, reduction=reduction)
         self.l1_loss         = base.L1Loss(reduction=reduction)
     
-    def __str__(self) -> str:
-        return f"perceptual_l1_Loss"
-    
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         per_loss = self.per_loss(input=input, target=target)
         l1_loss  = self.l1_loss(input=input, target=target)
@@ -514,9 +496,6 @@ class PSNRLoss(base.Loss):
         self.to_y  = to_y
         self.coef  = torch.tensor([65.481, 128.553, 24.966]).reshape(1, 3, 1, 1)
         self.first = True
-    
-    def __str__(self) -> str:
-        return f"psnr_loss"
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         assert len(input.size()) == 4
@@ -586,9 +565,6 @@ class TotalVariationALoss(base.Loss):
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.tv_loss_weight = tv_loss_weight
-    
-    def __str__(self) -> str:
-        return f"illumination_smoothness_loss"
     
     def forward(
         self,
@@ -1168,9 +1144,6 @@ class VGGCharbonnierLoss(base.Loss):
         self.char_loss_weight = char_loss_weight
         self.vgg_loss         = VGGLoss(reduction=reduction)
         self.char_loss        = base.CharbonnierLoss(reduction=reduction)
-    
-    def __str__(self) -> str:
-        return f"vgg_charbonnier_loss"
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         vgg_loss  =  self.vgg_loss(input=input, target=target)
