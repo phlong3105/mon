@@ -33,10 +33,9 @@ class Loss(nn.Loss):
         self,
         exp_patch_size : int   = 16,
         exp_mean_val   : float = 0.6,
-        spa_num_regions: Literal[4, 8, 16, 24] = 16,
+        spa_num_regions: Literal[4, 8, 16, 24] = 4,
         spa_patch_size : int   = 4,
         weight_col     : float = 5,
-        weight_edge    : float = 1,
         weight_exp     : float = 10,
         weight_spa     : float = 1,
         weight_tva     : float = 1600,
@@ -45,13 +44,11 @@ class Loss(nn.Loss):
     ):
         super().__init__(*args, **kwargs)
         self.weight_col  = weight_col
-        self.weight_edge = weight_edge
         self.weight_exp  = weight_exp
         self.weight_spa  = weight_spa
         self.weight_tva  = weight_tva
         
         self.loss_col    = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_edge   = nn.EdgeConstancyLoss(reduction=reduction)
         self.loss_exp    = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
@@ -71,20 +68,16 @@ class Loss(nn.Loss):
         enhance : torch.Tensor,
         **_
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        loss_col  = self.loss_col(input=enhance)                if self.weight_col  > 0 else 0
-        loss_edge = self.loss_edge(input=enhance, target=input) if self.weight_edge > 0 else 0
-        loss_exp  = self.loss_exp(input=enhance)                if self.weight_exp  > 0 else 0
-        loss_spa  = self.loss_spa(input=enhance, target=input)  if self.weight_spa  > 0 else 0
-        loss_tva  = self.loss_tva(input=adjust)                 if self.weight_tva  > 0 else 0
-        
+        loss_col  = self.loss_col(input=enhance)               if self.weight_col  > 0 else 0
+        loss_exp  = self.loss_exp(input=enhance)               if self.weight_exp  > 0 else 0
+        loss_spa  = self.loss_spa(input=enhance, target=input) if self.weight_spa  > 0 else 0
+        loss_tva  = self.loss_tva(input=adjust)                if self.weight_tva  > 0 else 0
         loss = (
-              self.weight_col  * loss_col
-            + self.weight_edge * loss_edge
-            + self.weight_exp  * loss_exp
-            + self.weight_tva  * loss_tva
-            + self.weight_spa  * loss_spa
+              self.weight_col * loss_col
+            + self.weight_exp * loss_exp
+            + self.weight_tva * loss_tva
+            + self.weight_spa * loss_spa
         )
-        
         return loss
         
 # endregion
@@ -149,8 +142,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         self.conv4    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
         self.conv5    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
         self.conv6    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.conv7    = nn.DSConv2d(self.num_channels * 2, self.channels,     3, 1, 1, bias=True)
-        self.attn     = nn.Identity()
+        self.conv7    = nn.DSConv2d(self.num_channels * 2, 3,     3, 1, 1, bias=True)
         self.act      = nn.PReLU()
         self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
         
@@ -403,7 +395,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
         x = input
-
+        
         # Downsampling
         x_down = x
         if self.scale_factor != 1:
@@ -413,7 +405,6 @@ class GCENet(base.LowLightImageEnhancementModel):
         f2 = self.act(self.conv2(f1))
         f3 = self.act(self.conv3(f2))
         f4 = self.act(self.conv4(f3))
-        f4 = self.attn(f4)
         f5 = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
         f6 = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
         a  =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
