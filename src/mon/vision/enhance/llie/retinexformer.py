@@ -162,16 +162,16 @@ class IGMSA(nn.Module):
 		self,
 		in_channels  : int,
 		head_channels: int = 64,
-		heads   	 : int = 8,
+		num_heads    : int = 8,
 	):
 		super().__init__()
-		self.num_heads = heads
+		self.num_heads = num_heads
 		self.dim_head  = head_channels
-		self.to_q 	   = nn.Linear(in_channels, head_channels * heads, bias=False)
-		self.to_k 	   = nn.Linear(in_channels, head_channels * heads, bias=False)
-		self.to_v 	   = nn.Linear(in_channels, head_channels * heads, bias=False)
-		self.rescale   = nn.Parameter(torch.ones(heads, 1, 1))
-		self.proj      = nn.Linear(head_channels * heads, in_channels, bias=True)
+		self.to_q 	   = nn.Linear(in_channels, head_channels * num_heads, bias=False)
+		self.to_k 	   = nn.Linear(in_channels, head_channels * num_heads, bias=False)
+		self.to_v 	   = nn.Linear(in_channels, head_channels * num_heads, bias=False)
+		self.rescale   = nn.Parameter(torch.ones(num_heads, 1, 1))
+		self.proj      = nn.Linear(head_channels * num_heads, in_channels, bias=True)
 		self.pos_emb   = nn.Sequential(
 			nn.Conv2d(in_channels, in_channels, 3, 1, 1, bias=False, groups=in_channels),
 			nn.GELU(),
@@ -232,7 +232,7 @@ class IGAB(nn.Module):
 		self,
 		in_channels  : int,
 		head_channels: int = 64,
-		heads        : int = 8,
+		num_heads    : int = 8,
 		num_blocks   : int = 2,
 	):
 		super().__init__()
@@ -240,7 +240,7 @@ class IGAB(nn.Module):
 		for _ in range(num_blocks):
 			self.blocks.append(
 				nn.ModuleList([
-					IGMSA(in_channels=in_channels, head_channels=head_channels, heads=heads),
+					IGMSA(in_channels=in_channels, head_channels=head_channels, num_heads=num_heads),
 					PreNorm(in_channels, FeedForward(in_channels=in_channels))
 				])
 			)
@@ -278,7 +278,7 @@ class Denoiser(nn.Module):
 		for i in range(level):
 			self.encoder_layers.append(
 				nn.ModuleList([
-					IGAB(in_channels=dim_level, num_blocks=num_blocks[i], head_channels=num_channels, heads=dim_level // num_channels),
+					IGAB(in_channels=dim_level, num_blocks=num_blocks[i], head_channels=num_channels, num_heads=dim_level // num_channels),
 					nn.Conv2d(dim_level, dim_level * 2, 4, 2, 1, bias=False),
 					nn.Conv2d(dim_level, dim_level * 2, 4, 2, 1, bias=False)
 				])
@@ -286,7 +286,7 @@ class Denoiser(nn.Module):
 			dim_level *= 2
 		
 		# Bottleneck
-		self.bottleneck = IGAB(in_channels=dim_level, head_channels=num_channels, heads=dim_level // num_channels, num_blocks=num_blocks[-1])
+		self.bottleneck = IGAB(in_channels=dim_level, head_channels=num_channels, num_heads=dim_level // num_channels, num_blocks=num_blocks[-1])
 		
 		# Decoder
 		self.decoder_layers = nn.ModuleList([])

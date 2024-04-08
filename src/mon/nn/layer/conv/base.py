@@ -10,11 +10,16 @@ __all__ = [
     "Conv2d",
     "Conv2dBn",
     "Conv2dNormAct",
+    "Conv2dNormActivation",
+    "Conv2dReLU",
     "Conv2dSame",
     "Conv2dTF",
+    "Conv2dTanh",
     "Conv3d",
     "Conv3dNormAct",
+    "Conv3dNormActivation",
     "ConvNormAct",
+    "ConvNormActivation",
     "ConvTranspose1d",
     "ConvTranspose2d",
     "ConvTranspose3d",
@@ -32,9 +37,6 @@ __all__ = [
     "LazyConvTranspose1d",
     "LazyConvTranspose2d",
     "LazyConvTranspose3d",
-    "Conv2dNormActivation",
-    "ConvNormActivation",
-    "Conv3dNormActivation",
     "PWConv2d",
     "PointwiseConv2d",
     "conv2d_same",
@@ -134,6 +136,85 @@ class Conv2dBn(nn.Module):
         y = self.conv(x)
         if self.bn is not None:
             y = self.bn(y)
+        return y
+
+
+class Conv2dReLU(nn.Module):
+    """Conv2d + ReLU."""
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = False,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        inplace     : bool            = True,
+    ):
+        super().__init__()
+        self.conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.relu = nn.ReLU(inplace=inplace)
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.relu(self.conv(x))
+        return y
+
+
+class Conv2dTanh(nn.Module):
+    """Conv2d + Tanh."""
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = False,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+    ):
+        super().__init__()
+        self.conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.tanh = nn.Tanh()
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.tanh(self.conv(x))
         return y
 
 

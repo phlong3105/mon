@@ -16,6 +16,7 @@ __all__ = [
     "EdgeLoss",
     "ExposureControlLoss",
     "GradientLoss",
+    "HistogramLoss",
     "PSNRLoss",
     "PerceptualL1Loss",
     "PerceptualLoss",
@@ -429,6 +430,32 @@ class GrayscaleLoss(base.Loss):
         return loss
 
 
+@LOSSES.register(name="histogram_loss")
+class HistogramLoss(base.Loss):
+    
+    def __init__(
+        self,
+        bins       : int   = 256,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.bins    = bins
+        self.l1_loss = base.L1Loss(reduction=reduction)
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        # Compute histograms for y_true and y_pred
+        input_hist  = torch.histc(input.view(-1),  bins=self.bins, min=0, max=1)
+        target_hist = torch.histc(target.view(-1), bins=self.bins, min=0, max=1)
+        # Normalize histograms
+        input_hist  = input_hist.float()  / input_hist.sum()
+        target_hist = target_hist.float() / target_hist.sum()
+        # Compute histogram distance
+        loss = self.l1_loss(input_hist, target_hist)
+        loss = self.loss_weight * loss
+        return loss
+        
+    
 @LOSSES.register(name="perceptual_loss")
 class PerceptualLoss(base.Loss):
     """Perceptual Loss."""
@@ -440,8 +467,8 @@ class PerceptualLoss(base.Loss):
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.mse = base.MSELoss(reduction=reduction)
-        self.net = net
+        self.l2_loss = base.L2Loss(reduction=reduction)
+        self.net     = net
         self.net.eval()
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -449,9 +476,8 @@ class PerceptualLoss(base.Loss):
             self.net = self.net.to(input.device)
         input_feats  = self.net(input)
         target_feats = self.net(target)
-        loss = self.mse(input=input_feats, target=target_feats)
-        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.loss_weight * loss
+        loss         = self.l2_loss(input=input_feats, target=target_feats)
+        loss         = self.loss_weight * loss
         return loss
 
 

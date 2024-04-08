@@ -135,7 +135,6 @@ class LYT(Model):
     def _create_processing_layers(self, filters):
         layerz = [layers.Conv2D(filters, (3, 3), activation='relu', padding='same') for _ in range(1)]
         return keras.Sequential(layerz)
-    
         
     def call(self, inputs):
         ycbcr = tf.image.rgb_to_yuv(inputs)

@@ -10,8 +10,13 @@ __all__ = [
     "hsv2rgb_torch",
     "rgb2hsl_torch",
     "rgb2hsv_torch",
+    # YCbCr
+    "rgb_to_y",
+    "rgb_to_ycbcr",
+    "ycbcr_to_rgb",
 ]
 
+import multipledispatch
 import torch
 
 
@@ -93,5 +98,96 @@ def hsl2rgb_torch(hsl: torch.Tensor) -> torch.Tensor:
     rgb[idx == 5] = torch.cat([_c, _o, _x], dim=1)[idx == 5]
     rgb += _m
     return rgb
+
+# endregion
+
+
+# region YCbCr
+
+def _rgb_to_y(r: torch.Tensor, g: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+    y = 0.299 * r + 0.587 * g + 0.114 * b
+    return y
+
+
+@multipledispatch.dispatch(torch.Tensor)
+def rgb_to_ycbcr(image: torch.Tensor) -> torch.Tensor:
+    """Convert an RGB image to YCbCr.
+    
+    Args:
+        image: RGB Image to be converted to YCbCr with shape :math:`[*, 3, H, W]`.
+
+    Returns:
+        YCbCr version of the image with shape :math:`[*, 3, H, W]`.
+    """
+    if not isinstance(image, torch.Tensor):
+        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+
+    if len(image.shape) < 3 or image.shape[-3] != 3:
+        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        
+    r = image[..., 0, :, :]
+    g = image[..., 1, :, :]
+    b = image[..., 2, :, :]
+
+    delta = 0.5
+    y     = _rgb_to_y(r, g, b)
+    cb    = (b - y) * 0.564 + delta
+    cr    = (r - y) * 0.713 + delta
+    return torch.stack([y, cb, cr], -3)
+
+
+@multipledispatch.dispatch(torch.Tensor)
+def rgb_to_y(image: torch.Tensor) -> torch.Tensor:
+    r"""Convert an RGB image to Y.
+    
+    Args:
+        image: RGB Image to be converted to Y with shape :math:`[*, 3, H, W]`.
+
+    Returns:
+        Y version of the image with shape :math:`[*, 1, H, W]`.
+    """
+    if not isinstance(image, torch.Tensor):
+        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+    
+    if len(image.shape) < 3 or image.shape[-3] != 3:
+        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+    
+    r = image[..., 0:1, :, :]
+    g = image[..., 1:2, :, :]
+    b = image[..., 2:3, :, :]
+    y = _rgb_to_y(r, g, b)
+    return y
+
+
+@multipledispatch.dispatch(torch.Tensor)
+def ycbcr_to_rgb(image: torch.Tensor) -> torch.Tensor:
+    r"""Convert an YCbCr image to RGB.
+
+    The image data is assumed to be in the range of (0, 1).
+
+    Args:
+        image: YCbCr Image to be converted to RGB with shape :math:`[*, 3, H, W]`.
+
+    Returns:
+        RGB version of the image with shape :math:`[*, 3, H, W]`.
+    """
+    if not isinstance(image, torch.Tensor):
+        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+    
+    if len(image.shape) < 3 or image.shape[-3] != 3:
+        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+    
+    y  = image[..., 0, :, :]
+    cb = image[..., 1, :, :]
+    cr = image[..., 2, :, :]
+
+    delta: float = 0.5
+    cb_shifted = cb - delta
+    cr_shifted = cr - delta
+
+    r = y + 1.403 * cr_shifted
+    g = y - 0.714 * cr_shifted - 0.344 * cb_shifted
+    b = y + 1.773 * cb_shifted
+    return torch.stack([r, g, b], -3).clamp(0, 1)
 
 # endregion
