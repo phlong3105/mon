@@ -309,6 +309,8 @@ def run_online(args: dict):
 @click.option("--epochs",   type=int, default=-1,   	  help="Training epochs.")
 @click.option("--steps",    type=int, default=-1,   	  help="Training steps.")
 @click.option("--imgsz",    type=int, default=512,        help="Image size.")
+@click.option("--exist-ok", is_flag=True,                 help="Exist OK.")
+@click.option("--verbose",  is_flag=True,                 help="Verbosity.")
 def main(
     root    : str,
     task    : str,
@@ -322,6 +324,8 @@ def main(
     epochs  : int,
     steps   : int,
     imgsz   : int,
+    exist_ok: bool,
+    verbose : bool,
 ):
     click.echo(click.style(f"\nInput Prompt:", fg="white", bg="red", bold=True))
     
@@ -396,9 +400,9 @@ def main(
             save_image   = True if save_image   == "yes" else False
             use_data_dir = True if use_data_dir == "yes" else False
         # Common Flags
-        exist_ok = click.prompt(click.style(f"Exist OK?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
+        exist_ok = click.prompt(click.style(f"Exist OK?   [yes/no]", fg="bright_yellow", bold=True), type=str, default=exist_ok)
         exist_ok = True if exist_ok == "yes" else False
-        verbose  = click.prompt(click.style(f"Verbosity?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
+        verbose  = click.prompt(click.style(f"Verbosity?  [yes/no]", fg="bright_yellow", bold=True), type=str, default=verbose)
         verbose  = True if verbose  == "yes" else False
     
     print("\n")

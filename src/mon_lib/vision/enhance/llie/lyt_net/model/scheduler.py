@@ -1,7 +1,10 @@
-import tensorflow as tf
 import math
 
+import tensorflow as tf
+
+
 class CosineDecayWithRestartsLearningRateSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+    
     def __init__(self, initial_lr, min_lr, total_steps, first_decay_steps, t_mul=2.0, m_mul=1.0):
         super(CosineDecayWithRestartsLearningRateSchedule, self).__init__()
         self.initial_lr = initial_lr

@@ -2,11 +2,10 @@ import os
 import sys
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = os.path.join(script_dir, '..')
+root_dir   = os.path.join(script_dir, "..")
 sys.path.append(root_dir)
 
 import data_loading as dl
-import tensorflow as tf
 from model.arch import LYT, Denoiser
 from model.losses import load_vgg, loss
 from model.scheduler import CosineDecayWithRestartsLearningRateSchedule
@@ -16,9 +15,8 @@ import numpy as np
 from find_gamma import *
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-tf.random.set_seed(
-    1
-)
+tf.random.set_seed(1)
+
 
 def get_time():
     current_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")

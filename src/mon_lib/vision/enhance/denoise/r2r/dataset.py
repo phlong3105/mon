@@ -1,19 +1,23 @@
+import glob
 import os
 import os.path
-import numpy as np
 import random
-import h5py
-import torch
+
 import cv2
-import glob
+import h5py
+import numpy as np
+import torch
 import torch.utils.data as udata
+
 from utils import data_augmentation
 
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_DEVICE_ORDER"]    = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(2)
+
 
 def normalize(data):
     return data/255.
+
 
 def Im2Patch(img, win, stride=1):
     k = 0
@@ -29,6 +33,8 @@ def Im2Patch(img, win, stride=1):
             Y[:,k,:] = np.array(patch[:]).reshape(endc, TotalPatNum)
             k = k + 1
     return Y.reshape([endc, win, win, TotalPatNum])
+
+
 def Patch2Im(Y, win, img_size,stride=1):
     
     endc = img_size[0]
@@ -47,6 +53,8 @@ def Patch2Im(Y, win, img_size,stride=1):
             k = k+1
     img = img/(weight+1e-6)
     return img
+
+
 def prepare_data(data_path,sigma, patch_size, stride, aug_times=1):
     # train
     print('process training data')
@@ -107,8 +115,10 @@ def prepare_data(data_path,sigma, patch_size, stride, aug_times=1):
     h5f.close()
     
     print('val set, # samples %d\n' % val_num)
+    
 
 class Dataset_train(udata.Dataset):
+    
     def __init__(self,  path='train'):
         super(Dataset_train, self).__init__()
         self.fullpath = path+'.h5'
@@ -117,8 +127,10 @@ class Dataset_train(udata.Dataset):
         self.keys = list(h5f.keys())
         random.shuffle(self.keys)
         h5f.close()
+        
     def __len__(self):
         return len(self.keys)
+    
     def __getitem__(self, index):
 
         h5f = h5py.File(self.fullpath, 'r')
@@ -129,7 +141,9 @@ class Dataset_train(udata.Dataset):
         h5f.close()
         return  torch.Tensor(clean), torch.Tensor(noisy)
 
+
 class Dataset_val(udata.Dataset):
+    
     def __init__(self,  path='train'):
         super(Dataset_val, self).__init__()
         self.fullpath = path+'.h5'
@@ -138,8 +152,10 @@ class Dataset_val(udata.Dataset):
         self.keys = list(h5f.keys())
 #        random.shuffle(self.keys)
         h5f.close()
+        
     def __len__(self):
         return len(self.keys)
+    
     def __getitem__(self, index):
 
         h5f = h5py.File(self.fullpath, 'r')
@@ -149,6 +165,7 @@ class Dataset_val(udata.Dataset):
         noisy = data[1]
         h5f.close()
         return torch.Tensor(clean), torch.Tensor(noisy)
+    
+    
 if __name__ == "__main__":
     prepare_data(data_path='./data/',sigma=25, patch_size=40, stride=10, aug_times=1)
- 

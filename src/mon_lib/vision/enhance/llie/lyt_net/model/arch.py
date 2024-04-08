@@ -1,10 +1,10 @@
-import tensorflow as tf
-from tensorflow.keras import layers
-from tensorflow.keras import Model
 import keras
+import tensorflow as tf
+from tensorflow.keras import layers, Model
 
 
 class MSEFBlock(layers.Layer):
+    
     def __init__(self, filters, **kwargs):
         super(MSEFBlock, self).__init__(**kwargs)
         self.layer_norm = tf.keras.layers.LayerNormalization(axis=-1)
@@ -18,13 +18,16 @@ class MSEFBlock(layers.Layer):
         x_fused = layers.Multiply()([x1, x2])
         x_out = layers.Add()([x_fused, inputs])
         return x_out
-    
+
+
 class SEBlock(layers.Layer):
+    
     def __init__(self, input_channels, reduction_ratio=16, **kwargs):
         super().__init__(**kwargs)
         self.pool = layers.GlobalAveragePooling2D()
         self.fc1 = layers.Dense(input_channels // reduction_ratio, activation='relu')
         self.fc2 = layers.Dense(input_channels, activation='tanh')
+        
     def call(self, inputs):
         x = self.pool(inputs)
         x = self.fc1(x)
@@ -32,7 +35,9 @@ class SEBlock(layers.Layer):
         scale = tf.reshape(x, [-1, 1, 1, inputs.shape[-1]])
         return inputs * scale
 
+
 class MultiHeadSelfAttention(layers.Layer):
+    
     def __init__(self, embed_size, num_heads):
         super(MultiHeadSelfAttention, self).__init__()
         self.embed_size = embed_size
@@ -47,6 +52,7 @@ class MultiHeadSelfAttention(layers.Layer):
     def split_heads(self, x, batch_size):
         x = tf.reshape(x, (batch_size, -1, self.num_heads, self.head_dim))
         return tf.transpose(x, perm=[0, 2, 1, 3])
+    
     def attention(self, query, key, value):
         matmul_qk = tf.matmul(query, key, transpose_b=True)
         depth = tf.cast(tf.shape(key)[-1], tf.float32)
@@ -54,6 +60,7 @@ class MultiHeadSelfAttention(layers.Layer):
         attention_weights = tf.nn.softmax(logits, axis=-1)
         output = tf.matmul(attention_weights, value)
         return output
+    
     def call(self, inputs):
         batch_size = tf.shape(inputs)[0]
         height = tf.shape(inputs)[1]
@@ -73,7 +80,9 @@ class MultiHeadSelfAttention(layers.Layer):
         output = tf.reshape(output, [batch_size, height, width, self.embed_size])
         return output
 
+
 class Denoiser(Model):
+    
     def __init__(self, num_filters, kernel_size=3, activation='relu'):
         super(Denoiser, self).__init__()
         self.conv1 = layers.Conv2D(num_filters, kernel_size=kernel_size, strides=1, padding='same', activation=activation)
@@ -86,6 +95,7 @@ class Denoiser(Model):
         self.up4 = layers.UpSampling2D(2)
         self.output_layer = layers.Conv2D(1, kernel_size=kernel_size, strides=1, padding='same', activation='tanh')
         self.res_layer = layers.Conv2D(1, kernel_size=kernel_size, strides=1, padding='same', activation='tanh')
+        
     def call(self, inputs):
         x1 = self.conv1(inputs)
         x2 = self.conv2(x1)
@@ -99,7 +109,9 @@ class Denoiser(Model):
         x = self.res_layer(x)
         return self.output_layer(x + inputs)
 
+
 class LYT(Model):
+    
     def __init__(self, filters=32, denoiser_cb=None, denoiser_cr=None):
         super(LYT, self).__init__()
         self.process_y = self._create_processing_layers(filters)
@@ -119,9 +131,11 @@ class LYT(Model):
         self.recombine = layers.Conv2D(filters, (3, 3), activation='relu', padding='same')
         
         self.final_adjustments = layers.Conv2D(3, (3, 3), activation='tanh', padding='same')
+        
     def _create_processing_layers(self, filters):
         layerz = [layers.Conv2D(filters, (3, 3), activation='relu', padding='same') for _ in range(1)]
         return keras.Sequential(layerz)
+    
         
     def call(self, inputs):
         ycbcr = tf.image.rgb_to_yuv(inputs)

@@ -1,5 +1,5 @@
 import tensorflow as tf
-import numpy as np
+
 
 def adjust_gamma(image, gamma=1.0):
     max_val = tf.reduce_max(image)
@@ -7,6 +7,7 @@ def adjust_gamma(image, gamma=1.0):
     image_gamma_corrected = tf.pow(image_normalized, gamma)
     image_gamma_corrected = image_gamma_corrected * max_val
     return image_gamma_corrected
+
 
 def find_optimal_gamma(source_image, target_image, gamma_range, max_pixel_value):
     optimal_gamma = gamma_range[0]

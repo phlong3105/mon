@@ -6,7 +6,6 @@ root_dir = os.path.join(script_dir, '..')
 sys.path.append(root_dir)
 
 import data_loading as dl
-import tensorflow as tf
 from model.arch import LYT, Denoiser
 import argparse
 import datetime
@@ -125,7 +124,7 @@ def start_test(dataset, weights, gtmean):
     print(f"SSIM: {avg_ssim:.6f}")
     print(f"LPIPS: {avg_lpips:.6f}")
 
-
+    
 def compute_lpips(predicted_image, ground_truth_image, lpips_model):
     # lpips_model = lpips.LPIPS(net='alex')
 
@@ -147,5 +146,4 @@ if __name__ == '__main__':
     parser.add_argument('--weights', type=str, required=True, help='Path to \'.h5\' file containing model weights.')
     parser.add_argument('--gtmean', action='store_true', help='Use GT Mean for evaluation.')
     args = parser.parse_args()
-
     start_test(args.dataset, args.weights, args.gtmean)

@@ -15,17 +15,14 @@ from tensorflow.python.framework.convert_to_constants import convert_variables_t
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.get_logger().setLevel(logging.ERROR)
 
-
 def get_time():
     current_time = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     return current_time
-
 
 def get_total_params(model):
     total_params = sum([tf.keras.backend.count_params(w) for w in model.trainable_weights])
     total_non_trainable_params = sum([tf.keras.backend.count_params(w) for w in model.non_trainable_weights])
     return total_params, total_non_trainable_params
-
 
 def compute_flops(model, input_shape=(256,256,3)):
     input_layer = tf.keras.Input(shape=input_shape)
@@ -52,7 +49,6 @@ def compute_flops(model, input_shape=(256,256,3)):
     total_flops = get_flops(model_)
     return total_flops
 
-
 def compute_complexity(shape=(256,256,3)):
     print('LYT-Net 2024 (c) Brateanu, A., Balmez, R., Avram A., Orhei, C.C.')
     print(f"({get_time()}) Computing complexity of LYT-Net.")
@@ -72,8 +68,7 @@ def compute_complexity(shape=(256,256,3)):
     print(f"({get_time()}) LYT-Net complexity:")
     print(f'FLOPs: {(flops / (1024*1024*1024)):.2f} G')
     print(f'Params: {param_count}')
-
-
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Complexity check script')
     parser.add_argument('--shape', type=str, required=False, help='Input shape')

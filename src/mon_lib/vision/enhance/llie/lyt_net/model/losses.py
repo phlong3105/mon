@@ -1,6 +1,6 @@
 import tensorflow as tf
-from tensorflow.keras.applications.vgg19 import VGG19
 from tensorflow.keras import Model
+from tensorflow.keras.applications.vgg19 import VGG19
 
 
 def color_loss(y_true, y_pred):

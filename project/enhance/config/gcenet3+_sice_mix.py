@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""RapidLight model trained on SICEMix dataset."""
+"""GCENet3+ model trained on SICEMix dataset."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "rapidlight_v01"
+model_name = "gcenet3+"
 data_name  = "sice_mix"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -30,33 +30,30 @@ verbose    = True
 # region Model
 
 model = {
-	"name"        : model_name,     # The model's name.
-	"root"        : root,           # The root directory of the model.
-	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
-	"channels"    : 3,              # The first layer's input channel.
-	"num_channels": 64,             # The number of input and output channels for subsequent layers.
-	"num_iters"   : 8,              # The number of progressive loop.
-	"num_classes" : None,           # A number of classes, which is also the last layer's output channels.
-	"classlabels" : None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
-	"weights"     : None,           # The model's weights.
-	"loss"        : None,           # Loss function for training the model.
-	"metrics"     : {
+	"name"       : model_name,     # The model's name.
+	"root"       : root,           # The root directory of the model.
+	"fullname"   : fullname,       # A full model name to save the checkpoint or weight.
+	"channels"   : 3,              # The first layer's input channel.
+	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
+	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
+	"weights"    : None,           # The model's weights.
+	"metrics"    : {
 	    "train": None,  # [{"name": "psnr"}],
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+		"test" : None,  # [{"name": "psnr"}],
     },          # A list metrics for validating and testing model.
-	"optimizers"  : [
+	"optimizers" : [
 		{
             "optimizer"   : {
 	            "name"        : "adam",
-	            "lr"          : 0.0001,
-	            "weight_decay": 0.0001,
+	            "lr"          : 0.00005,
+	            "weight_decay": 0.00001,
 	            "betas"       : [0.9, 0.99],
 			},
 			"lr_scheduler": None,
         }
     ],          # Optimizer(s) for training model.
-	"verbose"     : verbose,        # Verbosity.
+	"verbose"    : verbose,        # Verbosity.
 }
 
 # endregion
@@ -74,7 +71,7 @@ datamodule = {
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 8,             # The number of samples in one forward pass.
+    "batch_size": 4,             # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.

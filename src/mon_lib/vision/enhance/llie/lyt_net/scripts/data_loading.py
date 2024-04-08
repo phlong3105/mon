@@ -1,11 +1,8 @@
 import glob
-import os
+
 import tensorflow as tf
 
-
-tf.random.set_seed(
-    100
-    )
+tf.random.set_seed(100)
 
 
 def data_augmentation(raw_img, corrected_img):
@@ -65,6 +62,7 @@ def load_and_preprocess_image(raw_img_path, corrected_img_path):
     corrected_img = (corrected_img / 255.0) * 2 - 1.0
 
     return raw_img, corrected_img
+
 
 def get_datasets(raw_image_path, corrected_image_path):
     tf.random.set_seed(

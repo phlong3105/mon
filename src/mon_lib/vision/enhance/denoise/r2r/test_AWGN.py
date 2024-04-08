@@ -1,11 +1,9 @@
-import cv2
-import os
 import argparse
 import glob
-import numpy as np
-import torch
-import torch.nn as nn
+import os
+
 from torch.autograd import Variable
+
 from models import DnCNN
 from utils import *
 
@@ -21,8 +19,10 @@ parser.add_argument("--alpha", type=float, default=0.5, help='R2R recorruption p
 parser.add_argument("--training", type=str, default="R2R", help='R2R or N2C')
 opt = parser.parse_args()
 
+
 def normalize(data):
     return data/255.
+
 
 def main():
     # Build model
@@ -60,7 +60,7 @@ def main():
                 with torch.no_grad():
                     out_test_single = model(INoisy_pert)
                 if out_test  is None:
-                    out_test= out_test_single.detach()
+                    out_test = out_test_single.detach()
                 else:
                     out_test += out_test_single.detach()
                 del out_test_single
@@ -80,6 +80,6 @@ def main():
     psnr_test /= len(files_source)
     print("\nPSNR on test data %f" % psnr_test)
 
+
 if __name__ == "__main__":
     main()
-

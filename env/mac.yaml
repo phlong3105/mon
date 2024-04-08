@@ -50,6 +50,7 @@ dependencies:
       - torch>=2.2.1          # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio            # Simple audio I/O for pytorch.
       - torchvision           # Image and video datasets and models for torch deep learning.
+      - torchfile             # Torch7 binary serialized file parser.
       # Metric                
       - fvcore                
       - image-quality         
@@ -79,7 +80,9 @@ dependencies:
       - typing-extensions     # Backported and Experimental Type Hints for Python 3.7+.
       - validators            # Python Data Validation for Humans.
       - xmltodict             # Makes working with XML feel like you are working with JSON.
-      # UI                    
+      # TensorFlow
+      - tensorflow
+      # UI
       - PyQt6                 # Python bindings for the Qt cross-platform application toolkit.
       - rich                  # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
       - tabulate              # Pretty-print tabular data in Python, a library and a command-line utility.

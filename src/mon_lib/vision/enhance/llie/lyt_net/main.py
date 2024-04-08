@@ -1,8 +1,10 @@
 import argparse
 import subprocess
 
+
 def run_train(dataset):
     subprocess.run(['python', './scripts/train.py', '--dataset', dataset])
+
 
 def run_test(dataset, weights, gtmean=False):
     cmd = ['python', './scripts/test.py', '--dataset', dataset, '--weights', weights]
@@ -13,6 +15,7 @@ def run_test(dataset, weights, gtmean=False):
 
 def run_complexity_check(shape='(256,256,3)'):
     subprocess.run(['python', './scripts/complexity_check.py', '--shape', shape])
+
 
 def main():
     parser = argparse.ArgumentParser(description='Run project scripts')
@@ -52,6 +55,7 @@ def main():
             run_complexity_check(args.shape)
         else:
             run_complexity_check()
+
 
 if __name__ == '__main__':
     main()
