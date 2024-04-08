@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from pytorch_msssim import MS_SSIM, SSIM
+import mon
 from torch.nn import functional as F
 from torch.nn.modules.loss import _Loss
 from torchvision import transforms
@@ -9,10 +9,21 @@ from torchvision.models import vgg
 
 class Loss(_Loss):
     
-    def __init__(self):
+    def __init__(
+        self,
+        alpha1: float = 0.35,
+        alpha2: float = 0.10,
+        alpha3: float = 0.25,
+        alpha4: float = 0.30,
+    ):
         super().__init__()
-        self.msssim     = MS_SSIM(data_range=1.0)
-        self.ssim       = SSIM(data_range=1.0, nonnegative_ssim=True)
+        self.alpha1 = alpha1
+        self.alpha2 = alpha2
+        self.alpha3 = alpha3
+        self.alpha4 = alpha4
+        
+        self.msssim     = mon.CustomMSSSIM(data_range=1.0)
+        self.ssim       = mon.CustomSSIM(data_range=1.0, non_negative_ssim=True)
         self.perceptual = PerceptualLoss()
         self.tvloss     = TVLoss()
 
@@ -29,7 +40,12 @@ class Loss(_Loss):
         vgg_loss    = self.perceptual(x, y)
         region_loss = self.region(x, y)
         tv_loss     = self.tvloss(x)
-        loss        = 0.35 * str_loss + 0.25 * region_loss + 0.3 * vgg_loss + 0.1 * tv_loss
+        loss        = (
+              self.alpha1 * str_loss
+            + self.alpha2 * tv_loss
+            + self.alpha3 * region_loss
+            + self.alpha4 * vgg_loss
+        )
         return loss
 
 

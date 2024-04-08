@@ -30,14 +30,22 @@ def parse_config_file(
         error_console.log(f"No configuration given.")
         return None
     #
-    config = pathlib.Path(config).config_file()
+    config = pathlib.Path(config)
     if config.is_config_file():
         return config
+    #
+    config_ = config.config_file()
+    if config_.is_config_file():
+        return config_
     #
     config_dirs = [
         pathlib.Path(project_root),
         pathlib.Path(project_root) / "config"
     ]
+    for config_dir in config_dirs:
+        config_ = config_dir / config.name
+        if config_.is_config_file():
+            return config_
     for config_dir in config_dirs:
         config_ = (config_dir / config.name).config_file()
         if config_.is_config_file():

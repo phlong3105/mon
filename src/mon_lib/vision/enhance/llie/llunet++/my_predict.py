@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+References:
+    `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -15,8 +20,8 @@ import torch.optim
 import torchvision
 from PIL import Image
 
-import model
 import mon
+from model import NestedUNet
 
 console       = mon.console
 _current_file = mon.Path(__file__).absolute()
@@ -32,23 +37,20 @@ def predict(args: argparse.Namespace):
     save_dir  = args.save_dir
     device    = args.device
     imgsz     = args.imgsz
+    imgsz     = mon.parse_hw(imgsz)
     resize    = args.resize
     benchmark = args.benchmark
-
+    
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
     # Benchmark
     if benchmark:
-        scale_factor = 12
-        DCE_net      = model.enhance_net_nopool(scale_factor).to(device)
-        DCE_net.load_state_dict(torch.load(weights))
-        h = (imgsz // scale_factor) * scale_factor
-        w = (imgsz // scale_factor) * scale_factor
+        model = NestedUNet().to(device)
         flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = DCE_net,
-            image_size = [h, w],
+            model      = model,
+            image_size = imgsz,
             channels   = 3,
             runs       = 100,
             use_cuda   = True,
@@ -59,9 +61,9 @@ def predict(args: argparse.Namespace):
         console.log(f"Time   = {avg_time:.4f}")
     
     # Load model
-    scale_factor = 12
-    DCE_net = model.enhance_net_nopool(scale_factor).cuda()
-    DCE_net.load_state_dict(torch.load(weights))
+    model = NestedUNet()
+    model.load_state_dict(torch.load(weights))
+    model = model.cuda()
     
     # Data I/O
     console.log(f"{data}")
@@ -78,23 +80,21 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path    = meta["path"]
-                data_lowlight = Image.open(image_path).convert("RGB")
-                data_lowlight = (np.asarray(data_lowlight) / 255.0)
-                data_lowlight = torch.from_numpy(data_lowlight).float()
-                h0, w0        = data_lowlight.shape[0], data_lowlight.shape[1]
-                h1            = (h0 // scale_factor) * scale_factor
-                w1            = (w0 // scale_factor) * scale_factor
-                data_lowlight = data_lowlight[0:h1, 0:w1, :]
-                data_lowlight = data_lowlight.permute(2, 0, 1)
-                data_lowlight = data_lowlight.to(device).unsqueeze(0)
-                start_time    = time.time()
-                enhanced_image, params_maps = DCE_net(data_lowlight)
+                image_path     = meta["path"]
+                image          = Image.open(image_path).convert("RGB")
+                image          = (np.asarray(image) / 255.0)
+                image          = torch.from_numpy(image).float()
+                image          = image.permute(2, 0, 1)
+                image          = image.to(device).unsqueeze(0)
+                h0, w0         = mon.get_image_size(image)
+                image          = mon.resize(input=image, size=imgsz)
+                start_time     = time.time()
+                enhanced_image = model(image)
                 run_time       = (time.time() - start_time)
                 enhanced_image = mon.resize(input=enhanced_image, size=[h0, w0])
                 output_path    = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time     += run_time
+                sum_time      += run_time
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")
 

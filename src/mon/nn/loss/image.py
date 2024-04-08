@@ -17,6 +17,7 @@ __all__ = [
     "ExposureControlLoss",
     "GradientLoss",
     "HistogramLoss",
+    "MSSSIMLoss",
     "PSNRLoss",
     "PerceptualL1Loss",
     "PerceptualLoss",
@@ -31,14 +32,12 @@ __all__ = [
     "VGGLoss",
 ]
 
-import math
-from typing import Any, Literal
+from typing import Literal
 
 import numpy as np
 import torch
 import torchvision
 from torch import nn
-from torch.autograd import Variable
 from torch.nn import functional as F
 
 from mon import proc
@@ -463,7 +462,7 @@ class PerceptualLoss(base.Loss):
     def __init__(
         self,
         net        : nn.Module | str = "vgg19",
-        layers     : list  = ["conv4_2"],
+        layers     : list  = ["26"],
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
@@ -488,8 +487,6 @@ class PerceptualLoss(base.Loss):
             param.requires_grad = False
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        if self.net.device != input.device:
-            self.net = self.net.to(input.device)
         input_feats  = self.get_features(input)
         target_feats = self.get_features(target)
         loss         = 0
@@ -515,7 +512,7 @@ class PerceptualL1Loss(base.Loss):
     def __init__(
         self,
         net       : nn.Module | str = "vgg19",
-        layers    : list  = ["conv4_2"],
+        layers    : list  = ["26"],
         per_weight: float = 1.0,
         l1_weight : float = 1.0,
         reduction : Literal["none", "mean", "sum"] = "mean"
@@ -640,78 +637,76 @@ class TotalVariationALoss(base.Loss):
 
 @LOSSES.register(name="ssim_loss")
 class SSIMLoss(base.Loss):
-    """SSIM Loss. Modified from BasicSR: https://github.com/xinntao/BasicSR"""
+    """SSIM Loss."""
     
     def __init__(
         self,
-        loss_weight : float = 1.0,
-        reduction   : Literal["none", "mean", "sum"] = "mean",
-        window_size : int   = 11,
-        size_average: bool  = True
+        data_range       : float = 255,
+        size_average     : bool  = True,
+        window_size      : int   = 11,
+        window_sigma     : float = 1.5,
+        channel          : int   = 3,
+        spatial_dims     : int   = 2,
+        k                : tuple[float, float] | list[float] = (0.01, 0.03),
+        non_negative_ssim: bool  = False,
+        loss_weight      : float = 1.0,
+        reduction        : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self._window_size  = window_size
-        self._size_average = size_average
-        self._channel      = 1
-        self._window       = self.create_window(self._window_size, self._channel)
-    
-    @staticmethod
-    def gaussian(window_size: int, sigma: float) -> torch.Tensor:
-        gauss = torch.Tensor([math.exp(-(x - window_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(window_size)])
-        return gauss / gauss.sum()
-    
-    def create_window(self, window_size: int, channel: int) -> torch.Tensor:
-        _1d_window = self.gaussian(window_size, 1.5).unsqueeze(1)
-        _2d_window = _1d_window.mm(_1d_window.t()).float().unsqueeze(0).unsqueeze(0)
-        window     = Variable(_2d_window.expand(channel, 1, window_size, window_size).contiguous())
-        return window
-    
-    @staticmethod
-    def _ssim(
-        img1        : torch.Tensor,
-        img2        : torch.Tensor,
-        window      : torch.Tensor,
-        window_size : int,
-        channel     : int,
-        size_average: bool = True
-    ) -> torch.Tensor:
-        mu1     = F.conv2d(img1, window, padding=window_size // 2, groups=channel)
-        mu2     = F.conv2d(img2, window, padding=window_size // 2, groups=channel)
-        
-        mu1_sq  = mu1.pow(2)
-        mu2_sq  = mu2.pow(2)
-        mu1_mu2 = mu1*mu2
-        
-        sigma1_sq = F.conv2d(img1 * img1, window, padding = window_size // 2, groups=channel) - mu1_sq
-        sigma2_sq = F.conv2d(img2 * img2, window, padding = window_size // 2, groups=channel) - mu2_sq
-        sigma12   = F.conv2d(img1 * img2, window, padding = window_size // 2, groups=channel) - mu1_mu2
-        
-        c1 = 0.01 ** 2
-        c2 = 0.03 ** 2
-        ssim_map = ((2 * mu1_mu2 + c1) * (2 * sigma12 + c2)) / ((mu1_sq + mu2_sq + c1) * (sigma1_sq + sigma2_sq + c2))
-        
-        if size_average:
-            return ssim_map.mean()
-        else:
-            return ssim_map.mean(1).mean(1).mean(1)
+        from mon.nn.metric import CustomSSIM
+        self.ssim = CustomSSIM(
+            data_range        = data_range,
+            size_average      = size_average,
+            window_size       = window_size,
+            window_sigma      = window_sigma,
+            channel           = channel,
+            spatial_dims      = spatial_dims,
+            k                 = k,
+            non_negative_ssim = non_negative_ssim,
+        )
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        b, c, h, w = input.shape
-        
-        if c == self._channel and self._window.data.type() == input.data.type():
-            window = self._window
-        else:
-            window        = self.create_window(self._window_size, c)
-            window        = window.to(input.device)
-            window        = window.type_as(input)
-            self._window  = window
-            self._channel = c
-        
-        loss = 1.0 - self._ssim(input, target, window, self._window_size, c, self._size_average)
+        loss = 1.0 - self.ssim(input, target)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
+
+@LOSSES.register(name="ms_ssim_loss")
+class MSSSIMLoss(base.Loss):
+    """MS-SSIM Loss."""
+    
+    def __init__(
+        self,
+        data_range  : float = 255,
+        size_average: bool  = True,
+        window_size : int   = 11,
+        window_sigma: float = 1.5,
+        channel     : int   = 3,
+        spatial_dims: int   = 2,
+        weights     : list[float] | None = None,
+        k           : tuple[float, float] | list[float] = (0.01, 0.03),
+        loss_weight : float = 1.0,
+        reduction   : Literal["none", "mean", "sum"] = "mean",
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        from mon.nn.metric import CustomMSSSIM
+        self.ms_ssim = CustomMSSSIM(
+            data_range   = data_range,
+            size_average = size_average,
+            window_size  = window_size,
+            window_sigma = window_sigma,
+            channel      = channel,
+            spatial_dims = spatial_dims,
+            weights      = weights,
+            k            = k,
+        )
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        loss = 1.0 - self.ms_ssim(input, target)
         loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
     
-    
+
 @LOSSES.register(name="spatial_consistency_loss")
 class SpatialConsistencyLoss(base.Loss):
     """Spatial Consistency Loss :math:`\mathcal{L}_{spa}` encourages spatial

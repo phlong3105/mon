@@ -17,9 +17,9 @@ __all__ = [
 from typing import Any, Literal
 
 import torch
-from torchvision.models import vgg19, VGG19_Weights
+import torchvision
 
-from mon import core, nn, proc
+from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.vision.enhance.llie import base
@@ -30,42 +30,50 @@ console = core.console
 # region Loss
 
 class Loss(nn.Loss):
+    """
+    λ1, λ2, λ3, λ4 = {0.40, 0.05, 0.15, 0.40} for the LOL dataset.
+    λ1, λ2, λ3, λ4 = {0.35, 0.10, 0.25, 0.30} for the VE-LOL dataset.
+    """
     
     def __init__(
         self,
         str_weight: float = 0.35,
+        tv_weight : float = 0.10,
         reg_weight: float = 0.25,
         per_weight: float = 0.30,
-        tv_weight : float = 0.10,
         reduction : Literal["none", "mean", "sum"] = "mean",
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs, reduction=reduction)
         self.str_weight = str_weight
+        self.tv_weight  = tv_weight
         self.reg_weight = reg_weight
         self.per_weight = per_weight
-        self.tv_weight  = tv_weight
         
-        self.msssim     = nn.CustomMSSSIM(data_range=1.0)
-        self.ssim       = nn.CustomSSIM(data_range=1.0, non_negative_ssim=True)
-        self.per_loss   = nn.PerceptualLoss(reduction=reduction)
-        self.tv_loss    = nn.TVLoss(reduction=reduction)
+        self.ms_ssim_loss = nn.MSSSIMLoss(data_range=1.0)
+        self.ssim_loss    = nn.SSIMLoss(data_range=1.0, non_negative_ssim=True)
+        self.per_loss     = nn.PerceptualLoss(
+            net       = torchvision.models.vgg19(pretrained=True).features,
+            layers    = ["26"],
+            reduction = reduction,
+        )
+        self.tv_loss = nn.TVLoss(reduction=reduction)
         
     def forward(self, input: torch.Tensor, target: torch.Tensor, *_) -> torch.Tensor:
-        str_loss = 2 - self.msssim(input, target) - self.ssim(input, target)
-        per_loss = self.perceptual(input, target)
-        reg_loss = self.region(input, target)
-        tv_loss  = self.tvloss(input)
+        str_loss = self.ms_ssim_loss(input, target) + self.ssim_loss(input, target)
+        per_loss = self.per_loss(input, target)
+        reg_loss = self.region_loss(input, target)
+        tv_loss  = self.tv_loss(input)
         loss     = (
               self.str_weight * str_loss
+            + self.tv_weight  * tv_loss
             + self.reg_weight * reg_loss
             + self.per_weight * per_loss
-            + self.tv_weight * tv_loss
         )
         return loss
     
     @staticmethod
-    def region(input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    def region_loss(input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         gray     = 0.30 * target[:, 0, :, :] + 0.59 * target[:, 1, :, :] + 0.11 * target[:, 2, :, :]
         gray     = gray.view(-1)
         value    = -torch.topk(-gray, int(gray.shape[0] * 0.4))[0][0]
@@ -141,8 +149,9 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        channels: int = 3,
-        weights : Any = None,
+        channels    : int = 3,
+        weights     : Any = None,
+        loss_weights: list[float] = [0.35, 0.10, 0.25, 0.30],
         *args, **kwargs
     ):
         super().__init__(
@@ -187,7 +196,7 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
         self.final   = nn.Conv2d(nb_filter[0], self.channels, kernel_size=1)
         
         # Loss
-        self._loss = Loss()
+        self._loss = Loss(*loss_weights)
         
         # Load weights
         if self.weights:

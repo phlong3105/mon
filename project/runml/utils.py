@@ -131,7 +131,9 @@ def list_configs(
     model       : str | None = None
 ) -> list[str]:
     config_files = list_config_files(project_root=project_root, model=model)
-    return [f.name for f in config_files]
+    config_files = [f.name for f in config_files]
+    config_files = sorted(config_files)
+    return config_files
     
 # endregion
 

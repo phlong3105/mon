@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""LLUNet++ model trained on LOL-v1 dataset."""
+"""LLUNet++ model trained on LOL-v2-Real dataset."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _root_dir     = _current_file.parents[1]
 # region Basic
 
 model_name = "llunet++"
-data_name  = "lol_v1"
+data_name  = "lol_v2_real"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
 image_size = [400, 400]
@@ -38,7 +38,7 @@ model = {
 	"classlabels" : None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
 	"weights"     : None,           # The model's weights.
 	"loss"        : None,           # Loss function for training the model.
-	"loss_weights": [0.40, 0.05, 0.15, 0.40],
+	"loss_weights": [0.35, 0.10, 0.25, 0.30],
 	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],

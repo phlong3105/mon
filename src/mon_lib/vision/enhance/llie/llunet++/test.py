@@ -1,14 +1,12 @@
-import os
-import torch
-import numpy as np
-from PIL import Image
-
 import argparse
-from torchvision import transforms
 import datetime
-import math
-from model import NestedUNet
+import os
 
+import torch
+from PIL import Image
+from torchvision import transforms
+
+from model import NestedUNet
 
 
 def main(checkpoint, imgs_path, result_path):

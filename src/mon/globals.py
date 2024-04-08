@@ -910,6 +910,12 @@ MODELS_EXTRA = {
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "llflow",
                 "torch_distributed_launch": True,
             },
+            "llunet++"     : {
+                "tasks"    : [Task.LLIE],
+                "schemes"  : [Scheme.SUPERVISED],
+                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "llunet++",
+                "torch_distributed_launch": True,
+            },
             "pie"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.TRADITIONAL],
