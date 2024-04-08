@@ -32,7 +32,7 @@ __all__ = [
 ]
 
 import math
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 import torch
@@ -213,7 +213,7 @@ class ContradictChannelLoss(base.Loss):
             stride      = 1,
             padding     = int(kernel_size // 2)
         )
-        self.mae     = base.MAELoss()
+        self.l1_loss = base.L1Loss()
         self.sigmoid = nn.Sigmoid()
     
     def forward(
@@ -229,7 +229,7 @@ class ContradictChannelLoss(base.Loss):
         y_true = torch.squeeze(y_true[0])
         y_true = self.pool(y_true)
         
-        loss   = self.mae(y_pred, y_true)
+        loss   = self.l1_loss(y_pred, y_true)
         loss   = base.reduce_loss(loss=loss, reduction=self.reduction)
         loss   = self.sigmoid(loss)
         loss   = self.loss_weight * loss
@@ -420,12 +420,12 @@ class GrayscaleLoss(base.Loss):
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.l1 = base.L1Loss(reduction=reduction)
+        self.l1_loss = base.L1Loss(reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         x_g  = torch.mean(input,  1, keepdim=True)
         y_g  = torch.mean(target, 1, keepdim=True)
-        loss = self.l1(x_g, y_g)
+        loss = self.l1_loss(x_g, y_g)
         loss = self.loss_weight * loss
         return loss
 
@@ -462,24 +462,51 @@ class PerceptualLoss(base.Loss):
     
     def __init__(
         self,
-        net        : nn.Module,
+        net        : nn.Module | str = "vgg19",
+        layers     : list  = ["conv4_2"],
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.l2_loss = base.L2Loss(reduction=reduction)
-        self.net     = net
-        self.net.eval()
+        self.layers = layers
+        
+        if net in ["alexnet"]:
+            net = torchvision.models.alexnet(pretrained=True).features
+        elif net in ["vgg11"]:
+            net = torchvision.models.vgg11(pretrained=True).features
+        elif net in ["vgg13"]:
+            net = torchvision.models.vgg13(pretrained=True).features
+        elif net in ["vgg16"]:
+            net = torchvision.models.vgg16(pretrained=True).features
+        elif net in ["vgg19"]:
+            net = torchvision.models.vgg19(pretrained=True).features
+        
+        self.net = net.eval()
+        
+        # Disable gradient computation for net's parameters
+        for param in self.net.parameters():
+            param.requires_grad = False
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         if self.net.device != input.device:
             self.net = self.net.to(input.device)
-        input_feats  = self.net(input)
-        target_feats = self.net(target)
-        loss         = self.l2_loss(input=input_feats, target=target_feats)
-        loss         = self.loss_weight * loss
+        input_feats  = self.get_features(input)
+        target_feats = self.get_features(target)
+        loss         = 0
+        for xf, yf in zip(input_feats, target_feats):
+            loss += torch.mean(torch.abs(xf - yf))
+        loss = loss / len(input_feats)
+        loss = self.loss_weight * loss
         return loss
-
+        
+    def get_features(self, x: torch.Tensor) -> list[torch.Tensor]:
+        features = []
+        for name, layer in self.net._modules.items():
+            x = layer(x)
+            if name in self.layers:
+                features.append(x)
+        return features
+    
 
 @LOSSES.register(name="perceptual_l1_loss")
 class PerceptualL1Loss(base.Loss):
@@ -487,22 +514,22 @@ class PerceptualL1Loss(base.Loss):
     
     def __init__(
         self,
-        net            : nn.Module,
-        per_loss_weight: float = 1.0,
-        l1_loss_weight : float = 1.0,
-        reduction      : Literal["none", "mean", "sum"] = "mean"
+        net       : nn.Module | str = "vgg19",
+        layers    : list  = ["conv4_2"],
+        per_weight: float = 1.0,
+        l1_weight : float = 1.0,
+        reduction : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(reduction=reduction)
-        self.per_loss_weight = per_loss_weight
-        self.l1_loss_weight  = l1_loss_weight
-        self.per_loss        = PerceptualLoss(net=net, reduction=reduction)
-        self.l1_loss         = base.L1Loss(reduction=reduction)
+        self.per_weight = per_weight
+        self.l1_weight  = l1_weight
+        self.per_loss   = PerceptualLoss(net=net, layers=layers, reduction=reduction)
+        self.l1_loss    = base.L1Loss(reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         per_loss = self.per_loss(input=input, target=target)
         l1_loss  = self.l1_loss(input=input, target=target)
-        loss     = self.per_loss_weight * per_loss + self.l1_loss_weight * l1_loss
-        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        loss     = self.per_weight * per_loss + self.l1_weight * l1_loss
         return loss
 
 
@@ -1066,10 +1093,10 @@ class StdLoss(base.Loss):
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        blur      = (1 / 25) * np.ones((5, 5))
-        blur      = blur.reshape(1, 1, blur.shape[0], blur.shape[1])
-        self.blur = nn.Parameter(data=torch.cuda.FloatTensor(blur), requires_grad=False)
-        self.mse  = base.MSELoss()
+        blur         = (1 / 25) * np.ones((5, 5))
+        blur         = blur.reshape(1, 1, blur.shape[0], blur.shape[1])
+        self.blur    = nn.Parameter(data=torch.cuda.FloatTensor(blur), requires_grad=False)
+        self.l2_loss = base.L2Loss()
         
         image       = np.zeros((5, 5))
         image[2, 2] = 1
@@ -1085,7 +1112,7 @@ class StdLoss(base.Loss):
         x    = torch.mean(x, 1, keepdim=True)
         if self.image.device != x.device:
             self.image = self.image.to(x.device)
-        loss = self.mse(F.conv2d(x, self.image), F.conv2d(x, self.blur))
+        loss = self.l2_loss(F.conv2d(x, self.image), F.conv2d(x, self.blur))
         loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         loss = self.loss_weight * loss
         return loss
@@ -1134,10 +1161,9 @@ class VGGLoss(base.Loss):
         reduction  : Literal["none", "mean", "sum"] = "sum",
     ):
         super().__init__(reduction=reduction)
-        self.vgg       = self.VGG19()
-        # self.criterion = nn.L1Loss()
-        self.criterion = nn.L1Loss(reduction="sum")
-        self.weights   = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
+        self.vgg     = self.VGG19()
+        self.l1_loss = nn.L1Loss(reduction="sum")
+        self.weights = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         input_vgg  = self.vgg(input)
@@ -1145,7 +1171,7 @@ class VGGLoss(base.Loss):
         loss       = 0
         for i in range(len(input_vgg)):
             # print(x_vgg[i].shape, y_vgg[i].shape)
-            loss += self.weights[i] * self.criterion(input_vgg[i].detach(), target_vgg[i].detach())
+            loss += self.weights[i] * self.l1_loss(input_vgg[i].detach(), target_vgg[i].detach())
         # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         loss = self.loss_weight * loss
         return loss

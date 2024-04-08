@@ -1,0 +1,245 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements LLUnet++ (LLUnet++:UNet++ Based Nested Skip Connections Network
+for Low-Light Image Enhancement) models.
+
+References:
+    `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+"""
+
+from __future__ import annotations
+
+__all__ = [
+    "LLUnetPP",
+]
+
+from typing import Any, Literal
+
+import torch
+from torchvision.models import vgg19, VGG19_Weights
+
+from mon import core, nn, proc
+from mon.core import _callable
+from mon.globals import MODELS, Scheme
+from mon.vision.enhance.llie import base
+
+console = core.console
+
+
+# region Loss
+
+class Loss(nn.Loss):
+    
+    def __init__(
+        self,
+        str_weight: float = 0.35,
+        reg_weight: float = 0.25,
+        per_weight: float = 0.30,
+        tv_weight : float = 0.10,
+        reduction : Literal["none", "mean", "sum"] = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs, reduction=reduction)
+        self.str_weight = str_weight
+        self.reg_weight = reg_weight
+        self.per_weight = per_weight
+        self.tv_weight  = tv_weight
+        
+        self.msssim     = nn.CustomMSSSIM(data_range=1.0)
+        self.ssim       = nn.CustomSSIM(data_range=1.0, non_negative_ssim=True)
+        self.per_loss   = nn.PerceptualLoss(reduction=reduction)
+        self.tv_loss    = nn.TVLoss(reduction=reduction)
+        
+    def forward(self, input: torch.Tensor, target: torch.Tensor, *_) -> torch.Tensor:
+        str_loss = 2 - self.msssim(input, target) - self.ssim(input, target)
+        per_loss = self.perceptual(input, target)
+        reg_loss = self.region(input, target)
+        tv_loss  = self.tvloss(input)
+        loss     = (
+              self.str_weight * str_loss
+            + self.reg_weight * reg_loss
+            + self.per_weight * per_loss
+            + self.tv_weight * tv_loss
+        )
+        return loss
+    
+    @staticmethod
+    def region(input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        gray     = 0.30 * target[:, 0, :, :] + 0.59 * target[:, 1, :, :] + 0.11 * target[:, 2, :, :]
+        gray     = gray.view(-1)
+        value    = -torch.topk(-gray, int(gray.shape[0] * 0.4))[0][0]
+        weight   = 1 * (target > value) + 4 * (target <= value)
+        abs_diff = torch.abs(input - target)
+        return torch.mean(weight * abs_diff)
+    
+# endregion
+
+
+# region Module
+
+class UNetConvBlock(nn.Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        relu_slope  : float = 0.2,
+    ):
+        super().__init__()
+        self.conv_1     = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
+        self.norm1      = nn.InstanceNorm2d(in_channels, affine=True)
+        self.relu_1     = nn.LeakyReLU(relu_slope, inplace=False)
+        
+        self.conv_2     = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
+        self.relu_2     = nn.LeakyReLU(relu_slope, inplace=False)
+        
+        self.conv_3     = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        self.relu_3     = nn.LeakyReLU(relu_slope, inplace=False)
+
+        self.conv_1_1_1 = nn.Conv2d(in_channels, in_channels, 1, 1, 0)
+        self.conv_1_1   = nn.Conv2d(in_channels * 2, out_channels, 1, 1, 0)
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x    = input
+        #
+        out  = self.conv_1(x)
+        out  = self.norm1(out)
+        out  = self.relu_1(out)
+        #
+        out1 = self.conv_1_1_1(x)
+        out2 = torch.cat([out, out1], dim = 1)
+        #
+        out  = self.conv_2(out2)
+        out  = self.relu_2(out)
+        out  = self.conv_3(out)
+        out  = self.relu_3(out)
+        #
+        res  = self.conv_1_1(out2)
+        out += res
+        #
+        return out
+    
+# endregion
+
+
+# region Model
+
+@MODELS.register(name="llunet++")
+class LLUnetPP(base.LowLightImageEnhancementModel):
+    """LLUnet++ (LLUnet++:UNet++ Based Nested Skip Connections Network for
+    Low-Light Image Enhancement) model.
+    
+    References:
+        `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+
+    See Also: :class:`base.LowLightImageEnhancementModel`
+    """
+    
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {}
+
+    def __init__(
+        self,
+        channels: int = 3,
+        weights : Any = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name     = "llunet++",
+            channels = channels,
+            weights  = weights,
+            *args, **kwargs
+        )
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            channels = self.weights.get("channels", channels)
+            
+        self._channels = channels
+        
+        # Construct model
+        nb_filter    = [32, 64, 128, 256, 512]
+        #
+        self.pool    = nn.MaxPool2d(2, 2)
+        self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
+        #
+        self.conv0_0 = UNetConvBlock(self.channels, nb_filter[0])
+        self.conv1_0 = UNetConvBlock(nb_filter[0], nb_filter[1])
+        self.conv2_0 = UNetConvBlock(nb_filter[1], nb_filter[2])
+        self.conv3_0 = UNetConvBlock(nb_filter[2], nb_filter[3])
+        self.conv4_0 = UNetConvBlock(nb_filter[3], nb_filter[4])
+        #
+        self.conv0_1 = UNetConvBlock(nb_filter[0] + nb_filter[1], nb_filter[0])
+        self.conv1_1 = UNetConvBlock(nb_filter[1] + nb_filter[2], nb_filter[1])
+        self.conv2_1 = UNetConvBlock(nb_filter[2] + nb_filter[3], nb_filter[2])
+        self.conv3_1 = UNetConvBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
+        #
+        self.conv0_2 = UNetConvBlock(nb_filter[0] * 2 + nb_filter[1], nb_filter[0])
+        self.conv1_2 = UNetConvBlock(nb_filter[1] * 2 + nb_filter[2], nb_filter[1])
+        self.conv2_2 = UNetConvBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
+        #
+        self.conv0_3 = UNetConvBlock(nb_filter[0] * 3 + nb_filter[1], nb_filter[0])
+        self.conv1_3 = UNetConvBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
+        #
+        self.conv0_4 = UNetConvBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
+        #
+        self.final   = nn.Conv2d(nb_filter[0], self.channels, kernel_size=1)
+        
+        # Loss
+        self._loss = Loss()
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self._init_weights)
+
+    def _init_weights(self, m: nn.Module):
+        pass
+
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        pred = self.forward(input=input, *args, **kwargs)
+        loss = self.loss(pred, target)
+        return pred, loss
+
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> torch.Tensor:
+        x = input
+        #
+        x0_0 = self.conv0_0(x)
+        x1_0 = self.conv1_0(self.pool(x0_0))
+        x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0)], 1))
+        #
+        x2_0 = self.conv2_0(self.pool(x1_0))
+        x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0)], 1))
+        x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.up(x1_1)], 1))
+        #
+        x3_0 = self.conv3_0(self.pool(x2_0))
+        x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0)], 1))
+        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1)], 1))
+        x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.up(x1_2)], 1))
+        #
+        x4_0 = self.conv4_0(self.pool(x3_0))
+        x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0)], 1))
+        x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1)], 1))
+        x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2)], 1))
+        x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.up(x1_3)], 1))
+        #
+        y    = self.final(x0_4)
+        y    = torch.clamp(y, 0, 1)
+        #
+        return y
+    
+# endregion
