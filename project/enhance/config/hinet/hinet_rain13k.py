@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import mon
 from mon import albumentation as A
-from mon.core.config import default
+from mon.config import default
 
 _current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]

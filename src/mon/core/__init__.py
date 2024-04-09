@@ -22,7 +22,6 @@ Design Principle:
 
 from __future__ import annotations
 
-import mon.core.config
 import mon.core.dtype
 import mon.core.factory
 import mon.core.file
@@ -35,7 +34,6 @@ import mon.core.rich
 import mon.core.typing
 import mon.core.utils
 import mon.core.video
-from mon.core.config import *
 from mon.core.dtype import *
 from mon.core.factory import *
 from mon.core.file import *
