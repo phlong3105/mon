@@ -74,10 +74,12 @@ def predict(args: dict) -> str:
             ):
                 # Input
                 images = images.to(model.device)
+                h0, w0 = mon.get_image_size(images)
                 input  = images.clone()
                 if resize:
-                    h0, w0 = mon.get_image_size(images)
-                    input  = mon.resize(input=input, size=imgsz)
+                    input = mon.resize(input=input, size=imgsz)
+                else:
+                    input = mon.resize_divisible(input, divisor=32)
                 
                 # TTA (Pre)
                 for aug in augment:
@@ -116,7 +118,8 @@ def predict(args: dict) -> str:
                 
                 # Post-process
                 output = output[-1] if isinstance(output, list | tuple) else output
-                if resize:
+                h1, w1 = mon.get_image_size(output)
+                if h1 != h0 or w1 != w0:
                     output = mon.resize(input=output, size=[h0, w0])
                 
                 # Save
