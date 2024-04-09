@@ -1,12 +1,11 @@
-import networks
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
-import numpy as np
 
-from skimage import io,data
+import networks
+
 
 class DRIT(nn.Module):
+  
   def __init__(self, opts):
     super(DRIT, self).__init__()
 
@@ -17,7 +16,7 @@ class DRIT(nn.Module):
     self.concat = opts.concat
     self.no_ms = opts.no_ms
     self.content_share = opts.content_share
-    self.attri_share = opts.attri_share
+    self.attri_share = opts.attribute_share
     self.vgg = opts.vgg
     self.gpu = opts.gpu
 
@@ -92,14 +91,14 @@ class DRIT(nn.Module):
     self.enc_a.apply(networks.gaussian_weights_init)
 
   def set_scheduler(self, opts, last_ep=0):
-    self.disA_sch = networks.get_scheduler(self.disA_opt, opts, last_ep)
-    self.disB_sch = networks.get_scheduler(self.disB_opt, opts, last_ep)
-    self.disA2_sch = networks.get_scheduler(self.disA2_opt, opts, last_ep)
-    self.disB2_sch = networks.get_scheduler(self.disB2_opt, opts, last_ep)
+    self.disA_sch       = networks.get_scheduler(self.disA_opt      , opts, last_ep)
+    self.disB_sch       = networks.get_scheduler(self.disB_opt      , opts, last_ep)
+    self.disA2_sch      = networks.get_scheduler(self.disA2_opt     , opts, last_ep)
+    self.disB2_sch      = networks.get_scheduler(self.disB2_opt     , opts, last_ep)
     self.disContent_sch = networks.get_scheduler(self.disContent_opt, opts, last_ep)
-    self.enc_c_sch = networks.get_scheduler(self.enc_c_opt, opts, last_ep)
-    self.enc_a_sch = networks.get_scheduler(self.enc_a_opt, opts, last_ep)
-    self.gen_sch = networks.get_scheduler(self.gen_opt, opts, last_ep)
+    self.enc_c_sch      = networks.get_scheduler(self.enc_c_opt     , opts, last_ep)
+    self.enc_a_sch      = networks.get_scheduler(self.enc_a_opt     , opts, last_ep)
+    self.gen_sch        = networks.get_scheduler(self.gen_opt       , opts, last_ep)
 
   def setgpu(self, gpu):
     self.gpu = gpu
@@ -206,22 +205,17 @@ class DRIT(nn.Module):
       input_attr_forB = torch.cat((self.z_attr_b, self.z_random, self.z_random2), 0)
       output_fakeA = self.gen.forward_a(input_content_forA, input_attr_forA)
       output_fakeB = self.gen.forward_b(input_content_forB, input_attr_forB)
-      self.fake_AA_encoded, self.fake_AA_random, self.fake_AA_random2 = torch.split(output_fakeA,
-                                                                                                       self.z_content_a.size(
-                                                                                                         0), dim=0)
-      self.fake_BB_encoded, self.fake_BB_random, self.fake_BB_random2 = torch.split(output_fakeB,
-                                                                                                       self.z_content_a.size(
-                                                                                                         0), dim=0)
+      self.fake_AA_encoded, self.fake_AA_random, self.fake_AA_random2 = torch.split(output_fakeA, self.z_content_a.size(0), dim=0)
+      self.fake_BB_encoded, self.fake_BB_random, self.fake_BB_random2 = torch.split(output_fakeB, self.z_content_a.size(0), dim=0)
     else:
-      input_content_forB = torch.cat((self.z_content_b, self.z_content_b),0)
-      input_content_forA = torch.cat((self.z_content_a,  self.z_content_a),0)
+      input_content_forB = torch.cat((self.z_content_b, self.z_content_b), 0)
+      input_content_forA = torch.cat((self.z_content_a,  self.z_content_a), 0)
       input_attr_forA = torch.cat((self.z_attr_a, self.z_random),0)
       input_attr_forB = torch.cat((self.z_attr_b, self.z_random),0)
       output_fakeA = self.gen.forward_a(input_content_forA, input_attr_forA)
       output_fakeB = self.gen.forward_b(input_content_forB, input_attr_forB)
       self.fake_AA_encoded, self.fake_AA_random = torch.split(output_fakeA, self.z_content_a.size(0), dim=0)
       self.fake_BB_encoded, self.fake_BB_random = torch.split(output_fakeB, self.z_content_a.size(0), dim=0)
-
 
     # first cross translation
     if not self.no_ms:
@@ -286,7 +280,7 @@ class DRIT(nn.Module):
     self.input_B = image_b
     self.forward_content()
     self.disContent_opt.zero_grad()
-    loss_D_Content = self.backward_contentD(self.z_content_a, self.z_content_b)
+    loss_D_Content       = self.backward_contentD(self.z_content_a, self.z_content_b)
     self.disContent_loss = loss_D_Content.item()
     nn.utils.clip_grad_norm_(self.disContent.parameters(), 5)
     self.disContent_opt.step()

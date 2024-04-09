@@ -1,15 +1,19 @@
+import functools
+import os
+
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-import functools
-from torch.optim import lr_scheduler
 import torch.nn.functional as F
-import os
+from torch.autograd import Variable
+from torch.optim import lr_scheduler
+
 
 ####################################################################
 # ------------------------- Discriminators --------------------------
 ####################################################################
+
 class Dis_content(nn.Module):
+    
     def __init__(self):
         super(Dis_content, self).__init__()
         model = []
@@ -29,6 +33,7 @@ class Dis_content(nn.Module):
 
 
 class MultiScaleDis(nn.Module):
+    
     def __init__(self, input_dim, n_scale=3, n_layer=4, norm='None', sn=False):
         super(MultiScaleDis, self).__init__()
         ch = 64
@@ -59,6 +64,7 @@ class MultiScaleDis(nn.Module):
 
 
 class Dis(nn.Module):
+    
     def __init__(self, input_dim, norm='None', sn=False):
         super(Dis, self).__init__()
         ch = 64
@@ -94,7 +100,9 @@ class Dis(nn.Module):
 ####################################################################
 # ---------------------------- Encoders -----------------------------
 ####################################################################
+
 class E_content(nn.Module):
+    
     def __init__(self, input_dim_a, input_dim_b):
         super(E_content, self).__init__()
         encA_c = []
@@ -141,7 +149,9 @@ class E_content(nn.Module):
         outputB = self.conv_share(outputB)
         return outputB
 
+
 class E_content_share(nn.Module):
+    
     def __init__(self, input_dim_a, input_dim_b):
         super(E_content_share, self).__init__()
         enc_share = []
@@ -181,6 +191,7 @@ class E_content_share(nn.Module):
 
 
 class E_attr(nn.Module):
+    
     def __init__(self, input_dim_a, input_dim_b, output_nc=8):
         super(E_attr, self).__init__()
         dim = 64
@@ -241,6 +252,7 @@ class E_attr(nn.Module):
 
 
 class E_attr_concat(nn.Module):
+    
     def __init__(self, input_dim_a, input_dim_b, output_nc=8, norm_layer=None, nl_layer=None):
         super(E_attr_concat, self).__init__()
 
@@ -295,7 +307,9 @@ class E_attr_concat(nn.Module):
         outputVar_B = self.fcVar_B(conv_flat_B)
         return output_B, outputVar_B
 
+
 class E_attr_concat_share(nn.Module):
+    
     def __init__(self, input_dim_a, input_dim_b, output_nc=8, norm_layer=None, nl_layer=None):
         super(E_attr_concat_share, self).__init__()
 
@@ -354,7 +368,9 @@ class E_attr_concat_share(nn.Module):
 ####################################################################
 # --------------------------- Generators ----------------------------
 ####################################################################
+
 class G(nn.Module):
+    
     def __init__(self, output_dim_a, output_dim_b, nz):
         super(G, self).__init__()
         self.nz = nz
@@ -428,6 +444,7 @@ class G(nn.Module):
 
 
 class G_concat(nn.Module):
+    
     def __init__(self, output_dim_a, output_dim_b, nz):
         super(G_concat, self).__init__()
         self.nz = nz
@@ -505,6 +522,7 @@ class G_concat(nn.Module):
 ####################################################################
 # ------------------------- Basic Functions -------------------------
 ####################################################################
+
 def get_scheduler(optimizer, opts, cur_ep=-1):
     if opts.lr_policy == 'lambda':
         def lambda_rule(ep):
@@ -572,7 +590,9 @@ def gaussian_weights_init(m):
 ####################################################################
 
 ## The code of LayerNorm is modified from MUNIT (https://github.com/NVlabs/MUNIT)
+
 class LayerNorm(nn.Module):
+    
     def __init__(self, n_out, eps=1e-5, affine=True):
         super(LayerNorm, self).__init__()
         self.n_out = n_out
@@ -592,6 +612,7 @@ class LayerNorm(nn.Module):
 
 
 class BasicBlock(nn.Module):
+    
     def __init__(self, inplanes, outplanes, norm_layer=None, nl_layer=None):
         super(BasicBlock, self).__init__()
         layers = []
@@ -612,6 +633,7 @@ class BasicBlock(nn.Module):
 
 
 class LeakyReLUConv2d(nn.Module):
+    
     def __init__(self, n_in, n_out, kernel_size, stride, padding=0, norm='None', sn=False):
         super(LeakyReLUConv2d, self).__init__()
         model = []
@@ -633,6 +655,7 @@ class LeakyReLUConv2d(nn.Module):
 
 
 class ReLUINSConv2d(nn.Module):
+    
     def __init__(self, n_in, n_out, kernel_size, stride, padding=0):
         super(ReLUINSConv2d, self).__init__()
         model = []
@@ -648,6 +671,7 @@ class ReLUINSConv2d(nn.Module):
 
 
 class INSResBlock(nn.Module):
+    
     def conv3x3(self, inplanes, out_planes, stride=1):
         return [nn.ReflectionPad2d(1), nn.Conv2d(inplanes, out_planes, kernel_size=3, stride=stride)]
 
@@ -672,6 +696,7 @@ class INSResBlock(nn.Module):
 
 
 class MisINSResBlock(nn.Module):
+    
     def conv3x3(self, dim_in, dim_out, stride=1):
         return nn.Sequential(nn.ReflectionPad2d(1), nn.Conv2d(dim_in, dim_out, kernel_size=3, stride=stride))
 
@@ -718,6 +743,7 @@ class MisINSResBlock(nn.Module):
 
 
 class GaussianNoiseLayer(nn.Module):
+    
     def __init__(self, ):
         super(GaussianNoiseLayer, self).__init__()
 
@@ -729,6 +755,7 @@ class GaussianNoiseLayer(nn.Module):
 
 
 class ReLUINSConvTranspose2d(nn.Module):
+    
     def __init__(self, n_in, n_out, kernel_size, stride, padding, output_padding):
         super(ReLUINSConvTranspose2d, self).__init__()
         model = []
@@ -747,7 +774,9 @@ class ReLUINSConvTranspose2d(nn.Module):
 # --------------------- Spectral Normalization ---------------------
 #  This part of code is copied from pytorch master branch (0.5.0)
 ####################################################################
+
 class SpectralNorm(object):
+    
     def __init__(self, name='weight', n_power_iterations=1, dim=0, eps=1e-12):
         self.name = name
         self.dim = dim
@@ -827,6 +856,7 @@ def remove_spectral_norm(module, name='weight'):
 
 
 class Vgg16(nn.Module):
+    
     def __init__(self):
         super(Vgg16, self).__init__()
         self.conv1_1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1)
@@ -919,6 +949,7 @@ def vgg_preprocess(batch, opt):
 
 
 class PerceptualLoss(nn.Module):
+    
     def __init__(self, opt):
         super(PerceptualLoss, self).__init__()
         self.opt = opt

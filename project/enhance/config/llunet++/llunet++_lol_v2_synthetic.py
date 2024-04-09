@@ -59,9 +59,9 @@ model = {
 					"gamma": 0.99,
 				},
 				# REQUIRED: The scheduler measurement
-				"interval" : "epoch",     # Unit of the scheduler's step size. One of ['step', 'epoch'].
-				"frequency": 1,           # How many epochs/steps should pass between calls to `scheduler.step()`.
-				"monitor"  : "val/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
+				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
+				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
+				"monitor"  : "train/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
 				"strict"   : True,
 				"name"     : None,
 			},
