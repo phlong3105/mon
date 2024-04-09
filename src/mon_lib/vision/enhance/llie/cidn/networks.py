@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import annotations
+
 import functools
 import os
 
@@ -12,11 +17,11 @@ from torch.optim import lr_scheduler
 # ------------------------- Discriminators --------------------------
 ####################################################################
 
-class Dis_content(nn.Module):
+class DiscriminatorContent(nn.Module):
     
     def __init__(self):
-        super(Dis_content, self).__init__()
-        model = []
+        super().__init__()
+        model  = []
         model += [LeakyReLUConv2d(256, 256, kernel_size=7, stride=2, padding=1, norm='Instance')]
         model += [LeakyReLUConv2d(256, 256, kernel_size=7, stride=2, padding=1, norm='Instance')]
         model += [LeakyReLUConv2d(256, 256, kernel_size=7, stride=2, padding=1, norm='Instance')]
@@ -24,17 +29,16 @@ class Dis_content(nn.Module):
         model += [nn.Conv2d(256, 1, kernel_size=1, stride=1, padding=0)]
         self.model = nn.Sequential(*model)
 
-    def forward(self, x):
-        out = self.model(x)
-        out = out.view(-1)
-        outs = []
-        outs.append(out)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out  = self.model(x)
+        out  = out.view(-1)
+        outs = [out]
         return outs
 
 
 class MultiScaleDis(nn.Module):
     
-    def __init__(self, input_dim, n_scale=3, n_layer=4, norm='None', sn=False):
+    def __init__(self, input_dim, n_scale=3, n_layer=4, norm="None", sn=False):
         super(MultiScaleDis, self).__init__()
         ch = 64
         self.downsample = nn.AvgPool2d(3, stride=2, padding=1, count_include_pad=False)

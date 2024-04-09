@@ -61,7 +61,7 @@ class Loss(nn.Loss):
             patch_size  = spa_patch_size,
             reduction   = reduction,
         )
-        self.loss_tva    = nn.TotalVariationALoss(reduction=reduction)
+        self.loss_tva    = nn.TotalVariationLoss(reduction=reduction)
     
     def forward(
         self,

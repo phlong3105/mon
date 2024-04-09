@@ -49,7 +49,7 @@ class Loss(nn.Loss):
             mean_val   = exp_mean_val,
         )
         self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tva = nn.TotalVariationALoss(reduction=reduction)
+        self.loss_tva = nn.TotalVariationLoss(reduction=reduction)
     
     def forward(
         self,

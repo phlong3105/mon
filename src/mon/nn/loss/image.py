@@ -24,9 +24,7 @@ __all__ = [
     "SSIMLoss",
     "SpatialConsistencyLoss",
     "StdLoss",
-    "TVALoss",
     "TVLoss",
-    "TotalVariationALoss",
     "TotalVariationLoss",
     "VGGCharbonnierLoss",
     "VGGLoss",
@@ -39,6 +37,7 @@ import torch
 import torchvision
 from torch import nn
 from torch.nn import functional as F
+from torchvision import transforms
 
 from mon import proc
 from mon.core import _size_2_t
@@ -463,11 +462,13 @@ class PerceptualLoss(base.Loss):
         self,
         net        : nn.Module | str = "vgg19",
         layers     : list  = ["26"],
+        preprocess : bool  = False,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.layers = layers
+        self.layers     = layers
+        self.preprocess = preprocess
         
         if net in ["alexnet"]:
             net = torchvision.models.alexnet(pretrained=True).features
@@ -480,23 +481,35 @@ class PerceptualLoss(base.Loss):
         elif net in ["vgg19"]:
             net = torchvision.models.vgg19(pretrained=True).features
         
-        self.net = net.eval()
+        self.net     = net.eval()
+        self.l1_loss = base.L1Loss(reduction=reduction)
         
         # Disable gradient computation for net's parameters
         for param in self.net.parameters():
             param.requires_grad = False
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        if self.preprocess:
+            input  = self.run_preprocess(input)
+            target = self.run_preprocess(target)
         input_feats  = self.get_features(input)
         target_feats = self.get_features(target)
-        loss         = 0
+        #
+        loss = 0
         for xf, yf in zip(input_feats, target_feats):
-            loss += torch.mean(torch.abs(xf - yf))
+            loss += self.l1_loss(xf, yf)
         loss = loss / len(input_feats)
         loss = self.loss_weight * loss
         return loss
-        
-    def get_features(self, x: torch.Tensor) -> list[torch.Tensor]:
+    
+    @staticmethod
+    def run_preprocess(input: torch.Tensor) -> torch.Tensor:
+        transform = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        input     = transform(input)
+        return input
+    
+    def get_features(self, input: torch.Tensor) -> list[torch.Tensor]:
+        x        = input
         features = []
         for name, layer in self.net._modules.items():
             x = layer(x)
@@ -568,11 +581,13 @@ class PSNRLoss(base.Loss):
 @LOSSES.register(name="tv_loss")
 @LOSSES.register(name="total_variation_loss")
 class TotalVariationLoss(base.Loss):
-    """Total Variation Loss (Total Variation Regularization). It is mainly used
-    to create spatial smoothness.
+    """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
+    :math:`\mathcal{L}_{tvA}` preserve the monotonicity relations between
+    neighboring pixels. It is used to avoid aggressive and sharp changes between
+    neighboring pixels.
     
-    Calculate and sum up the variation between neighboring pixels for each
-    vertical and horizontal axis of a single image.
+    References:
+        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
     """
     
     def __init__(
@@ -587,53 +602,24 @@ class TotalVariationLoss(base.Loss):
         input : torch.Tensor,
         target: torch.Tensor | None = None
     ) -> torch.Tensor:
-        x    = input
-        h_tv = torch.mean(torch.abs(x[:, :, 1:, :] - x[:, :, :x.size(2) - 1, :]))
-        w_tv = torch.mean(torch.abs(x[:, :, :, 1:] - x[:, :, :, :x.size(3) - 1]))
-        loss = h_tv + w_tv
-        loss = self.loss_weight * loss
-        return loss
-
-
-@LOSSES.register(name="tva_loss")
-@LOSSES.register(name="total_variation_a_loss")
-class TotalVariationALoss(base.Loss):
-    """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
-    :math:`\mathcal{L}_{tvA}` preserve the monotonicity relations between
-    neighboring pixels. It is used to avoid aggressive and sharp changes between
-    neighboring pixels.
-    
-    References:
-        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
-    """
-    
-    def __init__(
-        self,
-        loss_weight   : float = 1.0,
-        reduction     : Literal["none", "mean", "sum"] = "mean",
-        tv_loss_weight: int = 1
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.tv_loss_weight = tv_loss_weight
-    
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None = None
-    ) -> torch.Tensor:
         x       = input
         b       = x.size()[0]
         h_x     = x.size()[2]
         w_x     = x.size()[3]
-        count_h = (x.size()[2] - 1) * x.size()[3]
-        count_w = x.size()[2] * (x.size()[3] - 1)
+        # count_h = (x.size()[2] - 1) * x.size()[3]
+        # count_w = x.size()[2] * (x.size()[3] - 1)
+        count_h = self._tensor_size(x[:, :, 1:, :])
+        count_w = self._tensor_size(x[:, :, :, 1:])
         h_tv    = torch.pow((x[:, :, 1:,  :] - x[:, :, :h_x - 1, :]), 2).sum()
         w_tv    = torch.pow((x[:, :,  :, 1:] - x[:, :, :, :w_x - 1]), 2).sum()
-        loss    = self.tv_loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
+        loss    = self.loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
         # loss    = base.reduce_loss(loss=loss, reduction=self.reduction)
-        loss    = self.loss_weight * loss
         return loss
-
+    
+    @staticmethod
+    def _tensor_size(t: torch.Tensor) -> int:
+        return t.size()[1] * t.size()[2] * t.size()[3]
+    
 
 @LOSSES.register(name="ssim_loss")
 class SSIMLoss(base.Loss):
@@ -1202,7 +1188,6 @@ class VGGCharbonnierLoss(base.Loss):
         return loss
 
 
-TVLoss  = TotalVariationLoss
-TVALoss = TotalVariationALoss
+TVLoss = TotalVariationLoss
 
 # endregion

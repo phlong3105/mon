@@ -75,7 +75,7 @@ class ZeroReferenceLoss(nn.Loss):
             patch_size  = spa_patch_size,
             reduction   = reduction,
         )
-        self.loss_tvA  = nn.TotalVariationALoss(reduction=reduction)
+        self.loss_tvA  = nn.TotalVariationLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"zero-reference loss"

@@ -237,7 +237,7 @@ class CENet(base.LowLightImageEnhancementModel):
         self.loss_spa = nn.SpatialConsistencyLoss(reduction="mean")
         self.loss_exp = nn.ExposureControlLoss(reduction="mean", patch_size=16, mean_val=0.6)
         self.loss_col = nn.ColorConstancyLoss(reduction="mean")
-        self.loss_tv  = nn.TotalVariationALoss(reduction="mean")
+        self.loss_tv  = nn.TotalVariationLoss(reduction="mean")
         
         # Load weights
         if self.weights:

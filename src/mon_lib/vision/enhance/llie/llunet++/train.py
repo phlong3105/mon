@@ -9,7 +9,7 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-from averageMeter import AverageMeter
+from average_meter import AverageMeter
 from dataset import dataset
 from loss import Loss
 from model import NestedUNet

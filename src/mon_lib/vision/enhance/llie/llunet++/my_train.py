@@ -20,7 +20,7 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
 import mon
-from averageMeter import AverageMeter
+from average_meter import AverageMeter
 from loss import Loss
 from model import NestedUNet
 from mon import albumentation as A

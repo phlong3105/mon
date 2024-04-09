@@ -53,9 +53,10 @@ class Loss(nn.Loss):
         self.ms_ssim_loss = nn.MSSSIMLoss(data_range=1.0)
         self.ssim_loss    = nn.SSIMLoss(data_range=1.0, non_negative_ssim=True)
         self.per_loss     = nn.PerceptualLoss(
-            net       = torchvision.models.vgg19(pretrained=True).features,
-            layers    = ["26"],
-            reduction = reduction,
+            net        = torchvision.models.vgg19(pretrained=True).features,
+            layers     = ["26"],
+            preprocess = True,
+            reduction  = reduction,
         )
         self.tv_loss = nn.TVLoss(reduction=reduction)
         
