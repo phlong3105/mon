@@ -20,7 +20,7 @@ model_name = "llunet++"
 data_name  = "lol_v2_real"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [400, 400]
+image_size = [384, 384]
 seed	   = 1234
 verbose    = True
 
@@ -48,7 +48,7 @@ model = {
 		{
             "optimizer"   : {
 				"name"        : "adam",
-				"lr"          : 0.00005,
+				"lr"          : 0.00001,
 				"weight_decay": 1e-4,
 				"betas"       : [0.9, 0.999],
 				"eps"		    : 1e-8,

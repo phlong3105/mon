@@ -119,6 +119,8 @@ def train(args: argparse.Namespace):
     datamodule: mon.DataModule = mon.DATAMODULES.build(config=data_args)
     datamodule.prepare_data()
     datamodule.setup(phase="training")
+    train_dataloader = datamodule.train_dataloader
+    val_dataloader   = datamodule.val_dataloader
     
     log = OrderedDict([
         ("epoch"     , []),
@@ -133,8 +135,8 @@ def train(args: argparse.Namespace):
     best_ssim = 0
 
     for epoch in range(epochs):
-        train_loss  = _train_epoch(datamodule.train_dataloader, model, criterion, optimizer, device)
-        val_results = _val_epoch(datamodule.val_dataloader, model, criterion, device)
+        train_loss  = _train_epoch(train_dataloader, model, criterion, optimizer, device)
+        val_results = _val_epoch(val_dataloader, model, criterion, device)
         val_loss    = val_results[0]
         val_psnr    = val_results[1]
         val_ssim    = val_results[2]
@@ -151,6 +153,7 @@ def train(args: argparse.Namespace):
         log["val/loss"].append(val_loss)
         log["val/psnr"].append(val_psnr)
         log["val/ssim"].append(val_ssim)
+        '''
         # pd.DataFrame(log).to_csv(str(save_dir / "log.csv"))
         writer.add_scalars(
             "train",
@@ -166,6 +169,7 @@ def train(args: argparse.Namespace):
             },
             epoch,
         )
+        '''
         
         # Save
         if val_loss < best_loss:

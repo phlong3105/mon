@@ -3,10 +3,10 @@ data        : "lol_v1"
 project     :
 name        :
 device      : 0
-imgsz       : 400
+imgsz       : 384
 epochs      : 100
 batch_size  : 4
-lr          : 0.00005
+lr          : 0.00001
 loss_weights: [0.40, 0.05, 0.15, 0.40]
 exist_ok    : True
 verbose     : True
