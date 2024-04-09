@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Uformer_B model trained on LOL-v2-Real dataset."""
+"""Uformer_B model trained on LOL-v2-Syn dataset."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _root_dir     = _current_file.parents[1]
 # region Basic
 
 model_name = "uformer_b"
-data_name  = "lol_v2_real"
+data_name  = "lol_v2_syn"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
 image_size = [512, 512]
@@ -71,7 +71,7 @@ model = {
 				# REQUIRED: The scheduler measurement
 				"interval" : "epoch",     # Unit of the scheduler's step size. One of ['step', 'epoch'].
 				"frequency": 1,           # How many epochs/steps should pass between calls to `scheduler.step()`.
-				"monitor"  : "val_loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
+				"monitor"  : "val/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
 				"strict"   : True,
 				"name"     : None,
 			},

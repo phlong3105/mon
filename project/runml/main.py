@@ -330,7 +330,7 @@ def main(
     click.echo(click.style(f"\nInput Prompt:", fg="white", bg="red", bold=True))
     
     # Task
-    tasks_     = utils.list_tasks(project_root=root)
+    tasks_     = mon.list_tasks(project_root=root)
     tasks_str_ = utils.parse_menu_string(tasks_)
     task       = click.prompt(click.style(f"Task {tasks_str_}", fg="bright_green", bold=True), default=task)
     task       = tasks_[int(task)] if mon.is_int(task) else task
@@ -340,18 +340,18 @@ def main(
     
     if mode in ["train", "predict", "online", "instance"]:
         # Model
-        models_      = utils.list_models(project_root=root, mode=mode, task=task)
+        models_      = mon.list_models(project_root=root, mode=mode, task=task)
         models_str_  = utils.parse_menu_string(models_)
         model	     = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	     = models_[int(model)] if mon.is_int(model) else model
         model_       = model.replace(" (mon_lib)", "")
         # Config     
-        configs_     = utils.list_configs(project_root=root, model=model_)
+        configs_     = mon.list_configs(project_root=root, model=model_)
         configs_str_ = utils.parse_menu_string(configs_)
         config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
         config       = configs_[int(config)] if mon.is_int(config) else config
         # Weights    
-        weights_     = utils.list_weights_files(project_root=root, model=model_, config=config)
+        weights_     = mon.list_weights_files(project_root=root, model=model_, config=config)
         weights_str_ = utils.parse_menu_string(weights_)
         weights      = click.prompt(click.style(f"Weights {weights_str_}", fg="bright_green", bold=True), type=str, default=weights or "")
         weights      = weights if weights not in [None, ""] else None
@@ -362,7 +362,7 @@ def main(
             weights = [w.replace("'", "") for w in weights]
         # Predict data
         if mode in ["predict", "online", "instance"]:
-            data_     = utils.list_datasets(project_root=root, task=task, mode="predict")
+            data_     = mon.list_datasets(project_root=root, task=task, mode="predict")
             data_str_ = utils.parse_menu_string(data_)
             data      = data.replace(",", ",\n    ") if isinstance(data, str) else data
             data	  = click.prompt(click.style(f"Predict(s) {data_str_}", fg="bright_green", bold=True), type=str, default=data)
@@ -374,7 +374,7 @@ def main(
         # Device
         devices_    = mon.list_devices()
         devices_str = utils.parse_menu_string(devices_)
-        device      = "auto" if model_ in utils.list_mon_models(mode=mode, task=task) and mode == "train" else device
+        device      = "auto" if model_ in mon.list_mon_models(mode=mode, task=task) and mode == "train" else device
         device      = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=device or "cuda:0")
         device 	    = devices_[int(device)] if mon.is_int(device) else device
         # Training Flags

@@ -3,5 +3,5 @@
 
 from __future__ import annotations
 
-import mon.core.config.base
-from mon.core.config.base import *
+import mon.core.config.utils
+from mon.core.config.utils import *

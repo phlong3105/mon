@@ -209,24 +209,25 @@ class Path(type(pathlib.Path())):
         subdirs = [d.name for d in self.subdirs()]
         return name in subdirs
     
-    def subdirs(self) -> list[Path]:
+    def subdirs(self, recursive: bool = False) -> list[Path]:
         """Returns a :class:`list` of subdirectories' paths inside the current
         directory.
         """
-        path  = self.parent if self.is_file_like() else self
-        # paths = list(path.glob("*"))
-        # paths = [path / f for f in os.listdir(str(path))]
-        paths = list(path.iterdir())
+        path = self.parent if self.is_file_like() else self
+        if recursive:
+            paths = list(path.rglob("*"))
+        else:
+            paths = list(path.iterdir())
         paths = [p for p in paths if p.is_dir()]
         return paths
     
-    def files(self) -> list[Path]:
-        """Return a :class:`list` of files' paths inside the current directory.
-        """
-        path  = self.parent if self.is_file_like() else self
-        # paths = list(path.rglob("*"))
-        # paths = [path / f for f in os.listdir(str(path))]
-        paths = list(path.iterdir())
+    def files(self, recursive: bool = False) -> list[Path]:
+        """Return a :class:`list` of files' paths inside the current directory."""
+        path = self.parent if self.is_file_like() else self
+        if recursive:
+            paths = list(path.rglob("*"))
+        else:
+            paths = list(path.iterdir())
         paths = [p for p in paths if p.is_file()]
         return paths
     

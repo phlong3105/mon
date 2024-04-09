@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Retinexformer model trained on LOL-v2 Real dataset."""
+"""Retinexformer model trained on LOL-v1 dataset."""
 
 from __future__ import annotations
 
@@ -17,10 +17,10 @@ _root_dir     = _current_file.parents[1]
 # region Basic
 
 model_name = "retinexformer"
-data_name  = "lol_v2_real"
+data_name  = "lol_v1"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [256, 256]
+image_size = [128, 128]
 seed	   = 1234
 verbose    = True
 
@@ -72,7 +72,7 @@ model = {
 				# REQUIRED: The scheduler measurement
 				"interval" : "epoch",     # Unit of the scheduler's step size. One of ['step', 'epoch'].
 				"frequency": 1,           # How many epochs/steps should pass between calls to `scheduler.step()`.
-				"monitor"  : "val_loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
+				"monitor"  : "val/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
 				"strict"   : True,
 				"name"     : None,
 			},
