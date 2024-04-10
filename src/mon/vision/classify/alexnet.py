@@ -42,7 +42,7 @@ class AlexNet(base.ImageClassificationModel):
     
     def __init__(
         self,
-        channels   : int   = 3,
+        in_channels: int   = 3,
         num_classes: int   = 1000,
         dropout    : float = 0.5,
         weights    : Any   = None,
@@ -50,14 +50,14 @@ class AlexNet(base.ImageClassificationModel):
     ):
         super().__init__(
             name        = "alexnet",
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
         )
         self.dropout  = dropout
         self.features = nn.Sequential(
-            nn.Conv2d(self.channels, 64, kernel_size=11, stride=4, padding=2),
+            nn.Conv2d(self.in_channels, 64, kernel_size=11, stride=4, padding=2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.Conv2d(64, 192, kernel_size=5, padding=2),

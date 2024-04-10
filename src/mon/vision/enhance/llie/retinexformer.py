@@ -476,7 +476,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 	
 	def __init__(
 		self,
-		channels    : int       = 3,
+		in_channels : int       = 3,
 		num_channels: int       = 31,
 		stage       : int       = 3,
 		num_blocks  : list[int] = [1, 1, 1],
@@ -484,28 +484,28 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		*args, **kwargs
 	):
 		super().__init__(
-			name     = "retinexformer",
-			channels = channels,
-			weights  = weights,
+			name        = "retinexformer",
+			in_channels = in_channels,
+			weights     = weights,
 			*args, **kwargs
 		)
 		
 		# Populate hyperparameter values from pretrained weights
 		if isinstance(self.weights, dict):
-			channels     = self.weights.get("channels"    , channels)
+			in_channels  = self.weights.get("in_channels" , in_channels)
 			num_channels = self.weights.get("num_channels", num_channels)
 			stage        = self.weights.get("stage"       , stage)
 			num_blocks   = self.weights.get("num_blocks"  , num_blocks)
-		
-		self._channels    = channels
+		self.in_channels  = in_channels
 		self.num_channels = num_channels
 		self.stage        = stage
 		self.num_blocks   = num_blocks
 		
+		# Construct model
 		self.body = nn.Sequential(*[
 			RetinexFormerSingleStage(
-				in_channels  = self.channels,
-				out_channels = self.channels,
+				in_channels  = self.in_channels,
+				out_channels = self.in_channels,
 				num_channels = self.num_channels,
 				level        = 2,
 				num_blocks   = self.num_blocks,

@@ -328,7 +328,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         inverted_residual_setting: Sequence[MBConvConfig | FusedMBConvConfig],
         dropout                  : float,
         stochastic_depth_prob    : float      = 0.2,
-        channels                 : int        = 3,
+        in_channels              : int        = 3,
         num_classes              : int        = 1000,
         norm_layer               : _callable  = None,
         last_channel             : int | None = None,
@@ -336,7 +336,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         *args, **kwargs,
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -358,7 +358,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         firstconv_output_channels = inverted_residual_setting[0].in_channels
         layers.append(
             nn.Conv2dNormAct(
-                in_channels      = self.channels,
+                in_channels      = self.in_channels,
                 out_channels     = firstconv_output_channels,
                 kernel_size      = 3,
                 stride           = 2,

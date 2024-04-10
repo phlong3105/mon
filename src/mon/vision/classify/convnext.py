@@ -115,7 +115,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         block_setting        : list[CNBlockConfig],
         stochastic_depth_prob: float     = 0.0,
         layer_scale          : float     = 1e-6,
-        channels             : int       = 3,
+        in_channels          : int       = 3,
         num_classes          : int       = 1000,
         block                : Any       = None,
         norm_layer           : _callable = None,
@@ -123,7 +123,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         *args, **kwargs,
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -148,7 +148,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         firstconv_output_channels = self.block_setting[0].in_channels
         layers.append(
             nn.Conv2dNormAct(
-                in_channels      = self.channels,
+                in_channels      = self.in_channels,
                 out_channels     = firstconv_output_channels,
                 kernel_size      = 4,
                 stride           = 4,

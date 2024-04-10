@@ -150,23 +150,22 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        channels    : int = 3,
+        in_channels : int = 3,
         weights     : Any = None,
         loss_weights: list[float] = [0.35, 0.10, 0.25, 0.30],
         *args, **kwargs
     ):
         super().__init__(
-            name     = "llunet++",
-            channels = channels,
-            weights  = weights,
+            name        = "llunet++",
+            in_channels = in_channels,
+            weights     = weights,
             *args, **kwargs
         )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels = self.weights.get("channels", channels)
-            
-        self._channels = channels
+            in_channels = self.weights.get("in_channels", in_channels)
+        self.in_channels = in_channels
         
         # Construct model
         nb_filter    = [32, 64, 128, 256, 512]
@@ -174,7 +173,7 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
         self.pool    = nn.MaxPool2d(2, 2)
         self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
         #
-        self.conv0_0 = UNetConvBlock(self.channels, nb_filter[0])
+        self.conv0_0 = UNetConvBlock(self.in_channels, nb_filter[0])
         self.conv1_0 = UNetConvBlock(nb_filter[0], nb_filter[1])
         self.conv2_0 = UNetConvBlock(nb_filter[1], nb_filter[2])
         self.conv3_0 = UNetConvBlock(nb_filter[2], nb_filter[3])
@@ -194,7 +193,7 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
         #
         self.conv0_4 = UNetConvBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
         #
-        self.final   = nn.Conv2d(nb_filter[0], self.channels, kernel_size=1)
+        self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         
         # Loss
         self._loss = Loss(*loss_weights)
@@ -208,11 +207,13 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
     def _init_weights(self, m: nn.Module):
         pass
     
+    '''
     def configure_optimizers(self):
         optimizer = nn.Adam(self.parameters(), lr=0.00001, weight_decay=1e-4)
         scheduler = nn.ExponentialLR(optimizer, 0.99)
         return {"optimizer": optimizer, "scheduler": scheduler}
-        
+    '''
+    
     def forward_loss(
         self,
         input : torch.Tensor,

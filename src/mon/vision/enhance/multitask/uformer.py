@@ -138,7 +138,7 @@ class Attention(nn.Module):
     
     def __init__(
         self,
-        channels        : int,
+        in_channels     : int,
         num_heads       : int,
         token_projection: str   = "linear",
         qkv_bias        : bool  = True,
@@ -147,14 +147,14 @@ class Attention(nn.Module):
         proj_drop       : float = 0.0,
     ):
         super().__init__()
-        self.channels         = channels
+        self.in_channels      = in_channels
         self.num_heads        = num_heads
-        head_channels         = channels // num_heads
+        head_channels         = in_channels // num_heads
         self.scale            = qk_scale or head_channels ** -0.5
-        self.qkv              = nn.LinearProjection(channels, num_heads, channels // num_heads, bias=qkv_bias)
+        self.qkv              = nn.LinearProjection(in_channels, num_heads, in_channels // num_heads, bias=qkv_bias)
         self.token_projection = token_projection
         self.attn_drop        = nn.Dropout(attn_drop)
-        self.proj             = nn.Linear(channels, channels)
+        self.proj             = nn.Linear(in_channels, in_channels)
         self.proj_drop        = nn.Dropout(proj_drop)
         self.softmax          = nn.Softmax(dim=-1)
 
@@ -187,7 +187,7 @@ class Attention(nn.Module):
         return x
 
     def extra_repr(self) -> str:
-        return f"dim={self.channels}, num_heads={self.num_heads}"
+        return f"dim={self.in_channels}, num_heads={self.num_heads}"
 
     def flops(self, q_num, kv_num) -> int:
         # Calculate flops for 1 window with token length of N
@@ -199,11 +199,11 @@ class Attention(nn.Module):
         # flops += N * self.dim * 3 * self.dim
         flops += self.qkv.flops(q_num, kv_num)
         # attn = (q @ k.transpose(-2, -1))
-        flops += self.num_heads * q_num * (self.channels // self.num_heads) * kv_num
+        flops += self.num_heads * q_num * (self.in_channels // self.num_heads) * kv_num
         #  x = (attn @ v)
-        flops += self.num_heads * q_num * (self.channels // self.num_heads) * kv_num
+        flops += self.num_heads * q_num * (self.in_channels // self.num_heads) * kv_num
         # x = self.proj(x)
-        flops += q_num * self.channels * self.channels
+        flops += q_num * self.in_channels * self.in_channels
         # print("MCA:{%.2f}" % (flops / 1e9))
         return flops
 
@@ -390,7 +390,7 @@ class LeWinTransformerBlock(nn.Module):
     
     def __init__(
         self,
-        channels        : int,
+        in_channels     : int,
         input_resolution: _size_2_t,
         num_heads       : int,
         window_size     : int       = 8,
@@ -409,7 +409,7 @@ class LeWinTransformerBlock(nn.Module):
         cross_modulator : bool      = False,
     ):
         super().__init__()
-        self.channels         = channels
+        self.in_channels      = in_channels
         self.input_resolution = input_resolution
         self.num_heads        = num_heads
         self.window_size      = window_size
@@ -485,7 +485,7 @@ class LeWinTransformerBlock(nn.Module):
 
     def extra_repr(self) -> str:
         return (
-            f"dim={self.channels}, "
+            f"dim={self.in_channels}, "
             f"input_resolution={self.input_resolution}, "
             f"num_heads={self.num_heads}, "
             f"win_size={self.window_size}, "
@@ -585,14 +585,14 @@ class LeWinTransformerBlock(nn.Module):
         flops = 0
         h, w  = self.input_resolution
         if self.cross_modulator is not None:
-            flops += self.channels * h * w
+            flops += self.in_channels * h * w
             flops += self.cross_attn.flops(h * w, self.window_size * self.window_size)
         # norm1
-        flops += self.channels * h * w
+        flops += self.in_channels * h * w
         # w-MSA/SW-MSA
         flops += self.attn.flops(h, w)
         # norm2
-        flops += self.channels * h * w
+        flops += self.in_channels * h * w
         # mlp
         flops += self.mlp.flops(h, w)
         # print("LeWin:{%.2f}"%(flops/1e9))
@@ -715,7 +715,7 @@ class Uformer(base.MultiTaskImageEnhancementModel):
     def __init__(
         self,
         image_size      : _size_2_t = 256,
-        channels        : int       = 3,
+        in_channels     : int       = 3,
         dd_in           : int       = 3,
         embed_channels  : int       = 32,
         depths          : list[int] = [2, 2, 2, 2, 2 , 2 , 2, 2, 2],
@@ -741,19 +741,19 @@ class Uformer(base.MultiTaskImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            channels = channels,
-            weights  = weights,
+            in_channels = in_channels,
+            weights     = weights,
             *args, **kwargs
         )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            image_size = self.weights.get("image_size", image_size)
-            dd_in      = self.weights.get("dd_in"     , dd_in)
-            channels   = self.weights.get("channels"  , channels)
+            image_size  = self.weights.get("image_size" , image_size)
+            dd_in       = self.weights.get("dd_in"      , dd_in)
+            in_channels = self.weights.get("in_channels", in_channels)
         
         self.image_size       = core.parse_hw(image_size)
-        self._channels        = channels
+        self.in_channels      = in_channels
         self.dd_in            = dd_in
         self.embed_channels   = embed_channels
         self.depths           = depths
@@ -790,7 +790,7 @@ class Uformer(base.MultiTaskImageEnhancementModel):
         )
         self.output_proj = OutputProj(
             in_channels  = 2 * self.embed_channels,
-            out_channels = self.channels,
+            out_channels = self.in_channels,
             kernel_size  = 3,
             stride       = 1,
         )

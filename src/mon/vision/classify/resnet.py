@@ -193,7 +193,7 @@ class ResNet(base.ImageClassificationModel, ABC):
         self,
         block                       : Type[BasicBlock | Bottleneck],
         layers                      : list[int],
-        channels                    : int  = 3,
+        in_channels                 : int  = 3,
         num_classes                 : int  = 1000,
         zero_init_residual          : bool = False,
         groups                      : int  = 1,
@@ -204,7 +204,7 @@ class ResNet(base.ImageClassificationModel, ABC):
         *args, **kwargs
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -226,7 +226,7 @@ class ResNet(base.ImageClassificationModel, ABC):
             )
         self.groups     = groups
         self.base_width = width_per_group
-        self.conv1      = nn.Conv2d(self.channels, self.num_channels, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1      = nn.Conv2d(self.in_channels, self.num_channels, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1        = norm_layer(self.num_channels)
         self.relu       = nn.ReLU(inplace=True)
         self.maxpool    = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)

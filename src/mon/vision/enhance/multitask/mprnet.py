@@ -355,7 +355,7 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 	"""Multi-Stage Progressive Image Restoration.
 	
 	Args:
-		channels: The first layer's input channel. Default: ``3`` for RGB image.
+		in_channels: The first layer's input channel. Default: ``3`` for RGB image.
 		num_channels: Output channels for subsequent layers. Default: ``64``.
 		depth: The depth of the network. Default: ``5``.
 		relu_slope: The slope of the ReLU activation. Default: ``0.2``,
@@ -376,7 +376,7 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 	
 	def __init__(
 		self,
-		channels         : int       = 3,
+		in_channels      : int       = 3,
 		num_channels     : int       = 96,
 		scale_unetfeats  : int       = 48,
 		scale_orsnetfeats: int       = 32,
@@ -389,16 +389,16 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 		*args, **kwargs
 	):
 		super().__init__(
-			name     = "mprnet",
-			channels = channels,
-			weights  = weights,
-			loss     = loss,
+			name        = "mprnet",
+			in_channels = in_channels,
+			weights     = weights,
+			loss        = loss,
 			*args, **kwargs
 		)
 		
 		# Populate hyperparameter values from pretrained weights
 		if isinstance(self.weights, dict):
-			channels          = self.weights.get("channels"         , channels)
+			in_channels       = self.weights.get("in_channels"      , in_channels)
 			num_channels      = self.weights.get("num_channels"     , num_channels)
 			scale_unetfeats   = self.weights.get("scale_unetfeats"  , scale_unetfeats)
 			scale_orsnetfeats = self.weights.get("scale_orsnetfeats", scale_orsnetfeats)
@@ -407,7 +407,7 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 			reduction         = self.weights.get("reduction"        , reduction)
 			bias              = self.weights.get("bias"             , bias)
 			
-		self._channels         = channels
+		self.in_channels       = in_channels
 		self.num_channels      = num_channels
 		self.scale_unetfeats   = scale_unetfeats
 		self.scale_orsnetfeats = scale_orsnetfeats
@@ -419,15 +419,15 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 		# Construct model
 		act_layer = nn.PReLU()
 		self.shallow_feat1 = nn.Sequential(
-			conv(self.channels, self.num_channels, kernel_size, bias=bias),
+			conv(self.in_channels, self.num_channels, kernel_size, bias=bias),
 			CAB(self.num_channels, kernel_size, reduction, bias=bias, act_layer=act_layer)
 		)
 		self.shallow_feat2 = nn.Sequential(
-			conv(self.channels, self.num_channels, kernel_size, bias=bias),
+			conv(self.in_channels, self.num_channels, kernel_size, bias=bias),
 			CAB(self.num_channels, kernel_size, reduction, bias=bias, act_layer=act_layer)
 		)
 		self.shallow_feat3 = nn.Sequential(
-			conv(self.channels, self.num_channels, kernel_size, bias=bias),
+			conv(self.in_channels, self.num_channels, kernel_size, bias=bias),
 			CAB(self.num_channels, kernel_size, reduction, bias=bias, act_layer=act_layer)
 		)
 		# Cross Stage Feature Fusion (CSFF)
@@ -440,7 +440,7 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 		self.sam23 		    = SAM(self.num_channels, kernel_size=1, bias=bias)
 		self.concat12 	    = conv(self.num_channels * 2, self.num_channels, kernel_size, bias=bias)
 		self.concat23  		= conv(self.num_channels * 2, self.num_channels + scale_orsnetfeats, kernel_size, bias=bias)
-		self.tail      		= conv(self.num_channels+scale_orsnetfeats, self.channels, kernel_size, bias=bias)
+		self.tail      		= conv(self.num_channels+scale_orsnetfeats, self.in_channels, kernel_size, bias=bias)
 		
 		# Load weights
 		if self.weights:

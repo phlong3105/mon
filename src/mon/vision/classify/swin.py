@@ -191,7 +191,7 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
         dropout              : float     = 0.0,
         attention_dropout    : float     = 0.0,
         stochastic_depth_prob: float     = 0.1,
-        channels             : int       = 3,
+        in_channels          : int       = 3,
         num_classes          : int       = 1000,
         norm_layer           : _callable = None,
         block                : _callable = None,
@@ -200,7 +200,7 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
         *args, **kwargs,
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -215,7 +215,7 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
         layers.append(
             nn.Sequential(
                 nn.Conv2d(
-                    in_channels  = self.channels,
+                    in_channels  = self.in_channels,
                     out_channels = embed_dim,
                     kernel_size  = (patch_size[0], patch_size[1]),
                     stride       = (patch_size[0], patch_size[1])

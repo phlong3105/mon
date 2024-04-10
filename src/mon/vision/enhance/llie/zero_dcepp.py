@@ -81,7 +81,7 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
     """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
     
     Args:
-        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         num_channels: The number of input and output channels for subsequent
             layers. Default: ``32``.
         num_iters: The number of convolutional layers in the model.
@@ -109,7 +109,7 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        channels    : int   = 3,
+        in_channels : int   = 3,
         num_channels: int   = 32,
         num_iters   : int   = 8,
         scale_factor: float = 1.0,
@@ -117,20 +117,20 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name     = "zero_dce++",
-            channels = channels,
-            weights  = weights,
+            name        = "zero_dce++",
+            in_channels = in_channels,
+            weights     = weights,
             *args, **kwargs
         )
         assert num_iters <= 8
+       
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels     = self.weights.get("channels",     channels)
+            in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
-            num_iters    = self.weights.get("num_iters",    num_iters)
+            num_iters    = self.weights.get("num_iters"   , num_iters)
             scale_factor = self.weights.get("scale_factor", scale_factor)
-        
-        self._channels     = channels
+        self.in_channels  = in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
         self.scale_factor = scale_factor
@@ -138,13 +138,13 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
         # Construct model
         self.relu     = nn.ReLU(inplace=True)
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-        self.e_conv1  = nn.DSConv2d(self.channels,         self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv1  = nn.DSConv2d(self.in_channels,      self.num_channels, kernel_size=3, stride=1, padding=1)
         self.e_conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
         self.e_conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
         self.e_conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
         self.e_conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, kernel_size=3, stride=1, padding=1)
         self.e_conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, kernel_size=3, stride=1, padding=1)
-        self.e_conv7  = nn.DSConv2d(self.num_channels * 2, 3,     kernel_size=3, stride=1, padding=1)
+        self.e_conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, kernel_size=3, stride=1, padding=1)
         
         # Loss
         self._loss = Loss()

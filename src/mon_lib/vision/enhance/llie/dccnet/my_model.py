@@ -447,8 +447,8 @@ class DCCNet(base.LowLightImageEnhancementModel):
             channels = self.weights.get("channels", channels)
             d_hist   = self.weights.get("d_hist",   d_hist)
             
-        self._channels = channels
-        self.d_hist    = d_hist
+        self.channels = channels
+        self.d_hist   = d_hist
         
         # Construct model
         self.g_net = GNet()

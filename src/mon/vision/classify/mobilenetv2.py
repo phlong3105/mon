@@ -115,7 +115,7 @@ class MobileNetV2(base.ImageClassificationModel):
     
     def __init__(
         self,
-        channels                 : int       = 3,
+        in_channels              : int       = 3,
         num_classes              : int       = 1000,
         width_mult               : float     = 1.0,
         inverted_residual_setting: list[list[int]] | None = None,
@@ -128,7 +128,7 @@ class MobileNetV2(base.ImageClassificationModel):
     ):
         super().__init__(
             name        = "mobilenetv2",
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -168,7 +168,7 @@ class MobileNetV2(base.ImageClassificationModel):
         self.last_channel = _utils._make_divisible(last_channel * max(1.0, self.width_mult), self.round_nearest)
         features: list[nn.Module] = [
             nn.Conv2dNormAct(
-                in_channels      = self.channels,
+                in_channels      = self.in_channels,
                 out_channels     = input_channel,
                 stride           = 2,
                 norm_layer       = norm_layer,

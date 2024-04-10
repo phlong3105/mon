@@ -221,12 +221,10 @@ class Model(lightning.LightningModule, ABC):
         fullname: The model's fullname to save the checkpoint or weights. It
             should have the following format: {name}-{dataset}-{suffix}.
             Default: ``None`` mean it will be the same as :param:`name`.
-        channels: The first layer's input channel. Default: ``3`` for RGB image.
-        num_classes: A number of classes, which is also the last layer's output
-            channels. Default: ``None`` mean it will be determined during model
-            parsing.
-        classlabels: A :class:`mon.nn.data.label.ClassLabels` object that
-            contains all labels in the dataset. Default: ``None``.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
+        out_channels: The last layer's output channels (number of classes).
+            Default: ``None`` mean it will be determined during model parsing.
+        num_classes: Alias to :param:`out_channels`, but for classification tasks.
         weights: The model's weights. Any of:
             - A state :class:`dict`.
             - A key in the :attr:`zoo`. Ex: 'yolov8x-det-coco'.
@@ -271,49 +269,41 @@ class Model(lightning.LightningModule, ABC):
     def __init__(
         self,
         # For saving/loading
-        name       : str | None = None,
-        root       : core.Path  = core.Path(),
-        fullname   : str | None = None,
+        name        : str | None = None,
+        root        : core.Path  = core.Path(),
+        fullname    : str | None = None,
         # For model architecture
-        channels   : int        = 3,
-        num_classes: int | None = None,
-        classlabels: Any        = None,
-        weights    : Any        = None,
+        in_channels : int        = 3,
+        out_channels: int | None = None,
+        num_classes : int | None = None,
+        weights     : Any        = None,
         # For training          
-        loss       : Any        = None,
-        metrics    : Any        = None,
-        optimizers : Any        = None,
+        loss        : Any        = None,
+        metrics     : Any        = None,
+        optimizers  : Any        = None,
         # Misc
-        verbose    : bool       = True,
+        verbose     : bool       = True,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.verbose    = verbose
+        self.verbose       = verbose
         # For saving/loading
-        self._name      = None
-        self._fullname  = None  # root/fullname
-        self._root      = None  # root/fullname
-        self._debug_dir = None
-        self._ckpt_dir  = None
-        self._set_name(name=name)
-        self._set_fullname(fullname=fullname)
-        self._set_root(root=root)
+        self.name          = name
+        self.fullname      = fullname  # root/fullname
+        self._debug_dir    = None
+        self._ckpt_dir     = None
+        self.root          = root
         # For model architecture
-        self._channels    = channels
-        self._num_classes = num_classes
-        self.classlabels  = classlabels
-        self._weights     = None
-        self._set_weights(weights=weights)
+        self.in_channels   = in_channels
+        self.out_channels  = out_channels or num_classes or self.in_channels
+        self._weights      = None
+        self.weights       = weights
         # For training
-        self._loss          = None
-        self._train_metrics = None
-        self._val_metrics   = None
-        self._test_metrics  = None
-        self.optims         = optimizers
-        self._set_loss(loss=loss)
-        self._set_train_metrics(metrics=metrics)
-        self._set_val_metrics(metrics=metrics)
-        self._set_test_metrics(metrics=metrics)
+        self.loss          = loss
+        self.train_metrics = metrics
+        self.val_metrics   = metrics
+        self.test_metrics  = metrics
+        self.optims        = optimizers
     
     # region Properties
     
@@ -343,7 +333,8 @@ class Model(lightning.LightningModule, ABC):
         """Return the model's name."""
         return self._name
     
-    def _set_name(self, name: str | None):
+    @name.setter
+    def name(self, name: str | None):
         """Specify the model's name. This value should only be defined once."""
         if name is None or name == "":
             name = humps.kebabize(self.__class__.__name__).lower()
@@ -354,7 +345,8 @@ class Model(lightning.LightningModule, ABC):
         """Return the model's fullname = name-suffix"""
         return self._fullname
     
-    def _set_fullname(self, fullname: str | None):
+    @fullname.setter
+    def fullname(self, fullname: str | None):
         """Specify the model's fullname. This value should only be defined once."""
         self._fullname = fullname if fullname not in [None, ""] else self.name
     
@@ -362,7 +354,8 @@ class Model(lightning.LightningModule, ABC):
     def root(self) -> core.Path:
         return self._root
     
-    def _set_root(self, root: Any):
+    @root.setter
+    def root(self, root: Any):
         root = core.Path(root)
         if root.name != self.fullname:
             root /= self.fullname
@@ -394,18 +387,19 @@ class Model(lightning.LightningModule, ABC):
     # region Model Architecture Properties
     
     @property
-    def channels(self) -> int:
-        return self._channels
+    def num_classes(self) -> int:
+        return self.out_channels
     
-    @property
-    def num_classes(self) -> int | None:
-        return self._num_classes
+    @num_classes.setter
+    def num_classes(self, num_classes: int):
+        self.out_channels = num_classes
     
     @property
     def weights(self) -> core.Path | dict:
         return self._weights
     
-    def _set_weights(self, weights: Any):
+    @weights.setter
+    def weights(self, weights: Any):
         if isinstance(weights, str):
             if core.Path(weights).is_weights_file():
                 weights = core.Path(weights)
@@ -414,7 +408,7 @@ class Model(lightning.LightningModule, ABC):
                 weights["path"] = self.zoo_dir / weights.get("path", "")
                 num_classes     = getattr(weights, "num_classes", None)
                 if num_classes is not None and num_classes != self.num_classes:
-                    self._num_classes = num_classes
+                    self.num_classes = num_classes
                     console.log(f"Overriding :attr:`num_classes` with {num_classes}.")
             else:
                 error_console.log(f"The key ``'{weights}'`` has not been defined in :attr:`zoo`.")
@@ -451,7 +445,8 @@ class Model(lightning.LightningModule, ABC):
         """Return the model's loss functions."""
         return self._loss
     
-    def _set_loss(self, loss: Any):
+    @loss.setter
+    def loss(self, loss: Any):
         """Specify the model's loss functions. This value should only be
         defined once.
         """
@@ -466,13 +461,15 @@ class Model(lightning.LightningModule, ABC):
         
         if self._loss:
             self._loss.requires_grad = True
+            self._loss.eval()
     
     @property
     def train_metrics(self) -> list[M.Metric] | None:
         """Return the training metrics."""
         return self._train_metrics
     
-    def _set_train_metrics(self, metrics: Any):
+    @train_metrics.setter
+    def train_metrics(self, metrics: Any):
         """Assign train metrics.
         
         Args:
@@ -506,7 +503,8 @@ class Model(lightning.LightningModule, ABC):
         """Return the validation metrics."""
         return self._val_metrics
     
-    def _set_val_metrics(self, metrics: Any):
+    @val_metrics.setter
+    def val_metrics(self, metrics: Any):
         """Assign val metrics. Similar to: :meth:`self._set_train_metrics()`."""
         if isinstance(metrics, dict) and "val" in metrics:
             metrics = metrics.get("val", metrics)
@@ -522,7 +520,8 @@ class Model(lightning.LightningModule, ABC):
         """Return the testing metrics."""
         return self._test_metrics
     
-    def _set_test_metrics(self, metrics: Any):
+    @test_metrics.setter
+    def test_metrics(self, metrics: Any):
         """Assign test metrics. Similar to: :meth:`self._set_train_metrics()`."""
         if isinstance(metrics, dict) and "test" in metrics:
             metrics = metrics.get("test", metrics)
@@ -567,7 +566,7 @@ class Model(lightning.LightningModule, ABC):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
-        self._set_weights(weights=weights)
+        self.weights = weights
         
         # Get the state_dict
         state_dict = None
@@ -590,10 +589,10 @@ class Model(lightning.LightningModule, ABC):
             self.load_state_dict(state_dict=state_dict)
             if self.verbose:
                 console.log(f"Load model's weights from: {self.weights}!")
-        
+    
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your
-        optimization. Normally, you’d need one, but for GANs you might have
+        optimization. Normally, you need one, but for GANs you might have
         multiple.
         
         Return:
@@ -609,6 +608,36 @@ class Model(lightning.LightningModule, ABC):
                 - :class:`tuple` of :class:`dict` as described above, with an
                   optional ``'frequency'`` key.
                 - ``None`` - Fit will run without any optimizer.
+            
+        Examples:
+            def configure_optimizers(self):
+                optimizer = Adam(...)
+                return {
+                    "optimizer": optimizer,
+                    "lr_scheduler": {
+                        "scheduler": ReduceLROnPlateau(optimizer, ...),
+                        "monitor": "metric_to_track",
+                        "frequency": "indicates how often the metric is updated",
+                        #  If "monitor" references validation metrics, then "frequency" should be set to a
+                        #  multiple of "trainer.check_val_every_n_epoch".
+                    },
+                }
+            
+            def configure_optimizers(self):
+                optimizer1 = Adam(...)
+                optimizer2 = SGD(...)
+                scheduler1 = ReduceLROnPlateau(optimizer1, ...)
+                scheduler2 = LambdaLR(optimizer2, ...)
+                return (
+                    {
+                        "optimizer": optimizer1,
+                        "lr_scheduler": {
+                            "scheduler": scheduler1,
+                            "monitor": "metric_to_track",
+                        },
+                    },
+                    {"optimizer": optimizer2, "lr_scheduler": scheduler2},
+                )
         """
         optims = self.optims
         
@@ -622,35 +651,29 @@ class Model(lightning.LightningModule, ABC):
             optims = [optims]
         assert isinstance(optims, list) and all(isinstance(o, dict) for o in optims)
         
-        for optim in optims:
+        for i, optim in enumerate(optims):
             # Define optimizer
             optimizer = optim.get("optimizer", None)
             if optimizer is None:
                 raise ValueError(f":param:`optimizer` must be defined.")
-            if isinstance(optimizer,  dict):
+            if isinstance(optimizer, dict):
                 optimizer = OPTIMIZERS.build(net=self, config=optimizer)
             optim["optimizer"] = optimizer
             
             # Define learning rate scheduler
             lr_scheduler = optim.get("lr_scheduler", None)
-            if "lr_scheduler" in optim and lr_scheduler is None:
-                optim.pop("lr_scheduler")
-            elif lr_scheduler is not None and isinstance(lr_scheduler, dict):
+            if lr_scheduler is not None and isinstance(lr_scheduler, dict):
                 scheduler = lr_scheduler.get("scheduler", None)
                 if scheduler is None:
                     raise ValueError(f":param:`scheduler` must be defined.")
                 if isinstance(scheduler, dict):
-                    scheduler = LR_SCHEDULERS.build(
-                        optimizer = optim["optimizer"],
-                        config    = scheduler
-                    )
+                    scheduler = LR_SCHEDULERS.build(optimizer=optimizer, config=scheduler)
                 lr_scheduler["scheduler"] = scheduler
+            optim["lr_scheduler"] = lr_scheduler
             
-            # Define optimizer frequency
-            frequency = optim.get("frequency", None)
-            if "frequency" in optim and frequency is None:
-                optim.pop("frequency")
-        
+            # Update optims
+            optims[i] = optim
+            
         # Re-assign optims
         if isinstance(optims, list | tuple) and len(optims) == 1:
             optims = optims[0]

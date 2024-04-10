@@ -187,7 +187,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         mlp_dim            : int,
         dropout            : float      = 0.0,
         attention_dropout  : float      = 0.0,
-        channels           : int        = 3,
+        in_channels        : int        = 3,
         num_classes        : int        = 1000,
         representation_size: int | None = None,
         norm_layer         : _callable = functools.partial(nn.LayerNorm, eps = 1e-6),
@@ -196,7 +196,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         *args, **kwargs
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -234,7 +234,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
             self.conv_proj: nn.Module = seq_proj
         else:
             self.conv_proj = nn.Conv2d(
-                in_channels  = self.channels,
+                in_channels  = self.in_channels,
                 out_channels = hidden_dim,
                 kernel_size  = patch_size,
                 stride       = patch_size,

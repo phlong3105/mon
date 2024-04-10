@@ -149,7 +149,7 @@ class GoogleNet(base.ImageClassificationModel):
 
     def __init__(
         self,
-        channels       : int                    = 3,
+        in_channels    : int                    = 3,
         num_classes    : int                    = 1000,
         aux_logits     : bool                   = True,
         transform_input: bool                   = False,
@@ -162,7 +162,7 @@ class GoogleNet(base.ImageClassificationModel):
     ):
         super().__init__(
             name        = "googlenet",
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -192,7 +192,7 @@ class GoogleNet(base.ImageClassificationModel):
         self.dropout         = dropout
         self.dropout_aux     = dropout_aux
         
-        self.conv1       = conv_block(self.channels, 64, kernel_size=7, stride=2, padding=3)
+        self.conv1       = conv_block(self.in_channels, 64, kernel_size=7, stride=2, padding=3)
         self.maxpool1    = nn.MaxPool2d(3, stride=2, ceil_mode=True)
         self.conv2       = conv_block(64, 64, kernel_size=1)
         self.conv3       = conv_block(64, 192, kernel_size=3, padding=1)

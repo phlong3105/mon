@@ -210,10 +210,13 @@ def main(
     args["image_size"]  = imgsz
     args["verbose"]     = verbose
     args["model"]      |= {
-        "root"    : save_dir,
-        "fullname": fullname,
-        "weights" : weights,
-        "verbose" : verbose,
+        "root"      : save_dir,
+        "fullname"  : fullname,
+        "weights"   : weights,
+        "loss"      : None,
+        "metrics"   : None,
+        "optimizers": None,
+        "verbose"   : verbose,
     }
     args["predictor"]  |= {
         "default_root_dir": save_dir,

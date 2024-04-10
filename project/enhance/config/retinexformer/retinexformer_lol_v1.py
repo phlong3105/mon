@@ -33,12 +33,11 @@ model = {
 	"name"        : model_name,     # The model's name.
 	"root"        : root,           # The root directory of the model.
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
-	"channels"    : 3,              # The first layer's input channel.
+	"in_channels" : 3,              # The first layer's input channel.
+	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 40,
 	"stage"       : 1,
 	"num_blocks"  : [1, 2, 2],
-	"num_classes" : None,           # A number of classes, which is also the last layer's output channels.
-	"classlabels" : None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
 	"weights"     : None,           # The model's weights.
 	"loss"        : {
 		"name": "l1_loss",
@@ -69,7 +68,6 @@ model = {
 					"restart_weights": [1, 1],
 					"eta_mins"		 : [0.0003, 0.000001],
 				},
-				# REQUIRED: The scheduler measurement
 				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
 				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
 				"monitor"  : "train/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.

@@ -241,7 +241,7 @@ class FINet(base.MultiTaskImageEnhancementModel):
     def __init__(
         self,
         variant     : str | None = None,
-        channels    : int          = 3,
+        in_channels : int          = 3,
         num_channels: int          = 64,
         depth       : int          = 5,
         relu_slope  : float        = 0.2,
@@ -262,10 +262,10 @@ class FINet(base.MultiTaskImageEnhancementModel):
         variant = core.to_int(variant)
         variant = f"{variant:03d}" if isinstance(variant, int) else None
         super().__init__(
-            name     = "finet",
-            variant  = variant,
-            channels = channels,
-            weights  = weights,
+            name        = "finet",
+            variant     = variant,
+            in_channels = in_channels,
+            weights     = weights,
             *args, **kwargs
         )
         
@@ -288,7 +288,7 @@ class FINet(base.MultiTaskImageEnhancementModel):
                 
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels     = self.weights.get("channels"    , channels)
+            in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
             depth        = self.weights.get("depth"       , depth)
             relu_slope   = self.weights.get("relu_slope"  , relu_slope)
@@ -297,7 +297,7 @@ class FINet(base.MultiTaskImageEnhancementModel):
             p            = self.weights.get("p"           , p)
             scheme       = self.weights.get("scheme"      , scheme)
             
-        self._channels    = channels
+        self.in_channels  = in_channels
         self.num_channels = num_channels
         self.depth        = depth
         self.relu_slope   = relu_slope
@@ -309,8 +309,8 @@ class FINet(base.MultiTaskImageEnhancementModel):
         # Construct model
         self.down_path_1 = nn.ModuleList()
         self.down_path_2 = nn.ModuleList()
-        self.conv_01     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
-        self.conv_02     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+        self.conv_01     = nn.Conv2d(self.in_channels, self.num_channels, 3, 1, 1)
+        self.conv_02     = nn.Conv2d(self.in_channels, self.num_channels, 3, 1, 1)
 
         prev_channels    = self.num_channels
         for i in range(self.depth):  # 0,1,2,3,4
@@ -333,7 +333,7 @@ class FINet(base.MultiTaskImageEnhancementModel):
 
         self.sam12 = SupervisedAttentionModule(prev_channels)
         self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
-        self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
+        self.last  = nn.Conv2d(prev_channels, self.in_channels, 3, 1, 1, bias=True)
         
         # Load weights
         if self.weights:

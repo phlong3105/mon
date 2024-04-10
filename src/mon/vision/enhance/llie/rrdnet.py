@@ -173,7 +173,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
     Decomposition) model.
     
     Args:
-        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         gamma: The gamma value for the illumination. Default: ``0.4``.
         
     References:
@@ -187,29 +187,28 @@ class RRDNet(base.LowLightImageEnhancementModel):
     
     def __init__(
         self,
-        channels: int   = 3,
-        gamma   : float = 0.4,
-        weights : Any   = None,
+        in_channels: int   = 3,
+        gamma      : float = 0.4,
+        weights    : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
-            name     = "rrdnet",
-            channels = channels,
-            weights  = weights,
+            name        = "rrdnet",
+            in_channels = in_channels,
+            weights     = weights,
             *args, **kwargs
         )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels = self.weights.get("channels", channels)
-            gamma    = self.weights.get("gamma",    gamma)
-        
-        self._channels = channels
-        self.gamma     = gamma
+            in_channels = self.weights.get("in_channels", in_channels)
+            gamma       = self.weights.get("gamma"      , gamma)
+        self.in_channels = in_channels
+        self.gamma       = gamma
         
         # Construct model
         self.illumination_net = nn.Sequential(
-            nn.Conv2d(self.channels, 16, 3, 1, 1),
+            nn.Conv2d(self.in_channels, 16, 3, 1, 1),
             nn.ReLU(),
             nn.Conv2d(16, 32, 3, 1, 1),
             nn.ReLU(),
@@ -220,7 +219,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
             nn.Conv2d(32, 1, 3, 1, 1),
         )
         self.reflectance_net = nn.Sequential(
-            nn.Conv2d(self.channels, 16, 3, 1, 1),
+            nn.Conv2d(self.in_channels, 16, 3, 1, 1),
             nn.ReLU(),
             nn.Conv2d(16, 32, 3, 1, 1),
             nn.ReLU(),
@@ -231,7 +230,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
             nn.Conv2d(32, 3, 3, 1, 1)
         )
         self.noise_net = nn.Sequential(
-            nn.Conv2d(self.channels, 16, 3, 1, 1),
+            nn.Conv2d(self.in_channels, 16, 3, 1, 1),
             nn.ReLU(),
             nn.Conv2d(16, 32, 3, 1, 1),
             nn.ReLU(),

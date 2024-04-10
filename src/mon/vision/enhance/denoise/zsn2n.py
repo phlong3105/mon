@@ -29,7 +29,7 @@ class ZSN2N(base.DenoisingModel):
     """ZS-N2N (Zero-Shot Noise2Noise).
     
     Args:
-        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         num_channels: Output channels for subsequent layers. Default: ``48``.
         
     See Also: :class:`base.DenoisingModel`.
@@ -40,24 +40,27 @@ class ZSN2N(base.DenoisingModel):
     
     def __init__(
         self,
-        channels    : int = 3,
+        in_channels : int = 3,
         num_channels: int = 48,
         *args, **kwargs
     ):
-        super().__init__(name="zsn2n", *args, **kwargs)
+        super().__init__(
+            name        = "zsn2n",
+            in_channels = in_channels,
+            *args, **kwargs
+        )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels      = self.weights.get("channels"    , channels)
-            num_channels  = self.weights.get("num_channels", num_channels)
-            
-        self._channels    = channels
+            in_channels  = self.weights.get("in_channels" , in_channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+        self.in_channels  = in_channels
         self.num_channels = num_channels
         
         # Construct network
-        self.conv1 = nn.Conv2d(self.channels,     self.num_channels, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(self.in_channels,  self.num_channels, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(self.num_channels, self.num_channels, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(self.num_channels, self.channels,     kernel_size=1)
+        self.conv3 = nn.Conv2d(self.num_channels, self.out_channels, kernel_size=1)
         self.act   = nn.LeakyReLU(negative_slope=0.2, inplace=True)
         
         # Loss

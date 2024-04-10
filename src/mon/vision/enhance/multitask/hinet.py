@@ -200,7 +200,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
     """Half-Instance Normalization Network.
     
     Args:
-        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         num_channels: Output channels for subsequent layers. Default: ``64``.
         depth: The depth of the network. Default: ``5``.
         relu_slope: The slope of the ReLU activation. Default: ``0.2``,
@@ -262,7 +262,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
     
     def __init__(
         self,
-        channels    : int   = 3,
+        in_channels : int   = 3,
         num_channels: int   = 64,
         depth       : int   = 5,
         relu_slope  : float = 0.2,
@@ -272,22 +272,22 @@ class HINet(base.MultiTaskImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name     = "hinet",
-            channels = channels,
-            weights  = weights,
+            name        = "hinet",
+            in_channels = in_channels,
+            weights     = weights,
             *args, **kwargs
         )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels     = self.weights.get("channels",     channels)
+            in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
             depth        = self.weights.get("depth"       , depth)
             relu_slope   = self.weights.get("relu_slope"  , relu_slope)
             in_pos_left  = self.weights.get("in_pos_left" , in_pos_left)
             in_pos_right = self.weights.get("in_pos_right", in_pos_right)
             
-        self._channels    = channels
+        self.in_channels  = in_channels
         self.num_channels = num_channels
         self.depth        = depth
         self.relu_slope   = relu_slope
@@ -297,8 +297,8 @@ class HINet(base.MultiTaskImageEnhancementModel):
         # Construct model
         self.down_path_1  = nn.ModuleList()
         self.down_path_2  = nn.ModuleList()
-        self.conv_01      = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
-        self.conv_02      = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+        self.conv_01      = nn.Conv2d(self.in_channels, self.num_channels, 3, 1, 1)
+        self.conv_02      = nn.Conv2d(self.in_channels, self.num_channels, 3, 1, 1)
         prev_channels     = self.num_channels
         for i in range(self.depth):  # 0, 1, 2, 3, 4
             use_hin    = True if self.in_pos_left <= i <= self.in_pos_right else False
@@ -318,7 +318,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
             prev_channels = (2 ** i) * self.num_channels
         self.sam12 = SupervisedAttentionModule(prev_channels)
         self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
-        self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
+        self.last  = nn.Conv2d(prev_channels, self.in_channels, 3, 1, 1, bias=True)
         
         # Load weights
         if self.weights:

@@ -30,25 +30,29 @@ verbose     = True
 # region Model
 
 model = {
-	"name"       : model_name,     # The model's name.
-	"root"       : root,           # The root directory of the model.
-	"fullname"   : fullname,       # A full model name to save the checkpoint or weight.
-	"channels"   : 3,              # The first layer's input channel.
-	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
-	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
-	"weights"    : None,           # The model's weights.
-	"loss"       : {
+	"name"        : model_name,     # The model's name.
+	"root"        : root,           # The root directory of the model.
+	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
+	"in_channels" : 3,              # The first layer's input channel.
+	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
+	"num_channels": 64,
+	"depth"       : 5,
+	"relu_slope"  : 0.2,
+	"in_pos_left" : 0,
+	"in_pos_right": 4,
+	"weights"     : None,           # The model's weights.
+	"loss"        : {
 		"name"       : "psnr_loss",
 		"loss_weight": 0.5,
 		"to_y"       : True,
 		# "name": "l1_loss",
 	},          # Loss function for training the model.
-	"metrics"    : {
+	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
 		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
-	"optimizers" : [
+	"optimizers"  : [
 		{
             "optimizer"   : {
 	            "name"        : "adam",
@@ -63,7 +67,6 @@ model = {
 					"eta_min"   : 1e-7,
 					"last_epoch": -1
 				},
-				# REQUIRED: The scheduler measurement
 				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
 				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
 				"monitor"  : "train/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
@@ -72,13 +75,7 @@ model = {
 			},
         }
     ],          # Optimizer(s) for training model.
-	"verbose"    : verbose,        # Verbosity.
-	# Model args
-	"num_channels": 64,
-	"depth"       : 5,
-	"relu_slope"  : 0.2,
-	"in_pos_left" : 0,
-	"in_pos_right": 4,
+	"verbose"     : verbose,        # Verbosity.
 }
 
 # endregion

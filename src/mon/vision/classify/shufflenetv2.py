@@ -131,14 +131,14 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         self,
         stages_repeats     : list[int],
         stages_out_channels: list[int],
-        channels           : int       = 3,
+        in_channels        : int       = 3,
         num_classes        : int       = 1000,
         inverted_residual  : _callable = InvertedResidual,
         weights            : Any       = None,
         *args, **kwargs
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -149,7 +149,7 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
             raise ValueError("Expected :param:`stages_out_channels` as :class:`list` of 5 positive ints")
         self._stage_out_channels = stages_out_channels
 
-        input_channels  = self.channels
+        input_channels  = self.in_channels
         output_channels = self._stage_out_channels[0]
         self.conv1 = nn.Sequential(
             nn.Conv2d(input_channels, output_channels, 3, 2, 1, bias=False),

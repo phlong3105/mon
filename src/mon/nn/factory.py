@@ -57,7 +57,21 @@ class OptimizerFactory(factory.Factory):
         assert name is not None and name in self
         
         if hasattr(net, "parameters"):
-            instance = self[name](params=net.parameters(), **kwargs)
+            # Note: we must remove losses' parameters()
+            params = []
+            for n, p in net.named_parameters():
+                if (
+                         "loss" in n
+                    or "train/" in n
+                    or   "val/" in n
+                    or  "test/" in n
+                ):
+                    continue
+                else:
+                    params.append(p)
+           
+            instance = self[name](params=params, **kwargs)
+            
             if getattr(instance, "name", None) is None:
                 instance.name = humps.depascalize(humps.pascalize(name))
             if to_dict:

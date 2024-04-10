@@ -193,7 +193,7 @@ class IPT(base.DerainingModel):
         # Variant code: [aa][l][i]
         # aa: architecture
         if self.variant[0:2] == "00":  # Zero-DCE (baseline)
-            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.Conv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -205,7 +205,7 @@ class IPT(base.DerainingModel):
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self._init_weights)
         elif self.variant[0:2] == "01":  # Zero-DCE++ (baseline)
-            self.conv1    = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.DSConv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv4    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -217,7 +217,7 @@ class IPT(base.DerainingModel):
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self._init_weights)
         elif self.variant[0:2] == "02":
-            self.conv1    = nn.BSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.BSConv2dS(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv4    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -229,7 +229,7 @@ class IPT(base.DerainingModel):
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self._init_weights)
         elif self.variant[0:2] == "03":
-            self.conv1    = nn.BSConv2dU(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.BSConv2dU(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv4    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -242,7 +242,7 @@ class IPT(base.DerainingModel):
             self.apply(self._init_weights)
         #
         elif self.variant[0:2] == "10":
-            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.Conv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -259,7 +259,7 @@ class IPT(base.DerainingModel):
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self._init_weights)
         elif self.variant[0:2] == "11":
-            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.Conv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -280,7 +280,7 @@ class IPT(base.DerainingModel):
             self.apply(self._init_weights)
         #
         elif self.variant[0:2] == "20":
-            self.conv1    = nn.Conv2d(self.channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.Conv2d(self.in_channels,  self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
             self.conv4    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)

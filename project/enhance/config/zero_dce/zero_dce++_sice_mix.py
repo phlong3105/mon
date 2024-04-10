@@ -30,20 +30,19 @@ verbose    = True
 # region Model
 
 model = {
-	"name"       : model_name,     # The model's name.
-	"root"       : root,           # The root directory of the model.
-	"fullname"   : fullname,       # A full model name to save the checkpoint or weight.
-	"channels"   : 3,              # The first layer's input channel.
-	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
-	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
-	"weights"    : None,           # The model's weights.
-	"loss"       : None,           # Loss function for training the model.
-	"metrics"    : {
+	"name"        : model_name,     # The model's name.
+	"root"        : root,           # The root directory of the model.
+	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
+	"in_channels" : 3,              # The first layer's input channel.
+	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
+	"weights"     : None,           # The model's weights.
+	"loss"        : None,           # Loss function for training the model.
+	"metrics"     : {
 	    "train": None,  # [{"name": "psnr"}],
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
 		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
-	"optimizers" : [
+	"optimizers"  : [
 		{
             "optimizer"   : {
 	            "name"        : "adam",
@@ -54,7 +53,7 @@ model = {
 			"lr_scheduler": None,
         }
     ],          # Optimizer(s) for training model.
-	"verbose"    : verbose,        # Verbosity.
+	"verbose"     : verbose,        # Verbosity.
 }
 
 # endregion

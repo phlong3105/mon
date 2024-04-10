@@ -285,7 +285,7 @@ class Inception3(base.ImageClassificationModel):
     
     def __init__(
         self,
-        channels        : int         = 3,
+        in_channels     : int         = 3,
         num_classes     : int         = 1000,
         aux_logits      : bool        = True,
         transform_input : bool        = False,
@@ -297,7 +297,7 @@ class Inception3(base.ImageClassificationModel):
     ):
         super().__init__(
             name        = "inception3",
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -329,7 +329,7 @@ class Inception3(base.ImageClassificationModel):
         self.transform_input = transform_input
         self.dropout         = dropout
         
-        self.Conv2d_1a_3x3   = conv_block(self.channels, 32, kernel_size=3, stride=2)
+        self.Conv2d_1a_3x3   = conv_block(self.in_channels, 32, kernel_size=3, stride=2)
         self.Conv2d_2a_3x3   = conv_block(32, 32, kernel_size=3)
         self.Conv2d_2b_3x3   = conv_block(32, 64, kernel_size=3, padding=1)
         self.maxpool1        = nn.MaxPool2d(kernel_size=3, stride=2)

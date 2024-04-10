@@ -198,7 +198,7 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         self,
         inverted_residual_setting: list[InvertedResidualConfig],
         last_channel             : int,
-        channels                 : int       = 3,
+        in_channels              : int       = 3,
         num_classes              : int       = 1000,
         block                    : _callable = None,
         norm_layer               : _callable = None,
@@ -207,7 +207,7 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         *args, **kwargs,
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -233,7 +233,7 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         firstconv_output_channels = inverted_residual_setting[0].in_channels
         layers.append(
             nn.Conv2dNormAct(
-                in_channels      = self.channels,
+                in_channels      = self.in_channels,
                 out_channels     = firstconv_output_channels,
                 kernel_size      = 3,
                 stride           = 2,

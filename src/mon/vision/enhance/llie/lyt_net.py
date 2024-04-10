@@ -201,30 +201,29 @@ class LYTNet(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        channels    : int = 3,
+        in_channels : int = 3,
         num_channels: int = 32,
         weights     : Any = None,
         *args, **kwargs
     ):
         super().__init__(
-            name     = "lyt_net",
-            channels = channels,
-            weights  = weights,
+            name        = "lyt_net",
+            in_channels = in_channels,
+            weights     = weights,
             *args, **kwargs
         )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            channels     = self.weights.get("channels",     channels)
+            in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
-            
-        self._channels    = channels
+        self.in_channels  = in_channels
         self.num_channels = num_channels
         
         # Construct model
-        self.process_y   = nn.Conv2dReLU(self.channels, self.num_channels, 3, 1)
-        self.process_cb  = nn.Conv2dReLU(self.channels, self.num_channels, 3, 1)
-        self.process_cr  = nn.Conv2dReLU(self.channels, self.num_channels, 3, 1)
+        self.process_y   = nn.Conv2dReLU(self.in_channels, self.num_channels, 3, 1)
+        self.process_cb  = nn.Conv2dReLU(self.in_channels, self.num_channels, 3, 1)
+        self.process_cr  = nn.Conv2dReLU(self.in_channels, self.num_channels, 3, 1)
         self.denoiser_cb = Denoiser(16)
         self.denoiser_cr = Denoiser(16)
         
@@ -236,7 +235,7 @@ class LYTNet(base.LowLightImageEnhancementModel):
         self.msef        = MSEFBlock(self.num_channels)
         
         self.recombine         = nn.Conv2dReLU(self.num_channels, self.num_channels, 3)
-        self.final_adjustments = nn.Conv2dTanh(self.num_channels, 3, 3)
+        self.final_adjustments = nn.Conv2dTanh(self.num_channels, self.out_channels, 3)
         
         # Loss
         self._loss = Loss()

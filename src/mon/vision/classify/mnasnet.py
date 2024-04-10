@@ -149,14 +149,14 @@ class MNASNet(base.ImageClassificationModel, ABC):
     def __init__(
         self,
         alpha      : float,
-        channels   : int   = 3,
+        in_channels: int   = 3,
         num_classes: int   = 1000,
         dropout    : float = 0.2,
         weights    : Any   = None,
         *args, **kwargs,
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -173,7 +173,7 @@ class MNASNet(base.ImageClassificationModel, ABC):
         depths      = _get_depths(self.alpha)
         layers = [
             # First layer: regular conv.
-            nn.Conv2d(self.channels, depths[0], 3, padding=1, stride=2, bias=False),
+            nn.Conv2d(self.in_channels, depths[0], 3, padding=1, stride=2, bias=False),
             nn.BatchNorm2d(depths[0], momentum=bn_momentum),
             nn.ReLU(inplace=True),
             # Depthwise separable, no skip.

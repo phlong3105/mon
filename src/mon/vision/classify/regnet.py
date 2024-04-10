@@ -331,7 +331,7 @@ class RegNet(base.ImageClassificationModel, ABC):
     def __init__(
         self,
         block_params: BlockParams,
-        channels    : int       = 3,
+        in_channels : int       = 3,
         num_classes : int       = 1000,
         stem_width  : int       = 32,
         stem_type   : _callable = None,
@@ -342,7 +342,7 @@ class RegNet(base.ImageClassificationModel, ABC):
         *args, **kwargs
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
@@ -358,7 +358,7 @@ class RegNet(base.ImageClassificationModel, ABC):
 
         # Ad hoc stem
         self.stem = stem_type(
-            self.channels,  # width_in
+            self.in_channels,  # width_in
             stem_width,
             norm_layer,
             activation,

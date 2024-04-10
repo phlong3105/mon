@@ -73,21 +73,21 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
     def __init__(
         self,
         version    : str   = "1_0",
-        channels   : int   = 3,
+        in_channels: int   = 3,
         num_classes: int   = 1000,
         dropout    : float = 0.5,
         weights    : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
-            channels    = channels,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
         )
         if version == "1_0":
             self.features = nn.Sequential(
-                nn.Conv2d(self.channels, 96, kernel_size=7, stride=2),
+                nn.Conv2d(self.in_channels, 96, kernel_size=7, stride=2),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
                 Fire(96, 16, 64, 64),
@@ -103,7 +103,7 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
             )
         elif version == "1_1":
             self.features = nn.Sequential(
-                nn.Conv2d(self.channels, 64, kernel_size=3, stride=2),
+                nn.Conv2d(self.in_channels, 64, kernel_size=3, stride=2),
                 nn.ReLU(inplace=True),
                 nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
                 Fire(64, 16, 64, 64),
