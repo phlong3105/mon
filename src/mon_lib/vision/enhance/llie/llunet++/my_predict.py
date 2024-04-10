@@ -66,7 +66,7 @@ def predict(args: argparse.Namespace):
     model = model.cuda()
     
     # Data I/O
-    console.log(f"{data}")
+    console.log(f"[bold red]{data}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -87,7 +87,10 @@ def predict(args: argparse.Namespace):
                 image          = image.permute(2, 0, 1)
                 image          = image.to(device).unsqueeze(0)
                 h0, w0         = mon.get_image_size(image)
-                image          = mon.resize(input=image, size=imgsz)
+                if resize:
+                    image = mon.resize(input=image, size=imgsz)
+                else:
+                    image = mon.resize_divisible(image=image, divisor=32)
                 start_time     = time.time()
                 enhanced_image = model(image)
                 run_time       = (time.time() - start_time)

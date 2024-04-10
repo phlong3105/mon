@@ -136,7 +136,7 @@ trainer = {
     "enable_progress_bar"              : True,
     "fast_dev_run"                     : False,   # Run `n` batches of train, val, and test to find any bugs (True = 1).
     "gradient_clip_algorithm"          : "norm",  # 'value' or 'norm'.
-    "gradient_clip_val"                : "0.1",   # The value at which to clip gradients.
+    "gradient_clip_val"                : None,    # The value at which to clip gradients.
     "inference_mode"                   : False,
     "limit_predict_batches"            : 1.0,     # How much of prediction dataset to check (float = fraction, int = num_batches).
     "limit_test_batches"               : 1.0,     # How much of test dataset to check (float = fraction, int = num_batches).

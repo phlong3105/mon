@@ -17,7 +17,7 @@ __all__ = [
 from typing import Any, Literal
 
 import torch
-import torchvision
+from torchvision.models import vgg
 
 from mon import core, nn
 from mon.core import _callable
@@ -53,13 +53,13 @@ class Loss(nn.Loss):
         self.ms_ssim_loss = nn.MSSSIMLoss(data_range=1.0)
         self.ssim_loss    = nn.SSIMLoss(data_range=1.0, non_negative_ssim=True)
         self.per_loss     = nn.PerceptualLoss(
-            net        = torchvision.models.vgg19(pretrained=True).features,
+            net        = vgg.vgg19(weights=vgg.VGG19_Weights.IMAGENET1K_V1).features,
             layers     = ["26"],
             preprocess = True,
             reduction  = reduction,
         )
         self.tv_loss = nn.TVLoss(reduction=reduction)
-        
+    
     def forward(self, input: torch.Tensor, target: torch.Tensor, *_) -> torch.Tensor:
         str_loss = self.ms_ssim_loss(input, target) + self.ssim_loss(input, target)
         per_loss = self.per_loss(input, target)
@@ -108,7 +108,7 @@ class UNetConvBlock(nn.Module):
 
         self.conv_1_1_1 = nn.Conv2d(in_channels, in_channels, 1, 1, 0)
         self.conv_1_1   = nn.Conv2d(in_channels * 2, out_channels, 1, 1, 0)
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x    = input
         #
@@ -207,7 +207,12 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
 
     def _init_weights(self, m: nn.Module):
         pass
-
+    
+    def configure_optimizers(self):
+        optimizer = nn.Adam(self.parameters(), lr=0.00001, weight_decay=1e-4)
+        scheduler = nn.ExponentialLR(optimizer, 0.99)
+        return {"optimizer": optimizer, "scheduler": scheduler}
+        
     def forward_loss(
         self,
         input : torch.Tensor,

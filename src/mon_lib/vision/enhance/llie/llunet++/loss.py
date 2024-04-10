@@ -53,7 +53,7 @@ class PerceptualLoss(_Loss):
     
     def __init__(self,):
         super().__init__()
-        self.vgg = vgg.vgg19(pretrained=True).features
+        self.vgg = vgg.vgg19(weights=vgg.VGG19_Weights.IMAGENET1K_V1).features
         for p in self.vgg.parameters():
             p.requires_grad = False
         self.vgg.eval()

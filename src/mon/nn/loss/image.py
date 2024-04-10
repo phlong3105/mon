@@ -37,7 +37,7 @@ import torch
 import torchvision
 from torch import nn
 from torch.nn import functional as F
-from torchvision import transforms
+from torchvision import models, transforms
 
 from mon import proc
 from mon.core import _size_2_t
@@ -471,15 +471,15 @@ class PerceptualLoss(base.Loss):
         self.preprocess = preprocess
         
         if net in ["alexnet"]:
-            net = torchvision.models.alexnet(pretrained=True).features
+            net = models.alexnet(weights=models.AlexNet_Weights).features
         elif net in ["vgg11"]:
-            net = torchvision.models.vgg11(pretrained=True).features
+            net = models.vgg11(weights=models.VGG11_Weights).features
         elif net in ["vgg13"]:
-            net = torchvision.models.vgg13(pretrained=True).features
+            net = models.vgg13(weights=models.VGG13_Weights).features
         elif net in ["vgg16"]:
-            net = torchvision.models.vgg16(pretrained=True).features
+            net = models.vgg16(weights=models.VGG16_Weights).features
         elif net in ["vgg19"]:
-            net = torchvision.models.vgg19(pretrained=True).features
+            net = models.vgg19(weights=models.VGG19_Weights).features
         
         self.net     = net.eval()
         self.l1_loss = base.L1Loss(reduction=reduction)

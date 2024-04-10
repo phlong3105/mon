@@ -14,6 +14,7 @@ import socket
 from collections import OrderedDict
 
 import click
+import pandas as pd
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -137,12 +138,12 @@ def train(args: argparse.Namespace):
     for epoch in range(epochs):
         train_loss  = _train_epoch(train_dataloader, model, criterion, optimizer, device)
         val_results = _val_epoch(val_dataloader, model, criterion, device)
-        val_loss    = val_results[0]
-        val_psnr    = val_results[1]
-        val_ssim    = val_results[2]
+        val_loss    = float(val_results[0])
+        val_psnr    = float(val_results[1].cpu().detach().numpy())
+        val_ssim    = float(val_results[2].cpu().detach().numpy())
         scheduler.step()
         console.log(
-            "Epoch [%d/%d] train/loss %.4f - val/loss %.4f - val/psnr %.4f - val/loss %.4f\n"
+            "Epoch [%d/%d] train/loss %.4f - val/loss %.4f - val/psnr %.4f - val/ssim %.4f\n"
             % (epoch, epochs, train_loss, val_loss, val_psnr, val_ssim)
         )
         
@@ -153,8 +154,7 @@ def train(args: argparse.Namespace):
         log["val/loss"].append(val_loss)
         log["val/psnr"].append(val_psnr)
         log["val/ssim"].append(val_ssim)
-        '''
-        # pd.DataFrame(log).to_csv(str(save_dir / "log.csv"))
+        pd.DataFrame(log).to_csv(str(save_dir / "log.csv"))
         writer.add_scalars(
             "train",
             {"train/loss": train_loss},
@@ -169,7 +169,6 @@ def train(args: argparse.Namespace):
             },
             epoch,
         )
-        '''
         
         # Save
         if val_loss < best_loss:

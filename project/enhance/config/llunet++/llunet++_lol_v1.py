@@ -106,7 +106,6 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
-	"gradient_clip_val": 0.01,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},

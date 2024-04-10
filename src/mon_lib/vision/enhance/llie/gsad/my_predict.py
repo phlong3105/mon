@@ -32,6 +32,8 @@ _current_dir  = _current_file.parents[0]
 transform     = transforms.Lambda(lambda t: (t * 2) - 1)
 
 
+# region Predict
+
 def predict(args: argparse.Namespace):
     '''
     parser = argparse.ArgumentParser()
@@ -112,7 +114,7 @@ def predict(args: argparse.Namespace):
         console.log(f"Time   = {avg_time:.4f}")
     
     # Data I/O
-    console.log(f"{data}")
+    console.log(f"[bold red]{data}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -149,6 +151,8 @@ def predict(args: argparse.Namespace):
                 sum_time   += run_time
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")
+
+# endregion
 
 
 # region Main

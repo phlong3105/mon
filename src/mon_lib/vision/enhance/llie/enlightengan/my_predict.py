@@ -43,7 +43,7 @@ def predict(args: argparse.Namespace):
     #     onnx_tool.model_profile(str(_current_dir/"enlighten_inference/enlighten.onnx"), inputs, None)
     
     # Data I/O
-    console.log(f"{data}")
+    console.log(f"[bold red]{data}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
