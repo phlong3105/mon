@@ -49,7 +49,7 @@ model = {
     },          # A list metrics for validating and testing model.
 	"optimizers"  : [
 		{
-            "optimizer"   : {
+            "optimizer"          : {
 	            # "name"        : "adam",
 	            # "lr"          : 0.0002,
 	            # "weight_decay": 0.02,
@@ -61,7 +61,7 @@ model = {
 				"betas"       : [0.9, 0.999],
 				"eps"		    : 1e-8,
 			},
-	        "lr_scheduler": {
+	        "lr_scheduler"       : {
 				"scheduler": {
 					"name"      	 : "cosine_annealing_restart_cyclic_lr",
 					"periods"   	 : [46000, 104000],
@@ -74,6 +74,7 @@ model = {
 				"strict"   : True,
 				"name"     : None,
 			},
+			"network_params_only": True,
         }
     ],          # Optimizer(s) for training model.
 	"verbose"     : verbose,        # Verbosity.

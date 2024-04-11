@@ -26,21 +26,21 @@ class OptimizerFactory(factory.Factory):
     
     def build(
         self,
-        net    : nn.Module,
-        name   : str  | None = None,
-        config : dict | None = None,
-        to_dict: bool        = False,
+        network            : nn.Module,
+        name               : str  | None = None,
+        config             : dict | None = None,
+        network_params_only: bool        = False,
+        to_dict            : bool        = False,
         **kwargs
     ):
-        """Build an instance of the registered optimizer corresponding to the
-        given name.
+        """Build an instance of the registered optimizer corresponding to the given name.
         
         Args:
-            net: A neural network.
+            network: A neural network.
             name: An optimizer's name.
             config: The optimizer's arguments.
-            to_dict: If ``True``, return a :class:`dict` of {:param:`name`:
-                attr:`instance`}. Default: ``False``.
+            network_params_only: If ``True``, only the network's parameters are used.
+            to_dict: If ``True``, return a :class:`dict` of ``{:param:`name`: attr:`instance`}``. Default: ``False``.
             **kwargs: Additional arguments that may be needed for the optimizer.
         
         Returns:
@@ -50,23 +50,26 @@ class OptimizerFactory(factory.Factory):
             return None
         if name is None and config is not None:
             assert "name" in config
-            config_ = copy.deepcopy(config)
-            name_   = config_.pop("name")
-            name    = name or name_
-            kwargs |= config_
+            config_  = copy.deepcopy(config)
+            name_    = config_.pop("name")
+            name     = name or name_
+            kwargs  |= config_
         assert name is not None and name in self
         
-        if hasattr(net, "parameters"):
-            # Note: we must remove losses' and metrics' parameters
+        if hasattr(network, "named_parameters"):
             params = []
-            for n, p in net.named_parameters():
-                if (
-                          "loss" not in n
-                    and "train/" not in n
-                    and   "val/" not in n
-                    and  "test/" not in n
-                ):
-                    params.append(p)
+            if network_params_only:
+                # Note: we must remove losses' and metrics' parameters
+                for n, p in network.named_parameters():
+                    if (
+                              "loss" not in n
+                        and "train/" not in n
+                        and   "val/" not in n
+                        and  "test/" not in n
+                    ):
+                        params.append(p)
+            else:
+                params = network.parameters()
             instance = self[name](params=params, **kwargs)
             
             if getattr(instance, "name", None) is None:
@@ -80,21 +83,22 @@ class OptimizerFactory(factory.Factory):
     
     def build_instances(
         self,
-        net    : nn.Module,
-        configs: list | None,
-        to_dict: bool = False,
+        network            : nn.Module,
+        configs            : list | None,
+        network_params_only: bool        = True,
+        to_dict            : bool        = False,
         *kwargs
     ):
         """Build multiple instances of different optimizers with the given
         arguments.
         
         Args:
-            net: A neural network.
+            network: A neural network.
             configs: A :class:`list` of optimizers' arguments. Each item can be:
-                - A name (:class:`str`)
+                - A name (:class:`str`).
                 - A :class:`dict` of arguments containing the ``'name'`` key.
-            to_dict: If ``True``, return a :class:`dict` of {:param:`name`:
-                attr:`instance`}. Default: ``False``.
+            network_params_only: If ``True``, only the network's parameters are used.
+            to_dict: If ``True``, return a :class:`dict` of ``{:param:`name`: attr:`instance`}``. Default: ``False``.
                 
         Returns:
             A :class:`list`, or :class:`dict` of optimizers.
@@ -111,7 +115,13 @@ class OptimizerFactory(factory.Factory):
             else:
                 name    = config.pop("name")
                 kwargs |= config
-            opt = self.build(net=net, name=name, to_dict=to_dict, **kwargs)
+            opt = self.build(
+                network             = network,
+                name                = name,
+                network_params_only = network_params_only,
+                to_dict             = to_dict,
+                **kwargs
+            )
             if opt is not None:
                 if to_dict:
                     optimizers |= opt

@@ -101,25 +101,28 @@ class dataset_unpair(data.Dataset):
 class dataset_pair(data.Dataset):
     
     def __init__(self, opts):
-        self.opt = opts
+        self.opt      = opts
         self.dataroot = opts.dataroot
+        
         # A
         images_A = os.listdir(os.path.join(self.dataroot, opts.phase + 'A'))
-        self.A = [os.path.join(self.dataroot, opts.phase + 'A', x) for x in images_A]
+        self.A   = [os.path.join(self.dataroot, opts.phase + 'A', x) for x in images_A]
         
         # B
         images_B = os.listdir(os.path.join(self.dataroot, opts.phase + 'B'))
-        self.B = [os.path.join(self.dataroot, opts.phase + 'B', x) for x in images_B]
+        self.B   = [os.path.join(self.dataroot, opts.phase + 'B', x) for x in images_B]
         
         # self.A_paths = sorted(self.A_paths)
         # self.B_paths = sorted(self.B_paths)
         self.A_size = len(self.A)
         self.B_size = len(self.B)
         
-        transform_list = [Resize(opts.resize_size, Image.BICUBIC)]
+        transform_list = [
+            Resize(opts.resize_size, Image.BICUBIC),
+            ToTensor(),
+            Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        ]
         # transform_list = []
-        transform_list.append(ToTensor())
-        transform_list.append(Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]))
         # transform_list = [transforms.ToTensor()]
         
         self.transform = transforms.Compose(transform_list)
@@ -129,14 +132,14 @@ class dataset_pair(data.Dataset):
         A_path = self.A[index]
         B_path = self.B[index]
         
-        A_img = Image.open(A_path).convert('RGB')
-        B_img = Image.open(B_path).convert('RGB')
+        A_img  = Image.open(A_path).convert('RGB')
+        B_img  = Image.open(B_path).convert('RGB')
         
-        A_img = self.transform(A_img)
-        B_img = self.transform(B_img)
+        A_img  = self.transform(A_img)
+        B_img  = self.transform(B_img)
         
-        w = A_img.size(2)
-        h = A_img.size(1)
+        w        = A_img.size(2)
+        h        = A_img.size(1)
         w_offset = random.randint(0, max(0, w - self.opt.resize_size - 1))
         h_offset = random.randint(0, max(0, h - self.opt.resize_size - 1))
         

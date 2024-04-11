@@ -13,7 +13,7 @@ def run_test(dataset, weights, gtmean=False):
     subprocess.run(cmd)
 
 
-def run_complexity_check(shape='(256,256,3)'):
+def run_complexity_check(shape='(256, 256, 3)'):
     subprocess.run(['python', './scripts/complexity_check.py', '--shape', shape])
 
 

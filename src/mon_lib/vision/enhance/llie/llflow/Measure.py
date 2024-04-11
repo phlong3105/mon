@@ -14,7 +14,8 @@ from skimage.metrics import peak_signal_noise_ratio as psnr
 import lpips
 
 
-class Measure():
+class Measure:
+    
     def __init__(self, net='alex', use_gpu=False):
         self.device = 'cuda' if use_gpu else 'cpu'
         self.model = lpips.LPIPS(net=net)
@@ -70,6 +71,7 @@ def imread(path):
 def format_result(psnr, ssim, lpips):
     return f'{psnr:0.2f}, {ssim:0.3f}, {lpips:0.3f}'
 
+
 def measure_dirs(dirA, dirB, use_gpu, verbose=False):
     if verbose:
         vprint = lambda x: print(x)
@@ -112,12 +114,11 @@ if __name__ == "__main__":
     parser.add_argument('-dirB', default='', type=str)
     parser.add_argument('-type', default='png')
     parser.add_argument('--use_gpu', action='store_true', default=False)
-    args = parser.parse_args()
-
-    dirA = args.dirA
-    dirB = args.dirB
-    type = args.type
+    args    = parser.parse_args()
+    dirA    = args.dirA
+    dirB    = args.dirB
+    type    = args.type
     use_gpu = args.use_gpu
-
+    
     if len(dirA) > 0 and len(dirB) > 0:
         measure_dirs(dirA, dirB, use_gpu=use_gpu, verbose=True)

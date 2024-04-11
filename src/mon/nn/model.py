@@ -652,16 +652,18 @@ class Model(lightning.LightningModule, ABC):
         assert isinstance(optims, list) and all(isinstance(o, dict) for o in optims)
         
         for i, optim in enumerate(optims):
+            optimizer           = optim.get("optimizer"          , None)
+            lr_scheduler        = optim.get("lr_scheduler"       , None)
+            network_params_only = optim.get("network_params_only", True)
+            
             # Define optimizer
-            optimizer = optim.get("optimizer", None)
             if optimizer is None:
                 raise ValueError(f":param:`optimizer` must be defined.")
             if isinstance(optimizer, dict):
-                optimizer = OPTIMIZERS.build(net=self, config=optimizer)
-            optim["optimizer"] = optimizer
+                optimizer = OPTIMIZERS.build(network=self, config=optimizer, network_params_only=network_params_only)
+            # optim["optimizer"] = optimizer
             
             # Define learning rate scheduler
-            lr_scheduler = optim.get("lr_scheduler", None)
             if lr_scheduler is not None and isinstance(lr_scheduler, dict):
                 scheduler = lr_scheduler.get("scheduler", None)
                 if scheduler is None:
@@ -669,10 +671,13 @@ class Model(lightning.LightningModule, ABC):
                 if isinstance(scheduler, dict):
                     scheduler = LR_SCHEDULERS.build(optimizer=optimizer, config=scheduler)
                 lr_scheduler["scheduler"] = scheduler
-            optim["lr_scheduler"] = lr_scheduler
+            # optim["lr_scheduler"] = lr_scheduler
             
             # Update optims
-            optims[i] = optim
+            optims[i] = {
+                "optimizer"   : optimizer,
+                "lr_scheduler": lr_scheduler,
+            }
             
         # Re-assign optims
         if isinstance(optims, list | tuple) and len(optims) == 1:

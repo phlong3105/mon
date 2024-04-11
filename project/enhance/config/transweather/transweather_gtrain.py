@@ -43,13 +43,14 @@ model = {
     },          # A list metrics for validating and testing model.
 	"optimizers"  : [
 		{
-            "optimizer"   : {
+            "optimizer"          : {
 	            "name"        : "adam",
 	            "lr"          : 0.00005,
 	            "weight_decay": 0.00001,
 	            "betas"       : [0.9, 0.99],
 			},
-			"lr_scheduler": None,
+			"lr_scheduler"       : None,
+			"network_params_only": True,
         }
     ],          # Optimizer(s) for training model.
 	"verbose"     : verbose,        # Verbosity.
