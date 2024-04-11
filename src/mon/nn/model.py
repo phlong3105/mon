@@ -744,6 +744,7 @@ class Model(lightning.LightningModule, ABC):
     # endregion
     
     # region Training
+    
     def fit_one(self, *args, **kwargs) -> Any:
         """Train the model with a single sample. This method is used for any
         learning scheme performed on one single instance such as online learning,

@@ -6,6 +6,7 @@ from pytorch_lightning.utilities.cli import DATAMODULE_REGISTRY, MODEL_REGISTRY,
 
 
 class CustomLightningCLI(LightningCLI):
+    
     def add_arguments_to_parser(self, parser):
         parser.add_argument("--pipeline", choices=["full", "train", "test"])
         parser.add_argument("--exp_name")

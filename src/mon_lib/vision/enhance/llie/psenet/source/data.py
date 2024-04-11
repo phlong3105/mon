@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 
 
 class NoGTDataset(data.Dataset):
+    
     def __init__(self, root_folder, pattern, resize=None, return_name=False):
         super().__init__()
         self.data_list = sorted(glob.glob(root_folder + pattern, recursive=True))
@@ -70,6 +71,7 @@ class PairedDataset(data.Dataset):
 
 @DATAMODULE_REGISTRY
 class AfifiDataModule(LightningDataModule):
+    
     def __init__(self, data_root, train_batch_size, val_batch_size, num_workers):
         super().__init__()
         train_data = NoGTDataset(data_root, "training/INPUT_IMAGES/*.*", resize=256, return_name=False)
@@ -99,6 +101,7 @@ class AfifiDataModule(LightningDataModule):
 
 @DATAMODULE_REGISTRY
 class SICEDataModule(LightningDataModule):
+    
     def __init__(self, data_root, train_batch_size, num_workers):
         super().__init__()
         train_data = NoGTDataset(data_root, "train_data/*", resize=256, return_name=False)
@@ -122,6 +125,7 @@ class SICEDataModule(LightningDataModule):
 
 @DATAMODULE_REGISTRY
 class LOLDataModule(LightningDataModule):
+    
     def __init__(self, data_root, num_workers):
         super().__init__()
 

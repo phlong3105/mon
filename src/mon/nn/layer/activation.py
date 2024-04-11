@@ -23,6 +23,7 @@ __all__ = [
     "LogSoftmax",
     "Mish",
     "MultiheadAttention",
+    "NegHardsigmoid",
     "PReLU",
     "RReLU",
     "ReLU",
@@ -118,6 +119,16 @@ def hard_sigmoid(input: torch.Tensor, inplace: bool = False) -> torch.Tensor:
         return input.add_(3.0).clamp_(0.0, 6.0).div_(6.0)
     else:
         return F.relu6(input + 3.0) / 6.0
+
+
+class NegHardsigmoid(nn.Module):
+    
+    def __init__(self, inplace: bool = True):
+        super().__init__()
+        self.inplace = inplace
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return F.relu6(3 * x + 3.0, inplace=self.inplace) / 6.0 - 0.5
 
 # endregion
 

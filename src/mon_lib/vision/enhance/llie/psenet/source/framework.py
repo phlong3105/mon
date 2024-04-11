@@ -19,6 +19,7 @@ def save_image(im, p):
 
 @MODEL_REGISTRY
 class PSENet(LightningModule):
+    
     def __init__(self, tv_w, gamma_lower, gamma_upper, number_refs, lr, afifi_evaluation=False):
         super().__init__()
         self.tv_w = tv_w
@@ -45,28 +46,24 @@ class PSENet(LightningModule):
             sch.step(self.trainer.callback_metrics["total_loss"])
 
     def generate_pseudo_gt(self, im):
-        bs, ch, h, w = im.shape
-        underexposed_ranges = torch.linspace(0, self.gamma_upper, steps=self.number_refs + 1).to(im.device)[:-1]
-        step_size = self.gamma_upper / self.number_refs
-        underexposed_gamma = torch.exp(
-            torch.rand([bs, self.number_refs], device=im.device) * step_size + underexposed_ranges[None, :]
-        )
-        overrexposed_ranges = torch.linspace(self.gamma_lower, 0, steps=self.number_refs + 1).to(im.device)[:-1]
-        step_size = - self.gamma_lower / self.number_refs
-        overrexposed_gamma = torch.exp(
-            torch.rand([bs, self.number_refs], device=im.device) * overrexposed_ranges[None, :]
-        )
+        bs, ch, h, w         = im.shape
+        underexposed_ranges  = torch.linspace(0, self.gamma_upper, steps=self.number_refs + 1).to(im.device)[:-1]
+        step_size            = self.gamma_upper / self.number_refs
+        underexposed_gamma   = torch.exp(torch.rand([bs, self.number_refs], device=im.device) * step_size + underexposed_ranges[None, :])
+        overrexposed_ranges  = torch.linspace(self.gamma_lower, 0, steps=self.number_refs + 1).to(im.device)[:-1]
+        step_size            = - self.gamma_lower / self.number_refs
+        overrexposed_gamma   = torch.exp(torch.rand([bs, self.number_refs], device=im.device) * overrexposed_ranges[None, :])
         gammas = torch.cat([underexposed_gamma, overrexposed_gamma], dim=1)
         # gammas: [bs, nref], im: [bs, ch, h, w] -> synthetic_references: [bs, nref, ch, h, w]
         synthetic_references = 1 - (1 - im[:, None]) ** gammas[:, :, None, None, None]
         previous_iter_output = self.model(im)[0].clone().detach()
-        references = torch.cat([im[:, None], previous_iter_output[:, None], synthetic_references], dim=1)
-        nref = references.shape[1]
-        scores = self.iqa(references.view(bs * nref, ch, h, w))
-        scores = scores.view(bs, nref, 1, h, w)
-        max_idx = torch.argmax(scores, dim=1)
-        max_idx = max_idx.repeat(1, ch, 1, 1)[:, None]
-        pseudo_gt = torch.gather(references, 1, max_idx)
+        references           = torch.cat([im[:, None], previous_iter_output[:, None], synthetic_references], dim=1)
+        nref                 = references.shape[1]
+        scores               = self.iqa(references.view(bs * nref, ch, h, w))
+        scores               = scores.view(bs, nref, 1, h, w)
+        max_idx              = torch.argmax(scores, dim=1)
+        max_idx              = max_idx.repeat(1, ch, 1, 1)[:, None]
+        pseudo_gt            = torch.gather(references, 1, max_idx)
         return pseudo_gt.squeeze(1)
 
     def training_step(self, batch, batch_idx):
@@ -78,12 +75,12 @@ class PSENet(LightningModule):
         nth_pseudo_gt = self.generate_pseudo_gt(batch)
         if self.saved_input is not None:
             # getting (n - 1)th input and (n - 1)-th pseudo gt -> calculate loss -> update model weight (handeled automatically by pytorch lightning)
-            im = self.saved_input
+            im                  = self.saved_input
             pred_im, pred_gamma = self.model(im)
-            pseudo_gt = self.saved_pseudo_gt
+            pseudo_gt           = self.saved_pseudo_gt
             reconstruction_loss = self.mse(pred_im, pseudo_gt)
-            tv_loss = self.tv(pred_gamma)
-            loss = reconstruction_loss + tv_loss * self.tv_w
+            tv_loss             = self.tv(pred_gamma)
+            loss                = reconstruction_loss + tv_loss * self.tv_w
 
             # logging
             self.log(

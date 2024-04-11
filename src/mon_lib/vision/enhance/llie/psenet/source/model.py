@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 
 class Hswish(nn.Module):
+    
     def __init__(self, inplace=True):
         super(Hswish, self).__init__()
         self.inplace = inplace
@@ -13,6 +14,7 @@ class Hswish(nn.Module):
 
 
 class Hsigmoid(nn.Module):
+    
     def __init__(self, inplace=True):
         super(Hsigmoid, self).__init__()
         self.inplace = inplace
@@ -22,6 +24,7 @@ class Hsigmoid(nn.Module):
 
 
 class HTanh(nn.Module):
+    
     def __init__(self, inplace=True):
         super(HTanh, self).__init__()
         self.inplace = inplace
@@ -31,6 +34,7 @@ class HTanh(nn.Module):
 
 
 class NegHsigmoid(nn.Module):
+    
     def __init__(self, inplace=True):
         super(NegHsigmoid, self).__init__()
         self.inplace = inplace
@@ -40,8 +44,9 @@ class NegHsigmoid(nn.Module):
 
 
 class SEModule(nn.Module):
+    
     def __init__(self, channel, reduction=1):
-        super(SEModule, self).__init__()
+        super().__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Conv2d(channel, channel // reduction, 1, 1, 0, bias=True),
@@ -56,6 +61,7 @@ class SEModule(nn.Module):
 
 
 class Identity(nn.Module):
+    
     def __init__(self, channel):
         super(Identity, self).__init__()
 
@@ -64,8 +70,9 @@ class Identity(nn.Module):
 
 
 class MobileBottleneck(nn.Module):
+    
     def __init__(self, inp, oup, kernel, stride, exp, se="SE", nl="RE"):
-        super(MobileBottleneck, self).__init__()
+        super().__init__()
         assert stride in [1, 2]
         # assert kernel in [3, 5, 7]
         padding = (kernel - 1) // 2
@@ -118,9 +125,8 @@ class MobileBottleneck(nn.Module):
 
 
 class UnetTMO(nn.Module):
-    def __init__(
-        self,
-    ):
+    
+    def __init__(self):
         super().__init__()
         self.first_conv = MobileBottleneck(3, 3, 3, 1, 6, nl="LeRE")
         base_number = 16

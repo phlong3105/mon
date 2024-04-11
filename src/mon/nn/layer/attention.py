@@ -1043,14 +1043,15 @@ class SqueezeExciteC(nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        b, c, _, _ = x.size()
-        y = self.avg_pool(x).view(b, c)
-        y = self.excitation(y).view(b, c, 1, 1)
-        y = x * y.expand_as(x)
-        # y = self.avg_pool(x)
-        # y = self.excitation(y)
-        # y = y.view(-1, c, 1, 1)
-        # y = x * y
+        # First implementation
+        # b, c, _, _ = x.size()
+        # y = self.avg_pool(x).view(b, c)
+        # y = self.excitation(y).view(b, c, 1, 1)
+        # y = x * y.expand_as(x)
+        # Second implementation
+        y = self.avg_pool(x)
+        y = self.excitation(y)
+        y = x * y
         return y
 
 
@@ -1096,14 +1097,15 @@ class SqueezeExciteL(nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        b, c, _, _ = x.size()
-        y = self.avg_pool(x).view(b, c)
-        y = self.excitation(y).view(b, c, 1, 1)
-        y = x * y.expand_as(x)
-        # y = self.avg_pool(x)
-        # y = self.excitation(y)
-        # y = y.view(-1, c, 1, 1)
-        # y = x * y
+        # First implementation
+        # b, c, _, _ = x.size()
+        # y = self.avg_pool(x).view(b, c)
+        # y = self.excitation(y).view(b, c, 1, 1)
+        # y = x * y.expand_as(x)
+        # Second implementation
+        y = self.avg_pool(x)
+        y = self.excitation(y)
+        y = x * y
         return y
 
 
