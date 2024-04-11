@@ -249,9 +249,7 @@ class ProcessedItemsColumn(progress.ProgressColumn):
         super().__init__(table_column=table_column)
     
     def render(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing the number of
-        processed items.
-        """
+        """Return a :class:`rich.text.Text` object showing the number of processed items."""
         completed     = int(task.completed)
         total         = int(task.total)
         download_text = f"{completed}/{total}"
@@ -264,9 +262,7 @@ class ProcessingSpeedColumn(progress.ProgressColumn):
     """A progress column showing human-readable progressing speed."""
     
     def render(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing the progressing
-        speed.
-        """
+        """Return a :class:`rich.text.Text` object showing the progressing speed."""
         speed = task.speed
         if speed is None:
             return text.Text("?", style="progress.data.speed")

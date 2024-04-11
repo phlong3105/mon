@@ -107,7 +107,7 @@ class OPEmbedder(base.Embedder, nn.Module):
             norm: Whether to normalize the features.
 
         Returns:
-           A 2-D :class:`list` of feature vectors.
+           A 2D :class:`list` of feature vectors.
         """
         images     = self.proj(images)
         n, c, h, w = images.shape

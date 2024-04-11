@@ -141,13 +141,13 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
     
     References:
         `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
-
+        
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
-
+    
     def __init__(
         self,
         in_channels : int = 3,
@@ -206,13 +206,6 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
 
     def _init_weights(self, m: nn.Module):
         pass
-    
-    '''
-    def configure_optimizers(self):
-        optimizer = nn.Adam(self.parameters(), lr=0.00001, weight_decay=1e-4)
-        scheduler = nn.ExponentialLR(optimizer, 0.99)
-        return {"optimizer": optimizer, "scheduler": scheduler}
-    '''
     
     def forward_loss(
         self,

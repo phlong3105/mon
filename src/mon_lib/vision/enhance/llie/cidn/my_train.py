@@ -9,12 +9,10 @@ import socket
 
 import click
 import torch
-from torch.utils.tensorboard import SummaryWriter
 
 import mon
-from dataset import dataset_pair
 from model import DRIT
-from options import TrainOptions
+from mon import albumentation as A
 from saver import Saver
 
 console       = mon.console
@@ -25,76 +23,73 @@ _current_dir  = _current_file.parents[0]
 # region Train
 
 def train(args: argparse.Namespace):
-    weights      = args.weights
-    weights      = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    data         = mon.Path(args.data)
-    save_dir     = mon.Path(args.save_dir)
-    device       = args.device
-    imgsz        = args.imgsz
-    epochs       = args.epochs
-    batch_size   = args.batch_size
-    lr           = args.lr
-    loss_weights = args.loss_weights
-    verbose      = args.verbose
-    weights_dir  = save_dir / "weights"
+    weights     = args.weights
+    weights     = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    data        = mon.Path(args.data)
+    save_dir    = mon.Path(args.save_dir)
+    device      = args.device
+    imgsz       = args.imgsz
+    verbose     = args.verbose
+    batch_size  = args.batch_size
+    
+    weights_dir = save_dir / "weights"
     weights_dir.mkdir(parents=True, exist_ok=True)
     
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
-    # parse options
-    parser = TrainOptions()
-    opts   = parser.parse()
-    
-    # daita loader
-    print('\n--- load dataset ---')
-    
-    # if opts.dataset == 'pair':
-    dataset = dataset_pair(opts)
-    # elif opts.dataset == 'unalign':
-    #   dataset = dataset_unaligned(opts)
-    # else:
-    # dataset = dataset_unpair(opts)
-    
-    train_loader = torch.utils.data.DataLoader(
-        dataset,
-        batch_size  = opts.batch_size,
-        shuffle     = True,
-        num_workers = opts.nThreads
-    )
-    
-    # model
-    print('\n--- load model ---')
-    model = DRIT(opts)
-    model.setgpu(opts.gpu)
-    if opts.resume is None:
+    # Load model
+    args.gpu = device
+    model = DRIT(args)
+    model.setgpu(args.gpu)
+    if args.resume is None:
         model.initialize()
         ep0      = -1
         total_it = 0
     else:
-        ep0, total_it = model.resume(opts.resume)
-    model.set_scheduler(opts, last_ep=ep0)
+        ep0, total_it = model.resume(args.resume)
+    model.set_scheduler(args, last_ep=ep0)
     ep0 += 1
-    print('start the training at epoch %d' % ep0)
     
-    # saver for display and output
-    saver = Saver(opts)
+    # Data I/O
+    data_args = {
+        "name"      : data,
+        "root"      : mon.DATA_DIR / "llie",
+        "transform" : A.Compose(transforms=[
+            A.Resize(width=imgsz, height=imgsz),
+        ]),
+        "to_tensor" : True,
+        "cache_data": False,
+        "batch_size": batch_size,
+        "devices"   : device,
+        "shuffle"   : True,
+        "verbose"   : verbose,
+    }
+    datamodule: mon.DataModule = mon.DATAMODULES.build(config=data_args)
+    datamodule.prepare_data()
+    datamodule.setup(phase="training")
+    train_dataloader = datamodule.train_dataloader
+    val_dataloader   = datamodule.val_dataloader
     
-    # train
-    print('\n--- train ---')
+    # Saver for display and output
+    args.display_dir = save_dir / "log"
+    args.result_dir  = save_dir / "weights"
+    saver = Saver(args)
+    
+    # Train
     max_it = 500000
-    for ep in range(ep0, opts.n_ep):
-        for it, (images_a, images_b) in enumerate(train_loader):
-            if images_a.size(0) != opts.batch_size or images_b.size(0) != opts.batch_size:
+    for ep in range(ep0, args.epochs):
+        for it, (images_a, images_b, meta) in enumerate(train_dataloader):
+            if images_a.size(0) != args.batch_size or images_b.size(0) != args.batch_size:
                 continue
             
             # input data
-            images_a = images_a.cuda(opts.gpu).detach()
-            images_b = images_b.cuda(opts.gpu).detach()
+            images_a = images_a.cuda(args.gpu).detach()
+            images_b = images_b.cuda(args.gpu).detach()
             
             # update model
-            if (it + 1) % opts.d_iter != 0 and it < len(train_loader) - 2:
+            if (it + 1) % args.d_iter != 0 and it < len(args.train_dataloader) - 2:
                 model.update_D_content(images_a, images_b)
                 continue
             else:
@@ -102,7 +97,7 @@ def train(args: argparse.Namespace):
                 model.update_EG()
             
             # save to display file
-            if not opts.no_display_img:
+            if not args.no_display_img:
                 saver.write_display(total_it, model)
             
             print('total_it: %d (ep %d, it %d), lr %08f' % (total_it, ep, it, model.gen_opt.param_groups[0]['lr']))
@@ -113,7 +108,7 @@ def train(args: argparse.Namespace):
                 break
         
         # decay learning rate
-        if opts.n_ep_decay > -1:
+        if args.n_epochs_decay > -1:
             model.update_lr()
         
         # save result image

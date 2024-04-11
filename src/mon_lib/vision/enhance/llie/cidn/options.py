@@ -32,7 +32,7 @@ class TrainOptions:
         self.parser.add_argument('--dis_scale',         type=int, default=3,        help='scale of discriminator')
         self.parser.add_argument('--dis_norm',          type=str, default='None',   help='normalization layer in discriminator [None, Instance]')
         self.parser.add_argument('--dis_spectral_norm', action='store_true',        help='use spectral normalization in discriminator')
-        self.parser.add_argument('--lr_policy',         type=str, default='lambda', help='type of learn rate decay')
+        self.parser.add_argument('--lr_policy',         type=str, default='lambda', help='type of learning rate decay')
         self.parser.add_argument('--n_ep',              type=int, default=1200,     help='number of epochs') # 400 * d_iter
         self.parser.add_argument('--n_ep_decay',        type=int, default=600,      help='epoch start decay learning rate, set -1 if no decay') # 200 * d_iter
         self.parser.add_argument('--resume',            type=str, default=None,     help='specified the dir of saved models for resume the training')
@@ -71,7 +71,7 @@ class TestOptions:
         self.parser.add_argument('--input_dim_b', type=int, default=3,      help='# of input channels for domain B')
         self.parser.add_argument('--a2b',         type=int, default=1,      help='translation direction, 1 for a2b, 0 for b2a')
         
-        # ouptput related
+        # output related
         self.parser.add_argument('--num',        type=int, default=5,            help='number of outputs per image')
         self.parser.add_argument('--name',       type=str, default='trial',      help='folder name to save outputs')
         self.parser.add_argument('--result_dir', type=str, default='../outputs', help='path for saving result images and models')

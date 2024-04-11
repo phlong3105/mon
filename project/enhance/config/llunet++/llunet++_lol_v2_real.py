@@ -37,7 +37,7 @@ model = {
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"weights"     : None,           # The model's weights.
 	"loss"        : None,           # Loss function for training the model.
-	"loss_weights": [0.35, 0.10, 0.25, 0.30],
+	"loss_weights": [0.40, 0.05, 0.15, 0.40],
 	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],

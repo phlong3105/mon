@@ -164,7 +164,7 @@ class OPEmbedder(nn.ConvLayerParsingMixin, nn.Module):
             normalization: Whether to normalize the features.
 
         Returns:
-           A 2-D :class:`list` of feature vectors.
+           A 2D :class:`list` of feature vectors.
         """
         # print(images.get_device())
         # self.proj.to(images.get_device())

@@ -30,7 +30,7 @@ def train(args: dict) -> str:
     datamodule.prepare_data()
     datamodule.setup(phase="training")
     
-    args["model"]["classlabels"] = datamodule.classlabels
+    # args["model"]["classlabels"] = datamodule.classlabels
     model: mon.Model = mon.MODELS.build(config=args["model"])
     
     if mon.is_rank_zero():

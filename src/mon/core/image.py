@@ -557,13 +557,13 @@ normalize_image = functools.partial(
 
 
 def to_3d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert a 2-D or 4-D image to a 3-D.
+    """Convert a 2D or 4D image to a 3D.
 
     Args:
         input: An image in channel-first format.
 
     Return:
-        A 3-D image in channel-first format.
+        A 3D image in channel-first format.
     """
     if not 2 <= input.ndim <= 4:
         raise ValueError(
@@ -589,13 +589,13 @@ def to_3d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
 
 
 def to_list_of_3d_image(input: Any) -> list[torch.Tensor | np.ndarray]:
-    """Convert arbitrary input to a :class:`list` of 3-D images.
+    """Convert arbitrary input to a :class:`list` of 3D images.
    
     Args:
         input: An image of arbitrary type.
         
     Return:
-        A :class:`list` of 3-D images.
+        A :class:`list` of 3D images.
     """
     if isinstance(input, (torch.Tensor, np.ndarray)):
         if input.ndim == 3:
@@ -611,13 +611,13 @@ def to_list_of_3d_image(input: Any) -> list[torch.Tensor | np.ndarray]:
 
 
 def to_4d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert a 2-D, 3-D, or 5-D image to a 4-D.
+    """Convert a 2D, 3D, or 5D image to a 4D.
 
     Args:
         input: An image in channel-first format.
 
     Return:
-        A 4-D image in channel-first format.
+        A 4D image in channel-first format.
     """
     if not 2 <= input.ndim <= 5:
         raise ValueError(
@@ -649,13 +649,13 @@ def to_4d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
 
 
 def to_5d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert a 2-D, 3-D, 4-D, or 6-D image to a 5-D.
+    """Convert a 2D, 3D, 4D, or 6D image to a 5D.
     
     Args:
         input: An tensor in channel-first format.
 
     Return:
-        A 5-D image in channel-first format.
+        A 5D image in channel-first format.
     """
     if not 2 <= input.ndim <= 6:
         raise ValueError(
@@ -784,7 +784,7 @@ def to_image_nparray(
     Args:
         input: An image.
         keepdim: If `True`, keep the original shape. If ``False``, convert it to
-            a 3-D shape. Default: ``True``.
+            a 3D shape. Default: ``True``.
         denormalize: If ``True``, convert image to :math:`[0, 255]`.
             Default: ``True``.
 
@@ -819,7 +819,7 @@ def to_image_tensor(
     Args:
         input: An image in channel-last or channel-first format.
         keepdim: If ``True``, keep the original shape. If ``False``, convert it
-            to a 4-D shape. Default: ``True``.
+            to a 4D shape. Default: ``True``.
         normalize: If ``True``, normalize the image to :math:``[0, 1]``.
             Default: ``False``.
         device: The device to run the model on. If ``None``, the default
@@ -1008,7 +1008,7 @@ def write_images_cv(
     """Write a :class:`list` of images to a directory using :mod:`cv2`.
    
     Args:
-        images: A :class:`list` of 3-D images.
+        images: A :class:`list` of 3D images.
         dir_path: A directory to write the images to.
         names: A :class:`list` of images' names.
         prefixes: A prefix to add to the :param:`names`.
@@ -1050,7 +1050,7 @@ def write_images_torch(
     """Write a :class:`list` of images to a directory using :mod:`torchvision`.
    
     Args:
-        images: A :class:`list` of 3-D images.
+        images: A :class:`list` of 3D images.
         dir_path: A directory to write the images to.
         names: A :class:`list` of images' names.
         prefixes: A prefix to add to the :param:`names`.

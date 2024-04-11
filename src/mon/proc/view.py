@@ -97,8 +97,8 @@ def imshow(
     
     Args:
         winname: The name of the window to display the image in.
-        image: The images to be displayed. Can be a 3-D or 4-D image, or a
-            :class:`list` of 3-D images.
+        image: The images to be displayed. Can be a 3D or 4D image, or a
+            :class:`list` of 3D images.
         label: Sequence of images' labels string. Default: ``None``.
         denormalize: If ``True``, convert image to :math:`[0, 255]`.
             Default: ``True``.
@@ -182,8 +182,8 @@ def imshow_classification(
     
     Args:
         winname: The name of the window to display the image in.
-        image: The images to be displayed. Can be a 3-D or 4-D image, or a
-            :class:`list` of 3-D images.
+        image: The images to be displayed. Can be a 3D or 4D image, or a
+            :class:`list` of 3D images.
         pred: Predicted classes probabilities. Can be a tensor of shape
             :math:`[B, N]` where ``N`` is the total number of all classes in the
             dataset. Defaults to ``None``.

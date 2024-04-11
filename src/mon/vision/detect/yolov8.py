@@ -109,7 +109,7 @@ class YOLOv8(base.Detector):
             pred: Prediction tensor of shape :math:`[B, C, H, W]`.
 
         Returns:
-            A 2-D :class:`list` of :class:`data.Instance` objects. The outer
+            A 2D :class:`list` of :class:`data.Instance` objects. The outer
             :class:`list` has ``B`` items.
         """
         pred = ops.non_max_suppression(

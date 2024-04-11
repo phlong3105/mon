@@ -50,7 +50,7 @@ console = core.console
 # region Boolean Distance
 
 def dice(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Dice dissimilarity between two boolean 1-D arrays. The Dice
+    """Compute the Dice dissimilarity between two boolean 1D arrays. The Dice
     dissimilarity between :param:`u` and :param:`v`, is:
     
     .. math::
@@ -67,14 +67,14 @@ def dice(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Dice dissimilarity between 1-D arrays :param:`u` and :param:`v`.
+        The Dice dissimilarity between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.dice(u=u, v=v, w=w)
 
 
 def hamming(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Hamming distance between two boolean 1-D arrays. The Hamming
-    distance between 1-D arrays :param:`u` and :param:`v`, is simply the
+    """Compute the Hamming distance between two boolean 1D arrays. The Hamming
+    distance between 1D arrays :param:`u` and :param:`v`, is simply the
     proportion of disagreeing components in :param:`u` and :param:`v`. If
     :param:`u` and :param:`v` are boolean vectors, the Hamming distance is:
     
@@ -97,8 +97,8 @@ def hamming(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
 
 
 def jaccard(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Jaccard-Needham dissimilarity between two boolean 1-D arrays.
-    The Jaccard-Needham dissimilarity between 1-D arrays :param:`u` and
+    """Compute the Jaccard-Needham dissimilarity between two boolean 1D arrays.
+    The Jaccard-Needham dissimilarity between 1D arrays :param:`u` and
     :param:`v` is:
 
     .. math::
@@ -121,8 +121,8 @@ def jaccard(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     
 
 def kulczynski1(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
-    """Compute the Kulczynski 1 dissimilarity between two boolean 1-D arrays.
-    The Kulczynski 1 dissimilarity between 1-D arrays :param:`u` and
+    """Compute the Kulczynski 1 dissimilarity between two boolean 1D arrays.
+    The Kulczynski 1 dissimilarity between 1D arrays :param:`u` and
     :param:`v` of length `n`, is defined as:
 
     .. math::
@@ -144,8 +144,8 @@ def kulczynski1(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) ->
     
 
 def rogerstanimoto(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
-    """Compute the Rogers-Tanimoto dissimilarity between two boolean 1-D arrays.
-    The Rogers-Tanimoto dissimilarity between 1-D arrays :param:`u` and
+    """Compute the Rogers-Tanimoto dissimilarity between two boolean 1D arrays.
+    The Rogers-Tanimoto dissimilarity between 1D arrays :param:`u` and
     :param:`v` is defined as:
 
     .. math::
@@ -168,8 +168,8 @@ def rogerstanimoto(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None)
     
     
 def russellrao(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
-    """Compute the Russell-Rao dissimilarity between two boolean 1-D arrays.
-    The Russell-Rao dissimilarity between 1-D arrays :param:`u` and
+    """Compute the Russell-Rao dissimilarity between two boolean 1D arrays.
+    The Russell-Rao dissimilarity between 1D arrays :param:`u` and
     :param:`v` is defined as:
 
     .. math::
@@ -192,8 +192,8 @@ def russellrao(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> 
     
 
 def sokalmichener(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
-    """Compute the Sokal-Michener dissimilarity between two boolean 1-D arrays.
-    The Sokal-Michener dissimilarity between 1-D arrays :param:`u` and
+    """Compute the Sokal-Michener dissimilarity between two boolean 1D arrays.
+    The Sokal-Michener dissimilarity between 1D arrays :param:`u` and
     :param:`v` is defined as:
 
     .. math::
@@ -217,8 +217,8 @@ def sokalmichener(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) 
   
 
 def sokalsneath(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
-    """Compute the Sokal-Sneath dissimilarity between two boolean 1-D arrays.
-    The Sokal-Sneath dissimilarity between 1-D arrays :param:`u` and :param:`v`
+    """Compute the Sokal-Sneath dissimilarity between two boolean 1D arrays.
+    The Sokal-Sneath dissimilarity between 1D arrays :param:`u` and :param:`v`
     is defined as:
 
     .. math::
@@ -241,8 +241,8 @@ def sokalsneath(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) ->
     
 
 def yule(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
-    """Compute the Yule dissimilarity between two boolean 1-D arrays.
-    The Yule dissimilarity between 1-D arrays :param:`u` and :param:`v`
+    """Compute the Yule dissimilarity between two boolean 1D arrays.
+    The Yule dissimilarity between 1D arrays :param:`u` and :param:`v`
     is defined as:
 
     .. math::
@@ -269,7 +269,7 @@ def yule(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
 # region Numeric Distance
 
 def braycurtis(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Bray-Curtis distance between two 1-D arrays. The Bray-Curtis
+    """Compute the Bray-Curtis distance between two 1D arrays. The Bray-Curtis
     distance between :param:`u` and :param:`v` is defined as:
     
     .. math::
@@ -284,13 +284,13 @@ def braycurtis(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> flo
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Bray-Curtis distance between 1-D arrays :param:`u` and :param:`v`.
+        The Bray-Curtis distance between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.braycurtis(u=u, v=v, w=w)
 
 
 def canberra(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Canberra distance between two 1-D arrays. The Canberra
+    """Compute the Canberra distance between two 1D arrays. The Canberra
     distance between :param:`u` and :param:`v` is defined as:
     
     .. math::
@@ -303,13 +303,13 @@ def canberra(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Canberra distance between 1-D arrays :param:`u` and :param:`v`.
+        The Canberra distance between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.canberra(u=u, v=v, w=w)
     
     
 def chebyshev(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Chebyshev distance between two 1-D arrays. The Chebyshev
+    """Compute the Chebyshev distance between two 1D arrays. The Chebyshev
     distance between :param:`u` and :param:`v` is defined as:
     
     .. math::
@@ -322,13 +322,13 @@ def chebyshev(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> floa
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Chebyshev distance between 1-D arrays :param:`u` and :param:`v`.
+        The Chebyshev distance between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.chebyshev(u=u, v=v, w=w)
     
 
 def cityblock(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the City Block (Manhattan) distance between two 1-D arrays. The
+    """Compute the City Block (Manhattan) distance between two 1D arrays. The
     Manhattan distance between :param:`u` and :param:`v` is defined as:
     
     .. math::
@@ -341,14 +341,14 @@ def cityblock(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> floa
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The City Block (Manhattan) distance between 1-D arrays :param:`u` and
+        The City Block (Manhattan) distance between 1D arrays :param:`u` and
         :param:`v`.
     """
     return scipy.spatial.distance.cityblock(u=u, v=v, w=w)
     
 
 def correlation(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the correlation distance between two 1-D arrays. The correlation
+    """Compute the correlation distance between two 1D arrays. The correlation
     distance between :param:`u` and :param:`v` is defined as:
     
     .. math::
@@ -362,13 +362,13 @@ def correlation(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> fl
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The correlation distance between 1-D arrays :param:`u` and :param:`v`.
+        The correlation distance between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.correlation(u=u, v=v, w=w)
     
 
 def cosine(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Cosine distance between two 1-D arrays. The Cosine distance
+    """Compute the Cosine distance between two 1D arrays. The Cosine distance
     between :param:`u` and :param:`v` is defined as:
     
     .. math::
@@ -381,13 +381,13 @@ def cosine(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Cosine distance between 1-D arrays :param:`u` and :param:`v`.
+        The Cosine distance between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.cosine(u=u, v=v, w=w)
     
 
 def euclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the Euclidean distance between two 1-D arrays. The Euclidean
+    """Compute the Euclidean distance between two 1D arrays. The Euclidean
     distance between :param:`u` and :param:`v` is defined as:
 
     .. math::
@@ -400,13 +400,13 @@ def euclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> floa
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Euclidean distance between 1-D arrays :param:`u` and :param:`v`.
+        The Euclidean distance between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.euclidean(u=u, v=v, w=w)
     
 
 def mahalanobis(u: np.ndarray, v: np.ndarray, vi: np.ndarray) -> float:
-    """Compute the Mahalanobis distance between two 1-D arrays. The Mahalanobis
+    """Compute the Mahalanobis distance between two 1D arrays. The Mahalanobis
     distance between :param:`u` and :param:`v` is defined as:
 
     .. math::
@@ -420,7 +420,7 @@ def mahalanobis(u: np.ndarray, v: np.ndarray, vi: np.ndarray) -> float:
         vi: The inverse of the covariance matrix.
 
     Returns:
-        The Mahalanobis distance between 1-D arrays :param:`u` and :param:`v`.
+        The Mahalanobis distance between 1D arrays :param:`u` and :param:`v`.
     """
     return scipy.spatial.distance.mahalanobis(u=u, v=v, VI=vi)
 
@@ -434,7 +434,7 @@ def minkowski(
     o: int        = 2,
     w: np.ndarray = None
 ) -> float:
-    """Compute the Minkowski distance between two 1-D arrays.
+    """Compute the Minkowski distance between two 1D arrays.
     
     Args:
         u: An array-like input.
@@ -450,7 +450,7 @@ def minkowski(
 
 
 def seuclidean(u: np.ndarray, v: np.ndarray, V: np.ndarray) -> float:
-    """Compute the standardized Euclidean distance between two 1-D arrays. The
+    """Compute the standardized Euclidean distance between two 1D arrays. The
     standardized Euclidean distance between :param:`u` and :param:`v` is defined
     as:
 
@@ -460,18 +460,18 @@ def seuclidean(u: np.ndarray, v: np.ndarray, V: np.ndarray) -> float:
     Args:
         u: An array-like input.
         v: An array-like input.
-        V: an 1-D array of component variances. It is usually computed among a
+        V: an 1D array of component variances. It is usually computed among a
             larger collection of vectors.
 
     Returns:
-        The standardized Euclidean distance between 1-D arrays :param:`u` and
+        The standardized Euclidean distance between 1D arrays :param:`u` and
         :param:`v`.
     """
     return scipy.spatial.distance.seuclidean(u=u, v=v, V=V)
     
 
 def sqeuclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
-    """Compute the squared Euclidean distance between two 1-D arrays. The
+    """Compute the squared Euclidean distance between two 1D arrays. The
     squared Euclidean distance between :param:`u` and :param:`v` is defined as:
 
     .. math::
@@ -484,7 +484,7 @@ def sqeuclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> fl
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The squared Euclidean distance between 1-D arrays :param:`u` and
+        The squared Euclidean distance between 1D arrays :param:`u` and
         :param:`v`.
     """
     return scipy.spatial.distance.sqeuclidean(u=u, v=v, w=w)
@@ -526,7 +526,7 @@ def directed_hausdorff(
     v: np.ndarray,
     seed: int = 0
 ) -> tuple[float, int, int]:
-    """Compute the directed Hausdorff distance between two 2-D arrays. Distances
+    """Compute the directed Hausdorff distance between two 2D arrays. Distances
     between pairs are calculated using a Euclidean metric.
     
     Args:
@@ -542,7 +542,7 @@ def directed_hausdorff(
         The index of the point contributing to the Hausdorff pair in :param:`v`.
         
     Examples:
-        Find the directed Hausdorff distance between two 2-D arrays of
+        Find the directed Hausdorff distance between two 2D arrays of
         coordinates:
         >>> from mon.vision.geometry.distance import directed_hausdorff
         >>> import numpy as np
@@ -552,7 +552,7 @@ def directed_hausdorff(
         2.23606797749979
         >>> directed_hausdorff(v, u)[0]
         3.0
-        Find the general (symmetric) Hausdorff distance between two 2-D
+        Find the general (symmetric) Hausdorff distance between two 2D
         arrays of coordinates:
         >>> max(directed_hausdorff(u, v)[0], directed_hausdorff(v, u)[0])
         3.0

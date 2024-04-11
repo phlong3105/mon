@@ -57,19 +57,16 @@ class OptimizerFactory(factory.Factory):
         assert name is not None and name in self
         
         if hasattr(net, "parameters"):
-            # Note: we must remove losses' parameters()
+            # Note: we must remove losses' and metrics' parameters
             params = []
             for n, p in net.named_parameters():
                 if (
-                         "loss" in n
-                    or "train/" in n
-                    or   "val/" in n
-                    or  "test/" in n
+                          "loss" not in n
+                    and "train/" not in n
+                    and   "val/" not in n
+                    and  "test/" not in n
                 ):
-                    continue
-                else:
                     params.append(p)
-           
             instance = self[name](params=params, **kwargs)
             
             if getattr(instance, "name", None) is None:
@@ -122,7 +119,7 @@ class OptimizerFactory(factory.Factory):
                     optimizers.append(opt)
         
         return optimizers if len(optimizers) > 0 else None
-
+    
 
 class LRSchedulerFactory(factory.Factory):
     """The factory for registering and building learning rate schedulers."""

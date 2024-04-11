@@ -27,11 +27,11 @@ def save_imgs(imgs, names, path):
 class Saver:
     
     def __init__(self, opts):
-        self.display_dir = os.path.join(opts.display_dir, opts.name)
-        self.model_dir = os.path.join(opts.result_dir, opts.name)
-        self.image_dir = os.path.join(self.model_dir, 'images')
-        self.display_freq = opts.display_freq
-        self.img_save_freq = opts.img_save_freq
+        self.display_dir     = os.path.join(opts.display_dir, opts.name)
+        self.model_dir       = os.path.join(opts.result_dir , opts.name)
+        self.image_dir       = os.path.join(self.model_dir  , 'images')
+        self.display_freq    = opts.display_freq
+        self.img_save_freq   = opts.img_save_freq
         self.model_save_freq = opts.model_save_freq
         
         # make directory

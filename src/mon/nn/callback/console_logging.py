@@ -75,7 +75,7 @@ class LogTrainingProgress(callbacks.Callback):
         self._last_global_step_saved = 0
         self._last_time_checked      = None
         self._init_triggers(every_n_epochs, every_n_train_steps, train_time_interval)
-        
+    
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str):
         """Called when fit, validate, test, predict, or tune begins."""
         dirpath = self._dirpath or core.Path(trainer.default_root_dir)
@@ -126,7 +126,7 @@ class LogTrainingProgress(callbacks.Callback):
                     f"in {elapsed_time :.3f} seconds "
                     f"({elapsed_hours:.3f} hours)\n"
                 )
-                
+    
     def on_train_batch_end(
         self,
         trainer  : "pl.Trainer",
@@ -162,7 +162,7 @@ class LogTrainingProgress(callbacks.Callback):
             monitor_candidates = self._get_monitor_candidates(trainer)
             candidates         = self._update_candidates(monitor_candidates)
             self._log(candidates)
-            
+    
     def on_train_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
         """Called when the train epoch ends."""
         if not self._should_skip_logging(trainer) and self._should_log_on_train_epoch_end(trainer):

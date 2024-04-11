@@ -110,7 +110,7 @@ class Detector(ABC):
             images: Images of shape :math:`[B, H, W, C]`.
 
         Returns:
-            A 2-D :class:`list` of :class:`supr.data.Instance` objects. The
+            A 2D :class:`list` of :class:`supr.data.Instance` objects. The
             outer :class:`list` has ``B`` items.
         """
         if self.model is None:
@@ -167,7 +167,7 @@ class Detector(ABC):
             pred: Prediction tensor of shape :math:`[B, H, W, C]`.
 
         Returns:
-            A 2-D :class:`list` of :class:`data.Instance` objects. The outer
+            A 2D :class:`list` of :class:`data.Instance` objects. The outer
             :class:`list` has ``B`` items.
         """
         pass

@@ -90,7 +90,7 @@ class ORBEmbedder(base.Embedder):
             images: Images of shape :math:`[N, H, W, C]`.
 
         Returns:
-           A 2-D :class:`list` of feature vectors.
+           A 2D :class:`list` of feature vectors.
         """
         features = []
         for image in images:

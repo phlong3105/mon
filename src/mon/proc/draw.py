@@ -278,7 +278,7 @@ def draw_trajectory(
     
     Args:
         image: An image.
-        trajectory: A 2-D array or list of points in :math:`[(x1, y1), ...]`
+        trajectory: A 2D array or list of points in :math:`[(x1, y1), ...]`
             format.
         color: A color of the bounding box.
         thickness: The thickness of the path in px. Default: 1.

@@ -34,7 +34,7 @@ class Embedder(ABC):
             images: Images of shape :math:`[B, H, W, C]`.
 
         Returns:
-           A 2-D :class:`list` of feature vectors.
+           A 2D :class:`list` of feature vectors.
         """
         pass
         
@@ -111,7 +111,7 @@ class DeepEmbedder(Embedder, ABC):
             images: Images of shape :math:`[B, H, W, C]`.
 
         Returns:
-           A 2-D :class:`list` of feature vectors.
+           A 2D :class:`list` of feature vectors.
         """
         if self.model is None:
             raise ValueError(f"model has not been defined yet!")
@@ -167,7 +167,7 @@ class DeepEmbedder(Embedder, ABC):
             pred: Prediction tensor of shape :math:`[N, C, H, W]`.
 
         Returns:
-            A 2-D :class:`list` of feature vectors.
+            A 2D :class:`list` of feature vectors.
         """
         pass
     

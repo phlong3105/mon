@@ -35,6 +35,7 @@ import torchmetrics
 
 from mon.globals import METRICS
 
+
 # region Image Metric
 
 ErrorRelativeGlobalDimensionlessSynthesis    = torchmetrics.image.ErrorRelativeGlobalDimensionlessSynthesis
@@ -83,7 +84,10 @@ METRICS.register(name="visual_information_fidelity",                      module
 # region Custom SSIM/MS-SSIM
 
 def _fspecial_gauss_1d(size: int, sigma: float) -> torch.Tensor:
-    r"""Create 1-D gauss kernel.
+    r"""Create 1D gauss kernel.
+    
+    Reference:
+        `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     
     Args:
         size: The size of gauss kernel.
@@ -100,11 +104,14 @@ def _fspecial_gauss_1d(size: int, sigma: float) -> torch.Tensor:
 
 
 def _gaussian_filter(input: torch.Tensor, window: torch.Tensor) -> torch.Tensor:
-    r""" Blur input with 1-D kernel.
+    r""" Blur input with 1D kernel.
     
+    Reference:
+        `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
+        
     Args:
         input: A batch of tensors to be blurred.
-        window : 1-D gauss kernel.
+        window : 1D Gaussian kernel.
     
     Returns:
         Blurred tensors.
@@ -135,12 +142,16 @@ def _custom_ssim(
     k           : tuple[float , float] | list[float] = (0.01, 0.03)
 ) -> tuple[torch.Tensor, torch.Tensor]:
     r""" Calculate ssim index for attr:`img1` and attr:`img2`.
-
+    
+    Reference:
+        `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
+        
     Args:
         img1: Image to be compared.
         img2: Image to be compared.
-        data_range: Value range of input images (usually 1.0 or 255).
-        window: 1-D gauss kernel
+        data_range: Value range of input images (usually ``1.0`` or ``255``).
+        window: 1D Gaussian kernel.
+        K: Kernel sizes. Default: ``(0.01, 0.03)``.
         size_average: If ``True``, ssim of all images will be averaged as a scalar.
     """
     k1, k2 = k
@@ -182,24 +193,31 @@ def custom_ssim(
     k                : tuple[float, float] | list[float] = (0.01, 0.03),
     non_negative_ssim: bool                = False,
 ) -> torch.Tensor:
+    """Interface of :obj:`_custom_ssim`.
+    
+    Reference:
+        `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
+    """
     if not img1.shape == img2.shape:
-        raise ValueError(f"Input images should have the same dimensions, but got {img1.shape} and {img2.shape}.")
+        raise ValueError(f":param:`img1` and :param:`img2` must have the same "
+                         f"dimensions, but got {img1.shape} and {img2.shape}.")
 
     for d in range(len(img1.shape) - 1, 1, -1):
         img1 = img1.squeeze(dim=d)
         img2 = img2.squeeze(dim=d)
 
     if len(img1.shape) not in (4, 5):
-        raise ValueError(f"Input images should be 4-d or 5-d tensors, but got {img1.shape}")
+        raise ValueError(f":param:`img1` and :param:`img2` must be 4D or 5D "
+                         f"tensors, but got {img1.shape}.")
 
     # if not X.type() == Y.type():
     #    raise ValueError(f"Input images should have the same dtype, but got {X.type()} and {Y.type()}.")
-
+    
     if window is not None:  # set win_size
         window_size = window.shape[-1]
 
     if not (window_size % 2 == 1):
-        raise ValueError("Window size should be odd.")
+        raise ValueError(":param:`window_size` must be odd.")
 
     if window is None:
         window = _fspecial_gauss_1d(window_size, window_sigma)
@@ -226,9 +244,14 @@ def custom_ms_ssim(
     weights     : list[float]  | None = None,
     k           : tuple[float, float] | list[float] = (0.01, 0.03),
 ) -> torch.Tensor:
-    r"""Interface of MS-SSIM."""
+    r"""Interface of MS-SSIM.
+    
+    Reference:
+        `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
+    """
     if not img1.shape == img2.shape:
-        raise ValueError(f"Input images should have the same dimensions, but got {img1.shape} and {img2.shape}.")
+        raise ValueError(f":param:`img1` and :param:`img2` must have the same "
+                         f"dimensions, but got {img1.shape} and {img2.shape}.")
 
     for d in range(len(img1.shape) - 1, 1, -1):
         img1 = img1.squeeze(dim=d)
@@ -242,18 +265,20 @@ def custom_ms_ssim(
     elif len(img1.shape) == 5:
         avg_pool = F.avg_pool3d
     else:
-        raise ValueError(f"Input images should be 4-d or 5-d tensors, but got {img1.shape}")
+        raise ValueError(f":param:`img1` and :param:`img2` must be 4D or 5D "
+                         f"tensors, but got {img1.shape}")
 
     if window is not None:  # set win_size
         window_size = window.shape[-1]
 
     if not (window_size % 2 == 1):
-        raise ValueError("Window size should be odd.")
+        raise ValueError(":param:`window_size` should be odd.")
 
     smaller_side = min(img1.shape[-2:])
-    assert smaller_side > (window_size - 1) * (
-        2 ** 4
-    ), "Image size should be larger than %d due to the 4 downsamplings in ms-ssim" % ((window_size - 1) * (2 ** 4))
+    assert smaller_side > (window_size - 1) * (2 ** 4), (
+        ":param:`img1` and :param:`img2` must be larger than %d due to the 4 "
+        "downsamplings in ms-ssim." % ((window_size - 1) * (2 ** 4))
+    )
 
     if weights is None:
         weights = [0.0448, 0.2856, 0.3001, 0.2363, 0.1333]
@@ -285,7 +310,11 @@ def custom_ms_ssim(
 
 
 class CustomSSIM(torch.nn.Module):
+    """
     
+    Reference:
+        `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
+    """
     def __init__(
         self,
         data_range       : float               = 255,
@@ -318,6 +347,12 @@ class CustomSSIM(torch.nn.Module):
 
 
 class CustomMSSSIM(torch.nn.Module):
+    """
+    
+    Reference:
+        `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
+    """
+    
     def __init__(
         self,
         data_range  : float              = 255,
