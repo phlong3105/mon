@@ -369,6 +369,18 @@ class PSENet(base.LowLightImageEnhancementModel):
         
         return loss
     
+    '''
+    def on_train_epoch_end(self):
+        """Called in the training loop at the very end of the epoch."""
+        lr_scheduler = self.lr_schedulers()
+        if isinstance(lr_scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            lr_scheduler.step(self.trainer.callback_metrics["train/loss"])
+            
+        if self.train_metrics:
+            for i, metric in enumerate(self.train_metrics):
+                metric.reset()
+    '''
+    
     # endregion
     
 # endregion

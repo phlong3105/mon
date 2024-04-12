@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements ZID models."""
+"""This module implements ZID (Zero-Shot Image Dehazing) models."""
 
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from mon.vision.enhance.dehaze import base
 console = core.console
 
 
-# region Misc
+# region Module
 
 def add_module(self, module_):
     self.add_module(str(len(self) + 1), module_)
@@ -31,10 +31,6 @@ def add_module(self, module_):
 
 nn.Module.add = add_module
 
-# endregion
-
-
-# region Module
 
 def conv(
     in_channels    : int,
@@ -325,17 +321,21 @@ class ZID(base.DehazingModel):
     
     def __init__(
         self,
-        image_size: _size_2_t = (512, 512),
-        clip      : bool      = True,
-        save_image: bool      = False,
-        weights   : Any       = None,
-        loss      : Any       = None,
+        in_channels : int       = 3,
+        out_channels: int       = 3,
+        image_size  : _size_2_t = (512, 512),
+        clip        : bool      = True,
+        save_image  : bool      = False,
+        weights     : Any       = None,
+        loss        : Any       = None,
         *args, **kwargs
     ):
         super().__init__(
-            name    = "zid",
-            weights = weights,
-            loss    = loss,
+            name         = "zid",
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            weights      = weights,
+            loss         = loss,
             *args, **kwargs
         )
         self.image_size = core.parse_hw(size=image_size or [512, 512])
@@ -344,8 +344,8 @@ class ZID(base.DehazingModel):
         
         # Image Network
         self.image_net   = encoder_decoder_skip(
-            in_channels   = 3,
-            out_channels  = 3,
+            in_channels   = self.in_channels,
+            out_channels  = self.out_channels,
             channels_down = [8, 16, 32, 64, 128],
             channels_up   = [8, 16, 32, 64, 128],
             channels_skip = [0, 0 , 0 , 4 , 4],
@@ -353,12 +353,12 @@ class ZID(base.DehazingModel):
             bias          = True,
             upsample_mode = "bilinear",
             sigmoid       = True,
-            act_layer= nn.LeakyReLU
+            act_layer     = nn.LeakyReLU,
         ).type(torch.cuda.FloatTensor)
 
         # Mask Network
         self.mask_net    = encoder_decoder_skip(
-            in_channels   = 3,
+            in_channels   = self.in_channels,
             out_channels  = 1,
             channels_down = [8, 16, 32, 64, 128],
             channels_up   = [8, 16, 32, 64, 128],
@@ -367,15 +367,15 @@ class ZID(base.DehazingModel):
             padding       = "reflection",
             upsample_mode = "bilinear",
             sigmoid       = True,
-            act_layer= nn.LeakyReLU
+            act_layer     = nn.LeakyReLU,
         ).type(torch.cuda.FloatTensor)
         
         # Ambient Network
-        self.ambient_net = VariationalAutoEncoder(self.image_size).type(torch.cuda.FloatTensor)
+        self.ambient_net = VariationalAutoEncoder(size=self.image_size).type(torch.cuda.FloatTensor)
         
         # Loss Functions
-        self.mse_loss = nn.MSELoss().type(torch.cuda.FloatTensor)
-        self.std_loss = nn.StdLoss().type(torch.cuda.FloatTensor)
+        self.mse_loss = nn.MSELoss(reduction="mean").type(torch.cuda.FloatTensor)
+        self.std_loss = nn.StdLoss(reduction="mean").type(torch.cuda.FloatTensor)
         
         if self.weights:
             self.load_weights()
@@ -398,10 +398,10 @@ class ZID(base.DehazingModel):
         loss        += self.ambient_net.get_loss()
         loss        += 0.005 * self.std_loss(mask)
         loss        += 0.1   * self.std_loss(ambient)
-        
+        #
         dcp_prior    = torch.min(image.permute(0, 2, 3, 1), 3)[0]
         loss        += self.mse_loss(dcp_prior, torch.zeros_like(dcp_prior)) - 0.05
-        
+        #
         atmosphere   = proc.get_atmosphere_prior(input.detach().cpu().numpy()[0])
         ambient_val  = nn.Parameter(data=torch.cuda.FloatTensor(atmosphere.reshape((1, 3, 1, 1))), requires_grad=False)
         loss        += self.mse_loss(ambient, ambient_val * torch.ones_like(ambient))

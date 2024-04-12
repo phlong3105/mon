@@ -20,7 +20,7 @@ model_name = "psenet"
 data_name  = "sice_mix"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [512, 512]
+image_size = [256, 256]
 seed	   = 42
 verbose    = True
 
@@ -80,13 +80,13 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
-		# A.Resize(width=image_size[0], height=image_size[1]),
+		A.Resize(width=image_size[0], height=image_size[1]),
 		# A.Flip(),
 		# A.Rotate(),
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 1,             # The number of samples in one forward pass.
+    "batch_size": 64,            # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.
