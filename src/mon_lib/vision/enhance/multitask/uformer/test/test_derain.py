@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Reference:
+References:
     `<https://github.com/ZhendongWang6/Uformer>`__
 """
 

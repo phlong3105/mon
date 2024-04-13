@@ -81,14 +81,13 @@ class SubspaceBlueprintSeparableConv2d(nn.Module):
         stride          : _size_2_t       = 1,
         padding         : _size_2_t | str = 0,
         dilation        : _size_2_t       = 1,
-        groups          : int             = 1,
         bias            : bool            = True,
         padding_mode    : str             = "zeros",
         device          : Any             = None,
         dtype           : Any             = None,
         p               : float           = 0.25,
         min_mid_channels: int             = 4,
-        act             : Callable        = None,
+        act_layer       : Callable        = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -107,9 +106,9 @@ class SubspaceBlueprintSeparableConv2d(nn.Module):
             dtype        = dtype,
         )
         self.act1 = activation.to_act_layer(
-            act_layer= act,
+            act_layer    = act_layer,
             num_features = mid_channels
-        )  # if norm else None
+        )
         self.pw_conv2 = conv.Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -124,9 +123,9 @@ class SubspaceBlueprintSeparableConv2d(nn.Module):
             dtype        = dtype,
         )
         self.act2    = activation.to_act_layer(
-            act_layer= act,
+            act_layer    = act_layer,
             num_features = out_channels
-        )  # if norm else None
+        )
         self.dw_conv = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -229,7 +228,32 @@ class UnconstrainedBlueprintSeparableConv2d(nn.Module):
         return y
 
 
-BSConv2dU = UnconstrainedBlueprintSeparableConv2d
+class BSConv2dU(nn.Module):
+    """Unconstrained Blueprint Separable Conv2d adopted from the paper:
+    `"Rethinking Depthwise Separable Convolutions: How Intra-Kernel Correlations
+    Lead to Improved MobileNets" <https://arxiv.org/abs/2003.13549>`__
+    
+    References:
+        `<https://github.com/zeiss-microscopy/BSConv>`__
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        act         : Callable        = None,
+        *args, **kwargs
+    ):
+        super().__init__()
 
 # endregion
 

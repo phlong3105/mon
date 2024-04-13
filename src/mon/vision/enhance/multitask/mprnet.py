@@ -364,7 +364,7 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 		in_pos_right: The layer index to end applying the Instance
 			Normalization. Default: ``4``.
 		
-	Reference:
+	References:
 		`<https://github.com/swz30/MPRNet/tree/main>`__
 
 	See Also: :class:`base.MultiTaskImageEnhancementModel`

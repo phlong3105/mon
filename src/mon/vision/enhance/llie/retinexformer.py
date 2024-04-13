@@ -384,7 +384,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 	"""`Retinexformer: One-stage Retinex-based Transformer for Low-light Image
 	Enhancement <https://arxiv.org/abs/2303.06705>`__.
 	
-	Reference:
+	References:
 		`<https://github.com/caiyuanhao1998/Retinexformer>`__
 
 	See Also: :class:`base.LowLightImageEnhancementModel`

@@ -8,7 +8,7 @@ LossOutput = namedtuple(
 new_state_dict = OrderedDict()
 
 class LossNetwork(torch.nn.Module):
-    """Reference:
+    """References:
         https://discuss.pytorch.org/t/how-to-extract-features-of-an-image-from-a-trained-model/119/3
     """
     def __init__(self):

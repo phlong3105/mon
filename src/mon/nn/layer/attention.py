@@ -1261,7 +1261,7 @@ class LocationAwareAttention(nn.Module):
         output: Tensor containing the feature from encoder outputs
         attn: Tensor containing the attention (alignment) from the encoder outputs.
 
-    Reference:
+    References:
         - `Attention-Based Models for Speech Recognition <https://arxiv.org/abs/1506.07503>`__
         - `ClovaCall <https://github.com/clovaai/ClovaCall/blob/master/las.pytorch/models/attention.py>`__
     """
@@ -1331,7 +1331,7 @@ class MultiHeadLocationAwareAttention(nn.Module):
         output: tensor containing the feature from encoder outputs.
         attn: tensor containing the attention (alignment) from the encoder outputs.
 
-    Reference:
+    References:
         - `Attention-Based Models for Speech Recognition <https://arxiv.org/abs/1506.07503>`__
         - `Attention-Based Models for Speech Recognition <https://arxiv.org/abs/1506.07503>`__
     """

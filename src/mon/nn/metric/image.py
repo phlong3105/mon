@@ -86,7 +86,7 @@ METRICS.register(name="visual_information_fidelity",                      module
 def _fspecial_gauss_1d(size: int, sigma: float) -> torch.Tensor:
     r"""Create 1D gauss kernel.
     
-    Reference:
+    References:
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     
     Args:
@@ -106,7 +106,7 @@ def _fspecial_gauss_1d(size: int, sigma: float) -> torch.Tensor:
 def _gaussian_filter(input: torch.Tensor, window: torch.Tensor) -> torch.Tensor:
     r""" Blur input with 1D kernel.
     
-    Reference:
+    References:
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
         
     Args:
@@ -143,7 +143,7 @@ def _custom_ssim(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     r""" Calculate ssim index for attr:`img1` and attr:`img2`.
     
-    Reference:
+    References:
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
         
     Args:
@@ -195,7 +195,7 @@ def custom_ssim(
 ) -> torch.Tensor:
     """Interface of :obj:`_custom_ssim`.
     
-    Reference:
+    References:
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     """
     if not img1.shape == img2.shape:
@@ -246,7 +246,7 @@ def custom_ms_ssim(
 ) -> torch.Tensor:
     r"""Interface of MS-SSIM.
     
-    Reference:
+    References:
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     """
     if not img1.shape == img2.shape:
@@ -312,7 +312,7 @@ def custom_ms_ssim(
 class CustomSSIM(torch.nn.Module):
     """
     
-    Reference:
+    References:
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     """
     def __init__(
@@ -349,7 +349,7 @@ class CustomSSIM(torch.nn.Module):
 class CustomMSSSIM(torch.nn.Module):
     """
     
-    Reference:
+    References:
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     """
     

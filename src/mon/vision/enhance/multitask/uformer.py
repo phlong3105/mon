@@ -702,7 +702,7 @@ class BasicUformerLayer(nn.Module):
 class Uformer(base.MultiTaskImageEnhancementModel):
     """A General U-Shaped Transformer (Uformer) Network.
     
-    Reference:
+    References:
         `<https://github.com/ZhendongWang6/Uformer>`__
 
     See Also: :class:`base.MultiTaskImageEnhancementModel`
@@ -1107,7 +1107,7 @@ class Uformer(base.MultiTaskImageEnhancementModel):
 class UformerT(Uformer):
     """Uformer Tiny model.
     
-    Reference:
+    References:
         `<https://github.com/ZhendongWang6/Uformer>`__
     """
     
@@ -1130,7 +1130,7 @@ class UformerT(Uformer):
 class UformerS(Uformer):
     """Uformer Small model.
     
-    Reference:
+    References:
         `<https://github.com/ZhendongWang6/Uformer>`__
     """
     
@@ -1205,7 +1205,7 @@ class UformerSFastleff(Uformer):
 class UformerB(Uformer):
     """Uformer Big model.
     
-    Reference:
+    References:
         `<https://github.com/ZhendongWang6/Uformer>`__
     """
     

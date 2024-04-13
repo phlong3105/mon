@@ -209,7 +209,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
         in_pos_right: The layer index to end applying the Instance
             Normalization. Default: ``4``.
         
-    Reference:
+    References:
         `<https://github.com/megvii-model/HINet>`__
 
     See Also: :class:`base.MultiTaskImageEnhancementModel`

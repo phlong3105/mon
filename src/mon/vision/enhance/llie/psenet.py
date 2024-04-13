@@ -4,7 +4,7 @@
 """This module implements PSENet (PSENet: Progressive Self-Enhancement Network
 for Unsupervised Extreme-Light Image Enhancement) models.
 
-Reference:
+References:
     `<https://github.com/VinAIResearch/PSENet-Image-Enhancement>`__
 """
 
@@ -205,7 +205,7 @@ class PSENet(base.LowLightImageEnhancementModel):
     """PSENet (PSENet: Progressive Self-Enhancement Network for Unsupervised
     Extreme-Light Image Enhancement) models.
     
-    Reference:
+    References:
         `<https://github.com/VinAIResearch/PSENet-Image-Enhancement>`__
      
     See Also: :class:`base.LowLightImageEnhancementModel`
