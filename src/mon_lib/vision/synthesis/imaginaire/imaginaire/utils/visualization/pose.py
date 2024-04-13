@@ -41,7 +41,7 @@ def draw_openpose_npy(resize_h, resize_w, crop_h, crop_w, original_h,
     op_key = cfgdata.keypoint_data_types[0]
     for input_type in cfgdata.input_types:
         if op_key in input_type:
-            nc = input_type[op_key].num_channels
+            nc = input_type[op_key].num_filters
     if crop_h is not None:
         h, w = crop_h, crop_w
     else:
@@ -381,10 +381,10 @@ def tensor2pose(cfg, label_tensor):
     use_densepose = use_openpose = False
     for input_type in cfg.data.input_types:
         if dp_key in input_type:
-            dp_ch = input_type[dp_key].num_channels
+            dp_ch = input_type[dp_key].num_filters
             use_densepose = True
         elif op_key in input_type:
-            op_ch = input_type[op_key].num_channels
+            op_ch = input_type[op_key].num_filters
             use_openpose = True
     if use_densepose:
         label_img = tensor2im(label_tensor[:dp_ch])

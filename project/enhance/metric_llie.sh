@@ -12,7 +12,7 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-model="psenet"
+model="gceunet++"
 data=(
     "dicm"
     "lime"

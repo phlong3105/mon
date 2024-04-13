@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""GCENet model trained on SICEMix dataset."""
+"""GCEUNet++ model trained on SICEMix dataset."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "gcenet"
+model_name = "gceunet++"
 data_name  = "sice_mix"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -34,7 +34,7 @@ model = {
 	"root"        : root,           # The root directory of the model.
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
-	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
+	"out_channels": 3,              # A number of classes, which is also the last layer's output channels.
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -43,11 +43,11 @@ model = {
     },          # A list metrics for validating and testing model.
 	"optimizers"  : [
 		{
-            "optimizer"          : {
-	            "name"        : "adam",
-	            "lr"          : 0.00005,
-	            "weight_decay": 0.00001,
-	            "betas"       : [0.9, 0.99],
+			"optimizer"          : {
+				"name"        : "adam",
+				"lr"          : 0.00005,
+				"weight_decay": 0.00001,
+				"betas"       : [0.9, 0.99],
 			},
 			"lr_scheduler"       : None,
 			"network_params_only": True,

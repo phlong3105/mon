@@ -58,7 +58,7 @@ class Loss(nn.Loss):
             preprocess = True,
             reduction  = reduction,
         )
-        self.tv_loss = nn.TVLoss(reduction=reduction)
+        self.tv_loss = nn.TotalVariationLoss(reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor, *_) -> torch.Tensor:
         str_loss = self.ms_ssim_loss(input, target) + self.ssim_loss(input, target)
@@ -106,7 +106,7 @@ class UNetConvBlock(nn.Module):
         self.conv_3     = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
         self.relu_3     = nn.LeakyReLU(relu_slope, inplace=False)
 
-        self.conv_1_1_1 = nn.Conv2d(in_channels, in_channels, 1, 1, 0)
+        self.conv_1_1_1 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
         self.conv_1_1   = nn.Conv2d(in_channels * 2, out_channels, 1, 1, 0)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -136,7 +136,7 @@ class UNetConvBlock(nn.Module):
 
 @MODELS.register(name="llunet++")
 class LLUnetPP(base.LowLightImageEnhancementModel):
-    """LLUnet++ (LLUnet++:UNet++ Based Nested Skip Connections Network for
+    """LLUnet++ (LLUnet++: UNet++ Based Nested Skip Connections Network for
     Low-Light Image Enhancement) model.
     
     References:
@@ -174,10 +174,10 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
         self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
         #
         self.conv0_0 = UNetConvBlock(self.in_channels, nb_filter[0])
-        self.conv1_0 = UNetConvBlock(nb_filter[0], nb_filter[1])
-        self.conv2_0 = UNetConvBlock(nb_filter[1], nb_filter[2])
-        self.conv3_0 = UNetConvBlock(nb_filter[2], nb_filter[3])
-        self.conv4_0 = UNetConvBlock(nb_filter[3], nb_filter[4])
+        self.conv1_0 = UNetConvBlock(nb_filter[0],     nb_filter[1])
+        self.conv2_0 = UNetConvBlock(nb_filter[1],     nb_filter[2])
+        self.conv3_0 = UNetConvBlock(nb_filter[2],     nb_filter[3])
+        self.conv4_0 = UNetConvBlock(nb_filter[3],     nb_filter[4])
         #
         self.conv0_1 = UNetConvBlock(nb_filter[0] + nb_filter[1], nb_filter[0])
         self.conv1_1 = UNetConvBlock(nb_filter[1] + nb_filter[2], nb_filter[1])

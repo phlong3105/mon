@@ -527,7 +527,7 @@ def get_paired_input_image_channel_number(data_cfg):
     for ix, data_type in enumerate(data_cfg.input_types):
         for k in data_type:
             if k in data_cfg.input_image:
-                num_channels += data_type[k].num_channels
+                num_channels += data_type[k].num_filters
                 print('Concatenate %s for input.' % data_type)
     print('\tNum. of channels in the input image: %d' % num_channels)
     return num_channels
@@ -553,7 +553,7 @@ def get_paired_input_label_channel_number(data_cfg, video=False):
                     if getattr(data_cfg, 'use_dont_care', False):
                         num_labels += 1
                 else:
-                    num_labels += data_type[k].num_channels
+                    num_labels += data_type[k].num_filters
             print('Concatenate %s for input.' % data_type)
 
     if video:

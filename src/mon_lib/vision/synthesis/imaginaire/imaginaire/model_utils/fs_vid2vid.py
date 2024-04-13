@@ -678,7 +678,7 @@ def get_face_bbox_for_output(data_cfg, pose, crop_smaller=0):
     if use_openpose:  # Use openpose face keypoints to identify face region.
         for input_type in data_cfg.input_types:
             if 'poses-openpose' in input_type:
-                num_ch = input_type['poses-openpose'].num_channels
+                num_ch = input_type['poses-openpose'].num_filters
         if num_ch > 3:
             face = (pose[:, -1] > 0).nonzero(as_tuple=False)
         else:

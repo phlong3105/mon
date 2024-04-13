@@ -155,8 +155,8 @@ class BaseDataset(data.Dataset):
 
         # Add some info into cfgdata for legacy support.
         self.cfgdata.data_types = self.data_types
-        self.cfgdata.num_channels = [self.num_channels[name]
-                                     for name in self.data_types]
+        self.cfgdata.num_filters = [self.num_channels[name]
+                                    for name in self.data_types]
 
         # Augmentations which need full dict.
         self.full_data_post_aug_ops, self.full_data_ops = [], []
