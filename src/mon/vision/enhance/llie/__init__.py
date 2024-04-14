@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import mon.vision.enhance.llie.base
 import mon.vision.enhance.llie.gcenet
+import mon.vision.enhance.llie.llhinet
 import mon.vision.enhance.llie.llunetpp
 import mon.vision.enhance.llie.psenet
 import mon.vision.enhance.llie.retinexformer
@@ -20,6 +21,7 @@ import mon.vision.enhance.llie.zero_dcepp
 import mon.vision.enhance.llie.zero_didce
 from mon.vision.enhance.llie.base import *
 from mon.vision.enhance.llie.gcenet import *
+from mon.vision.enhance.llie.llhinet import *
 from mon.vision.enhance.llie.llunetpp import *
 from mon.vision.enhance.llie.psenet import *
 from mon.vision.enhance.llie.retinexformer import *

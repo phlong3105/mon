@@ -295,7 +295,7 @@ class Denoiser(nn.Module):
 				nn.ModuleList([
 					nn.ConvTranspose2d(dim_level, dim_level // 2, stride=2, kernel_size=2, padding=0, output_padding=0),
 					nn.Conv2d(dim_level, dim_level // 2, 1, 1, bias=False),
-					IGAB(in_channels=dim_level // 2, num_blocks=num_blocks[level - 1 - i], head_channels=num_channels, heads=(dim_level // 2) // num_channels),
+					IGAB(in_channels=dim_level // 2, num_blocks=num_blocks[level - 1 - i], head_channels=num_channels, num_heads=(dim_level // 2) // num_channels),
 				])
 			)
 			dim_level //= 2

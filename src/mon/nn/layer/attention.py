@@ -1147,7 +1147,7 @@ class SimAM(nn.Module):
 # endregion
 
 
-# Transformer
+# region Transformer
 
 class ScaledDotProductAttention(nn.Module):
     """Scaled Dot-Product Attention proposed in "Attention Is All You Need"

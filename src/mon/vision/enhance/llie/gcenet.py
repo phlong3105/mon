@@ -87,50 +87,6 @@ class Loss(nn.Loss):
 
 # region Module
 
-class UNetConvBlock(nn.Module):
-    
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        relu_slope  : float = 0.2,
-    ):
-        super().__init__()
-        self.conv1   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
-        self.norm1   = nn.InstanceNorm2d(in_channels, affine=True)
-        self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
-       
-        self.conv2   = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
-        self.relu2   = nn.LeakyReLU(relu_slope, inplace=False)
-        
-        self.conv3   = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
-        self.relu3   = nn.LeakyReLU(relu_slope, inplace=False)
-
-        self.conv1_2 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
-        self.conv2_3 = nn.Conv2d(in_channels * 2, out_channels, 1, 1, 0)
-        
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x    = input
-        x1_2 = self.conv1_2(x)
-        #
-        x1   = self.conv1(x)
-        x1   = self.norm1(x1)
-        x1   = self.relu1(x1)
-        #
-        x2   = torch.cat([x1, x1_2], dim=1)
-        x2_3 = self.conv2_3(x2)
-        #
-        x2   = self.conv2(x2)
-        x2   = self.relu2(x2)
-        #
-        x3  = self.conv3(x2)
-        x3  = self.relu3(x3)
-        #
-        y   = x3 + x2_3
-        #
-        return y
-
-
 class ConvBlock(nn.Module):
     
     def __init__(
@@ -139,44 +95,59 @@ class ConvBlock(nn.Module):
         out_channels : int,
         relu_slope   : float = 0.2,
         is_last_layer: bool  = False,
+        use_hin      : bool  = True,
     ):
         super().__init__()
+        self.use_hin = use_hin
+        
         self.conv1   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
-        self.norm1   = nn.InstanceNorm2d(in_channels, affine=True)
-        self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
-        
-        self.conv2   = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
-        self.relu2   = nn.LeakyReLU(relu_slope, inplace=False)
-        
-        self.conv3   = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
-        if is_last_layer:
-            self.relu3 = nn.Tanh()
+        if use_hin:
+            self.norm1 = nn.InstanceNorm2d(in_channels // 2, affine=True)
         else:
-            self.relu3 = nn.LeakyReLU(relu_slope, inplace=False)
+            self.norm1 = nn.InstanceNorm2d(in_channels, affine=True)
+        self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
+        self.simam   = nn.SimAM()
         
-        self.conv1_2 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
+        self.conv2   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
+        
+        self.conv3   = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
+        self.relu3   = nn.LeakyReLU(relu_slope, inplace=False)
+        
+        self.conv4   = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        if is_last_layer:
+            self.relu4 = nn.Tanh()
+        else:
+            self.relu4 = nn.LeakyReLU(relu_slope, inplace=False)
+        
+        self.conv1_3 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
         # self.conv2_3 = nn.DSConv2d(in_channels * 2, out_channels, 1, 1, 0)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x    = input
-        x1_2 = self.conv1_2(x)
         #
         x1   = self.conv1(x)
-        x1   = self.norm1(x1)
+        if self.use_hin:
+            x1_1, x1_2 = torch.chunk(x1, 2, dim=1)
+            x1         = torch.cat([self.norm1(x1_1), x1_2], dim=1)
+        else:
+            x1 = self.norm1(x1)
         x1   = self.relu1(x1)
+        x1   = self.simam(x1)
         #
-        x2   = torch.cat([x1, x1_2], dim=1)
+        x2   = self.conv2(x1)
+        #
+        x3   = torch.cat([x2, self.conv1_3(x)], dim=1)
         # x2_3 = self.conv2_3(x2)
         #
-        x2   = self.conv2(x2)
-        x2   = self.relu2(x2)
+        x3   = self.conv3(x3)
+        x3   = self.relu3(x3)
         #
-        x3  = self.conv3(x2)
-        x3  = self.relu3(x3)
+        x4   = self.conv4(x3)
+        x4   = self.relu4(x4)
         #
         # x3   = x3 + x2_3
         #
-        return x3
+        return x4
 
 # endregion
 
@@ -367,7 +338,7 @@ class GCEUNetPP(base.LowLightImageEnhancementModel):
         self.num_filters  = num_filters
         
         # Construct model
-        self.conv1 = ConvBlock(self.in_channels,     self.num_filters)
+        self.conv1 = ConvBlock(self.in_channels,     self.num_filters, use_hin=False)
         self.conv2 = ConvBlock(self.num_filters,     self.num_filters)
         self.conv3 = ConvBlock(self.num_filters,     self.num_filters)
         self.conv4 = ConvBlock(self.num_filters,     self.num_filters)

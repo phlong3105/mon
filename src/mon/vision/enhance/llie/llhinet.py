@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements LLUnet++ (LLUnet++:UNet++ Based Nested Skip Connections Network
-for Low-Light Image Enhancement) models.
-
-References:
-    `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+"""This module implements LLHINet (Low-Light Half Instance Normalization Network)
+models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "LLUnetPP",
+    "LLHINet",
 ]
 
 from typing import Any, Literal
@@ -87,61 +84,81 @@ class Loss(nn.Loss):
 
 # region Module
 
-class UNetConvBlock(nn.Module):
+class SimpleGate(nn.Module):
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x      = input
+        x1, x2 = x.chunk(2, dim=1)
+        return x1 * x2
+    
+    
+class HINBlock(nn.Module):
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         relu_slope  : float = 0.2,
+        use_hin     : bool  = True,
     ):
         super().__init__()
+        self.use_hin = use_hin
+        
         self.conv1   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
-        self.norm1   = nn.InstanceNorm2d(in_channels, affine=True)
+        if use_hin:
+            self.norm1 = nn.InstanceNorm2d(in_channels // 2, affine=True)
+        else:
+            self.norm1 = nn.InstanceNorm2d(in_channels, affine=True)
         self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
-                     
-        self.conv2   = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
-        self.relu2   = nn.LeakyReLU(relu_slope, inplace=False)
-                     
-        self.conv3   = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        self.simam   = nn.SimAM()
+        
+        self.conv2   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
+        
+        self.conv3   = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
         self.relu3   = nn.LeakyReLU(relu_slope, inplace=False)
-
-        self.conv1_2 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
-        self.conv2_3 = nn.Conv2d(in_channels * 2, out_channels, 1, 1, 0)
-    
+        
+        self.conv4   = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        self.relu4   = nn.LeakyReLU(relu_slope, inplace=False)
+        
+        self.conv1_3 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
+        self.conv3_4 = nn.Conv2d(in_channels * 2, out_channels, 1, 1, 0)
+        
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x    = input
-        x1_2 = self.conv1_2(x)
         #
         x1   = self.conv1(x)
-        x1   = self.norm1(x1)
+        if self.use_hin:
+            x1_1, x1_2 = torch.chunk(x1, 2, dim=1)
+            x1         = torch.cat([self.norm1(x1_1), x1_2], dim=1)
+        else:
+            x1 = self.norm1(x1)
         x1   = self.relu1(x1)
+        x1   = self.simam(x1)
         #
-        x2   = torch.cat([x1, x1_2], dim = 1)
-        x2_3 = self.conv2_3(x2)
+        x2   = self.conv2(x1)
         #
-        x2   = self.conv2(x2)
-        x2   = self.relu2(x2)
-        x3   = self.conv3(x2)
+        x3   = torch.cat([x2, self.conv1_3(x)], dim=1)
+        x3_4 = self.conv3_4(x3)
+        #
+        x3   = self.conv3(x3)
         x3   = self.relu3(x3)
+        x4   = self.conv4(x3)
+        x4   = self.relu4(x4)
         #
-        x3  += x2_3
+        x4  += x3_4
         #
-        return x3
-    
+        return x4
+
+
 # endregion
 
 
 # region Model
 
-@MODELS.register(name="llunet++")
-class LLUnetPP(base.LowLightImageEnhancementModel):
-    """LLUnet++ (LLUnet++: UNet++ Based Nested Skip Connections Network for
-    Low-Light Image Enhancement) model.
+@MODELS.register(name="llhinet")
+class LLHINet(base.LowLightImageEnhancementModel):
+    """LLHINet (Low-Light Half Instance Normalization Network) models.
     
-    References:
-        `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
-        
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
@@ -151,21 +168,25 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
     def __init__(
         self,
         in_channels : int = 3,
+        out_channels: int = 3,
         weights     : Any = None,
         loss_weights: list[float] = [0.35, 0.10, 0.25, 0.30],
         *args, **kwargs
     ):
         super().__init__(
-            name        = "llunet++",
-            in_channels = in_channels,
-            weights     = weights,
+            name         = "llhinet",
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            weights      = weights,
             *args, **kwargs
         )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            in_channels = self.weights.get("in_channels", in_channels)
-        self.in_channels = in_channels
+            in_channels  = self.weights.get("in_channels",  in_channels)
+            out_channels = self.weights.get("out_channels", out_channels)
+        self.in_channels  = in_channels or self.in_channels
+        self.out_channels = out_channels or self.out_channels
         
         # Construct model
         nb_filter    = [32, 64, 128, 256, 512]
@@ -173,25 +194,25 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
         self.pool    = nn.MaxPool2d(2, 2)
         self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
         #
-        self.conv0_0 = UNetConvBlock(self.in_channels, nb_filter[0])
-        self.conv1_0 = UNetConvBlock(nb_filter[0],     nb_filter[1])
-        self.conv2_0 = UNetConvBlock(nb_filter[1],     nb_filter[2])
-        self.conv3_0 = UNetConvBlock(nb_filter[2],     nb_filter[3])
-        self.conv4_0 = UNetConvBlock(nb_filter[3],     nb_filter[4])
+        self.conv0_0 = HINBlock(self.in_channels, nb_filter[0], use_hin=False)
+        self.conv1_0 = HINBlock(nb_filter[0], nb_filter[1])
+        self.conv2_0 = HINBlock(nb_filter[1], nb_filter[2])
+        self.conv3_0 = HINBlock(nb_filter[2], nb_filter[3])
+        self.conv4_0 = HINBlock(nb_filter[3], nb_filter[4])
         #
-        self.conv0_1 = UNetConvBlock(nb_filter[0] + nb_filter[1], nb_filter[0])
-        self.conv1_1 = UNetConvBlock(nb_filter[1] + nb_filter[2], nb_filter[1])
-        self.conv2_1 = UNetConvBlock(nb_filter[2] + nb_filter[3], nb_filter[2])
-        self.conv3_1 = UNetConvBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
+        self.conv0_1 = HINBlock(nb_filter[0] + nb_filter[1], nb_filter[0])
+        self.conv1_1 = HINBlock(nb_filter[1] + nb_filter[2], nb_filter[1])
+        self.conv2_1 = HINBlock(nb_filter[2] + nb_filter[3], nb_filter[2])
+        self.conv3_1 = HINBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
         #
-        self.conv0_2 = UNetConvBlock(nb_filter[0] * 2 + nb_filter[1], nb_filter[0])
-        self.conv1_2 = UNetConvBlock(nb_filter[1] * 2 + nb_filter[2], nb_filter[1])
-        self.conv2_2 = UNetConvBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
+        self.conv0_2 = HINBlock(nb_filter[0] * 2 + nb_filter[1], nb_filter[0])
+        self.conv1_2 = HINBlock(nb_filter[1] * 2 + nb_filter[2], nb_filter[1])
+        self.conv2_2 = HINBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
         #
-        self.conv0_3 = UNetConvBlock(nb_filter[0] * 3 + nb_filter[1], nb_filter[0])
-        self.conv1_3 = UNetConvBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
+        self.conv0_3 = HINBlock(nb_filter[0] * 3 + nb_filter[1], nb_filter[0])
+        self.conv1_3 = HINBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
         #
-        self.conv0_4 = UNetConvBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
+        self.conv0_4 = HINBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
         #
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         
@@ -250,5 +271,5 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
         y    = torch.clamp(y, 0, 1)
         #
         return y
-    
+
 # endregion
