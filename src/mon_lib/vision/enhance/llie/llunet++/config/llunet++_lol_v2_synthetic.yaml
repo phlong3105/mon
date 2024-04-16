@@ -1,12 +1,18 @@
+# General config
+root        :
 weights     :
-data        : "lol_v2_synthetic"
+model       :
 project     :
 name        :
 device      : 0
 imgsz       : 384
 epochs      : 100
-batch_size  : 4
-lr          : 0.00001
-loss_weights: [0.35, 0.10, 0.25, 0.30]
 exist_ok    : True
 verbose     : True
+# Data
+data        : "lol_v2_synthetic"
+batch_size  : 4
+# Loss
+loss_weights: [0.35, 0.10, 0.25, 0.30]
+# Training
+lr          : 0.00001

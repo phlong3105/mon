@@ -1,19 +1,24 @@
-train           : data/train/lol_v1/low
-val             : data/val/lol_v1/low
-test            : data/test/lol_v1/low
+# General config
+root            :
+weights         :
+model           :
 project         :
 name            :
-weights         :
+save_dir        :
 device          : 0
-imgsz           : 512
+imgsz           : 512     # Inference size
 epochs          : 200
-lr              : 0.0001
-weight_decay    : 0.0001
-grad_clip_norm  : 0.1
+exist_ok        : True
+verbose         : True
+# Data
+data            : "lol_v1"
 train_batch_size: 32
 val_batch_size  : 4
 num_workers     : 4
+# Training
+load_pretrain   : False
+lr              : 0.0001
+weight_decay    : 0.0001
+grad_clip_norm  : 0.1
 display_iter    : 10
 checkpoint_iter : 10
-exist_ok        : True
-verbose         : True

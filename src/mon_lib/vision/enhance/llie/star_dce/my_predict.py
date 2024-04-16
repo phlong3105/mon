@@ -3,32 +3,67 @@
 
 """
 References:
-    `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+    `<https://github.com/zzyfd/STAR-pytorch/tree/main>`__
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+import random
 import socket
 import time
 
 import click
+import cv2
 import numpy as np
 import torch
+import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim
 import torchvision
-from PIL import Image
 
+import models.model
 import mon
-from model import NestedUNet
 
 console       = mon.console
 _current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 
 # region Predict
+
+def RGBtoYUV444(rgb):
+    # code from Jun
+    # yuv range: y[0,1], uv[-0.5, 0.5]
+    height, width, ch = rgb.shape
+    assert ch == 3, "rgb should have 3 channels"
+    
+    rgb2yuv_mat = np.array([[0.299, 0.587, 0.114], [-0.16874, -0.33126, 0.5], [0.5, -0.41869, -0.08131]], dtype=np.float32)
+    rgb_t       = rgb.transpose(2, 0, 1).reshape(3, -1)
+    yuv         = rgb2yuv_mat @ rgb_t
+    yuv         = yuv.transpose().reshape((height, width, 3))
+    
+    # return yuv.astype(np.float32)
+    # rescale uv to [0,1]
+    yuv[:, :, 1] += 0.5
+    yuv[:, :, 2] += 0.5
+    return yuv
+
+
+def weights_init(m):
+    classname = m.__class__.__name__
+    if isinstance(m, nn.Conv2d):
+        m.weight.data.normal_(0.0, 0.02)
+        if m.bias is not None:
+            m.bias.data.fill_(0)
+    elif classname.find("BatchNorm") != -1:
+        m.weight.data.normal_(1.0, 0.02)
+        m.bias.data.fill_(0)
+
 
 def predict(args: argparse.Namespace):
     # General config
@@ -42,10 +77,12 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
-    # Device
-    device = device[0] if isinstance(device, list) else device
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+    # Seed
+    cudnn.deterministic = True
+    random.seed(0)
+    np.random.seed(0)
+    torch.manual_seed(0)
+    torch.cuda.manual_seed(0)
     
     # Data I/O
     console.log(f"[bold red]{data}")
@@ -55,7 +92,7 @@ def predict(args: argparse.Namespace):
     
     # Benchmark
     if benchmark:
-        model = NestedUNet().to(device)
+        model = models.model.enhance_net_litr()
         flops, params, avg_time = mon.calculate_efficiency_score(
             model      = model,
             image_size = imgsz,
@@ -67,12 +104,11 @@ def predict(args: argparse.Namespace):
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
-    
+        
     # Model
-    model = NestedUNet()
-    model.load_state_dict(torch.load(weights))
-    model = model.cuda()
-    model.eval()
+    DCE_net = models.model.enhance_net_litr().to(device)
+    DCE_net.load_state_dict(torch.load(weights), strict=True)
+    DCE_net.eval()
     
     # Predicting
     with torch.no_grad():
@@ -83,19 +119,21 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path     = meta["path"]
-                image          = Image.open(image_path).convert("RGB")
-                image          = (np.asarray(image) / 255.0)
-                image          = torch.from_numpy(image).float()
-                image          = image.permute(2, 0, 1)
-                image          = image.to(device).unsqueeze(0)
-                h0, w0         = mon.get_image_size(image)
+                image_path = meta["path"]
+                image      = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+                image      = cv2.transpose(image)
+                image      = (np.asarray(image[..., ::-1]) / 255.0)
+                image      = RGBtoYUV444(image)
+                image      = torch.from_numpy(image).float()  # float32
+                image      = image.to(device).unsqueeze(0)
+                h0, w0     = mon.get_image_size(image)
                 if resize:
                     image = mon.resize(input=image, size=imgsz)
                 else:
                     image = mon.resize_divisible(image=image, divisor=32)
+                image_resize   = F.interpolate(image, (args.image_ds, args.image_ds), mode="area")
                 start_time     = time.time()
-                enhanced_image = model(image)
+                enhanced_image, x_r = DCE_net(image_resize, img_in=image)
                 run_time       = (time.time() - start_time)
                 enhanced_image = mon.resize(input=enhanced_image, size=[h0, w0])
                 output_path    = save_dir / image_path.name

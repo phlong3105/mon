@@ -77,42 +77,35 @@ def _val_epoch(val_loader, model, criterion, device):
 
 
 def train(args: argparse.Namespace):
-    weights      = args.weights
-    weights      = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    data         = mon.Path(args.data)
-    save_dir     = mon.Path(args.save_dir)
-    device       = args.device
-    imgsz        = args.imgsz
-    epochs       = args.epochs
-    batch_size   = args.batch_size
-    lr           = args.lr
-    loss_weights = args.loss_weights
-    verbose      = args.verbose
+    # General config
+    weights  = args.weights
+    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    save_dir = mon.Path(args.save_dir)
+    device   = args.device
+    imgsz    = args.imgsz
+    epochs   = args.epochs
+    verbose  = args.verbose
+    
+    # Directory
     weights_dir  = save_dir / "weights"
     weights_dir.mkdir(parents=True, exist_ok=True)
     
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
-    
-    writer    = SummaryWriter(log_dir=str(save_dir / "tensorboard"))
-    criterion = Loss(*loss_weights)
-    criterion = criterion.to(device)
     cudnn.benchmark = True
     
-    model     = NestedUNet().to(device)
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=1e-4)
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.99)
-    
+    # Data I/O
     data_args = {
-        "name"      : data,
+        "name"      : args.data,
         "root"      : mon.DATA_DIR / "llie",
         "transform" : A.Compose(transforms=[
             A.Resize(width=imgsz, height=imgsz),
         ]),
         "to_tensor" : True,
         "cache_data": False,
-        "batch_size": batch_size,
+        "batch_size": args.batch_size,
         "devices"   : device,
         "shuffle"   : True,
         "verbose"   : verbose,
@@ -123,7 +116,20 @@ def train(args: argparse.Namespace):
     train_dataloader = datamodule.train_dataloader
     val_dataloader   = datamodule.val_dataloader
     
-    log = OrderedDict([
+    # Model
+    model  = NestedUNet().to(device)
+    model.train()
+    
+    # Loss
+    criterion = Loss(*args.loss_weights).to(device)
+    
+    # Optimizer
+    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.99)
+    
+    # Logging
+    writer = SummaryWriter(log_dir=str(save_dir / "tensorboard"))
+    log    = OrderedDict([
         ("epoch"     , []),
         ("lr"        , []),
         ("train/loss", []),
@@ -134,7 +140,8 @@ def train(args: argparse.Namespace):
     best_loss = 1000
     best_psnr = 0
     best_ssim = 0
-
+    
+    # Training
     for epoch in range(epochs):
         train_loss  = _train_epoch(train_dataloader, model, criterion, optimizer, device)
         val_results = _val_epoch(val_dataloader, model, criterion, device)
@@ -149,7 +156,7 @@ def train(args: argparse.Namespace):
         
         # Log
         log["epoch"].append(epoch)
-        log["lr"].append(lr)
+        log["lr"].append(args.lr)
         log["train/loss"].append(train_loss)
         log["val/loss"].append(val_loss)
         log["val/psnr"].append(val_psnr)

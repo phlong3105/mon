@@ -33,47 +33,50 @@ def weights_init(m):
 
 
 def train(args: argparse.Namespace):
-    weights          = args.weights
-    weights          = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    input_dir        = mon.Path(args.train)
-    save_dir         = mon.Path(args.save_dir)
-    device           = args.device
-    epochs           = args.epochs
-    train_batch_size = args.train_batch_size
-    num_workers      = args.num_workers
-    lr               = args.lr
-    weight_decay     = args.weight_decay
-    grad_clip_norm   = args.grad_clip_norm
-    display_iter     = args.display_iter
-    checkpoint_iter  = args.checkpoints_iter
-    weights_dir      = save_dir / "weights"
+    # General config
+    weights  = args.weights
+    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    save_dir = mon.Path(args.save_dir)
+    device   = args.device
+    epochs   = args.epochs
+    verbose  = args.verbose
+    
+    # Directory
+    weights_dir = save_dir / "weights"
     weights_dir.mkdir(parents=True, exist_ok=True)
     
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
+    # Data I/O
+    train_dataset = dataloader.lowlight_loader(args.data)
+    train_loader  = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size  = args.train_batch_size,
+        shuffle     = True,
+        num_workers = args.num_workers,
+        pin_memory  = True
+    )
+    
+    # Model
     DCE_net = mmodel.enhance_net_nopool().to(device)
     DCE_net.apply(weights_init)
     if mon.Path(weights).is_weights_file():
         DCE_net.load_state_dict(torch.load(weights))
-   
-    train_dataset = dataloader.lowlight_loader(input_dir)
-    train_loader  = torch.utils.data.DataLoader(
-	    train_dataset,
-	    batch_size  = train_batch_size,
-	    shuffle     = True,
-	    num_workers = num_workers,
-	    pin_memory  = True
-    )
-
-    L_color   = myloss.L_color()
-    L_spa     = myloss.L_spa()
-    L_exp     = myloss.L_exp(16, 0.6)
-    L_tv      = myloss.L_TV()
-    optimizer = torch.optim.Adam(DCE_net.parameters(), lr=lr, weight_decay=weight_decay)
     DCE_net.train()
     
+    # Loss
+    L_color = myloss.L_color()
+    L_spa   = myloss.L_spa()
+    L_exp   = myloss.L_exp(16 , 0.6)
+    L_tv    = myloss.L_TV()
+    
+    # Optimizer
+    optimizer = torch.optim.Adam(DCE_net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    
+    # Training
     with mon.get_progress_bar() as pbar:
         for _ in pbar.track(
             sequence    = range(epochs),
@@ -92,12 +95,12 @@ def train(args: argparse.Namespace):
     
                 optimizer.zero_grad()
                 loss.backward()
-                torch.nn.utils.clip_grad_norm(DCE_net.parameters(), grad_clip_norm)
+                torch.nn.utils.clip_grad_norm(DCE_net.parameters(), args.grad_clip_norm)
                 optimizer.step()
                 
-                if ((iteration + 1) % display_iter) == 0:
+                if ((iteration + 1) % args.display_iter) == 0:
                     print("Loss at iteration", iteration + 1, ":", loss.item())
-                if ((iteration + 1) % checkpoint_iter) == 0:
+                if ((iteration + 1) % args.checkpoints_iter) == 0:
                     torch.save(DCE_net.state_dict(), weights_dir / "best.pt")
 
 # endregion
