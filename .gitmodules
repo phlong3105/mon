@@ -1,7 +1,3 @@
-# project
-[submodule "project/XAnyLabeling"]
-	path = project/XAnyLabeling
-	url = https://github.com/phlong3105/XAnyLabeling
 # src/mon_lib
 [submodule "src/mon_lib/vision/detect/yolov7"]
 	path = src/mon_lib/vision/detect/yolov7

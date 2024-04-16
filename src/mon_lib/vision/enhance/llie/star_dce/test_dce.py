@@ -10,7 +10,7 @@ import os
 import argparse
 import time
 from dataloaders.dataloader_hdrplus_enhance_portrait_corrected import EnhanceDataset
-from dataloaders.dataloader_FiveK import EnhanceDataset_FiveK
+from dataloaders.dataloader_fivek import EnhanceDataset_FiveK
 import torch.nn.functional as F
 import numpy as np
 from torch.utils.tensorboard import SummaryWriter

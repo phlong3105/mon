@@ -14,7 +14,7 @@ import torch.optim
 from torch.utils.tensorboard import SummaryWriter
 
 import models
-from dataloaders.dataloader_FiveK import EnhanceDataset_FiveK
+from dataloaders.dataloader_fivek import EnhanceDataset_FiveK
 
 
 def weights_init(m):

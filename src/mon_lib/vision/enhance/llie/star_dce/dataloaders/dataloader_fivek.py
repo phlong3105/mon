@@ -36,9 +36,9 @@ def get_image_index(path):
 
 
 def populate_train_list(images_path) -> tuple[list[str], list[str]]:
-    data_dir   = mon.DATA_DIR / "llie" / images_path / "train"
-    input_list = glob.glob(os.path.abspath(str(data_dir) + "lq/*"))
-    gt_list    = map(lambda x: x.replace("lq", "hq"), input_list)
+    data_dir   = mon.DATA_DIR / "llie" / "fivek_c" / "train" / "lq"
+    input_list = glob.glob(os.path.abspath(str(data_dir) + "/*"))
+    gt_list    = map(lambda x: x.replace("/lq/", "/hq/"), input_list)
     return list(input_list), list(gt_list)
 
 

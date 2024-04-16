@@ -38,9 +38,10 @@ def run_train(args: dict):
     assert root.exists()
     
     # Parse arguments
-    is_extra_model = "(mon_lib)" in model
-    model          = model.replace(" (mon_lib)", "")
-    is_extra_model = is_extra_model and model in mon.MODELS_EXTRA
+    use_extra_model = "(mon_lib)" in model
+    model           = model.replace(" (mon_lib)", "")
+    is_mon_model    = model in mon.MODELS
+    is_extra_model  = model in mon.MODELS_EXTRA
     
     config   = mon.parse_config_file(project_root=root, config=config)
     assert config not in [None, "None", ""]
@@ -63,7 +64,7 @@ def run_train(args: dict):
     flags   += ["--verbose"]  if verbose  else []
     
     # Parse script file
-    if is_extra_model:
+    if use_extra_model or (is_extra_model and not is_mon_model):
         torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
         script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_train.py"
         devices     = mon.parse_device(device)
@@ -133,9 +134,10 @@ def run_predict(args: dict):
     assert root.exists()
     
     # Parse arguments
-    is_extra_model = "(mon_lib)" in model
-    model          = model.replace(" (mon_lib)", "")
-    is_extra_model = is_extra_model and model in mon.MODELS_EXTRA
+    use_extra_model = "(mon_lib)" in model
+    model           = model.replace(" (mon_lib)", "")
+    is_mon_model    = model in mon.MODELS
+    is_extra_model  = model in mon.MODELS_EXTRA
     
     config   = mon.parse_config_file(project_root=root, config=config)
     config   = config or "default"
@@ -165,7 +167,7 @@ def run_predict(args: dict):
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
-        if is_extra_model:
+        if use_extra_model or (is_extra_model and not is_mon_model):
             torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
             script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_predict.py"
             python_call = ["python"]
@@ -227,9 +229,10 @@ def run_online(args: dict):
     assert root.exists()
     
     # Parse arguments
-    is_extra_model = "(mon_lib)" in model
-    model          = model.replace(" (mon_lib)", "")
-    is_extra_model = is_extra_model and model in mon.MODELS_EXTRA
+    use_extra_model = "(mon_lib)" in model
+    model           = model.replace(" (mon_lib)", "")
+    is_mon_model    = model in mon.MODELS
+    is_extra_model  = model in mon.MODELS_EXTRA
     
     config   = mon.parse_config_file(project_root=root, config=config)
     assert config not in [None, "None", ""]
@@ -258,7 +261,7 @@ def run_online(args: dict):
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
-        if is_extra_model:
+        if use_extra_model or (is_extra_model and not is_mon_model):
             torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
             script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_online.py"
             python_call = ["python"]

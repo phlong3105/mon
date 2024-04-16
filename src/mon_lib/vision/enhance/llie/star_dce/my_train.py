@@ -25,7 +25,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import models.model
 import mon
-from dataloaders.dataloader_FiveK import EnhanceDataset_FiveK
+from dataloaders.dataloader_fivek import EnhanceDataset_FiveK
 
 console       = mon.console
 _current_file = mon.Path(__file__).absolute()
@@ -89,7 +89,7 @@ def train(args: argparse.Namespace):
     
     # Model
     # DCE_net = models.build_model(args).to(device)
-    DCE_net = models.model.enhance_net_litr()
+    DCE_net = models.model.enhance_net_litr().to(device)
     DCE_net.apply(weights_init)
     DCE_net.train()
     if args.load_pretrain:
@@ -98,7 +98,9 @@ def train(args: argparse.Namespace):
         DCE_net = nn.DataParallel(DCE_net)
     
     # Loss
-    L_L1 = nn.L1Loss() if not args.l2_loss else nn.MSELoss()
+    import losses
+    L_L1    = nn.L1Loss().to(device) if not args.l2_loss else nn.MSELoss().to(device)
+    L_color = losses.L_color().to(device)
     
     # Optimizer
     optimizer = optim.Adam(DCE_net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -124,8 +126,9 @@ def train(args: argparse.Namespace):
             ):
                 input, target = img_lowlight
                 input         = input.to(device)
-                img_input_ds  = F.interpolate(input, (args.image_ds, args.image_ds), mode="area")
                 target        = target.to(device)
+                img_input_ds  = F.interpolate(input, (args.image_ds, args.image_ds), mode="area")
+                img_input_ds  = img_input_ds.to(device)
                 torch.cuda.synchronize()
                 
                 # Forward
@@ -136,11 +139,9 @@ def train(args: argparse.Namespace):
                 sum_time  += run_time
                 
                 # Loss
-                import losses
-                L_color    = losses.L_color()
-                loss_color = torch.mean(L_color(enhanced_image)) if args.color_loss else torch.zeros([]).cuda()
-                loss_l1    = L_L1(enhanced_image, target) if not args.no_l1 else torch.zeros([]).cuda()
-                loss_cos   = 1 - nn.functional.cosine_similarity(enhanced_image, target, dim=1).mean() if args.cos_loss else torch.zeros([]).cuda()
+                loss_color = torch.mean(L_color(enhanced_image)) if args.color_loss else torch.zeros([]).to(device)
+                loss_l1    = L_L1(enhanced_image, target)        if not args.no_l1  else torch.zeros([]).to(device)
+                loss_cos   = 1 - nn.functional.cosine_similarity(enhanced_image, target, dim=1).mean() if args.cos_loss else torch.zeros([]).to(device)
                 if args.mul_loss:
                     loss = loss_l1 * loss_cos
                 else:
@@ -166,10 +167,10 @@ def train(args: argparse.Namespace):
                     console.log(
                         "Loss at iteration",
                         iteration, ":", loss_l1.item(),
-                        " | LR : ", optimizer.param_groups[0]["lr"],
-                        "Batch time: ", run_time,
-                        "Batch Time AVG: ", sum_time / (iteration + 1),
-                        "Cos loss: ", loss_cos.item()
+                        # " | LR : ", optimizer.param_groups[0]["lr"],
+                        # "Batch time: ", run_time,
+                        # "Batch Time AVG: ", sum_time / (iteration + 1),
+                        # "Cos loss: ", loss_cos.item()
                     )
                     writer.add_scalar("loss",       loss_l1,    istep)
                     writer.add_scalar("Color_loss", loss_color, istep)
