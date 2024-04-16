@@ -47,8 +47,9 @@ class Loss(nn.Loss):
         self.reg_weight = reg_weight
         self.per_weight = per_weight
         
-        self.ms_ssim_loss = nn.MSSSIMLoss(data_range=1.0)
-        self.ssim_loss    = nn.SSIMLoss(data_range=1.0, non_negative_ssim=True)
+        self.ms_ssim_loss = nn.MSSSIMLoss(data_range=1.0, reduction=reduction)
+        self.ssim_loss    = nn.SSIMLoss(data_range=1.0, non_negative_ssim=True, reduction=reduction)
+        # self.psnr_loss    = nn.PSNRLoss(reduction=reduction)
         self.per_loss     = nn.PerceptualLoss(
             net        = vgg.vgg19(weights=vgg.VGG19_Weights.IMAGENET1K_V1).features,
             layers     = ["26"],
@@ -58,11 +59,13 @@ class Loss(nn.Loss):
         self.tv_loss = nn.TotalVariationLoss(reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor, *_) -> torch.Tensor:
-        str_loss = self.ms_ssim_loss(input, target) + self.ssim_loss(input, target)
-        per_loss = self.per_loss(input, target)
-        reg_loss = self.region_loss(input, target)
-        tv_loss  = self.tv_loss(input)
-        loss     = (
+        str_loss  = self.ms_ssim_loss(input, target) + self.ssim_loss(input, target)
+        # psnr_loss = self.psnr_loss(input, target)
+        # str_loss  = 0.6 * ssim_loss + 0.4 * psnr_loss
+        per_loss  = self.per_loss(input, target)
+        reg_loss  = self.region_loss(input, target)
+        tv_loss   = self.tv_loss(input)
+        loss      = (
               self.str_weight * str_loss
             + self.tv_weight  * tv_loss
             + self.reg_weight * reg_loss
@@ -84,14 +87,6 @@ class Loss(nn.Loss):
 
 # region Module
 
-class SimpleGate(nn.Module):
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x      = input
-        x1, x2 = x.chunk(2, dim=1)
-        return x1 * x2
-    
-    
 class HINBlock(nn.Module):
     
     def __init__(
@@ -108,7 +103,7 @@ class HINBlock(nn.Module):
         if use_hin:
             self.norm1 = nn.InstanceNorm2d(in_channels // 2, affine=True)
         else:
-            self.norm1 = nn.InstanceNorm2d(in_channels, affine=True)
+            self.norm1 = nn.Identity()
         self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
         self.simam   = nn.SimAM()
         
@@ -200,16 +195,16 @@ class LLHINet(base.LowLightImageEnhancementModel):
         self.conv3_0 = HINBlock(nb_filter[2], nb_filter[3])
         self.conv4_0 = HINBlock(nb_filter[3], nb_filter[4])
         #
-        self.conv0_1 = HINBlock(nb_filter[0] + nb_filter[1], nb_filter[0])
-        self.conv1_1 = HINBlock(nb_filter[1] + nb_filter[2], nb_filter[1])
-        self.conv2_1 = HINBlock(nb_filter[2] + nb_filter[3], nb_filter[2])
+        self.conv0_1 = HINBlock(nb_filter[0] + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_1 = HINBlock(nb_filter[1] + nb_filter[2] + nb_filter[2], nb_filter[1])
+        self.conv2_1 = HINBlock(nb_filter[2] + nb_filter[3] + nb_filter[3], nb_filter[2])
         self.conv3_1 = HINBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
         #
-        self.conv0_2 = HINBlock(nb_filter[0] * 2 + nb_filter[1], nb_filter[0])
-        self.conv1_2 = HINBlock(nb_filter[1] * 2 + nb_filter[2], nb_filter[1])
+        self.conv0_2 = HINBlock(nb_filter[0] * 2 + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_2 = HINBlock(nb_filter[1] * 2 + nb_filter[2] + nb_filter[2], nb_filter[1])
         self.conv2_2 = HINBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
         #
-        self.conv0_3 = HINBlock(nb_filter[0] * 3 + nb_filter[1], nb_filter[0])
+        self.conv0_3 = HINBlock(nb_filter[0] * 3 + nb_filter[1] + nb_filter[1], nb_filter[0])
         self.conv1_3 = HINBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
         #
         self.conv0_4 = HINBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
@@ -250,21 +245,22 @@ class LLHINet(base.LowLightImageEnhancementModel):
         #
         x0_0 = self.conv0_0(x)
         x1_0 = self.conv1_0(self.pool(x0_0))
-        x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0)], 1))
-        #
         x2_0 = self.conv2_0(self.pool(x1_0))
-        x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0)], 1))
-        x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.up(x1_1)], 1))
-        #
         x3_0 = self.conv3_0(self.pool(x2_0))
-        x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0)], 1))
-        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1)], 1))
-        x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.up(x1_2)], 1))
-        #
         x4_0 = self.conv4_0(self.pool(x3_0))
+        #
         x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0)], 1))
+        x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0), self.up(x3_1)], 1))
+        x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0), self.up(x2_1)], 1))
+        x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0), self.up(x1_1)], 1))
+        #
         x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1)], 1))
+        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1), self.up(x2_2)], 1))
+        x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.up(x1_1), self.up(x1_2)], 1))
+        #
         x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2)], 1))
+        x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.up(x1_2), self.up(x1_3)], 1))
+        #
         x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.up(x1_3)], 1))
         #
         y    = self.final(x0_4)

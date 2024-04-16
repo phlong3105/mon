@@ -12,6 +12,7 @@ from __future__ import annotations
 
 __all__ = [
     "LLUnetPP",
+    "LLUnetPPNoPool",
 ]
 
 from typing import Any, Literal
@@ -245,6 +246,142 @@ class LLUnetPP(base.LowLightImageEnhancementModel):
         x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1)], 1))
         x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2)], 1))
         x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.up(x1_3)], 1))
+        #
+        y    = self.final(x0_4)
+        y    = torch.clamp(y, 0, 1)
+        #
+        return y
+
+
+@MODELS.register(name="llunet++_nopool")
+class LLUnetPPNoPool(base.LowLightImageEnhancementModel):
+    """LLUnet++ (LLUnet++: UNet++ Based Nested Skip Connections Network for
+    Low-Light Image Enhancement) model.
+    
+    References:
+        `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+        
+    See Also: :class:`base.LowLightImageEnhancementModel`
+    """
+    
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {}
+    
+    def __init__(
+        self,
+        in_channels : int = 3,
+        weights     : Any = None,
+        loss_weights: list[float] = [0.35, 0.10, 0.25, 0.30],
+        *args, **kwargs
+    ):
+        super().__init__(
+            name        = "llunet++",
+            in_channels = in_channels,
+            weights     = weights,
+            *args, **kwargs
+        )
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+        self.in_channels = in_channels
+        
+        # Construct model
+        nb_filter    = [32, 64, 128, 256, 512]
+        #
+        # self.pool    = nn.MaxPool2d(2, 2)
+        # self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
+        #
+        self.conv0_0 = UNetConvBlock(self.in_channels, nb_filter[0])
+        self.conv1_0 = UNetConvBlock(nb_filter[0],     nb_filter[1])
+        self.conv2_0 = UNetConvBlock(nb_filter[1],     nb_filter[2])
+        self.conv3_0 = UNetConvBlock(nb_filter[2],     nb_filter[3])
+        self.conv4_0 = UNetConvBlock(nb_filter[3],     nb_filter[4])
+        #
+        self.conv0_0_down = nn.Conv2d(nb_filter[0], nb_filter[0], 4, 2, 1)
+        self.conv1_0_down = nn.Conv2d(nb_filter[1], nb_filter[1], 4, 2, 1)
+        self.conv2_0_down = nn.Conv2d(nb_filter[2], nb_filter[2], 4, 2, 1)
+        self.conv3_0_down = nn.Conv2d(nb_filter[3], nb_filter[3], 4, 2, 1)
+        self.conv1_0_up   = nn.ConvTranspose2d(nb_filter[1], nb_filter[1], 2, 2, 0, 0)
+        self.conv2_0_up   = nn.ConvTranspose2d(nb_filter[2], nb_filter[2], 2, 2, 0, 0)
+        self.conv3_0_up   = nn.ConvTranspose2d(nb_filter[3], nb_filter[3], 2, 2, 0, 0)
+        self.conv4_0_up   = nn.ConvTranspose2d(nb_filter[4], nb_filter[4], 2, 2, 0, 0)
+        #
+        self.conv0_1 = UNetConvBlock(nb_filter[0] + nb_filter[1], nb_filter[0])
+        self.conv1_1 = UNetConvBlock(nb_filter[1] + nb_filter[2], nb_filter[1])
+        self.conv2_1 = UNetConvBlock(nb_filter[2] + nb_filter[3], nb_filter[2])
+        self.conv3_1 = UNetConvBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
+        #
+        self.conv1_1_up = nn.ConvTranspose2d(nb_filter[1], nb_filter[1], 2, 2, 0, 0)
+        self.conv2_1_up = nn.ConvTranspose2d(nb_filter[2], nb_filter[2], 2, 2, 0, 0)
+        self.conv3_1_up = nn.ConvTranspose2d(nb_filter[3], nb_filter[3], 2, 2, 0, 0)
+        #
+        self.conv0_2 = UNetConvBlock(nb_filter[0] * 2 + nb_filter[1], nb_filter[0])
+        self.conv1_2 = UNetConvBlock(nb_filter[1] * 2 + nb_filter[2], nb_filter[1])
+        self.conv2_2 = UNetConvBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
+        #
+        self.conv1_2_up = nn.ConvTranspose2d(nb_filter[1], nb_filter[1], 2, 2, 0, 0)
+        self.conv2_2_up = nn.ConvTranspose2d(nb_filter[2], nb_filter[2], 2, 2, 0, 0)
+        #
+        self.conv0_3 = UNetConvBlock(nb_filter[0] * 3 + nb_filter[1], nb_filter[0])
+        self.conv1_3 = UNetConvBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
+        #
+        self.conv1_3_up = nn.ConvTranspose2d(nb_filter[1], nb_filter[1], 2, 2, 0, 0)
+        #
+        self.conv0_4 = UNetConvBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
+        #
+        self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
+        
+        # Loss
+        self._loss = Loss(*loss_weights)
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self._init_weights)
+
+    def _init_weights(self, m: nn.Module):
+        pass
+    
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        pred = self.forward(input=input, *args, **kwargs)
+        loss = self.loss(pred, target)
+        return pred, loss
+
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> torch.Tensor:
+        x = input
+        #
+        x0_0 = self.conv0_0(x)
+        x1_0 = self.conv1_0(self.conv0_0_down(x0_0))
+        x0_1 = self.conv0_1(torch.cat([x0_0, self.conv1_0_up(x1_0)], 1))
+        #
+        x2_0 = self.conv2_0(self.conv1_0_down(x1_0))
+        x1_1 = self.conv1_1(torch.cat([x1_0, self.conv2_0_up(x2_0)], 1))
+        x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.conv1_1_up(x1_1)], 1))
+        #
+        x3_0 = self.conv3_0(self.conv2_0_down(x2_0))
+        x2_1 = self.conv2_1(torch.cat([x2_0, self.conv3_0_up(x3_0)], 1))
+        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.conv2_1_up(x2_1)], 1))
+        x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.conv1_2_up(x1_2)], 1))
+        #
+        x4_0 = self.conv4_0(self.conv3_0_down(x3_0))
+        x3_1 = self.conv3_1(torch.cat([x3_0, self.conv4_0_up(x4_0)], 1))
+        x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.conv3_1_up(x3_1)], 1))
+        x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.conv2_2_up(x2_2)], 1))
+        x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.conv1_3_up(x1_3)], 1))
         #
         y    = self.final(x0_4)
         y    = torch.clamp(y, 0, 1)

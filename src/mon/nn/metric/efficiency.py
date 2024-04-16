@@ -51,8 +51,19 @@ def calculate_efficiency_score(
 	params        = model.params if hasattr(model, "params") and params == 0 else params
 	params        = parameter_count(model) if hasattr(model, "params") else params
 	params        = sum(list(params.values())) if isinstance(params, dict) else params
-	g_flops       = flops  * 1e-9
-	m_params      = params * 1e-6
+	'''
+	params = 0
+	for n, p in model.named_parameters():
+		if (
+			"loss" not in n
+			and "train/" not in n
+			and   "val/" not in n
+			and  "test/" not in n
+		):
+			params += p.numel()
+	'''
+	g_flops       = flops * 1e-9
+	m_params      = int(params) * 1e-6
 	
 	# Get time
 	start_time = time.time()

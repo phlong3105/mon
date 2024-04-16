@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""LLUNet++ model trained on LOL-v2-Synthetic dataset."""
+"""LLUNet++ model trained on Rain13K dataset."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _root_dir     = _current_file.parents[1]
 # region Basic
 
 model_name = "llunet++"
-data_name  = "lol_v2_synthetic"
+data_name  = "rain13k"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
 image_size = [384, 384]
@@ -37,7 +37,7 @@ model = {
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"weights"     : None,           # The model's weights.
 	"loss"        : None,           # Loss function for training the model.
-	"loss_weights": [0.40, 0.05, 0.15, 0.40],  # [0.35, 0.10, 0.25, 0.30],
+	"loss_weights": [0.40, 0.05, 0.15, 0.40],
 	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
@@ -76,11 +76,11 @@ model = {
 
 datamodule = {
     "name"      : data_name,
-    "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
+    "root"      : mon.DATA_DIR / "derain",  # A root directory where the data is stored.
     "transform" : A.Compose(transforms=[
 		A.Resize(width=image_size[0], height=image_size[1]),
-		# A.Flip(),
-		# A.Rotate(),
+		A.Flip(),
+		A.Rotate(),
     ]),  # Transformations performing on both the input and target.
     "to_tensor" : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,        # If ``True``, cache data to disk for faster loading next time.
@@ -105,7 +105,6 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
-	"gradient_clip_val": 0.01,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},

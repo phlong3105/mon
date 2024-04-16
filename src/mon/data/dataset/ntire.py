@@ -44,15 +44,15 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 		# patterns = [
 		# 	self.root / "ntire24-llie" / self.split / "low"
 		# ]
-		if self._split in [Split.TRAIN]:
+		if self.split in [Split.TRAIN]:
 			patterns = [
 				self.root / "train" / "ntire24_llie" / "lq",
 			]
-		elif self._split in [Split.VAL]:
+		elif self.split in [Split.VAL]:
 			patterns = [
 				self.root / "train" / "ntire24_llie" / "lq",
 			]
-		elif self._split in [Split.TEST]:
+		elif self.split in [Split.TEST]:
 			patterns = [
 				self.root / "val" / "ntire24_llie" / "lq",
 			]
@@ -63,7 +63,7 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 			for pattern in patterns:
 				for path in pbar.track(
 					sorted(list(pattern.rglob("*"))),
-					description=f"Listing {self.__class__.__name__} {self.split} images"
+					description=f"Listing {self.__class__.__name__} {self.split_str} images"
 				):
 					if path.is_image_file():
 						image = base.ImageLabel(path=path)
@@ -74,7 +74,7 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				self._images,
-				description=f"Listing {self.__class__.__name__} {self.split} labels"
+				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				path  = img.path.replace("/lq/", "/hq/")
 				label = base.ImageLabel(path=path.image_file())

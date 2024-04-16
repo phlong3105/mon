@@ -40,15 +40,15 @@ class MIPI24Flare(base.ImageEnhancementDataset):
 		super().__init__(root=root, *args, **kwargs)
 	
 	def _get_images(self):
-		if self._split in [Split.TRAIN]:
+		if self.split in [Split.TRAIN]:
 			patterns = [
 				self.root / "train" / "mipi24_flare" / "lq",
 			]
-		elif self._split in [Split.VAL]:
+		elif self.split in [Split.VAL]:
 			patterns = [
 				self.root / "val" / "mipi24_flare" / "lq",
 			]
-		elif self._split in [Split.TEST]:
+		elif self.split in [Split.TEST]:
 			patterns = [
 				self.root / "test" / "mipi24_flare" / "lq",
 			]
@@ -59,7 +59,7 @@ class MIPI24Flare(base.ImageEnhancementDataset):
 			for pattern in patterns:
 				for path in pbar.track(
 					sorted(list(pattern.rglob("*"))),
-					description=f"Listing {self.__class__.__name__} {self.split} images"
+					description=f"Listing {self.__class__.__name__} {self.split_str} images"
 				):
 					if path.is_image_file():
 						image = base.ImageLabel(path=path)
@@ -70,7 +70,7 @@ class MIPI24Flare(base.ImageEnhancementDataset):
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				self._images,
-				description=f"Listing {self.__class__.__name__} {self.split} labels"
+				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				path  = img.path.replace("/lq/", "/hq/")
 				label = base.ImageLabel(path=path.image_file())

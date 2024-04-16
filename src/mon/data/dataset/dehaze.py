@@ -71,14 +71,14 @@ class DenseHaze(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "densehaze" / self.split / "lq"
+            self.root / "densehaze" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -89,7 +89,7 @@ class DenseHaze(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -113,14 +113,14 @@ class IHaze(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "ihaze" /  self.split / "lq"
+            self.root / "ihaze" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -131,7 +131,7 @@ class IHaze(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -155,14 +155,14 @@ class NHHaze(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "nhhaze" / self.split / "lq"
+            self.root / "nhhaze" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -173,7 +173,7 @@ class NHHaze(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -197,14 +197,14 @@ class OHaze(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "ohaze" / self.split / "lq"
+            self.root / "ohaze" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -215,7 +215,7 @@ class OHaze(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -238,14 +238,14 @@ class RESIDEHSTSReal(base.UnlabeledImageDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_hsts_real" / self.split / "lq"
+            self.root / "reside_hsts_real" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -269,14 +269,14 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_hsts_syn" / self.split / "lq"
+            self.root / "reside_hsts_syn" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -287,7 +287,7 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -311,14 +311,14 @@ class RESIDEITS(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_its" / self.split / "lq"
+            self.root / "reside_its" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -329,7 +329,7 @@ class RESIDEITS(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
@@ -355,14 +355,14 @@ class RESIDEITSV2(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_its_v2" / self.split / "lq"
+            self.root / "reside_its_v2" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -373,7 +373,7 @@ class RESIDEITSV2(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
@@ -399,14 +399,14 @@ class RESIDEOTS(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_ots" / self.split / "lq"
+            self.root / "reside_ots" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -417,7 +417,7 @@ class RESIDEOTS(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
@@ -442,14 +442,14 @@ class RESIDERTTS(base.UnlabeledImageDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_rtts" / self.split / "lq"
+            self.root / "reside_rtts" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -473,14 +473,14 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_sots_indoor "/ self.split / "lq"
+            self.root / "reside_sots_indoor " / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -491,7 +491,7 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
@@ -517,14 +517,14 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_sots_outdoor" / self.split / "lq"
+            self.root / "reside_sots_outdoor" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -535,7 +535,7 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
@@ -560,14 +560,14 @@ class RESIDEUHI(base.UnlabeledImageDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "reside_uhi" / self.split / "lq"
+            self.root / "reside_uhi" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -591,16 +591,16 @@ class SateHaze1K(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "satehaze1k_thin"     / self.split / "lq",
-            self.root / "satehaze1k_moderate" / self.split / "lq",
-            self.root / "satehaze1k_thick"    / self.split / "lq",
+            self.root / "satehaze1k_thin" / self.split_str / "lq",
+            self.root / "satehaze1k_moderate" / self.split_str / "lq",
+            self.root / "satehaze1k_thick" / self.split_str / "lq",
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -611,7 +611,7 @@ class SateHaze1K(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -634,14 +634,14 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "satehaze1k_thin" / self.split / "lq"
+            self.root / "satehaze1k_thin" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -652,7 +652,7 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -675,14 +675,14 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "satehaze1k_moderate" / self.split / "lq"
+            self.root / "satehaze1k_moderate" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -693,7 +693,7 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -716,14 +716,14 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "satehaze1k_thick" / self.split / "lq"
+            self.root / "satehaze1k_thick" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -734,7 +734,7 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())

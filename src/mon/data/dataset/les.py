@@ -134,14 +134,14 @@ class Flare7KPP(base.UnlabeledImageDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "flare7k++" / self.split / "lq"
+            self.root / "flare7k++" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -152,14 +152,14 @@ class Flare7KPP(base.UnlabeledImageDataset):
         
     def _get_reflective_flare(self):
         patterns = [
-            self.root / "flare7k++" / self.split / "pattern" / "reflective_flare"
+            self.root / "flare7k++" / self.split_str / "pattern" / "reflective_flare"
         ]
         self.reflective_flare: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} reflective flare"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} reflective flare"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -167,14 +167,14 @@ class Flare7KPP(base.UnlabeledImageDataset):
     
     def _get_scattering_flare(self):
         patterns = [
-            self.root / "flare7k++" / self.split / "pattern" / "scattering_flare" / "compound_flare"
+            self.root / "flare7k++" / self.split_str / "pattern" / "scattering_flare" / "compound_flare"
         ]
         self.scattering_flare: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} reflective flare"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} reflective flare"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -219,14 +219,14 @@ class Flare7KPPReal(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "flare7k++_real" / self.split / "lq"
+            self.root / "flare7k++_real" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -237,7 +237,7 @@ class Flare7KPPReal(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -260,14 +260,14 @@ class Flare7KPPSyn(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "flare7k++_syn" / self.split / "lq"
+            self.root / "flare7k++_syn" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -278,7 +278,7 @@ class Flare7KPPSyn(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -301,14 +301,14 @@ class FlareReal800(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "flarereal800" / self.split / "lq"
+            self.root / "flarereal800" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -319,7 +319,7 @@ class FlareReal800(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -342,14 +342,14 @@ class LEDLight(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "ledlight" / self.split / "lq"
+            self.root / "ledlight" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -360,7 +360,7 @@ class LEDLight(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -384,14 +384,14 @@ class LightEffect(base.UnlabeledImageDataset):
     def _get_images(self):
         patterns = [
             # self.root / self.split / "light-effect" / "clear",
-            self.root / "lighteffect" / self.split / "lq",
+            self.root / "lighteffect" / self.split_str / "lq",
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)

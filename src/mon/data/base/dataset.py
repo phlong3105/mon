@@ -165,6 +165,10 @@ class Dataset(dataset.Dataset, ABC):
 	
 	@property
 	def split(self) -> str:
+		return self._split
+	
+	@property
+	def split_str(self) -> str:
 		return self._split.value
 	
 	def _init_split(self, split: Split):
@@ -311,7 +315,7 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
 		)
 		self._images: list[ImageLabel] = []
 		
-		cache_file = self.root / f"{self.split}.cache"
+		cache_file = self.root / f"{self.split_str}.cache"
 		if cache_data and cache_file.is_cache_file():
 			self.load_cache(path=cache_file)
 		else:
@@ -469,7 +473,7 @@ class UnlabeledImageInpaintingDataset(UnlabeledDataset, ABC):
 		self._images: list[ImageLabel] = []
 		self._masks : list[ImageLabel] = []
 		
-		cache_file = self.root / f"{self.split}.cache"
+		cache_file = self.root / f"{self.split_str}.cache"
 		if cache_data and cache_file.is_cache_file():
 			self.load_cache(path=cache_file)
 		else:
@@ -542,7 +546,7 @@ class UnlabeledImageInpaintingDataset(UnlabeledDataset, ABC):
 				f"{len(self._images)} and {len(self._masks)}."
 			)
 		if self.verbose:
-			console.log(f"Number of {self.split} samples: {len(self._images)}.")
+			console.log(f"Number of {self.split_str} samples: {len(self._images)}.")
 	
 	def cache_data(self, path: core.Path):
 		"""Cache data to :param:`path`."""
@@ -663,7 +667,7 @@ class ImageLoader(UnlabeledImageDataset):
 		with core.get_progress_bar() as pbar:
 			for path in pbar.track(
 				sorted(paths),
-				description=f"[bright_yellow]Listing {self.__class__.__name__} {self.split} images"
+				description=f"[bright_yellow]Listing {self.__class__.__name__} {self.split_str} images"
 			):
 				if path.is_image_file():
 					self._images.append(ImageLabel(path=path))
@@ -720,7 +724,7 @@ class LabeledImageDataset(LabeledDataset, ABC):
 		if not hasattr(self, "labels"):
 			self._labels = []
 		
-		cache_file = self.root / f"{self.split}.cache"
+		cache_file = self.root / f"{self.split_str}.cache"
 		if cache_data and cache_file.is_file():
 			self.load_cache(path=cache_file)
 		else:
@@ -784,7 +788,7 @@ class LabeledImageDataset(LabeledDataset, ABC):
 				f"{len(self._images)} and {len(self._labels)}."
 			)
 		if self.verbose:
-			console.log(f"Number of {self.split} samples: {len(self._images)}.")
+			console.log(f"Number of {self.split_str} samples: {len(self._images)}.")
 	
 	def cache_data(self, path: core.Path):
 		"""Cache data to :param:`path`."""
@@ -867,7 +871,7 @@ class LabeledImageInpaintingDataset(LabeledDataset, ABC):
 		if not hasattr(self, "labels"):
 			self._labels = []
 		
-		cache_file = self.root / f"{self.split}.cache"
+		cache_file = self.root / f"{self.split_str}.cache"
 		if cache_data and cache_file.is_file():
 			self.load_cache(path=cache_file)
 		else:
@@ -965,7 +969,7 @@ class LabeledImageInpaintingDataset(LabeledDataset, ABC):
 				f"{len(self._images)}, {len(self._masks)}and {len(self._labels)}."
 			)
 		if self.verbose:
-			console.log(f"Number of {self.split} samples: {len(self._images)}.")
+			console.log(f"Number of {self.split_str} samples: {len(self._images)}.")
 	
 	def cache_data(self, path: core.Path):
 		"""Cache data to :param:`path`."""
@@ -1943,7 +1947,7 @@ class DetectionDatasetVOC(ImageDetectionDataset, ABC):
 		with core.get_progress_bar() as pbar:
 			for f in pbar.track(
 				files,
-				description=f"Listing {self.__class__.__name__} {self.split} labels"
+				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				self.labels.append(
 					VOCDetectionsLabel.from_file(
@@ -2006,7 +2010,7 @@ class DetectionDatasetYOLO(ImageDetectionDataset, ABC):
 		with core.get_progress_bar() as pbar:
 			for f in pbar.track(
 				files,
-				description=f"Listing {self.__class__.__name__} {self.split} labels"
+				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				self._labels.append(YOLODetectionsLabel.from_file(path=f))
 	

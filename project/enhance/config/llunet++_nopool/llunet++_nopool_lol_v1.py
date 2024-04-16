@@ -16,7 +16,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "llunet++"
+model_name = "llunet++_nopool"
 data_name  = "lol_v1"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -79,8 +79,8 @@ datamodule = {
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
     "transform" : A.Compose(transforms=[
 		A.Resize(width=image_size[0], height=image_size[1]),
-		A.Flip(),
-		A.Rotate(),
+		# A.Flip(),
+		# A.Rotate(),
     ]),  # Transformations performing on both the input and target.
     "to_tensor" : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,        # If ``True``, cache data to disk for faster loading next time.

@@ -54,14 +54,14 @@ class GTSnow(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "gtsnow" / self.split / "lq"
+            self.root / "gtsnow" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -72,7 +72,7 @@ class GTSnow(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = str(img.path)
                 path  = path[:-9] + "C-000.png"
@@ -98,14 +98,14 @@ class KITTISnow(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "kitti_snow" / self.split / "lq"
+            self.root / "kitti_snow" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -116,7 +116,7 @@ class KITTISnow(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -139,7 +139,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "kitti_snow_s" / self.split / "lq"
+            self.root / "kitti_snow_s" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -147,7 +147,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -158,7 +158,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -181,14 +181,14 @@ class KITTISnowM(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "kitti_snow_m" / self.split / "lq"
+            self.root / "kitti_snow_m" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -199,7 +199,7 @@ class KITTISnowM(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -222,14 +222,14 @@ class KITTISnowL(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "kitti_snow_l" / self.split / "lq"
+            self.root / "kitti_snow_l" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -240,7 +240,7 @@ class KITTISnowL(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -263,14 +263,14 @@ class Snow100K(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "snow100k" / self.split / "lq"
+            self.root / "snow100k" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -281,7 +281,7 @@ class Snow100K(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -304,14 +304,14 @@ class Snow100KS(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "snow100k_s" / self.split / "lq"
+            self.root / "snow100k_s" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -322,7 +322,7 @@ class Snow100KS(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -345,14 +345,14 @@ class Snow100KM(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "snow100k_m" / self.split / "lq"
+            self.root / "snow100k_m" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -363,7 +363,7 @@ class Snow100KM(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
@@ -386,14 +386,14 @@ class Snow100KL(base.ImageEnhancementDataset):
     
     def _get_images(self):
         patterns = [
-            self.root / "snow100k_l" / self.split / "lq"
+            self.root / "snow100k_l" / self.split_str / "lq"
         ]
         self._images: list[base.ImageLabel] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -404,7 +404,7 @@ class Snow100KL(base.ImageEnhancementDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = base.ImageLabel(path=path.image_file())
