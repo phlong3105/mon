@@ -20,6 +20,7 @@ from Metrics import cal_PSNR
 from unet_model import UNet
 import torch.nn.functional as F
 
+
 def get_hist(file_name):
     src = cv2.imread(file_name)
     src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
@@ -135,9 +136,6 @@ def lowlight(image_path):
     plt.tight_layout()
     plt.draw()
     plt.savefig(plot_path)
-
-
-
 
 
 # 파일이 import에 의해서가 아닌 interpreter에 의해서 호출될때만 실행 가능
