@@ -964,12 +964,6 @@ MODELS_EXTRA = {
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "stablellve",
                 "torch_distributed_launch": True,
             },
-            "star_dce"     : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "star_dce",
-                "torch_distributed_launch": True,
-            },
             "uretinexnet"  : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],

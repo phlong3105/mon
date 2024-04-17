@@ -156,6 +156,7 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
             self.apply(self._init_weights)
 
     def _init_weights(self, m: torch.nn.Module):
+        '''
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):
@@ -166,6 +167,13 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
                 m.pw_conv.weight.data.normal_(0.0, 0.02)
             else:
                 m.weight.data.normal_(0.0, 0.02)
+        '''
+        classname = m.__class__.__name__
+        if classname.find("Conv") != -1:
+            m.weight.data.normal_(0.0, 0.02)
+        elif classname.find("BatchNorm") != -1:
+            m.weight.data.normal_(1.0, 0.02)
+            m.bias.data.fill_(0)
 
     def forward_loss(
         self,
