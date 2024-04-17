@@ -1,15 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 from torchvision.models.vgg import vgg16
-import torchvision
-
-import numpy as np
-from PIL import Image
 
 
 class perceptual_loss(nn.Module):
+    
     def __init__(self, requires_grad=False):
         super(perceptual_loss, self).__init__()
 
@@ -54,6 +50,7 @@ class perceptual_loss(nn.Module):
 
 
 class monotonous_loss(nn.Module):
+    
     def __init__(self, requires_grad=False):
         super(monotonous_loss, self).__init__()
 
@@ -82,6 +79,7 @@ class monotonous_loss(nn.Module):
 
 
 class attention_loss(nn.Module):
+    
     def __init__(self):
         super(attention_loss, self).__init__()
         self.mseloss = nn.L1Loss().cuda()
@@ -94,7 +92,9 @@ class attention_loss(nn.Module):
 
         return self.mseloss(att, att_gt)
 
+
 class transfunction_loss(nn.Module):
+    
     def __init__(self):
         super(transfunction_loss, self).__init__()
         self.maeloss = nn.L1Loss().cuda()
@@ -105,6 +105,7 @@ class transfunction_loss(nn.Module):
 
 
 class entropy_loss(nn.Module):
+    
     def __init__(self):
         super(entropy_loss, self).__init__()
 
@@ -123,12 +124,14 @@ class entropy_loss(nn.Module):
 
         return loss_e
 
+
 class totalvariation_loss(nn.Module):
+    
     def __init__(self, TVLoss_weight=1e-4):
         super(totalvariation_loss,self).__init__()
         self.TVLoss_weight = TVLoss_weight
 
-    def forward(self,w0):
+    def forward(self, w0):
         w1, w2, w3 = w0
         w = torch.cat((w1,w2,w3),dim=1)
         loss_tv = 0
@@ -148,4 +151,3 @@ class totalvariation_loss(nn.Module):
         #     loss_tv += self.TVLoss_weight * (h_tv + w_tv)
 
         return loss_tv
-

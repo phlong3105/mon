@@ -1,36 +1,38 @@
-import torch
+import argparse
+import glob
+import os
 import shutil
-import torchvision
+import sys
+import time
+from distutils.dir_util import copy_tree
+
+import cv2
+import numpy as np
+import torch
 import torch.backends.cudnn as cudnn
 import torch.optim
-import os
-import sys
-import argparse
-import time
-import dataloader
-from Model import Image_network
-import Myloss
-from torch.utils.tensorboard import SummaryWriter
-import glob
-from Metrics import cal_PSNR
-from PIL import Image
-import numpy as np
-import cv2
-from distutils.dir_util import copy_tree
+import torchvision
 from matplotlib import pyplot as plt
+from PIL import Image
+from torch.utils.tensorboard import SummaryWriter
+
+import dataloader
+import myloss
+from metrics import cal_PSNR
+from model import Image_network
 
 writer = SummaryWriter()
 GPU_NUM = 1
 
 
 def get_hist(file_name):
-    src = cv2.imread(file_name)
-    src = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
+    src    = cv2.imread(file_name)
+    src    = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
     hist_s = np.zeros((3, 256))
 
     for (j, color) in enumerate(("red", "green", "blue")):
-        S = src[..., j]
-        hist_s[j, ...], _ = np.histogram(S.flatten(), 256, [0, 256])
+        s = src[..., j]
+        hist_s[j, ...], _ = np.histogram(s.flatten(), 256, [0, 256])
         hist_s[j, ...] = hist_s[j, ...] / np.sum(hist_s[j, ...])
 
     hist_s = torch.from_numpy(hist_s).float()
@@ -174,7 +176,7 @@ def eval(model, save_plot=False):
 
 def weights_init(m):
     classname = m.__class__.__name__
-    if classname.find('Conv2d') != -1:
+    if classname.find("Conv2d") != -1:
         m.weight.data.normal_(0.0, 0.02)
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
@@ -191,10 +193,10 @@ def dfs_freeze(model):
 
 
 def train(config):
-    sum_time = 0
-    highest_psnr = 0
+    sum_time       = 0
+    highest_psnr   = 0
     highest_psnr_s = 0
-    psnr_ep = 0
+    psnr_ep        = 0
 
     if torch.cuda.is_available():
         cudnn.benchmark = True
@@ -207,14 +209,19 @@ def train(config):
     Imgnet.apply(weights_init)
     Imgnet = Imgnet.cuda()
 
-    train_dataset = dataloader.input_loader(config.train_images_path)
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=config.train_batch_size, shuffle=True,
-                                               num_workers=config.num_workers, pin_memory=True)
+    train_dataset = dataloader.InputLoader(config.train_images_path)
+    train_loader = torch.utils.data.DataLoader(
+        dataset     = train_dataset,
+        batch_size  = config.train_batch_size,
+        shuffle     = True,
+        num_workers = config.num_workers,
+        pin_memory  = True
+    )
 
     loss_c = torch.nn.MSELoss().cuda()
-    loss_e = Myloss.entropy_loss().cuda()
-    cos = torch.nn.CosineSimilarity(dim=1)
-    loss_t = Myloss.totalvariation_loss().cuda()
+    loss_e = myloss.entropy_loss().cuda()
+    cos    = torch.nn.CosineSimilarity(dim=1)
+    loss_t = myloss.totalvariation_loss().cuda()
 
     optimizer_img = torch.optim.Adam(Imgnet.parameters(), lr=config.lr, weight_decay=config.weight_decay)
 
@@ -261,8 +268,8 @@ def train(config):
 
         for iteration, (low, gt, hist) in enumerate(train_loader):
 
-            low = low.cuda()
-            gt = gt.cuda()
+            low  = low.cuda()
+            gt   = gt.cuda()
             hist = hist.cuda()
 
             img, tf, w, _ = Imgnet(low, hist)
@@ -271,7 +278,7 @@ def train(config):
             loss_img = loss_c(img, gt)
             loss_ent = loss_e(w)
             loss_col = torch.mean(1 - torch.abs(cos(gt, img)))
-            loss_tv = loss_t(w)
+            loss_tv  = loss_t(w)
 
             if epoch == 0:
                 loss_f = (cont_c * loss_img + cont_e * loss_ent + loss_tv + cont_cs * loss_col)
@@ -332,8 +339,6 @@ def train(config):
             loss_cos_2 = loss_cos_1
 
             loss_2 = loss_1
-
-
         else:
             loss_col_1 = loss_col_0
             loss_ent_1 = loss_ent_0

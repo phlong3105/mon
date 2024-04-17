@@ -1,30 +1,22 @@
 import os
-import sys
-import torchvision
+import random
+
+import numpy as np
 import torch
 import torch.utils.data as data
-import numpy as np
 from PIL import Image, ImageOps
-import glob
-import random
-import Metrics
-import cv2
-import time
 
 random.seed(123)
 
 
-
-
-
-class input_loader(data.Dataset):
+class InputLoader(data.Dataset):
 
 	def __init__(self, image_path):
 		self.image_path = image_path
-		self.in_files = self.list_files(os.path.join(image_path, 'input'))
+		self.in_files   = self.list_files(os.path.join(image_path, "input"))
 
-
-	def data_augment(self, inp, gt):
+	@staticmethod
+	def data_augment(inp, gt):
 		a = random.randint(1, 4)
 		if a == 1:
 			return inp, gt
@@ -35,34 +27,34 @@ class input_loader(data.Dataset):
 		else:
 			return ImageOps.flip(inp), ImageOps.flip(gt)
 
-	def __getitem__(self, index):
-		fname = os.path.split(self.in_files[index])[-1]
+	def __getitem__(self, index: int):
+		fname    = os.path.split(self.in_files[index])[-1]
 		data_low = Image.open(self.in_files[index])
-		data_gt = Image.open(os.path.join(self.image_path, 'gt', fname))
+		data_gt  = Image.open(os.path.join(self.image_path, "gt", fname))
 
-		low = np.asarray(data_low)
+		low       = np.asarray(data_low)
 		data_hist = np.zeros((3, 256))
 		for i in range(3):
 			S = low[..., i]
 			data_hist[i, ...], _ = np.histogram(S.flatten(), 256, [0, 256])
-			data_hist[i, ...] = data_hist[i, ...] / np.sum(data_hist[i, ...])
+			data_hist[i, ...]    = data_hist[i, ...] / np.sum(data_hist[i, ...])
 
 		data_input, data_gt = self.data_augment(data_low, data_gt)
 
-		data_input = (np.asarray(data_input)/255.0)
-		data_gt = (np.asarray(data_gt)/255.0)
+		data_input = (np.asarray(data_input) / 255.0)
+		data_gt    = (np.asarray(data_gt) / 255.0)
 
 		data_input = torch.from_numpy(data_input).float()
-		data_gt = torch.from_numpy(data_gt).float()
-		data_hist = torch.from_numpy(data_hist).float()
-
-
-		return data_input.permute(2,0,1), data_gt.permute(2,0,1), data_hist
+		data_gt    = torch.from_numpy(data_gt).float()
+		data_hist  = torch.from_numpy(data_hist).float()
+		
+		return data_input.permute(2, 0, 1), data_gt.permute(2, 0, 1), data_hist
 
 	def __len__(self):
 		return len(self.in_files)
 
-	def list_files(self, in_path):
+	@staticmethod
+	def list_files(in_path):
 		files = []
 		for (dirpath, dirnames, filenames) in os.walk(in_path):
 			files.extend(filenames)

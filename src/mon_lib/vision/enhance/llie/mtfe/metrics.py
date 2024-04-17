@@ -1,13 +1,11 @@
-import math
-import cv2
-import csv
-import os
-import sys
-import glob
 import fnmatch
+import math
+import os
+
+import cv2
+import numpy as np
 from IQA_pytorch import SSIM, utils
 from PIL import Image
-import numpy as np
 
 # target folder
 target_path = './data/train_check/'
@@ -41,6 +39,7 @@ def cal_PSNR(image):
     psnr = 10 * math.log10(1 / mse)
 
     return psnr
+
 
 def PSNR1(ss,rr):
     ss = ss.cpu()

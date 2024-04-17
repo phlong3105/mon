@@ -1,24 +1,15 @@
-import torch
-import torch.nn as nn
-import torchvision
-import torch.backends.cudnn as cudnn
-import torch.optim
-import os
-import sys
-import argparse
-import time
-import dataloader
-from Model import Image_network
-import numpy as np
-from torchvision import transforms
-from PIL import Image
 import glob
-import time
-from matplotlib import pyplot as plt
+import os
+
 import cv2
-from Metrics import cal_PSNR
-from unet_model import UNet
-import torch.nn.functional as F
+import numpy as np
+import torch
+import torch.optim
+import torchvision
+from matplotlib import pyplot as plt
+from PIL import Image
+
+from model import Image_network
 
 
 def get_hist(file_name):
@@ -45,6 +36,7 @@ def lowlight(image_path):
     data_lowlight = data_lowlight.cuda().unsqueeze(0)
     hist = get_hist(image)
     hist = hist.cuda().unsqueeze(0)
+    
     Imgnet = Image_network()
     Imgnet = Imgnet.cuda()
     Imgnet.eval()
@@ -114,7 +106,6 @@ def lowlight(image_path):
     axs[1].plot(g2, color='g')
     axs[1].plot(r2, color='r')
 
-
     vec3 = vec3.squeeze(0)
     vec3 = vec3.cpu().detach().numpy()
     vec3 = vec3 * 255
@@ -124,7 +115,6 @@ def lowlight(image_path):
     axs[2].plot(b3, color='b')
     axs[2].plot(g3, color='g')
     axs[2].plot(r3, color='r')
-
 
     axs[0].set_xlim([0, 255])
     axs[0].set_ylim([0, 255])

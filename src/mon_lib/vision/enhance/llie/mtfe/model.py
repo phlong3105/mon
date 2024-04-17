@@ -1,11 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from unet_model import UNet
 
 
-
 class intensityTransform(nn.Module):
+    
     def __init__(self, intensities, channels, **kwargs):
         super(intensityTransform, self).__init__(**kwargs)
         self.channels = channels
@@ -49,6 +50,7 @@ class intensityTransform(nn.Module):
 
 
 class conv_block(nn.Module):
+    
     def __init__(self, input_ch, output_ch, kernel_size, strides, dropout_rate=0.1):
         super(conv_block, self).__init__()
         self.dropout_rate = dropout_rate
@@ -71,6 +73,7 @@ class conv_block(nn.Module):
 
 
 class SFC_module(nn.Module):
+    
     def __init__(self, in_ch, out_ch, expansion, num):
         super(SFC_module, self).__init__()
         exp_ch = int(in_ch * expansion)
@@ -88,7 +91,6 @@ class SFC_module(nn.Module):
         self.pw_conv = nn.Conv2d(out_ch, out_ch, 1, 1)
         self.pw_bn = nn.BatchNorm2d(out_ch)
         self.pw_relu = nn.ReLU()
-
 
     def swish(self, x):
         return x * torch.sigmoid(x)
@@ -109,6 +111,7 @@ class SFC_module(nn.Module):
 
 
 class HSFC_module(nn.Module):
+    
     def __init__(self, in_ch, expansion):
         super(HSFC_module, self).__init__()
         exp_ch = int(in_ch * expansion)
@@ -164,7 +167,9 @@ class Histogram_network(nn.Module):
 
         return y
 
+
 class Attention_block(nn.Module):
+    
     def __init__(self, in_ch, out_ch):
         super(Attention_block, self).__init__()
         self.g_conv = nn.Conv2d(in_ch, in_ch, 3, 1, 1, groups=int(in_ch/2))
@@ -325,4 +330,3 @@ class Image_network(nn.Module):
         # xy = xy * 2.0 - 1.0
 
         return xy, (tf1, tf2, tf3), (w1, w2, w3), (xy1, xy2, xy3)
-

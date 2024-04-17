@@ -916,6 +916,12 @@ MODELS_EXTRA = {
                 "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "llunet++",
                 "torch_distributed_launch": True,
             },
+            "mtfe"         : {
+                "tasks"    : [Task.LLIE],
+                "schemes"  : [Scheme.SUPERVISED],
+                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "mtfe",
+                "torch_distributed_launch": True,
+            },
             "pie"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.TRADITIONAL],

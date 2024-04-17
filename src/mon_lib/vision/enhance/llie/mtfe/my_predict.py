@@ -10,14 +10,15 @@ import socket
 import time
 
 import click
+import cv2
 import numpy as np
 import torch
 import torch.optim
 import torchvision
 from PIL import Image
 
-import model
 import mon
+from model import Image_network
 
 console       = mon.console
 _current_file = mon.Path(__file__).absolute()
@@ -25,6 +26,21 @@ _current_dir  = _current_file.parents[0]
 
 
 # region Predict
+
+def get_hist(file_name):
+    src    = cv2.imread(file_name)
+    src    = cv2.cvtColor(src, cv2.COLOR_BGR2RGB)
+    hist_s = np.zeros((3, 256))
+
+    for (j, color) in enumerate(("red", "green", "blue")):
+        s = src[..., j]
+        hist_s[j, ...], _ = np.histogram(s.flatten(), 256, [0, 256])
+        hist_s[j, ...]    = hist_s[j, ...] / np.sum(hist_s[j, ...])
+
+    hist_s = torch.from_numpy(hist_s).float()
+
+    return hist_s
+
 
 def predict(args: argparse.Namespace):
     # General config
@@ -43,18 +59,15 @@ def predict(args: argparse.Namespace):
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
     # Model
-    scale_factor = 12
-    DCE_net      = model.enhance_net_nopool(scale_factor).to(device)
-    DCE_net.load_state_dict(torch.load(weights))
-    DCE_net.eval()
+    Imgnet = Image_network().to(device)
+    Imgnet.load_state_dict(torch.load(weights))
+    Imgnet.eval()
     
     # Benchmark
     if benchmark:
-        h = (imgsz // scale_factor) * scale_factor
-        w = (imgsz // scale_factor) * scale_factor
         flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = copy.deepcopy(DCE_net),
-            image_size = [h, w],
+            model      = copy.deepcopy(Imgnet),
+            image_size = imgsz,
             channels   = 3,
             runs       = 100,
             use_cuda   = True,
@@ -79,22 +92,29 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path    = meta["path"]
-                data_lowlight = Image.open(image_path).convert("RGB")
-                data_lowlight = (np.asarray(data_lowlight) / 255.0)
-                data_lowlight = torch.from_numpy(data_lowlight).float()
-                h0, w0        = data_lowlight.shape[0], data_lowlight.shape[1]
-                h1            = (h0 // scale_factor) * scale_factor
-                w1            = (w0 // scale_factor) * scale_factor
-                data_lowlight = data_lowlight[0:h1, 0:w1, :]
-                data_lowlight = data_lowlight.permute(2, 0, 1)
-                data_lowlight = data_lowlight.to(device).unsqueeze(0)
-                start_time    = time.time()
-                enhanced_image, params_maps = DCE_net(data_lowlight)
-                run_time       = (time.time() - start_time)
+                image_path = meta["path"]
+                image      = Image.open(str(image_path))
+                image      = (np.asarray(image) / 255.0)
+                image      = torch.from_numpy(image).float()
+                image      = image.permute(2, 0, 1)
+                image      = image.to(device).unsqueeze(0)
+                histogram  = get_hist(str(image_path))
+                histogram  = histogram.to(device).unsqueeze(0)
+                           
+                h0, w0 = mon.get_image_size(image)
+                if resize:
+                    image = mon.resize(input=image, size=imgsz)
+                else:
+                    image = mon.resize_divisible(image=image, divisor=32)
+              
+                start_time = time.time()
+                enhanced_image, vec, wm, xy = Imgnet(image, histogram)
+                run_time   = (time.time() - start_time)
+                
                 enhanced_image = mon.resize(input=enhanced_image, size=[h0, w0])
                 output_path    = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
+                
                 sum_time     += run_time
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")
