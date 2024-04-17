@@ -117,7 +117,7 @@ def train(args: argparse.Namespace):
     val_dataloader   = datamodule.val_dataloader
     
     # Model
-    model  = NestedUNet().to(device)
+    model = NestedUNet().to(device)
     model.train()
     
     # Loss

@@ -35,6 +35,7 @@ def run_infer(weights, image_path: str):
 
     DCE_net    = mmodel.enhance_net_nopool().cuda()
     DCE_net.load_state_dict(torch.load(weights))
+    DCE_net.eval()
     start_time = time.time()
     _, enhanced_image, _ = DCE_net(data_lowlight)
     run_time   = (time.time() - start_time)
@@ -50,6 +51,7 @@ def run_infer(weights, image_path: str):
 
 
 def predict(args: argparse.Namespace):
+    # General config
     weights   = args.weights
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
@@ -59,14 +61,20 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
+    
     # Benchmark
     if benchmark:
         DCE_net = mmodel.enhance_net_nopool().to(device)
-        DCE_net.load_state_dict(torch.load(weights))
         flops, params, avg_time = mon.calculate_efficiency_score(
             model      = DCE_net,
             image_size = imgsz,
@@ -78,12 +86,6 @@ def predict(args: argparse.Namespace):
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
-    
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

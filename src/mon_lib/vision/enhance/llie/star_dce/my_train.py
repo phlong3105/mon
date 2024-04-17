@@ -91,11 +91,11 @@ def train(args: argparse.Namespace):
     # DCE_net = models.build_model(args).to(device)
     DCE_net = models.model.enhance_net_litr().to(device)
     DCE_net.apply(weights_init)
-    DCE_net.train()
     if args.load_pretrain:
         DCE_net.load_state_dict(torch.load(weights), strict=True)
     if args.parallel:
         DCE_net = nn.DataParallel(DCE_net)
+    DCE_net.train()
     
     # Loss
     import losses

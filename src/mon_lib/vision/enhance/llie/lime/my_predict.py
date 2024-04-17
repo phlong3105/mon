@@ -23,10 +23,11 @@ _current_dir  = _current_file.parents[0]
 # region Predict
 
 def predict(args: argparse.Namespace):
+    # General config
+    weights   = args.weights[0] if isinstance(args.weights, list) else args.weights
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
-    # weights   = args.weights[0] if isinstance(args.weights, list) else args.weights
-    # device    = args.device
+    device    = args.device
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark

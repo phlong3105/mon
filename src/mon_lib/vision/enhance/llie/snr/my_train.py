@@ -42,12 +42,14 @@ def init_dist(backend="nccl", **kwargs):
 
 
 def train(args: argparse.Namespace):
+    # General config
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
     device   = args.device
     launcher = args.launcher
     
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")

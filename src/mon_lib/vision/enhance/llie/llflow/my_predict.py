@@ -84,6 +84,7 @@ def format_measurements(meas):
 
 
 def predict(args: argparse.Namespace):
+    # General config
     opt       = args.opt
     weights   = args.weights
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
@@ -94,13 +95,22 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
+    opt            = option.parse(opt, is_train=False)
+    opt["gpu_ids"] = None
+    opt            = option.dict_to_nonedict(opt)
+    
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
-    opt            = option.parse(opt, is_train=False)
-    opt["gpu_ids"] = None
-    opt            = option.dict_to_nonedict(opt)
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Model
     model          = create_model(opt)
     # model_path     = opt_get(opt, ["model_path"], None)
     model.load_network(load_path=weights, network=model.netG)
@@ -112,12 +122,6 @@ def predict(args: argparse.Namespace):
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
-    
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

@@ -25,6 +25,7 @@ _current_dir  = _current_file.parents[0]
 # region Predict
 
 def predict(args: argparse.Namespace):
+    # General config
     weights   = args.weights
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
@@ -34,19 +35,20 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
-    # Load model
-    model = EnlightenOnnxModel(weights=weights)
-    
-    # Measure efficiency score
-    # if benchmark:
-    #     inputs = {"input": create_ndarray_f32((1, 3, 512, 512)), }
-    #     onnx_tool.model_profile(str(_current_dir/"enlighten_inference/enlighten.onnx"), inputs, None)
-    
     # Data I/O
     console.log(f"[bold red]{data}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Measure efficiency score
+    # if benchmark:
+    #     model  = EnlightenOnnxModel(weights=weights)
+    #     inputs = {"input": create_ndarray_f32((1, 3, 512, 512)), }
+    #     onnx_tool.model_profile(str(_current_dir/"enlighten_inference/enlighten.onnx"), inputs, None)
+    
+    # Model
+    model = EnlightenOnnxModel(weights=weights)
     
     # Predicting
     with torch.no_grad():

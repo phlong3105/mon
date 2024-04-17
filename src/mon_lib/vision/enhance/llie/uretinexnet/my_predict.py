@@ -98,6 +98,7 @@ class Inference(nn.Module):
         
 
 def predict(args: argparse.Namespace):
+    # General config
     data      = args.data
     save_dir  = args.save_dir
     device    = args.device
@@ -105,15 +106,20 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
-    # Load model
-    model = Inference(args).to(device)
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Benchmark
     if benchmark:
+        model = Inference(args).to(device)
         flops, params, avg_time = mon.calculate_efficiency_score(
             model      = model,
             image_size = imgsz,
@@ -126,11 +132,9 @@ def predict(args: argparse.Namespace):
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # Model
+    model = Inference(args).to(device)
+    model.eval()
     
     # Predicting
     with torch.no_grad():

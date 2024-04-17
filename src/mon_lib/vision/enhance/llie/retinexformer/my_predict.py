@@ -26,6 +26,7 @@ _current_dir  = _current_file.parents[0]
 # region Predict
 
 def predict(args: argparse.Namespace):
+    # General config
     weights   = args.weights
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
@@ -35,6 +36,7 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
@@ -47,6 +49,21 @@ def predict(args: argparse.Namespace):
     opt["dist"]   = False
     opt["device"] = device
     
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Benchmark
+    if benchmark:
+        model = create_model(opt).net_g
+        flops, params, avg_time = model.measure_efficiency_score(image_size=imgsz)
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
+    
+    # Model
     model      = create_model(opt).net_g
     checkpoint = torch.load(weights)
     try:
@@ -61,19 +78,6 @@ def predict(args: argparse.Namespace):
     model.to(device)
     # model = nn.DataParallel(model)
     model.eval()
-    
-    # Benchmark
-    if benchmark:
-        flops, params, avg_time = model.measure_efficiency_score(image_size=imgsz)
-        console.log(f"FLOPs  = {flops:.4f}")
-        console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
-    
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

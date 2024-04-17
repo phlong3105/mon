@@ -35,23 +35,7 @@ transform     = transforms.Lambda(lambda t: (t * 2) - 1)
 # region Predict
 
 def predict(args: argparse.Namespace):
-    '''
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', type=str, help='Path to option YAML file.',  default='./config/dataset.yml')
-    parser.add_argument('--input',   type=str, help='testing the unpaired image', default='images/unpaired/')
-    parser.add_argument('--launcher', choices=['none', 'pytorch'], default='none', help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
-    parser.add_argument('--tfboard', action='store_true')
-    parser.add_argument('-c', '--config', type=str, default='config/test_unpaired.json', help='JSON file for configuration')
-    parser.add_argument('-p', '--phase', type=str, choices=['train', 'val'], help='Run either train(training) or val(generation)', default='train')
-    parser.add_argument('-gpu', '--gpu_ids', type=str, default="0")
-    parser.add_argument('-debug', '-d', action='store_true')
-    parser.add_argument('-enable_wandb', action='store_true')
-    parser.add_argument('-log_wandb_ckpt', action='store_true')
-    parser.add_argument('-log_eval', action='store_true')
-    # parse configs
-    args = parser.parse_args()
-    '''
+    # General config
     weights   = args.weights
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
@@ -62,6 +46,7 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
+    # Device
     device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
@@ -100,24 +85,24 @@ def predict(args: argparse.Namespace):
     torch.backends.cudnn.benchmark = True
     # torch.backends.cudnn.deterministic = True
     
-    # Create model
-    opt["path"]["resume_state"] = str(weights)
-    diffusion = Model.create_model(opt)
-    diffusion.set_new_noise_schedule(opt["model"]["beta_schedule"]["val"], schedule_phase="val")
-    # logger.info("Initial Model Finished")
-    
-    # Measure efficiency score
-    if benchmark:
-        flops, params, avg_time = diffusion.measure_efficiency_score(image_size=imgsz)
-        console.log(f"FLOPs  = {flops:.4f}")
-        console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
-    
     # Data I/O
     console.log(f"[bold red]{data}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Model
+    opt["path"]["resume_state"] = str(weights)
+    diffusion = Model.create_model(opt)
+    diffusion.set_new_noise_schedule(opt["model"]["beta_schedule"]["val"], schedule_phase="val")
+    # logger.info("Initial Model Finished")
+    
+    # Benchmark
+    if benchmark:
+        flops, params, avg_time = diffusion.measure_efficiency_score(image_size=imgsz)
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
     
     # Predicting
     with torch.no_grad():

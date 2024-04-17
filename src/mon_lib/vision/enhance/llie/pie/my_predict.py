@@ -23,6 +23,7 @@ _current_dir  = _current_file.parents[0]
 # region Predict
 
 def predict(args: argparse.Namespace):
+    # General config
     data      = args.data
     save_dir  = args.save_dir
     imgsz     = args.imgsz
@@ -35,7 +36,7 @@ def predict(args: argparse.Namespace):
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
-    #
+    # Predicting
     sum_time = 0
     with mon.get_progress_bar() as pbar:
         for images, target, meta in pbar.track(
