@@ -8,17 +8,23 @@ import copy
 import os
 import socket
 import time
+from copy import deepcopy
 
 import click
 import cv2
 import numpy as np
+import thop
 import torch
 import torch.optim
 import torchvision
+from fvcore.nn import FlopCountAnalysis, parameter_count
 from PIL import Image
+from torch import nn
 
 import mon
 from model import Image_network
+from mon import core
+from mon.core import _size_2_t
 
 console       = mon.console
 _current_file = mon.Path(__file__).absolute()
@@ -40,6 +46,52 @@ def get_hist(file_name):
     hist_s = torch.from_numpy(hist_s).float()
 
     return hist_s
+
+
+def calculate_efficiency_score(
+    model     : nn.Module,
+    image_size: _size_2_t = 512,
+    channels  : int       = 3,
+    runs      : int       = 100,
+    use_cuda  : bool      = True,
+    verbose   : bool      = False,
+):
+    # Define input tensor
+    h, w  = core.parse_hw(image_size)
+    input = torch.rand(1, channels, h, w)
+    hist  = np.zeros((3, 256))
+    hist  = torch.from_numpy(hist).float()
+    hist  = hist.unsqueeze(0)
+    
+    # Deploy to cuda
+    if use_cuda:
+        input = input.cuda()
+        hist  = hist.cuda()
+        model = model.cuda()
+    
+    # Get FLOPs and Params
+    flops, params = thop.profile(deepcopy(model), inputs=(input, hist), verbose=verbose)
+    flops         = FlopCountAnalysis(model, (input, hist)).total() if flops == 0 else flops
+    params        = model.params if hasattr(model, "params") and params == 0 else params
+    params        = parameter_count(model) if hasattr(model, "params") else params
+    params        = sum(list(params.values())) if isinstance(params, dict) else params
+    g_flops       = flops * 1e-9
+    m_params      = int(params) * 1e-6
+    
+    # Get time
+    start_time = time.time()
+    for i in range(runs):
+        _ = model(input, hist)
+    runtime    = time.time() - start_time
+    avg_time   = runtime / runs
+    
+    # Print
+    if verbose:
+        console.log(f"FLOPs (G) : {flops:.4f}")
+        console.log(f"Params (M): {params:.4f}")
+        console.log(f"Time (s)  : {avg_time:.4f}")
+    
+    return flops, params, avg_time
 
 
 def predict(args: argparse.Namespace):
@@ -65,7 +117,7 @@ def predict(args: argparse.Namespace):
     
     # Benchmark
     if benchmark:
-        flops, params, avg_time = mon.calculate_efficiency_score(
+        flops, params, avg_time = calculate_efficiency_score(
             model      = copy.deepcopy(Imgnet),
             image_size = imgsz,
             channels   = 3,
@@ -100,7 +152,7 @@ def predict(args: argparse.Namespace):
                 image      = image.to(device).unsqueeze(0)
                 histogram  = get_hist(str(image_path))
                 histogram  = histogram.to(device).unsqueeze(0)
-                           
+                
                 h0, w0 = mon.get_image_size(image)
                 if resize:
                     image = mon.resize(input=image, size=imgsz)

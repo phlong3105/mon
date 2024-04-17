@@ -30,6 +30,7 @@ from models import lc_model
 
 
 class UTVNet(nn.Module):
+    
     def __init__(self):
         super(UTVNet, self).__init__()
         self.a = utv_model.ADMM(1, 8, 1)

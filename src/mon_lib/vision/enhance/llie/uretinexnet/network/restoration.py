@@ -5,6 +5,7 @@ from network.architecture import *
 import math
 import torch.nn.functional as F
 
+
 class HalfDnCNNSE(nn.Module):
     def __init__(self, opts):
         super().__init__()
@@ -49,6 +50,7 @@ class HalfDnCNNSE(nn.Module):
         n = self.conv8(x5)
         r_restore = r + n
         return r_restore
+
 
 class SELayer(nn.Module):
     def __init__(self, channel, reduction=16):

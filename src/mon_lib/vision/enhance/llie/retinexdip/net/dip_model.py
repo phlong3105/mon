@@ -94,6 +94,7 @@ class Encoder(nn.Module):
 
         return output_layer11
 
+
 class Decoder(nn.Module):
     def __init__(self):
         super(Decoder, self).__init__()        
