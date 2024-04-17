@@ -29,9 +29,9 @@ for arg in vars(args):
 path_true = args.data_path
 path_pred = args.output_path
 
-psnr = []
-ssim = []
-mae = []
+psnr  = []
+ssim  = []
+mae   = []
 names = []
 
 files = list(glob(path_true + '/*/*.jpg')) + list(glob(path_true + '/*/*.png')) + list(glob(path_true + '/*.jpg')) + list(glob(path_true + '/*.png'))
