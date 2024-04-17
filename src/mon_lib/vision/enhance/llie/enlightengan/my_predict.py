@@ -35,12 +35,6 @@ def predict(args: argparse.Namespace):
     resize    = args.resize
     benchmark = args.benchmark
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
-    
     # Measure efficiency score
     # if benchmark:
     #     model  = EnlightenOnnxModel(weights=weights)
@@ -49,6 +43,12 @@ def predict(args: argparse.Namespace):
     
     # Model
     model = EnlightenOnnxModel(weights=weights)
+    
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

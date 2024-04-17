@@ -9,6 +9,7 @@ References:
 from __future__ import annotations
 
 import argparse
+import copy
 import os
 import random
 import socket
@@ -89,17 +90,15 @@ def predict(args: argparse.Namespace):
     torch.manual_seed(0)
     torch.cuda.manual_seed(0)
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # Model
+    DCE_net = models.model.enhance_net_litr().to(device)
+    DCE_net.load_state_dict(torch.load(weights), strict=True)
+    DCE_net.eval()
     
     # Benchmark
     if benchmark:
-        model = models.model.enhance_net_litr()
         flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = model,
+            model      = copy.deepcopy(DCE_net),
             image_size = imgsz,
             channels   = 3,
             runs       = 100,
@@ -109,11 +108,12 @@ def predict(args: argparse.Namespace):
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
-        
-    # Model
-    DCE_net = models.model.enhance_net_litr().to(device)
-    DCE_net.load_state_dict(torch.load(weights), strict=True)
-    DCE_net.eval()
+    
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

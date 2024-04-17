@@ -71,22 +71,6 @@ def train(args: argparse.Namespace):
     torch.manual_seed(0)
     torch.cuda.manual_seed(0)
     
-    # Data I/O
-    train_dataset = EnhanceDataset_FiveK(
-        images_path  = args.data,
-        image_size   = args.image_h,
-        is_yuv       = False,
-        image_size_w = args.image_w,
-    )
-    train_loader  = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size  = args.train_batch_size,
-        shuffle     = False,
-        num_workers = args.num_workers,
-        pin_memory  = True,
-        drop_last   = True
-    )
-    
     # Model
     # DCE_net = models.build_model(args).to(device)
     DCE_net = models.model.enhance_net_litr().to(device)
@@ -114,6 +98,22 @@ def train(args: argparse.Namespace):
     # Logging
     writer    = SummaryWriter(log_dir=str(save_dir / "tensorboard"))
     best_loss = 100
+    
+    # Data I/O
+    train_dataset = EnhanceDataset_FiveK(
+        images_path  = args.data,
+        image_size   = args.image_h,
+        is_yuv       = False,
+        image_size_w = args.image_w,
+    )
+    train_loader  = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size  = args.train_batch_size,
+        shuffle     = False,
+        num_workers = args.num_workers,
+        pin_memory  = True,
+        drop_last   = True
+    )
     
     # Training
     for epoch in range(epochs):

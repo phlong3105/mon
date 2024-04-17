@@ -30,19 +30,17 @@ def predict(args: dict) -> str:
     resize     = args["predictor"]["resize"]
     benchmark  = args["predictor"]["benchmark"]
     save_image = args["predictor"]["save_image"]
-    
-    # Initialization
     console.rule(f"[bold red] {fullname}")
     
+    # Seed
     mon.set_random_seed(seed)
     
-    devices          = torch.device(("cpu" if not torch.cuda.is_available() else devices))
-    model: mon.Model = mon.MODELS.build(config=args["model"])
-    model            = model.to(devices)
-    model.eval()
+    # Device
+    devices = torch.device(("cpu" if not torch.cuda.is_available() else devices))
     
     # Benchmark
     if benchmark and torch.cuda.is_available():
+        model = mon.MODELS.build(config=args["model"])
         flops, params, avg_time = mon.calculate_efficiency_score(
             model      = model,
             image_size = imgsz,
@@ -54,13 +52,17 @@ def predict(args: dict) -> str:
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
-        
+    
+    # Model
+    model: mon.Model = mon.MODELS.build(config=args["model"])
+    model = model.to(devices)
+    model.eval()
+    
     # Data I/O
     console.log(f"[bold red] {source}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=source, dst=save_dir, denormalize=True)
     save_dir = save_dir if save_dir not in [None, "None", ""] else model.root
-    save_dir = mon.Path(save_dir)
-    save_dir = save_dir / data_name
+    save_dir = mon.Path(save_dir) / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting

@@ -96,26 +96,6 @@ def train(args: argparse.Namespace):
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     cudnn.benchmark = True
     
-    # Data I/O
-    data_args = {
-        "name"      : args.data,
-        "root"      : mon.DATA_DIR / "llie",
-        "transform" : A.Compose(transforms=[
-            A.Resize(width=imgsz, height=imgsz),
-        ]),
-        "to_tensor" : True,
-        "cache_data": False,
-        "batch_size": args.batch_size,
-        "devices"   : device,
-        "shuffle"   : True,
-        "verbose"   : verbose,
-    }
-    datamodule: mon.DataModule = mon.DATAMODULES.build(config=data_args)
-    datamodule.prepare_data()
-    datamodule.setup(phase="training")
-    train_dataloader = datamodule.train_dataloader
-    val_dataloader   = datamodule.val_dataloader
-    
     # Model
     model = NestedUNet().to(device)
     model.train()
@@ -140,6 +120,26 @@ def train(args: argparse.Namespace):
     best_loss = 1000
     best_psnr = 0
     best_ssim = 0
+    
+    # Data I/O
+    data_args = {
+        "name"      : args.data,
+        "root"      : mon.DATA_DIR / "llie",
+        "transform" : A.Compose(transforms=[
+            A.Resize(width=imgsz, height=imgsz),
+        ]),
+        "to_tensor" : True,
+        "cache_data": False,
+        "batch_size": args.batch_size,
+        "devices"   : device,
+        "shuffle"   : True,
+        "verbose"   : verbose,
+    }
+    datamodule: mon.DataModule = mon.DATAMODULES.build(config=data_args)
+    datamodule.prepare_data()
+    datamodule.setup(phase="training")
+    train_dataloader = datamodule.train_dataloader
+    val_dataloader   = datamodule.val_dataloader
     
     # Training
     for epoch in range(epochs):

@@ -50,16 +50,6 @@ def train(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
-    # Data I/O
-    train_dataset = dataloader.lowlight_loader(args.data)
-    train_loader  = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size  = args.train_batch_size,
-        shuffle     = True,
-        num_workers = args.num_workers,
-        pin_memory  = True
-    )
-    
     # Model
     DCE_net = mmodel.enhance_net_nopool().to(device)
     DCE_net.apply(weights_init)
@@ -75,6 +65,16 @@ def train(args: argparse.Namespace):
     
     # Optimizer
     optimizer = torch.optim.Adam(DCE_net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    
+    # Data I/O
+    train_dataset = dataloader.lowlight_loader(args.data)
+    train_loader  = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size  = args.train_batch_size,
+        shuffle     = True,
+        num_workers = args.num_workers,
+        pin_memory  = True
+    )
     
     # Training
     with mon.get_progress_bar() as pbar:

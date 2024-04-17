@@ -27,6 +27,7 @@ Author: Chuanjun Zheng (chuanjunzhengcs@gmail.com)
 from __future__ import annotations
 
 import argparse
+import copy
 import os
 import socket
 import time
@@ -63,17 +64,15 @@ def predict(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device    = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # Model
+    model = network.UTVNet().to(device)
+    model.load_state_dict(torch.load(str(weights), map_location=device))
+    model.eval()
     
     # Benchmark
     if benchmark:
-        model = network.UTVNet().to(device)
         flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = model,
+            model      = copy.deepcopy(model),
             image_size = imgsz,
             channels   = 3,
             runs       = 100,
@@ -84,10 +83,11 @@ def predict(args: argparse.Namespace):
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
     
-    # Model
-    model = network.UTVNet().to(device)
-    model.load_state_dict(torch.load(str(weights), map_location=device))
-    model.eval()
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     torch.set_grad_enabled(False)

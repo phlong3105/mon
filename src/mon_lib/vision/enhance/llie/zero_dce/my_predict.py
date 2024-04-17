@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import os
 import socket
 import time
@@ -25,31 +26,6 @@ _current_dir  = _current_file.parents[0]
 
 # region Predict
 
-def run_infer(weights, image_path: str):
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    data_lowlight = Image.open(image_path).convert("RGB")
-    data_lowlight = (np.asarray(data_lowlight) / 255.0)
-    data_lowlight = torch.from_numpy(data_lowlight).float()
-    data_lowlight = data_lowlight.permute(2, 0, 1)
-    data_lowlight = data_lowlight.cuda().unsqueeze(0)
-
-    DCE_net    = mmodel.enhance_net_nopool().cuda()
-    DCE_net.load_state_dict(torch.load(weights))
-    DCE_net.eval()
-    start_time = time.time()
-    _, enhanced_image, _ = DCE_net(data_lowlight)
-    run_time   = (time.time() - start_time)
-    # print(run_time)
-    '''
-    image_path  = image_path.replace("test_data", "result")
-    result_path = image_path
-    if not os.path.exists(image_path.replace("/" + image_path.split("/")[-1], '')):
-        os.makedirs(image_path.replace("/" + image_path.split("/")[-1], ''))
-    torchvision.utils.save_image(enhanced_image, result_path)
-    '''
-    return enhanced_image, run_time
-
-
 def predict(args: argparse.Namespace):
     # General config
     weights   = args.weights
@@ -66,17 +42,15 @@ def predict(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # Model
+    DCE_net = mmodel.enhance_net_nopool().to(device)
+    DCE_net.load_state_dict(torch.load(weights))
+    DCE_net.eval()
     
     # Benchmark
     if benchmark:
-        DCE_net = mmodel.enhance_net_nopool().to(device)
         flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = DCE_net,
+            model      = copy.deepcopy(DCE_net),
             image_size = imgsz,
             channels   = 3,
             runs       = 100,
@@ -87,6 +61,12 @@ def predict(args: argparse.Namespace):
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
     
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
+    
     # Predicting
     with torch.no_grad():
         sum_time = 0
@@ -96,9 +76,16 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path  = meta["path"]
-                enhanced_image, run_time = run_infer(weights, image_path)
-                output_path = save_dir / image_path.name
+                image_path    = meta["path"]
+                data_lowlight = Image.open(image_path).convert("RGB")
+                data_lowlight = (np.asarray(data_lowlight) / 255.0)
+                data_lowlight = torch.from_numpy(data_lowlight).float()
+                data_lowlight = data_lowlight.permute(2, 0, 1)
+                data_lowlight = data_lowlight.to(device).unsqueeze(0)
+                start_time    = time.time()
+                _, enhanced_image, _ = DCE_net(data_lowlight)
+                run_time      = (time.time() - start_time)
+                output_path   = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time += run_time
         avg_time = float(sum_time / len(data_loader))

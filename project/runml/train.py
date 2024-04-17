@@ -19,23 +19,24 @@ console = mon.console
 # region Train
 
 def train(args: dict) -> str:
-    # Initialization
+    # General config
     if mon.is_rank_zero():
         console.rule("[bold red]1. INITIALIZATION")
         console.log(f"Machine: {args['hostname']}")
     
+    # Seed
     mon.set_random_seed(args["seed"])
     
-    datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["datamodule"])
-    datamodule.prepare_data()
-    datamodule.setup(phase="training")
-    
-    # args["model"]["classlabels"] = datamodule.classlabels
+    # Model
     model: mon.Model = mon.MODELS.build(config=args["model"])
-    
     if mon.is_rank_zero():
         mon.print_dict(args, title=model.fullname)
         console.log("[green]Done")
+    
+    # Data I/O
+    datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["datamodule"])
+    datamodule.prepare_data()
+    datamodule.setup(phase="training")
     
     # Trainer
     if mon.is_rank_zero():

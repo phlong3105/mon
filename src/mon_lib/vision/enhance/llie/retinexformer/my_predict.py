@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import os
 import socket
 import time
@@ -49,20 +50,6 @@ def predict(args: argparse.Namespace):
     opt["dist"]   = False
     opt["device"] = device
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Benchmark
-    if benchmark:
-        model = create_model(opt).net_g
-        flops, params, avg_time = model.measure_efficiency_score(image_size=imgsz)
-        console.log(f"FLOPs  = {flops:.4f}")
-        console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
-    
     # Model
     model      = create_model(opt).net_g
     checkpoint = torch.load(weights)
@@ -78,6 +65,19 @@ def predict(args: argparse.Namespace):
     model.to(device)
     # model = nn.DataParallel(model)
     model.eval()
+    
+    # Benchmark
+    if benchmark:
+        flops, params, avg_time = copy.deepcopy(model).measure_efficiency_score(image_size=imgsz)
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
+    
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

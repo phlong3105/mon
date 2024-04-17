@@ -37,6 +37,9 @@ def predict(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
+    # Model
+    model = RetinexNet(imgsz, benchmark).to(device)
+    
     # Data I/O
     console.log(f"[bold red]{data}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
@@ -52,9 +55,6 @@ def predict(args: argparse.Namespace):
         ):
             image_path  = meta["path"]
             image_paths.append(image_path)
-    
-    # Model
-    model = RetinexNet(imgsz, benchmark).to(device)
     
     # Predicting
     start_time = time.time()

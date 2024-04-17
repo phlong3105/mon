@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import os
 import socket
 import time
@@ -104,12 +105,6 @@ def predict(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
-    
     # Model
     model          = create_model(opt)
     # model_path     = opt_get(opt, ["model_path"], None)
@@ -118,10 +113,16 @@ def predict(args: argparse.Namespace):
     
     # Benchmark
     if benchmark:
-        flops, params, avg_time = model.measure_efficiency_score(image_size=imgsz)
+        flops, params, avg_time = copy.deepcopy(model).measure_efficiency_score(image_size=imgsz)
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
+    
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

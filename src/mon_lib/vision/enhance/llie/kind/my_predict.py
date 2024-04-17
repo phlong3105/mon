@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import socket
 
 import click
@@ -40,27 +41,6 @@ def predict(args: argparse.Namespace):
     # args.output_dir.mkdir(parents=True, exist_ok=True)
     # console.log(f"Data: {args.input_dir}")
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Benchmark
-    if benchmark:
-        model = KinD()
-        flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = model,
-            image_size = imgsz,
-            channels   = 3,
-            runs       = 100,
-            use_cuda   = True,
-            verbose    = False,
-        )
-        console.log(f"FLOPs  = {flops:.4f}")
-        console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
-        
     # Model
     args["noDecom"] = True
     model = KinD()
@@ -73,6 +53,26 @@ def predict(args: argparse.Namespace):
     model.illum_net.load_state_dict(pretrain_illum)
     model = model.to(device)
     model.eval()
+    
+    # Benchmark
+    if benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = copy.deepcopy(model),
+            image_size = imgsz,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
+    
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     target_b = 0.70

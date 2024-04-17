@@ -85,12 +85,6 @@ def predict(args: argparse.Namespace):
     torch.backends.cudnn.benchmark = True
     # torch.backends.cudnn.deterministic = True
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
-    
     # Model
     opt["path"]["resume_state"] = str(weights)
     diffusion = Model.create_model(opt)
@@ -103,6 +97,12 @@ def predict(args: argparse.Namespace):
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
+    
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():

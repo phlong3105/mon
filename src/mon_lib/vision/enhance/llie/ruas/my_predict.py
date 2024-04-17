@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import os
 import socket
 import sys
@@ -60,17 +61,17 @@ def predict(args: argparse.Namespace):
     cudnn.benchmark = True
     cudnn.enabled   = True
     
-    # Data I/O
-    console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # Model
+    model = Network().to(device)
+    model.load_state_dict(torch.load(str(weights)))
+    for p in model.parameters():
+        p.requires_grad = False
+    model.eval()
     
     # Benchmark
     if benchmark:
-        model = Network()
         flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = model,
+            model      = copy.deepcopy(model),
             image_size = imgsz,
             channels   = 3,
             runs       = 100,
@@ -81,12 +82,11 @@ def predict(args: argparse.Namespace):
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
     
-    # Model
-    model = Network().to(device)
-    model.load_state_dict(torch.load(str(weights)))
-    for p in model.parameters():
-        p.requires_grad = False
-    model.eval()
+    # Data I/O
+    console.log(f"[bold red]{data}")
+    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    save_dir = save_dir / data_name
+    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():
