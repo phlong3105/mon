@@ -1,0 +1,3 @@
+[submodule "src/mon_extra/vision/detect/yolov7"]
+	path = src/mon_extra/vision/detect/yolov7
+	url = https://github.com/phlong3105/yolov7
