@@ -1,16 +1,16 @@
-# src/mon_lib
-[submodule "src/mon_lib/vision/detect/yolov7"]
-	path = src/mon_lib/vision/detect/yolov7
+# src/mon_extra
+[submodule "src/mon_extra/vision/detect/yolov7"]
+	path = src/mon_extra/vision/detect/yolov7
 	url = https://github.com/phlong3105/yolov7
-[submodule "src/mon_lib/vision/detect/yolov9"]
-	path = src/mon_lib/vision/detect/yolov9
+[submodule "src/mon_extra/vision/detect/yolov9"]
+	path = src/mon_extra/vision/detect/yolov9
 	url  = https://github.com/phlong3105/yolov9
-[submodule "src/mon_lib/vision/multitask/automl"]
-	path = src/mon_lib/vision/multitask/automl
+[submodule "src/mon_extra/vision/multitask/automl"]
+	path = src/mon_extra/vision/multitask/automl
 	url  = https://github.com/phlong3105/automl
-[submodule "src/mon_lib/vision/multitask/supergradients"]
-	path = src/mon_lib/vision/multitask/supergradients
+[submodule "src/mon_extra/vision/multitask/supergradients"]
+	path = src/mon_extra/vision/multitask/supergradients
 	url  = https://github.com/phlong3105/supergradients
-[submodule "src/mon_lib/vision/multitask/ultralytics"]
-	path = src/mon_lib/vision/multitask/ultralytics
+[submodule "src/mon_extra/vision/multitask/ultralytics"]
+	path = src/mon_extra/vision/multitask/ultralytics
 	url  = https://github.com/phlong3105/ultralytics

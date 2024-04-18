@@ -64,11 +64,11 @@ hydra-core            = {version="*", optional=true}
 kmeans_pytorch        = {version="*", optional=true}
 mediapipe             = {version="*", optional=true}
 pandas                = {version="*", optional=true}
-supergradients        = {path="src/mon_lib/vision/multitask/supergradients", develop=true}
-ultralytics           = {path="src/mon_lib/vision/multitask/ultralytics",    develop=true}
-yolor                 = {path="src/mon_lib/vision/detect/yolor",             develop=true}
-yolov7                = {path="src/mon_lib/vision/detect/yolov7",            develop=true}
-yolov9                = {path="src/mon_lib/vision/detect/yolov9",            develop=true}
+supergradients        = {path="src/mon_extra/vision/multitask/supergradients", develop=true}
+ultralytics           = {path="src/mon_extra/vision/multitask/ultralytics",    develop=true}
+yolor                 = {path="src/mon_extra/vision/detect/yolor",             develop=true}
+yolov7                = {path="src/mon_extra/vision/detect/yolov7",            develop=true}
+yolov9                = {path="src/mon_extra/vision/detect/yolov9",            develop=true}
 
 [tool.poetry.extras]
 dev = [

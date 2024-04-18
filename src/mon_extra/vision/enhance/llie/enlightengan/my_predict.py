@@ -108,7 +108,7 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/enlightengan/weights/[original]_enlightengan.onnx"
+    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/enlightengan/weights/[extra]_enlightengan.onnx"
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)

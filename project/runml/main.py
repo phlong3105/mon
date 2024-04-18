@@ -15,7 +15,6 @@ import utils
 _current_file    = mon.Path(__file__).absolute()
 _current_dir     = _current_file.parents[0]
 _modes 	         = ["train", "predict", "online", "instance", "metric", "plot"]
-_extra_model_str = "(original)"
 
 
 # region Train
@@ -39,11 +38,8 @@ def run_train(args: dict):
     assert root.exists()
     
     # Parse arguments
-    use_extra_model = f"{_extra_model_str}" in model
-    model           = model.replace(f" {_extra_model_str}", "")
-    is_mon_model    = model in mon.MODELS
-    is_extra_model  = model in mon.MODELS_EXTRA
-    
+    is_extra_model = mon.is_extra_model(model)
+    model    = mon.parse_model_name(model)
     config   = mon.parse_config_file(project_root=root, config=config)
     assert config not in [None, "None", ""]
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
@@ -65,9 +61,9 @@ def run_train(args: dict):
     flags   += ["--verbose"]  if verbose  else []
     
     # Parse script file
-    if use_extra_model or (is_extra_model and not is_mon_model):
-        torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-        script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_train.py"
+    if is_extra_model:
+        torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
+        script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_train.py"
         devices     = mon.parse_device(device)
         if isinstance(devices, list) and torch_distributed_launch:
             python_call = [
@@ -135,11 +131,8 @@ def run_predict(args: dict):
     assert root.exists()
     
     # Parse arguments
-    use_extra_model = f"{_extra_model_str}" in model
-    model           = model.replace(f" {_extra_model_str}", "")
-    is_mon_model    = model in mon.MODELS
-    is_extra_model  = model in mon.MODELS_EXTRA
-    
+    is_extra_model = mon.is_extra_model(model)
+    model    = mon.parse_model_name(model)
     config   = mon.parse_config_file(project_root=root, config=config)
     config   = config or "default"
     # assert config not in [None, "None", ""]
@@ -168,9 +161,9 @@ def run_predict(args: dict):
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
-        if use_extra_model or (is_extra_model and not is_mon_model):
-            torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_predict.py"
+        if is_extra_model:
+            torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
+            script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_predict.py"
             python_call = ["python"]
         else:
             script_file = _current_dir / "predict.py"
@@ -230,11 +223,8 @@ def run_online(args: dict):
     assert root.exists()
     
     # Parse arguments
-    use_extra_model = f"{_extra_model_str}" in model
-    model           = model.replace(f" {_extra_model_str}", "")
-    is_mon_model    = model in mon.MODELS
-    is_extra_model  = model in mon.MODELS_EXTRA
-    
+    is_extra_model = mon.is_extra_model(model)
+    model    = mon.parse_model_name(model)
     config   = mon.parse_config_file(project_root=root, config=config)
     assert config not in [None, "None", ""]
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
@@ -262,9 +252,9 @@ def run_online(args: dict):
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
-        if use_extra_model or (is_extra_model and not is_mon_model):
-            torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_online.py"
+        if is_extra_model:
+            torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
+            script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_online.py"
             python_call = ["python"]
         else:
             script_file = _current_dir / "online.py"
@@ -348,14 +338,14 @@ def main(
         models_str_  = utils.parse_menu_string(models_)
         model	     = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	     = models_[int(model)] if mon.is_int(model) else model
-        model_       = model.replace(f" {_extra_model_str}", "")
+        model_name   = mon.parse_model_name(model)
         # Config     
-        configs_     = mon.list_configs(project_root=root, model=model_)
+        configs_     = mon.list_configs(project_root=root, model=model_name)
         configs_str_ = utils.parse_menu_string(configs_)
         config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
         config       = configs_[int(config)] if mon.is_int(config) else config
         # Weights    
-        weights_     = mon.list_weights_files(project_root=root, model=model_, config=config)
+        weights_     = mon.list_weights_files(project_root=root, model=model_name)
         weights_str_ = utils.parse_menu_string(weights_)
         weights      = click.prompt(click.style(f"Weights {weights_str_}", fg="bright_green", bold=True), type=str, default=weights or "")
         weights      = weights if weights not in [None, ""] else None
@@ -373,12 +363,12 @@ def main(
             data 	  = mon.to_list(data)
             data 	  = [data_[int(d)] if mon.is_int(d) else d for d in data]
         # Fullname
-        fullname    = mon.Path(config).stem if config not in [None, "None", ""] else model_
+        fullname    = mon.Path(config).stem if config not in [None, "None", ""] else model_name
         fullname    = click.prompt(click.style(f"Save name: {fullname}", fg="bright_green", bold=True), type=str, default=fullname)
         # Device
         devices_    = mon.list_devices()
         devices_str = utils.parse_menu_string(devices_)
-        device      = "auto" if model_ in mon.list_mon_models(mode=mode, task=task) and mode == "train" else device
+        device      = "auto" if model_name in mon.list_mon_models(mode=mode, task=task) and mode == "train" else device
         device      = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=device or "cuda:0")
         device 	    = devices_[int(device)] if mon.is_int(device) else device
         # Training Flags

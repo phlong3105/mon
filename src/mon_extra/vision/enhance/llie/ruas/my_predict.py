@@ -1,28 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# https://github.com/CharlieZCJ/UTVNet
-
-'''
-This is a PyTorch implementation of the ICCV 2021 paper:
-"Adaptive Unfolding Total Variation Network for Low-Light Image Enhancement": https://arxiv.org/abs/2110.00984
-
-Please cite the paper if you use this code
-
-@InProceedings{Zheng_2021_ICCV,
-    author    = {Zheng, Chuanjun and Shi, Daming and Shi, Wentian},
-    title     = {Adaptive Unfolding Total Variation Network for Low-Light Image Enhancement},
-    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
-    month     = {October},
-    year      = {2021},
-    pages     = {4439-4448}
-}
-
-Tested with Pytorch 1.7.1, Python 3.6
-
-Author: Chuanjun Zheng (chuanjunzhengcs@gmail.com)
-
-'''
+# https://github.com/KarelZhang/RUAS
 
 from __future__ import annotations
 
@@ -35,11 +14,12 @@ import time
 import click
 import numpy as np
 import torch
-import torchvision
+import torch.backends.cudnn as cudnn
+import torch.utils
 from PIL import Image
 
 import mon
-from models import network
+from model import Network
 
 console       = mon.console
 _current_file = mon.Path(__file__).absolute()
@@ -48,6 +28,13 @@ _current_dir  = _current_file.parents[0]
 
 # region Predict
 
+def save_images(tensor, path):
+    image_numpy = tensor[0].cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0)))
+    im = Image.fromarray(np.clip(image_numpy * 255.0, 0, 255.0).astype("uint8"))
+    im.save(path, 'png')
+
+
 def predict(args: argparse.Namespace):
     # General config
     weights   = args.weights
@@ -55,18 +42,29 @@ def predict(args: argparse.Namespace):
     data      = args.data
     save_dir  = args.save_dir
     device    = args.device
+    seed      = args.seed
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
     
     # Device
-    device    = device[0] if isinstance(device, list) else device
+    device = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device    = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+    
+    # Seed
+    np.random.seed(seed)
+    torch.cuda.set_device(device)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    cudnn.benchmark = True
+    cudnn.enabled   = True
     
     # Model
-    model = network.UTVNet().to(device)
-    model.load_state_dict(torch.load(str(weights), map_location=device))
+    model = Network().to(device)
+    model.load_state_dict(torch.load(str(weights)))
+    for p in model.parameters():
+        p.requires_grad = False
     model.eval()
     
     # Benchmark
@@ -90,7 +88,6 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
-    torch.set_grad_enabled(False)
     with torch.no_grad():
         sum_time = 0
         with mon.get_progress_bar() as pbar:
@@ -99,37 +96,26 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path     = meta["path"]
-                image          = Image.open(image_path).convert("RGB")
-                image          = (np.asarray(image) / 255.0)
-                image          = torch.from_numpy(image).float()
-                image          = image.permute(2, 0, 1)
-                image          = image.to(device).unsqueeze(0)
-                start_time     = time.time()
-                enhanced_image = model(image)
-                enhanced_image = enhanced_image.clamp(0, 1).cpu()
-                run_time       = (time.time() - start_time)
-                output_path    = save_dir / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time      += run_time
+                image_path      = meta["path"]
+                # input           = Variable(images, volatile=True).to(device)
+                input           = images.to(device)
+                # console.log(f"Processing {u_name}")
+                start_time      = time.time()
+                u_list, r_list  = model(input)
+                run_time        = (time.time() - start_time)
+                sum_time       += run_time
+                output_path     = save_dir / image_path.name
+                save_images(u_list[-1], str(output_path))
+                # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
+                # save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
+                """
+                if args.model == "lol":
+                    save_images(u_list[-1], u_path)
+                elif args.model == "upe" or args.model == "dark":
+                    save_images(u_list[-2], u_path)
+                """
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")
-        
-    """
-    if args.input_dir_name == 'sRGBSID':
-        test_input_dir = './dataset/sRGBSID/test/1/'
-        test_input_dir2 = './dataset/sRGBSID/test/2/'
-        test_gt_dir = './dataset/sRGBSID/gt/test/'
-        loaderTest = dataset.rgbDataset(test_input_dir, test_input_dir2, test_gt_dir, 'test', '512', args.input_dir_name)
-
-    else:
-        test_input_dir = './dataset/ELD/{}/'.format(args.input_dir_name)
-        test_input_dir2 = ''
-        test_gt_dir = './dataset/ELD/{}g/'.format(args.input_dir_name)
-        loaderTest = dataset.rgbDataset(test_input_dir, test_input_dir2, test_gt_dir, 'test', '1024', args.input_dir_name)
-
-    test(model, args, loaderTest, device)
-    """
 
 # endregion
 
@@ -169,7 +155,7 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/utvnet/utvnet_model_test.pt"
+    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/ruas/weights/[extra]_ruas_lol_v1.pt"
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
@@ -191,6 +177,7 @@ def main(
         "benchmark" : benchmark,
         "save_image": save_image,
         "verbose"   : verbose,
+        "seed"      : 2,
     }
     args = argparse.Namespace(**args)
     

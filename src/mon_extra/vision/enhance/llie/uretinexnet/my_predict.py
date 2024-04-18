@@ -191,9 +191,9 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    decom_model_low_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/weights/[original]_uretinexnet_init_low.pth"
-    unfolding_model_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/weights/[original]_uretinexnet_unfolding.pth"
-    adjust_model_weights    = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/weights/[original]_uretinexnet_L_adjust.pth"
+    decom_model_low_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/weights/[extra]_uretinexnet_init_low.pth"
+    unfolding_model_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/weights/[extra]_uretinexnet_unfolding.pth"
+    adjust_model_weights    = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/weights/[extra]_uretinexnet_L_adjust.pth"
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
