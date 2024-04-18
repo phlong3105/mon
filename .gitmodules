@@ -1,6 +1,6 @@
 [submodule "src/mon_extra/vision/detect/yolov7"]
 	path = src/mon_extra/vision/detect/yolov7
-	url  = https://github.com/phlong3105/yolov7
+	url  = https://github.com/phlong3105/yolov7/tree/main
 [submodule "src/mon_extra/vision/detect/yolov9"]
 	path = src/mon_extra/vision/detect/yolov9
 	url  = https://github.com/phlong3105/yolov9
