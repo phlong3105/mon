@@ -231,7 +231,6 @@ class Image_network(nn.Module):
         self.fusion_bn = nn.BatchNorm1d(768)
         self.fusion_sig = nn.Sigmoid()
 
-
         self.FC11 = nn.Linear(768, 768)
         self.FC12 = nn.Linear(768, 768)
         self.FC13 = nn.Linear(768, 768)

@@ -1,0 +1,20 @@
+# General config
+root        :
+weights     :
+data        :
+model       :
+fullname    :
+save_dir    :
+device      :
+epochs      :
+steps       :
+imgsz       :
+resize      :
+benchmark   :
+save_image  :
+use_data_dir:
+exist_ok    :
+verbose     :
+# Data
+
+# Training

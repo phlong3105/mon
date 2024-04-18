@@ -25,20 +25,21 @@ import importlib.util
 import os
 from typing import Any
 
-from mon.core import dtype, file, humps, pathlib, rich
+from mon import core
 
-console       = rich.console
-error_console = rich.error_console
+console          = core.console
+error_console    = core.error_console
+_extra_model_str = "(original)"
 
 
 # region Projects
 
-def get_project_default_config(project_root: str | pathlib.Path) -> dict:
+def get_project_default_config(project_root: str | core.Path) -> dict:
     if project_root in [None, "None", ""]:
         error_console.log(f"{project_root} is not a valid project directory.")
         return {}
     
-    config_file = pathlib.Path(project_root) / "config" / "default.py"
+    config_file = core.Path(project_root) / "config" / "default.py"
     if config_file.exists():
         spec   = importlib.util.spec_from_file_location("default", str(config_file))
         module = importlib.util.module_from_spec(spec)
@@ -51,7 +52,7 @@ def get_project_default_config(project_root: str | pathlib.Path) -> dict:
 
 # region Tasks
 
-def list_tasks(project_root: str | pathlib.Path) -> list[str]:
+def list_tasks(project_root: str | core.Path) -> list[str]:
     from mon.globals import Task
     tasks           = Task.keys()
     default_configs = get_project_default_config(project_root=project_root)
@@ -90,20 +91,20 @@ def list_extra_models(task: str, mode: str) -> list[str]:
 def list_models(
     task        : str,
     mode        : str,
-    project_root: str | pathlib.Path | None = None
+    project_root: str | core.Path | None = None
 ) -> list[str]:
     models          =   list_mon_models(task, mode)
     extra_models    = list_extra_models(task, mode)
     default_configs = get_project_default_config(project_root=project_root)
     if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
-        project_models = [humps.snakecase(m) for m in default_configs["MODELS"]]
+        project_models = [core.snakecase(m) for m in default_configs["MODELS"]]
         if len(project_models) > 0:
-            models       = [m for m in models       if humps.snakecase(m) in project_models]
-            extra_models = [m for m in extra_models if humps.snakecase(m) in project_models]
+            models       = [m for m in models       if core.snakecase(m) in project_models]
+            extra_models = [m for m in extra_models if core.snakecase(m) in project_models]
     #
     for i, m in enumerate(extra_models):
         if m in models:
-            extra_models[i] = f"{m} (mon_lib)"
+            extra_models[i] = f"{m} {_extra_model_str}"
     models = models + extra_models
     return sorted(models)
 
@@ -112,10 +113,10 @@ def list_models(
 
 # region Config
 
-def list_config_files(project_root: str | pathlib.Path, model: str | None = None) -> list[pathlib.Path]:
+def list_config_files(project_root: str | core.Path, model: str | None = None) -> list[core.Path]:
     """List configuration files in the given :param:`project`."""
     assert project_root not in [None, "None", ""]
-    project_root = pathlib.Path(project_root)
+    project_root = core.Path(project_root)
     config_dir   = project_root / "config"
     config_files = list(config_dir.files(recursive=True))
     config_files = [
@@ -127,28 +128,29 @@ def list_config_files(project_root: str | pathlib.Path, model: str | None = None
     ]
     if model not in [None, "None", ""]:
         config_files = [cf for cf in config_files if f"{model}_" in cf.name]
+    config_files = core.unique(config_files)
     config_files = sorted(config_files)
     return config_files
 
 
-def list_configs(project_root: str | pathlib.Path, model: str | None = None) -> list[str]:
+def list_configs(project_root: str | core.Path, model: str | None = None) -> list[str]:
     config_files = list_config_files(project_root=project_root, model=model)
     config_files = [str(f.name) for f in config_files]
-    # config_files = sorted(config_files)
+    config_files = core.unique(config_files)
     config_files = sorted(config_files, key=lambda x: (os.path.splitext(x)[1], x))
     return config_files
 
 
 def parse_config_file(
-    config      : str | pathlib.Path,
-    project_root: str | pathlib.Path
-) -> pathlib.Path | None:
+    config      : str | core.Path,
+    project_root: str | core.Path
+) -> core.Path | None:
     # assert config not in [None, "None", ""]
     if config in [None, "None", ""]:
         error_console.log(f"No configuration given.")
         return None
     #
-    config = pathlib.Path(config)
+    config = core.Path(config)
     if config.is_config_file():
         return config
     #
@@ -156,7 +158,7 @@ def parse_config_file(
     if config_.is_config_file():
         return config_
     #
-    config_dirs = pathlib.Path(project_root).subdirs(recursive=True)
+    config_dirs = core.Path(project_root).subdirs(recursive=True)
     for config_dir in config_dirs:
         config_ = config_dir / config.name
         if config_.is_config_file():
@@ -175,15 +177,15 @@ def load_config(config: Any) -> dict:
         data = None
     elif isinstance(config, dict):
         data = config
-    elif isinstance(config, pathlib.Path | str):
-        config = pathlib.Path(config)
+    elif isinstance(config, core.Path | str):
+        config = core.Path(config)
         if config.is_py_file():
             spec   = importlib.util.spec_from_file_location(str(config.stem), str(config))
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             data  = {key: value for key, value in module.__dict__.items() if not key.startswith("__")}
         else:
-            data = file.read_from_file(path=config)
+            data = core.read_from_file(path=config)
     else:
         data = None
     
@@ -228,7 +230,7 @@ def list_extra_datasets(task: str, mode: str) -> list[str]:
 def list_datasets(
     task        : str,
     mode        : str,
-    project_root: str | pathlib.Path | None = None
+    project_root: str | core.Path | None = None
 ) -> list[str]:
     datasets        = sorted(list_mon_datasets(task, mode) + list_extra_datasets(task, mode))
     default_configs = get_project_default_config(project_root=project_root)
@@ -243,27 +245,27 @@ def list_datasets(
 
 def list_weights_files(
     model       : str,
-    config      : str            | None = None,
-    project_root: str | pathlib.Path | None = None,
-) -> list[pathlib.Path]:
+    config      : str             | None = None,
+    project_root: str | core.Path | None = None,
+) -> list[core.Path]:
     from mon.globals import ZOO_DIR
     files = []
-    #
+    # Search for weights in project_root
     if project_root not in [None, "None", ""]:
-        project_root = pathlib.Path(project_root)
+        project_root = core.Path(project_root)
         train_dir    = project_root / "run" / "train"
         files        = sorted(list(train_dir.rglob(f"*")))
         files        = [f for f in files if f.is_weights_file()]
         # if config not in [None, "None", ""]:
         #     config = str(pathlib.Path(config).stem)
         #     files  = [f for f in files if config in str(f)]
-    #
+    # Search for weights in ZOO_DIR
     for path in sorted(list(ZOO_DIR.rglob(f"*"))):
         if path.is_weights_file():
             files.append(path)
-    #
-    files = dtype.unique(files)
+    # Remove duplicate and sort
     files = [f for f in files if f"{model}_" in str(f)]
+    files = core.unique(files)
     files = sorted(files)
     return files
 
@@ -272,8 +274,8 @@ def list_weights_files(
 
 # region Save Dir
 
-def list_train_save_dirs(project_root: str | pathlib.Path) -> list[pathlib.Path]:
-    project_root = pathlib.Path(project_root)
+def list_train_save_dirs(project_root: str | core.Path) -> list[core.Path]:
+    project_root = core.Path(project_root)
     train_dir    = project_root / "run" / "train"
     save_dirs    = sorted(list(train_dir.dirs()))
     return save_dirs

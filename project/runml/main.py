@@ -12,9 +12,10 @@ import click
 import mon
 import utils
 
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
-modes_ 	      = ["train", "predict", "online", "instance", "metric", "plot"]
+_current_file    = mon.Path(__file__).absolute()
+_current_dir     = _current_file.parents[0]
+_modes 	         = ["train", "predict", "online", "instance", "metric", "plot"]
+_extra_model_str = "(original)"
 
 
 # region Train
@@ -38,8 +39,8 @@ def run_train(args: dict):
     assert root.exists()
     
     # Parse arguments
-    use_extra_model = "(mon_lib)" in model
-    model           = model.replace(" (mon_lib)", "")
+    use_extra_model = f"{_extra_model_str}" in model
+    model           = model.replace(f" {_extra_model_str}", "")
     is_mon_model    = model in mon.MODELS
     is_extra_model  = model in mon.MODELS_EXTRA
     
@@ -134,8 +135,8 @@ def run_predict(args: dict):
     assert root.exists()
     
     # Parse arguments
-    use_extra_model = "(mon_lib)" in model
-    model           = model.replace(" (mon_lib)", "")
+    use_extra_model = f"{_extra_model_str}" in model
+    model           = model.replace(f" {_extra_model_str}", "")
     is_mon_model    = model in mon.MODELS
     is_extra_model  = model in mon.MODELS_EXTRA
     
@@ -229,8 +230,8 @@ def run_online(args: dict):
     assert root.exists()
     
     # Parse arguments
-    use_extra_model = "(mon_lib)" in model
-    model           = model.replace(" (mon_lib)", "")
+    use_extra_model = f"{_extra_model_str}" in model
+    model           = model.replace(f" {_extra_model_str}", "")
     is_mon_model    = model in mon.MODELS
     is_extra_model  = model in mon.MODELS_EXTRA
     
@@ -338,8 +339,8 @@ def main(
     task       = click.prompt(click.style(f"Task {tasks_str_}", fg="bright_green", bold=True), default=task)
     task       = tasks_[int(task)] if mon.is_int(task) else task
     # Mode
-    mode       = click.prompt(click.style(f"Mode {utils.parse_menu_string(modes_)}", fg="bright_green", bold=True), default=mode)
-    mode       = modes_[int(mode)] if mon.is_int(mode) else mode
+    mode       = click.prompt(click.style(f"Mode {utils.parse_menu_string(_modes)}", fg="bright_green", bold=True), default=mode)
+    mode       = _modes[int(mode)] if mon.is_int(mode) else mode
     
     if mode in ["train", "predict", "online", "instance"]:
         # Model
@@ -347,7 +348,7 @@ def main(
         models_str_  = utils.parse_menu_string(models_)
         model	     = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	     = models_[int(model)] if mon.is_int(model) else model
-        model_       = model.replace(" (mon_lib)", "")
+        model_       = model.replace(f" {_extra_model_str}", "")
         # Config     
         configs_     = mon.list_configs(project_root=root, model=model_)
         configs_str_ = utils.parse_menu_string(configs_)

@@ -380,7 +380,7 @@ class Model(lightning.LightningModule, ABC):
         """Specify the path of the model's pretrained weights directory in
         :attr:`ZOO_DIR`.
         """
-        return ZOO_DIR / self.name
+        return ZOO_DIR / self.name / "weights"
     
     # endregion
     
