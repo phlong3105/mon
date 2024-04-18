@@ -7,6 +7,7 @@ from __future__ import annotations
 
 __all__ = [
     "get_project_default_config",
+    "is_extra_model",
     "list_config_files",
     "list_configs",
     "list_datasets",
@@ -19,6 +20,7 @@ __all__ = [
     "list_weights_files",
     "load_config",
     "parse_config_file",
+    "parse_model_name",
 ]
 
 import importlib.util
@@ -27,9 +29,8 @@ from typing import Any
 
 from mon import core
 
-console          = core.console
-error_console    = core.error_console
-_extra_model_str = "(original)"
+console       = core.console
+error_console = core.error_console
 
 
 # region Projects
@@ -66,6 +67,16 @@ def list_tasks(project_root: str | core.Path) -> list[str]:
 
 # region Models
 
+def is_extra_model(model: str) -> bool:
+    from mon.globals import MODELS, EXTRA_MODELS, EXTRA_MODEL_STR
+    use_extra_model = f"{EXTRA_MODEL_STR}" in model
+    model           = model.replace(f" {EXTRA_MODEL_STR}", "")
+    return (
+        use_extra_model or
+        (model in MODELS and model not in EXTRA_MODELS)
+    )
+
+
 def list_mon_models(task: str, mode: str) -> list[str]:
     from mon.globals import Task, MODELS, Scheme
     task   = Task(task)
@@ -78,9 +89,9 @@ def list_mon_models(task: str, mode: str) -> list[str]:
 
 
 def list_extra_models(task: str, mode: str) -> list[str]:
-    from mon.globals import Task, MODELS_EXTRA, Scheme
+    from mon.globals import Task, EXTRA_MODELS, Scheme
     task   = Task(task)
-    models = MODELS_EXTRA
+    models = EXTRA_MODELS
     models = [m for m in models if task in models[m]["tasks"]]
     if mode in ["online", "instance"]:
         mode   = Scheme(mode)
@@ -93,7 +104,8 @@ def list_models(
     mode        : str,
     project_root: str | core.Path | None = None
 ) -> list[str]:
-    models          =   list_mon_models(task, mode)
+    from mon.globals import EXTRA_MODEL_STR
+    models          = list_mon_models(task, mode)
     extra_models    = list_extra_models(task, mode)
     default_configs = get_project_default_config(project_root=project_root)
     if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
@@ -101,12 +113,17 @@ def list_models(
         if len(project_models) > 0:
             models       = [m for m in models       if core.snakecase(m) in project_models]
             extra_models = [m for m in extra_models if core.snakecase(m) in project_models]
-    #
+    # Rename extra models for clarity
     for i, m in enumerate(extra_models):
         if m in models:
-            extra_models[i] = f"{m} {_extra_model_str}"
+            extra_models[i] = f"{m} {EXTRA_MODEL_STR}"
     models = models + extra_models
     return sorted(models)
+
+
+def parse_model_name(model: str) -> str:
+    from mon.globals import EXTRA_MODEL_STR
+    return model.replace(f"{EXTRA_MODEL_STR}", "").strip()
 
 # endregion
 
@@ -127,24 +144,25 @@ def list_config_files(project_root: str | core.Path, model: str | None = None) -
         )
     ]
     if model not in [None, "None", ""]:
-        config_files = [cf for cf in config_files if f"{model}_" in cf.name]
+        model_name   = parse_model_name(model)
+        config_files = [cf for cf in config_files if f"{model_name}_" in cf.name]
     config_files = core.unique(config_files)
     config_files = sorted(config_files)
     return config_files
 
 
 def list_configs(project_root: str | core.Path, model: str | None = None) -> list[str]:
+    from mon.globals import EXTRA_MODEL_STR
     config_files = list_config_files(project_root=project_root, model=model)
     config_files = [str(f.name) for f in config_files]
+    # if is_extra_model(model):
+    #     config_files = [EXTRA_MODEL_STR in f for f in config_files]
     config_files = core.unique(config_files)
     config_files = sorted(config_files, key=lambda x: (os.path.splitext(x)[1], x))
     return config_files
 
 
-def parse_config_file(
-    config      : str | core.Path,
-    project_root: str | core.Path
-) -> core.Path | None:
+def parse_config_file(config: str | core.Path, project_root: str | core.Path) -> core.Path | None:
     # assert config not in [None, "None", ""]
     if config in [None, "None", ""]:
         error_console.log(f"No configuration given.")
@@ -214,13 +232,13 @@ def list_mon_datasets(task: str, mode: str) -> list[str]:
 
 
 def list_extra_datasets(task: str, mode: str) -> list[str]:
-    from mon.globals import Task, Split, DATASETS_EXTRA
+    from mon.globals import Task, Split, EXTRA_DATASETS
     if mode in ["train"]:
         split = Split("train")
     else:
         split = Split("test")
     task 	 = Task(task)
-    datasets = DATASETS_EXTRA
+    datasets = EXTRA_DATASETS
     return sorted([
         d for d in datasets
         if (task in datasets[d]["tasks"] and split in datasets[d]["splits"])
@@ -243,31 +261,26 @@ def list_datasets(
 
 # region Weights
 
-def list_weights_files(
-    model       : str,
-    config      : str             | None = None,
-    project_root: str | core.Path | None = None,
-) -> list[core.Path]:
+def list_weights_files(model: str, project_root: str | core.Path | None = None) -> list[core.Path]:
     from mon.globals import ZOO_DIR
-    files = []
+    
+    weights_files = []
     # Search for weights in project_root
     if project_root not in [None, "None", ""]:
-        project_root = core.Path(project_root)
-        train_dir    = project_root / "run" / "train"
-        files        = sorted(list(train_dir.rglob(f"*")))
-        files        = [f for f in files if f.is_weights_file()]
-        # if config not in [None, "None", ""]:
-        #     config = str(pathlib.Path(config).stem)
-        #     files  = [f for f in files if config in str(f)]
+        project_root  = core.Path(project_root)
+        train_dir     = project_root / "run" / "train"
+        weights_files = sorted(list(train_dir.rglob(f"*")))
+        weights_files = [f for f in weights_files if f.is_weights_file()]
     # Search for weights in ZOO_DIR
     for path in sorted(list(ZOO_DIR.rglob(f"*"))):
         if path.is_weights_file():
-            files.append(path)
+            weights_files.append(path)
     # Remove duplicate and sort
-    files = [f for f in files if f"{model}_" in str(f)]
-    files = core.unique(files)
-    files = sorted(files)
-    return files
+    model_name    = parse_model_name(model)
+    weights_files = [f for f in weights_files if f"{model_name}_" in str(f)]
+    weights_files = core.unique(weights_files)
+    weights_files = sorted(weights_files)
+    return weights_files
 
 # endregion
 

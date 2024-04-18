@@ -18,22 +18,24 @@ __all__ = [
     "CONFIG_FILE_FORMATS",
     "DATAMODULES",
     "DATASETS",
-    "DATASETS_EXTRA",
     "DATA_DIR",
     "DETECTORS",
     "DISTANCES",
     "EMBEDDERS",
+    "EXTRA_DATASETS",
+    "EXTRA_DATASET_STR",
+    "EXTRA_METRICS",
+    "EXTRA_MODELS",
+    "EXTRA_MODEL_STR",
     "FILE_HANDLERS",
     "IMAGE_FILE_FORMATS",
     "LOGGERS",
     "LOSSES",
     "LR_SCHEDULERS",
     "METRICS",
-    "METRICS_EXTRA",
     "MODELS",
-    "MODELS_EXTRA",
     "MON_DIR",
-    "MON_LIB_DIR",
+    "MON_EXTRA_DIR",
     "MOTIONS",
     "OBJECTS",
     "OPTIMIZERS",
@@ -69,7 +71,7 @@ _current_file = pathlib.Path(__file__).absolute()
 ROOT_DIR      = _current_file.parents[2]
 SRC_DIR       = _current_file.parents[1]
 MON_DIR       = _current_file.parents[0]
-MON_LIB_DIR   = SRC_DIR / "mon_lib"
+MON_EXTRA_DIR = SRC_DIR / "mon_extra"
 
 ZOO_DIR = None
 for i, parent in enumerate(_current_file.parents):
@@ -633,7 +635,20 @@ IMAGE_FILE_FORMATS   = [".arw", ".bmp", ".dng", ".jpg", ".jpeg", ".png", ".ppm",
 VIDEO_FILE_FORMATS   = [".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv"]
 TORCH_FILE_FORMATS   = [".pt", ".pth", ".weights", ".ckpt", ".tar", ".onnx"]
 WEIGHTS_FILE_FORMATS = [".pt", ".pth", ".onnx"]
-METRICS_EXTRA        = {
+
+# List 3rd party modules
+EXTRA_DATASET_STR = "[extra]"
+EXTRA_MODEL_STR   = "[extra]"
+EXTRA_DATASETS    = {
+    # region detect
+        "aic24_fisheye8k": {
+        "tasks"         : [Task.DETECT],
+        "splits"        : [Split.TRAIN, Split.VAL, Split.TEST],
+        "has_test_label": False,
+    },
+    # endregion
+}
+EXTRA_METRICS     = {
     # FR
     "ahiq"               : {"metric_mode": "FR", "lower_is_better": False, },
     "ckdn"               : {"metric_mode": "FR", "lower_is_better": False, },
@@ -705,36 +720,25 @@ METRICS_EXTRA        = {
     "tv"                 : {"metric_mode": "NR", "lower_is_better": False, },
     "uranker"            : {"metric_mode": "NR", "lower_is_better": False, },
 }
-DATASETS_EXTRA       = {
-    # region detect
-        "aic24_fisheye8k": {
-        "tasks"         : [Task.DETECT],
-        "splits"        : [Split.TRAIN, Split.VAL, Split.TEST],
-        "has_test_label": False,
-    },
-    # endregion
-}
-
-# Models
-MODELS_EXTRA = {
+EXTRA_MODELS      = {
     # region detect
         # region supergradients
             "yolo_nas_s": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
                 "torch_distributed_launch": False,
             },
             "yolo_nas_m": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
                 "torch_distributed_launch": False,
             },
             "yolo_nas_l": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
                 "torch_distributed_launch": False,
             },
         # endregion
@@ -742,25 +746,25 @@ MODELS_EXTRA = {
             "yolor_d6": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
                 "torch_distributed_launch": True,
             },
             "yolor_e6": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
                 "torch_distributed_launch": True,
             },
             "yolor_p6": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
                 "torch_distributed_launch": True,
             },
             "yolor_w6": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolor",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
                 "torch_distributed_launch": True,
             },
         # endregion
@@ -768,37 +772,37 @@ MODELS_EXTRA = {
             "yolov7"    : {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
                 "torch_distributed_launch": True,
             },
             "yolov7_d6" : {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
                 "torch_distributed_launch": True,
             },
             "yolov7_e6" : {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
                 "torch_distributed_launch": True,
             },
             "yolov7_e6e": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
                 "torch_distributed_launch": True,
             },
             "yolov7_w6" : {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
                 "torch_distributed_launch": True,
             },
             "yolov7x"   : {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov7",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
                 "torch_distributed_launch": True,
             },
         # endregion
@@ -806,42 +810,42 @@ MODELS_EXTRA = {
             "yolov8n": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "ultralytics",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "ultralytics",
                 "torch_distributed_launch": False,
             },
             "yolov8s": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "ultralytics",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "ultralytics",
                 "torch_distributed_launch": False,
             },
             "yolov8m": {
                 "tasks"    : [Task.DETECT],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "ultralytics",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "ultralytics",
                 "torch_distributed_launch": False,
             },
             "yolov8l": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "ultralytics",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "ultralytics",
                 "torch_distributed_launch": False,
             },
             "yolov8x": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "ultralytics",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "ultralytics",
                 "torch_distributed_launch": False,
             },
             "yolov9c_ultralytics": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "ultralytics",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "ultralytics",
                 "torch_distributed_launch": True,
             },
             "yolov9e_ultralytics": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "multitask" / "ultralytics",
+                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "ultralytics",
                 "torch_distributed_launch": True,
             },
         # endregion
@@ -849,25 +853,25 @@ MODELS_EXTRA = {
             "gelan_c" : {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov9",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
                 "torch_distributed_launch": True,
             },
             "gelan_e" : {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov9",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
                 "torch_distributed_launch": True,
             },
             "yolov9_c": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov9",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
                 "torch_distributed_launch": True,
             },
             "yolov9_e": {
                 "tasks"    : [Task.DETECT],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "detect" / "yolov9",
+                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
                 "torch_distributed_launch": True,
             },
         # endregion
@@ -877,127 +881,127 @@ MODELS_EXTRA = {
             "dccnet"       : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "dccnet",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "dccnet",
                 "torch_distributed_launch": True,
             },
             "enlightengan" : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.UNSUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "enlightengan",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "enlightengan",
                 "torch_distributed_launch": True,
             },
             "gsad"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "gsad",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "gsad",
                 "torch_distributed_launch": True,
             },
             "kind"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "kind",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "kind",
                 "torch_distributed_launch": True,
             },
             "lime"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.TRADITIONAL],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "lime",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "lime",
                 "torch_distributed_launch": True,
             },
             "llflow"       : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "llflow",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "llflow",
                 "torch_distributed_launch": True,
             },
             "llunet++"     : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "llunet++",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "llunet++",
                 "torch_distributed_launch": True,
             },
             "mtfe"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "mtfe",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "mtfe",
                 "torch_distributed_launch": True,
             },
             "pie"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.TRADITIONAL],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "pie",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "pie",
                 "torch_distributed_launch": True,
             },
             "retinexformer": {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "retinexformer",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "retinexformer",
                 "torch_distributed_launch": True,
             },
             "retinexnet"   : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "retinexnet",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "retinexnet",
                 "torch_distributed_launch": True,
             },
             "ruas"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "ruas",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "ruas",
                 "torch_distributed_launch": True,
             },
             "sci"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "sci",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "sci",
                 "torch_distributed_launch": True,
             },
             "sgz"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "sgz",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "sgz",
                 "torch_distributed_launch": True,
             },
             "snr"          : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "snr",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "snr",
                 "torch_distributed_launch": True,
             },
             "stablellve"   : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "stablellve",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "stablellve",
                 "torch_distributed_launch": True,
             },
             "uretinexnet"  : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "uretinexnet",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "uretinexnet",
                 "torch_distributed_launch": True,
             },
             "utvnet"       : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "utvnet",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "utvnet",
                 "torch_distributed_launch": True,
             },
             "zero_dce"     : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zero_dce",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce",
                 "torch_distributed_launch": True,
             },
             "zero_dce++"   : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zero_dce++",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce++",
                 "torch_distributed_launch": True,
             },
             "zero_didce"   : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "llie" / "zero_didce",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_didce",
                 "torch_distributed_launch": True,
             },
         # endregion
@@ -1005,7 +1009,7 @@ MODELS_EXTRA = {
             "restormer"    : {
                 "tasks"    : [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_LIB_DIR / "vision" / "enhance" / "multitask" / "restormer",
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "multitask" / "restormer",
                 "torch_distributed_launch": True,
             },
         # endregion

@@ -9,7 +9,7 @@ project_dir=$(dirname "$current_dir")
 mon_dir=$(dirname "$project_dir")
 runml_dir="${project_dir}/runml"
 data_dir="${mon_dir}/data"
-yolor_dir="${mon_dir}/src/mon_lib/vision/detect/yolor"
+yolor_dir="${mon_dir}/src/mon_extra/vision/detect/yolor"
 
 # Constants
 test_cameras=(
