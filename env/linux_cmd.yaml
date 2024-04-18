@@ -48,9 +48,9 @@ dependencies:
       - tensorboard           # TensorFlow's Visualization Toolkit.
       # PyTorch
       - einops                # A new flavour of deep learning operations.
-      - lightning>=2.2.1      #
+      - lightning>=2.2.2      #
       - onnxruntime           # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
-      - torch>=2.2.1          # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+      - torch>=2.2.2          # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio            # Simple audio I/O for pytorch.
       - torchvision           # Image and video datasets and models for torch deep learning.
       - torchfile             # Torch7 binary serialized file parser.
@@ -63,7 +63,7 @@ dependencies:
       - piqa                  # PyTorch Image Quality Assessment package.
       - pycocotools           # COCO dataset and evaluation metrics for object detection, instance segmentation, and person keypoint detection.
       - pyiqa                 # PyTorch Toolbox for Image Quality Assessment.
-      - torchmetrics>=1.3.1   # Collection of PyTorch native metrics for easy evaluating machine learning models.
+      - torchmetrics>=1.3.2   # Collection of PyTorch native metrics for easy evaluating machine learning models.
       # Ray                   
       - ray[tune]             # Ray is a fast and simple framework for building and running distributed applications.
       # Scientific            
