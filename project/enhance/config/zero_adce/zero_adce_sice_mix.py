@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-ADCE model trained on SICEMix dataset."""
-
 from __future__ import annotations
 
 import mon

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""LLHINet model trained on LOL-v1 dataset."""
-
 from __future__ import annotations
 
 import mon
