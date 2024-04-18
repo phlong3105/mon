@@ -107,20 +107,6 @@ def train(args: argparse.Namespace):
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.99)
     
-    # Logging
-    writer = SummaryWriter(log_dir=str(save_dir / "tensorboard"))
-    log    = OrderedDict([
-        ("epoch"     , []),
-        ("lr"        , []),
-        ("train/loss", []),
-        ("val/loss"  , []),
-        ("val/psnr"  , []),
-        ("val/ssim"  , []),
-    ])
-    best_loss = 1000
-    best_psnr = 0
-    best_ssim = 0
-    
     # Data I/O
     data_args = {
         "name"      : args.data,
@@ -140,6 +126,20 @@ def train(args: argparse.Namespace):
     datamodule.setup(phase="training")
     train_dataloader = datamodule.train_dataloader
     val_dataloader   = datamodule.val_dataloader
+    
+    # Logging
+    writer = SummaryWriter(log_dir=str(save_dir / "tensorboard"))
+    log    = OrderedDict([
+        ("epoch"     , []),
+        ("lr"        , []),
+        ("train/loss", []),
+        ("val/loss"  , []),
+        ("val/psnr"  , []),
+        ("val/ssim"  , []),
+    ])
+    best_loss = 1000
+    best_psnr = 0
+    best_ssim = 0
     
     # Training
     for epoch in range(epochs):
@@ -179,15 +179,15 @@ def train(args: argparse.Namespace):
         
         # Save
         if val_loss < best_loss:
-            torch.save(model.state_dict(), str(weights_dir/"best.pt"))
+            torch.save(model.state_dict(), str(weights_dir / "best.pt"))
             best_loss = val_loss
         if val_psnr > best_psnr:
-            torch.save(model.state_dict(), str(weights_dir/"best_psnr.pt"))
+            torch.save(model.state_dict(), str(weights_dir / "best_psnr.pt"))
             best_psnr = val_psnr
         if val_ssim > best_ssim:
-            torch.save(model.state_dict(), str(weights_dir/"best_ssim.pt"))
+            torch.save(model.state_dict(), str(weights_dir / "best_ssim.pt"))
             best_ssim = val_ssim
-        torch.save(model.state_dict(), str(weights_dir/"last.pt"))
+        torch.save(model.state_dict(), str(weights_dir / "last.pt"))
         torch.cuda.empty_cache()
    
     writer.close()
@@ -232,8 +232,7 @@ def main(
     
     # Parse arguments
     weights  = weights  or args.get("weights")
-    project  = args.get("project")
-    fullname = fullname or args.get("name")
+    fullname = fullname or args.get("fullname")
     device   = device   or args.get("device")
     epochs   = epochs   or args.get("epochs")
     exist_ok = exist_ok or args.get("exist_ok")
@@ -242,8 +241,7 @@ def main(
     # Prioritize input args --> config file args
     root     = mon.Path(root)
     weights  = mon.to_list(weights)
-    project  = root.name or project
-    save_dir = save_dir  or root / "run" / "train" / fullname
+    save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
     
@@ -252,8 +250,7 @@ def main(
     args["config"]     = config
     args["weights"]    = weights
     args["model"]      = model
-    args["project"]    = project
-    args["name"]       = fullname
+    args["fullname"]   = fullname
     args["save_dir"]   = save_dir
     args["device"]     = device
     args["local_rank"] = local_rank

@@ -425,8 +425,7 @@ def main(
     # Parse arguments
     root     = mon.Path(root)
     weights  = mon.to_list(weights)
-    project  = root.name
-    save_dir = save_dir  or root / "run" / "train" / fullname
+    save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
     
@@ -436,7 +435,6 @@ def main(
         "config"    : config,
         "opt"       : config,
         "model"     : model,
-        "project"   : project,
         "fullname"  : fullname,
         "save_dir"  : save_dir,
         "weights"   : weights,

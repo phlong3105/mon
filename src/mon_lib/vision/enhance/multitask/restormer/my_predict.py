@@ -241,7 +241,6 @@ def main(
     root     = mon.Path(root)
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
-    project  = root.name
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
     imgsz    = mon.parse_hw(imgsz)[0]
@@ -253,7 +252,6 @@ def main(
         "opt"         : config,
         "model"       : model,
         "data"        : data,
-        "project"     : project,
         "fullname"    : fullname,
         "save_dir"    : save_dir,
         "weights"     : weights,

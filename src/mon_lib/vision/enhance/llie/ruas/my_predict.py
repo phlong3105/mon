@@ -9,7 +9,6 @@ import argparse
 import copy
 import os
 import socket
-import sys
 import time
 
 import click
@@ -156,9 +155,8 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/ruas/ruas_lol_v1.pt"
+    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/ruas/weights/[original]_ruas_lol_v1.pt"
     weights  = mon.to_list(weights)
-    project  = root.name
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
@@ -171,8 +169,7 @@ def main(
         "weights"   : weights,
         "model"     : model,
         "data"      : data,
-        "project"   : project,
-        "name"      : fullname,
+        "fullname"  : fullname,
         "save_dir"  : save_dir,
         "device"    : device,
         "imgsz"     : imgsz,

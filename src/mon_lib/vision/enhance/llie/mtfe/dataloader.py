@@ -5,15 +5,18 @@ import numpy as np
 import torch
 import torch.utils.data as data
 from PIL import Image, ImageOps
+from torchvision import transforms
+
+import mon
 
 random.seed(123)
 
 
 class InputLoader(data.Dataset):
 
-	def __init__(self, image_path):
-		self.image_path = image_path
-		self.in_files   = self.list_files(os.path.join(image_path, "input"))
+	def __init__(self, image_path, split="train"):
+		self.image_path = str(mon.DATA_DIR / "llie" / image_path / split)
+		self.in_files   = self.list_files(os.path.join(self.image_path, "lq"))
 
 	@staticmethod
 	def data_augment(inp, gt):
@@ -28,22 +31,26 @@ class InputLoader(data.Dataset):
 			return ImageOps.flip(inp), ImageOps.flip(gt)
 
 	def __getitem__(self, index: int):
-		fname    = os.path.split(self.in_files[index])[-1]
-		data_low = Image.open(self.in_files[index])
-		data_gt  = Image.open(os.path.join(self.image_path, "gt", fname))
-
+		fname     = os.path.split(self.in_files[index])[-1]
+		data_low  = Image.open(self.in_files[index])
+		data_gt   = Image.open(os.path.join(self.image_path, "hq", fname))
+		
 		low       = np.asarray(data_low)
 		data_hist = np.zeros((3, 256))
 		for i in range(3):
 			S = low[..., i]
 			data_hist[i, ...], _ = np.histogram(S.flatten(), 256, [0, 256])
 			data_hist[i, ...]    = data_hist[i, ...] / np.sum(data_hist[i, ...])
-
+		
+		transform = transforms.Compose([
+			transforms.Resize([400, 600]),
+		])
+		data_low = transform(data_low)
+		data_gt  = transform(data_gt)
+	
 		data_input, data_gt = self.data_augment(data_low, data_gt)
-
 		data_input = (np.asarray(data_input) / 255.0)
 		data_gt    = (np.asarray(data_gt) / 255.0)
-
 		data_input = torch.from_numpy(data_input).float()
 		data_gt    = torch.from_numpy(data_gt).float()
 		data_hist  = torch.from_numpy(data_hist).float()

@@ -143,8 +143,7 @@ def main(
     
     # Parse arguments
     weights  = weights  or args.get("weights")
-    project  = args.get("project")
-    fullname = fullname or args.get("name")
+    fullname = fullname or args.get("fullname")
     device   = device   or args.get("device")
     epochs   = epochs   or args.get("epochs")
     exist_ok = exist_ok or args.get("exist_ok")
@@ -153,8 +152,7 @@ def main(
     # Prioritize input args --> config file args
     root     = mon.Path(root)
     weights  = mon.to_list(weights)
-    project  = root.name or project
-    save_dir = save_dir  or root / "run" / "train" / fullname
+    save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
     
@@ -163,8 +161,7 @@ def main(
     args["config"]     = config
     args["weights"]    = weights
     args["model"]      = model
-    args["project"]    = project
-    args["name"]       = fullname
+    args["fullname"]   = fullname
     args["save_dir"]   = save_dir
     args["device"]     = device
     args["local_rank"] = local_rank

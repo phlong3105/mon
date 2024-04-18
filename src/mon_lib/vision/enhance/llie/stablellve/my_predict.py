@@ -147,9 +147,8 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/stablellve/stablellve_checkpoint.pth"
+    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/stablellve/weights/[original]stablellve_checkpoint.pth"
     weights  = mon.to_list(weights)
-    project  = root.name
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
@@ -162,8 +161,7 @@ def main(
         "weights"   : weights,
         "model"     : model,
         "data"      : data,
-        "project"   : project,
-        "name"      : fullname,
+        "fullname"  : fullname,
         "save_dir"  : save_dir,
         "device"    : device,
         "imgsz"     : imgsz,

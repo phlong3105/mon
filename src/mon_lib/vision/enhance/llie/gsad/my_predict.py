@@ -195,8 +195,7 @@ def main(
     
     # Prioritize input args --> config file args
     weights  = weights  or args.get("weights")
-    project  = args.get("project")
-    fullname = fullname or args.get("name")
+    fullname = fullname or args.get("fullname")
     device   = device   or args.get("device")
     imgsz    = imgsz    or args.get("imgsz")
     verbose  = verbose  or args.get("verbose")
@@ -204,8 +203,7 @@ def main(
     # Parse arguments
     root     = mon.Path(root)
     weights  = mon.to_list(weights)
-    project  = root.name or project
-    save_dir = save_dir  or root / "run" / "predict" / model
+    save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
     imgsz    = mon.parse_hw(imgsz)[0]
@@ -216,8 +214,7 @@ def main(
     args["weights"]        = weights
     args["model"]          = model
     args["data"]           = data
-    args["project"]        = project
-    args["name"]           = fullname
+    args["fullname"]       = fullname
     args["save_dir"]       = save_dir
     args["device"]         = device
     args["local_rank"]     = local_rank

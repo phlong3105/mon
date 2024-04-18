@@ -105,10 +105,9 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    weights  = mon.ZOO_DIR / "vision/enhance/llie/retinexnet"
+    weights  = mon.ZOO_DIR / "vision/enhance/llie/retinexnet/weights"
     weights  = mon.to_list(weights)
-    project  = root.name
-    save_dir = save_dir  or root / "run" / "predict" / model
+    save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
     imgsz    = mon.parse_hw(imgsz)[0]
@@ -120,8 +119,7 @@ def main(
         "weights"   : weights,
         "model"     : model,
         "data"      : data,
-        "project"   : project,
-        "name"      : fullname,
+        "fullname"  : fullname,
         "save_dir"  : save_dir,
         "device"    : device,
         "imgsz"     : imgsz,

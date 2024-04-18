@@ -1,8 +1,8 @@
 # General config
 root        :
 weights     :
-data        : "lol_v1"
 model       :
+data        : "lol_v1"
 fullname    :
 save_dir    :
 device      : 0
