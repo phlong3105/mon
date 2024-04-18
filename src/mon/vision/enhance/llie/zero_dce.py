@@ -23,6 +23,41 @@ console = core.console
 
 # region Loss
 
+class TotalVariationLoss(nn.Loss):
+    """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
+    :math:`\mathcal{L}_{tvA}` preserve the monotonicity relations between
+    neighboring pixels. It is used to avoid aggressive and sharp changes between
+    neighboring pixels.
+    
+    References:
+        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
+    """
+    
+    def __init__(
+        self,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean",
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        x       = input
+        b       = x.size()[0]
+        h_x     = x.size()[2]
+        w_x     = x.size()[3]
+        count_h =  (x.size()[2]-1) * x.size()[3]
+        count_w = x.size()[2] * (x.size()[3] - 1)
+        h_tv    = torch.pow((x[:, :, 1:, :] - x[:, :, :h_x - 1, :]), 2).sum()
+        w_tv    = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x - 1]), 2).sum()
+        loss    = self.loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
+        # loss    = base.reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+    
+    
 class Loss(nn.Loss):
 
     def __init__(
@@ -49,7 +84,7 @@ class Loss(nn.Loss):
             mean_val   = exp_mean_val,
         )
         self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tva = nn.TotalVariationLoss(reduction=reduction)
+        self.loss_tva = TotalVariationLoss(reduction=reduction)
     
     def forward(
         self,
