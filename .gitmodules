@@ -7,3 +7,6 @@
 [submodule "src/mon_extra/vision/multitask/ultralytics"]
 	path = src/mon_extra/vision/multitask/ultralytics
 	url = https://github.com/phlong3105/ultralytics
+[submodule "src/mon_extra/vision/multitask/automl"]
+	path = src/mon_extra/vision/multitask/automl
+	url = https://github.com/phlong3105/automl
