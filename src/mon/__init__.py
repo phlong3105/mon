@@ -21,4 +21,4 @@ from mon.nn import *
 from mon.proc import *
 from mon.vision import *
 
-__version__ = "1.4.4"
+__version__ = "1.4.5"
