@@ -10,3 +10,6 @@
 [submodule "src/mon_extra/vision/multitask/automl"]
 	path = src/mon_extra/vision/multitask/automl
 	url = https://github.com/phlong3105/automl
+[submodule "tool/XAnyLabeling"]
+	path = tool/XAnyLabeling
+	url = https://github.com/phlong3105/XAnyLabeling
