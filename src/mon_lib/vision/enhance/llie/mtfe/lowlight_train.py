@@ -102,7 +102,7 @@ def eval(model, save_plot=False):
             torchvision.utils.save_image(xy[1], xy_path2)
             torchvision.utils.save_image(xy[2], xy_path3)
 
-            if save_plot == True:
+            if save_plot:
                 if not os.path.exists(plot_path.replace('/' + plot_path.split("/")[-1], '')):
                     os.makedirs(plot_path.replace('/' + plot_path.split("/")[-1], ''))
 
@@ -210,7 +210,7 @@ def train(config):
     Imgnet = Imgnet.cuda()
 
     train_dataset = dataloader.InputLoader(config.train_images_path)
-    train_loader = torch.utils.data.DataLoader(
+    train_loader  = torch.utils.data.DataLoader(
         dataset     = train_dataset,
         batch_size  = config.train_batch_size,
         shuffle     = True,
@@ -224,7 +224,7 @@ def train(config):
     loss_t = myloss.totalvariation_loss().cuda()
 
     optimizer_img = torch.optim.Adam(Imgnet.parameters(), lr=config.lr, weight_decay=config.weight_decay)
-
+    
     Imgnet.train()
 
     num_params = 0
@@ -233,27 +233,27 @@ def train(config):
         num_params += param.numel()
     print('# of Imgnet params : %d' % num_params)
 
-    cont_c = 0.5
-    cont_e = 0.2
+    cont_c  = 0.5
+    cont_e  = 0.2
     cont_cs = 0.3
 
-    lambda_c = 0
-    lambda_e = 0
+    lambda_c  = 0
+    lambda_e  = 0
     lambda_cs = 0
 
-    difficulty_c = 0
-    difficulty_e = 0
+    difficulty_c  = 0
+    difficulty_e  = 0
     difficulty_cs = 0
 
     loss_col_0 = 0
     loss_ent_0 = 0
     loss_cos_0 = 0
-    loss_0 = 0
+    loss_0     = 0
 
     loss_col_2 = 0
     loss_ent_2 = 0
     loss_cos_2 = 0
-    loss_2 = 0
+    loss_2     = 0
 
     for epoch in range(config.num_epochs):
         st = time.time()
@@ -261,9 +261,9 @@ def train(config):
         sumLossCol = 0
         sumLossEnt = 0
         sumLossCos = 0
-        sumLossTV = 0
+        sumLossTV  = 0
 
-        sumLoss = 0
+        sumLoss  = 0
         sumLoss_ = 0
 
         for iteration, (low, gt, hist) in enumerate(train_loader):
@@ -283,10 +283,9 @@ def train(config):
             if epoch == 0:
                 loss_f = (cont_c * loss_img + cont_e * loss_ent + loss_tv + cont_cs * loss_col)
             elif epoch == 1:
-                loss_f = (lambda_c * loss_img) + (lambda_e * loss_ent) + (loss_tv) + (lambda_cs * loss_col)
+                loss_f = (lambda_c * loss_img) + (lambda_e * loss_ent) + loss_tv + (lambda_cs * loss_col)
             else:
-                loss_f = (lambda_c * difficulty_c * loss_img) + (
-                        lambda_e * difficulty_e * loss_ent) + (loss_tv) + (lambda_cs * difficulty_cs * loss_col)
+                loss_f = (lambda_c * difficulty_c * loss_img) + (lambda_e * difficulty_e * loss_ent) + loss_tv + (lambda_cs * difficulty_cs * loss_col)
             loss_ = loss_f - loss_tv
 
             optimizer_img.zero_grad()
@@ -297,9 +296,9 @@ def train(config):
             sumLossCol += loss_img.item()
             sumLossEnt += loss_ent.item()
             sumLossCos += loss_col.item()
-            sumLossTV += loss_tv.item()
+            sumLossTV  += loss_tv.item()
 
-            sumLoss += loss_f.item()
+            sumLoss  += loss_f.item()
             sumLoss_ += loss_.item()
 
             if iteration == (len(train_loader) - 1):
@@ -309,7 +308,7 @@ def train(config):
                 loss_col_0 = sumLossCol / len(train_loader)
                 loss_ent_0 = sumLossEnt / len(train_loader)
                 loss_cos_0 = sumLossCos / len(train_loader)
-                loss_0 = sumLoss_ / len(train_loader)
+                loss_0     = sumLoss_   / len(train_loader)
 
                 writer.add_scalar('color_loss', sumLossCol / len(train_loader), epoch + 1)
                 writer.add_scalar('transformationFunction_loss', sumLossEnt / len(train_loader), epoch + 1)
@@ -321,18 +320,18 @@ def train(config):
             loss_col_1 = loss_col_0
             loss_ent_1 = loss_ent_0
             loss_cos_1 = loss_cos_0
-            loss_1 = loss_0
+            loss_1     = loss_0
             # get loss weights
-            lambda_c = cont_c * (loss_1 / loss_col_1)
-            lambda_e = cont_e * (loss_1 / loss_ent_1)
+            lambda_c  = cont_c  * (loss_1 / loss_col_1)
+            lambda_e  = cont_e  * (loss_1 / loss_ent_1)
             lambda_cs = cont_cs * (loss_1 / loss_cos_1)
 
             print()
             print('lambda_c\t' + str(lambda_c))
             print('lambda_e\t' + str(lambda_e))
             print('lambda_cs\t' + str(lambda_cs))
-
             print()
+            
             # update previous losses
             loss_col_2 = loss_col_1
             loss_ent_2 = loss_ent_1
@@ -343,10 +342,10 @@ def train(config):
             loss_col_1 = loss_col_0
             loss_ent_1 = loss_ent_0
             loss_cos_1 = loss_cos_0
-            loss_1 = loss_0
+            loss_1     = loss_0
             # get loss weights
-            lambda_c = cont_c * (loss_1 / loss_col_1)
-            lambda_e = cont_e * (loss_1 / loss_ent_1)
+            lambda_c  = cont_c * (loss_1 / loss_col_1)
+            lambda_e  = cont_e * (loss_1 / loss_ent_1)
             lambda_cs = cont_cs * (loss_1 / loss_cos_1)
 
             print()
@@ -355,8 +354,8 @@ def train(config):
             print('lambda_cs\t' + str(lambda_cs))
             print()
             # get difficulties
-            difficulty_c = ((loss_col_1 / loss_col_2) / (loss_1 / loss_2)) ** config.beta
-            difficulty_e = ((loss_ent_1 / loss_ent_2) / (loss_1 / loss_2)) ** config.beta
+            difficulty_c  = ((loss_col_1 / loss_col_2) / (loss_1 / loss_2)) ** config.beta
+            difficulty_e  = ((loss_ent_1 / loss_ent_2) / (loss_1 / loss_2)) ** config.beta
             difficulty_cs = ((loss_cos_1 / loss_cos_2) / (loss_1 / loss_2)) ** config.beta
             print('difficulty_c\t' + str(difficulty_c))
             print('difficulty_e\t' + str(difficulty_e))
@@ -381,7 +380,7 @@ def train(config):
         et = time.time() - st
         print('%d epoch: %.3f' % (epoch + 1, et))
         sum_time += et
-        rTime = (sum_time / (epoch + 1)) * (config.num_epochs - (epoch + 1))
+        rTime     = (sum_time / (epoch + 1)) * (config.num_epochs - (epoch + 1))
         print("Estimated time remaining :%d hour %d min %d sec" % (
             rTime / 3600, (rTime % 3600) / 60, (rTime % 3600) % 60))
 

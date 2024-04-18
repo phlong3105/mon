@@ -14,6 +14,7 @@ __all__ = [
     "EdgeCharbonnierLoss",
     "EdgeConstancyLoss",
     "EdgeLoss",
+    "EntropyLoss",
     "ExposureControlLoss",
     "GradientLoss",
     "HistogramLoss",
@@ -341,6 +342,32 @@ class EdgeCharbonnierLoss(base.Loss):
         loss 	  = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
+
+@LOSSES.register(name="entropy_loss")
+class EntropyLoss(base.Loss):
+    
+    def __init__(
+        self,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean",
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        b, c, h, w = input.shape
+        e_sum      = torch.zeros(b, c, h, w).to(input.device)
+        for n in range(0, len(w)):
+            ent    = -w[n] * torch.log2(w[n])
+            e_sum += ent
+        e_sum = e_sum
+        loss  = torch.mean(e_sum)
+        loss  = self.loss_weight * loss
+        return loss
+    
 
 @LOSSES.register(name="exposure_control_loss")
 class ExposureControlLoss(base.Loss):

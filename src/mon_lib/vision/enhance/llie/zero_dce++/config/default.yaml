@@ -1,24 +1,28 @@
 # General config
-root            :
-weights         :
-model           :
-project         :
-name            :
-save_dir        :
-device          : 0
-imgsz           : 512     # Inference size
-epochs          : 200
-exist_ok        : True
-verbose         : True
-# Data
-data            :
+root        :
+weights     :
+data        :
+model       :
+fullname    :
+save_dir    :
+device      : 0
+epochs      : 200
+steps       :
+imgsz       : 512
+resize      :
+benchmark   :
+save_image  :
+use_data_dir:
+exist_ok    : False
+verbose     : True
+
+# Model
+scale_factor: 1
+
+# Training
 train_batch_size: 8
 val_batch_size  : 8
 num_workers     : 4
-# Model
-scale_factor    : 1
-# Training
-load_pretrain   : False
 lr              : 0.0001
 weight_decay    : 0.0001
 grad_clip_norm  : 0.1

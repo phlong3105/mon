@@ -1,8 +1,21 @@
-project:
-name:
-weights:
-device  : 0
-imgsz   : 512
-epochs  : 400
-exist_ok: True
-verbose : True
+# General config
+root        :
+weights     :
+data        :
+model       :
+fullname    :
+save_dir    :
+device      : 0
+epochs      : 400
+steps       :
+imgsz       : 512
+resize      :
+benchmark   :
+save_image  :
+use_data_dir:
+exist_ok    : False
+verbose     : True
+
+# Model
+
+# Training

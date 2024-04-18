@@ -15,6 +15,7 @@ save_image  :
 use_data_dir:
 exist_ok    :
 verbose     :
-# Data
+
+# Model
 
 # Training

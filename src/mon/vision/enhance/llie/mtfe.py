@@ -30,52 +30,54 @@ console = core.console
 
 # region Loss
 
+class TotalVariationLoss(nn.Loss):
+    
+    def __init__(
+        self,
+        loss_weight: float = 1e-4,
+        reduction  : Literal["none", "mean", "sum"] = "mean",
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        w1, w2, w3 = input
+        w       = torch.cat((w1, w2, w3), dim=1)
+        b       = w.size()[0]
+        h_x     = w.size()[2]
+        w_x     = w.size()[3]
+        count_h = (w.size()[2] - 1) * w.size()[3]
+        count_w = w.size()[2] * (w.size()[3] - 1)
+        h_tv    = torch.pow((w[:, :, 1:, :] - w[:, :, :h_x - 1, :]), 2).sum() / count_h
+        w_tv    = torch.pow((w[:, :, :, 1:] - w[:, :, :, :w_x - 1]), 2).sum() / count_w
+        loss    = self.loss_weight * (h_tv + w_tv) / b
+        return loss
+    
+
 class Loss(nn.Loss):
 
     def __init__(
         self,
-        spa_weight    : float = 1.0,
-        exp_patch_size: int   = 16,
-        exp_mean_val  : float = 0.6,
-        exp_weight    : float = 10.0,
-        col_weight    : float = 5.0,
-        tva_weight    : float = 200.0,
-        reduction     : Literal["none", "mean", "sum"] = "mean",
+        reduction: Literal["none", "mean", "sum"] = "mean",
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.spa_weight = spa_weight
-        self.exp_weight = exp_weight
-        self.col_weight = col_weight
-        self.tva_weight = tva_weight
-        
-        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = nn.ExposureControlLoss(
-            reduction  = reduction,
-            patch_size = exp_patch_size,
-            mean_val   = exp_mean_val,
-        )
-        self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tva = nn.TotalVariationLoss(reduction=reduction)
+        self.loss_c = nn.L2Loss(reduction=reduction)
+        self.loss_e = nn.EntropyLoss(reduction=reduction)
+        self.loss_t = TotalVariationLoss(reduction=reduction)
+        self.cos    = nn.CosineSimilarity(dim=1)
     
     def forward(
         self,
         input  : torch.Tensor,
-        adjust : torch.Tensor,
-        enhance: torch.Tensor,
+        target : torch.Tensor,
+        weights: torch.Tensor,
         **_
     ) -> torch.Tensor:
-        loss_spa = self.loss_spa(input=enhance, target=input)
-        loss_exp = self.loss_exp(input=enhance)
-        loss_col = self.loss_col(input=enhance)
-        loss_tva = self.loss_tva(input=adjust)
-        loss     = (
-              self.spa_weight * loss_spa
-            + self.exp_weight * loss_exp
-            + self.col_weight * loss_col
-            + self.tva_weight * loss_tva
-        )
-        return loss
+        pass
 
 # endregion
 
@@ -395,10 +397,10 @@ class MTFE(base.LowLightImageEnhancementModel):
     
     Args:
         in_channels: The first layer's input channel. Default: ``3`` for RGB image.
-        
+    
     References:
         `<https://github.com/PJaemin/MTFE/tree/main>`__
-
+    
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     

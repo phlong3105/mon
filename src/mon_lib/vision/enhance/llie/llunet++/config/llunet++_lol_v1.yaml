@@ -1,18 +1,24 @@
 # General config
 root        :
 weights     :
-model       :
-project     :
-name        :
-device      : 0
-imgsz       : 384
-epochs      : 100
-exist_ok    : True
-verbose     : True
-# Data
 data        : "lol_v1"
-batch_size  : 4
-# Loss
+model       :
+fullname    :
+save_dir    :
+device      : 0
+epochs      : 100
+steps       :
+imgsz       : 384
+resize      :
+benchmark   :
+save_image  :
+use_data_dir:
+exist_ok    : False
+verbose     : True
+
+# Model
 loss_weights: [0.40, 0.05, 0.15, 0.40]
+
 # Training
+batch_size  : 4
 lr          : 0.00001
