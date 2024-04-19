@@ -30,6 +30,6 @@ class DeblurringModel(base.ImageEnhancementModel, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "deblur"
+        return ZOO_DIR / "mon" / "vision" / "enhance" / "deblur"
     
 # endregion

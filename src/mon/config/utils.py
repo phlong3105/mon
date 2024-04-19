@@ -115,15 +115,15 @@ def list_models(
             extra_models = [m for m in extra_models if core.snakecase(m) in project_models]
     # Rename extra models for clarity
     for i, m in enumerate(extra_models):
-        if m in models:
-            extra_models[i] = f"{m} {EXTRA_MODEL_STR}"
+        # if m in models:
+        extra_models[i] = f"{m}_{EXTRA_MODEL_STR}"
     models = models + extra_models
     return sorted(models)
 
 
 def parse_model_name(model: str) -> str:
     from mon.globals import EXTRA_MODEL_STR
-    return model.replace(f"{EXTRA_MODEL_STR}", "").strip()
+    return model.replace(f"_{EXTRA_MODEL_STR}", "").strip()
 
 # endregion
 
@@ -272,7 +272,8 @@ def list_weights_files(model: str, project_root: str | core.Path | None = None) 
         weights_files = sorted(list(train_dir.rglob(f"*")))
         weights_files = [f for f in weights_files if f.is_weights_file()]
     # Search for weights in ZOO_DIR
-    for path in sorted(list(ZOO_DIR.rglob(f"*"))):
+    zoo_dir = ZOO_DIR / "mon_extra" if is_extra_model(model) else ZOO_DIR / "mon"
+    for path in sorted(list(zoo_dir.rglob(f"*"))):
         if path.is_weights_file():
             weights_files.append(path)
     # Remove duplicate and sort

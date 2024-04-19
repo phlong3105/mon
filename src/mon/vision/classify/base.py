@@ -29,6 +29,6 @@ class ImageClassificationModel(nn.Model, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "classify"
+        return ZOO_DIR / "mon" / "vision" / "classify"
     
 # endregion

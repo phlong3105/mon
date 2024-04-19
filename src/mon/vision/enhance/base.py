@@ -30,6 +30,6 @@ class ImageEnhancementModel(nn.Model, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / self.name
+        return ZOO_DIR / "mon" / "vision" / "enhance" / self.name
     
 # endregion
