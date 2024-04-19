@@ -80,7 +80,7 @@ def measure_metric_piqa(
         if m in _METRICS:
             metric_f[m] = _METRICS[m]().to(device=device)
         
-    need_target = any(m in _METRICS and mon.METRICS_EXTRA[m]["metric_mode"] == "FR" for m in metric)
+    need_target = any(m in _METRICS and mon.EXTRA_METRICS[m]["metric_mode"] == "FR" for m in metric)
    
     # Measuring
     h, w = mon.parse_hw(imgsz)
@@ -112,9 +112,9 @@ def measure_metric_piqa(
             for m in metric:
                 if m not in _METRICS:
                     continue
-                if not has_target and mon.METRICS_EXTRA[m]["metric_mode"] == "FR":
+                if not has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
                     continue
-                elif has_target and mon.METRICS_EXTRA[m]["metric_mode"] == "FR":
+                elif has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
                     values[m].append(float(metric_f[m](image, target)))
                 else:
                     values[m].append(float(metric_f[m](image)))
@@ -190,7 +190,7 @@ def measure_metric_pyiqa(
                 device      = device,
             )
     mon.enable_print()
-    need_target = any(mon.METRICS_EXTRA[m]["metric_mode"] == "FR" for m in metric)
+    need_target = any(mon.EXTRA_METRICS[m]["metric_mode"] == "FR" for m in metric)
     
     # Measuring
     h, w = mon.parse_hw(imgsz)
@@ -222,9 +222,9 @@ def measure_metric_pyiqa(
             for m in metric:
                 if m not in _METRICS:
                     continue
-                if not has_target and mon.METRICS_EXTRA[m]["metric_mode"] == "FR":
+                if not has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
                     continue
-                elif has_target and mon.METRICS_EXTRA[m]["metric_mode"] == "FR":
+                elif has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
                     values[m].append(metric_f[m](image, target))
                 else:
                     values[m].append(metric_f[m](image))
@@ -239,8 +239,8 @@ def measure_metric_pyiqa(
 
 def update_results(results: dict, new_values: dict) -> dict:
     for m, v in new_values.items():
-        if m in mon.METRICS_EXTRA:
-            lower_is_better = mon.METRICS_EXTRA[m]["lower_is_better"]
+        if m in mon.EXTRA_METRICS:
+            lower_is_better = mon.EXTRA_METRICS[m]["lower_is_better"]
             if m not in results:
                 results[m] = v
             elif results[m] is None:
