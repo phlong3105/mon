@@ -162,7 +162,7 @@ def train(args: argparse.Namespace):
     )
     
     # Logging
-    writer = SummaryWriter(log_dir=str(save_dir / "tensorboard"))
+    writer = SummaryWriter(log_dir=str(save_dir / "log"))
     
     # Training
     best_psnr = 0

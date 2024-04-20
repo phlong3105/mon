@@ -79,6 +79,8 @@ class LogTrainingProgress(callbacks.Callback):
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str):
         """Called when fit, validate, test, predict, or tune begins."""
         dirpath = self._dirpath or core.Path(trainer.default_root_dir)
+        if str(dirpath.stem) != "log":
+            dirpath /= "log"
         dirpath = trainer.strategy.broadcast(dirpath)
         self._dirpath = core.Path(dirpath)
     

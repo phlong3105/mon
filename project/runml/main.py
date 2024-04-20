@@ -63,8 +63,8 @@ def run_train(args: dict):
     
     # Parse script file
     if use_extra_model:
-        torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-        script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_train.py"
+        torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
+        script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_train.py"
         devices     = mon.parse_device(device)
         if isinstance(devices, list) and torch_distributed_launch:
             python_call = [
@@ -163,8 +163,8 @@ def run_predict(args: dict):
         
         # Parse script file
         if use_extra_model:
-            torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_predict.py"
+            torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
+            script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_predict.py"
             python_call = ["python"]
         else:
             script_file = _current_dir / "predict.py"
@@ -254,8 +254,8 @@ def run_online(args: dict):
         
         # Parse script file
         if use_extra_model:
-            torch_distributed_launch = mon.MODELS_EXTRA[model]["torch_distributed_launch"]
-            script_file = mon.MODELS_EXTRA[model]["model_dir"] / "my_online.py"
+            torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
+            script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_online.py"
             python_call = ["python"]
         else:
             script_file = _current_dir / "online.py"
@@ -341,12 +341,12 @@ def main(
         model 	     = models_[int(model)] if mon.is_int(model) else model
         model_name   = mon.parse_model_name(model)
         # Config     
-        configs_     = mon.list_configs(project_root=root, model=model_name)
+        configs_     = mon.list_configs(project_root=root, model=model)
         configs_str_ = utils.parse_menu_string(configs_)
         config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
         config       = configs_[int(config)] if mon.is_int(config) else config
         # Weights    
-        weights_     = mon.list_weights_files(project_root=root, model=model_name)
+        weights_     = mon.list_weights_files(project_root=root, model=model)
         weights_str_ = utils.parse_menu_string(weights_)
         weights      = click.prompt(click.style(f"Weights {weights_str_}", fg="bright_green", bold=True), type=str, default=weights or "")
         weights      = weights if weights not in [None, ""] else None

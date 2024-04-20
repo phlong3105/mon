@@ -70,10 +70,10 @@ def list_tasks(project_root: str | core.Path) -> list[str]:
 def is_extra_model(model: str) -> bool:
     from mon.globals import MODELS, EXTRA_MODELS, EXTRA_MODEL_STR
     use_extra_model = f"{EXTRA_MODEL_STR}" in model
-    model           = model.replace(f" {EXTRA_MODEL_STR}", "")
+    model           = model.replace(f" {EXTRA_MODEL_STR}", "").strip()
     return (
         use_extra_model or
-        (model in MODELS and model not in EXTRA_MODELS)
+        (model not in MODELS and model in EXTRA_MODELS)
     )
 
 
@@ -115,15 +115,15 @@ def list_models(
             extra_models = [m for m in extra_models if core.snakecase(m) in project_models]
     # Rename extra models for clarity
     for i, m in enumerate(extra_models):
-        # if m in models:
-        extra_models[i] = f"{m}_{EXTRA_MODEL_STR}"
+        if m in models:
+            extra_models[i] = f"{m} {EXTRA_MODEL_STR}"
     models = models + extra_models
     return sorted(models)
 
 
 def parse_model_name(model: str) -> str:
     from mon.globals import EXTRA_MODEL_STR
-    return model.replace(f"_{EXTRA_MODEL_STR}", "").strip()
+    return model.replace(f" {EXTRA_MODEL_STR}", "").strip()
 
 # endregion
 

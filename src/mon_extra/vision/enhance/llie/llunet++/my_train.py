@@ -128,7 +128,7 @@ def train(args: argparse.Namespace):
     val_dataloader   = datamodule.val_dataloader
     
     # Logging
-    writer = SummaryWriter(log_dir=str(save_dir / "tensorboard"))
+    writer = SummaryWriter(log_dir=str(save_dir / "log"))
     log    = OrderedDict([
         ("epoch"     , []),
         ("lr"        , []),

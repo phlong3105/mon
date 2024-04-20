@@ -23,7 +23,7 @@ MODELS = [
 
 ]
 # If unsure, run the following script:
-# mon.print_table(mon.MODELS | mon.MODELS_EXTRA)
+# mon.print_table(mon.MODELS | mon.EXTRA_MODELS)
 
 # List all datasets that are used in this project.
 DATASETS = [

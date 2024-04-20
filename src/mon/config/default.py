@@ -107,13 +107,13 @@ datamodule = {
 # region Logger
 
 tensorboard = {
-    "save_dir"         : None,            # Save directory.
-    "name"             : "",              # Experiment name ("" = no per-experiment subdirectory).
-    "version"          : "tensorboard",   # '/save_dir/name/version/'.
-    "sub_dir"          : None,            # Subdirectory to group TensorBoard logs: '/save_dir/name/version/sub_dir/'
-    "log_graph"        : False,           # Adds the computational graph to tensorboard.
+    "save_dir"         : None,    # Save directory.
+    "name"             : "",      # Experiment name ("" = no per-experiment subdirectory).
+    "version"          : "log",   # '/save_dir/name/version/'.
+    "sub_dir"          : None,    # Subdirectory to group TensorBoard logs: '/save_dir/name/version/sub_dir/'
+    "log_graph"        : False,   # Adds the computational graph to tensorboard.
     "default_hp_metric": True,
-    "prefix"           : "",              # A string to put at the beginning of metric keys.
+    "prefix"           : "",      # A string to put at the beginning of metric keys.
 }
 
 # endregion
