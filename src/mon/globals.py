@@ -896,6 +896,12 @@ EXTRA_MODELS      = {
                 "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "gsad",
                 "torch_distributed_launch": True,
             },
+            "hvi_cidnet"   : {
+                "tasks"    : [Task.LLIE],
+                "schemes"  : [Scheme.SUPERVISED],
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "hvi_cidnet",
+                "torch_distributed_launch": True,
+            },
             "kind"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],

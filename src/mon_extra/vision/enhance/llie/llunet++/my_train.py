@@ -33,7 +33,7 @@ _current_dir  = _current_file.parents[0]
 
 # region Train
 
-def _train_epoch(train_loader, model, criterion, optimizer, device):
+def train_epoch(train_loader, model, criterion, optimizer, device):
     loss_meters = AverageMeter()
     model.train()
     with mon.get_progress_bar() as pbar:
@@ -54,7 +54,7 @@ def _train_epoch(train_loader, model, criterion, optimizer, device):
     return loss_meters.avg
 
 
-def _val_epoch(val_loader, model, criterion, device):
+def val_epoch(val_loader, model, criterion, device):
     loss_meters = AverageMeter()
     psnr_meters = mon.PeakSignalNoiseRatio().to(device)
     ssim_meters = mon.StructuralSimilarityIndexMeasure().to(device)
@@ -143,8 +143,8 @@ def train(args: argparse.Namespace):
     
     # Training
     for epoch in range(epochs):
-        train_loss  = _train_epoch(train_dataloader, model, criterion, optimizer, device)
-        val_results = _val_epoch(val_dataloader, model, criterion, device)
+        train_loss  = train_epoch(train_dataloader, model, criterion, optimizer, device)
+        val_results = val_epoch(val_dataloader, model, criterion, device)
         val_loss    = float(val_results[0])
         val_psnr    = float(val_results[1].cpu().detach().numpy())
         val_ssim    = float(val_results[2].cpu().detach().numpy())

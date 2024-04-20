@@ -1,23 +1,27 @@
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-import torch
+import argparse
 import glob
+import os
+from os import listdir
+from os.path import join
+
 import cv2
 import lpips
 import numpy as np
+import torch
 from PIL import Image
-from os.path import join
-from os import listdir
-import argparse
 
-mea_parser = argparse.ArgumentParser(description='Measure')
-mea_parser.add_argument('--use_GT_mean', action='store_true', help='Use the mean of GT to rectify the output of the model')
-mea_parser.add_argument('--SID', action='store_true')
-mea_parser.add_argument('--Blur', action='store_true')
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+mea_parser = argparse.ArgumentParser(description="Measure")
+mea_parser.add_argument("--use_gt_mean", action="store_true", help="Use the mean of GT to rectify the output of the model")
+mea_parser.add_argument("--sid", action="store_true")
+mea_parser.add_argument("--Blur", action="store_true")
 mea = mea_parser.parse_args()
+
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in [".png", ".jpg", ".bmp", ".JPG", ".jpeg"])
+
 
 def ssim(prediction, target):
     C1 = (0.01 * 255)**2
@@ -39,16 +43,17 @@ def ssim(prediction, target):
                                        (sigma1_sq + sigma2_sq + C2))
     return ssim_map.mean()
 
+
 def calculate_ssim(target, ref):
     '''
     calculate SSIM
-    the same outputs as MATLAB's
+    the same outputs as MATLAB"s
     img1, img2: [0, 255]
     '''
     img1 = np.array(target, dtype=np.float64)
     img2 = np.array(ref, dtype=np.float64)
     if not img1.shape == img2.shape:
-        raise ValueError('Input images must have the same dimensions.')
+        raise ValueError("Input images must have the same dimensions.")
     if img1.ndim == 2:
         return ssim(img1, img2)
     elif img1.ndim == 3:
@@ -60,7 +65,8 @@ def calculate_ssim(target, ref):
         elif img1.shape[2] == 1:
             return ssim(np.squeeze(img1), np.squeeze(img2))
     else:
-        raise ValueError('Wrong input image dimensions.')
+        raise ValueError("Wrong input image dimensions.")
+
 
 def calculate_psnr(target, ref):
     img1 = np.array(target, dtype=np.float32)
@@ -69,7 +75,8 @@ def calculate_psnr(target, ref):
     psnr = 10.0 * np.log10(255.0 * 255.0 / np.mean(np.square(diff)))
     return psnr
 
-def metrics(im_dir, label_dir, use_GT_mean):
+
+def metrics(im_dir, label_dir, use_gt_mean):
     avg_psnr = 0
     avg_ssim = 0
     avg_lpips = 0
@@ -78,22 +85,22 @@ def metrics(im_dir, label_dir, use_GT_mean):
 
     for item in sorted(glob.glob(im_dir)):
         n += 1
-        im1 = Image.open(item).convert('RGB') 
+        im1 = Image.open(item).convert("RGB") 
 
-        name = item.split('\\')[-1]
+        name = item.split("\\")[-1]
         
-        if mea.SID:
+        if mea.sid:
             data_filenames = [join(label_dir, x) for x in listdir(label_dir) if is_image_file(x)]
-            im2 = Image.open(data_filenames[0]).convert('RGB')
+            im2 = Image.open(data_filenames[0]).convert("RGB")
         else:
-            im2 = Image.open(label_dir + name).convert('RGB')
+            im2 = Image.open(label_dir + name).convert("RGB")
             
         (h, w) = im2.size
         im1 = im1.resize((h, w))  
         im1 = np.array(im1)
         im2 = np.array(im2)
         
-        if use_GT_mean:
+        if use_gt_mean:
             mean_restored = cv2.cvtColor(im1, cv2.COLOR_RGB2GRAY).mean()
             mean_target = cv2.cvtColor(im2, cv2.COLOR_RGB2GRAY).mean()
             im1 = np.clip(im1 * (mean_target/mean_restored), 0, 255)
@@ -113,22 +120,22 @@ def metrics(im_dir, label_dir, use_GT_mean):
     return avg_psnr, avg_ssim, avg_lpips, n
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     
     avg_psnr = 0
     avg_ssim = 0
     avg_lpips = 0
     n = 0
-    loss_fn = lpips.LPIPS(net='alex')
+    loss_fn = lpips.LPIPS(net="alex")
     loss_fn.cuda()
     if mea.Blur:
         for index in range(1,257):
             fill_index = str(index).zfill(4)
             test_dir = "./output/LOL_Blur/"
             im_dir = test_dir + fill_index + "/*.png"
-            label_dir = '../datasets/LOL_blur/test/high_sharp_scaled/' + fill_index + "/"
+            label_dir = "../datasets/LOL_blur/test/high_sharp_scaled/" + fill_index + "/"
             if os.path.exists(test_dir + fill_index):
-                i_psnr, i_ssim, i_lpips, i_n = metrics(im_dir, label_dir,mea.use_GT_mean)
+                i_psnr, i_ssim, i_lpips, i_n = metrics(im_dir, label_dir,mea.use_gt_mean)
                 print("===> Finish " + fill_index + " folder")
                 print("===> Avg.PSNR: {:.4f} dB ".format(i_psnr/i_n))
                 print("===> Avg.SSIM: {:.4f} ".format(i_ssim/i_n))
@@ -139,14 +146,14 @@ if __name__ == '__main__':
                 n += i_n
                 torch.cuda.empty_cache()
     
-    elif mea.SID:
+    elif mea.sid:
         for index in range(1,257):
             fill_index = "1"+str(index).zfill(4)
-            test_dir = "./output/SID/"
+            test_dir = "./output/sid/"
             im_dir = test_dir + fill_index + "/*.png"
-            label_dir = '../datasets/Sony_total_dark/test/long/' + fill_index + "/"
+            label_dir = "../datasets/Sony_total_dark/test/long/" + fill_index + "/"
             if os.path.exists(test_dir + fill_index):
-                i_psnr, i_ssim, i_lpips, i_n = metrics(im_dir, label_dir,mea.use_GT_mean)
+                i_psnr, i_ssim, i_lpips, i_n = metrics(im_dir, label_dir,mea.use_gt_mean)
                 print("===> Finish " + fill_index + " folder")
                 print("===> Avg.PSNR: {:.4f} dB ".format(i_psnr/i_n))
                 print("===> Avg.SSIM: {:.4f} ".format(i_ssim/i_n))

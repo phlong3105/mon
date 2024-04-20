@@ -1,0 +1,66 @@
+# General config
+root        :
+weights     :
+model       :
+data        :
+fullname    :
+save_dir    :
+device      : 0
+epochs      : 1000
+steps       :
+imgsz       :
+resize      :
+benchmark   :
+save_image  : True
+use_data_dir: False
+exist_ok    : False
+verbose     : True
+
+# Model
+
+# Data
+data_train_lol_blur        : "llie/lol_blur/train"
+data_train_lol_v1          : "llie/lol_v1/train"
+data_train_lol_v2_real     : "llie/lol_v2_real/train"
+data_train_lol_v2_synthetic: "llie/lol_v2_synthetic/train"
+data_train_sid             : "llie/sid/train"
+data_train_sice            : "llie/sice/train"
+
+data_val_lol_blur          : "llie/lol_blur/test/lq"
+data_val_lol_v1            : "llie/lol_v1/test/lq"
+data_val_lol_v2_real       : "llie/lol_v2_real/test/lq"
+data_val_lol_v2_synthetic  : "llie/lol_v2_synthetic/test/lq"
+data_val_sid               : "llie/sid/test/lq"
+data_val_sice              : "llie/sice/test/lq"
+
+data_valgt_lol_blur        : "llie/lol_blur/test/hq"
+data_valgt_lol_v1          : "llie/lol_v1/test/hq"
+data_valgt_lol_v2_real     : "llie/lol_v2_real/test/hq"
+data_valgt_lol_v2_synthetic: "llie/lol_v2_synthetic/test/hq"
+data_valgt_sid             : "llie/sid/test/hq"
+data_valgt_sice            : "llie/sice/test/hq"
+
+lol_blur          : False
+lol_v1            : False
+lol_v2_real       : False
+lol_v2_synthetic  : False
+sid               : False
+sice              : False
+
+# Training
+batch_size        : 8
+crop_size         : 256
+start_epoch       : 0
+lr                : 1e-4
+gpu_mode          : True
+threads           : 16
+cos_restart_cyclic: False
+cos_restart       : True
+warmup_epochs     : 3
+start_warmup      : True
+
+HVI_weight        : 1.0
+L1_weight         : 1.0
+D_weight          : 0.5
+E_weight          : 50.0
+P_weight          : 1e-2

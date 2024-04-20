@@ -103,14 +103,14 @@ All the weights that we trained on different datasets is available at [[Baidu Pa
 | (LOLv2_real)<br />v2 wo perc loss/ w gt mean  | 27.7619     | 0.8812     | 0.1649     | √       | ditto                                                        | (lost)                   |
 | (LOLv2_real)<br />v2 best gt mean             | **28.1387** | **0.8920** | **0.1008** | √       | [Baidu Pan](https://pan.baidu.com/s/1qewb6u5w1VUaaEzEjFXllQ?pwd=yixu) | LOLv2_real/w_prec.pth    |
 | (LOLv2_real)<br />v2 best Normal              | **24.1106** | 0.8675     | 0.1162     |         | [Baidu Pan](https://pan.baidu.com/s/1V9aMZWEU2D0bVRDmPeNzMQ?pwd=yixu) | (lost)                   |
-| (LOLv2_real)<br />v2 best PSNR                | 23.9040     | 0.8656     | 0.1219     |         | [Baidu Pan](https://pan.baidu.com/s/1PFQ49oa_n7ywTGLl3TUb3A?pwd=yixu) | LOLv2_real/best_PSNR.pth |
-| (LOLv2_real)<br />v2 best SSIM                | 23.8975     | **0.8705** | 0.1185     |         | [Baidu Pan](https://pan.baidu.com/s/1zeBPFJS3HxQ9zZZnYGMn4g?pwd=yixu) | LOLv2_real/best_SSIM.pth |
-| (LOLv2_real)<br />v2 best SSIM/ w gt mean     | **28.3926** | 0.8873     | 0.1136     | √       | None                                                         | LOLv2_real/best_SSIM.pth |
+| (LOLv2_real)<br />v2 best PSNR                | 23.9040     | 0.8656     | 0.1219     |         | [Baidu Pan](https://pan.baidu.com/s/1PFQ49oa_n7ywTGLl3TUb3A?pwd=yixu) | LOLv2_real/best_psnr.pth |
+| (LOLv2_real)<br />v2 best SSIM                | 23.8975     | **0.8705** | 0.1185     |         | [Baidu Pan](https://pan.baidu.com/s/1zeBPFJS3HxQ9zZZnYGMn4g?pwd=yixu) | LOLv2_real/best_ssim.pth |
+| (LOLv2_real)<br />v2 best SSIM/ w gt mean     | **28.3926** | 0.8873     | 0.1136     | √       | None                                                         | LOLv2_real/best_ssim.pth |
 | (LOLv2_syn)<br />syn wo perc loss/ wo gt mean | **25.7048** | **0.9419** | 0.0471     |         | [Baidu Pan](https://pan.baidu.com/s/1ZZtalO3vxqSJOJ58BnfUXw?pwd=yixu) | LOLv2_syn/wo_perc.pth    |
 | (LOLv2_syn)<br />syn wo perc loss/ w gt mean  | **29.5663** | **0.9497** | 0.0437     | √       | ditto                                                        | LOLv2_syn/wo_perc.pth    |
 | (LOLv2_syn)<br />syn w perc loss/ wo gt mean  | 25.1294     | 0.9388     | **0.0450** |         | [Baidu Pan](https://pan.baidu.com/s/1R_ltvaWHJ_sY-unHAEGunw?pwd=yixu) | LOLv2_syn/w_perc.pth     |
 | (LOLv2_syn)<br />syn w perc loss/ w gt mean   | 29.3666     | **0.9500** | **0.0403** | √       | ditto                                                        | LOLv2_syn/w_perc.pth     |
-| Sony_Total_Dark                               | **22.9039** | **0.6763** | **0.4109** |         | [Baidu Pan](https://pan.baidu.com/s/15w3oMuF3hOtJK29v_xjX3g?pwd=yixu) | SID.pth                  |
+| Sony_Total_Dark                               | **22.9039** | **0.6763** | **0.4109** |         | [Baidu Pan](https://pan.baidu.com/s/15w3oMuF3hOtJK29v_xjX3g?pwd=yixu) | sid.pth                  |
 | LOL-Blur                                      | **26.5719** | **0.8903** | **0.1203** |         | [Baidu Pan](https://pan.baidu.com/s/11zTPd3xrJe0GbEXF_lYHvQ?pwd=yixu) | LOL-Blur.pth             |
 | SICE-Mix                                      | **13.4235** | 0.6360     | 0.3624     | √       | [Baidu Pan](https://pan.baidu.com/s/11x4oJuIKE0iJqdqagG1RhQ?pwd=yixu) | SICE.pth                 |
 | SICE-Grad                                     | **13.4453** | 0.6477     | 0.3181     | √       | [Baidu Pan](https://pan.baidu.com/s/1IICeonyuUHcUfTapa4GKxw?pwd=yixu) | SICE.pth                 |
@@ -274,82 +274,82 @@ Download our weights from [[Baidu Pan](https://pan.baidu.com/s/1rvQcQPwsYbtLIYwB
         ├── wo_perc.pth
         ├── test_finetuning.pth
     ├── LOLv2_real
-        ├── best_PSNR.pth
-        ├── best_SSIM.pth
+        ├── best_psnr.pth
+        ├── best_ssim.pth
         ├── w_perc.pth
     ├── LOLv2_syn
         ├── w_perc.pth
         ├── wo_perc.pth
     ├── LOL-Blur.pth
     ├── SICE.pth
-    ├── SID.pth
+    ├── sid.pth
 ```
 - **You can test our method as followed, all the results will saved in `./output` folder:**
 
 ```cmd
 # LOLv1
-python eval.py --lol --perc # weights that trained with perceptual loss
-python eval.py --lol # weights that trained without perceptual loss
+python eval.py --lol_v1 --perc # weights that trained with perceptual loss
+python eval.py --lol_v1 # weights that trained without perceptual loss
 
 # LOLv2-real
-python eval.py --lol_v2_real --best_GT_mean # you can choose best_GT_mean or best_PSNR or best_SSIM
+python eval.py --lol_v2_real --best_gt_mean # you can choose best_gt_mean or best_psnr or best_ssim
 
 # LOLv2-syn
-python eval.py --lol_v2_syn --perc # weights that trained with perceptual loss
-python eval.py --lol_v2_syn # weights that trained without perceptual loss
+python eval.py --lol_v2_synthetic --perc # weights that trained with perceptual loss
+python eval.py --lol_v2_synthetic # weights that trained without perceptual loss
 
 # SICE
-python eval.py --SICE_grad # output SICE_grad
-python eval.py --SICE_mix # output SICE_mix
+python eval.py --sice_grad # output sice_grad
+python eval.py --sice_mix # output sice_mix
 
 # Sony-Total-Dark
-python eval_SID_blur --SID
+python eval_SID_blur --sid
 
 # LOL-Blur
 python eval_SID_blur --Blur
 
 # five unpaired datasets DICM, LIME, MEF, NPE, VV. 
 # We note that: you can choose one weights in ./weights folder, and set the alpha float number (defualt=1.0) as illumination scale of the datasets.
-# You can change "--DICM" to the other unpaired datasets "LIME, MEF, NPE, VV".
-python eval.py --unpaired --DICM --unpaired_weights --alpha
+# You can change "--dicm" to the other unpaired datasets "LIME, MEF, NPE, VV".
+python eval.py --unpaired --dicm --unpaired_weights --alpha
 # e.g.
-python eval.py --unpaired --DICM --unpaired_weights ./weights/LOLv2_syn/w_perc.pth --alpha 0.9
+python eval.py --unpaired --dicm --unpaired_weights ./weights/LOLv2_syn/w_perc.pth --alpha 0.9
 ```
 
 - **Also, you can test all the metrics mentioned in our paper as follows:**
 
 ```cmd
 # LOLv1
-python measure.py --lol
+python measure.py --lol_v1
 
 # LOLv2-real
 python measure.py --lol_v2_real
 
 # LOLv2-syn
-python measure.py --lol_v2_syn
+python measure.py --lol_v2_synthetic
 
 # Sony-Total-Dark
-python measure_SID_blur.py --SID
+python measure_SID_blur.py --sid
 
 # LOL-Blur
 python measure_SID_blur.py --Blur
 
 # SICE-Grad
-python measure.py --SICE_grad
+python measure.py --sice_grad
 
 # SICE-Mix
-python measure.py --SICE_mix
+python measure.py --sice_mix
 
 
 # five unpaired datasets DICM, LIME, MEF, NPE, VV. 
-# You can change "--DICM" to the other unpaired datasets "LIME, MEF, NPE, VV".
-python measure_niqe_bris.py --DICM
+# You can change "--dicm" to the other unpaired datasets "LIME, MEF, NPE, VV".
+python measure_niqe_bris.py --dicm
 
 
-# Note: Following LLFlow, KinD, and Retinxformer, we have also adjusted the brightness of the output image produced by the network, based on the average value of GroundTruth (GT). This only works in paired datasets. If you want to measure it, please add "--use_GT_mean".
+# Note: Following LLFlow, KinD, and Retinxformer, we have also adjusted the brightness of the output image produced by the network, based on the average value of GroundTruth (GT). This only works in paired datasets. If you want to measure it, please add "--use_gt_mean".
 # 
 # e.g.
-python measure.py --lol --use_GT_mean
+python measure.py --lol_v1 --use_gt_mean
   
 ```
 
@@ -395,4 +395,3 @@ If you find our work useful for your research, please cite our paper
       primaryClass={cs.CV}
 }
 ```
-

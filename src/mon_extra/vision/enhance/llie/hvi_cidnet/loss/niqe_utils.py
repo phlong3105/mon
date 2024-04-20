@@ -1,24 +1,23 @@
+import math
 
 import cv2
-import math
 import numpy as np
+import torch
 from scipy.ndimage import convolve
 from scipy.special import gamma
-import torch
+
 
 def cubic(x):
     """cubic function used for calculate_weights_indices."""
-    absx = torch.abs(x)
-    absx2 = absx**2
-    absx3 = absx**3
-    return (1.5 * absx3 - 2.5 * absx2 + 1) * (
-        (absx <= 1).type_as(absx)) + (-0.5 * absx3 + 2.5 * absx2 - 4 * absx + 2) * (((absx > 1) *
-                                                                                     (absx <= 2)).type_as(absx))
-
+    absx  = torch.abs(x)
+    absx2 = absx ** 2
+    absx3 = absx ** 3
+    return (1.5 * absx3 - 2.5 * absx2 + 1) * ((absx <= 1).type_as(absx)) + (-0.5 * absx3 + 2.5 * absx2 - 4 * absx + 2) * (((absx > 1) * (absx <= 2)).type_as(absx))
 
 
 def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width, antialiasing):
     """Calculate weights and indices, used for imresize function.
+    
     Args:
         in_length (int): Input length.
         out_length (int): Output length.
@@ -51,8 +50,7 @@ def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width
 
     # The indices of the input pixels involved in computing the k-th output
     # pixel are in row k of the indices matrix.
-    indices = left.view(out_length, 1).expand(out_length, p) + torch.linspace(0, p - 1, p).view(1, p).expand(
-        out_length, p)
+    indices = left.view(out_length, 1).expand(out_length, p) + torch.linspace(0, p - 1, p).view(1, p).expand(out_length, p)
 
     # The weights used to compute the k-th output pixel are in row k of the
     # weights matrix.
@@ -66,7 +64,7 @@ def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width
 
     # Normalize the weights matrix so that each row sums to 1.
     weights_sum = torch.sum(weights, 1).view(out_length, 1)
-    weights = weights / weights_sum.expand(out_length, p)
+    weights     = weights / weights_sum.expand(out_length, p)
 
     # If a column in weights is all zero, get rid of it. only consider the
     # first and last column.
@@ -77,12 +75,13 @@ def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width
     if not math.isclose(weights_zero_tmp[-1], 0, rel_tol=1e-6):
         indices = indices.narrow(1, 0, p - 2)
         weights = weights.narrow(1, 0, p - 2)
-    weights = weights.contiguous()
-    indices = indices.contiguous()
+    weights   = weights.contiguous()
+    indices   = indices.contiguous()
     sym_len_s = -indices.min() + 1
     sym_len_e = indices.max() - in_length
-    indices = indices + sym_len_s - 1
+    indices   = indices + sym_len_s - 1
     return weights, indices, int(sym_len_s), int(sym_len_e)
+
 
 def imresize(img, scale, antialiasing=True):
     """imresize function same as MATLAB.
@@ -115,13 +114,11 @@ def imresize(img, scale, antialiasing=True):
     in_c, in_h, in_w = img.size()
     out_h, out_w = math.ceil(in_h * scale), math.ceil(in_w * scale)
     kernel_width = 4
-    kernel = 'cubic'
+    kernel       = "cubic"
 
     # get weights and indices
-    weights_h, indices_h, sym_len_hs, sym_len_he = calculate_weights_indices(in_h, out_h, scale, kernel, kernel_width,
-                                                                             antialiasing)
-    weights_w, indices_w, sym_len_ws, sym_len_we = calculate_weights_indices(in_w, out_w, scale, kernel, kernel_width,
-                                                                             antialiasing)
+    weights_h, indices_h, sym_len_hs, sym_len_he = calculate_weights_indices(in_h, out_h, scale, kernel, kernel_width, antialiasing)
+    weights_w, indices_w, sym_len_ws, sym_len_we = calculate_weights_indices(in_w, out_w, scale, kernel, kernel_width, antialiasing)
     # process H dimension
     # symmetric copying
     img_aug = torch.FloatTensor(in_c, in_h + sym_len_hs + sym_len_he, in_w)
@@ -227,7 +224,6 @@ def _convert_output_type_range(img, dst_type):
     return img.astype(dst_type)
 
 
-
 def rgb2ycbcr(img, y_only=False):
     """Convert a RGB image to YCbCr image.
     This function produces the same results as Matlab's `rgb2ycbcr` function.
@@ -284,6 +280,7 @@ def bgr2ycbcr(img, y_only=False):
             img, [[24.966, 112.0, -18.214], [128.553, -74.203, -93.786], [65.481, -37.797, 112.0]]) + [16, 128, 128]
     out_img = _convert_output_type_range(out_img, img_type)
     return out_img
+
 
 def ycbcr2rgb(img):
     """Convert a YCbCr image to RGB image.
@@ -346,6 +343,7 @@ def reorder_image(img, input_order='HWC'):
         img = img.transpose(1, 2, 0)
     return img
 
+
 def rgb2ycbcr_pt(img, y_only=False):
     """Convert RGB images to YCbCr images (PyTorch version).
     It implements the ITU-R BT.601 conversion for standard-definition television. See more details in
@@ -367,6 +365,7 @@ def rgb2ycbcr_pt(img, y_only=False):
     out_img = out_img / 255.
     return
 
+
 def tensor2img(tensor):
     im = (255. * tensor).data.cpu().numpy()
     # clamp
@@ -374,6 +373,7 @@ def tensor2img(tensor):
     im[im < 0] = 0
     im = im.astype(np.uint8)
     return im
+
 
 def img2tensor(img):
     img = (img / 255.).astype('float32')
@@ -385,6 +385,7 @@ def img2tensor(img):
     img = np.ascontiguousarray(img, dtype=np.float32)
     tensor = torch.from_numpy(img)
     return tensor
+
 
 def estimate_aggd_param(block):
     """Estimate AGGD (Asymmetric Generalized Gaussian Distribution) parameters.
