@@ -1,20 +1,15 @@
 import argparse
+import os
 
+import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from data.data import *
 from net.cidnet import CIDNet
 
-eval_parser = argparse.ArgumentParser(description="Eval")
-eval_parser.add_argument("--sid",  action="store_true")
-eval_parser.add_argument("--blue", action="store_true")
-ep = eval_parser.parse_args()
 
-cuda = True
-if cuda and not torch.cuda.is_available():
-    raise Exception("No GPU found, please run without --cuda")
-
+# region Eval
 
 def eval(model, testing_data_loader, model_path, output_folder):
     torch.set_grad_enabled(False)
@@ -39,9 +34,26 @@ def eval(model, testing_data_loader, model_path, output_folder):
         output_img.save(output_folder + name[0])
         
     torch.set_grad_enabled(True)
-    
-    
+   
+# endregion
+
+
+# region Main
+
+def parse_args():
+    eval_parser = argparse.ArgumentParser(description="Eval")
+    eval_parser.add_argument("--sid",  action="store_true")
+    eval_parser.add_argument("--blue", action="store_true")
+    ep = eval_parser.parse_args()
+    return ep
+
+
 if __name__ == "__main__":
+    ep   = parse_args()
+    cuda = True
+    if cuda and not torch.cuda.is_available():
+        raise Exception("No GPU found, please run without --cuda")
+        
     net = CIDNet().cuda()
     if ep.blur:
         for index in range(1,257):
@@ -69,3 +81,5 @@ if __name__ == "__main__":
                 output_folder =  SID_folder + fill_index + "/"
                 eval_data     = DataLoader(dataset=get_eval_set(now_dir), num_workers=0, batch_size=1, shuffle=False)
                 eval(net, eval_data, model_path, output_folder)
+
+# endregion

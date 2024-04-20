@@ -10,9 +10,13 @@ from __future__ import annotations
 
 import argparse
 import copy
+import os
+import random
 import socket
 
 import click
+import numpy as np
+import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -20,10 +24,13 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms
 
 import mon
-from data.data import *
-from data.scheduler import *
+from data.data import (
+    get_eval_set, get_lol_v1_training_set, get_lol_v2_synthetic_training_set, get_lol_v2_training_set,
+    get_sice_eval_set, get_sice_training_set, get_sid_training_set, get_training_set_blur,
+)
+from data.scheduler import CosineAnnealingRestartCyclicLR, CosineAnnealingRestartLR, GradualWarmupScheduler
 from eval import eval
-from loss.losses import *
+from loss.losses import EdgeLoss, L1Loss, PerceptualLoss, SSIM
 from measure import metrics
 from net.cidnet import CIDNet
 
@@ -87,7 +94,7 @@ def train(args: argparse.Namespace):
     ).to(device)
     
     # Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.Adam(model.parameters(), lr=float(args.lr))
     if args.cos_restart_cyclic:
         if args.start_warmup:
             scheduler_step = CosineAnnealingRestartCyclicLR(
@@ -268,8 +275,8 @@ def train(args: argparse.Namespace):
                     gt_img     = transforms.ToPILImage()(gt_rgb[0].squeeze(0))
                     if not os.path.exists(str(debug_dir)):
                         os.mkdir(str(debug_dir))
-                    output_img.save(str(debug_dir) + "/test.png")
-                    gt_img.save(str(debug_dir) + "/gt.png")
+                    output_img.save(str(debug_dir) + "/" + "test.png")
+                    gt_img.save(str(debug_dir) + "/" + "gt.png")
         
         scheduler.step()
         
@@ -289,26 +296,17 @@ def train(args: argparse.Namespace):
         avg_psnr, avg_ssim, avg_lpips = metrics(im_dir, label_dir, use_gt_mean=False)
         
         # Log
-        print("===> Epoch[{}]: Loss: {:.4f} || Learning rate: lr={}.".format(epoch, avg_loss, optimizer.param_groups[0]["lr"]))
+        print("===> Epoch[{}] ".format(epoch))
+        print("===> Loss: {:.4f} ".format(avg_loss))
+        print("===> Learning rate: {:.8f}".format(optimizer.param_groups[0]["lr"]))
         print("===> PSNR: {:.4f} ".format(avg_psnr))
         print("===> SSIM: {:.4f} ".format(avg_ssim))
         print("===> LPIPS: {:.4f} ".format(avg_lpips))
-        writer.add_scalars(
-            "train",
-            {
-                "train/loss": avg_loss,
-            },
-            epoch,
-        )
-        writer.add_scalars(
-            "val",
-            {
-                "val/psnr" : avg_psnr,
-                "val/ssim" : avg_ssim,
-                "val/lpips": avg_lpips,
-            },
-            epoch,
-        )
+        print()
+        writer.add_scalar("train/loss", avg_loss , epoch)
+        writer.add_scalar("val/psnr"  , avg_psnr , epoch)
+        writer.add_scalar("val/ssim"  , avg_ssim , epoch)
+        writer.add_scalar("val/lpips" , avg_lpips, epoch)
         psnr.append(avg_psnr)
         ssim.append(avg_ssim)
         lpips.append(avg_lpips)
@@ -332,17 +330,17 @@ def train(args: argparse.Namespace):
 # region Main
 
 @click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/train/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--epochs",     type=int, default=None, help="Stop training once this number of epochs is reached.")
-@click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
-@click.option("--exist-ok",   is_flag=True)
-@click.option("--verbose",    is_flag=True)
+@click.option("--root",     type=str, default=None, help="Project root.")
+@click.option("--config",   type=str, default=None, help="Model config.")
+@click.option("--weights",  type=str, default=None, help="Weights paths.")
+@click.option("--model",    type=str, default=None, help="Model name.")
+@click.option("--fullname", type=str, default=None, help="Save results to root/run/train/fullname.")
+@click.option("--save-dir", type=str, default=None, help="Optional saving directory.")
+@click.option("--device",   type=str, default=None, help="Running devices.")
+@click.option("--epochs",   type=int, default=None, help="Stop training once this number of epochs is reached.")
+@click.option("--steps",    type=int, default=None, help="Stop training once this number of steps is reached.")
+@click.option("--exist-ok", is_flag=True)
+@click.option("--verbose",  is_flag=True)
 def main(
     root    : str,
     config  : str,

@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from loss.loss_utils import *
@@ -91,7 +92,7 @@ class PerceptualLoss(nn.Module):
         use_input_norm    = True,
         range_norm        = True,
         perceptual_weight = 1.0,
-        style_weight      = 0.,
+        style_weight      = 0.0,
         criterion         = "l1"
     ):
         super().__init__()

@@ -1,10 +1,12 @@
 import os
-import torch
 from collections import OrderedDict
-from torch import nn as nn
-from torchvision.models import vgg as vgg
 
-class Registry():
+import torch
+from torch import nn as nn
+from torchvision.models import vgg as vgg, VGG19_Weights
+
+
+class Registry:
     """
     The registry that provides name -> object mapping, to support third-party
     users' custom modules.
@@ -79,10 +81,10 @@ class Registry():
 
 
 DATASET_REGISTRY = Registry('dataset')
-ARCH_REGISTRY = Registry('arch')
-MODEL_REGISTRY = Registry('model')
-LOSS_REGISTRY = Registry('loss')
-METRIC_REGISTRY = Registry('metric')
+ARCH_REGISTRY    = Registry('arch')
+MODEL_REGISTRY   = Registry('model')
+LOSS_REGISTRY    = Registry('loss')
+METRIC_REGISTRY  = Registry('metric')
 
 VGG_PRETRAIN_PATH = 'experiments/pretrained_models/vgg19-dcbb9e9d.pth'
 NAMES = {
@@ -153,19 +155,21 @@ class VGGFeatureExtractor(nn.Module):
         pooling_stride (int): The stride of max pooling operation. Default: 2.
     """
 
-    def __init__(self,
-                 layer_name_list,
-                 vgg_type='vgg19',
-                 use_input_norm=True,
-                 range_norm=False,
-                 requires_grad=False,
-                 remove_pooling=False,
-                 pooling_stride=2):
+    def __init__(
+        self,
+        layer_name_list,
+        vgg_type        = "vgg19",
+        use_input_norm  = True,
+        range_norm      = False,
+        requires_grad   = False,
+        remove_pooling  = False,
+        pooling_stride  = 2
+    ):
         super(VGGFeatureExtractor, self).__init__()
 
         self.layer_name_list = layer_name_list
-        self.use_input_norm = use_input_norm
-        self.range_norm = range_norm
+        self.use_input_norm  = use_input_norm
+        self.range_norm      = range_norm
 
         self.names = NAMES[vgg_type.replace('_bn', '')]
         if 'bn' in vgg_type:
@@ -179,11 +183,11 @@ class VGGFeatureExtractor(nn.Module):
                 max_idx = idx
 
         if os.path.exists(VGG_PRETRAIN_PATH):
-            vgg_net = getattr(vgg, vgg_type)(pretrained=False)
+            vgg_net    = getattr(vgg, vgg_type)()
             state_dict = torch.load(VGG_PRETRAIN_PATH, map_location=lambda storage, loc: storage)
             vgg_net.load_state_dict(state_dict)
         else:
-            vgg_net = getattr(vgg, vgg_type)(pretrained=True)
+            vgg_net = getattr(vgg, vgg_type)(weights=VGG19_Weights.IMAGENET1K_V1)
 
         features = vgg_net.features[:max_idx + 1]
 

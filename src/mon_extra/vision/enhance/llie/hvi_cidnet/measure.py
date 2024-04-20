@@ -9,17 +9,12 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 
+import mon
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-mea_parser = argparse.ArgumentParser(description="Measure")
-mea_parser.add_argument("--use_gt_mean",      action="store_true", help="Use the mean of GT to rectify the output of the model")
-mea_parser.add_argument("--lol_v1",           action="store_true", help="measure lol_v1 dataset")
-mea_parser.add_argument("--lol_v2_real",      action="store_true", help="measure lol_v2_real dataset")
-mea_parser.add_argument("--lol_v2_synthetic", action="store_true", help="measure lol_v2_synthetic dataset")
-mea_parser.add_argument("--sice_grad",        action="store_true", help="measure sice_grad dataset")
-mea_parser.add_argument("--sice_mix",         action="store_true", help="measure sice_mix dataset")
-mea = mea_parser.parse_args()
 
+# region Measure
 
 def ssim(prediction, target):
     C1        = (0.01 * 255) ** 2
@@ -81,11 +76,10 @@ def metrics(im_dir, label_dir, use_gt_mean):
     loss_fn.cuda()
     for item in tqdm(sorted(glob.glob(im_dir))):
         n   += 1
-        
         im1  = Image.open(item).convert("RGB")
-        name = item.split("\\")[-1]
+        name = mon.Path(item).name
 
-        im2    = Image.open(label_dir + name).convert("RGB")
+        im2    = Image.open(label_dir + "/" + name).convert("RGB")
         (h, w) = im2.size
         im1    = im1.resize((h, w))
         im1    = np.array(im1)
@@ -94,7 +88,7 @@ def metrics(im_dir, label_dir, use_gt_mean):
         if use_gt_mean:
             mean_restored = cv2.cvtColor(im1, cv2.COLOR_RGB2GRAY).mean()
             mean_target   = cv2.cvtColor(im2, cv2.COLOR_RGB2GRAY).mean()
-            im1           = np.clip(im1 * (mean_target/mean_restored), 0, 255)
+            im1           = np.clip(im1 * (mean_target / mean_restored), 0, 255)
         
         score_psnr = calculate_psnr(im1, im2)
         score_ssim = calculate_ssim(im1, im2)
@@ -113,8 +107,25 @@ def metrics(im_dir, label_dir, use_gt_mean):
     avg_lpips = avg_lpips / n
     return avg_psnr, avg_ssim, avg_lpips
 
+# endregion
 
+
+# region Main
+
+def parse_args():
+    mea_parser = argparse.ArgumentParser(description="Measure")
+    mea_parser.add_argument("--use_gt_mean",      action="store_true", help="Use the mean of GT to rectify the output of the model")
+    mea_parser.add_argument("--lol_v1",           action="store_true", help="measure lol_v1 dataset")
+    mea_parser.add_argument("--lol_v2_real",      action="store_true", help="measure lol_v2_real dataset")
+    mea_parser.add_argument("--lol_v2_synthetic", action="store_true", help="measure lol_v2_synthetic dataset")
+    mea_parser.add_argument("--sice_grad",        action="store_true", help="measure sice_grad dataset")
+    mea_parser.add_argument("--sice_mix",         action="store_true", help="measure sice_mix dataset")
+    mea = mea_parser.parse_args()
+    return mea
+    
+    
 if __name__ == "__main__":
+    mea = parse_args()
     if mea.lol_v1:
         im_dir    = "./output/LOLv1/*.png"
         label_dir = "../datasets/LOLdataset/eval15/high/"
@@ -135,3 +146,5 @@ if __name__ == "__main__":
     print("===> Avg.PSNR: {:.4f} dB ".format(avg_psnr))
     print("===> Avg.SSIM: {:.4f} ".format(avg_ssim))
     print("===> Avg.LPIPS: {:.4f} ".format(avg_lpips))
+
+# endregion

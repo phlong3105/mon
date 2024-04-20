@@ -1,38 +1,18 @@
 import argparse
+import os
 
+import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from tqdm import tqdm
 
 from data.data import *
-from loss.losses import *
 from net.cidnet import CIDNet
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-eval_parser = argparse.ArgumentParser(description="Eval")
-eval_parser.add_argument("--perc",              action="store_true", help="trained with perceptual loss")
-eval_parser.add_argument("--lol_v1",            action="store_true", help="output lolv1 dataset")
-eval_parser.add_argument("--lol_v2_real",       action="store_true", help="output lol_v2_real dataset")
-eval_parser.add_argument("--lol_v2_synthetic",  action="store_true", help="output lol_v2_synthetic dataset")
-eval_parser.add_argument("--sice_grad",         action="store_true", help="output sice_grad dataset")
-eval_parser.add_argument("--sice_mix",          action="store_true", help="output sice_mix dataset")
 
-eval_parser.add_argument("--best_gt_mean",      action="store_true", help="output lol_v2_real dataset best_gt_mean")
-eval_parser.add_argument("--best_psnr",         action="store_true", help="output lol_v2_real dataset best_psnr")
-eval_parser.add_argument("--best_ssim",         action="store_true", help="output lol_v2_real dataset best_ssim")
-
-eval_parser.add_argument("--unpaired",          action="store_true", help="output unpaired dataset")
-eval_parser.add_argument("--dicm",              action="store_true", help="output DICM dataset")
-eval_parser.add_argument("--lime",              action="store_true", help="output LIME dataset")
-eval_parser.add_argument("--mef",               action="store_true", help="output MEF dataset")
-eval_parser.add_argument("--npe",               action="store_true", help="output NPE dataset")
-eval_parser.add_argument("--vv",                action="store_true", help="output VV dataset")
-eval_parser.add_argument("--alpha",             type=float, default=1.0)
-eval_parser.add_argument("--unpaired_weights",  type=str,   default="./weights/lol_v2_synthetic/w_perc.pth")
-
-ep = eval_parser.parse_args()
-
+# region Eval
 
 def eval(
     model,
@@ -76,7 +56,7 @@ def eval(
             output = output[:, :, :h, :w]
         
         output_img = transforms.ToPILImage()(output.squeeze(0))
-        output_img.save(output_folder + name[0])
+        output_img.save(output_folder + "/" + name[0])
         torch.cuda.empty_cache()
     # print("===> End evaluation")
     if lol_v1:
@@ -85,8 +65,39 @@ def eval(
         model.trans.gated2 = False
     torch.set_grad_enabled(True)
 
+# endregion
+
+
+# region Main
+
+def parse_args():
+    eval_parser = argparse.ArgumentParser(description="Eval")
+    eval_parser.add_argument("--perc",              action="store_true", help="trained with perceptual loss")
+    eval_parser.add_argument("--lol_v1",            action="store_true", help="output lolv1 dataset")
+    eval_parser.add_argument("--lol_v2_real",       action="store_true", help="output lol_v2_real dataset")
+    eval_parser.add_argument("--lol_v2_synthetic",  action="store_true", help="output lol_v2_synthetic dataset")
+    eval_parser.add_argument("--sice_grad",         action="store_true", help="output sice_grad dataset")
+    eval_parser.add_argument("--sice_mix",          action="store_true", help="output sice_mix dataset")
+    
+    eval_parser.add_argument("--best_gt_mean",      action="store_true", help="output lol_v2_real dataset best_gt_mean")
+    eval_parser.add_argument("--best_psnr",         action="store_true", help="output lol_v2_real dataset best_psnr")
+    eval_parser.add_argument("--best_ssim",         action="store_true", help="output lol_v2_real dataset best_ssim")
+    
+    eval_parser.add_argument("--unpaired",          action="store_true", help="output unpaired dataset")
+    eval_parser.add_argument("--dicm",              action="store_true", help="output DICM dataset")
+    eval_parser.add_argument("--lime",              action="store_true", help="output LIME dataset")
+    eval_parser.add_argument("--mef",               action="store_true", help="output MEF dataset")
+    eval_parser.add_argument("--npe",               action="store_true", help="output NPE dataset")
+    eval_parser.add_argument("--vv",                action="store_true", help="output VV dataset")
+    eval_parser.add_argument("--alpha",             type=float, default=1.0)
+    eval_parser.add_argument("--unpaired_weights",  type=str,   default="./weights/lol_v2_synthetic/w_perc.pth")
+    
+    ep = eval_parser.parse_args()
+    return ep
+    
 
 if __name__ == "__main__":
+    ep   = parse_args()
     cuda = True
     if cuda and not torch.cuda.is_available():
         raise Exception("No GPU found, or need to change CUDA_VISIBLE_DEVICES number")
@@ -166,3 +177,5 @@ if __name__ == "__main__":
         unpaired  = ep.unpaired,
         alpha     = alpha
     )
+    
+# endregion
