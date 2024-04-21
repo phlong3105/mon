@@ -17,6 +17,8 @@ exist_ok    : False
 verbose     : True
 
 # Model
+gated2: True
+alpha : 0.8
 
 # Data
 data_train_lol_blur        : "llie/lol_blur/train"

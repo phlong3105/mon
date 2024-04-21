@@ -37,18 +37,13 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    device   = args.device
+    device    = mon.set_device(args.device)
     epochs   = args.epochs
     verbose  = args.verbose
     
     # Directory
     weights_dir = save_dir / "weights"
     weights_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Device
-    device = device[0] if isinstance(device, list) else device
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
     # Model
     DCE_net = mmodel.enhance_net_nopool().to(device)

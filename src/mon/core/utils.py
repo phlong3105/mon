@@ -13,6 +13,7 @@ __all__ = [
     "make_divisible",
     "parse_device",
     "parse_hw",
+    "set_device",
     "set_random_seed",
     "upcast",
 ]
@@ -45,13 +46,6 @@ def make_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]:
     h    = int(math.ceil(h / divisor) * divisor)
     w    = int(math.ceil(w / divisor) * divisor)
     return h, w
-
-
-'''
-def make_divisible(x: int, divisor: int) -> int:
-    """Make a number :param:`x` evenly divisible by a :param:`divisor`."""
-    return math.ceil(x / divisor) * divisor
-'''
 
 
 def upcast(input: torch.Tensor | np.ndarray, keep_type: bool = False) -> torch.Tensor | np.ndarray:
@@ -168,8 +162,25 @@ def list_devices() -> list[str]:
         devices.append(cuda_str)
         
     return devices
+
+
+def set_device(device: Any, use_single_device: bool = True) -> torch.device:
+    """Set a cuda device in the current machine.
     
+    Args:
+        device: Cuda devices to set.
+        use_single_device: If ``True``, set a single-device cuda device in the list.
     
+    Returns:
+        A cuda device in the current machine.
+    """
+    device = parse_device(device)
+    device = device[0] if isinstance(device, list) and use_single_device else device
+    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
+    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+    torch.cuda.set_device(device)  # change allocation of current GPU
+    return device
+
 # endregion
 
 
@@ -229,5 +240,6 @@ def set_random_seed(seed: int | list[int] | tuple[int, int]):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
 
 # endregion

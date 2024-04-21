@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+References:
+    `<https://github.com/Fediory/HVI-CIDNet>`__
+"""
+
 from __future__ import annotations
 
 import argparse
 import copy
-import os
 import socket
 import time
 
@@ -16,8 +20,8 @@ import torch.optim
 import torchvision
 from PIL import Image
 
-import model
 import mon
+from net.cidnet import CIDNet
 
 console       = mon.console
 _current_file = mon.Path(__file__).absolute()
@@ -34,18 +38,28 @@ def predict(args: argparse.Namespace):
     save_dir  = args.save_dir
     device    = mon.set_device(args.device)
     imgsz     = args.imgsz
+    imgsz     = mon.parse_hw(imgsz)
     resize    = args.resize
     benchmark = args.benchmark
     
     # Model
-    DiDCE_net = model.enhance_net_nopool().to(device)
-    DiDCE_net.load_state_dict(torch.load(weights))
-    DiDCE_net.eval()
+    torch.set_grad_enabled(False)
+    model = CIDNet().to(device)
+    model.load_state_dict(torch.load(weights, map_location=lambda storage, loc: storage))
+    model.eval()
     
+    if data == "lol_v1":
+        model.trans.gated  = True
+    elif data in ["lol_v2_real", "lol_v2_synthetic"]:
+        model.trans.gated2 = True
+        model.trans.alpha  = 0.8
+    else:
+        model.trans.alpha  = 0.8
+        
     # Benchmark
     if benchmark:
         flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = copy.deepcopy(DiDCE_net),
+            model      = copy.deepcopy(model),
             image_size = imgsz,
             channels   = 3,
             runs       = 100,
@@ -71,18 +85,24 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path    = meta["path"]
-                data_lowlight = Image.open(image_path)
-                data_lowlight = (np.asarray(data_lowlight) / 255.0)
-                data_lowlight = torch.from_numpy(data_lowlight).float()
-                data_lowlight = data_lowlight.permute(2, 0, 1)
-                data_lowlight = data_lowlight.cuda().unsqueeze(0)
-                start_time    = time.time()
-                enhanced_image, a = DiDCE_net(data_lowlight)
-                run_time      = (time.time() - start_time)
-                output_path   = save_dir / image_path.name
+                image_path     = meta["path"]
+                image          = Image.open(image_path).convert("RGB")
+                image          = (np.asarray(image) / 255.0)
+                image          = torch.from_numpy(image).float()
+                image          = image.permute(2, 0, 1)
+                image          = image.to(device).unsqueeze(0)
+                h0, w0         = mon.get_image_size(image)
+                if resize:
+                    image = mon.resize(input=image, size=imgsz)
+                else:
+                    image = mon.resize_divisible(image=image, divisor=32)
+                start_time     = time.time()
+                enhanced_image = model(image)
+                run_time       = (time.time() - start_time)
+                enhanced_image = mon.resize(input=enhanced_image, size=[h0, w0])
+                output_path    = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time     += run_time
+                sum_time      += run_time
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")
 

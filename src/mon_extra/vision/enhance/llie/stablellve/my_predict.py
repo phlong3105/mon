@@ -33,15 +33,10 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
-    device    = args.device
+    device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
-    
-    # Device
-    device = device[0] if isinstance(device, list) else device
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     
     # Model
     model = UNet(n_channels=3, bilinear=True).to(device)
@@ -147,7 +142,7 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/stablellve/weights/[original]stablellve_checkpoint.pth"
+    weights  = weights or mon.ZOO_DIR / "mon_extra/vision/enhance/llie/stablellve/weights/stablellve_checkpoint.pth"
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)

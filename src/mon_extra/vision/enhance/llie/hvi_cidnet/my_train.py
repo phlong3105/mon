@@ -46,7 +46,7 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    device   = args.device
+    device   = mon.set_device(args.device)
     imgsz    = args.imgsz
     epochs   = args.epochs
     verbose  = args.verbose
@@ -58,18 +58,9 @@ def train(args: argparse.Namespace):
     debug_dir.mkdir(parents=True, exist_ok=True)
     
     # Seed
-    seed = random.randint(1, 1000000)
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    os.environ["PYTHONHASHSEED"] = str(seed)
+    mon.set_random_seed(random.randint(1, 1000000))
     
     # Device
-    device = device[0] if isinstance(device, list) else device
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
     cudnn.benchmark = True
     
     # Model
@@ -162,7 +153,7 @@ def train(args: argparse.Namespace):
         args.data_valgt_lol_v2_synthetic = str(mon.DATA_DIR / args.data_valgt_lol_v2_synthetic)
         args.data_valgt_sid              = str(mon.DATA_DIR / args.data_valgt_sid)
         args.data_valgt_sice             = str(mon.DATA_DIR / args.data_valgt_sice)
-
+        
         if args.lol_v1:
             train_set            = get_lol_v1_training_set(args.data_train_lol_v1, size=args.crop_size)
             training_data_loader = DataLoader(dataset=train_set, num_workers=args.threads, batch_size=args.batch_size, shuffle=True)
@@ -170,6 +161,7 @@ def train(args: argparse.Namespace):
             testing_data_loader  = DataLoader(dataset=test_set, num_workers=args.threads, batch_size=1, shuffle=False)
             output_folder        = "lol_v1"
             label_dir            = args.data_valgt_lol_v1
+            norm_size            = True
         elif args.lol_blur:
             train_set            = get_training_set_blur(args.data_train_lol_blur, size=args.crop_size)
             training_data_loader = DataLoader(dataset=train_set, num_workers=args.threads, batch_size=args.batch_size, shuffle=True)
@@ -177,6 +169,7 @@ def train(args: argparse.Namespace):
             testing_data_loader  = DataLoader(dataset=test_set, num_workers=args.threads, batch_size=1, shuffle=False)
             output_folder        = "lol_blur"
             label_dir            = args.data_valgt_lol_blur
+            norm_size            = True
         elif args.lol_v2_real:
             train_set            = get_lol_v2_training_set(args.data_train_lol_v2_real, size=args.crop_size)
             training_data_loader = DataLoader(dataset=train_set, num_workers=args.threads, batch_size=args.batch_size, shuffle=True)
@@ -184,6 +177,7 @@ def train(args: argparse.Namespace):
             testing_data_loader  = DataLoader(dataset=test_set, num_workers=args.threads, batch_size=1, shuffle=False)
             output_folder        = "lol_v2_real"
             label_dir            = args.data_valgt_lol_v2_real
+            norm_size            = True
         elif args.lol_v2_synthetic:
             train_set            = get_lol_v2_synthetic_training_set(args.data_train_lol_v2_synthetic, size=args.crop_size)
             training_data_loader = DataLoader(dataset=train_set, num_workers=args.threads, batch_size=args.batch_size, shuffle=True)
@@ -198,6 +192,7 @@ def train(args: argparse.Namespace):
             testing_data_loader  = DataLoader(dataset=test_set, num_workers=args.threads, batch_size=1, shuffle=False)
             output_folder        = "sid"
             label_dir            = args.data_valgt_sid
+            norm_size            = True
             npy                  = True
         elif args.sice_mix:
             train_set            = get_sice_training_set(args.data_train_sice, size=args.crop_size)
@@ -287,7 +282,7 @@ def train(args: argparse.Namespace):
             testing_data_loader = testing_data_loader,
             model_path          = None,
             output_folder       = str(debug_dir / output_folder),
-            norm_size           = True,
+            norm_size           = norm_size,
             lol_v1              = args.lol_v1,
             lol_v2              = args.lol_v2_real,
             alpha               = 0.8

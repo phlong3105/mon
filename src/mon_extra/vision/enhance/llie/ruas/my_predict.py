@@ -41,22 +41,16 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
-    device    = args.device
+    device    = mon.set_device(args.device)
     seed      = args.seed
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
     
-    # Device
-    device = device[0] if isinstance(device, list) else device
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
-    
     # Seed
-    np.random.seed(seed)
-    torch.cuda.set_device(device)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
+    mon.set_random_seed(seed)
+    
+    # Device
     cudnn.benchmark = True
     cudnn.enabled   = True
     

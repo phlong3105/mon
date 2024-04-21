@@ -27,7 +27,7 @@ def predict(args: argparse.Namespace):
     weights   = args.weights[0] if isinstance(args.weights, list) else args.weights
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
-    device    = args.device
+    device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
