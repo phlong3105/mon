@@ -15,7 +15,6 @@ import random
 import socket
 
 import click
-import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
@@ -284,7 +283,7 @@ def train(args: argparse.Namespace):
             output_folder       = str(debug_dir / output_folder),
             norm_size           = norm_size,
             lol_v1              = args.lol_v1,
-            lol_v2              = args.lol_v2_real,
+            lol_v2              = args.lol_v2_real or args.data_train_lol_v2_synthetic,
             alpha               = 0.8
         )
         avg_loss = loss_last_10 / pic_last_10

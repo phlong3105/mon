@@ -28,6 +28,7 @@ def measure_metric_piqa(
     resize        : bool,
     metric        : list[str],
     test_y_channel: bool,
+    use_gt_mean   : bool,
     save_txt      : bool,
     verbose       : bool,
 ) -> dict:
@@ -135,6 +136,7 @@ def measure_metric_pyiqa(
     resize        : bool,
     metric        : list[str],
     test_y_channel: bool,
+    use_gt_mean   : bool,
     save_txt      : bool,
     verbose       : bool,
 ) -> dict:
@@ -260,6 +262,7 @@ def update_results(results: dict, new_values: dict) -> dict:
 @click.option("--resize",         is_flag=True)
 @click.option("--metric",         type=str, multiple=True, help="Measuring metric.")
 @click.option("--test-y-channel", is_flag=True)
+@click.option("--use-gt-mean",    is_flag=True)
 @click.option("--backend",        type=click.Choice(["piqa", "pyiqa"], case_sensitive=False), default=["piqa", "pyiqa"], multiple=True)
 @click.option("--save-txt",       is_flag=True)
 @click.option("--append-results", is_flag=True)
@@ -274,6 +277,7 @@ def main(
     resize        : bool,
     metric        : list[str],
     test_y_channel: bool,
+    use_gt_mean   : bool,
     backend       : list[str],
     save_txt      : bool,
     append_results: bool,
@@ -297,6 +301,7 @@ def main(
                 imgsz          = imgsz,
                 resize         = resize,
                 test_y_channel = test_y_channel,
+                use_gt_mean    = use_gt_mean,
                 metric         = metric,
                 save_txt       = save_txt,
                 verbose        = verbose,
@@ -311,6 +316,7 @@ def main(
                 resize         = resize,
                 metric         = metric,
                 test_y_channel = test_y_channel,
+                use_gt_mean    = use_gt_mean,
                 save_txt       = save_txt,
                 verbose        = verbose,
             )

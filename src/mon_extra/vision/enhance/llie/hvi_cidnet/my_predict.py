@@ -99,6 +99,7 @@ def predict(args: argparse.Namespace):
                 start_time     = time.time()
                 enhanced_image = model(image)
                 run_time       = (time.time() - start_time)
+                enhanced_image = torch.clamp(enhanced_image, 0, 1)
                 enhanced_image = mon.resize(input=enhanced_image, size=[h0, w0])
                 output_path    = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
