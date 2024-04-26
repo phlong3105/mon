@@ -641,7 +641,7 @@ EXTRA_DATASET_STR = "[extra]"
 EXTRA_MODEL_STR   = "[extra]"
 EXTRA_DATASETS    = {
     # region detect
-        "aic24_fisheye8k": {
+        "aicity_2024_fisheye8k": {
         "tasks"         : [Task.DETECT],
         "splits"        : [Split.TRAIN, Split.VAL, Split.TEST],
         "has_test_label": False,
