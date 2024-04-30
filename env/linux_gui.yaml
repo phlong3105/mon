@@ -11,85 +11,69 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  # Required
   - python=3.11
-  - pip                       # PyPA recommended tool for installing Python packages.
-  # CUDA
-  - cudatoolkit=11.8          # CUDA Toolkit - Including CUDA runtime.
-  - cudnn                     # NVIDIA's cuDNN deep neural network acceleration library.
-  - pynvml                    # Python Bindings for the NVIDIA Management Library.
-  # GitHub
-  - git                       # Distributed version control system.
-  - git-lfs                   # An open source Git extension for versioning large files.
-  # Scientific
-  - openblas                  # OpenBLAS is an optimized BLAS library.
+  - pip                        # PyPA recommended tool for installing Python packages.
+  - git                        # Distributed version control system.
+  # Optional: Hardware Acceleration
+  - cudatoolkit=11.8           # CUDA Toolkit - Including CUDA runtime.
+  - cudnn                      # NVIDIA's cuDNN deep neural network acceleration library.
+  - pynvml                     # Python Bindings for the NVIDIA Management Library.
+  - openblas                   # OpenBLAS is an optimized BLAS library.
   - pip:
-      - poetry                # Python packaging and dependency management made easy.
-      - setuptools
-      # Documentation
-      - emoji                 # Emoji for Python.
-      - markdown              # Python implementation of Markdown.
-      - mkdocs                # Project documentation with Markdown.
-      - mkdocs-material       # A Material Design theme for mkdocs.
-      - mkdocstrings          # Automatic documentation from sources, for MkDocs.
-      - sphinx                # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
-      - sphinx-paramlinks     # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
-      # Image
-      - albumentations
-      - exifread              # Easy to use Python module to extract Exif metadata from digital image files (TIFF, JPEG, PNG, Webp, HEIC).
-      - ffmpeg-python         # Python bindings for FFmpeg - with complex filtering support.
-      - kornia                # # Kornia is a differentiable computer vision library for PyTorch.
-      - opencv-python         # Computer vision and machine learning software library.
-      - opencv-contrib-python
-      - rawpy                 # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
-      # Networking
-      - requests              # Requests is an elegant and simple HTTP library for Python, built with ♥
-      # Plot
-      - matplotlib            # Publication quality figures in Python.
-      - tensorboard           # TensorFlow's Visualization Toolkit.
-      # PyTorch
-      - einops                # A new flavour of deep learning operations.
-      - lightning>=2.2.2      #
-      - onnxruntime           # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
-      - torch>=2.2.2          # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
-      - torchaudio            # Simple audio I/O for pytorch.
-      - torchvision           # Image and video datasets and models for torch deep learning.
-      - torchfile             # Torch7 binary serialized file parser.
-      # Metric
-      - fvcore
-      - image-quality
-      - lpips
-      - thop                  # Count the MACs / FLOPs of your PyTorch model.
-      - piq                   # A collection of measures and metrics for image quality assessment.
-      - piqa                  # PyTorch Image Quality Assessment package.
-      - pycocotools           # COCO dataset and evaluation metrics for object detection, instance segmentation, and person keypoint detection.
-      - pyiqa                 # PyTorch Toolbox for Image Quality Assessment.
-      - torchmetrics>=1.3.2   # Collection of PyTorch native metrics for easy evaluating machine learning models.
-      # Ray
-      - ray[tune]             # Ray is a fast and simple framework for building and running distributed applications.
-      # Scientific
-      - filterpy              # Kalman filters and other optimal and non-optimal estimation filters in Python.
-      - numpy                 # The fundamental package for scientific computing with Python.
-      - scikit-image          # Image processing in Python.
-      - scikit-learn          # A set of python modules for machine learning and data mining.
-      - scipy                 # Scientific Library for Python.
-      # Syntax
-      - click                 # Click is a Python package for creating beautiful command line interfaces.
-      - multipledispatch      # Multiple dispatch.
-      - protobuf              # Protocol Buffers - Google's data interchange format.
-      - pyhumps               # Convert strings (and dictionary keys) between snake case, camel case and pascal case in Python.
-      - pytest
-      - PyYAML                # YAML parser and emitter for Python.
-      - sortedcontainers      # Python Sorted Container Types: SortedList, SortedDict, and SortedSet.
-      - typing-extensions     # Backported and Experimental Type Hints for Python 3.7+.
-      - validators            # Python Data Validation for Humans.
-      - xmltodict             # Makes working with XML feel like you are working with JSON.
-      # TensorFlow
-      - tensorflow
-      # UI
-      - PyQt6                 # Python bindings for the Qt cross-platform application toolkit.
-      - rich                  # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
-      - tabulate              # Pretty-print tabular data in Python, a library and a command-line utility.
-      - tqdm                  # Fast, Extensible Progress Meter.
-
-
-# poetry setuptools markdown mkdocs mkdocs-material mkdocstrings sphinx sphinx-paramlinks albumentations ffmpeg-python kornia opencv-python opencv-contrib-python requests matplotlib tensorboard einops flopco-pytorch lightning pytorch-lightning piqa pyiqa thop torch torchaudio torchmetrics torchvision ray[tune] filterpy numpy scikit-image scikit-learn scipy click multipledispatch protobuf pyhumps PyYAML sortedcontainers typing-extensions validators xmltodict PyQt6 rich tabulate tqdm
+      # Required: Building Tools
+      - poetry                 # Python packaging and dependency management made easy.
+      - setuptools             # Easily download, build, install, upgrade, and uninstall Python packages
+      # Required: Python Basic
+      - click                  # Click is a Python package for creating beautiful command line interfaces.
+      - emoji                  # Emoji for Python.
+      - multipledispatch       # Multiple dispatch.
+      - numpy                  # The fundamental package for scientific computing with Python.
+      - protobuf               # Protocol Buffers - Google's data interchange format.
+      - psutil                 # Cross-platform lib for process and system monitoring in Python.
+      - PyYAML                 # YAML parser and emitter for Python.
+      - pyhumps                # Convert strings between snake case, camel case and pascal case in Python.
+      - pytest                 # Simple powerful testing with Python.
+      - requests               # Requests is an elegant and simple HTTP library for Python, built with ♥.
+      - rich                   # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
+      - scipy                  # Scientific Library for Python.
+      - tabulate               # Pretty-print tabular data in Python, a library and a command-line utility.
+      - tqdm                   # Fast, Extensible Progress Meter.
+      - typing-extensions      # Backported and Experimental Type Hints for Python 3.7+.
+      - validators             # Python Data Validation for Humans.
+      - xmltodict              # Makes working with XML feel like you are working with JSON.
+      # Required: Data Processing
+      - albumentations         # An efficient library for image augmentation, providing extensive transformations to support machine learning and computer vision tasks.
+      - ffmpeg-python          # Python bindings for FFmpeg—with complex filtering support.
+      - kornia                 # Kornia is a differentiable computer vision library for PyTorch.
+      - opencv-python          # Computer vision and machine learning software library.
+      - opencv-contrib-python  # Wrapper package for OpenCV python bindings.
+      - Pillow                 # Python Imaging Library (Fork).
+      - pycocotools            # COCO dataset and evaluation metrics for object detection, instance segmentation, and person keypoint detection.
+      - pyiqa                  # PyTorch Toolbox for Image Quality Assessment.
+      - rawpy                  # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
+      # Required: Deep Learning
+      - einops                 # A new flavor of deep learning operations.
+      - lightning>=2.2.3       # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+      - onnxruntime            # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
+      - tensorboard            # TensorFlow's Visualization Toolkit.
+      - tensorflow             # TensorFlow is an open source machine learning framework for everyone.
+      - thop                   # Count the MACs / FLOPs of your PyTorch model.
+      - torch>=2.3.0           # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+      - torchaudio             # Simple audio I/O for pytorch.
+      - torchmetrics>=1.3.2    # Collection of PyTorch native metrics for easy evaluating machine learning models.
+      - torchvision            # Image and video datasets and models for Torch deep learning.
+      # Optional: UI
+      - matplotlib             # Publication quality figures in Python.
+      - PyQt6                  # Python bindings for the Qt cross-platform application toolkit.
+      # Optional: Documentation
+      - markdown               # Python implementation of Markdown.
+      - mkdocs                 # Project documentation with Markdown.
+      - mkdocs-material        # A Material Design theme for mkdocs.
+      - mkdocstrings           # Automatic documentation from sources, for MkDocs.
+      - sphinx                 # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
+      - sphinx-paramlinks      # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
+      # Optional
+      - filterpy               # Kalman filters and other optimal and non-optimal estimation filters in Python.
+      - scikit-image           # Image processing in Python.
+      - scikit-learn           # A set of python modules for machine learning and data mining.

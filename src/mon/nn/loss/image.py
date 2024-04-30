@@ -252,7 +252,8 @@ class EdgeLoss(base.Loss):
 
     def conv_gauss(self, image: torch.Tensor) -> torch.Tensor:
         n_channels, _, kw, kh = self.kernel.shape
-        image = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode='replicate')
+        self.kernel = self.kernel.to(image.device)
+        image       = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode='replicate')
         return F.conv2d(image, self.kernel, groups=n_channels)
     
     def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:

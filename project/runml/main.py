@@ -11,11 +11,11 @@ import click
 
 import mon
 import utils
+from project.runml import install
 
-_current_file    = mon.Path(__file__).absolute()
-_current_dir     = _current_file.parents[0]
-_modes 	         = ["train", "predict", "online", "instance", "metric", "plot"]
-_extra_model_str = "(original)"
+_current_file = mon.Path(__file__).absolute()
+_current_dir  = _current_file.parents[0]
+_modes 	      = ["install", "train", "predict", "online", "instance", "metric", "plot"]
 
 
 # region Train
@@ -333,14 +333,15 @@ def main(
     mode       = click.prompt(click.style(f"Mode {utils.parse_menu_string(_modes)}", fg="bright_green", bold=True), default=mode)
     mode       = _modes[int(mode)] if mon.is_int(mode) else mode
     
-    if mode in ["train", "predict", "online", "instance"]:
+    if mode in ["install", "train", "predict", "online", "instance"]:
         # Model
         models_      = mon.list_models(project_root=root, mode=mode, task=task)
         models_str_  = utils.parse_menu_string(models_)
         model	     = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	     = models_[int(model)] if mon.is_int(model) else model
         model_name   = mon.parse_model_name(model)
-        # Config     
+    if mode in ["train", "predict", "online", "instance"]:
+        # Config
         configs_     = mon.list_configs(project_root=root, model=model)
         configs_str_ = utils.parse_menu_string(configs_)
         config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
@@ -399,11 +400,15 @@ def main(
         exist_ok = True if exist_ok == "yes" else False
         verbose  = click.prompt(click.style(f"Verbosity?  [yes/no]", fg="bright_yellow", bold=True), type=str, default=verbose)
         verbose  = True if verbose  == "yes" else False
+    else:
+        raise ValueError()
     
     print("\n")
     
     # Run
-    if mode in ["train"]:
+    if mode in ["install"]:
+        install.install(name=model)
+    elif mode in ["train"]:
         args = {
             "root"    : root,
             "task"    : task,

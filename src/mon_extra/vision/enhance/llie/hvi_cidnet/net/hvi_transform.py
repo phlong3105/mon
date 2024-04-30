@@ -31,19 +31,19 @@ class RGB_HVI(nn.Module):
         saturation = (value - img_min) / (value + eps)
         saturation[value == 0] = 0
         
-        hue = hue.unsqueeze(1)
+        hue        = hue.unsqueeze(1)
         saturation = saturation.unsqueeze(1)
-        value = value.unsqueeze(1)
+        value      = value.unsqueeze(1)
         
         k = self.density_k
         self.this_k = k.item()
         
         color_sensitive = ((value * 0.5 * pi).sin() + eps).pow(k)
-        cx = (2.0 * pi * hue).cos()
-        cy = (2.0 * pi * hue).sin()
-        X = color_sensitive * saturation * cx
-        Y = color_sensitive * saturation * cy
-        Z = value
+        cx   = (2.0 * pi * hue).cos()
+        cy   = (2.0 * pi * hue).sin()
+        X   = color_sensitive * saturation * cx
+        Y   = color_sensitive * saturation * cy
+        Z   = value
         xyz = torch.cat([X, Y, Z], dim=1)
         return xyz
     
@@ -59,8 +59,8 @@ class RGB_HVI(nn.Module):
         v = I
         k = self.this_k
         color_sensitive = ((v * 0.5 * pi).sin() + eps).pow(k)
-        H = (H) / (color_sensitive + eps)
-        V = (V) / (color_sensitive + eps)
+        H = H / (color_sensitive + eps)
+        V = V / (color_sensitive + eps)
         H = torch.clamp(H, -1, 1)
         V = torch.clamp(V, -1, 1)
         h = torch.atan2(V, H) / (2 * pi)

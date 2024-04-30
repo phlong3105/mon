@@ -23,6 +23,7 @@ __all__ = [
     "CosineAnnealingWarmRestarts",
     "CyclicLR",
     "ExponentialLR",
+    "GradualWarmupScheduler",
     "LBFGS",
     "LRScheduler",
     "LambdaLR",
@@ -91,51 +92,6 @@ OPTIMIZERS.register(name="sparse_adam", module=SparseAdam)
 
 # region Scheduler
 
-@LR_SCHEDULERS.register(name="vibrate_lr")
-class VibrateLR(_LRScheduler):
-    """
-
-    Args:
-        optimizer: Torch optimizer.
-        last_epoch: Used in _LRScheduler. Default: ``-1``.
-    """
-
-    def __init__(
-        self,
-        optimizer : Optimizer,
-        total_iter: int,
-        last_epoch: int = -1,
-    ):
-        self.total_iter = total_iter
-        super().__init__(optimizer, last_epoch)
-
-    def get_lr(self):
-        process = self.last_epoch / self.total_iter
-
-        f = 0.1
-        if process < 3 / 8:
-            f = 1 - process * 8 / 3
-        elif process < 5 / 8:
-            f = 0.2
-
-        t  = self.total_iter // 80
-        th = t // 2
-
-        t  = self.last_epoch % t
-
-        f2 = t / th
-        if t >= th:
-            f2 = 2 - f2
-
-        weight = f * f2
-
-        if self.last_epoch < th:
-            weight = max(0.1, weight)
-
-        # console.log('f {}, t {}, th {}, t {}, f2 {}'.format(f, t, th, t, f2))
-        return [weight * group["initial_lr"] for group in self.optimizer.param_groups]
-
-
 @LR_SCHEDULERS.register(name="cosine_annealing_restart_lr")
 class CosineAnnealingRestartLR(_LRScheduler):
     """Cosine annealing with restarts learning rate scheme.
@@ -182,7 +138,8 @@ class CosineAnnealingRestartLR(_LRScheduler):
             for base_lr in self.base_lrs
         ]
 
-    def _get_position_from_periods(self, iteration: int, cumulative_period: list[int]) -> int:
+    @staticmethod
+    def _get_position_from_periods(iteration: int, cumulative_period: list[int]) -> int:
         """Get the position from a period list.
 
         It will return the index of the right-closest number in the period list.
@@ -318,6 +275,76 @@ class CosineAnnealingRestartCyclicLR(_LRScheduler):
                 return i
 
 
+@LR_SCHEDULERS.register(name="gradual_warmup_scheduler")
+class GradualWarmupScheduler(_LRScheduler):
+    """Gradually warm-up (increasing) learning rate in an optimizer.
+    
+    Paper: `Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour <https://arxiv.org/abs/1706.02677>`__
+
+    Args:
+        optimizer: A wrapped optimizer.
+        multiplier: `Target learning rate = base lr * multiplier` if `multiplier > 1.0`.
+            If `multiplier = 1.0`, lr starts from 0 and ends up with the base_lr.
+        total_epoch: Target learning rate is reached at total_epoch.
+        after_scheduler: After target_epoch, use this scheduler (e.g., ReduceLROnPlateau)
+    """
+    
+    def __init__(
+        self,
+        optimizer      : Optimizer,
+        multiplier     : int,
+        total_epoch    : int,
+        after_scheduler: _LRScheduler | None = None
+    ):
+        self.multiplier = multiplier
+        if self.multiplier < 1.0:
+            raise ValueError(":param:`multiplier` should be greater thant or equal to 1.0")
+        self.total_epoch     = total_epoch
+        self.after_scheduler = after_scheduler
+        self.finished        = False
+        super(GradualWarmupScheduler, self).__init__(optimizer)
+    
+    def get_lr(self):
+        if self.last_epoch > self.total_epoch:
+            if self.after_scheduler:
+                if not self.finished:
+                    self.after_scheduler.base_lrs = [base_lr * self.multiplier for base_lr in self.base_lrs]
+                    self.finished = True
+                return self.after_scheduler.get_lr()
+            return [base_lr * self.multiplier for base_lr in self.base_lrs]
+        
+        if self.multiplier == 1.0:
+            return [base_lr * (float(self.last_epoch) / self.total_epoch) for base_lr in self.base_lrs]
+        else:
+            return [base_lr * ((self.multiplier - 1.0) * self.last_epoch / self.total_epoch + 1.0) for base_lr in self.base_lrs]
+    
+    def step_ReduceLROnPlateau(self, metrics, epoch=None):
+        if epoch is None:
+            epoch = self.last_epoch + 1
+        self.last_epoch = epoch if epoch != 0 else 1  # ReduceLROnPlateau is called at the end of epoch, whereas others are called at beginning
+        if self.last_epoch <= self.total_epoch:
+            warmup_lr = [base_lr * ((self.multiplier - 1.0) * self.last_epoch / self.total_epoch + 1.0) for base_lr in self.base_lrs]
+            for param_group, lr in zip(self.optimizer.param_groups, warmup_lr):
+                param_group["lr"] = lr
+        else:
+            if epoch is None:
+                self.after_scheduler.step(metrics, None)
+            else:
+                self.after_scheduler.step(metrics, epoch - self.total_epoch)
+    
+    def step(self, epoch=None, metrics=None):
+        if type(self.after_scheduler) != ReduceLROnPlateau:
+            if self.finished and self.after_scheduler:
+                if epoch is None:
+                    self.after_scheduler.step(None)
+                else:
+                    self.after_scheduler.step(epoch - self.total_epoch)
+            else:
+                return super(GradualWarmupScheduler, self).step(epoch)
+        else:
+            self.step_ReduceLROnPlateau(metrics, epoch)
+
+
 @LR_SCHEDULERS.register(name="multistep_lr_restart")
 class MultiStepLRRestart(_LRScheduler):
     
@@ -352,6 +379,51 @@ class MultiStepLRRestart(_LRScheduler):
             group["lr"] * self.gamma**self.milestones[self.last_epoch]
             for group in self.optimizer.param_groups
         ]
+
+
+@LR_SCHEDULERS.register(name="vibrate_lr")
+class VibrateLR(_LRScheduler):
+    """
+
+    Args:
+        optimizer: Torch optimizer.
+        last_epoch: Used in _LRScheduler. Default: ``-1``.
+    """
+
+    def __init__(
+        self,
+        optimizer : Optimizer,
+        total_iter: int,
+        last_epoch: int = -1,
+    ):
+        self.total_iter = total_iter
+        super().__init__(optimizer, last_epoch)
+
+    def get_lr(self):
+        process = self.last_epoch / self.total_iter
+
+        f = 0.1
+        if process < 3 / 8:
+            f = 1 - process * 8 / 3
+        elif process < 5 / 8:
+            f = 0.2
+
+        t  = self.total_iter // 80
+        th = t // 2
+
+        t  = self.last_epoch % t
+
+        f2 = t / th
+        if t >= th:
+            f2 = 2 - f2
+
+        weight = f * f2
+
+        if self.last_epoch < th:
+            weight = max(0.1, weight)
+
+        # console.log('f {}, t {}, th {}, t {}, f2 {}'.format(f, t, th, t, f2))
+        return [weight * group["initial_lr"] for group in self.optimizer.param_groups]
 
 
 LRScheduler                 = _LRScheduler

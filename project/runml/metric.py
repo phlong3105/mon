@@ -9,7 +9,7 @@ import logging
 import os
 
 import click
-import piqa
+# import piqa
 import pyiqa
 import torch
 
@@ -19,7 +19,7 @@ console = mon.console
 
 
 # region Function
-
+'''
 def measure_metric_piqa(
     input_dir     : mon.Path,
     target_dir    : mon.Path | None,
@@ -35,16 +35,16 @@ def measure_metric_piqa(
     """Measure metrics."""
     _METRICS = {
         # "fid"    : piqa.FID,
-        "fsim"   : piqa.FSIM,   
+        "fsim"   : piqa.FSIM,
         "haarpsi": piqa.HaarPSI,
-        "lpips"  : piqa.LPIPS,  
-        "mdsi"   : piqa.MDSI,   
+        "lpips"  : piqa.LPIPS,
+        "mdsi"   : piqa.MDSI,
         "ms-gmsd": piqa.MS_GMSD,
         "ms-ssim": piqa.MS_SSIM,
-        "psnr"   : piqa.PSNR,   
-        "ssim"   : piqa.SSIM,   
-        "tv"     : piqa.TV,     
-        "vsi"    : piqa.VSI,    
+        "psnr"   : piqa.PSNR,
+        "ssim"   : piqa.SSIM,
+        "tv"     : piqa.TV,
+        "vsi"    : piqa.VSI,
     }
 
     assert input_dir is not None and mon.Path(input_dir).is_dir()
@@ -126,6 +126,7 @@ def measure_metric_piqa(
         else:
             results[m] = None
     return results
+'''
 
 
 def measure_metric_pyiqa(
@@ -293,6 +294,7 @@ def main(
         logger.disabled = True
     
     for b in backend:
+        '''
         if b in ["piqa"]:
             new_values = measure_metric_piqa(
                 input_dir      = input_dir,
@@ -307,7 +309,8 @@ def main(
                 verbose        = verbose,
             )
             results = update_results(results, new_values)
-        elif b in ["pyiqa"]:
+        '''
+        if b in ["pyiqa"]:
             new_values = measure_metric_pyiqa(
                 input_dir      = input_dir,
                 target_dir     = target_dir,

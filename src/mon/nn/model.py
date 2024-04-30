@@ -671,9 +671,19 @@ class Model(lightning.LightningModule, ABC):
                 if scheduler is None:
                     raise ValueError(f":param:`scheduler` must be defined.")
                 if isinstance(scheduler, dict):
+                    # after scheduler
+                    if "after_scheduler" in scheduler:
+                        after_scheduler = scheduler["after_scheduler"]
+                        scheduler.pop("after_scheduler")
+                    else:
+                        after_scheduler = None
+                    if isinstance(after_scheduler, dict):
+                        after_scheduler = LR_SCHEDULERS.build(optimizer=optim["optimizer"], config=after_scheduler)
+                        scheduler["after_scheduler"] = after_scheduler
+                    #
                     scheduler = LR_SCHEDULERS.build(optimizer=optim["optimizer"], config=scheduler)
                 lr_scheduler["scheduler"] = scheduler
-                optim["lr_scheduler"] = lr_scheduler
+                optim["lr_scheduler"]     = lr_scheduler
             
             # Update optim
             if "network_params_only" in optim:

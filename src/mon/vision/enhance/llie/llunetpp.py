@@ -283,8 +283,10 @@ class LLUnetPPNoPool(base.LowLightImageEnhancementModel):
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            in_channels = self.weights.get("in_channels", in_channels)
-        self.in_channels = in_channels
+            in_channels  = self.weights.get("in_channels" , in_channels)
+            loss_weights = self.weights.get("loss_weights", loss_weights)
+        self.in_channels  = in_channels
+        self.loss_weights = loss_weights
         
         # Construct model
         nb_filter    = [32, 64, 128, 256, 512]
@@ -333,7 +335,7 @@ class LLUnetPPNoPool(base.LowLightImageEnhancementModel):
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         
         # Loss
-        self._loss = Loss(*loss_weights)
+        self._loss = Loss(*self.loss_weights)
         
         # Load weights
         if self.weights:

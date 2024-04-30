@@ -10,9 +10,6 @@ import os
 import click
 import cv2
 import numpy as np
-import piqa
-import pyiqa
-import torch
 
 import mon
 

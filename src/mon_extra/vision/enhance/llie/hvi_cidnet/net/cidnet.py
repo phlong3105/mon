@@ -17,7 +17,7 @@ class CIDNet(nn.Module):
         # HV_ways
         self.HVE_block0 = nn.Sequential(
             nn.ReplicationPad2d(1),
-            nn.Conv2d(3, ch1, 3, stride=1, padding=0,bias=False)
+            nn.Conv2d(3, ch1, 3, stride=1, padding=0, bias=False)
         )
         self.HVE_block1 = NormDownsample(ch1, ch2, use_norm=norm)
         self.HVE_block2 = NormDownsample(ch2, ch3, use_norm=norm)

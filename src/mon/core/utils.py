@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "check_installed_package",
     "get_gpu_device_memory",
     "is_rank_zero",
     "list_cuda_devices",
@@ -18,6 +19,7 @@ __all__ = [
     "upcast",
 ]
 
+import importlib
 import math
 import os
 import random
@@ -241,5 +243,21 @@ def set_random_seed(seed: int | list[int] | tuple[int, int]):
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
+
+# endregion
+
+
+# region Installed Package
+
+def check_installed_package(package_name: str, verbose: bool = False) -> bool:
+    try:
+        importlib.import_module(package_name)
+        if verbose:
+            print(f"`{package_name}` is installed.")
+        return True
+    except ImportError:
+        if verbose:
+            print(f"`{package_name}` is not installed.")
+        return False
 
 # endregion

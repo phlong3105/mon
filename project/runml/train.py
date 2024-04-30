@@ -131,7 +131,7 @@ def main(
     weights  = weights[0] if isinstance(weights, list | tuple) else weights
     save_dir = save_dir  or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    # device   = mon.parse_device(device)
+    device   = mon.parse_device(device)
     
     # Update arguments
     args["hostname"]  = hostname
