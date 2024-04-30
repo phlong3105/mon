@@ -27,11 +27,11 @@ __all__ = [
     "SpikeDetection",
     "TQDMProgressBar",
     "Timer",
-    "TuneReportCallback",
-    "TuneReportCheckpointCallback",
+    # "TuneReportCallback",
+    # "TuneReportCheckpointCallback",
 ]
 
-import ray.tune.integration.pytorch_lightning as ray
+# import ray.tune.integration.pytorch_lightning as ray
 from lightning.pytorch import callbacks
 
 from mon.globals import CALLBACKS
@@ -58,8 +58,8 @@ StochasticWeightAveraging     = callbacks.StochasticWeightAveraging
 SpikeDetection                = callbacks.SpikeDetection
 Timer                         = callbacks.Timer
 TQDMProgressBar               = callbacks.TQDMProgressBar
-TuneReportCallback            = ray.TuneReportCallback
-TuneReportCheckpointCallback  = ray.TuneReportCheckpointCallback
+# TuneReportCallback            = ray.TuneReportCallback
+# TuneReportCheckpointCallback  = ray.TuneReportCheckpointCallback
 
 CALLBACKS.register(name="backbone_finetuning"            , module=BackboneFinetuning)
 CALLBACKS.register(name="batch_size_finder"              , module=BatchSizeFinder)
@@ -75,7 +75,7 @@ CALLBACKS.register(name="stochastic_weight_averaging"    , module=StochasticWeig
 CALLBACKS.register(name="spike_detection"                , module=SpikeDetection)
 CALLBACKS.register(name="timer"                          , module=Timer)
 CALLBACKS.register(name="tqdm_progress_bar"              , module=TQDMProgressBar)
-CALLBACKS.register(name="tune_report_callback"           , module=TuneReportCallback)
-CALLBACKS.register(name="tune_report_checkpoint_callback", module=TuneReportCheckpointCallback)
+# CALLBACKS.register(name="tune_report_callback"           , module=TuneReportCallback)
+# CALLBACKS.register(name="tune_report_checkpoint_callback", module=TuneReportCheckpointCallback)
 
 # endregion

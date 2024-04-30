@@ -56,38 +56,20 @@ include = [
 exclude = []
 
 [tool.poetry.dependencies]
-python                = ">=3.11, <3.12"
-cog                   = {version="*", optional=true}
-easydict              = {version="*", optional=true}
-guided-filter-pytorch = {version="*", optional=true}
-hydra-core            = {version="*", optional=true}
-kmeans_pytorch        = {version="*", optional=true}
-mediapipe             = {version="*", optional=true}
-pandas                = {version="*", optional=true}
-supergradients        = {path="src/mon_extra/vision/multitask/supergradients", develop=true}
-ultralytics           = {path="src/mon_extra/vision/multitask/ultralytics",    develop=true}
-yolor                 = {path="src/mon_extra/vision/detect/yolor",             develop=true}
-yolov7                = {path="src/mon_extra/vision/detect/yolov7",            develop=true}
-yolov9                = {path="src/mon_extra/vision/detect/yolov9",            develop=true}
+python         = ">=3.11, <3.13"
+supergradients = {path="src/mon_extra/vision/multitask/supergradients", develop=true}
+ultralytics    = {path="src/mon_extra/vision/multitask/ultralytics",    develop=true}
+yolor          = {path="src/mon_extra/vision/detect/yolor",             develop=true}
+yolov7         = {path="src/mon_extra/vision/detect/yolov7",            develop=true}
+yolov9         = {path="src/mon_extra/vision/detect/yolov9",            develop=true}
 
 [tool.poetry.extras]
 dev = [
-    "kmeans_pytorch",
     "supergradients",
     "ultralytics",
     "yolor",
     "yolov7",
     "yolov9",
-]
-aic = [
-    "cog",
-    "guided-filter-pytorch",
-    "hydra-core",
-    "mediapipe",
-    "pandas",
-    "tensorflow",
-    "torchfile",
-    # "ultralytics",
 ]
 
 [build-system]

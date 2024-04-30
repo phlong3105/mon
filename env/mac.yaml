@@ -12,7 +12,7 @@ channels:
   - defaults
 dependencies:
   # Required
-  - python=3.11
+  - python=3.12
   - pip                        # PyPA recommended tool for installing Python packages.
   - git                        # Distributed version control system.
   # Optional: Hardware Acceleration
@@ -51,6 +51,7 @@ dependencies:
       - rawpy                  # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
       # Required: Deep Learning
       - einops                 # A new flavor of deep learning operations.
+      - fvcore                 # Collection of common code shared among different research projects in FAIR computer vision team.
       - lightning>=2.2.3       # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
       - onnxruntime            # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
       - tensorboard            # TensorFlow's Visualization Toolkit.
