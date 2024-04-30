@@ -1,0 +1,7 @@
+# pip install -qr requirements.txt
+
+numpy
+opencv-python
+thop
+torch
+torchvision

@@ -11,11 +11,33 @@ import click
 
 import mon
 import utils
-from project.runml import install
 
 _current_file = mon.Path(__file__).absolute()
 _current_dir  = _current_file.parents[0]
 _modes 	      = ["install", "train", "predict", "online", "instance", "metric", "plot"]
+
+
+# region Install
+
+def run_install(args: dict):
+    # Get user input
+    root  = mon.Path(args["root"])
+    model = args["model"]
+    
+    assert root.exists()
+    
+    # Parse arguments
+    use_extra_model = mon.is_extra_model(model)
+    model           = mon.parse_model_name(model)
+    
+    # Parse script file
+    if use_extra_model:
+        requirement_file = mon.EXTRA_MODELS[model]["model_dir"] / "requirements.txt"
+        if requirement_file.is_txt_file():
+            result = subprocess.run(["pip", "install", "-r", f"{str(requirement_file)}"], cwd=_current_dir)
+            print(result)
+            
+# endregion
 
 
 # region Train
@@ -400,14 +422,16 @@ def main(
         exist_ok = True if exist_ok == "yes" else False
         verbose  = click.prompt(click.style(f"Verbosity?  [yes/no]", fg="bright_yellow", bold=True), type=str, default=verbose)
         verbose  = True if verbose  == "yes" else False
-    else:
-        raise ValueError()
     
     print("\n")
     
     # Run
     if mode in ["install"]:
-        install.install(name=model)
+        args = {
+            "root" : root,
+            "model": model,
+        }
+        run_install(args)
     elif mode in ["train"]:
         args = {
             "root"    : root,
