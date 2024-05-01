@@ -135,14 +135,16 @@ class FractionalInstanceNorm2d(nn.InstanceNorm2d):
     Args:
         num_features: Number of input features.
         r: Ratio of input features that will be normalized. Default: ``0.5``.
+        stride: Stride to select features. Default: ``0`` means no stride (split 2 parts).
+        
+    See Also: :class:`HalfInstanceNorm2d`
     """
-
-    schemes = ["linear", "random", "interleave"]
-
+    
     def __init__(
         self,
         num_features       : int,
         r                  : float = 0.5,
+        stride             : int   = 0,
         eps                : float = 1e-5,
         momentum           : float = 0.1,
         affine             : bool  = True,
@@ -159,25 +161,29 @@ class FractionalInstanceNorm2d(nn.InstanceNorm2d):
             device              = device,
             dtype               = dtype,
         )
-        self.r = r
+        assert 0 < stride < num_features, f":param:`stride` must be in the range :math:`[0, num_features]`."
+        self.r      = r
+        self.stride = stride
         
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         self._check_input_dim(input)
         x          = input
         b, c, h, w = x.shape
-        split_size = [self.num_features, c - self.num_features]
-        y1, y2     = torch.split(x, split_size, dim=1)
-        y1         = F.instance_norm(
-            input           = y1,
-            running_mean    = self.running_mean,
-            running_var     = self.running_var,
-            weight          = self.weight,
-            bias            = self.bias,
-            use_input_stats = self.training or not self.track_running_stats,
-            momentum        = self.momentum,
-            eps             = self.eps
-        )
-        y = torch.cat([y1, y2], dim=1)
+        
+        if self.stride == 0:
+            split_size = [self.num_features, c - self.num_features]
+            y1, y2     = torch.split(x, split_size, dim=1)
+            y1         = F.instance_norm(
+                input           = y1,
+                running_mean    = self.running_mean,
+                running_var     = self.running_var,
+                weight          = self.weight,
+                bias            = self.bias,
+                use_input_stats = self.training or not self.track_running_stats,
+                momentum        = self.momentum,
+                eps             = self.eps
+            )
+            y = torch.cat([y1, y2], dim=1)
         return y
 
 
@@ -346,14 +352,12 @@ class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
 
 
 class LearnableInstanceNorm2d(nn.InstanceNorm2d):
-    """Apply Instance Normalization on a fraction of the input tensor. The number
-    of normalized features is learnable during training.
+    """Apply Instance Normalization on a fraction of the input tensor.
+    The number of normalized features is learnable during training.
     
     Args:
         num_features: Number of features of the input tensor.
         r: Fraction of the input tensor to be normalized. Default: ``0.5``.
-        eps: Small constant for numerical stability. Default: ``1e-5``.
-        momentum: Momentum for moving average. Default: ``0.1``.
     
     See Also: :class:`torch.nn.InstanceNorm2d`
     """

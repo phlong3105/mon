@@ -98,15 +98,10 @@ class HINBlock(nn.Module):
         use_in      : bool  = True,
     ):
         super().__init__()
-        self.use_in      = use_in
-        # self.in_channels = in_channels
-        
+        self.use_in  = use_in
         self.conv1   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
         if use_in:
-            # self.norm1 = nn.InstanceNorm2d(in_channels // 2, affine=True)
             self.norm1 = nn.LearnableInstanceNorm2d(in_channels, r=0.5, affine=True)
-            # self.norm1    = nn.InstanceNorm2d(in_channels, affine=True)
-            # self.in_ratio = nn.Parameter(torch.tensor(0.5), requires_grad=True)
         else:
             self.norm1 = nn.Identity()
             # self.in_ratio = nn.Parameter(torch.tensor(0.0), requires_grad=True)
@@ -132,17 +127,6 @@ class HINBlock(nn.Module):
         x    = input
         #
         x1   = self.conv1(x)
-        '''
-        if self.use_in:
-            x1_norm  = self.norm1(x1)
-            x1_1_dim = math.ceil(float(self.in_ratio * self.in_channels))  # x1_1 is the normalized features
-            x1_2_dim = int(self.in_channels - x1_1_dim)                    # x1_2 is the original features
-            _, x1_2  = core.split_tensor_by_sizes(x1,      [x1_1_dim, x1_2_dim], dim=1)
-            x1_1, _  = core.split_tensor_by_sizes(x1_norm, [x1_1_dim, x1_2_dim], dim=1)
-            x1       = torch.cat([x1_1, x1_2], dim=1)
-        else:
-            x1 = self.norm1(x1)
-        '''
         x1   = self.norm1(x1)
         x1   = self.relu1(x1)
         x1   = self.simam(x1)

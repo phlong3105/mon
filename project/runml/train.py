@@ -122,7 +122,7 @@ def main(
     weights  = weights  or args["model"]["weights"]
     fullname = fullname or args["fullname"]
     device   = device   or args["trainer"]["devices"]
-    epochs   = epochs   or args["trainer"]["max_epochs"]
+    epochs   = epochs if epochs > 0 else args["trainer"]["max_epochs"]
     steps    = steps    or args["trainer"]["max_steps"]
     
     # Parse arguments

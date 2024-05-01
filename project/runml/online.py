@@ -152,7 +152,7 @@ def main(
     fullname = fullname or args["fullname"]
     save_dir = save_dir or args["predictor"]["default_root_dir"]
     device   = device   or args["predictor"]["devices"]
-    epochs   = epochs   or args["trainer"]["max_epochs"]
+    epochs   = epochs if epochs > 0 else args["trainer"]["max_epochs"]
     steps    = steps    or args["trainer"]["max_steps"]
     imgsz    = imgsz    or args["image_size"]
     

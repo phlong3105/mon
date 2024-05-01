@@ -96,7 +96,7 @@ datamodule = {
 # region Training
 
 trainer = default.trainer | {
-	"callbacks"        : [
+	"callbacks"       : [
 		default.log_training_progress,
 		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
 		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
@@ -104,11 +104,11 @@ trainer = default.trainer | {
 		default.rich_model_summary,
 		default.rich_progress_bar,
 	],
-	"default_root_dir" : root,  # Default path for logs and weights.
-	"logger"           : {
+	"default_root_dir": root,  # Default path for logs and weights.
+	"logger"          : {
 		"tensorboard": default.tensorboard,
 	},
-	"strategy"         : "ddp_find_unused_parameters_true",
+	"max_epochs"      : 1000,
 }
 
 # endregion

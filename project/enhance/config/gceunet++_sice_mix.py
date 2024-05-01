@@ -81,7 +81,7 @@ datamodule = {
 # region Training
 
 trainer = default.trainer | {
-	"callbacks"       : [
+	"callbacks"        : [
 		default.log_training_progress,
 		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
 		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
