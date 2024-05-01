@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements LLHINet (Low-Light Half Instance Normalization Network)
-models.
+"""This module implements LLLINet (Low-Light Learnable Instance Normalization
+Network) models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "LLHINet",
+    "LLLINet",
 ]
 
+import math
 from typing import Any, Literal
 
 import torch
@@ -94,16 +95,21 @@ class HINBlock(nn.Module):
         in_channels : int,
         out_channels: int,
         relu_slope  : float = 0.2,
-        use_hin     : bool  = True,
+        use_in      : bool  = True,
     ):
         super().__init__()
-        self.use_hin = use_hin
+        self.use_in      = use_in
+        # self.in_channels = in_channels
         
         self.conv1   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
-        if use_hin:
-            self.norm1 = nn.InstanceNorm2d(in_channels // 2, affine=True)
+        if use_in:
+            # self.norm1 = nn.InstanceNorm2d(in_channels // 2, affine=True)
+            self.norm1 = nn.LearnableInstanceNorm2d(in_channels, r=0.5, affine=True)
+            # self.norm1    = nn.InstanceNorm2d(in_channels, affine=True)
+            # self.in_ratio = nn.Parameter(torch.tensor(0.5), requires_grad=True)
         else:
             self.norm1 = nn.Identity()
+            # self.in_ratio = nn.Parameter(torch.tensor(0.0), requires_grad=True)
         self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
         self.simam   = nn.SimAM()
         
@@ -117,16 +123,27 @@ class HINBlock(nn.Module):
         
         self.conv1_3 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
         self.conv3_4 = nn.Conv2d(in_channels * 2, out_channels, 1, 1, 0)
-        
+    
+    @property
+    def in_ratio(self):
+        return self.norm1.r if self.use_in else 0
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x    = input
         #
         x1   = self.conv1(x)
-        if self.use_hin:
-            x1_1, x1_2 = torch.chunk(x1, 2, dim=1)
-            x1         = torch.cat([self.norm1(x1_1), x1_2], dim=1)
+        '''
+        if self.use_in:
+            x1_norm  = self.norm1(x1)
+            x1_1_dim = math.ceil(float(self.in_ratio * self.in_channels))  # x1_1 is the normalized features
+            x1_2_dim = int(self.in_channels - x1_1_dim)                    # x1_2 is the original features
+            _, x1_2  = core.split_tensor_by_sizes(x1,      [x1_1_dim, x1_2_dim], dim=1)
+            x1_1, _  = core.split_tensor_by_sizes(x1_norm, [x1_1_dim, x1_2_dim], dim=1)
+            x1       = torch.cat([x1_1, x1_2], dim=1)
         else:
             x1 = self.norm1(x1)
+        '''
+        x1   = self.norm1(x1)
         x1   = self.relu1(x1)
         x1   = self.simam(x1)
         #
@@ -150,9 +167,9 @@ class HINBlock(nn.Module):
 
 # region Model
 
-@MODELS.register(name="llhinet")
-class LLHINet(base.LowLightImageEnhancementModel):
-    """LLHINet (Low-Light Half Instance Normalization Network) models.
+@MODELS.register(name="lllinet")
+class LLLINet(base.LowLightImageEnhancementModel):
+    """LLHINet (Low-Light Learnable Instance Normalization Network) models.
     
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
@@ -169,7 +186,7 @@ class LLHINet(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name         = "llhinet",
+            name         = "lllinet",
             in_channels  = in_channels,
             out_channels = out_channels,
             weights      = weights,
@@ -189,7 +206,7 @@ class LLHINet(base.LowLightImageEnhancementModel):
         self.pool    = nn.MaxPool2d(2, 2)
         self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
         #
-        self.conv0_0 = HINBlock(self.in_channels, nb_filter[0], use_hin=False)
+        self.conv0_0 = HINBlock(self.in_channels, nb_filter[0], use_in=False)
         self.conv1_0 = HINBlock(nb_filter[0], nb_filter[1])
         self.conv2_0 = HINBlock(nb_filter[1], nb_filter[2])
         self.conv3_0 = HINBlock(nb_filter[2], nb_filter[3])
@@ -265,7 +282,18 @@ class LLHINet(base.LowLightImageEnhancementModel):
         #
         y    = self.final(x0_4)
         y    = torch.clamp(y, 0, 1)
-        #
+        
         return y
-
+    
+    def print_debug(self):
+        """Print debug info."""
+        for i, (n, c) in enumerate(self.named_modules()):
+            if hasattr(c, "in_ratio"):
+                console.log(f"{n}: {c.in_ratio}")
+    
+    def on_validation_epoch_end(self):
+        super().on_validation_epoch_end()
+        if self.trainer.is_global_zero:
+            self.print_debug()
+    
 # endregion

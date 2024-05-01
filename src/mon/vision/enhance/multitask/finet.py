@@ -63,7 +63,7 @@ class UNetConvBlock(nn.Module):
             self.csff_dec = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
 
         if use_fin:
-            self.norm = nn.FractionalInstanceNorm2d(
+            self.norm = nn.FractionalInstanceNorm2d_Old2(
                 num_features = out_channels,
                 p            = self.p,
                 scheme       = scheme,

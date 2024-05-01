@@ -62,6 +62,7 @@ from types import ModuleType
 from typing import Any, Callable, Iterable
 
 import multipledispatch
+import torch
 
 
 # region Enum

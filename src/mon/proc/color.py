@@ -342,6 +342,7 @@ class RGBToHVI(nn.Module):
         super().__init__()
         self.eps       = eps
         self.density_k = torch.nn.Parameter(torch.full([1], 0.2))  # k is reciprocal to the paper mentioned
+        self.density_k.requires_grad = True
         self.gated     = False
         self.gated2    = False
         self.alpha     = 1.0

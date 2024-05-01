@@ -13,7 +13,6 @@ __all__ = [
     "BatchNorm3d",
     "CrossMapLRN2d",
     "FractionalInstanceNorm2d",
-    "FractionalInstanceNorm2dOld",
     "GroupNorm",
     "GroupNormAct",
     "HalfInstanceNorm2d",
@@ -28,6 +27,7 @@ __all__ = [
     "LazyInstanceNorm1d",
     "LazyInstanceNorm2d",
     "LazyInstanceNorm3d",
+    "LearnableInstanceNorm2d",
     "LocalResponseNorm",
     "SyncBatchNorm",
 ]
@@ -43,6 +43,7 @@ from torch.nn.modules.batchnorm import *
 from torch.nn.modules.instancenorm import *
 from torch.nn.modules.normalization import *
 
+from mon import core
 from mon.nn.layer import activation, linear
 
 
@@ -127,19 +128,13 @@ class BatchNorm2dReLU(BatchNorm2dAct):
 
 # region Instance Normalization
 
-class FractionalInstanceNorm2dOld(nn.InstanceNorm2d):
+class FractionalInstanceNorm2d(nn.InstanceNorm2d):
     """Fractional Instance Normalization is a generalization of Half Instance
     Normalization.
     
     Args:
         num_features: Number of input features.
-        ratio: Ratio of input features that will be normalized. Default:
-            ``0.5``.
-        scheme: Feature selection mechanism. One of:
-            - ``'linear'``    : normalized only first half.
-            - ``'random'``    : randomly choose features to normalize.
-            - ``'interleave'``: interleaving choose features to normalize.
-            Default: ``'linear'``.
+        r: Ratio of input features that will be normalized. Default: ``0.5``.
     """
 
     schemes = ["linear", "random", "interleave"]
@@ -147,12 +142,7 @@ class FractionalInstanceNorm2dOld(nn.InstanceNorm2d):
     def __init__(
         self,
         num_features       : int,
-        ratio              : float = 0.5,
-        scheme             : Literal[
-                                "linear",
-                                "random",
-                                "interleave"
-                            ]   = "linear",
+        r                  : float = 0.5,
         eps                : float = 1e-5,
         momentum           : float = 0.1,
         affine             : bool  = True,
@@ -160,11 +150,8 @@ class FractionalInstanceNorm2dOld(nn.InstanceNorm2d):
         device             : Any   = None,
         dtype              : Any   = None,
     ):
-        self.in_channels = num_features
-        self.ratio       = ratio
-        self.scheme      = scheme
         super().__init__(
-            num_features        = math.ceil(num_features * self.ratio),
+            num_features        = math.ceil(num_features * r),
             eps                 = eps,
             momentum            = momentum,
             affine              = affine,
@@ -172,67 +159,29 @@ class FractionalInstanceNorm2dOld(nn.InstanceNorm2d):
             device              = device,
             dtype               = dtype,
         )
-
-        if scheme not in self.schemes:
-            raise ValueError(f"``scheme`` must be one of: {self.schemes}. But got: {scheme}.")
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        self._check_input_dim(x)
-        _, c, _, _ = x.shape
+        self.r = r
         
-        if self.ratio == 0.0:
-            return x
-        elif self.ratio == 1.0:
-            y = F.instance_norm(
-                input           = x,
-                running_mean    = self.running_mean,
-                running_var     = self.running_var,
-                weight          = self.weight,
-                bias            = self.bias,
-                use_input_stats = self.training or not self.track_running_stats,
-                momentum        = self.momentum,
-                eps             = self.eps
-            )
-            return y
-        else:
-            if self.scheme == "random":
-                y1_idxes = random.sample(range(self.in_channels), self.num_features)
-                y2_idxes = list(set(range(self.in_channels)) - set(y1_idxes))
-                y1_idxes = torch.Tensor(y1_idxes).to(torch.int).to(x.device)
-                y2_idxes = torch.Tensor(y2_idxes).to(torch.int).to(x.device)
-                y1       = torch.index_select(x, 1, y1_idxes)
-                y2       = torch.index_select(x, 1, y2_idxes)
-            elif self.scheme == "interleave":
-                skip     = int(math.floor(self.in_channels / self.num_features))
-                y1_idxes = []
-                for i in range(0, self.in_channels, skip):
-                    if len(y1_idxes) < self.num_features:
-                        y1_idxes.append(i)
-                y2_idxes = list(set(range(self.in_channels)) - set(y1_idxes))
-                y1_idxes = torch.Tensor(y1_idxes).to(torch.int).to(x.device)
-                y2_idxes = torch.Tensor(y2_idxes).to(torch.int).to(x.device)
-                y1       = torch.index_select(x, 1, y1_idxes)
-                y2       = torch.index_select(x, 1, y2_idxes)
-            else:  # Half-Half
-                split_size = [self.num_features, c - self.num_features]
-                y1, y2     = torch.split(x, split_size, dim=1)
-            
-            y1 = F.instance_norm(
-                input           = y1,
-                running_mean    = self.running_mean,
-                running_var     = self.running_var,
-                weight          = self.weight,
-                bias            = self.bias,
-                use_input_stats = self.training or not self.track_running_stats,
-                momentum        = self.momentum,
-                eps             = self.eps
-            )
-            y = torch.cat([y1, y2], dim=1)
-            return y
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        self._check_input_dim(input)
+        x          = input
+        b, c, h, w = x.shape
+        split_size = [self.num_features, c - self.num_features]
+        y1, y2     = torch.split(x, split_size, dim=1)
+        y1         = F.instance_norm(
+            input           = y1,
+            running_mean    = self.running_mean,
+            running_var     = self.running_var,
+            weight          = self.weight,
+            bias            = self.bias,
+            use_input_stats = self.training or not self.track_running_stats,
+            momentum        = self.momentum,
+            eps             = self.eps
+        )
+        y = torch.cat([y1, y2], dim=1)
+        return y
 
 
-class FractionalInstanceNorm2d(nn.InstanceNorm2d):
+class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
     """Apply Instance Normalization on a fraction of the input tensor.
     
     Args:
@@ -396,7 +345,76 @@ class FractionalInstanceNorm2d(nn.InstanceNorm2d):
         return y
 
 
+class LearnableInstanceNorm2d(nn.InstanceNorm2d):
+    """Apply Instance Normalization on a fraction of the input tensor. The number
+    of normalized features is learnable during training.
+    
+    Args:
+        num_features: Number of features of the input tensor.
+        r: Fraction of the input tensor to be normalized. Default: ``0.5``.
+        eps: Small constant for numerical stability. Default: ``1e-5``.
+        momentum: Momentum for moving average. Default: ``0.1``.
+    
+    See Also: :class:`torch.nn.InstanceNorm2d`
+    """
+   
+    def __init__(
+        self,
+        num_features       : int,
+        r                  : float = 0.5,
+        eps                : float = 1e-5,
+        momentum           : float = 0.1,
+        affine             : bool  = True,
+        track_running_stats: bool  = False,
+        device             : Any   = None,
+        dtype              : Any   = None,
+    ):
+        super().__init__(
+            num_features        = num_features,
+            eps                 = eps,
+            momentum            = momentum,
+            affine              = affine,
+            track_running_stats = track_running_stats,
+            device              = device,
+            dtype               = dtype,
+        )
+        self.r = nn.Parameter(torch.full([num_features], r), requires_grad=True)
+        
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        self._check_input_dim(input)
+        
+        x          = input
+        b, c, h, w = x.shape
+        x_norm     = F.instance_norm(
+            input           = x,
+            running_mean    = self.running_mean,
+            running_var     = self.running_var,
+            weight          = self.weight,
+            bias            = self.bias,
+            use_input_stats = self.training or not self.track_running_stats,
+            momentum        = self.momentum,
+            eps             = self.eps
+        )
+        r = self.r.reshape(-1, c, 1, 1)
+        y = (x_norm * r) + (x * (1 - r))
+        # y1_dim = math.ceil(float(self.r * self.num_features))  # y1 is the normalized features
+        # y2_dim = int(self.num_features - y1_dim)               # y2 is the original features
+        # _, y2  = core.split_tensor_by_sizes(x,      [y1_dim, y2_dim], dim=1)
+        # y1, _  = core.split_tensor_by_sizes(x_norm, [y1_dim, y2_dim], dim=1)
+        # y      = torch.cat([y1, y2], dim=1)
+        return y
+
+
 class HalfInstanceNorm2d(nn.InstanceNorm2d):
+    """Apply Instance Normalization on the first half of the input tensor.
+    
+    Args:
+        num_features: Number of features of the input tensor.
+        eps: Small constant for numerical stability. Default: ``1e-5``.
+        momentum: Momentum for moving average. Default: ``0.1``.
+    
+    See Also: :class:`torch.nn.InstanceNorm2d`
+    """
     
     def __init__(
         self,

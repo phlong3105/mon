@@ -14,7 +14,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "llhinet"
+model_name = "lllinet"
 data_name  = "lol_v1"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -106,6 +106,8 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
+	"max_epochs"       : 100,
+	# "strategy"         : "ddp_find_unused_parameters_true"
 }
 
 # endregion

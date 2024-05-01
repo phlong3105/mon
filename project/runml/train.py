@@ -132,6 +132,8 @@ def main(
     save_dir = save_dir  or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
+    device   = mon.to_int_list(device) if "auto" not in device else device
+    # print(device)
     
     # Update arguments
     args["hostname"]  = hostname
