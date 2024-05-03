@@ -470,6 +470,9 @@ class HVICIDNet(base.LowLightImageEnhancementModel):
     """HVI-CIDNet (You Only Need One Color Space: An Efficient Network for
     Low-light Image Enhancement) models.
     
+    Notes:
+        - Using batch_size = 1 or 2.
+        
     References:
         `<https://github.com/Fediory/HVI-CIDNet>`__
         
@@ -564,7 +567,7 @@ class HVICIDNet(base.LowLightImageEnhancementModel):
         self.i_lca5  = I_LCA(ch3, head3)
         self.i_lca6  = I_LCA(ch2, head2)
         
-        self.trans   = proc.RGBToHVI().cuda()
+        self.trans   = proc.RGBToHVI()
         
         # Loss
         self._loss = Loss(*self.loss_weights, reduction="mean")
@@ -592,7 +595,7 @@ class HVICIDNet(base.LowLightImageEnhancementModel):
         loss_hvi   = self.loss(pred_hvi, target_hvi)
         loss       = loss_rgb + self.hvi_weight * loss_hvi
         extra      = {
-            "hvi_k": float(self.trans.item())
+            "hvi_k": float(self.trans.density_k.item())
         }
         return pred_rgb, loss, extra
 

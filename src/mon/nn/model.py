@@ -25,6 +25,7 @@ from urllib.parse import urlparse  # noqa: F401
 import humps
 import lightning.pytorch.utilities.types
 import torch.hub
+import torchvision.utils
 from thop.profile import *
 from torch import nn
 
@@ -808,10 +809,10 @@ class Model(lightning.LightningModule, ABC):
         if extra is not None and isinstance(extra, dict):
             for k, v in extra.items():
                 log_dict[f"train/{k}"] = v
-            
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
                 log_dict[f"train/{metric.name}"] = metric(pred, target)
+        
         self.log_dict(
             dictionary     = log_dict,
             prog_bar       = False,
@@ -888,10 +889,10 @@ class Model(lightning.LightningModule, ABC):
         if extra is not None and isinstance(extra, dict):
             for k, v in extra.items():
                 log_dict[f"val/{k}"] = v
-        
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
                 log_dict[f"val/{metric.name}"] = metric(pred, target)
+                
         self.log_dict(
             dictionary     = log_dict,
             prog_bar       = False,
@@ -903,7 +904,7 @@ class Model(lightning.LightningModule, ABC):
         )
         
         if self._should_save_image():
-            self._log_image(input, target, pred, self.current_epoch, self.global_step)
+            self._log_image(input, self.current_epoch, self.global_step)
         
         return loss
 
@@ -947,10 +948,10 @@ class Model(lightning.LightningModule, ABC):
         if extra is not None and isinstance(extra, dict):
             for k, v in extra.items():
                 log_dict[f"test/{k}"] = v
-                
         if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
                 log_dict[f"test/{metric.name}"] = metric(pred, target)
+       
         self.log_dict(
             dictionary     = log_dict,
             prog_bar       = False,
@@ -1045,16 +1046,26 @@ class Model(lightning.LightningModule, ABC):
             and self.current_epoch % self.trainer.log_image_every_n_epochs == 0
         )
     
-    def _log_image(
+    def log_image(
         self,
-        input : torch.Tensor,
-        target: torch.Tensor,
-        pred  : torch.Tensor | Sequence[torch.Tensor],
-        epoch : int,
-        step  : int,
+        dictionary: dict,
+        epoch     : int,
+        step      : int,
+        extension : str = "jpg"
     ):
+        """Log debug images to :attr:`debug_dir`."""
+        epoch = int(epoch)
+        step  = int(step)
+        for k, v in dictionary.items():
+            v = core.denormalize_image(v)
+            for i, image in enumerate(v):
+                save_file = self.debug_dir / f"{k}_{epoch:06d}_{step:8d}_{i:2d}.{extension}"
+                torchvision.utils.save_image(image, str(save_file))
+                
+    def print_debug(self):
+        """Print debug info to console during training and validating."""
         pass
-
+    
     # endregion
     
 # endregion
