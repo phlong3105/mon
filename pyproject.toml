@@ -44,7 +44,7 @@ include = [
     "LICENSE",
     "env/IgnoreList",
     "env/README.md",
-    "env/docker.txt",
+    "env/docker_script.txt",
     "env/dockerfile",
     "env/linux_cmd.yaml",
     "env/linux_ui.yaml",

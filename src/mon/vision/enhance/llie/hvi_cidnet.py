@@ -590,9 +590,11 @@ class HVICIDNet(base.LowLightImageEnhancementModel):
         target_hvi = self.rgb_to_hvi(target)
         loss_rgb   = self.loss(pred_rgb, target_rgb)
         loss_hvi   = self.loss(pred_hvi, target_hvi)
-        # print(float(loss_rgb), float(loss_hvi))
         loss       = loss_rgb + self.hvi_weight * loss_hvi
-        return pred_rgb, loss
+        extra      = {
+            "hvi_k": float(self.trans.item())
+        }
+        return pred_rgb, loss, extra
 
     def forward(
         self,
@@ -657,5 +659,18 @@ class HVICIDNet(base.LowLightImageEnhancementModel):
     
     def rgb_to_hvi(self, input: torch.Tensor) -> torch.Tensor:
         return self.trans.rgb_to_hvi(input)
+    
+    # region Training
+    
+    def on_validation_epoch_end(self):
+        super().on_validation_epoch_end()
+        if self.trainer.is_global_zero:
+            self.print_debug()
+      
+    def print_debug(self):
+        """Print debug info."""
+        console.log(f"HVI's `k`: {float(self.trans.density_k.item())}")
+
+    # endregion
     
 # endregion

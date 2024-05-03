@@ -52,10 +52,15 @@ model = {
 			},
 	        "lr_scheduler"       : {
 				"scheduler": {
-					"name"           : "cosine_annealing_restart_lr",
-					"periods"        : [1000],
-					"restart_weights": [1],
-					"eta_min"        : 1e-7,
+					"name"           : "gradual_warmup_scheduler",
+					"multiplier"     : 1,
+					"total_epoch"    : 3,
+					"after_scheduler": {
+						"name"           : "cosine_annealing_restart_lr",
+						"periods"        : [1000 - 3],  # max_epochs - total_epoch
+						"restart_weights": [1],
+						"eta_min"        : 1e-7,
+					}
 				},
 				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
 				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
@@ -84,7 +89,7 @@ datamodule = {
     ]),  # Transformations performing on both the input and target.
     "to_tensor" : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,        # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 8,            # The number of samples in one forward pass.
+    "batch_size": 1,            # The number of samples in one forward pass.
     "devices"   : 0,            # A list of devices to use. Default: ``0``.
     "shuffle"   : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,      # Verbosity.
@@ -105,6 +110,7 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir": root,  # Default path for logs and weights.
+	"devices"         : [0],
 	"logger"          : {
 		"tensorboard": default.tensorboard,
 	},

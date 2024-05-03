@@ -704,18 +704,20 @@ class Model(lightning.LightningModule, ABC):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> (
+        tuple[torch.Tensor, torch.Tensor | None] |
+        tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]
+    ):
         """Forward pass with loss value. Loss function may need more arguments
         beside the ground-truth and prediction values. For calculating the
         metrics, we only need the final predictions and ground-truth.
 
         Args:
             input: An input of shape :math:`[B, C, H, W]`.
-            target: A ground-truth of shape :math:`[N, C, H, W]`. Default:
-                ``None``.
+            target: A ground-truth of shape :math:`[B, C, H, W]`. Default: ``None``.
             
         Return:
-            Predictions and loss value.
+            Prediction, loss, and extra values.
         """
         pred = self.forward(input=input, *args, **kwargs)
         pred = pred[-1] if isinstance(pred, list | tuple) else pred
@@ -786,23 +788,27 @@ class Model(lightning.LightningModule, ABC):
         Return:
             Any of:
                 - The loss tensor.
-                - A :class:`dict`. Can include any keys, but must include the
-                  key ``'loss'``.
+                - A :class:`dict`. Can include any keys, but must include the key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """
         # Forward
         input, target, extra = batch[0], batch[1], batch[2:]
-        pred, loss = self.forward_loss(
-            input  = input,
-            target = target,
-            *args, **kwargs
-        )
+        results = self.forward_loss(input=input, target=target, *args, **kwargs)
+        if len(results) == 2:
+            pred, loss = results
+            extra      = None
+        else:
+            pred, loss, extra = results
         
         # Log
         log_dict = {
             f"step"      : self.current_epoch,
             f"train/loss": loss,
         }
+        if extra is not None and isinstance(extra, dict):
+            for k, v in extra.items():
+                log_dict[f"train/{k}"] = v
+            
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
                 log_dict[f"train/{metric.name}"] = metric(pred, target)
@@ -867,17 +873,22 @@ class Model(lightning.LightningModule, ABC):
             - ``None``, validation will skip to the next batch.
         """
         input, target, extra = batch[0], batch[1], batch[2:]
-        pred, loss = self.forward_loss(
-            input  = input,
-            target = target,
-            *args, **kwargs
-        )
+        results = self.forward_loss(input=input, target=target, *args, **kwargs)
+        if len(results) == 2:
+            pred, loss = results
+            extra      = None
+        else:
+            pred, loss, extra = results
         
         # Log
         log_dict = {
             f"step"    : self.current_epoch,
             f"val/loss": loss,
         }
+        if extra is not None and isinstance(extra, dict):
+            for k, v in extra.items():
+                log_dict[f"val/{k}"] = v
+        
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
                 log_dict[f"val/{metric.name}"] = metric(pred, target)
@@ -921,17 +932,22 @@ class Model(lightning.LightningModule, ABC):
                 - ``None``, testing will skip to the next batch.
         """
         input, target, extra = batch[0], batch[1], batch[2:]
-        pred, loss = self.forward_loss(
-            input  = input,
-            target = target,
-            *args, **kwargs
-        )
+        results = self.forward_loss(input=input, target=target, *args, **kwargs)
+        if len(results) == 2:
+            pred, loss = results
+            extra      = None
+        else:
+            pred, loss, extra = results
         
         # Log
         log_dict = {
             f"step"     : self.current_epoch,
             f"test/loss": loss,
         }
+        if extra is not None and isinstance(extra, dict):
+            for k, v in extra.items():
+                log_dict[f"test/{k}"] = v
+                
         if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
                 log_dict[f"test/{metric.name}"] = metric(pred, target)

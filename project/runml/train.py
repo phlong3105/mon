@@ -123,7 +123,7 @@ def main(
     fullname = fullname or args["fullname"]
     device   = device   or args["trainer"]["devices"]
     epochs   = epochs if epochs > 0 else args["trainer"]["max_epochs"]
-    steps    = steps    or args["trainer"]["max_steps"]
+    steps    = steps  if steps  > 0 else args["trainer"]["max_steps"]
     
     # Parse arguments
     root     = mon.Path(root)
@@ -133,7 +133,6 @@ def main(
     save_dir = mon.Path(save_dir)
     device   = mon.parse_device(device)
     device   = mon.to_int_list(device) if "auto" not in device else device
-    # print(device)
     
     # Update arguments
     args["hostname"]  = hostname

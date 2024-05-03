@@ -401,11 +401,6 @@ class LearnableInstanceNorm2d(nn.InstanceNorm2d):
         )
         r = self.r.reshape(-1, c, 1, 1)
         y = (x_norm * r) + (x * (1 - r))
-        # y1_dim = math.ceil(float(self.r * self.num_features))  # y1 is the normalized features
-        # y2_dim = int(self.num_features - y1_dim)               # y2 is the original features
-        # _, y2  = core.split_tensor_by_sizes(x,      [y1_dim, y2_dim], dim=1)
-        # y1, _  = core.split_tensor_by_sizes(x_norm, [y1_dim, y2_dim], dim=1)
-        # y      = torch.cat([y1, y2], dim=1)
         return y
 
 

@@ -269,15 +269,19 @@ class LLLINet(base.LowLightImageEnhancementModel):
         
         return y
     
-    def print_debug(self):
-        """Print debug info."""
-        for i, (n, c) in enumerate(self.named_modules()):
-            if hasattr(c, "in_ratio"):
-                console.log(f"{n}: {c.in_ratio}")
+    # region Training
     
     def on_validation_epoch_end(self):
         super().on_validation_epoch_end()
         if self.trainer.is_global_zero:
             self.print_debug()
+    
+    def print_debug(self):
+        """Print debug info."""
+        for i, (n, c) in enumerate(self.named_modules()):
+            if hasattr(c, "in_ratio"):
+                console.log(f"{n}: {c.in_ratio}")
+
+    # endregion
     
 # endregion

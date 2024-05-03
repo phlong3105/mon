@@ -368,8 +368,7 @@ class RGBToHVI(nn.Module):
         saturation  = saturation.unsqueeze(1)
         value       = value.unsqueeze(1)
         
-        # self.this_k     = self.density_k.item()
-        self.this_k     = self.density_k.clone()
+        self.this_k     = self.density_k.item()
         color_sensitive = ((value * 0.5 * pi).sin() + self.eps).pow(self.density_k)
         cx   = (2.0 * pi * hue).cos()
         cy   = (2.0 * pi * hue).sin()
