@@ -14,12 +14,12 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "zero_adce"
-data_name  = "sice_mix"
+model_name = "llunet++_hvi"
+data_name  = "lol_v1"
 root       = _root_dir / "run"
-fullname   = f"{model_name}-{data_name}"
-image_size = [512, 512]
-seed	   = 100
+fullname   = f"{model_name}_{data_name}"
+image_size = [384, 384]
+seed	   = 1234
 verbose    = True
 
 # endregion
@@ -35,20 +35,32 @@ model = {
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"weights"     : None,           # The model's weights.
 	"loss"        : None,           # Loss function for training the model.
+	"loss_weights": [0.40, 0.05, 0.15, 0.40],
 	"metrics"     : {
-	    "train": None,  # [{"name": "psnr"}],
+	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : None,  # [{"name": "psnr"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
 	"optimizers"  : [
 		{
             "optimizer"          : {
-	            "name"        : "adam",
-	            "lr"          : 0.00005,
-	            "weight_decay": 0.00001,
-	            "betas"       : [0.9, 0.99],
+				"name"        : "adam",
+				"lr"          : 0.00001,
+				"weight_decay": 1e-4,
+				"betas"       : [0.9, 0.999],
+				"eps"		    : 1e-8,
 			},
-			"lr_scheduler"       : None,
+	        "lr_scheduler"       : {
+				"scheduler": {
+					"name" : "exponential_lr",
+					"gamma": 0.99,
+				},
+				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
+				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
+				"monitor"  : "train/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
+				"strict"   : True,
+				"name"     : None,
+			},
 			"network_params_only": True,
         }
     ],          # Optimizer(s) for training model.
@@ -63,17 +75,17 @@ model = {
 datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
-	"transform" : A.Compose(transforms=[
+    "transform" : A.Compose(transforms=[
 		A.Resize(width=image_size[0], height=image_size[1]),
 		# A.Flip(),
 		# A.Rotate(),
-	]),  # Transformations performing on both the input and target.
-    "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
-    "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 32,            # The number of samples in one forward pass.
-    "devices"   : 0,             # A list of devices to use. Default: ``0``.
-    "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
-    "verbose"   : verbose,       # Verbosity.
+    ]),  # Transformations performing on both the input and target.
+    "to_tensor" : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "cache_data": False,        # If ``True``, cache data to disk for faster loading next time.
+    "batch_size": 1,            # The number of samples in one forward pass.
+    "devices"   : 0,            # A list of devices to use. Default: ``0``.
+    "shuffle"   : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
+    "verbose"   : verbose,      # Verbosity.
 }
 
 # endregion
@@ -82,7 +94,7 @@ datamodule = {
 # region Training
 
 trainer = default.trainer | {
-	"callbacks"        : [
+	"callbacks"       : [
 		default.log_training_progress,
 		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
 		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
@@ -90,11 +102,12 @@ trainer = default.trainer | {
 		default.rich_model_summary,
 		default.rich_progress_bar,
 	],
-	"default_root_dir" : root,  # Default path for logs and weights.
-	"gradient_clip_val": 0.1,
-	"logger"           : {
+	"default_root_dir": root,  # Default path for logs and weights.
+	"devices"         : [0],
+	"logger"          : {
 		"tensorboard": default.tensorboard,
 	},
+	"max_epochs"      : 100,
 }
 
 # endregion

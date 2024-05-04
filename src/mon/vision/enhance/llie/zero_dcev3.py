@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Zero-DCE models."""
+"""This module implements Zero-DCEv3 models."""
 
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCE",
+    "ZeroDCEv3",
 ]
 
 from typing import Any, Literal
 
 import torch
 
-from mon import core, nn
-from mon.core import _callable
+from mon import core, nn, proc
+from mon.core import _callable, _size_2_t
 from mon.globals import MODELS, Scheme
 from mon.vision.enhance.llie import base
 
@@ -57,9 +57,9 @@ class TotalVariationLoss(nn.Loss):
         # loss    = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
     
-    
-class Loss(nn.Loss):
 
+class Loss(nn.Loss):
+    
     def __init__(
         self,
         spa_weight    : float = 1.0,
@@ -67,7 +67,7 @@ class Loss(nn.Loss):
         exp_mean_val  : float = 0.6,
         exp_weight    : float = 10.0,
         col_weight    : float = 5.0,
-        tva_weight    : float = 200.0,
+        tva_weight    : float = 1600.0,
         reduction     : Literal["none", "mean", "sum"] = "mean",
         *args, **kwargs
     ):
@@ -108,21 +108,81 @@ class Loss(nn.Loss):
 # endregion
 
 
+# region Module
+
+class DSConv2d(nn.Module):
+    """Depthwise Separable Conv2d."""
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        is_last     : bool            = False,
+    ):
+        super().__init__()
+        self.dw_conv = nn.Conv2d(
+            in_channels  = in_channels,
+            out_channels = in_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = in_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.lin1    = nn.LearnableInstanceNorm2d(in_channels)
+        self.relu1   = nn.PReLU()
+        self.pw_conv = nn.Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        # self.lin2    = nn.LearnableInstanceNorm2d(out_channels)
+        if is_last:
+            self.relu2 = nn.PReLU()
+        else:
+            self.relu2 = nn.Tanh()
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.dw_conv(x)
+        y = self.lin1(y)
+        y = self.relu1(y)
+        y = self.pw_conv(y)
+        # y = self.lin2(y)
+        y = self.relu2(y)
+        return y
+
+# endregion
+
+
 # region Model
 
-@MODELS.register(name="zero_dce")
-class ZeroDCE(base.LowLightImageEnhancementModel):
-    """Zero-DCE (Zero-Reference Deep Curve Estimation) model.
+@MODELS.register(name="zero_dcev3")
+class ZeroDCEv3(base.LowLightImageEnhancementModel):
+    """Zero-DCEv3 (Zero-Reference Deep Curve Estimation V3) model.
     
     Args:
         in_channels: The first layer's input channel. Default: ``3`` for RGB image.
-        num_channels: The number of input and output channels for subsequent
-            layers. Default: ``32``.
-        num_iters: The number of progressive loop. Default: ``8``.
-        
-    References:
-        `<https://github.com/Li-Chongyi/Zero-DCE>`__
-
+        num_channels: The number of input and output channels for subsequent layers. Default: ``32``.
+        num_iters: The number of convolutional layers in the model. Default: ``8``.
+        scale_factor: Downsampling/upsampling ratio. Defaults: ``1``.
+    
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
@@ -138,13 +198,12 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "zero_dce",
+            name        = "zero_dcev3",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs
         )
-        assert num_iters <= 8
-        
+       
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
             in_channels  = self.weights.get("in_channels" , in_channels)
@@ -153,19 +212,18 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         self.in_channels  = in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
-        self.out_channels = self.in_channels * self.num_iters
         
         # Construct model
-        self.relu     = nn.ReLU(inplace=True)
-        self.e_conv1  = nn.Conv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv4  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv5  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv6  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv7  = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-        self.maxpool  = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
-        self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.pool    = nn.MaxPool2d(2, 2)
+        self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
+        self.e_conv1 = DSConv2d(1,          self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv2 = DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv3 = DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv4 = DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv5 = DSConv2d(self.num_channels * 2, self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv6 = DSConv2d(self.num_channels * 2, self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv7 = DSConv2d(self.num_channels * 2, self.out_channels, kernel_size=3, stride=1, padding=1, is_last=True)
+        self.trans   = proc.RGBToHVI()
         
         # Loss
         self._loss = Loss()
@@ -176,13 +234,17 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         else:
             self.apply(self._init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def _init_weights(self, m: torch.nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
-            m.weight.data.normal_(0.0, 0.02)
-        elif classname.find("BatchNorm") != -1:
-            m.weight.data.normal_(1.0, 0.02)
-            m.bias.data.fill_(0)
+            if hasattr(m, "conv"):
+                m.conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "dw_conv"):
+                m.dw_conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "pw_conv"):
+                m.pw_conv.weight.data.normal_(0.0, 0.02)
+            else:
+                m.weight.data.normal_(0.0, 0.02)
 
     def forward_loss(
         self,
@@ -194,7 +256,7 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         adjust, enhance = pred
         loss = self.loss(input, adjust, enhance)
         return enhance, loss
-
+    
     def forward(
         self,
         input    : torch.Tensor,
@@ -203,20 +265,22 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        x    = input
-        x1   =  self.relu(self.e_conv1(x))
-        x2   =  self.relu(self.e_conv2(x1))
-        x3   =  self.relu(self.e_conv3(x2))
-        x4   =  self.relu(self.e_conv4(x3))
-        x5   =  self.relu(self.e_conv5(torch.cat([x3, x4], 1)))
-        x6   =  self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
-        x_r  = torch.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
-        
-        x_rs = torch.split(x_r, 3, dim=1)
-        y    = x
+        x   = input
+        hvi = self.trans.rgb_to_hvi(x)
+        i   = hvi[:, 2, :, :].unsqueeze(1).to(x.dtype)
+        #
+        x1  = self.e_conv1(i)
+        x2  = self.e_conv2(self.pool(x1))
+        x3  = self.e_conv3(self.pool(x2))
+        x4  = self.e_conv4(self.pool(x3))
+        x5  = self.e_conv5(torch.cat([x3, self.up(x4)], 1))
+        x6  = self.e_conv6(torch.cat([x2, self.up(x5)], 1))
+        x_r = self.e_conv7(torch.cat([x1, self.up(x6)], 1))
+        #
+        y = x
         for i in range(0, self.num_iters):
-            y = y + x_rs[i] * (torch.pow(y, 2) - y)
-
+            y = y + x_r * (torch.pow(y, 2) - y)
+        #
         return x_r, y
-    
+
 # endregion

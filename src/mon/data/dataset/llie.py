@@ -21,6 +21,8 @@ __all__ = [
     "Fusion",
     "LIME",
     "LIMEDataModule",
+    "LOLBlur",
+    "LOLBlurDataModule",
     "LOLV1",
     "LOLV1DataModule",
     "LOLV2Real",
@@ -275,7 +277,49 @@ class LIME(base.UnlabeledImageDataset):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
                         self._images.append(image)
-                
+
+
+@DATASETS.register(name="lol_blur")
+class LOLBlur(base.ImageEnhancementDataset):
+    """LOL-Blur dataset consists of low-light + blurred and normal-light + sharp
+    image pairs.
+    
+    See Also: :class:`base.ImageEnhancementDataset`.
+    """
+    
+    _tasks          = [Task.LLIE]
+    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    _has_test_label = True
+    
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
+    
+    def _get_images(self):
+        patterns = [
+            self.root / "lol_blur" / self.split_str / "lq"
+        ]
+        self._images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self._images.append(image)
+    
+    def _get_labels(self):
+        self._labels: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                self._images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+            ):
+                path  = img.path.replace("/lq/", "/hq/")
+                label = base.ImageLabel(path=path.image_file())
+                self._labels.append(label)
+
 
 @DATASETS.register(name="lol_v1")
 class LOLV1(base.ImageEnhancementDataset):
@@ -763,6 +807,39 @@ class LIMEDataModule(base.DataModule):
     def get_classlabels(self):
         pass
 
+
+@DATAMODULES.register(name="lol_blur")
+class LOLBlurDataModule(base.DataModule):
+    """LOL-Blur datamodule.
+    
+    See Also: :class:`base.DataModule`.
+    """
+    
+    _tasks = [Task.LLIE]
+    
+    def prepare_data(self, *args, **kwargs):
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: Literal["training", "testing", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if phase in [None, "training"]:
+            self.train = LOLBlur(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = LOLBlur(split=Split.VAL,  **self.dataset_kwargs)
+        if phase in [None, "testing"]:
+            self.test  = LOLBlur(split=Split.TEST, **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        pass
+    
 
 @DATAMODULES.register(name="lol_v1")
 class LOLV1DataModule(base.DataModule):

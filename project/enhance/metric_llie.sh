@@ -12,7 +12,7 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-model="hvi_cidnet"
+model="zero_dcev3"
 data=(
     "dicm"
     "lime"
