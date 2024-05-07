@@ -16,7 +16,7 @@ python -W ignore main.py \
     --root "${current_dir}" \
     --task "llie" \
     --mode "predict" \
-    --data "1,3,4,8,9,11,5,6,7" \
+    --data "1,3,4,9,10,12,6,7,8" \
     --verbose \
     "$@"
 

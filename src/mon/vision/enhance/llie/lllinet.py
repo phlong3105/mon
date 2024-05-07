@@ -9,6 +9,7 @@ from __future__ import annotations
 
 __all__ = [
     "LLLINet",
+    "LLLINetHVI",
 ]
 
 import math
@@ -17,7 +18,7 @@ from typing import Any, Literal
 import torch
 from torchvision.models import vgg
 
-from mon import core, nn
+from mon import core, nn, proc
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.vision.enhance.llie import base
@@ -88,7 +89,7 @@ class Loss(nn.Loss):
 
 # region Module
 
-class HINBlock(nn.Module):
+class UNetConvBlock(nn.Module):
     
     def __init__(
         self,
@@ -190,25 +191,25 @@ class LLLINet(base.LowLightImageEnhancementModel):
         self.pool    = nn.MaxPool2d(2, 2)
         self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
         #
-        self.conv0_0 = HINBlock(self.in_channels, nb_filter[0], use_in=False)
-        self.conv1_0 = HINBlock(nb_filter[0], nb_filter[1])
-        self.conv2_0 = HINBlock(nb_filter[1], nb_filter[2])
-        self.conv3_0 = HINBlock(nb_filter[2], nb_filter[3])
-        self.conv4_0 = HINBlock(nb_filter[3], nb_filter[4])
+        self.conv0_0 = UNetConvBlock(self.in_channels, nb_filter[0], use_in=False)
+        self.conv1_0 = UNetConvBlock(nb_filter[0], nb_filter[1])
+        self.conv2_0 = UNetConvBlock(nb_filter[1], nb_filter[2])
+        self.conv3_0 = UNetConvBlock(nb_filter[2], nb_filter[3])
+        self.conv4_0 = UNetConvBlock(nb_filter[3], nb_filter[4])
         #
-        self.conv0_1 = HINBlock(nb_filter[0] + nb_filter[1] + nb_filter[1], nb_filter[0])
-        self.conv1_1 = HINBlock(nb_filter[1] + nb_filter[2] + nb_filter[2], nb_filter[1])
-        self.conv2_1 = HINBlock(nb_filter[2] + nb_filter[3] + nb_filter[3], nb_filter[2])
-        self.conv3_1 = HINBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
+        self.conv0_1 = UNetConvBlock(nb_filter[0] + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_1 = UNetConvBlock(nb_filter[1] + nb_filter[2] + nb_filter[2], nb_filter[1])
+        self.conv2_1 = UNetConvBlock(nb_filter[2] + nb_filter[3] + nb_filter[3], nb_filter[2])
+        self.conv3_1 = UNetConvBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
         #
-        self.conv0_2 = HINBlock(nb_filter[0] * 2 + nb_filter[1] + nb_filter[1], nb_filter[0])
-        self.conv1_2 = HINBlock(nb_filter[1] * 2 + nb_filter[2] + nb_filter[2], nb_filter[1])
-        self.conv2_2 = HINBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
+        self.conv0_2 = UNetConvBlock(nb_filter[0] * 2 + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_2 = UNetConvBlock(nb_filter[1] * 2 + nb_filter[2] + nb_filter[2], nb_filter[1])
+        self.conv2_2 = UNetConvBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
         #
-        self.conv0_3 = HINBlock(nb_filter[0] * 3 + nb_filter[1] + nb_filter[1], nb_filter[0])
-        self.conv1_3 = HINBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
+        self.conv0_3 = UNetConvBlock(nb_filter[0] * 3 + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_3 = UNetConvBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
         #
-        self.conv0_4 = HINBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
+        self.conv0_4 = UNetConvBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
         #
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         
@@ -266,7 +267,7 @@ class LLLINet(base.LowLightImageEnhancementModel):
         #
         y    = self.final(x0_4)
         y    = torch.clamp(y, 0, 1)
-        
+        #
         return y
     
     # region Training
@@ -282,6 +283,145 @@ class LLLINet(base.LowLightImageEnhancementModel):
             if hasattr(c, "in_ratio"):
                 console.log(f"{n}: {c.in_ratio}")
 
+    # endregion
+
+
+@MODELS.register(name="lllinet_hvi")
+class LLLINetHVI(base.LowLightImageEnhancementModel):
+    """LLHINet (Low-Light Learnable Instance Normalization Network) models.
+    
+    See Also: :class:`base.LowLightImageEnhancementModel`
+    """
+    
+    _scheme: list[Scheme] = [Scheme.SUPERVISED]
+    _zoo   : dict = {}
+    
+    def __init__(
+        self,
+        in_channels : int = 3,
+        out_channels: int = 3,
+        weights     : Any = None,
+        loss_weights: list[float] = [0.35, 0.10, 0.25, 0.30],
+        *args, **kwargs
+    ):
+        super().__init__(
+            name         = "lllinet_hvi",
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            weights      = weights,
+            *args, **kwargs
+        )
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            in_channels  = self.weights.get("in_channels",  in_channels)
+            out_channels = self.weights.get("out_channels", out_channels)
+        self.in_channels  = in_channels or self.in_channels
+        self.out_channels = out_channels or self.out_channels
+        
+        # Construct model
+        nb_filter    = [32, 64, 128, 256, 512]
+        #
+        self.pool    = nn.MaxPool2d(2, 2)
+        self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
+        #
+        self.conv0_0 = UNetConvBlock(self.in_channels, nb_filter[0], use_in=False)
+        self.conv1_0 = UNetConvBlock(nb_filter[0], nb_filter[1])
+        self.conv2_0 = UNetConvBlock(nb_filter[1], nb_filter[2])
+        self.conv3_0 = UNetConvBlock(nb_filter[2], nb_filter[3])
+        self.conv4_0 = UNetConvBlock(nb_filter[3], nb_filter[4])
+        #
+        self.conv0_1 = UNetConvBlock(nb_filter[0] + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_1 = UNetConvBlock(nb_filter[1] + nb_filter[2] + nb_filter[2], nb_filter[1])
+        self.conv2_1 = UNetConvBlock(nb_filter[2] + nb_filter[3] + nb_filter[3], nb_filter[2])
+        self.conv3_1 = UNetConvBlock(nb_filter[3] + nb_filter[4], nb_filter[3])
+        #
+        self.conv0_2 = UNetConvBlock(nb_filter[0] * 2 + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_2 = UNetConvBlock(nb_filter[1] * 2 + nb_filter[2] + nb_filter[2], nb_filter[1])
+        self.conv2_2 = UNetConvBlock(nb_filter[2] * 2 + nb_filter[3], nb_filter[2])
+        #
+        self.conv0_3 = UNetConvBlock(nb_filter[0] * 3 + nb_filter[1] + nb_filter[1], nb_filter[0])
+        self.conv1_3 = UNetConvBlock(nb_filter[1] * 3 + nb_filter[2], nb_filter[1])
+        #
+        self.conv0_4 = UNetConvBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
+        #
+        self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
+        #
+        self.trans   = proc.RGBToHVI()
+        
+        # Loss
+        self._loss = Loss(*loss_weights)
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self._init_weights)
+    
+    def _init_weights(self, m: nn.Module):
+        pass
+    
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        pred = self.forward(input=input, *args, **kwargs)
+        loss = self.loss(pred, target)
+        return pred, loss
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> torch.Tensor:
+        x    = input
+        hvi  = self.trans.rgb_to_hvi(x)
+        #
+        x0_0 = self.conv0_0(hvi)
+        x1_0 = self.conv1_0(self.pool(x0_0))
+        x2_0 = self.conv2_0(self.pool(x1_0))
+        x3_0 = self.conv3_0(self.pool(x2_0))
+        x4_0 = self.conv4_0(self.pool(x3_0))
+        #
+        x3_1 = self.conv3_1(torch.cat([x3_0, self.up(x4_0)], 1))
+        x2_1 = self.conv2_1(torch.cat([x2_0, self.up(x3_0), self.up(x3_1)], 1))
+        x1_1 = self.conv1_1(torch.cat([x1_0, self.up(x2_0), self.up(x2_1)], 1))
+        x0_1 = self.conv0_1(torch.cat([x0_0, self.up(x1_0), self.up(x1_1)], 1))
+        #
+        x2_2 = self.conv2_2(torch.cat([x2_0, x2_1, self.up(x3_1)], 1))
+        x1_2 = self.conv1_2(torch.cat([x1_0, x1_1, self.up(x2_1), self.up(x2_2)], 1))
+        x0_2 = self.conv0_2(torch.cat([x0_0, x0_1, self.up(x1_1), self.up(x1_2)], 1))
+        #
+        x1_3 = self.conv1_3(torch.cat([x1_0, x1_1, x1_2, self.up(x2_2)], 1))
+        x0_3 = self.conv0_3(torch.cat([x0_0, x0_1, x0_2, self.up(x1_2), self.up(x1_3)], 1))
+        #
+        x0_4 = self.conv0_4(torch.cat([x0_0, x0_1, x0_2, x0_3, self.up(x1_3)], 1))
+        #
+        y    = self.final(x0_4)
+        y    = self.trans.hvi_to_rgb(y)
+        #
+        y    = torch.clamp(y, 0, 1)
+        #
+        return y
+    
+    # region Training
+    
+    def on_validation_epoch_end(self):
+        super().on_validation_epoch_end()
+        if self.trainer.is_global_zero:
+            self.print_debug()
+    
+    def print_debug(self):
+        """Print debug info."""
+        for i, (n, c) in enumerate(self.named_modules()):
+            if hasattr(c, "in_ratio"):
+                console.log(f"{n}: {c.in_ratio}")
+    
     # endregion
     
 # endregion

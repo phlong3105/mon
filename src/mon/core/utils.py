@@ -155,17 +155,17 @@ def list_devices() -> list[str]:
     # Get GPU devices if available
     if torch.cuda.is_available():
         # All GPU devices
-        cuda_str    = "cuda:"
-        num_devices = torch.cuda.device_count()
+        all_cuda_str = "cuda:"
+        num_devices  = torch.cuda.device_count()
         # gpu_devices = [torch.cuda.get_device_name(i) for i in range(num_devices)]
         for i in range(num_devices):
-            cuda_str += f"{i},"
-        if cuda_str[-1] == ",":
-            cuda_str = cuda_str[:-1]
-        
-        devices.append("cuda:0")
-        if cuda_str != "cuda:0":
-            devices.append(cuda_str)
+            all_cuda_str += f"{i},"
+            devices.append(f"cuda:{i}")
+       
+        if all_cuda_str[-1] == ",":
+            all_cuda_str = all_cuda_str[:-1]
+        if all_cuda_str != "cuda:0":
+            devices.append(all_cuda_str)
         
     return devices
 

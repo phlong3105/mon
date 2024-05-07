@@ -14,12 +14,12 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "llunet++_hvi"
-data_name  = "lol_v1"
+model_name = "hvi_cidnet"
+data_name  = "lol_v2_real"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [384, 384]
-seed	   = 1234
+image_size = [256, 256]
+seed	   = 1000000
 verbose    = True
 
 # endregion
@@ -33,9 +33,12 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
+	"channels"    : [36, 36, 72, 144],
+	"heads"       : [1, 2, 4, 8],
+	"norm"        : False,
+	"hvi_weight"  : 1.0,
 	"weights"     : None,           # The model's weights.
 	"loss"        : None,           # Loss function for training the model.
-	"loss_weights": [0.40, 0.05, 0.15, 0.40],
 	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
@@ -44,16 +47,20 @@ model = {
 	"optimizers"  : [
 		{
             "optimizer"          : {
-				"name"        : "adam",
-				"lr"          : 0.00001,
-				"weight_decay": 1e-4,
-				"betas"       : [0.9, 0.999],
-				"eps"		    : 1e-8,
+				"name": "adam",
+				"lr"  : 0.0001,
 			},
 	        "lr_scheduler"       : {
 				"scheduler": {
-					"name" : "exponential_lr",
-					"gamma": 0.99,
+					"name"           : "gradual_warmup_scheduler",
+					"multiplier"     : 1,
+					"total_epoch"    : 3,
+					"after_scheduler": {
+						"name"           : "cosine_annealing_restart_lr",
+						"periods"        : [1000 - 3],  # max_epochs - total_epoch
+						"restart_weights": [1],
+						"eta_min"        : 1e-7,
+					}
 				},
 				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
 				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
@@ -76,9 +83,9 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
     "transform" : A.Compose(transforms=[
-		A.Resize(width=image_size[0], height=image_size[1]),
-		# A.Flip(),
-		# A.Rotate(),
+		A.RandomCrop(height=image_size[0], width=image_size[1]),
+	    A.HorizontalFlip(),
+		A.VerticalFlip(),
     ]),  # Transformations performing on both the input and target.
     "to_tensor" : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,        # If ``True``, cache data to disk for faster loading next time.
@@ -107,7 +114,7 @@ trainer = default.trainer | {
 	"logger"          : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"      : 100,
+	"max_epochs"      : 1000,
 }
 
 # endregion

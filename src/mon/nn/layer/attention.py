@@ -1121,10 +1121,10 @@ class SimAM(nn.Module):
     Module for Convolutional Neural Networks".
     
     References:
-        - `<https://github.com/ZjjConan/SimAM>`__
+        `<https://github.com/ZjjConan/SimAM>`__
     """
     
-    def __init__(self, e_lambda: float = 1e-4, *args, **kwargs):
+    def __init__(self, e_lambda: float = 1e-4):
         super().__init__()
         self.e_lambda = e_lambda
         self.act      = act.Sigmoid()

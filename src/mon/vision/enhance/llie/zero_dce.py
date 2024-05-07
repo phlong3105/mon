@@ -168,7 +168,7 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
         
         # Loss
-        self._loss = Loss()
+        self._loss = Loss(reduction="mean")
         
         # Load weights
         if self.weights:
