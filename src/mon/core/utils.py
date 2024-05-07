@@ -210,7 +210,7 @@ def is_rank_zero() -> bool:
 
 
 # region NVML (NVIDIA Management Library)
-    
+
 def get_gpu_device_memory(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
     """Return the GPU memory status as a :class:`tuple` of :math:`(total, used, free)`.
     

@@ -212,25 +212,27 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
     
     Args:
         unit: The unit of memory. Default: ``'GB'``.
-        table_column: The column in the table to associate this field with.
-            Default: ``None``.
+        table_column: The column in the table to associate this field with. Default: ``None``.
     """
     
     def __init__(
         self,
-        device      : int                 = 0,
+        devices     : int | list[int]     = 0,
         unit        : MemoryUnit          = MemoryUnit.GB,
         table_column: table.Column | None = None
     ):
         super().__init__(table_column=table_column)
-        self.device = dtype.to_int(device)
-        self.unit   = MemoryUnit.from_value(value=unit)
+        self.devices = dtype.to_int_list(devices)
+        self.unit    = MemoryUnit.from_value(value=unit)
     
     def render(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing current GPU memory
-        status.
-        """
-        total, used, free = utils.get_gpu_device_memory(device=self.device)
+        """Return a :class:`rich.text.Text` object showing current GPU memory status."""
+        total, used, free = 0, 0, 0
+        for i in self.devices:
+            t, u, f  = utils.get_gpu_device_memory(device=i)
+            total   += t
+            used    += u
+            free    += f
         memory_status = f"{used:.1f}/{total:.1f}{self.unit.value}"
         memory_text   = text.Text(memory_status, style="bright_yellow")
         return memory_text

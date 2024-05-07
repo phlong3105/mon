@@ -63,6 +63,7 @@ case "$OSTYPE" in
             fi
             conda env create -f "${env_yml_path}"
             echo "conda activate mon" >> ~/.bashrc
+            source ~/.bashrc
             echo -e "... Done"
         fi
 
@@ -90,6 +91,7 @@ case "$OSTYPE" in
             echo -e "\nCreating 'mon' environment:"
             conda env create -f "${env_yml_path}"
             echo "conda activate mon" >> ~/.bash_profile
+            source ~/.bash_profile
             echo -e "... Done"
         fi
         # Install FFMPEG

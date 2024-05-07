@@ -62,7 +62,7 @@ class RichProgressBar(rich_progress.RichProgressBar):
                 ),
                 rich_progress.BatchesProcessedColumn(style="progress.download"),
                 "•",
-                rich.GPUMemoryUsageColumn(),
+                rich.GPUMemoryUsageColumn(devices=trainer.device_ids),
                 "•",
                 rich_progress.ProcessingSpeedColumn(style="progress.data.speed"),
                 "•",
