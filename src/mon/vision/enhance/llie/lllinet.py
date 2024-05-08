@@ -421,7 +421,8 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         for i, (n, c) in enumerate(self.named_modules()):
             if hasattr(c, "in_ratio"):
                 console.log(f"{n}: {c.in_ratio}")
-    
+        console.log(f"HVI's `k`: {float(self.trans.density_k.item())}")
+        
     # endregion
     
 # endregion

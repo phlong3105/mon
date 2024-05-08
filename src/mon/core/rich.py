@@ -227,13 +227,14 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
     
     def render(self, task: progress.Task) -> text.Text:
         """Return a :class:`rich.text.Text` object showing current GPU memory status."""
+        num_devices       = len(self.devices)
         total, used, free = 0, 0, 0
         for i in self.devices:
             t, u, f  = utils.get_gpu_device_memory(device=i)
             total   += t
             used    += u
             free    += f
-        memory_status = f"{used:.1f}/{total:.1f}{self.unit.value}"
+        memory_status = f"{used:.1f}/{total:.1f}{self.unit.value} ({num_devices})"
         memory_text   = text.Text(memory_status, style="bright_yellow")
         return memory_text
 

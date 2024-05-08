@@ -107,7 +107,7 @@ trainer = default.trainer | {
 	"logger"          : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"      : 100,
+	"max_epochs"      : 300,
 }
 
 # endregion
