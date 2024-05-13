@@ -5,5 +5,5 @@
 
 from __future__ import annotations
 
-import mon.proc.filter.guided_filter
-from mon.proc.filter.guided_filter import *
+import mon.vision.filter.guided_filter
+from mon.vision.filter.guided_filter import *

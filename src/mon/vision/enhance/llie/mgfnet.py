@@ -12,10 +12,11 @@ __all__ = [
 from typing import Any, Literal
 
 import torch
-from mon.nn import functional as F
-from mon import core, nn, proc
+
+from mon import core, nn
 from mon.core import _callable, _size_2_t
 from mon.globals import MODELS, Scheme
+from mon.vision import prior
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -207,7 +208,6 @@ class MGFNet(base.LowLightImageEnhancementModel):
         self.gamma        = gamma
         
         # Construct model
-        self.up    = nn.UpsamplingBilinear2d(self.scale_factor)
         self.conv1 = ConvBlock(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
         self.conv2 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
         self.conv3 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -256,34 +256,33 @@ class MGFNet(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        x      = input
-        x_down = x
-        if self.scale_factor != 1:
-            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+        x    = input
         #
-        x1  = self.conv1(x_down)
-        x2  = self.conv2(x1)
-        x3  = self.conv3(x2)
-        x4  = self.conv4(x3)
-        x5  = self.conv5(torch.cat([x3, x4], 1))
-        x6  = self.conv6(torch.cat([x2, x5], 1))
-        x_r = self.conv7(torch.cat([x1, x6], 1))
-        #
-        if self.scale_factor != 1:
-            x_r = self.up(x_r)
+        x1   = self.conv1(x)
+        x2   = self.conv2(x1)
+        x3   = self.conv3(x2)
+        x4   = self.conv4(x3)
+        x5   = self.conv5(torch.cat([x3, x4], 1))
+        x6   = self.conv6(torch.cat([x2, x5], 1))
+        x_r  = self.conv7(torch.cat([x1, x6], 1))
         #
         x_rs = torch.split(x_r, 3, dim=1)
         y    = x
+        
         if not self.predicting:
             for i in range(0, self.num_iters):
                 y = y + x_rs[i] * (torch.pow(y, 2) - y)
         else:
-            g = proc.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
             for i in range(self.num_iters):
                 b = y * (1 - g)
                 d = y * g
                 y = b + d + x_rs[i] * (torch.pow(d, 2) - d)
         #
         return x_r, y
-
+    
+    def enhance_01(self, input: torch.Tensor, pred: torch.Tensor) -> torch.Tensor:
+        
+        pass
+    
 # endregion

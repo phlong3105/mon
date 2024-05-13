@@ -12,7 +12,7 @@ __all__ = [
 from abc import ABC
 
 from mon import core, nn
-from mon.globals import ZOO_DIR, Task
+from mon.globals import Task, ZOO_DIR
 
 console = core.console
 

@@ -22,9 +22,10 @@ from typing import Any, Literal
 import torch
 from torchvision.models import vgg
 
-from mon import core, nn, proc
+from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
+from mon.vision import color
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -316,7 +317,7 @@ class LLUnetPPHVI(base.LowLightImageEnhancementModel):
         #
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         #
-        self.trans   = proc.RGBToHVI()
+        self.trans   = color.RGBToHVI()
         
         # Loss
         self._loss = Loss(*loss_weights)
@@ -613,7 +614,7 @@ class LLUnetPPNoPoolHVI(base.LowLightImageEnhancementModel):
         #
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         #
-        self.trans   = proc.RGBToHVI()
+        self.trans   = color.RGBToHVI()
         
         # Loss
         self._loss = Loss(*self.loss_weights)

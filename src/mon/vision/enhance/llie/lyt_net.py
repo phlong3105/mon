@@ -19,9 +19,10 @@ from typing import Any, Literal
 import torch
 from torchvision.models import vgg19, VGG19_Weights
 
-from mon import core, nn, proc
+from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
+from mon.vision import color
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -267,7 +268,7 @@ class LYTNet(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        ycbcr = proc.rgb_to_ycbcr(input)
+        ycbcr = color.rgb_to_ycbcr(input)
         y     = ycbcr[:, 0, :, :]
         cb    = ycbcr[:, 1, :, :]
         cr    = ycbcr[:, 2, :, :]

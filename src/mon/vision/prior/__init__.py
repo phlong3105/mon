@@ -5,5 +5,5 @@
 
 from __future__ import annotations
 
-import mon.proc.prior.image
-from mon.proc.prior.image import *
+import mon.vision.prior.image
+from mon.vision.prior.image import *

@@ -40,7 +40,6 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision import models, transforms
 
-from mon import proc
 from mon.core import _size_2_t
 from mon.globals import LOSSES
 from mon.nn.loss import base
@@ -66,7 +65,8 @@ class BrightnessConstancyLoss(base.Loss):
         self.eps   = eps
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        target = proc.get_guided_brightness_enhancement_map_prior(target, self.gamma, self.ksize)
+        from mon.vision import prior
+        target = prior.get_guided_brightness_enhancement_map_prior(target, self.gamma, self.ksize)
         loss   = torch.sqrt((target - input) ** 2 + (self.eps * self.eps))
         loss   = base.reduce_loss(loss=loss, reduction=self.reduction)
         loss   = self.loss_weight * loss

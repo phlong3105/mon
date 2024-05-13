@@ -12,8 +12,9 @@ __all__ = [
 
 import numpy as np
 
-from mon import core, proc
+from mon import core
 from mon.globals import TRACKERS
+from mon.vision import geometry
 from mon.vision.track import base, motion as mmotion
 
 console = core.console
@@ -169,7 +170,7 @@ class SORTBBox(base.Tracker):
                 np.arange(len(instances)),\
                 np.empty((0, 5), dtype=int)
 
-        iou_matrix = proc.get_bbox_iou2(bbox1=instances, bbox2=tracks)
+        iou_matrix = geometry.get_bbox_iou2(bbox1=instances, bbox2=tracks)
         
         if min(iou_matrix.shape) > 0:
             a = (iou_matrix > self.iou_threshold).astype(np.int32)

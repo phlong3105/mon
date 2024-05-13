@@ -15,10 +15,11 @@ from typing import Any, Literal
 import kornia
 import torch
 
-from mon import core, nn, proc
+from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
+from mon.vision import prior
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -316,7 +317,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 y = y + l * (torch.pow(y, 2) - y)
         else:
             y = x
-            g = proc.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
             for _ in range(self.num_iters):
                 b = y * (1 - g)
                 d = y * g
@@ -443,7 +444,7 @@ class GCEUNetPP(base.LowLightImageEnhancementModel):
                 y = y + l * (torch.pow(y, 2) - y)
         else:
             y = x
-            g = proc.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
             for _ in range(self.num_iters):
                 b = y * (1 - g)
                 d = y * g

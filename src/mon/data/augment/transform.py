@@ -17,7 +17,7 @@ import torchvision.transforms
 # noinspection PyUnresolvedReferences
 from torchvision.transforms import *
 
-from mon import nn, proc
+from mon import nn
 
 
 # region Adjust
@@ -29,16 +29,17 @@ class RandomGammaCorrection(nn.Module):
         self.gamma = gamma
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        from mon.vision import adjust_gamma
         if self.gamma is None:
             # More chances of selecting 0 (original image)
             self.gamma = random.choice([0.5, 1, 2])
-            return proc.adjust_gamma(input, self.gamma, gain=1)
+            return adjust_gamma(input, self.gamma, gain=1)
         elif isinstance(self.gamma, tuple):
             gamma = random.uniform(*self.gamma)
-            return proc.adjust_gamma(input, gamma, gain=1)
+            return adjust_gamma(input, gamma, gain=1)
         elif self.gamma == 0:
             return input
         else:
-            return proc.adjust_gamma(input, self.gamma, gain=1)
+            return adjust_gamma(input, self.gamma, gain=1)
     
 # endregion

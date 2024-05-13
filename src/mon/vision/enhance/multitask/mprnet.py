@@ -11,7 +11,7 @@ __all__ = [
 	"MPRNet",
 ]
 
-from typing import Any, Literal, Sequence
+from typing import Any, Sequence
 
 import torch
 

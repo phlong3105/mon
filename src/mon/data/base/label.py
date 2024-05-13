@@ -41,7 +41,7 @@ import cv2
 import numpy as np
 import torch
 
-from mon import core, proc
+from mon import core
 from mon.core import _size_2_t
 
 console = core.console
@@ -992,6 +992,7 @@ class DetectionsLabelVOC(DetectionsLabel):
 		Return:
 			A :class:`VOCDetections` object.
 		"""
+		from mon.vision import geometry
 		path = core.Path(path)
 		if not path.is_xml_file():
 			raise ValueError(f":param:`path` must be a valid path to an ``.xml`` file, but got {path}.")
@@ -1018,7 +1019,7 @@ class DetectionsLabelVOC(DetectionsLabel):
 			name       = o.get["name"]
 			bndbox     = o.get["bndbox"]
 			bbox       = torch.FloatTensor([bndbox["xmin"], bndbox["ymin"], bndbox["xmax"], bndbox["ymax"]])
-			bbox       = proc.bbox_xyxy_to_cxcywhn(bbox=bbox, height=height, width=width)
+			bbox       = geometry.bbox_xyxy_to_cxcywhn(bbox=bbox, height=height, width=width)
 			confidence = o.get("confidence", 1.0)
 			truncated  = o.get("truncated",  0)
 			difficult  = o.get("difficult" , 0)

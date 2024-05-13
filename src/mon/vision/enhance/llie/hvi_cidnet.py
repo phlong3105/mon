@@ -22,9 +22,10 @@ import torch
 from einops import rearrange
 from torchvision.models import vgg as vgg, VGG19_Weights
 
-from mon import core, nn, proc
+from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
+from mon.vision import color
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -567,7 +568,7 @@ class HVICIDNet(base.LowLightImageEnhancementModel):
         self.i_lca5  = I_LCA(ch3, head3)
         self.i_lca6  = I_LCA(ch2, head2)
         
-        self.trans   = proc.RGBToHVI()
+        self.trans   = color.RGBToHVI()
         
         # Loss
         self._loss = Loss(*self.loss_weights, reduction="mean")

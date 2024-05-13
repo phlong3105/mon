@@ -18,8 +18,9 @@ from typing import Any, Callable
 import cv2
 import numpy as np
 
-from mon import core, nn, proc
+from mon import core, nn
 from mon.globals import AppleRGB, MOTIONS, MovingState
+from mon.vision import geometry, utils
 from mon.vision.track import motion as mmotion
 
 console = core.console
@@ -80,7 +81,7 @@ class Instance:
     
     @property
     def bbox_center(self):
-        return proc.get_bbox_center(bbox=self.bbox)
+        return geometry.get_bbox_center(bbox=self.bbox)
     
     @property
     def bbox_tl(self):
@@ -89,7 +90,7 @@ class Instance:
     
     @property
     def bbox_corners_points(self) -> np.ndarray:
-        return proc.get_bbox_corners_points(bbox=self.bbox)
+        return geometry.get_bbox_corners_points(bbox=self.bbox)
         
     def draw(
         self,
@@ -324,7 +325,7 @@ class MovingObject(list[Instance], Object):
         """The total traveled distance of the object."""
         if len(self.trajectory) < 2:
             return 0.0
-        return proc.distance.euclidean(u=self.trajectory[0], v=self.trajectory[-1])
+        return geometry.distance.euclidean(u=self.trajectory[0], v=self.trajectory[-1])
     
     def traveled_distance_between(self, start: int = -1, end: int = -2) -> float:
         """The traveled distance of the object between :param:`start` and
@@ -333,7 +334,7 @@ class MovingObject(list[Instance], Object):
         step = abs(end - start)
         if len(self.trajectory) < step:
             return 0.0
-        return proc.distance.euclidean(u=self.trajectory[start], v=self.trajectory[end])
+        return geometry.distance.euclidean(u=self.trajectory[start], v=self.trajectory[end])
     
     def update(self, instance: Instance | None, **_):
         """Update the object with a new detected instances."""
@@ -343,7 +344,7 @@ class MovingObject(list[Instance], Object):
      
     def update_trajectory(self):
         """Update trajectory with a new instance's center point."""
-        d = proc.distance.euclidean(u=self.trajectory[-1], v=self.current.bbox_center)
+        d = geometry.distance.euclidean(u=self.trajectory[-1], v=self.current.bbox_center)
         if d >= self.min_traveled_distance:
             self.trajectory.append(list(self.current.bbox_center))
             
@@ -382,7 +383,7 @@ class MovingObject(list[Instance], Object):
                 label   = False,
                 color   = [255, 255, 255]
             )
-            image = proc.draw_trajectory(
+            image = utils.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
                 color      = [255, 255, 255],
@@ -396,7 +397,7 @@ class MovingObject(list[Instance], Object):
                 label   = False,
                 color   = [255, 255, 255]
             )
-            image = proc.draw_trajectory(
+            image = utils.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
                 color      = [255, 255, 255],
@@ -410,7 +411,7 @@ class MovingObject(list[Instance], Object):
                 label   = label,
                 color   = [255, 255, 255]
             )
-            image = proc.draw_trajectory(
+            image = utils.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
                 color      = [255, 255, 255],
@@ -424,7 +425,7 @@ class MovingObject(list[Instance], Object):
                 label   = label,
                 color   = color
             )
-            image = proc.draw_trajectory(
+            image = utils.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
                 color      = color,
@@ -438,7 +439,7 @@ class MovingObject(list[Instance], Object):
                 label   = label,
                 color   = color
             )
-            image = proc.draw_trajectory(
+            image = utils.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
                 color      = color,

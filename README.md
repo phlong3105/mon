@@ -38,7 +38,6 @@ code
      |       |_ core         # Base functionality for other packages.
      |       |_ data         # Data processing package.
      |       |_ nn           # Machine learning package.
-     |       |_ proc         # Basic processing package. 
      |       |_ vision       # Computer vision package.
      |_ zoo                  # Model zoo.
      |_ .gitignore           # 

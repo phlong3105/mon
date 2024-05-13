@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from cv2.ximgproc import guidedFilter
 
-from mon import core, nn, proc
+from mon import core, nn
 from mon.core import _callable, _size_2_t
 from mon.globals import MODELS, Scheme
 from mon.vision.enhance.dehaze import base
@@ -402,7 +402,8 @@ class ZID(base.DehazingModel):
         dcp_prior    = torch.min(image.permute(0, 2, 3, 1), 3)[0]
         loss        += self.mse_loss(dcp_prior, torch.zeros_like(dcp_prior)) - 0.05
         #
-        atmosphere   = proc.get_atmosphere_prior(input.detach().cpu().numpy()[0])
+        from mon.vision import prior
+        atmosphere   = prior.get_atmosphere_prior(input.detach().cpu().numpy()[0])
         ambient_val  = nn.Parameter(data=torch.cuda.FloatTensor(atmosphere.reshape((1, 3, 1, 1))), requires_grad=False)
         loss        += self.mse_loss(ambient, ambient_val * torch.ones_like(ambient))
         

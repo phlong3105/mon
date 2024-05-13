@@ -10,9 +10,6 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Sequence
-
-import torch
 
 from mon import core, nn
 from mon.globals import ZOO_DIR

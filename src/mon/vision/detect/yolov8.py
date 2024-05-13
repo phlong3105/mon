@@ -11,14 +11,14 @@ __all__ = [
 
 import numpy as np
 import torch
+from ultralytics.nn import tasks
+from ultralytics.yolo.data import augment
+from ultralytics.yolo.utils import checks, ops
 
 from mon import core
 from mon.globals import DETECTORS
 from mon.vision import track
 from mon.vision.detect import base
-from ultralytics.nn import tasks
-from ultralytics.yolo.data import augment
-from ultralytics.yolo.utils import checks, ops
 
 console = core.console
 
