@@ -19,7 +19,7 @@ import mon.vision.enhance.llie.retinexformer
 import mon.vision.enhance.llie.rrdnet
 import mon.vision.enhance.llie.zero_dce
 import mon.vision.enhance.llie.zero_dcepp
-import mon.vision.enhance.llie.zero_dcev3
+import mon.vision.enhance.llie.mgfnet
 import mon.vision.enhance.llie.zero_didce
 from mon.vision.enhance.llie.base import *
 from mon.vision.enhance.llie.gcenet import *
@@ -31,5 +31,5 @@ from mon.vision.enhance.llie.retinexformer import *
 from mon.vision.enhance.llie.rrdnet import *
 from mon.vision.enhance.llie.zero_dce import *
 from mon.vision.enhance.llie.zero_dcepp import *
-from mon.vision.enhance.llie.zero_dcev3 import *
+from mon.vision.enhance.llie.mgfnet import *
 from mon.vision.enhance.llie.zero_didce import *

@@ -12,7 +12,6 @@ __all__ = [
     "LLLINetHVI",
 ]
 
-import math
 from typing import Any, Literal
 
 import torch
@@ -214,7 +213,7 @@ class LLLINet(base.LowLightImageEnhancementModel):
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         
         # Loss
-        self._loss = Loss(*loss_weights)
+        self._loss = Loss(*loss_weights, reduction="mean")
         
         # Load weights
         if self.weights:
@@ -298,9 +297,10 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
     
     def __init__(
         self,
-        in_channels : int = 3,
-        out_channels: int = 3,
-        weights     : Any = None,
+        in_channels : int         = 3,
+        out_channels: int         = 3,
+        weights     : Any         = None,
+        hvi_weight  : float       = 1.0,
         loss_weights: list[float] = [0.35, 0.10, 0.25, 0.30],
         *args, **kwargs
     ):
@@ -314,10 +314,14 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels",  in_channels)
+            in_channels  = self.weights.get("in_channels" , in_channels)
             out_channels = self.weights.get("out_channels", out_channels)
-        self.in_channels  = in_channels or self.in_channels
+            hvi_weight   = self.weights.get("hvi_weight"  , hvi_weight)
+            loss_weights = self.weights.get("loss_weights", loss_weights)
+        self.in_channels  = in_channels  or self.in_channels
         self.out_channels = out_channels or self.out_channels
+        self.hvi_weight   = hvi_weight
+        self.loss_weights = loss_weights
         
         # Construct model
         nb_filter    = [32, 64, 128, 256, 512]
@@ -350,7 +354,8 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         self.trans   = proc.RGBToHVI()
         
         # Loss
-        self._loss = Loss(*loss_weights)
+        # from mon.vision.enhance.llie.hvi_cidnet import Loss as CIDNetLoss
+        self._loss = Loss(*self.loss_weights, reduction="mean")
         
         # Load weights
         if self.weights:
@@ -367,9 +372,20 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         target: torch.Tensor | None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        pred = self.forward(input=input, *args, **kwargs)
-        loss = self.loss(pred, target)
-        return pred, loss
+        # pred = self.forward(input=input, *args, **kwargs)
+        # loss = self.loss(pred, target)
+        # return pred, loss
+        pred_rgb   = self.forward(input=input, *args, **kwargs)
+        pred_hvi   = self.rgb_to_hvi(pred_rgb)
+        target_rgb = target
+        target_hvi = self.rgb_to_hvi(target)
+        loss_rgb   = self.loss(pred_rgb, target_rgb)
+        loss_hvi   = self.loss(pred_hvi, target_hvi)
+        loss       = loss_rgb + self.hvi_weight * loss_hvi
+        extra      = {
+            "hvi_k": float(self.trans.density_k.item())
+        }
+        return pred_rgb, loss, extra
     
     def forward(
         self,
@@ -408,6 +424,9 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         y    = torch.clamp(y, 0, 1)
         #
         return y
+    
+    def rgb_to_hvi(self, input: torch.Tensor) -> torch.Tensor:
+        return self.trans.rgb_to_hvi(input)
     
     # region Training
     

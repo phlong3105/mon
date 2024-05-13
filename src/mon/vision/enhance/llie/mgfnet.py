@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Zero-DCEv3 models."""
+"""This module implements MGFNet (Multi-Guided Filtering Network) models."""
 
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCEv3",
+    "MGFNet",
 ]
 
 from typing import Any, Literal
 
 import torch
-
+from mon.nn import functional as F
 from mon import core, nn, proc
 from mon.core import _callable, _size_2_t
 from mon.globals import MODELS, Scheme
@@ -141,7 +141,7 @@ class ConvBlock(nn.Module):
         )
         self.lin  = nn.LearnableInstanceNorm2d(num_features=out_channels)
         if not is_last:
-            self.relu = nn.PReLU()
+            self.relu = nn.LeakyReLU()
             self.attn = nn.SimAM()
         else:
             self.relu = nn.Tanh()
@@ -160,9 +160,9 @@ class ConvBlock(nn.Module):
 
 # region Model
 
-@MODELS.register(name="zero_dcev3")
-class ZeroDCEv3(base.LowLightImageEnhancementModel):
-    """Zero-DCEv3 (Zero-Reference Deep Curve Estimation V3) model.
+@MODELS.register(name="mgfnet")
+class MGFNet(base.LowLightImageEnhancementModel):
+    """MGFNet (Multi-Guided Filtering Network) model.
     
     Args:
         in_channels: The first layer's input channel. Default: ``3`` for RGB image.
@@ -178,14 +178,16 @@ class ZeroDCEv3(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        in_channels : int = 3,
-        num_channels: int = 32,
-        num_iters   : int = 8,
-        weights     : Any = None,
+        in_channels : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 8,
+        scale_factor: int   = 2,
+        gamma       : float = 2.8,
+        weights     : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
-            name        = "zero_dcev3",
+            name        = "mgfnet",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs
@@ -196,22 +198,23 @@ class ZeroDCEv3(base.LowLightImageEnhancementModel):
             in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
             num_iters    = self.weights.get("num_iters"   , num_iters)
-        self.in_channels  = in_channels
+            scale_factor = self.weights.get("scale_factor", scale_factor)
+        self.in_channels  = in_channels  or self.in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
+        self.scale_factor = scale_factor
         self.out_channels = self.in_channels * self.num_iters
+        self.gamma        = gamma
         
         # Construct model
-        # self.pool    = nn.MaxPool2d(2, 2)
-        # self.up      = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
-        self.e_conv1 = ConvBlock(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv2 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv3 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv4 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv5 = ConvBlock(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv6 = ConvBlock(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv7 = ConvBlock(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, is_last=True)
-        # self.trans   = proc.RGBToHVI()
+        self.up    = nn.UpsamplingBilinear2d(self.scale_factor)
+        self.conv1 = ConvBlock(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
+        self.conv2 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+        self.conv3 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+        self.conv4 = ConvBlock(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+        self.conv5 = ConvBlock(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+        self.conv6 = ConvBlock(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+        self.conv7 = ConvBlock(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, is_last=True)
         
         # Loss
         self._loss = Loss(reduction="mean")
@@ -253,22 +256,33 @@ class ZeroDCEv3(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        x   = input
-        # hvi = self.trans.rgb_to_hvi(x)
-        # i   = hvi[:, 2, :, :].unsqueeze(1).to(x.dtype)
+        x      = input
+        x_down = x
+        if self.scale_factor != 1:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
         #
-        x1  = self.e_conv1(x)
-        x2  = self.e_conv2(x1)
-        x3  = self.e_conv3(x2)
-        x4  = self.e_conv4(x3)
-        x5  = self.e_conv5(torch.cat([x3, x4], 1))
-        x6  = self.e_conv6(torch.cat([x2, x5], 1))
-        x_r = self.e_conv7(torch.cat([x1, x6], 1))
+        x1  = self.conv1(x_down)
+        x2  = self.conv2(x1)
+        x3  = self.conv3(x2)
+        x4  = self.conv4(x3)
+        x5  = self.conv5(torch.cat([x3, x4], 1))
+        x6  = self.conv6(torch.cat([x2, x5], 1))
+        x_r = self.conv7(torch.cat([x1, x6], 1))
+        #
+        if self.scale_factor != 1:
+            x_r = self.up(x_r)
         #
         x_rs = torch.split(x_r, 3, dim=1)
         y    = x
-        for i in range(0, self.num_iters):
-            y = y + x_rs[i] * (torch.pow(y, 2) - y)
+        if not self.predicting:
+            for i in range(0, self.num_iters):
+                y = y + x_rs[i] * (torch.pow(y, 2) - y)
+        else:
+            g = proc.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            for i in range(self.num_iters):
+                b = y * (1 - g)
+                d = y * g
+                y = b + d + x_rs[i] * (torch.pow(d, 2) - d)
         #
         return x_r, y
 

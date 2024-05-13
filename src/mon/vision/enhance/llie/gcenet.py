@@ -252,7 +252,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         self.act      = nn.PReLU()
         
         # Loss
-        self._loss    = Loss(reduction="mean")
+        self._loss = Loss(reduction="mean")
         
         # Load weights
         if self.weights:
