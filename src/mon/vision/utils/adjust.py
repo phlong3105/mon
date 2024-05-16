@@ -15,9 +15,9 @@ __all__ = [
 from typing import Literal
 
 import cv2
-import multipledispatch
 import numpy as np
 import torch
+from plum import dispatch
 from torchvision.transforms import functional as TF
 
 
@@ -94,7 +94,7 @@ def blend(
 
 # region Gamma
 
-@multipledispatch.dispatch(torch.Tensor)
+@dispatch
 def adjust_gamma(image: torch.Tensor, gamma: float = 1.0, gain: float = 1.0) -> torch.Tensor:
     """Adjust gamma value in the image. Also known as Power Law Transform.
     
@@ -116,7 +116,7 @@ def adjust_gamma(image: torch.Tensor, gamma: float = 1.0, gain: float = 1.0) -> 
     return TF.adjust_gamma(img=image, gamma=gamma, gain=gain)
 
 
-@multipledispatch.dispatch(np.ndarray)
+@dispatch
 def adjust_gamma(image: np.ndarray, gamma: float = 1.0, gain: float = 1.0) -> np.ndarray:
     """Adjust gamma value in the image. Also known as Power Law Transform.
     

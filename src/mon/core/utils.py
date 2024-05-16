@@ -8,12 +8,14 @@ from __future__ import annotations
 __all__ = [
     "check_installed_package",
     "get_gpu_device_memory",
+    "get_machine_memory",
     "is_rank_zero",
     "list_cuda_devices",
     "list_devices",
     "make_divisible",
     "parse_device",
     "parse_hw",
+    "pynvml_available",
     "set_device",
     "set_random_seed",
     "upcast",
@@ -23,11 +25,17 @@ import importlib
 import math
 import os
 import random
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
-import pynvml
+import psutil
 import torch
+
+try:
+    import pynvml
+    pynvml_available = True
+except ImportError:
+    pynvml_available = False
 
 from mon.globals import MemoryUnit
 
@@ -83,7 +91,7 @@ def upcast(input: torch.Tensor | np.ndarray, keep_type: bool = False) -> torch.T
     return input
 
 
-def parse_hw(size: int | list[int]) -> list[int]:
+def parse_hw(size: int | Sequence[int]) -> list[int]:
     """Casts a size object to the standard :math:`[H, W]`.
 
     Args:
@@ -187,6 +195,39 @@ def set_device(device: Any, use_single_device: bool = True) -> torch.device:
     torch.cuda.set_device(device)  # change allocation of current GPU
     return device
 
+
+def get_machine_memory(unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
+    """Return the RAM status as a :class:`list` of :math:`[total, used, free]`.
+    
+    Args:
+        unit: The memory unit. Default: ``'GB'``.
+    """
+    memory = psutil.virtual_memory()
+    unit   = MemoryUnit.from_value(value=unit)
+    ratio  = MemoryUnit.byte_conversion_mapping()[unit]
+    total  = memory.total     / ratio
+    free   = memory.available / ratio
+    used   = memory.used      / ratio
+    return [total, used, free]
+
+
+def get_gpu_device_memory(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
+    """Return the GPU memory status as a :class:`list` of :math:`[total, used, free]`.
+    
+    Args:
+        device: The index of the GPU device. Default: ``0``.
+        unit: The memory unit. Default: ``'GB'``.
+    """
+    pynvml.nvmlInit()
+    unit  = MemoryUnit.from_value(value=unit)
+    h     = pynvml.nvmlDeviceGetHandleByIndex(index=device)
+    info  = pynvml.nvmlDeviceGetMemoryInfo(h)
+    ratio = MemoryUnit.byte_conversion_mapping()[unit]
+    total = info.total / ratio
+    free  = info.free  / ratio
+    used  = info.used  / ratio
+    return [total, used, free]
+
 # endregion
 
 
@@ -205,28 +246,6 @@ def is_rank_zero() -> bool:
         "LOCAL_RANK" not in os.environ.keys() and
         "NODE_RANK"  not in os.environ.keys()
     ) else False
-
-# endregion
-
-
-# region NVML (NVIDIA Management Library)
-
-def get_gpu_device_memory(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
-    """Return the GPU memory status as a :class:`tuple` of :math:`(total, used, free)`.
-    
-    Args:
-        device: The index of the GPU device. Default: ``0``.
-        unit: The memory unit. Default: ``'GB'``.
-    """
-    pynvml.nvmlInit()
-    unit  = MemoryUnit.from_value(value=unit)
-    h     = pynvml.nvmlDeviceGetHandleByIndex(index=device)
-    info  = pynvml.nvmlDeviceGetMemoryInfo(h)
-    ratio = MemoryUnit.byte_conversion_mapping()[unit]
-    total = info.total / ratio
-    free  = info.free / ratio
-    used  = info.used / ratio
-    return [total, used, free]
 
 # endregion
 

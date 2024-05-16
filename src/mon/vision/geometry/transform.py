@@ -5,13 +5,6 @@
 
 from __future__ import annotations
 
-import cv2
-import numpy as np
-import PIL
-import torch
-# noinspection PyUnresolvedReferences
-from kornia.geometry.transform import *
-
 __all__ = [
     "Affine",
     "Hflip",
@@ -62,21 +55,18 @@ __all__ = [
     "rescale",
     "resize",
     "resize_divisible",
-    "rot180",
-    "rotate",
-    "rotate3d",
-    "scale",
-    "shear",
-    "translate",
-    "upscale_double",
-    "vflip",
-    "warp_affine",
-    "warp_affine3d",
-    "warp_grid",
-    "warp_grid3d",
-    "warp_perspective",
-    "warp_perspective3d",
 ]
+
+from typing import Sequence
+
+import cv2
+import numpy as np
+import PIL
+import torch
+from kornia.geometry import transform
+# noinspection PyUnresolvedReferences
+from kornia.geometry.transform import *
+from plum import dispatch
 
 from mon import core
 
@@ -102,16 +92,99 @@ def crop_divisible(image: PIL.Image, divisor: int = 32):
 
 # region Resize
 
-def resize_divisible(image: torch.Tensor | np.ndarray, divisor: int = 32) -> torch.Tensor | np.ndarray:
+@dispatch
+def resize(
+    image        : torch.Tensor,
+    size         : int | Sequence[int],
+    interpolation: str = "bilinear",
+    **kwargs,
+) -> torch.Tensor:
+    """Resize an image using :mod:`kornia`.
+    
+    Args:
+        image: An image tensor.
+        size: The target size.
+        interpolation: Algorithm used for upsampling: ``'nearest'`` | ``'linear'``
+            | ``'bilinear'`` | ``'bicubic'`` | ``'trilinear'`` | ``'area'``.
+    
+    **kwargs (korina.geometry.transform.resize):
+        - align_corners: interpolation flag.
+        - side: Corresponding side if ``size`` is an integer. Can be one of ``'short'``, ``'long'``, ``'vert'``, or ``'horz'``.
+        - antialias: if ``True``, then image will be filtered with Gaussian before downscaling. No effect for upscaling.
+    
+    **kwargs (cv2.resize):
+        - fx: Scale factor along the horizontal axis.
+        - fy: Scale factor along the vertical axis.
+        - antialias: if ``True``, then image will be filtered with Gaussian before downscaling. No effect for upscaling.
+    
+    Returns:
+        The resized image.
+    """
+    align_corners = kwargs.pop("align_corners", None)
+    side          = kwargs.pop("side",          "short")
+    antialias     = kwargs.pop("antialias",     False)
+    return transform.resize(
+        input         = image,
+        size          = size,
+        interpolation = interpolation,
+        align_corners = align_corners,
+        side          = side,
+        antialias     = antialias,
+    )
+
+
+@dispatch
+def resize(
+    image        : np.ndarray,
+    size         : int | Sequence[int],
+    interpolation: int = cv2.INTER_LINEAR,
+    **kwargs,
+) -> np.ndarray:
+    """Resize an image using :mod:`kornia`.
+    
+    Args:
+        image: An image tensor.
+        size: The target size.
+        interpolation: Algorithm used for upsampling:
+            - cv2.INTER_AREA: This is used when we need to shrink an image.
+            - cv2.INTER_CUBIC: This is slow but more efficient.
+            - cv2.INTER_LINEAR: This is primarily used when zooming is required. This is the default interpolation technique in OpenCV.
+
+    **kwargs (cv2.resize):
+        - fx: Scale factor along the horizontal axis.
+        - fy: Scale factor along the vertical axis.
+        - antialias: if ``True``, then image will be filtered with Gaussian before downscaling. No effect for upscaling.
+    
+    Returns:
+        The resized image.
+    """
+    fx   = kwargs.pop("fx", None)
+    fy   = kwargs.pop("fy", None)
+    h, w = core.parse_hw(size)
+    return cv2.resize(
+        src           = image,
+        dsize         = (w, h),
+        fx            = fx,
+        fy            = fy,
+        interpolation = interpolation,
+    )
+
+
+@dispatch
+def resize_divisible(image: torch.Tensor, divisor: int = 32) -> torch.Tensor:
     """Resize an image to a size that is divisible by :param:`divisor`."""
-    h, w = core.get_image_size(image)
-    h, w = core.make_divisible((h, w), divisor)
-    if isinstance(image, torch.Tensor):
-        image = resize(image, size=(h, w))
-    elif isinstance(image, np.ndarray):
-        image = cv2.resize(image, dsize=(w, h))
-    else:
-        raise TypeError(f"Unsupported type {type(image)}")
+    h, w  = core.get_image_size(image)
+    h, w  = core.make_divisible((h, w), divisor)
+    image = resize(image, size=(h, w))
+    return image
+
+
+@dispatch
+def resize_divisible(image: np.ndarray, divisor: int = 32) -> np.ndarray:
+    """Resize an image to a size that is divisible by :param:`divisor`."""
+    h, w  = core.get_image_size(image)
+    h, w  = core.make_divisible((h, w), divisor)
+    image = cv2.resize(image, dsize=(w, h))
     return image
 
 # endregion

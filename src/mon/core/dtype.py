@@ -61,8 +61,7 @@ from collections import OrderedDict
 from types import ModuleType
 from typing import Any, Callable, Iterable
 
-import multipledispatch
-import torch
+from plum import dispatch
 
 
 # region Enum
@@ -403,13 +402,13 @@ to_triple    = to_ntuple(3)
 to_quadruple = to_ntuple(4)
 
 
-@multipledispatch.dispatch(list)
+@dispatch
 def unique(x: list) -> list:
     """Get unique items from a :class:`list`."""
     return list(set(x))
 
 
-@multipledispatch.dispatch(tuple)
+@dispatch
 def unique(x: tuple) -> tuple:
     """Get unique items from a :class:`tuple`."""
     return tuple(set(x))

@@ -337,6 +337,11 @@ def hsv_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region HVI
 
 class RGBToHVI(nn.Module):
+    """Convert an RGB image to HVI.
+    
+    References:
+        `<https://github.com/Fediory/HVI-CIDNet/blob/master/net/HVI_transform.py>`__
+    """
     
     def __init__(self, eps: float = 1e-8):
         super().__init__()

@@ -27,8 +27,8 @@ dependencies:
       # Required: Python Basic
       - click                  # Click is a Python package for creating beautiful command line interfaces.
       - emoji                  # Emoji for Python.
-      - multipledispatch       # Multiple dispatch.
       - numpy                  # The fundamental package for scientific computing with Python.
+      - plum-dispatch          # Multiple dispatch in Python.
       - protobuf               # Protocol Buffers - Google's data interchange format.
       - psutil                 # Cross-platform lib for process and system monitoring in Python.
       - PyYAML                 # YAML parser and emitter for Python.

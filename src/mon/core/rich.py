@@ -30,12 +30,13 @@ __all__ = [
 import fcntl
 import shutil
 import struct
+import subprocess
 import sys
 import termios
-import subprocess
 
-import multipledispatch
 import rich
+import torch
+from plum import dispatch
 from rich import panel, pretty, progress, table, text, theme
 
 from mon.core import dtype, utils
@@ -208,7 +209,7 @@ def get_progress_bar(
 
 
 class GPUMemoryUsageColumn(progress.ProgressColumn):
-    """A progress column showing current GPU memory usage, e.g. ``33.1/48.0GB``.
+    """A progress column showing current CPU/GPU memory usage, e.g. ``33.1/48.0GB``.
     
     Args:
         unit: The unit of memory. Default: ``'GB'``.
@@ -227,17 +228,30 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
     
     def render(self, task: progress.Task) -> text.Text:
         """Return a :class:`rich.text.Text` object showing current GPU memory status."""
+        return self.get_gpu_memory_text(task) \
+            if torch.cuda.is_available() \
+            else self.get_machine_memory_text(task)
+    
+    def get_machine_memory_text(self, task: progress.Task) -> text.Text:
+        """Return a :class:`rich.text.Text` object showing current RAM status."""
+        total, used, free = utils.get_machine_memory(unit=self.unit)
+        memory_status     = f"{used:.1f}/{total:.1f}{self.unit.value} (CPU)"
+        memory_text       = text.Text(memory_status, style="bright_yellow")
+        return memory_text
+    
+    def get_gpu_memory_text(self, task: progress.Task) -> text.Text:
+        """Return a :class:`rich.text.Text` object showing current GPU memory status."""
         num_devices       = len(self.devices)
         total, used, free = 0, 0, 0
         for i in self.devices:
-            t, u, f  = utils.get_gpu_device_memory(device=i)
+            t, u, f  = utils.get_gpu_device_memory(device=i, unit=self.unit)
             total   += t
             used    += u
             free    += f
-        memory_status = f"{used:.1f}/{total:.1f}{self.unit.value} ({num_devices})"
+        memory_status = f"{used:.1f}/{total:.1f}{self.unit.value} ({num_devices} GPUs)"
         memory_text   = text.Text(memory_status, style="bright_yellow")
         return memory_text
-
+    
 
 class ProcessedItemsColumn(progress.ProgressColumn):
     """A progress column showing the number of processed items, e.g.
@@ -301,7 +315,7 @@ def print_dict(x: dict, title: str = ""):
     console.log(p)
 
 
-@multipledispatch.dispatch(list)
+@dispatch
 def print_table(x: list[dict]):
     """Print a :class:`list` of :class:`dict` in a :class:`rich.table.Table`.
     All :class:`dict` in the given list must contain the same keys.
@@ -316,7 +330,7 @@ def print_table(x: list[dict]):
     console.log(tab)
 
 
-@multipledispatch.dispatch(dict)
+@dispatch
 def print_table(x: dict):
     """Print a :class:`dict` in a :class:`rich.table.Table`."""
     assert isinstance(x, dict)
