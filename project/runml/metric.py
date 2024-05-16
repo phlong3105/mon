@@ -207,7 +207,7 @@ def measure_metric_pyiqa(
             if torch.any(image.isnan()):
                 continue
             if resize:
-                image = mon.resize(input=image, size=[h, w])
+                image = mon.resize(image, (h, w))
             
             has_target  = need_target
             target_file = None
@@ -218,7 +218,7 @@ def measure_metric_pyiqa(
             if target_file is not None and target_file.exists():
                 target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
                 if resize:
-                    target = mon.resize(input=target, size=[h, w])
+                    target = mon.resize(target, (h, w))
             else:
                 has_target = False
             

@@ -175,7 +175,7 @@ def resize_divisible(image: torch.Tensor, divisor: int = 32) -> torch.Tensor:
     """Resize an image to a size that is divisible by :param:`divisor`."""
     h, w  = core.get_image_size(image)
     h, w  = core.make_divisible((h, w), divisor)
-    image = resize(image, size=(h, w))
+    image = resize(image, (h, w))
     return image
 
 
@@ -184,7 +184,7 @@ def resize_divisible(image: np.ndarray, divisor: int = 32) -> np.ndarray:
     """Resize an image to a size that is divisible by :param:`divisor`."""
     h, w  = core.get_image_size(image)
     h, w  = core.make_divisible((h, w), divisor)
-    image = cv2.resize(image, dsize=(w, h))
+    image = resize(image, (w, h))
     return image
 
 # endregion

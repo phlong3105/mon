@@ -347,7 +347,7 @@ def weights_init_identity(m):
         
         
 def build_lr_net(
-    norm        : nn.Module = nn.AdaptiveNorm2d,
+    norm        : nn.Module = nn.AdaptiveBatchNorm2d,
     in_channels : int       = 3,
     mid_channels: int       = 24,
     layer       : int       = 5,
@@ -413,7 +413,7 @@ class DeepGuidedFilter(nn.Module):
         lr_channels  : int       = 24,
         lr_layer     : int       = 5,
         lr_relu_slope: float     = 0.2,
-        lr_norm      : nn.Module = nn.AdaptiveNorm2d,
+        lr_norm      : nn.Module = nn.AdaptiveBatchNorm2d,
     ):
         super().__init__()
         self.lr = build_lr_net(
@@ -458,7 +458,7 @@ class DeepGuidedFilterAdvanced(DeepGuidedFilter):
         lr_channels  : int       = 24,
         lr_layer     : int       = 5,
         lr_relu_slope: float     = 0.2,
-        lr_norm      : nn.Module = nn.AdaptiveNorm2d,
+        lr_norm      : nn.Module = nn.AdaptiveBatchNorm2d,
     ):
         super().__init__(
             radius        = radius,
@@ -470,7 +470,7 @@ class DeepGuidedFilterAdvanced(DeepGuidedFilter):
         )
         self.guided_map = nn.Sequential(
             nn.Conv2d(3, 15, 1, bias=False),
-            nn.AdaptiveNorm2d(15),
+            nn.AdaptiveBatchNorm2d(15),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(15, 3, 1)
         )
@@ -504,7 +504,7 @@ class DeepGuidedFilterConvGF(nn.Module):
         lr_channels  : int       = 24,
         lr_layer     : int       = 5,
         lr_relu_slope: float     = 0.2,
-        lr_norm      : nn.Module = nn.AdaptiveNorm2d,
+        lr_norm      : nn.Module = nn.AdaptiveBatchNorm2d,
     ):
         super().__init__()
         self.lr = build_lr_net(
@@ -514,7 +514,7 @@ class DeepGuidedFilterConvGF(nn.Module):
             layer        = lr_layer,
             relu_slope   = lr_relu_slope,
         )
-        self.gf = ConvGuidedFilter(radius=radius, norm=nn.AdaptiveNorm2d)
+        self.gf = ConvGuidedFilter(radius=radius, norm=nn.AdaptiveBatchNorm2d)
 
     def forward(self, x_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
         return self.gf(x_lr, self.lr(x_lr), x_hr).clamp(0, 1)
@@ -533,7 +533,7 @@ class DeepGuidedFilterGuidedMapConvGF(DeepGuidedFilterConvGF):
         lr_channels    : int       = 24,
         lr_layer       : int       = 5,
         lr_relu_slope  : float     = 0.2,
-        lr_norm        : nn.Module = nn.AdaptiveNorm2d,
+        lr_norm        : nn.Module = nn.AdaptiveBatchNorm2d,
     ):
         super().__init__(
             radius        = radius,
@@ -544,7 +544,7 @@ class DeepGuidedFilterGuidedMapConvGF(DeepGuidedFilterConvGF):
         )
         self.guided_map = nn.Sequential(
             nn.Conv2d(3, guided_channels, 1, bias=False) if guided_dilation == 0 else nn.Conv2d(3, guided_channels, 3, padding=guided_dilation, dilation=guided_dilation, bias=False),
-            nn.AdaptiveNorm2d(guided_channels),
+            nn.AdaptiveBatchNorm2d(guided_channels),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(guided_channels, 3, 1)
         )

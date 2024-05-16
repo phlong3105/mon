@@ -91,7 +91,7 @@ def predict(args: argparse.Namespace):
                 
                 if resize:
                     h0, w0 = mon.get_image_size(images)
-                    images = mon.resize(input=images, size=imgsz)
+                    images = mon.resize(images, imgsz)
                     console.log("Resizing images to: ", images.shape[2], images.shape[3])
                     # images = proc.resize(input=images, size=[1000, 666])
                 
@@ -110,7 +110,7 @@ def predict(args: argparse.Namespace):
                 # Unpad images to original dimensions
                 restored = restored[:, :, :h, :w]
                 if resize:
-                    restored = mon.resize(input=restored, size=[h0, w0])
+                    restored = mon.resize(restored, (h0, w0))
                 restored = torch.clamp(restored, 0, 1).cpu().detach().permute(0, 2, 3, 1).squeeze(0).numpy()
                 
                 output_path = save_dir / image_path.name

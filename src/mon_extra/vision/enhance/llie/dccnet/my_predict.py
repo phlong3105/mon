@@ -81,11 +81,11 @@ def predict(args: argparse.Namespace):
                 data_lowlight  = data_lowlight.permute(2, 0, 1)
                 data_lowlight  = data_lowlight.cuda().unsqueeze(0)
                 h, w           = mon.get_image_size(images)
-                data_lowlight  = mon.resize_divisible(image=data_lowlight, divisor=32)
+                data_lowlight  = mon.resize_divisible(data_lowlight, 32)
                 start_time     = time.time()
                 gray, color_hist, enhanced_image = color_net(data_lowlight)
                 run_time       = (time.time() - start_time)
-                enhanced_image = mon.resize(input=enhanced_image, size=[h, w ])
+                enhanced_image = mon.resize(enhanced_image, (h, w))
                 output_path    = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time += run_time

@@ -33,6 +33,8 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
+	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
+	"num_iters"   : 8,              # The number of progressive loop.
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -69,7 +71,7 @@ datamodule = {
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 8,             # The number of samples in one forward pass.
+    "batch_size": 1,             # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.

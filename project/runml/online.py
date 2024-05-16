@@ -77,7 +77,7 @@ def online_learning(args: dict) -> str:
                 input  = images.clone()
                 if resize:
                     h0, w0 = mon.get_image_size(images)
-                    input  = mon.resize(input=input, size=imgsz)
+                    input  = mon.resize(input, imgsz)
                 
                 # Forward
                 start_time = time.time()
@@ -87,7 +87,7 @@ def online_learning(args: dict) -> str:
                 # Post-process
                 output = output[-1] if isinstance(output, list | tuple) else output
                 if resize:
-                    output = mon.resize(input=output, size=[h0, w0])
+                    output = mon.resize(output, (h0, w0))
                 
                 # Save
                 if save_image:

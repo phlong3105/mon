@@ -150,7 +150,7 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
             in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
             num_iters    = self.weights.get("num_iters"   , num_iters)
-        self.in_channels  = in_channels
+        self.in_channels  = in_channels  or self.in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
         self.out_channels = self.in_channels * self.num_iters
