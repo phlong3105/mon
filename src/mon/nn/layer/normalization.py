@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "AdaptiveNorm2d",
     "BatchNorm1d",
     "BatchNorm2d",
     "BatchNorm2dAct",
@@ -45,6 +46,27 @@ from torch.nn.modules.normalization import *
 
 from mon import core
 from mon.nn.layer import activation, linear
+
+
+# region Adaptive Normalization
+
+class AdaptiveNorm2d(nn.Module):
+    
+    def __init__(
+        self,
+        num_features: int,
+        eps         : float = 0.999,
+        momentum    : float = 0.001,
+    ):
+        super().__init__()
+        self.w_0 = nn.Parameter(torch.Tensor([1.0]))
+        self.w_1 = nn.Parameter(torch.Tensor([0.0]))
+        self.bn  = nn.BatchNorm2d(num_features, eps=eps, momentum=momentum)
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return self.w_0 * input + self.w_1 * self.bn(input)
+
+# endregion
 
 
 # region Batch Normalization
