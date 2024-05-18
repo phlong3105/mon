@@ -35,6 +35,8 @@ __all__ = [
     "NPEDataModule",
     "SICEMix",
     "SICEMixDataModule",
+    "ULOL",
+    "ULOLMixDataModule",
     "VV",
     "VVDataModule",
 ]
@@ -544,6 +546,48 @@ class SICEMix(base.UnlabeledImageDataset):
                         self._images.append(image)
 
 
+@DATASETS.register(name="ulol")
+class ULOL(base.UnlabeledImageDataset):
+    """Custom ULOL (Unsupervised LOw-Light) dataset for training.
+    
+    See Also: :class:`base.UnlabeledImageDataset`.
+    """
+    
+    _tasks          = [Task.LLIE]
+    _splits         = [Split.TRAIN]
+    _has_test_label = False
+    
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
+    
+    def _get_images(self):
+        patterns = [
+            self.root / "sice_mix"         / self.split_str / "lq",
+            self.root / "lol_v1"           / self.split_str / "lq",
+            self.root / "lol_v1"           / self.split_str / "hq",
+            self.root / "lol_v2_real"      / self.split_str / "lq",
+            self.root / "lol_v2_real"      / self.split_str / "hq",
+            self.root / "lol_v2_synthetic" / self.split_str / "lq",
+            self.root / "lol_v2_synthetic" / self.split_str / "hq",
+            self.root / "dicm"             / "test"         / "lq",
+            self.root / "fusion"           / "test"         / "lq",
+            self.root / "lime"             / "test"         / "lq",
+            self.root / "mef"              / "test"         / "lq",
+            self.root / "npe"              / "test"         / "lq",
+            self.root / "vv"               / "test"         / "lq",
+        ]
+        self._images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self._images.append(image)
+                        
+
 @DATASETS.register(name="vv")
 class VV(base.UnlabeledImageDataset):
     """VV dataset consists of 24 low-light images.
@@ -1044,6 +1088,39 @@ class SICEMixDataModule(base.DataModule):
         if phase in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
             
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        pass
+
+
+@DATAMODULES.register(name="ulol")
+class ULOLMixDataModule(base.DataModule):
+    """Custom ULOL (Unsupervised LOw-Light) datamodule.
+    
+    See Also: :class:`base.DataModule`.
+    """
+    
+    _tasks = [Task.LLIE]
+    
+    def prepare_data(self, *args, **kwargs):
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: Literal["training", "testing", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if phase in [None, "training"]:
+            self.train = ULOL(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
+        if phase in [None, "testing"]:
+            self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         

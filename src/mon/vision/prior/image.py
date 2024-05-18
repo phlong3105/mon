@@ -22,6 +22,7 @@ import torch
 
 from mon import core
 from mon.core import _size_2_t
+from mon.vision import filtering
 
 
 # region Intensity & Gradient
@@ -195,8 +196,7 @@ def get_guided_brightness_enhancement_map_prior(
     over-saturation, while preserving image details and enhancing the contrast
     in the dark regions effectively.
     
-    Equation: :math:`I_{attn} = (1 - I_{V})^{\gamma}`, where
-    :math:`\gamma \geq 1`.
+    Equation: :math:`I_{attn} = (1 - I_{V})^{\gamma}`, where :math:`\gamma \geq 1`.
     
     Args:
         input: An image.
@@ -210,13 +210,15 @@ def get_guided_brightness_enhancement_map_prior(
     """
     if isinstance(input, torch.Tensor):
         if denoise_ksize is not None:
-            input = kornia.filters.median_blur(input, denoise_ksize)
+            input = filtering.guided_filter(input, input, denoise_ksize)
+            # input = kornia.filters.median_blur(input, denoise_ksize)
         hsv  = kornia.color.rgb_to_hsv(input)
         v    = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
         attn = torch.pow((1 - v), gamma)
     elif isinstance(input, np.ndarray):
         if denoise_ksize is not None:
-            input = cv2.medianBlur(input, denoise_ksize)
+            input = filtering.guided_filter(input, input, denoise_ksize)
+            # input = cv2.medianBlur(input, denoise_ksize)
         hsv = cv2.cvtColor(input, cv2.COLOR_RGB2HSV)
         if hsv.dtype != np.float64:
             hsv  = hsv.astype("float64")

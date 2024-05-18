@@ -34,6 +34,7 @@ import subprocess
 import sys
 import termios
 
+import numpy as np
 import rich
 import torch
 from plum import dispatch
@@ -241,13 +242,19 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
     
     def get_gpu_memory_text(self, task: progress.Task) -> text.Text:
         """Return a :class:`rich.text.Text` object showing current GPU memory status."""
-        num_devices       = len(self.devices)
-        total, used, free = 0, 0, 0
+        num_devices          = len(self.devices)
+        totals, useds, frees = [], [], []
         for i in self.devices:
             t, u, f  = utils.get_gpu_device_memory(device=i, unit=self.unit)
-            total   += t
-            used    += u
-            free    += f
+            totals.append(t)
+            useds.append(u)
+            frees.append(f)
+        # total = np.mean(totals)
+        # used  = np.mean(useds)
+        # free  = np.mean(frees)
+        total = min(totals)
+        used  = max(useds)
+        free  = min(frees)
         memory_status = f"{used:.1f}/{total:.1f}{self.unit.value} ({num_devices} GPUs)"
         memory_text   = text.Text(memory_status, style="bright_yellow")
         return memory_text

@@ -222,11 +222,11 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
         x = input
-        
+        #
         x_down = x
         if self.scale_factor != 1:
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
-
+        #
         x1  =  self.relu(self.e_conv1(x_down))
         x2  =  self.relu(self.e_conv2(x1))
         x3  =  self.relu(self.e_conv3(x2))
@@ -234,14 +234,14 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
         x5  =  self.relu(self.e_conv5(torch.cat([x3, x4], 1)))
         x6  =  self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
         x_r = torch.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
-        
+        #
         if self.scale_factor != 1:
             x_r = self.upsample(x_r)
-
+        #
         y = x
         for i in range(0, self.num_iters):
             y = y + x_r * (torch.pow(y, 2) - y)
-       
+        #
         return x_r, y
 
 # endregion

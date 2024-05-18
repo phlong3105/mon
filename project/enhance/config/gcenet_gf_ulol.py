@@ -14,8 +14,8 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "gcenet"
-data_name  = "sice_mix"
+model_name = "gcenet_gf"
+data_name  = "ulol"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
 image_size = [512, 512]
@@ -35,14 +35,8 @@ model = {
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 8,              # The number of progressive loop.
-	"radius"      : 1,
-	"eps"         : 1e-2,
-	"scale_factor": 2.0,
-	"lr_channels" : 24,
-	"lr_layers"   : 5,
-	"gm_channels" : 64,
-	"gm_dilation" : 0,
-	"gamma"       : 3.5,
+	"radius"	  : 1,
+	"eps"		  : 1e-2,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,

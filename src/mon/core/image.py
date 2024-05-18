@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
+    "add_weighted",
+    "blend",
     "check_image_size",
     "denormalize_image",
     "denormalize_image_mean_std",
@@ -850,6 +852,77 @@ def to_image_tensor(
 # endregion
 
 
+# region Simple Ops
+
+def add_weighted(
+    input1: torch.Tensor | np.ndarray,
+    alpha : float,
+    input2: torch.Tensor | np.ndarray,
+    beta  : float,
+    gamma : float = 0.0,
+) -> torch.Tensor | np.ndarray:
+    """Calculate the weighted sum of two image tensors as follows:
+        output = image1 * alpha + image2 * beta + gamma
+
+    Args:
+        input1: The first image.
+        alpha: The weight of the :param:`image1` elements.
+        input2: The second image.
+        beta: The weight of the :param:`image2` elements.
+        gamma: A scalar added to each sum. Default: ``0.0``.
+
+    Returns:
+        A weighted image.
+    """
+    if input1.shape != input2.shape:
+        raise ValueError(
+            f"The shape of x and y must be the same, but got "
+            f"{input1.shape} and {input2.shape}."
+        )
+    bound  = 1.0 if input1.is_floating_point() else 255.0
+    output = input1 * alpha + input2 * beta + gamma
+    if isinstance(output, torch.Tensor):
+        output = output.clamp(0, bound).to(input1.dtype)
+    elif isinstance(output, np.ndarray):
+        output = np.clip(output, 0, bound)
+    else:
+        raise TypeError(
+            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(input)}."
+        )
+    return output
+
+
+def blend(
+    input1: torch.Tensor | np.ndarray,
+    input2: torch.Tensor | np.ndarray,
+    alpha : float,
+    gamma : float = 0.0
+) -> torch.Tensor | np.ndarray:
+    """Blend 2 images together using the formula:
+        output = :param:`image1` * alpha + :param:`image2` * beta + gamma
+
+    Args:
+        input1: A source image.
+        input2: A n overlay image that we want to blend on top of
+            :param:`image1`.
+        alpha: An alpha transparency of the overlay.
+        gamma: A scalar added to each sum. Default: ``0.0``.
+
+    Returns:
+        A blended image.
+    """
+    return add_weighted(
+        input1 = input2,
+        alpha  = alpha,
+        input2 = input1,
+        beta   = 1.0 - alpha,
+        gamma  = gamma,
+    )
+
+# endregion
+
+
 # region I/O
 
 def read_image(
@@ -932,7 +1005,7 @@ def write_image_cv(
     image = to_channel_last_image(input=image)
     if 2 <= image.ndim <= 3:
         raise ValueError(
-            f"img's number of dimensions must be between ``2`` and ``3``, "
+            f"image's number of dimensions must be between ``2`` and ``3``, "
             f"but got {image.ndim}."
         )
     # Write image
