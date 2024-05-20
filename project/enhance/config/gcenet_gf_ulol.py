@@ -35,8 +35,9 @@ model = {
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 8,              # The number of progressive loop.
-	"radius"	  : 1,
-	"eps"		  : 1e-2,
+	"radius"	  : 3,
+	"eps"		  : 1e-3,
+	"gamma"		  : 1.5,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -47,8 +48,8 @@ model = {
 		{
             "optimizer"          : {
 	            "name"        : "adam",
-	            "lr"          : 0.0001,
-	            "weight_decay": 0.0001,
+	            "lr"          : 0.00005,
+	            "weight_decay": 0.00001,
 	            "betas"       : [0.9, 0.99],
 			},
 			"lr_scheduler"       : None,

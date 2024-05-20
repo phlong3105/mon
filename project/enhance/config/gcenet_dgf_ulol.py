@@ -14,8 +14,8 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "gcenet"
-data_name  = "sice_mix"
+model_name = "gcenet_dgf"
+data_name  = "ulol"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
 image_size = [512, 512]
@@ -36,13 +36,11 @@ model = {
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 8,              # The number of progressive loop.
 	"radius"      : 1,
-	"eps"         : 1e-2,
+	"eps"         : 1e-8,
 	"scale_factor": 2.0,
-	"lr_channels" : 24,
-	"lr_layers"   : 5,
 	"gm_channels" : 64,
 	"gm_dilation" : 0,
-	"gamma"       : 3.5,
+	"gamma"       : 0.0,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -53,8 +51,8 @@ model = {
 		{
             "optimizer"          : {
 	            "name"        : "adam",
-	            "lr"          : 0.0001,
-	            "weight_decay": 0.0001,
+	            "lr"          : 0.00005,
+	            "weight_decay": 0.00001,
 	            "betas"       : [0.9, 0.99],
 			},
 			"lr_scheduler"       : None,
@@ -79,7 +77,7 @@ datamodule = {
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 8,             # The number of samples in one forward pass.
+    "batch_size": 32,            # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.

@@ -45,8 +45,8 @@ model = {
 		{
             "optimizer"          : {
 	            "name"        : "adam",
-	            "lr"          : 0.0001,
-	            "weight_decay": 0.0001,
+	            "lr"          : 0.00005,
+	            "weight_decay": 0.00001,
 	            "betas"       : [0.9, 0.99],
 			},
 			"lr_scheduler"       : None,

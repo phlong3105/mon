@@ -36,13 +36,10 @@ model = {
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 8,              # The number of progressive loop.
 	"radius"      : 1,
-	"eps"         : 1e-2,
 	"scale_factor": 2.0,
-	"lr_channels" : 24,
-	"lr_layers"   : 5,
 	"gm_channels" : 64,
 	"gm_dilation" : 0,
-	"gamma"       : 3.5,
+	"gamma"       : 0.1,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -53,8 +50,8 @@ model = {
 		{
             "optimizer"          : {
 	            "name"        : "adam",
-	            "lr"          : 0.0001,
-	            "weight_decay": 0.0001,
+	            "lr"          : 0.00005,
+	            "weight_decay": 0.00001,
 	            "betas"       : [0.9, 0.99],
 			},
 			"lr_scheduler"       : None,

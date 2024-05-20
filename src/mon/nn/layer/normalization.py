@@ -7,6 +7,7 @@ from __future__ import annotations
 
 __all__ = [
     "AdaptiveBatchNorm2d",
+    "AdaptiveInstanceNorm2d",
     "BatchNorm1d",
     "BatchNorm2d",
     "BatchNorm2dAct",
@@ -50,6 +51,12 @@ from mon.nn.layer import activation, linear
 # region Batch Normalization
 
 class AdaptiveBatchNorm2d(nn.Module):
+    """Adaptive Batch Normalization.
+    
+    References:
+        - `Fast Image Processing with Fully-Convolutional Networks <https://arxiv.org/abs/1709.00643>`__
+        - `<https://github.com/nrupatunga/Fast-Image-Filters>`__
+    """
     
     def __init__(
         self,
@@ -60,7 +67,7 @@ class AdaptiveBatchNorm2d(nn.Module):
         super().__init__()
         self.w_0 = nn.Parameter(torch.Tensor([1.0]))
         self.w_1 = nn.Parameter(torch.Tensor([0.0]))
-        self.bn  = nn.BatchNorm2d(num_features, eps=eps, momentum=momentum)
+        self.bn  = nn.BatchNorm2d(num_features=num_features, eps=eps, momentum=momentum)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return self.w_0 * input + self.w_1 * self.bn(input)
@@ -144,6 +151,26 @@ class BatchNorm2dReLU(BatchNorm2dAct):
 
 
 # region Instance Normalization
+
+class AdaptiveInstanceNorm2d(nn.Module):
+    """Adaptive Instance Normalization adopted from :class:`AdaptiveBatchNorm2d`.
+    """
+    
+    def __init__(
+        self,
+        num_features: int,
+        eps         : float = 0.999,
+        momentum    : float = 0.001,
+        affine      : bool  = False,
+    ):
+        super().__init__()
+        self.w_0  = nn.Parameter(torch.Tensor([1.0]))
+        self.w_1  = nn.Parameter(torch.Tensor([0.0]))
+        self.norm = nn.InstanceNorm2d(num_features=num_features, eps=eps, momentum=momentum, affine=affine)
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return self.w_0 * input + self.w_1 * self.bn(input)
+    
 
 class FractionalInstanceNorm2d(nn.InstanceNorm2d):
     """Fractional Instance Normalization is a generalization of Half Instance

@@ -170,7 +170,7 @@ class GuidedFilter(nn.Module):
         y = guide
         n_x, c_x, h_x, w_x = x.size()
         n_y, c_y, h_y, w_y = y.size()
-    
+        
         assert n_x == n_y
         assert c_x == 1 or c_x == c_y
         assert h_x == h_y and w_x == w_y
@@ -226,7 +226,6 @@ class FastGuidedFilter(nn.Module):
         n_xlr, c_xlr, h_xlr, w_xlr = x_lr.shape
         n_ylr, c_ylr, h_ylr, w_ylr = y_lr.shape
         n_xhr, c_xhr, h_xhr, w_xhr = x_hr.shape
-        # print(h_xlr, h_ylr, h_xhr, w_xlr, w_ylr, w_xhr)
         
         assert n_xlr == n_ylr and n_ylr == n_xhr
         assert c_xlr == c_xhr and (c_xlr == 1 or c_xlr == c_ylr)
