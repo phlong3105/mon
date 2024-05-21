@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-References:
-    `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -13,16 +8,13 @@ import socket
 from collections import OrderedDict
 
 import click
-import pandas as pd
 import torch
 import torch.backends.cudnn as cudnn
-import torch.optim as optim
+import torch.optim
 from torch.utils.tensorboard import SummaryWriter
-
+import model as mmodel
 import mon
-from average_meter import AverageMeter
-from loss import Loss
-from model import NestedUNet
+import myloss
 from mon import albumentation as A
 
 console       = mon.console
@@ -32,47 +24,26 @@ _current_dir  = _current_file.parents[0]
 
 # region Train
 
-def train_epoch(train_loader, model, criterion, optimizer, device):
-    loss_meters = AverageMeter()
-    model.train()
-    with mon.get_progress_bar() as pbar:
-        for input, target, meta in pbar.track(
-            sequence    = train_loader,
-            total       = len(train_loader),
-            description = f"[bright_yellow] Training"
-        ):
-            input  = input.to(device)
-            target = target.to(device)
-            output = model(input)
-            loss   = criterion(output, target)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            loss_meters.update(loss.item(), input.size(0))
-            # console.log(loss_meters.avg)
-    return loss_meters.avg
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find("Conv") != -1:
+        m.weight.data.normal_(0.0, 0.02)
+    elif classname.find("BatchNorm") != -1:
+        m.weight.data.normal_(1.0, 0.02)
+        m.bias.data.fill_(0)
 
 
-def val_epoch(val_loader, model, criterion, device):
-    loss_meters = AverageMeter()
+def val_epoch(val_loader, model, device):
     psnr_meters = mon.PeakSignalNoiseRatio().to(device)
     ssim_meters = mon.StructuralSimilarityIndexMeasure().to(device)
     model.eval()
-    with mon.get_progress_bar() as pbar:
-        for input, target, meta in pbar.track(
-            sequence    = val_loader,
-            total       = len(val_loader),
-            description = f"[bright_yellow] Validating"
-        ):
-            input  = input.to(device)
-            target = target.to(device)
-            output = model(input)
-            loss   = criterion(output, target)
-            loss_meters.update(loss.item(), input.size(0))
-            psnr_meters.update(output, target)
-            ssim_meters.update(output, target)
-            # console.log(loss_meters.avg)
-    return loss_meters.avg, psnr_meters.compute(), ssim_meters.compute()
+    for input, target, meta in val_loader:
+        input  = input.to(device)
+        target = target.to(device)
+        enhanced_image_1, enhanced_image, E = model(input)
+        psnr_meters.update(enhanced_image, target)
+        ssim_meters.update(enhanced_image, target)
+    return psnr_meters.compute(), ssim_meters.compute()
 
 
 def train(args: argparse.Namespace):
@@ -80,7 +51,7 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    device    = mon.set_device(args.device)
+    device   = mon.set_device(args.device)
     imgsz    = args.imgsz
     epochs   = args.epochs
     verbose  = args.verbose
@@ -93,15 +64,20 @@ def train(args: argparse.Namespace):
     cudnn.benchmark = True
     
     # Model
-    model = NestedUNet().to(device)
-    model.train()
+    DCE_net = mmodel.enhance_net_nopool().to(device)
+    DCE_net.apply(weights_init)
+    if mon.Path(weights).is_weights_file():
+        DCE_net.load_state_dict(torch.load(weights))
+    DCE_net.train()
     
     # Loss
-    criterion = Loss(*args.loss_weights).to(device)
+    L_color = myloss.L_color()
+    L_spa   = myloss.L_spa()
+    L_exp   = myloss.L_exp(16, 0.6)
+    L_tv    = myloss.L_TV()
     
     # Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.99)
+    optimizer = torch.optim.Adam(DCE_net.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     
     # Data I/O
     data_args = {
@@ -112,7 +88,7 @@ def train(args: argparse.Namespace):
         ]),
         "to_tensor" : True,
         "cache_data": False,
-        "batch_size": args.batch_size,
+        "batch_size": args.train_batch_size,
         "devices"   : device,
         "shuffle"   : True,
         "verbose"   : verbose,
@@ -124,73 +100,60 @@ def train(args: argparse.Namespace):
     val_dataloader   = datamodule.val_dataloader
     
     # Logging
-    writer = SummaryWriter(log_dir=str(save_dir / "log"))
-    log    = OrderedDict([
-        ("epoch"     , []),
-        ("lr"        , []),
-        ("train/loss", []),
-        ("val/loss"  , []),
-        ("val/psnr"  , []),
-        ("val/ssim"  , []),
-    ])
-    best_loss = 1000
     best_psnr = 0
     best_ssim = 0
     
     # Training
-    for epoch in range(epochs):
-        train_loss  = train_epoch(train_dataloader, model, criterion, optimizer, device)
-        val_results = val_epoch(val_dataloader, model, criterion, device)
-        val_loss    = float(val_results[0])
-        val_psnr    = float(val_results[1].cpu().detach().numpy())
-        val_ssim    = float(val_results[2].cpu().detach().numpy())
-        scheduler.step()
-        console.log(
-            "Epoch [%d/%d] train/loss %.4f - val/loss %.4f - val/psnr %.4f - val/ssim %.4f\n"
-            % (epoch, epochs, train_loss, val_loss, val_psnr, val_ssim)
-        )
-        
-        # Log
-        log["epoch"].append(epoch)
-        log["lr"].append(args.lr)
-        log["train/loss"].append(train_loss)
-        log["val/loss"].append(val_loss)
-        log["val/psnr"].append(val_psnr)
-        log["val/ssim"].append(val_ssim)
-        pd.DataFrame(log).to_csv(str(save_dir / "log.csv"))
-        writer.add_scalars(
-            "train",
-            {"train/loss": train_loss},
-            epoch,
-        )
-        writer.add_scalars(
-            "val",
-            {
-                "val/loss": val_loss,
-                "val/psnr": val_psnr,
-                "val/ssim": val_ssim,
-            },
-            epoch,
-        )
-        
-        # Save
-        if val_loss < best_loss:
-            torch.save(model.state_dict(), str(weights_dir / "best.pt"))
-            best_loss = val_loss
-        if val_psnr > best_psnr:
-            torch.save(model.state_dict(), str(weights_dir / "best_psnr.pt"))
-            best_psnr = val_psnr
-        if val_ssim > best_ssim:
-            torch.save(model.state_dict(), str(weights_dir / "best_ssim.pt"))
-            best_ssim = val_ssim
-        torch.save(model.state_dict(), str(weights_dir / "last.pt"))
-        torch.cuda.empty_cache()
-   
-    writer.close()
+    with mon.get_progress_bar() as pbar:
+        for epoch in pbar.track(
+            sequence    = range(epochs),
+            total       = epochs,
+            description = f"[bright_yellow] Training"
+        ):
+            for iteration, (input, target, meta) in enumerate(train_dataloader):
+                input = input.to(device)
+                enhanced_image_1, enhanced_image, E = DCE_net(input)
+                
+                loss_tv  = 200 * L_tv(E)
+                loss_spa = torch.mean(L_spa(enhanced_image, input))
+                loss_col =   5 * torch.mean(L_color(enhanced_image))
+                loss_exp =  10 * torch.mean(L_exp(enhanced_image))
+                loss     = loss_tv + loss_spa + loss_col + loss_exp
     
+                optimizer.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm(DCE_net.parameters(), args.grad_clip_norm)
+                optimizer.step()
+                
+                if ((iteration + 1) % args.display_iter) == 0:
+                    print("Loss at iteration", iteration + 1, ":", loss.item())
+                if ((iteration + 1) % args.checkpoint_iter) == 0:
+                    torch.save(DCE_net.state_dict(), weights_dir / "best.pt")
+            
+            # Validation
+            val_results = val_epoch(val_dataloader, DCE_net, device)
+            val_psnr    = float(val_results[0].cpu().detach().numpy())
+            val_ssim    = float(val_results[1].cpu().detach().numpy())
+            
+            # Log
+            console.log(
+                "Epoch [%d/%d] val/psnr %.4f - val/ssim %.4f\n"
+                % (epoch, epochs, val_psnr, val_ssim)
+            )
+            
+            # Save
+            if val_psnr > best_psnr:
+                torch.save(DCE_net.state_dict(), str(weights_dir / "best_psnr.pt"))
+                best_psnr = val_psnr
+            if val_ssim > best_ssim:
+                torch.save(DCE_net.state_dict(), str(weights_dir / "best_ssim.pt"))
+                best_ssim = val_ssim
+            torch.save(DCE_net.state_dict(), str(weights_dir / "last.pt"))
+            torch.cuda.empty_cache()
+        
 # endregion
 
-    
+
 # region Main
 
 @click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
@@ -258,7 +221,7 @@ def main(
     
     if not exist_ok:
         mon.delete_dir(paths=mon.Path(args.save_dir))
-    
+        
     train(args)
     return str(args.save_dir)
 

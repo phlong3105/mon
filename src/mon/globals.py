@@ -890,6 +890,12 @@ EXTRA_MODELS      = {
                 "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "enlightengan",
                 "torch_distributed_launch": True,
             },
+            "gcenet"       : {
+                "tasks"    : [Task.LLIE],
+                "schemes"  : [Scheme.ZEROSHOT, Scheme.UNSUPERVISED],
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "gcenet",
+                "torch_distributed_launch": True,
+            },
             "gsad"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],

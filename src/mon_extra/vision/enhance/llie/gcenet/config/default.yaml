@@ -1,0 +1,30 @@
+# General config
+root        :
+weights     :
+model       :
+data        :
+fullname    :
+save_dir    :
+device      : 0
+epochs      : 200
+steps       :
+imgsz       : 512
+resize      :
+benchmark   :
+save_image  :
+use_data_dir:
+exist_ok    : False
+verbose     : True
+
+# Model
+load_pretrain: False
+
+# Training
+train_batch_size: 32
+val_batch_size  : 4
+num_workers     : 4
+lr              : 0.0001
+weight_decay    : 0.0001
+grad_clip_norm  : 0.1
+display_iter    : 10
+checkpoint_iter : 10

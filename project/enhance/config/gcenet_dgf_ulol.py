@@ -36,8 +36,8 @@ model = {
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 8,              # The number of progressive loop.
 	"radius"      : 1,
-	"eps"         : 1e-8,
-	"scale_factor": 2.0,
+	"eps"         : 1e-3,
+	"scale_factor": 1.0,
 	"gm_channels" : 64,
 	"gm_dilation" : 0,
 	"gamma"       : 0.0,
@@ -77,7 +77,7 @@ datamodule = {
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 32,            # The number of samples in one forward pass.
+    "batch_size": 16,            # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.

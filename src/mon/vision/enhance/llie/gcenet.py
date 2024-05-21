@@ -293,7 +293,10 @@ class EnhanceNet(nn.Module):
                 m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
             elif hasattr(m, "weight"):
                 m.weight.data.normal_(0.0, 0.02)  # 0.02
-                
+            elif classname.find("BatchNorm") != -1:
+                m.weight.data.normal_(1.0, 0.02)
+                m.bias.data.fill_(0)
+            
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x   = input
         x1  = self.e_conv1(x)
@@ -373,135 +376,6 @@ class GCENet(base.LowLightImageEnhancementModel):
             relu_slope   = 0.2,
         )
         self.gf = filtering.ConvGuidedFilter(radius=self.radius, norm=nn.AdaptiveBatchNorm2d)
-        
-        # Loss
-        self._loss = Loss(reduction="mean")
-        
-        # Load weights
-        if self.weights:
-            self.load_weights()
-        else:
-            self.apply(self._init_weights)
-    
-    def _init_weights(self, m: nn.Module):
-        pass
-    
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        pred = self.forward(input=input, *args, **kwargs)
-        adjust, enhance = pred
-        loss = self.loss(input, adjust, enhance)
-        return enhance, loss
-    
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x    = input
-        #
-        x_lr = x
-        x_hr = x
-        if self.scale_factor != 1:
-            x_lr = F.interpolate(x_lr, scale_factor=1 / self.scale_factor, mode="bilinear")
-        # Enhancement
-        x_r  = self.en(x_lr)
-        x_rs = torch.split(x_r, 3, dim=1)
-        if not self.predicting:
-            y_lr = x_lr
-            for i in range(self.num_iters):
-                y_lr = y_lr + x_rs[i] * (torch.pow(y_lr, 2) - y_lr)
-        else:
-            if self.gamma in [None, 0.0]:
-                y_lr = x_lr
-                for i in range(self.num_iters):
-                    y_lr = y_lr + x_rs[i] * (torch.pow(y_lr, 2) - y_lr)
-            else:
-                y_lr = x_lr
-                g    = prior.get_guided_brightness_enhancement_map_prior(x_lr, self.gamma, 9)
-                for i in range(0, self.num_iters):
-                    b    = y_lr * (1 - g)
-                    d    = y_lr * g
-                    y_lr = b + d + x_rs[i] * (torch.pow(d, 2) - d)
-        # Guided Filter
-        y = self.gf(self.gm(x_lr), y_lr, self.gm(x_hr))
-        #
-        return x_r, y
-    
-    
-@MODELS.register(name="gcenet_dgf")
-class GCENetDGF(base.LowLightImageEnhancementModel):
-    """GCENet (Guidance Curve Estimation Network) model.
-    
-    See Also: :class:`base.LowLightImageEnhancementModel`
-    """
-    
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
-    
-    def __init__(
-        self,
-        in_channels : int   = 3,
-        num_channels: int   = 32,
-        num_iters   : int   = 8,
-        radius      : int   = 1,
-        eps         : float = 1e-3,
-        scale_factor: float = 2.0,
-        gm_channels : int   = 64,
-        gm_dilation : int   = 0,
-        gamma       : float = 0.1,
-        weights     : Any   = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            name        = "gcenet_dgf",
-            in_channels = in_channels,
-            weights     = weights,
-            *args, **kwargs
-        )
-        
-        # Populate hyperparameter values from pretrained weights
-        if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels" , in_channels)
-            num_channels = self.weights.get("num_channels", num_channels)
-            num_iters    = self.weights.get("num_iters"   , num_iters)
-            radius       = self.weights.get("radius"      , radius)
-            eps          = self.weights.get("eps"         , eps)
-            scale_factor = self.weights.get("scale_factor", scale_factor)
-            gm_channels  = self.weights.get("gm_channels" , gm_channels)
-            gm_dilation  = self.weights.get("gm_dilation" , gm_dilation)
-            gamma        = self.weights.get("gamma"       , gamma)
-        self.in_channels  = in_channels  or self.in_channels
-        self.num_channels = num_channels
-        self.num_iters    = num_iters
-        self.radius       = radius
-        self.eps          = eps
-        self.scale_factor = scale_factor
-        self.gm_channels  = gm_channels
-        self.gm_dilation  = gm_dilation
-        self.gamma        = gamma
-        
-        # Construct model
-        self.en = EnhanceNet(
-            in_channels  = self.in_channels,
-            num_channels = self.num_channels,
-            num_iters    = self.num_iters,
-            norm         = nn.AdaptiveBatchNorm2d,
-        )
-        self.gm = GuidedMap(
-            in_channels  = self.in_channels,
-            channels     = self.gm_channels,
-            dilation     = self.gm_dilation,
-            relu_slope   = 0.2,
-        )
-        self.gf = filtering.FastGuidedFilter(radius=self.radius, eps=self.eps)
         
         # Loss
         self._loss = Loss(reduction="mean")
@@ -645,8 +519,8 @@ class GCENetBaseline(base.LowLightImageEnhancementModel):
         for i in range(0, self.num_iters):
             y = y + x_rs[i] * (torch.pow(y, 2) - y)
         return x_r, y
-    
-    
+
+
 @MODELS.register(name="gcenet_gf")
 class GCENetGF(base.LowLightImageEnhancementModel):
     """GCENet-GF (Guidance Curve Estimation Network) model with simple guided filter.
@@ -752,6 +626,138 @@ class GCENetGF(base.LowLightImageEnhancementModel):
                     y = b + d + x_rs[i] * (torch.pow(d, 2) - d)
             # Guided Filter
             y = self.gf(y, y)
+        #
+        return x_r, y
+
+
+@MODELS.register(name="gcenet_dgf")
+class GCENetDGF(base.LowLightImageEnhancementModel):
+    """GCENet (Guidance Curve Estimation Network) model.
+    
+    See Also: :class:`base.LowLightImageEnhancementModel`
+    """
+    
+    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    _zoo   : dict = {}
+    
+    def __init__(
+        self,
+        in_channels : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 8,
+        radius      : int   = 1,
+        eps         : float = 1e-3,
+        scale_factor: float = 2.0,
+        gm_channels : int   = 64,
+        gm_dilation : int   = 0,
+        gamma       : float = 0.1,
+        weights     : Any   = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name        = "gcenet_dgf",
+            in_channels = in_channels,
+            weights     = weights,
+            *args, **kwargs
+        )
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            in_channels  = self.weights.get("in_channels" , in_channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+            num_iters    = self.weights.get("num_iters"   , num_iters)
+            radius       = self.weights.get("radius"      , radius)
+            eps          = self.weights.get("eps"         , eps)
+            scale_factor = self.weights.get("scale_factor", scale_factor)
+            gm_channels  = self.weights.get("gm_channels" , gm_channels)
+            gm_dilation  = self.weights.get("gm_dilation" , gm_dilation)
+            gamma        = self.weights.get("gamma"       , gamma)
+        self.in_channels  = in_channels  or self.in_channels
+        self.num_channels = num_channels
+        self.num_iters    = num_iters
+        self.radius       = radius
+        self.eps          = eps
+        self.scale_factor = scale_factor
+        self.gm_channels  = gm_channels
+        self.gm_dilation  = gm_dilation
+        self.gamma        = gamma
+        
+        # Construct model
+        self.en = EnhanceNet(
+            in_channels  = self.in_channels,
+            num_channels = self.num_channels,
+            num_iters    = self.num_iters,
+            norm         = nn.AdaptiveBatchNorm2d,
+        )
+        '''
+        self.gm = GuidedMap(
+            in_channels  = self.in_channels,
+            channels     = self.gm_channels,
+            dilation     = self.gm_dilation,
+            relu_slope   = 0.2,
+        )
+        '''
+        self.gf = filtering.FastGuidedFilter(radius=self.radius, eps=self.eps)
+        
+        # Loss
+        self._loss = Loss(reduction="mean")
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self._init_weights)
+    
+    def _init_weights(self, m: nn.Module):
+        pass
+    
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        pred = self.forward(input=input, *args, **kwargs)
+        adjust, enhance = pred
+        loss = self.loss(input, adjust, enhance)
+        return enhance, loss
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        x    = input
+        # Enhancement
+        x_r  = self.en(x)
+        x_rs = torch.split(x_r, 3, dim=1)
+        if not self.predicting:
+            y = x
+            for i in range(self.num_iters):
+                y = y + x_rs[i] * (torch.pow(y, 2) - y)
+        else:
+            if self.gamma in [None, 0.0]:
+                y = x
+                for i in range(self.num_iters):
+                    y = y + x_rs[i] * (torch.pow(y, 2) - y)
+            else:
+                y = x
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for i in range(0, self.num_iters):
+                    b = y * (1 - g)
+                    d = y * g
+                    y = b + d + x_rs[i] * (torch.pow(d, 2) - d)
+            # Guided Filter
+            x_lr = y
+            y_lr = y
+            x_hr = y
+            if self.scale_factor != 1.0:
+                x_lr = F.interpolate(x_lr, scale_factor=1 / self.scale_factor, mode="bilinear")
+                y_lr = F.interpolate(y_lr, scale_factor=1 / self.scale_factor, mode="bilinear")
+            y = self.gf(x_lr, y_lr, x_hr)
         #
         return x_r, y
 
