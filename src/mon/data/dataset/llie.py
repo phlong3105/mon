@@ -33,8 +33,12 @@ __all__ = [
     "MEFDataModule",
     "NPE",
     "NPEDataModule",
+    "SICEGrad",
+    "SICEGradDataModule",
     "SICEMix",
     "SICEMixDataModule",
+    "SICEMixV2",
+    "SICEMixV2DataModule",
     "ULOL",
     "ULOLMixDataModule",
     "VV",
@@ -515,6 +519,36 @@ class NPE(base.UnlabeledImageDataset):
                         self._images.append(image)
 
 
+@DATASETS.register(name="sice_grad")
+class SICEGrad(base.UnlabeledImageDataset):
+    """SICE-Grad dataset.
+    
+    See Also: :class:`base.UnlabeledImageDataset`.
+    """
+    
+    _tasks          = [Task.LLIE]
+    _splits         = [Split.TRAIN]
+    _has_test_label = False
+    
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
+    
+    def _get_images(self):
+        patterns = [
+            self.root / "sice_grad" / self.split_str / "lq"
+        ]
+        self._images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self._images.append(image)
+                        
+                        
 @DATASETS.register(name="sice_mix")
 class SICEMix(base.UnlabeledImageDataset):
     """Custom SICE dataset for training :class:`mon.vision.enhance.llie.zerodce.ZeroDCE`
@@ -546,6 +580,36 @@ class SICEMix(base.UnlabeledImageDataset):
                         self._images.append(image)
 
 
+@DATASETS.register(name="sice_mix_v2")
+class SICEMixV2(base.UnlabeledImageDataset):
+    """SICE-MixV2 dataset.
+    
+    See Also: :class:`base.UnlabeledImageDataset`.
+    """
+    
+    _tasks          = [Task.LLIE]
+    _splits         = [Split.TRAIN]
+    _has_test_label = False
+    
+    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
+    
+    def _get_images(self):
+        patterns = [
+            self.root / "sice_mix_v2" / self.split_str / "lq"
+        ]
+        self._images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self._images.append(image)
+                        
+
 @DATASETS.register(name="ulol")
 class ULOL(base.UnlabeledImageDataset):
     """Custom ULOL (Unsupervised LOw-Light) dataset for training.
@@ -563,6 +627,7 @@ class ULOL(base.UnlabeledImageDataset):
     def _get_images(self):
         patterns = [
             self.root / "sice_mix"         / self.split_str / "lq",
+            self.root / "sice_mix_v2"      / self.split_str / "lq",
             self.root / "lol_v1"           / self.split_str / "lq",
             self.root / "lol_v1"           / self.split_str / "hq",
             self.root / "lol_v2_real"      / self.split_str / "lq",
@@ -1065,9 +1130,42 @@ class NPEDataModule(base.DataModule):
         pass
 
 
+@DATAMODULES.register(name="sice_grad")
+class SICEGradDataModule(base.DataModule):
+    """SICE-Grad datamodule.
+    
+    See Also: :class:`base.DataModule`.
+    """
+    
+    _tasks = [Task.LLIE]
+    
+    def prepare_data(self, *args, **kwargs):
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: Literal["training", "testing", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if phase in [None, "training"]:
+            self.train = SICEGrad(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
+        if phase in [None, "testing"]:
+            self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        pass
+
+
 @DATAMODULES.register(name="sice_mix")
 class SICEMixDataModule(base.DataModule):
-    """SICEMix datamodule.
+    """SICE-Mix datamodule.
     
     See Also: :class:`base.DataModule`.
     """
@@ -1097,6 +1195,39 @@ class SICEMixDataModule(base.DataModule):
     def get_classlabels(self):
         pass
 
+
+@DATAMODULES.register(name="sice_mix_v2")
+class SICEMixV2DataModule(base.DataModule):
+    """SICE-MixV2 datamodule.
+    
+    See Also: :class:`base.DataModule`.
+    """
+    
+    _tasks = [Task.LLIE]
+    
+    def prepare_data(self, *args, **kwargs):
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: Literal["training", "testing", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if phase in [None, "training"]:
+            self.train = SICEMixV2(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
+        if phase in [None, "testing"]:
+            self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        pass
+    
 
 @DATAMODULES.register(name="ulol")
 class ULOLMixDataModule(base.DataModule):

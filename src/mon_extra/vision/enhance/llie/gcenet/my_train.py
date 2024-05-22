@@ -5,16 +5,15 @@ from __future__ import annotations
 
 import argparse
 import socket
-from collections import OrderedDict
 
 import click
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim
-from torch.utils.tensorboard import SummaryWriter
+
 import model as mmodel
 import mon
-import myloss
+import my_loss
 from mon import albumentation as A
 
 console       = mon.console
@@ -71,10 +70,10 @@ def train(args: argparse.Namespace):
     DCE_net.train()
     
     # Loss
-    L_color = myloss.L_color()
-    L_spa   = myloss.L_spa()
-    L_exp   = myloss.L_exp(16, 0.6)
-    L_tv    = myloss.L_TV()
+    L_color = my_loss.ColorLoss()
+    L_spa   = my_loss.SpaLoss()
+    L_exp   = my_loss.ExpLoss(16, 0.6)
+    L_tv    = my_loss.TVLoss()
     
     # Optimizer
     optimizer = torch.optim.Adam(DCE_net.parameters(), lr=args.lr, weight_decay=args.weight_decay)

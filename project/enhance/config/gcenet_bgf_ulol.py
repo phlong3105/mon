@@ -14,7 +14,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "gcenet_gf"
+model_name = "gcenet_bgf"
 data_name  = "ulol"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"

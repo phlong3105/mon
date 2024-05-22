@@ -25,7 +25,6 @@ from torch import nn
 
 from mon.core import _callable, _size_2_t
 from mon.nn.layer import activation
-from mon.nn.layer.conv import base
 
 
 # region Depthwise Separable Convolution
@@ -46,7 +45,7 @@ class DepthwiseConv2d(nn.Module):
         dtype       : Any             = None,
     ):
         super().__init__()
-        self.dw_conv = base.Conv2d(
+        self.dw_conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = in_channels,
             kernel_size  = kernel_size,
@@ -83,7 +82,7 @@ class PointwiseConv2d(nn.Module):
         dtype       : Any             = None,
     ):
         super().__init__()
-        self.pw_conv = base.Conv2d(
+        self.pw_conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -120,7 +119,7 @@ class DepthwiseSeparableConv2d(nn.Module):
         dtype       : Any             = None,
     ):
         super().__init__()
-        self.dw_conv = base.Conv2d(
+        self.dw_conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = in_channels,
             kernel_size  = kernel_size,
@@ -133,7 +132,7 @@ class DepthwiseSeparableConv2d(nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.pw_conv = base.Conv2d(
+        self.pw_conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,

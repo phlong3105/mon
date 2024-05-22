@@ -17,7 +17,6 @@ from torch import nn
 
 from mon.core import _size_2_t
 from mon.nn.layer import normalization
-from mon.nn.layer.conv import base
 
 
 # region Blueprint Separable Convolution
@@ -53,7 +52,7 @@ class BSConv2dS(nn.Module):
         if bn_kwargs is None:
             bn_kwargs = {}
         # Pointwise 1
-        self.pw1 = base.Conv2d(
+        self.pw1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
             kernel_size  = (1, 1),
@@ -69,7 +68,7 @@ class BSConv2dS(nn.Module):
         else:
             self.bn1 = None
         # Pointwise 2
-        self.pw2 = base.Conv2d(
+        self.pw2 = nn.Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
             kernel_size  = (1, 1),
@@ -85,7 +84,7 @@ class BSConv2dS(nn.Module):
         else:
             self.bn2 = None
         # Depthwise
-        self.dw = base.Conv2d(
+        self.dw = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -142,7 +141,7 @@ class BSConv2dU(nn.Module):
         if bn_kwargs is None:
             bn_kwargs = {}
         # Pointwise
-        self.pw = base.Conv2d(
+        self.pw = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = (1, 1),
@@ -158,7 +157,7 @@ class BSConv2dU(nn.Module):
         else:
             self.bn = None
         # Depthwise
-        self.dw = base.Conv2d(
+        self.dw = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
