@@ -801,8 +801,7 @@ class GCENetBGF(base.LowLightImageEnhancementModel):
     ) -> tuple[torch.Tensor, torch.Tensor]:
         x = input
         # Guided Filter
-        if self.predicting:
-            x = self.gf(x, x)
+        x = self.gf(x, x)
         # Enhancement
         x_r = self.en(x)
         # Enhancement loop
