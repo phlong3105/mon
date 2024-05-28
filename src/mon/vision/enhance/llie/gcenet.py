@@ -407,10 +407,8 @@ class GCENet(base.LowLightImageEnhancementModel):
         num_channels: int   = 32,
         num_iters   : int   = 8,
         radius      : int   = 1,
-        scale_factor: float = 2.0,
-        gm_channels : int   = 64,
-        gm_dilation : int   = 0,
-        gamma       : float = 0.1,
+        eps         : float = 1e-3,
+        gamma       : float = 2.8,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -427,17 +425,13 @@ class GCENet(base.LowLightImageEnhancementModel):
             num_channels = self.weights.get("num_channels", num_channels)
             num_iters    = self.weights.get("num_iters"   , num_iters)
             radius       = self.weights.get("radius"      , radius)
-            scale_factor = self.weights.get("scale_factor", scale_factor)
-            gm_channels  = self.weights.get("gm_channels" , gm_channels)
-            gm_dilation  = self.weights.get("gm_dilation" , gm_dilation)
+            eps          = self.weights.get("eps"         , eps)
             gamma        = self.weights.get("gamma"       , gamma)
-        self.in_channels  = in_channels  or self.in_channels
+        self.in_channels  = in_channels or self.in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
         self.radius       = radius
-        self.scale_factor = scale_factor
-        self.gm_channels  = gm_channels
-        self.gm_dilation  = gm_dilation
+        self.eps          = eps
         self.gamma        = gamma
         
         # Construct model
@@ -445,15 +439,9 @@ class GCENet(base.LowLightImageEnhancementModel):
             in_channels  = self.in_channels,
             num_channels = self.num_channels,
             num_iters    = self.num_iters,
-            norm         = nn.AdaptiveBatchNorm2d,
+            norm         = nn.LearnableInstanceNorm2d,
         )
-        self.gm = GuidedMap(
-            in_channels  = self.in_channels,
-            channels     = self.gm_channels,
-            dilation     = self.gm_dilation,
-            relu_slope   = 0.2,
-        )
-        self.gf = filtering.ConvGuidedFilter(radius=self.radius, norm=nn.AdaptiveBatchNorm2d)
+        self.gf = filtering.GuidedFilter(radius=self.radius, eps=self.eps)
         
         # Loss
         self._loss = Loss(reduction="mean")
@@ -473,9 +461,19 @@ class GCENet(base.LowLightImageEnhancementModel):
         target: torch.Tensor | None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        pred = self.forward(input=input, *args, **kwargs)
-        adjust, enhance = pred
-        loss = self.loss(input, adjust, enhance)
+        # Symmetry
+        input1,  input2   = self.pair_downsampler(input)
+        adjust1, enhance1 = self.forward(input=input1, *args, **kwargs)
+        adjust2, enhance2 = self.forward(input=input2, *args, **kwargs)
+        #
+        adjust,    enhance   = self.forward(input=input, *args, **kwargs)
+        denoised1, denoised2 = self.pair_downsampler(enhance)
+        #
+        mse_loss  = nn.MSELoss()
+        loss_res  = 0.5 * (mse_loss(input1,   enhance2)  + mse_loss(input2,   enhance1))
+        loss_cons = 0.5 * (mse_loss(enhance1, denoised1) + mse_loss(enhance2, denoised2))
+        loss_en   = self.loss(input, adjust, enhance)
+        loss      = 0.5 * (loss_res + loss_cons) + 0.5 * loss_en
         return enhance, loss
     
     def forward(
@@ -486,35 +484,41 @@ class GCENet(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        x    = input
-        #
-        x_lr = x
-        x_hr = x
-        if self.scale_factor != 1:
-            x_lr = F.interpolate(x_lr, scale_factor=1 / self.scale_factor, mode="bilinear")
+        x = input
+        # Guided Filter
+        x = self.gf(x, x)
         # Enhancement
-        x_r  = self.en(x_lr)
+        x_r = self.en(x)
+        # Enhancement loop
         if not self.predicting:
-            y_lr = x_lr
+            y = x
             for i in range(self.num_iters):
-                y_lr = y_lr + x_r * (torch.pow(y_lr, 2) - y_lr)
+                y = y + x_r * (torch.pow(y, 2) - y)
         else:
             if self.gamma in [None, 0.0]:
-                y_lr = x_lr
+                y = x
                 for i in range(self.num_iters):
-                    y_lr = y_lr + x_r * (torch.pow(y_lr, 2) - y_lr)
+                    y = y + x_r * (torch.pow(y, 2) - y)
             else:
-                y_lr = x_lr
-                g    = prior.get_guided_brightness_enhancement_map_prior(x_lr, self.gamma, 9)
+                y = x
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for i in range(0, self.num_iters):
-                    b    = y_lr * (1 - g)
-                    d    = y_lr * g
-                    y_lr = b + d + x_r * (torch.pow(d, 2) - d)
-        # Guided Filter
-        y = self.gf(self.gm(x_lr), y_lr, self.gm(x_hr))
-        #
+                    b = y * (1 - g)
+                    d = y * g
+                    y = b + d + x_r * (torch.pow(d, 2) - d)
         return x_r, y
-
+    
+    @staticmethod
+    def pair_downsampler(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        c       = input.shape[1]
+        filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(input.device)
+        filter1 = filter1.repeat(c, 1, 1, 1)
+        filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(input.device)
+        filter2 = filter2.repeat(c, 1, 1, 1)
+        output1 = F.conv2d(input, filter1, stride=2, groups=c)
+        output2 = F.conv2d(input, filter2, stride=2, groups=c)
+        return output1, output2
+    
 
 @MODELS.register(name="gcenet_baseline")
 class GCENetBaseline(base.LowLightImageEnhancementModel):

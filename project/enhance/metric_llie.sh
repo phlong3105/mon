@@ -12,13 +12,13 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-model="gcenet_bgf"
+model="gcenet"
 data=(
     "dicm"
-    # "lime"
-    # "mef"
-    # "npe"
-    # "vv"
+    "lime"
+    "mef"
+    "npe"
+    "vv"
     "lol_v1"
     "lol_v2_real"
     "lol_v2_synthetic"
