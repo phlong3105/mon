@@ -34,7 +34,7 @@ model = {
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
-	"num_iters"   : 15,             # The number of progressive loop.
+	"num_iters"   : 13,             # The number of progressive loop.
 	"radius"	  : 3,
 	"eps"		  : 1e-4,
 	"gamma"		  : 0.1,

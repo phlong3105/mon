@@ -439,7 +439,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             in_channels  = self.in_channels,
             num_channels = self.num_channels,
             num_iters    = self.num_iters,
-            norm         = nn.LearnableInstanceNorm2d,
+            norm         = None,
         )
         self.gf = filtering.GuidedFilter(radius=self.radius, eps=self.eps)
         
