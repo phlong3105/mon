@@ -9,7 +9,9 @@ import socket
 import time
 
 import click
+import cv2
 import torch
+from matplotlib import pyplot as plt
 
 import mon
 
@@ -99,19 +101,13 @@ def predict(args: dict) -> str:
                         output.append(o)
                 else:
                     raise TypeError()
-                ''' Debug code for GCENet paper.
-                output       = model(input=input, augment=False, profile=False)
-                a, p, output = output[0], output[1], output[2]
-                a = (-1 * a)
-                a = mon.to_image_nparray(a, False, True)
-                p = mon.to_image_nparray(p, False, True)
-                (B, G, R) = cv2.split(a)
-                zeros = np.zeros(a.shape[:2], dtype=a.dtype)
-                R = cv2.merge([zeros, zeros, R])
-                G = cv2.merge([zeros, G, zeros])
-                B = cv2.merge([B, zeros, zeros])
-                '''
                 run_time = time.time() - start_time
+                
+                # Forward (Debug)
+                if isinstance(input, torch.Tensor):
+                    debug_output = model.forward_debug(input=input)
+                else:
+                    debug_output = None
                 
                 # TTA (Post)
                 for aug in augment:
@@ -128,20 +124,16 @@ def predict(args: dict) -> str:
                 if save_image:
                     output_path = save_dir / f"{meta['stem']}.png"
                     mon.write_image(output_path, output, denormalize=True)
-                    '''
-                    a_path = output_dir / f"{files[0].stem}-a.png"
-                    B_path = output_dir / f"{files[0].stem}-b.png"
-                    G_path = output_dir / f"{files[0].stem}-g.png"
-                    R_path = output_dir / f"{files[0].stem}-r.png"
-                    p_path = output_dir / f"{files[0].stem}-p.png"
-                    cv2.imwrite(str(a_path), a)
-                    cv2.imwrite(str(B_path), B)
-                    cv2.imwrite(str(G_path), G)
-                    cv2.imwrite(str(R_path), R)
-                    cv2.imwrite(str(p_path), p)
-                    '''
+                    
                     if data_writer is not None:
                         data_writer.write_batch(data=output)
+                        
+                    # Debug
+                    if isinstance(debug_output, dict):
+                        for k, v in debug_output.items():
+                            path = save_dir / f"{meta['stem']}_{k}.png"
+                            mon.write_image(path, v, denormalize=True)
+                    
                 sum_time += run_time
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")

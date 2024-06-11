@@ -261,37 +261,6 @@ class ConvBlock(nn.Module):
         return x
 
 
-class KANConvBlock(nn.Module):
-    
-    def __init__(
-        self,
-        in_channels  : int,
-        out_channels : int,
-        relu_slope   : float = 0.2,
-        is_last_layer: bool  = False,
-        norm         : nn.Module | None = nn.AdaptiveBatchNorm2d,
-    ):
-        super().__init__()
-        self.conv = nn.FastKANConv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True)
-        #
-        if norm is not None:
-            self.norm = norm(out_channels)
-        else:
-            self.norm = nn.Identity()
-        #
-        if is_last_layer:
-            self.relu = nn.Tanh()
-        else:
-            self.relu = nn.LeakyReLU(relu_slope, inplace=False)
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        x = self.conv(x)
-        x = self.norm(x)
-        x = self.relu(x)
-        return x
-
-
 # noinspection PyMethodMayBeStatic
 class EnhanceNet(nn.Module):
     
@@ -340,52 +309,27 @@ class EnhanceNet(nn.Module):
         return x_r
 
 
-class KANEnhanceNet(nn.Module):
+class DenoiseNet(nn.Module):
     
     def __init__(
         self,
-        in_channels : int,
-        num_channels: int,
-        num_iters   : int,
-        norm        : nn.Module | None = nn.AdaptiveBatchNorm2d,
+        in_channels : int   = 3,
+        num_channels: int   = 48,
+        relu_slope  : float = 0.2,
     ):
         super().__init__()
-        out_channels = in_channels * num_iters
-        self.e_conv1 = KANConvBlock(in_channels,      num_channels, norm=norm)
-        self.e_conv2 = KANConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv3 = KANConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv4 = KANConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv5 = KANConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv6 = KANConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv7 = KANConvBlock(num_channels * 2, out_channels, norm=norm, is_last_layer=True)
-        self.apply(self._init_weights)
-    
-    def _init_weights(self, m: nn.Module):
-        classname = m.__class__.__name__
-        if classname.find("Conv") != -1:
-            # if hasattr(m, "conv"):
-            #     m.conv.weight.data.normal_(0.0, 0.02)    # 0.02
-            if hasattr(m, "dw_conv"):
-                m.dw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "pw_conv"):
-                m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "weight"):
-                m.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif classname.find("BatchNorm") != -1:
-                m.weight.data.normal_(1.0, 0.02)
-                m.bias.data.fill_(0)
-    
+        self.conv1 = nn.Conv2d(in_channels,  num_channels, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(num_channels, num_channels, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(num_channels, in_channels,  kernel_size=1)
+        self.act   = nn.LeakyReLU(negative_slope=relu_slope, inplace=True)
+            
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x   = input
-        x1  = self.e_conv1(x)
-        x2  = self.e_conv2(x1)
-        x3  = self.e_conv3(x2)
-        x4  = self.e_conv4(x3)
-        x5  = self.e_conv5(torch.cat([x3, x4], 1))
-        x6  = self.e_conv6(torch.cat([x2, x5], 1))
-        x_r = self.e_conv7(torch.cat([x1, x6], 1))
-        return x_r
-    
+        x = input
+        x = self.act(self.conv1(x))
+        x = self.act(self.conv2(x))
+        y = self.conv3(x)
+        return y
+
 # endregion
 
 
@@ -405,8 +349,8 @@ class GCENet(base.LowLightImageEnhancementModel):
         self,
         in_channels : int   = 3,
         num_channels: int   = 32,
-        num_iters   : int   = 8,
-        radius      : int   = 1,
+        num_iters   : int   = 13,
+        radius      : int   = 3,
         eps         : float = 1e-3,
         gamma       : float = 2.8,
         weights     : Any   = None,
@@ -461,21 +405,53 @@ class GCENet(base.LowLightImageEnhancementModel):
         target: torch.Tensor | None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        # Symmetry
-        input1,  input2   = self.pair_downsampler(input)
-        adjust1, enhance1 = self.forward(input=input1, *args, **kwargs)
-        adjust2, enhance2 = self.forward(input=input2, *args, **kwargs)
-        #
-        adjust,    enhance   = self.forward(input=input, *args, **kwargs)
-        denoised1, denoised2 = self.pair_downsampler(enhance)
-        #
+        # Symmetric Loss
+        i         = input
+        i1  , i2  = self.pair_downsampler(i)
+        c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
+        c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
+        c1  , c2  , gf , o  = self.forward(input=i,  *args, **kwargs)
+        o1  , o2  = self.pair_downsampler(o)
         mse_loss  = nn.MSELoss()
-        loss_res  = 0.5 * (mse_loss(input1,   enhance2)  + mse_loss(input2,   enhance1))
-        loss_cons = 0.5 * (mse_loss(enhance1, denoised1) + mse_loss(enhance2, denoised2))
-        loss_en   = self.loss(input, adjust, enhance)
-        loss      = 0.5 * (loss_res + loss_cons) + 0.5 * loss_en
-        return enhance, loss
+        loss_res  = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
+        loss_cons = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
+        loss_enh  = self.loss(i, c1, o)
+        loss      = 0.5 * (loss_res + loss_cons) + 0.5 * loss_enh
+        return o, loss
     
+    def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
+        i        = input
+        i1  , i2 = self.pair_downsampler(i)
+        c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
+        c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
+        c1  , c2  , gf , o  = self.forward(input=i,  *args, **kwargs)
+        o1  , o2 = self.pair_downsampler(o)
+        noise    = torch.abs(o - gf)
+        doi      = torch.abs(o - i)
+        c1       = -1 * c1
+        c1_1     = -1 * c1_1
+        c1_2     = -1 * c1_2
+        return {
+            "c1"   : c1,
+            "c2"   : c2,
+            "gf"   : gf,
+            "o"    : o,
+            "i1"   : i1,
+            "i2"   : i2,
+            "c1_1" : c1_1,
+            "c1_2" : c1_2,
+            "c2_1" : c2_1,
+            "c2_2" : c2_2,
+            "gf1"  : gf1,
+            "gf2"  : gf2,
+            "j1"   : j1,
+            "j2"   : j2,
+            "o1"   : o1,
+            "o2"   : o2,
+            "noise": noise,
+            "doi"  : doi,
+        }
+        
     def forward(
         self,
         input    : torch.Tensor,
@@ -483,30 +459,25 @@ class GCENet(base.LowLightImageEnhancementModel):
         profile  : bool      = False,
         out_index: int       = -1,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x = input
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        x    = input
         # Guided Filter
-        x = self.gf(x, x)
+        x_gf = self.gf(x, x)
         # Enhancement
-        x_r = self.en(x)
+        c1   = self.en(x_gf)
+        c2   = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
         # Enhancement loop
         if not self.predicting:
             y = x
             for i in range(self.num_iters):
-                y = y + x_r * (torch.pow(y, 2) - y)
+                y = y + c1 * (torch.pow(y, 2) - y)
         else:
-            if self.gamma in [None, 0.0]:
-                y = x
-                for i in range(self.num_iters):
-                    y = y + x_r * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(0, self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + x_r * (torch.pow(d, 2) - d)
-        return x_r, y
+            y = x
+            for i in range(0, self.num_iters):
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+        return c1, c2, x_gf, y
     
     @staticmethod
     def pair_downsampler(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -521,59 +492,29 @@ class GCENet(base.LowLightImageEnhancementModel):
     
 
 @MODELS.register(name="gcenet_baseline")
-class GCENetBaseline(base.LowLightImageEnhancementModel):
+class GCENetBaseline(GCENet):
     """GCENet (Guided Curve Estimation Network) model.
     
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
-    
     def __init__(
         self,
-        in_channels : int   = 3,
-        num_channels: int   = 32,
-        num_iters   : int   = 8,
-        weights     : Any   = None,
+        in_channels : int = 3,
+        num_channels: int = 32,
+        num_iters   : int = 8,
+        weights     : Any = None,
         *args, **kwargs
     ):
         super().__init__(
-            name        = "gcenet_baseline",
-            in_channels = in_channels,
-            weights     = weights,
+            name         = "gcenet_baseline",
+            in_channels  = in_channels,
+            num_channels = num_channels,
+            num_iters    = num_iters,
+            weights      = weights,
             *args, **kwargs
         )
-        
-        # Populate hyperparameter values from pretrained weights
-        if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels" , in_channels)
-            num_channels = self.weights.get("num_channels", num_channels)
-            num_iters    = self.weights.get("num_iters"   , num_iters)
-        self.in_channels  = in_channels  or self.in_channels
-        self.num_channels = num_channels
-        self.num_iters    = num_iters
-        
-        # Construct model
-        self.en = EnhanceNet(
-            in_channels  = self.in_channels,
-            num_channels = self.num_channels,
-            num_iters    = self.num_iters,
-            norm         = None,
-        )
-        
-        # Loss
-        self._loss = Loss(reduction="mean")
-        
-        # Load weights
-        if self.weights:
-            self.load_weights()
-        else:
-            self.apply(self._init_weights)
-    
-    def _init_weights(self, m: nn.Module):
-        pass
-    
+
     def forward_loss(
         self,
         input : torch.Tensor,
@@ -593,132 +534,20 @@ class GCENetBaseline(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        x   = input
-        x_r = self.en(x)
-        y   = x
+        x  = input
+        c1 = self.en(x)
+        y  = x
         for i in range(0, self.num_iters):
-            y = y + x_r * (torch.pow(y, 2) - y)
-        return x_r, y
+            y = y + c1 * (torch.pow(y, 2) - y)
+        return c1, y
 
 
 @MODELS.register(name="gcenet_agf")
-class GCENetAGF(base.LowLightImageEnhancementModel):
-    """GCENet-AGF (Guided Curve Estimation Network) model with simple guided 
-    filter.
+class GCENetAGF(GCENet):
+    """GCENet-AGF (Guided Curve Estimation Network) model with simple guided filter.
     
-    See Also: :class:`base.LowLightImageEnhancementModel`
+    See Also: :class:`GCENet`
     """
-    
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
-    
-    def __init__(
-        self,
-        in_channels : int   = 3,
-        num_channels: int   = 32,
-        num_iters   : int   = 8,
-        radius      : int   = 1,
-        eps         : float = 1e-4,
-        gamma       : float = 2.8,
-        weights     : Any   = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            name        = "gcenet_agf",
-            in_channels = in_channels,
-            weights     = weights,
-            *args, **kwargs
-        )
-        
-        # Populate hyperparameter values from pretrained weights
-        if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels" , in_channels)
-            num_channels = self.weights.get("num_channels", num_channels)
-            num_iters    = self.weights.get("num_iters"   , num_iters)
-            radius       = self.weights.get("radius"      , radius)
-            eps          = self.weights.get("eps"         , eps)
-            gamma        = self.weights.get("gamma"       , gamma)
-        self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_channels
-        self.num_iters    = num_iters
-        self.radius       = radius
-        self.eps          = eps
-        self.gamma        = gamma
-        
-        # Construct model
-        self.en = EnhanceNet(
-            in_channels  = self.in_channels,
-            num_channels = self.num_channels,
-            num_iters    = self.num_iters,
-            norm         = None,
-        )
-        self.gf = filtering.GuidedFilter(radius=self.radius, eps=self.eps)
-        
-        # Loss
-        self._loss = Loss(reduction="mean")
-        
-        # Load weights
-        if self.weights:
-            self.load_weights()
-        else:
-            self.apply(self._init_weights)
-    
-    def _init_weights(self, m: nn.Module):
-        pass
-    
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        pred = self.forward(input=input, *args, **kwargs)
-        adjust, enhance = pred
-        loss = self.loss(input, adjust, enhance)
-        return enhance, loss
-    
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x   = input
-        x_r = self.en(x)
-        # Enhancement loop
-        if not self.predicting:
-            y = x
-            for i in range(self.num_iters):
-                y = y + x_r * (torch.pow(y, 2) - y)
-        else:
-            if self.gamma in [None, 0.0]:
-                y = x
-                for i in range(self.num_iters):
-                    y = y + x_r * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(0, self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + x_r * (torch.pow(d, 2) - d)
-            # Guided Filter
-            y = self.gf(y, y)
-        #
-        return x_r, y
-
-
-@MODELS.register(name="gcenet_bgf")
-class GCENetBGF(base.LowLightImageEnhancementModel):
-    """GCENet-GF (Guided Curve Estimation Network) model with simple guided filter.
-    
-    See Also: :class:`base.LowLightImageEnhancementModel`
-    """
-    
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
     
     def __init__(
         self,
@@ -732,68 +561,16 @@ class GCENetBGF(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "gcenet_bgf",
-            in_channels = in_channels,
-            weights     = weights,
+            name         = "gcenet_agf",
+            in_channels  = in_channels,
+            num_channels = num_channels,
+            num_iters    = num_iters,
+            radius       = radius,
+            eps          = eps,
+            gamma        = gamma,
+            weights      = weights,
             *args, **kwargs
         )
-        
-        # Populate hyperparameter values from pretrained weights
-        if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels" , in_channels)
-            num_channels = self.weights.get("num_channels", num_channels)
-            num_iters    = self.weights.get("num_iters"   , num_iters)
-            radius       = self.weights.get("radius"      , radius)
-            eps          = self.weights.get("eps"         , eps)
-            gamma        = self.weights.get("gamma"       , gamma)
-        self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_channels
-        self.num_iters    = num_iters
-        self.radius       = radius
-        self.eps          = eps
-        self.gamma        = gamma
-        
-        # Construct model
-        self.en = EnhanceNet(
-            in_channels  = self.in_channels,
-            num_channels = self.num_channels,
-            num_iters    = self.num_iters,
-            norm         = None,
-        )
-        self.gf = filtering.GuidedFilter(radius=self.radius, eps=self.eps)
-        
-        # Loss
-        self._loss = Loss(reduction="mean")
-        
-        # Load weights
-        if self.weights:
-            self.load_weights()
-        else:
-            self.apply(self._init_weights)
-    
-    def _init_weights(self, m: nn.Module):
-        pass
-    
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        # Symmetry
-        input1,  input2   = self.pair_downsampler(input)
-        adjust1, enhance1 = self.forward(input=input1, *args, **kwargs)
-        adjust2, enhance2 = self.forward(input=input2, *args, **kwargs)
-        #
-        adjust,    enhance   = self.forward(input=input, *args, **kwargs)
-        denoised1, denoised2 = self.pair_downsampler(enhance)
-        #
-        mse_loss  = nn.MSELoss()
-        loss_res  = 0.5 * (mse_loss(input1,   enhance2)  + mse_loss(input2,   enhance1))
-        loss_cons = 0.5 * (mse_loss(enhance1, denoised1) + mse_loss(enhance2, denoised2))
-        loss_en   = self.loss(input, adjust, enhance)
-        loss      = 0.5 * (loss_res + loss_cons) + 0.5 * loss_en
-        return enhance, loss
     
     def forward(
         self,
@@ -802,42 +579,84 @@ class GCENetBGF(base.LowLightImageEnhancementModel):
         profile  : bool      = False,
         out_index: int       = -1,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x = input
-        # Guided Filter
-        x = self.gf(x, x)
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        x  = input
         # Enhancement
-        x_r = self.en(x)
+        c1 = self.en(x)
+        c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+        # Enhancement loop
+        if self.gamma in [None, 0.0]:
+            y = x
+            for i in range(self.num_iters):
+                y = y + c1 * (torch.pow(y, 2) - y)
+        else:
+            y = x
+            for i in range(0, self.num_iters):
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+        # Guided Filter
+        y_gf = self.gf(x, y)
+        return c1, c2, y, y_gf
+    
+
+@MODELS.register(name="gcenet_bgf")
+class GCENetBGF(GCENet):
+    """GCENet-BGF (Guided Curve Estimation Network) model with simple guided filter.
+    
+    See Also: :class:`GCENet`
+    """
+    
+    def __init__(
+        self,
+        in_channels : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 12,
+        radius      : int   = 3,
+        eps         : float = 1e-3,
+        gamma       : float = 2.8,
+        weights     : Any   = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name         = "gcenet_bgf",
+            in_channels  = in_channels,
+            num_channels = num_channels,
+            num_iters    = num_iters,
+            radius       = radius,
+            eps          = eps,
+            gamma        = gamma,
+            weights      = weights,
+            *args, **kwargs
+        )
+
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        x    = input
+        # Guided Filter
+        x_gf = self.gf(x, x)
+        # Enhancement
+        c1   = self.en(x_gf)
+        c2   = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
         # Enhancement loop
         if not self.predicting:
             y = x
             for i in range(self.num_iters):
-                y = y + x_r * (torch.pow(y, 2) - y)
+                y = y + c1 * (torch.pow(y, 2) - y)
         else:
-            if self.gamma in [None, 0.0]:
-                y = x
-                for i in range(self.num_iters):
-                    y = y + x_r * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(0, self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + x_r * (torch.pow(d, 2) - d)
-        return x_r, y
-    
-    @staticmethod
-    def pair_downsampler(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        c       = input.shape[1]
-        filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(input.device)
-        filter1 = filter1.repeat(c, 1, 1, 1)
-        filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(input.device)
-        filter2 = filter2.repeat(c, 1, 1, 1)
-        output1 = F.conv2d(input, filter1, stride=2, groups=c)
-        output2 = F.conv2d(input, filter2, stride=2, groups=c)
-        return output1, output2
-    
+            y = x
+            for i in range(0, self.num_iters):
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+        return c1, c2, x_gf, y
+        
 # endregion
 
 

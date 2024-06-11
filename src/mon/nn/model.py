@@ -724,7 +724,19 @@ class Model(lightning.LightningModule, ABC):
         pred = pred[-1] if isinstance(pred, list | tuple) else pred
         loss = self.loss(pred, target)
         return pred, loss
-        
+    
+    def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
+        """Forward pass for debugging. This function is used to visualize the
+        intermediate layers of the model.
+
+        Args:
+            input: An input of shape :math:`[B, C, H, W]`.
+            
+        Return:
+            Prediction. Default: ``None``.
+        """
+        return None
+    
     @abstractmethod
     def forward(
         self,
@@ -907,7 +919,7 @@ class Model(lightning.LightningModule, ABC):
             self._log_image(input, self.current_epoch, self.global_step)
         
         return loss
-
+    
     def on_validation_epoch_end(self):
         """Called in the validation loop at the very end of the epoch."""
         if self.val_metrics:

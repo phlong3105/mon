@@ -14,7 +14,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "gcenet_bgf"
+model_name = "gcenet_agf2"
 data_name  = "ulol"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -36,7 +36,7 @@ model = {
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 13,             # The number of progressive loop.
 	"radius"	  : 3,
-	"eps"		  : 1e-2,
+	"eps"		  : 1e-3,
 	"gamma"		  : 2.0,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
