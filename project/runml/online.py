@@ -30,6 +30,7 @@ def online_learning(args: dict) -> str:
     resize     = args["predictor"]["resize"]
     benchmark  = args["predictor"]["benchmark"]
     save_image = args["predictor"]["save_image"]
+    save_debug = args["predictor"]["save_debug"]
     
     # Initialization
     console.rule(f"[bold red] {fullname}")
@@ -121,6 +122,7 @@ def online_learning(args: dict) -> str:
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
 @click.option("--save-image", is_flag=True)
+@click.option("--save-debug", is_flag=True)
 @click.option("--verbose",    is_flag=True)
 def main(
     root      : str,
@@ -137,6 +139,7 @@ def main(
     resize    : bool,
     benchmark : bool,
     save_image: bool,
+    save_debug: bool,
     verbose   : bool,
 ) -> str:
     hostname = socket.gethostname().lower()
@@ -189,6 +192,7 @@ def main(
         "resize"          : resize,
         "benchmark"       : benchmark,
         "save_image"      : save_image,
+        "save_debug"      : save_debug,
         "verbose"         : verbose,
     }
     

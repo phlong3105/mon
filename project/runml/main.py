@@ -148,6 +148,7 @@ def run_predict(args: dict):
     resize       = args["resize"]
     benchmark    = args["benchmark"]
     save_image   = args["save_image"]
+    save_debug   = args["save_debug"]
     use_data_dir = args["use_data_dir"]
     verbose      = args["verbose"]
     
@@ -181,6 +182,7 @@ def run_predict(args: dict):
         flags   = ["--resize"]     if resize     else []
         flags  += ["--benchmark"]  if benchmark  else []
         flags  += ["--save-image"] if save_image else []
+        flags  += ["--save-debug"] if save_debug else []
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
@@ -240,6 +242,7 @@ def run_online(args: dict):
     resize       = args["resize"]
     benchmark    = args["benchmark"]
     save_image   = args["save_image"]
+    save_debug   = args["save_debug"]
     use_data_dir = args["use_data_dir"]
     verbose      = args["verbose"]
     
@@ -272,6 +275,7 @@ def run_online(args: dict):
         flags   = ["--resize"]     if resize     else []
         flags  += ["--benchmark"]  if benchmark  else []
         flags  += ["--save-image"] if save_image else []
+        flags  += ["--save-debug"] if save_debug else []
         flags  += ["--verbose"]    if verbose    else []
         
         # Parse script file
@@ -412,10 +416,12 @@ def main(
             # Other Flags
             benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
             save_image   = click.prompt(click.style(f"Save image? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
+            save_debug   = click.prompt(click.style(f"Save debug? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
             use_data_dir = click.prompt(click.style(f"Data dir?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
             resize       = True if resize       == "yes" else False
             benchmark    = True if benchmark    == "yes" else False
             save_image   = True if save_image   == "yes" else False
+            save_debug   = True if save_debug   == "yes" else False
             use_data_dir = True if use_data_dir == "yes" else False
         # Common Flags
         exist_ok = click.prompt(click.style(f"Exist OK?   [yes/no]", fg="bright_yellow", bold=True), type=str, default=exist_ok)
@@ -465,6 +471,7 @@ def main(
             "resize" 	  : resize,
             "benchmark"   : benchmark,
             "save_image"  : save_image,
+            "save_debug"  : save_debug,
             "use_data_dir": use_data_dir,
             "verbose"     : verbose,
         }
@@ -487,6 +494,7 @@ def main(
             "resize" 	  : resize,
             "benchmark"   : benchmark,
             "save_image"  : save_image,
+            "save_debug"  : save_debug,
             "use_data_dir": use_data_dir,
             "verbose"     : verbose,
         }

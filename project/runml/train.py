@@ -41,7 +41,7 @@ def train(args: dict) -> str:
     # Trainer
     if mon.is_rank_zero():
         console.rule("[bold red]2. SETUP TRAINER")
-        mon.copy_file(src=args["config"], dst=model.root/"config.py")
+    mon.copy_file(src=args["config"], dst=model.root/"config.py")
     
     ckpt      = mon.get_latest_checkpoint(dirpath=model.ckpt_dir) if model.ckpt_dir.exists() else None
     callbacks = mon.CALLBACKS.build_instances(configs=args["trainer"]["callbacks"])

@@ -175,6 +175,7 @@ predictor = {
 	"augment"         : None ,   # Test-time augmentation.
     "benchmark"       : False,   # Measure efficient score.
     "save_image"      : False,   # Save result images.
+	"save_debug"      : False,   # Save debug images.
     "verbose"         : True,    # Verbosity.
 }
 

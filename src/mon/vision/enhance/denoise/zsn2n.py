@@ -31,7 +31,10 @@ class ZSN2N(base.DenoisingModel):
     Args:
         in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         num_channels: Output channels for subsequent layers. Default: ``48``.
-        
+    
+    References:
+        `<https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing#scrollTo=Srf0GQTYrkxA>`_
+    
     See Also: :class:`base.DenoisingModel`.
     """
     
@@ -85,11 +88,10 @@ class ZSN2N(base.DenoisingModel):
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         # Symmetry
-        noisy1, noisy2 = self.pair_downsampler(input)
-        pred1          = self.forward(input=noisy1)
-        pred2          = self.forward(input=noisy2)
-        #
-        noisy_denoised       = self.forward(input)
+        noisy1, noisy2       = self.pair_downsampler(input)
+        pred1                = noisy1 - self.forward(input=noisy1)
+        pred2                = noisy2 - self.forward(input=noisy2)
+        noisy_denoised       =  input - self.forward(input)
         denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
         # Loss
         mse_loss  = nn.MSELoss()

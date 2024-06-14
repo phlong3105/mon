@@ -32,6 +32,7 @@ def predict(args: dict) -> str:
     resize     = args["predictor"]["resize"]
     benchmark  = args["predictor"]["benchmark"]
     save_image = args["predictor"]["save_image"]
+    save_debug = args["predictor"]["save_debug"]
     console.rule(f"[bold red] {fullname}")
     
     # Seed
@@ -66,6 +67,8 @@ def predict(args: dict) -> str:
     save_dir = save_dir if save_dir not in [None, "None", ""] else model.root
     save_dir = mon.Path(save_dir) / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
+    debug_save_dir = mon.Path(save_dir) / f"{data_name}_debug"
+    debug_save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():
@@ -104,7 +107,7 @@ def predict(args: dict) -> str:
                 run_time = time.time() - start_time
                 
                 # Forward (Debug)
-                if isinstance(input, torch.Tensor):
+                if save_debug and isinstance(input, torch.Tensor):
                     debug_output = model.forward_debug(input=input)
                 else:
                     debug_output = None
@@ -127,11 +130,11 @@ def predict(args: dict) -> str:
                     
                     if data_writer is not None:
                         data_writer.write_batch(data=output)
-                        
+                    
                     # Debug
-                    if isinstance(debug_output, dict):
+                    if save_debug and isinstance(debug_output, dict):
                         for k, v in debug_output.items():
-                            path = save_dir / f"{meta['stem']}_{k}.png"
+                            path = debug_save_dir / f"{meta['stem']}_{k}.png"
                             mon.write_image(path, v, denormalize=True)
                     
                 sum_time += run_time
@@ -158,6 +161,7 @@ def predict(args: dict) -> str:
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
 @click.option("--save-image", is_flag=True)
+@click.option("--save-debug", is_flag=True)
 @click.option("--verbose",    is_flag=True)
 def main(
     root      : str,
@@ -172,6 +176,7 @@ def main(
     resize    : bool,
     benchmark : bool,
     save_image: bool,
+    save_debug: bool,
     verbose   : bool,
 ) -> str:
     hostname = socket.gethostname().lower()
@@ -219,6 +224,7 @@ def main(
         "resize"          : resize,
         "benchmark"       : benchmark,
         "save_image"      : save_image,
+        "save_debug"      : save_debug,
         "verbose"         : verbose,
     }
     

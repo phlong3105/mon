@@ -8,7 +8,9 @@ from __future__ import annotations
 __all__ = [
     "GCENet",
     "GCENetAGF",
+    "GCENetAGFSymLoss",
     "GCENetBGF",
+    "GCENetBGFSymLoss",
     "GCENetBaseline",
 ]
 
@@ -347,6 +349,7 @@ class GCENet(base.LowLightImageEnhancementModel):
     
     def __init__(
         self,
+        name        : str   = "gcenet",
         in_channels : int   = 3,
         num_channels: int   = 32,
         num_iters   : int   = 13,
@@ -357,7 +360,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "gcenet",
+            name        = name,
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs
@@ -405,51 +408,175 @@ class GCENet(base.LowLightImageEnhancementModel):
         target: torch.Tensor | None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        # Symmetric Loss
-        i         = input
-        i1  , i2  = self.pair_downsampler(i)
+        # Symmetric Loss 1
+        i        = input
+        i1, i2   = self.pair_downsampler(i)
         c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
         c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        c1  , c2  , gf , o  = self.forward(input=i,  *args, **kwargs)
-        o1  , o2  = self.pair_downsampler(o)
-        mse_loss  = nn.MSELoss()
-        loss_res  = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
-        loss_cons = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
-        loss_enh  = self.loss(i, c1, o)
-        loss      = 0.5 * (loss_res + loss_cons) + 0.5 * loss_enh
+        c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
+        o1, o2   = self.pair_downsampler(o)
+        mse_loss = nn.MSELoss()
+        loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
+        loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
+        loss_enh = self.loss(i, c_1, o)
+        loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
+        
+        # Symmetric Loss 2
+        # i        = input
+        # i1, i2   = self.pair_downsampler(i)
+        # c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
+        # c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
+        # c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
+        # n1       = i1 - j1
+        # n2       = i2 - j2
+        # n        =  i - o
+        # o_1, o_2 = self.pair_downsampler(o)
+        # n_1, n_2 = self.pair_downsampler(n)
+        # mse_loss = nn.MSELoss()
+        # loss_res = 0.5 * (mse_loss(i1 - n2,  j2) + mse_loss(i2 - n1, j1 ))
+        # loss_con = 0.5 * (mse_loss(j1     , o_1) + mse_loss(j2     , o_2))
+        # loss_enh = self.loss(i, c_1, o)
+        # loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
+        
+        # Symmetric Loss 3
+        # i        = input
+        # i1, i2   = self.pair_downsampler(i)
+        # c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
+        # c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
+        # c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
+        # n1       = i1 - j1
+        # n2       = i2 - j2
+        # n        =  i - o
+        # o_1, o_2 = self.pair_downsampler(o)
+        # n_1, n_2 = self.pair_downsampler(n)
+        # mse_loss = nn.MSELoss()
+        # loss_res = (1 / 3) * (mse_loss(i1 - n2,  j2) + mse_loss(i2 - n1, j1 ))
+        # loss_noi = (1 / 3) * (mse_loss(n1     , n_1) + mse_loss(n2     , n_2))
+        # loss_con = (1 / 3) * (mse_loss(j1     , o_1) + mse_loss(j2     , o_2))
+        # loss_enh = self.loss(i, c_1, o)
+        # loss     = 0.5 * (loss_res + loss_con + loss_noi) + 0.5 * loss_enh
+        
         return o, loss
     
     def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
-        i        = input
-        i1  , i2 = self.pair_downsampler(i)
+        i      = input
+        i1, i2 = self.pair_downsampler(i)
         c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
         c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        c1  , c2  , gf , o  = self.forward(input=i,  *args, **kwargs)
-        o1  , o2 = self.pair_downsampler(o)
-        noise    = torch.abs(o - gf)
-        doi      = torch.abs(o - i)
-        c1       = -1 * c1
-        c1_1     = -1 * c1_1
-        c1_2     = -1 * c1_2
+        c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
+        o1, o2   = self.pair_downsampler(o)
+        #
+        c_1      = c_1  * -1
+        c1_1     = c1_1 * -1
+        c2_1     = c2_1 * -1
+        d_gf_i_1 = (gf1 - i1) * -1
+        d_gf_i_2 = (gf2 - i2) * -1
+        d_gf_i   = (gf  - i ) * -1
+        d_gf_j_1 = (gf1 - j1) * -1
+        d_gf_j_2 = (gf2 - j2) * -1
+        d_gf_j   = (gf  - o ) * -1
+        d_j_i_1  = (j1  - i1) * -1
+        d_j_i_2  = (j2  - i2) * -1
+        d_j_i    = (o   - i ) * -1
+        #
+        c_1_r      =      c_1[:, 0:1, :, :]
+        c_1_g      =      c_1[:, 1:2, :, :]
+        c_1_b      =      c_1[:, 2:3, :, :]
+        c1_1_r     =     c1_1[:, 0:1, :, :]
+        c1_1_g     =     c1_1[:, 1:2, :, :]
+        c1_1_b     =     c1_1[:, 2:3, :, :]
+        c2_1_r     =     c2_1[:, 0:1, :, :]
+        c2_1_g     =     c2_1[:, 1:2, :, :]
+        c2_1_b     =     c2_1[:, 2:3, :, :]
+        d_gf_i_1_r = d_gf_i_1[:, 0:1, :, :]
+        d_gf_i_1_g = d_gf_i_1[:, 1:2, :, :]
+        d_gf_i_1_b = d_gf_i_1[:, 2:3, :, :]
+        d_gf_i_2_r = d_gf_i_2[:, 0:1, :, :]
+        d_gf_i_2_g = d_gf_i_2[:, 1:2, :, :]
+        d_gf_i_2_b = d_gf_i_2[:, 2:3, :, :]
+        d_gf_i_r   =   d_gf_i[:, 0:1, :, :]
+        d_gf_i_g   =   d_gf_i[:, 1:2, :, :]
+        d_gf_i_b   =   d_gf_i[:, 2:3, :, :]
+        d_gf_j_1_r = d_gf_j_1[:, 0:1, :, :]
+        d_gf_j_1_g = d_gf_j_1[:, 1:2, :, :]
+        d_gf_j_1_b = d_gf_j_1[:, 2:3, :, :]
+        d_gf_j_2_r = d_gf_j_2[:, 0:1, :, :]
+        d_gf_j_2_g = d_gf_j_2[:, 1:2, :, :]
+        d_gf_j_2_b = d_gf_j_2[:, 2:3, :, :]
+        d_gf_j_r   =   d_gf_j[:, 0:1, :, :]
+        d_gf_j_g   =   d_gf_j[:, 1:2, :, :]
+        d_gf_j_b   =   d_gf_j[:, 2:3, :, :]
+        d_j_i_1_r  =  d_j_i_1[:, 0:1, :, :]
+        d_j_i_1_g  =  d_j_i_1[:, 1:2, :, :]
+        d_j_i_1_b  =  d_j_i_1[:, 2:3, :, :]
+        d_j_i_2_r  =  d_j_i_2[:, 0:1, :, :]
+        d_j_i_2_g  =  d_j_i_2[:, 1:2, :, :]
+        d_j_i_2_b  =  d_j_i_2[:, 2:3, :, :]
+        d_j_i_r    =    d_j_i[:, 0:1, :, :]
+        d_j_i_g    =    d_j_i[:, 1:2, :, :]
+        d_j_i_b    =    d_j_i[:, 2:3, :, :]
+        #
         return {
-            "c1"   : c1,
-            "c2"   : c2,
-            "gf"   : gf,
-            "o"    : o,
-            "i1"   : i1,
-            "i2"   : i2,
-            "c1_1" : c1_1,
-            "c1_2" : c1_2,
-            "c2_1" : c2_1,
-            "c2_2" : c2_2,
-            "gf1"  : gf1,
-            "gf2"  : gf2,
-            "j1"   : j1,
-            "j2"   : j2,
-            "o1"   : o1,
-            "o2"   : o2,
-            "noise": noise,
-            "doi"  : doi,
+            "i"         : i,
+            "i1"        : i1,
+            "i2"        : i2,
+            "c1_1"      : c1_1,
+            "c1_1_r"    : c1_1_r,
+            "c1_1_g"    : c1_1_g,
+            "c1_1_b"    : c1_1_b,
+            "c1_2"      : c1_2,
+            "c2_1"      : c2_1,
+            "c2_1_r"    : c2_1_r,
+            "c2_1_g"    : c2_1_g,
+            "c2_1_b"    : c2_1_b,
+            "c2_2"      : c2_2,
+            "c_1"       : c_1,
+            "c_1_r"     : c_1_r,
+            "c_1_g"     : c_1_g,
+            "c_1_b"     : c_1_b,
+            "c_2"       : c_2,
+            "gf1"       : gf1,
+            "gf2"       : gf2,
+            "gf"        : gf,
+            "o"         : o,
+            "o1"        : o1,
+            "o2"        : o2,
+            "d_gf_i_1"  : d_gf_i_1,
+            "d_gf_i_2"  : d_gf_i_2,
+            "d_gf_i"    : d_gf_i,
+            "d_gf_j_1"  : d_gf_j_1,
+            "d_gf_j_2"  : d_gf_j_2,
+            "d_gf_j"    : d_gf_j,
+            "d_j_i_1"   : d_j_i_1,
+            "d_j_i_2"   : d_j_i_2,
+            "d_j_i"     : d_j_i,
+            "d_gf_i_1_r": d_gf_i_1_r,
+            "d_gf_i_1_g": d_gf_i_1_g,
+            "d_gf_i_1_b": d_gf_i_1_b,
+            "d_gf_i_2_r": d_gf_i_2_r,
+            "d_gf_i_2_g": d_gf_i_2_g,
+            "d_gf_i_2_b": d_gf_i_2_b,
+            "d_gf_i_r"  : d_gf_i_r,
+            "d_gf_i_g"  : d_gf_i_g,
+            "d_gf_i_b"  : d_gf_i_b,
+            "d_gf_j_1_r": d_gf_j_1_r,
+            "d_gf_j_1_g": d_gf_j_1_g,
+            "d_gf_j_1_b": d_gf_j_1_b,
+            "d_gf_j_2_r": d_gf_j_2_r,
+            "d_gf_j_2_g": d_gf_j_2_g,
+            "d_gf_j_2_b": d_gf_j_2_b,
+            "d_gf_j_r"  : d_gf_j_r,
+            "d_gf_j_g"  : d_gf_j_g,
+            "d_gf_j_b"  : d_gf_j_b,
+            "d_j_i_1_r" : d_j_i_1_r,
+            "d_j_i_1_g" : d_j_i_1_g,
+            "d_j_i_1_b" : d_j_i_1_b,
+            "d_j_i_2_r" : d_j_i_2_r,
+            "d_j_i_2_g" : d_j_i_2_g,
+            "d_j_i_2_b" : d_j_i_2_b,
+            "d_j_i_r"   : d_j_i_r,
+            "d_j_i_g"   : d_j_i_g,
+            "d_j_i_b"   : d_j_i_b,
         }
         
     def forward(
@@ -465,14 +592,15 @@ class GCENet(base.LowLightImageEnhancementModel):
         x_gf = self.gf(x, x)
         # Enhancement
         c1   = self.en(x_gf)
-        c2   = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
         # Enhancement loop
         if not self.predicting:
-            y = x
+            y  = x
+            c2 = None
             for i in range(self.num_iters):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
-            y = x
+            y  = x
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
@@ -489,7 +617,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         output1 = F.conv2d(input, filter1, stride=2, groups=c)
         output2 = F.conv2d(input, filter2, stride=2, groups=c)
         return output1, output2
-    
+
 
 @MODELS.register(name="gcenet_baseline")
 class GCENetBaseline(GCENet):
@@ -572,6 +700,18 @@ class GCENetAGF(GCENet):
             *args, **kwargs
         )
     
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        # Symmetric Loss
+        i = input
+        c1, c2, gf, o = self.forward(input=i,  *args, **kwargs)
+        loss = self.loss(i, c1, o)
+        return o, loss
+    
     def forward(
         self,
         input    : torch.Tensor,
@@ -579,18 +719,19 @@ class GCENetAGF(GCENet):
         profile  : bool      = False,
         out_index: int       = -1,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         x  = input
         # Enhancement
         c1 = self.en(x)
-        c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
         # Enhancement loop
         if self.gamma in [None, 0.0]:
-            y = x
+            y  = x
+            c2 = None
             for i in range(self.num_iters):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
-            y = x
+            y  = x
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
@@ -598,7 +739,67 @@ class GCENetAGF(GCENet):
         # Guided Filter
         y_gf = self.gf(x, y)
         return c1, c2, y, y_gf
+
+
+@MODELS.register(name="gcenet_agf_symloss")
+class GCENetAGFSymLoss(GCENet):
+    """GCENet-AGF-SymLoss (Guided Curve Estimation Network) model with simple
+    guided filter.
     
+    See Also: :class:`GCENet`
+    """
+    
+    def __init__(
+        self,
+        in_channels : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 12,
+        radius      : int   = 3,
+        eps         : float = 1e-3,
+        gamma       : float = 2.8,
+        weights     : Any   = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name         = "gcenet_agf_symloss",
+            in_channels  = in_channels,
+            num_channels = num_channels,
+            num_iters    = num_iters,
+            radius       = radius,
+            eps          = eps,
+            gamma        = gamma,
+            weights      = weights,
+            *args, **kwargs
+        )
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        x  = input
+        # Enhancement
+        c1 = self.en(x)
+        # Enhancement loop
+        if self.gamma in [None, 0.0]:
+            y  = x
+            c2 = None
+            for i in range(self.num_iters):
+                y = y + c1 * (torch.pow(y, 2) - y)
+        else:
+            y  = x
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            for i in range(0, self.num_iters):
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+        # Guided Filter
+        y_gf = self.gf(x, y)
+        return c1, c2, y, y_gf
+
 
 @MODELS.register(name="gcenet_bgf")
 class GCENetBGF(GCENet):
@@ -629,7 +830,19 @@ class GCENetBGF(GCENet):
             weights      = weights,
             *args, **kwargs
         )
-
+    
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        # Symmetric Loss
+        i = input
+        c1, c2, gf, o = self.forward(input=i,  *args, **kwargs)
+        loss = self.loss(i, c1, o)
+        return o, loss
+    
     def forward(
         self,
         input    : torch.Tensor,
@@ -643,20 +856,80 @@ class GCENetBGF(GCENet):
         x_gf = self.gf(x, x)
         # Enhancement
         c1   = self.en(x_gf)
-        c2   = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
         # Enhancement loop
         if not self.predicting:
-            y = x
+            y  = x
+            c2 = None
             for i in range(self.num_iters):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
-            y = x
+            y  = x
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         return c1, c2, x_gf, y
-        
+
+
+@MODELS.register(name="gcenet_bgf_symloss")
+class GCENetBGFSymLoss(GCENet):
+    """GCENet-BGF-SymLoss (Guided Curve Estimation Network) model with simple guided filter.
+    
+    See Also: :class:`GCENet`
+    """
+    
+    def __init__(
+        self,
+        in_channels : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 12,
+        radius      : int   = 3,
+        eps         : float = 1e-3,
+        gamma       : float = 2.8,
+        weights     : Any   = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name         = "gcenet_bgf_symloss",
+            in_channels  = in_channels,
+            num_channels = num_channels,
+            num_iters    = num_iters,
+            radius       = radius,
+            eps          = eps,
+            gamma        = gamma,
+            weights      = weights,
+            *args, **kwargs
+        )
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        x    = input
+        # Guided Filter
+        x_gf = self.gf(x, x)
+        # Enhancement
+        c1   = self.en(x_gf)
+        # Enhancement loop
+        if not self.predicting:
+            y  = x
+            c2 = None
+            for i in range(self.num_iters):
+                y = y + c1 * (torch.pow(y, 2) - y)
+        else:
+            y  = x
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
+            for i in range(0, self.num_iters):
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+        return c1, c2, x_gf, y
+
 # endregion
 
 
