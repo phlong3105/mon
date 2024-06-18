@@ -64,10 +64,10 @@ def predict(args: dict) -> str:
     # Data I/O
     console.log(f"[bold red] {source}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=source, dst=save_dir, denormalize=True)
-    save_dir = save_dir if save_dir not in [None, "None", ""] else model.root
-    save_dir = mon.Path(save_dir) / data_name
+    save_root = save_dir if save_dir not in [None, "None", ""] else model.root
+    save_dir  = mon.Path(save_root) / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
-    debug_save_dir = mon.Path(save_dir) / f"{data_name}_debug"
+    debug_save_dir = mon.Path(save_root) / f"{data_name}_debug"
     debug_save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting

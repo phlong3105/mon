@@ -466,18 +466,18 @@ class GCENet(base.LowLightImageEnhancementModel):
         c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
         o1, o2   = self.pair_downsampler(o)
         #
-        c_1      = c_1  * -1
-        c1_1     = c1_1 * -1
-        c2_1     = c2_1 * -1
-        d_gf_i_1 = (gf1 - i1) * -1
-        d_gf_i_2 = (gf2 - i2) * -1
-        d_gf_i   = (gf  - i ) * -1
-        d_gf_j_1 = (gf1 - j1) * -1
-        d_gf_j_2 = (gf2 - j2) * -1
-        d_gf_j   = (gf  - o ) * -1
-        d_j_i_1  = (j1  - i1) * -1
-        d_j_i_2  = (j2  - i2) * -1
-        d_j_i    = (o   - i ) * -1
+        c_1        = c_1  * -1
+        c1_1       = c1_1 * -1
+        c2_1       = c2_1 * -1
+        d_gf_i_1   = (gf1 - i1) * -10
+        d_gf_i_2   = (gf2 - i2) * -10
+        d_gf_i     = (gf  - i ) * -10
+        d_gf_j_1   = (gf1 - j1) * -10
+        d_gf_j_2   = (gf2 - j2) * -10
+        d_gf_j     = (gf  - o ) * -10
+        d_j_i_1    = (j1  - i1) * -10
+        d_j_i_2    = (j2  - i2) * -10
+        d_j_i      = (o   - i ) * -10
         #
         c_1_r      =      c_1[:, 0:1, :, :]
         c_1_g      =      c_1[:, 1:2, :, :]
