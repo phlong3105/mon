@@ -36,8 +36,8 @@ model = {
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
 	"radius"	  : 3,
-	"eps"		  : 1e-4,
-	"gamma"		  : 0.1,
+	"eps"		  : 1e-3,
+	"gamma"		  : 2.8,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,

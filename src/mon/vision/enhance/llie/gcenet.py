@@ -821,9 +821,6 @@ class GCENetB1(GCENet):
 
 @MODELS.register(name="gcenet_b2")
 class GCENetB2(GCENet):
-    
-    
-    
     """GCENet-B2 (Guided Curve Estimation Network) model with simple guided filter.
     
     See Also: :class:`GCENet`
