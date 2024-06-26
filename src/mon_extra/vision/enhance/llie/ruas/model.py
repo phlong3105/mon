@@ -196,7 +196,7 @@ class Network(nn.Module):
         self._init_weights()
 
     def _init_weights(self):
-        model_dict = torch.load(mon.ZOO_DIR / "vision/enhance/llie/ruas/denoise.pt")
+        model_dict = torch.load(mon.ZOO_DIR / "mon_extra/vision/enhance/llie/ruas/weights/denoise.pt")
         self.denoise_net.load_state_dict(model_dict)
 
     def forward(self, input):

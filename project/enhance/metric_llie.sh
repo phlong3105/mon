@@ -12,13 +12,13 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-model="gcenet_bgf"
+model="hvi_cidnet_[extra]"
 data=(
-    "dicm"
-    "lime"
-    "mef"
-    "npe"
-    "vv"
+    # "dicm"
+    # "lime"
+    # "mef"
+    # "npe"
+    # "vv"
     "lol_v1"
     "lol_v2_real"
     "lol_v2_synthetic"
@@ -38,11 +38,12 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --result-file "${current_dir}" \
         --name "${model}" \
         --metric "psnr" \
+        --metric "ssimc" \
+        --metric "psnry" \
         --metric "ssim" \
         --metric "lpips" \
         --metric "niqe" \
         --metric "pi" \
-        --test-y-channel \
         --backend "pyiqa" \
         --show-results
 done

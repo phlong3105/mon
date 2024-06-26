@@ -130,16 +130,15 @@ def measure_metric_piqa(
 
 
 def measure_metric_pyiqa(
-    input_dir     : mon.Path,
-    target_dir    : mon.Path | None,
-    result_file   : mon.Path | str,
-    imgsz         : int,
-    resize        : bool,
-    metric        : list[str],
-    test_y_channel: bool,
-    use_gt_mean   : bool,
-    save_txt      : bool,
-    verbose       : bool,
+    input_dir  : mon.Path,
+    target_dir : mon.Path | None,
+    result_file: mon.Path | str,
+    imgsz      : int,
+    resize     : bool,
+    metric     : list[str],
+    use_gt_mean: bool,
+    save_txt   : bool,
+    verbose    : bool,
 ) -> dict:
     """Measure metrics using :mod:`pyiqa` package."""
     _METRICS = list(pyiqa.DEFAULT_CONFIGS.keys())
@@ -179,19 +178,11 @@ def measure_metric_pyiqa(
     for i, m in enumerate(metric):
         if m not in _METRICS:
             continue
-        if "test_y_channel" in pyiqa.DEFAULT_CONFIGS[m]["metric_opts"]:
-            metric_f[m] = pyiqa.InferenceModel(
-                metric_name    = m,
-                as_loss        = False,
-                test_y_channel = test_y_channel,
-                device         = device,
-            )
-        else:
-            metric_f[m] = pyiqa.InferenceModel(
-                metric_name = m,
-                as_loss     = False,
-                device      = device,
-            )
+        metric_f[m] = pyiqa.InferenceModel(
+            metric_name = m,
+            as_loss     = False,
+            device      = device,
+        )
     mon.enable_print()
     need_target = any(mon.EXTRA_METRICS[m]["metric_mode"] == "FR" for m in metric)
     
@@ -262,7 +253,6 @@ def update_results(results: dict, new_values: dict) -> dict:
 @click.option("--imgsz",          type=int,                      default=256)
 @click.option("--resize",         is_flag=True)
 @click.option("--metric",         type=str, multiple=True, help="Measuring metric.")
-@click.option("--test-y-channel", is_flag=True)
 @click.option("--use-gt-mean",    is_flag=True)
 @click.option("--backend",        type=click.Choice(["piqa", "pyiqa"], case_sensitive=False), default=["piqa", "pyiqa"], multiple=True)
 @click.option("--save-txt",       is_flag=True)
@@ -277,7 +267,6 @@ def main(
     imgsz         : int,
     resize        : bool,
     metric        : list[str],
-    test_y_channel: bool,
     use_gt_mean   : bool,
     backend       : list[str],
     save_txt      : bool,
@@ -312,16 +301,15 @@ def main(
         '''
         if b in ["pyiqa"]:
             new_values = measure_metric_pyiqa(
-                input_dir      = input_dir,
-                target_dir     = target_dir,
-                result_file    = result_file,
-                imgsz          = imgsz,
-                resize         = resize,
-                metric         = metric,
-                test_y_channel = test_y_channel,
-                use_gt_mean    = use_gt_mean,
-                save_txt       = save_txt,
-                verbose        = verbose,
+                input_dir   = input_dir,
+                target_dir  = target_dir,
+                result_file = result_file,
+                imgsz       = imgsz,
+                resize      = resize,
+                metric      = metric,
+                use_gt_mean = use_gt_mean,
+                save_txt    = save_txt,
+                verbose     = verbose,
             )
             results = update_results(results, new_values)
         else:

@@ -149,7 +149,7 @@ def main(
     
     # Parse arguments
     root     = mon.Path(root)
-    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/ruas/weights/[original]_ruas_lol_v1.pt"
+    weights  = weights or mon.ZOO_DIR / "vision/enhance/llie/ruas/weights/ruas_lol_v1.pt"
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
