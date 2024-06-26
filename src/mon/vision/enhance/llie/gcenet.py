@@ -7,11 +7,10 @@ from __future__ import annotations
 
 __all__ = [
     "GCENet",
-    "GCENetAGF",
-    "GCENetAGFSymLoss",
-    "GCENetBGF",
-    "GCENetBGFSymLoss",
-    "GCENetBaseline",
+    "GCENetA1",
+    "GCENetA2",
+    "GCENetB1",
+    "GCENetB2",
 ]
 
 from typing import Any, Literal
@@ -619,60 +618,9 @@ class GCENet(base.LowLightImageEnhancementModel):
         return output1, output2
 
 
-@MODELS.register(name="gcenet_baseline")
-class GCENetBaseline(GCENet):
-    """GCENet (Guided Curve Estimation Network) model.
-    
-    See Also: :class:`base.LowLightImageEnhancementModel`
-    """
-    
-    def __init__(
-        self,
-        in_channels : int = 3,
-        num_channels: int = 32,
-        num_iters   : int = 8,
-        weights     : Any = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            name         = "gcenet_baseline",
-            in_channels  = in_channels,
-            num_channels = num_channels,
-            num_iters    = num_iters,
-            weights      = weights,
-            *args, **kwargs
-        )
-
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        pred = self.forward(input=input, *args, **kwargs)
-        adjust, enhance = pred
-        loss = self.loss(input, adjust, enhance)
-        return enhance, loss
-        
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x  = input
-        c1 = self.en(x)
-        y  = x
-        for i in range(0, self.num_iters):
-            y = y + c1 * (torch.pow(y, 2) - y)
-        return c1, y
-
-
-@MODELS.register(name="gcenet_agf")
-class GCENetAGF(GCENet):
-    """GCENet-AGF (Guided Curve Estimation Network) model with simple guided filter.
+@MODELS.register(name="gcenet_a1")
+class GCENetA1(GCENet):
+    """GCENet-A1 (Guided Curve Estimation Network) model with simple guided filter.
     
     See Also: :class:`GCENet`
     """
@@ -689,7 +637,7 @@ class GCENetAGF(GCENet):
         *args, **kwargs
     ):
         super().__init__(
-            name         = "gcenet_agf",
+            name         = "gcenet_a1",
             in_channels  = in_channels,
             num_channels = num_channels,
             num_iters    = num_iters,
@@ -741,10 +689,9 @@ class GCENetAGF(GCENet):
         return c1, c2, y, y_gf
 
 
-@MODELS.register(name="gcenet_agf_symloss")
-class GCENetAGFSymLoss(GCENet):
-    """GCENet-AGF-SymLoss (Guided Curve Estimation Network) model with simple
-    guided filter.
+@MODELS.register(name="gcenet_a2")
+class GCENetA2(GCENet):
+    """GCENet-A2 (Guided Curve Estimation Network) model with simple guided filter.
     
     See Also: :class:`GCENet`
     """
@@ -761,7 +708,7 @@ class GCENetAGFSymLoss(GCENet):
         *args, **kwargs
     ):
         super().__init__(
-            name         = "gcenet_agf_symloss",
+            name         = "gcenet_a2",
             in_channels  = in_channels,
             num_channels = num_channels,
             num_iters    = num_iters,
@@ -801,9 +748,9 @@ class GCENetAGFSymLoss(GCENet):
         return c1, c2, y, y_gf
 
 
-@MODELS.register(name="gcenet_bgf")
-class GCENetBGF(GCENet):
-    """GCENet-BGF (Guided Curve Estimation Network) model with simple guided filter.
+@MODELS.register(name="gcenet_b1")
+class GCENetB1(GCENet):
+    """GCENet-B1 (Guided Curve Estimation Network) model with simple guided filter.
     
     See Also: :class:`GCENet`
     """
@@ -820,7 +767,7 @@ class GCENetBGF(GCENet):
         *args, **kwargs
     ):
         super().__init__(
-            name         = "gcenet_bgf",
+            name         = "gcenet_b1",
             in_channels  = in_channels,
             num_channels = num_channels,
             num_iters    = num_iters,
@@ -872,9 +819,12 @@ class GCENetBGF(GCENet):
         return c1, c2, x_gf, y
 
 
-@MODELS.register(name="gcenet_bgf_symloss")
-class GCENetBGFSymLoss(GCENet):
-    """GCENet-BGF-SymLoss (Guided Curve Estimation Network) model with simple guided filter.
+@MODELS.register(name="gcenet_b2")
+class GCENetB2(GCENet):
+    
+    
+    
+    """GCENet-B2 (Guided Curve Estimation Network) model with simple guided filter.
     
     See Also: :class:`GCENet`
     """
@@ -891,7 +841,7 @@ class GCENetBGFSymLoss(GCENet):
         *args, **kwargs
     ):
         super().__init__(
-            name         = "gcenet_bgf_symloss",
+            name         = "gcenet_b2",
             in_channels  = in_channels,
             num_channels = num_channels,
             num_iters    = num_iters,

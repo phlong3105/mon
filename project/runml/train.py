@@ -93,7 +93,7 @@ def train(args: dict) -> str:
 @click.option("--model",    type=str, default=None, help="Model name.")
 @click.option("--fullname", type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir", type=str, default=None, help="Optional saving directory.")
-@click.option("--device",   type=str, default=None, help="Running devices.")
+@click.option("--devices",  type=str, default=None, help="Running devices.")
 @click.option("--epochs",   type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",    type=int, default=None, help="Stop training once this number of steps is reached.")
 @click.option("--exist-ok", is_flag=True)
@@ -105,7 +105,7 @@ def main(
     model   : str,
     fullname: str,
     save_dir: str,
-    device  : str,
+    devices : str,
     epochs  : int,
     steps   : int,
     exist_ok: bool,
@@ -121,7 +121,7 @@ def main(
     root     = root     or args["root"]
     weights  = weights  or args["model"]["weights"]
     fullname = fullname or args["fullname"]
-    device   = device   or args["trainer"]["devices"]
+    devices  = devices  or args["trainer"]["devices"]
     epochs   = epochs if epochs > 0 else args["trainer"]["max_epochs"]
     steps    = steps  if steps  > 0 else args["trainer"]["max_steps"]
     
@@ -131,8 +131,8 @@ def main(
     weights  = weights[0] if isinstance(weights, list | tuple) else weights
     save_dir = save_dir  or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
-    device   = mon.to_int_list(device) if "auto" not in device else device
+    devices  = mon.parse_device(devices)
+    devices  = mon.to_int_list(devices) if "auto" not in devices else devices
     
     # Update arguments
     args["hostname"]  = hostname
@@ -148,7 +148,7 @@ def main(
     }
     args["trainer"]  |= {
         "default_root_dir": save_dir,
-        "devices"         : device,
+        "devices"         : devices,
         "max_epochs"      : epochs if steps is not None else None,
         "max_steps"       : steps,
     }

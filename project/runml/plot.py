@@ -456,12 +456,12 @@ def plot_matplotlib(
     type    = click.Path(exists=False),
     help    = "Save results location."
 )
-@click.option("--image-size", default=None, type=int)
-@click.option("--num-cols",   default=8,    type=int)
-@click.option("--mode",    default="diff",  type=click.Choice(["image", "diff"],     case_sensitive=False))
-@click.option("--ref",     default="input", type=click.Choice(_INCLUDE_DIRS,                 case_sensitive=False))
-@click.option("--backend", default="cv2",   type=click.Choice(["cv2", "matplotlib"], case_sensitive=False))
-@click.option("--verbose", is_flag=True)
+@click.option("--image-size", default=None,    type=int)
+@click.option("--num-cols",   default=8,       type=int)
+@click.option("--mode",       default="diff",  type=click.Choice(["image", "diff"],     case_sensitive=False))
+@click.option("--ref",        default="input", type=click.Choice(_INCLUDE_DIRS,                 case_sensitive=False))
+@click.option("--backend",    default="cv2",   type=click.Choice(["cv2", "matplotlib"], case_sensitive=False))
+@click.option("--verbose",    is_flag=True)
 @click.pass_context
 def main(
     ctx,

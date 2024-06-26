@@ -52,7 +52,7 @@ def run_train(args: dict):
     model    = args["model"]
     fullname = args["fullname"]
     save_dir = args["save_dir"]
-    device   = args["device"]
+    devices  = args["devices"]
     epochs   = args["epochs"]
     steps    = args["steps"]
     exist_ok = args["exist_ok"]
@@ -76,7 +76,7 @@ def run_train(args: dict):
         "--model"   : model,
         "--fullname": fullname,
         "--save-dir": str(save_dir),
-        "--device"  : device,
+        "--devices" : devices,
         "--epochs"  : epochs,
         "--steps"   : steps,
     }
@@ -87,7 +87,7 @@ def run_train(args: dict):
     if use_extra_model:
         torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
         script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_train.py"
-        devices     = mon.parse_device(device)
+        devices     = mon.parse_device(devices)
         if isinstance(devices, list) and torch_distributed_launch:
             python_call = [
                 f"python",
@@ -143,7 +143,7 @@ def run_predict(args: dict):
     data         = args["data"]
     fullname     = args["fullname"]
     save_dir     = args["save_dir"]
-    device       = args["device"]
+    devices      = args["devices"]
     imgsz        = args["imgsz"]
     resize       = args["resize"]
     benchmark    = args["benchmark"]
@@ -176,7 +176,7 @@ def run_predict(args: dict):
             "--model"   : model,
             "--fullname": fullname,
             "--save-dir": str(save_dir),
-            "--device"  : device,
+            "--devices" : devices,
             "--imgsz"   : imgsz,
         }
         flags   = ["--resize"]     if resize     else []
@@ -235,7 +235,7 @@ def run_online(args: dict):
     data         = args["data"]
     fullname     = args["fullname"]
     save_dir     = args["save_dir"]
-    device       = args["device"]
+    devices      = args["devices"]
     epochs       = args["epochs"]
     steps        = args["steps"]
     imgsz        = args["imgsz"]
@@ -269,7 +269,7 @@ def run_online(args: dict):
             "--model"   : model,
             "--fullname": fullname,
             "--save-dir": str(save_dir),
-            "--device"  : device,
+            "--devices" : devices,
             "--imgsz"   : imgsz,
         }
         flags   = ["--resize"]     if resize     else []
@@ -326,7 +326,7 @@ def run_online(args: dict):
 @click.option("--data",     type=str, default=None,       help="Predict dataset.")
 @click.option("--save-dir", type=str, default=None,       help="Optional saving directory.")
 @click.option("--weights",  type=str, default=None,       help="Weights paths.")
-@click.option("--device",   type=str, default=None,       help="Running devices.")
+@click.option("--devices",  type=str, default=None,       help="Running devices.")
 @click.option("--epochs",   type=int, default=-1,   	  help="Training epochs.")
 @click.option("--steps",    type=int, default=-1,   	  help="Training steps.")
 @click.option("--imgsz",    type=int, default=512,        help="Image size.")
@@ -341,7 +341,7 @@ def main(
     data    : str,
     save_dir: str,
     weights : str,
-    device  : int | list[int] | str,
+    devices : int | list[int] | str,
     epochs  : int,
     steps   : int,
     imgsz   : int,
@@ -396,9 +396,9 @@ def main(
         # Device
         devices_    = mon.list_devices()
         devices_str = utils.parse_menu_string(devices_)
-        device      = "auto" if model_name in mon.list_mon_models(mode=mode, task=task) and mode == "train" else device
-        device      = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=device or "cuda:0")
-        device 	    = devices_[int(device)] if mon.is_int(device) else device
+        devices     = "auto" if model_name in mon.list_mon_models(mode=mode, task=task) and mode == "train" else devices
+        devices     = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=devices or "cuda:0")
+        devices	    = devices_[int(devices)] if mon.is_int(devices) else devices
         # Training Flags
         if mode in ["train", "online", "instance"]:
             epochs = click.prompt(click.style(f"Epochs              ", fg="bright_yellow", bold=True), type=int, default=epochs)
@@ -448,7 +448,7 @@ def main(
             "model"   : model,
             "fullname": fullname,
             "save_dir": save_dir,
-            "device"  : device,
+            "devices" : devices,
             "epochs"  : epochs,
             "steps"   : steps,
             "exist_ok": exist_ok,
@@ -466,7 +466,7 @@ def main(
             "data"        : data,
             "fullname"    : fullname,
             "save_dir"    : save_dir,
-            "device"      : device,
+            "devices"     : devices,
             "imgsz"       : imgsz,
             "resize" 	  : resize,
             "benchmark"   : benchmark,
@@ -487,7 +487,7 @@ def main(
             "data"        : data,
             "fullname"    : fullname,
             "save_dir"    : save_dir,
-            "device"      : device,
+            "devices"     : devices,
             "epochs"      : epochs,
             "steps"       : steps,
             "imgsz"       : imgsz,

@@ -115,7 +115,7 @@ def online_learning(args: dict) -> str:
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--devices",    type=str, default=None, help="Running devices.")
 @click.option("--epochs",     type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
@@ -132,7 +132,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    device    : int | list[int] | str,
+    devices   : int | list[int] | str,
     epochs    : int,
     steps     : int,
     imgsz     : int,
@@ -154,7 +154,7 @@ def main(
     data     = data     or args["predictor"]["source"]
     fullname = fullname or args["fullname"]
     save_dir = save_dir or args["predictor"]["default_root_dir"]
-    device   = device   or args["predictor"]["devices"]
+    devices  = devices  or args["predictor"]["devices"]
     epochs   = epochs if epochs > 0 else args["trainer"]["max_epochs"]
     steps    = steps  if steps  > 0 else args["trainer"]["max_steps"]
     imgsz    = imgsz    or args["image_size"]
@@ -181,14 +181,14 @@ def main(
     }
     args["trainer"]    |= {
         "default_root_dir": save_dir,
-        "devices"         : device,
+        "devices"         : devices,
         "max_epochs"      : epochs if steps is not None else None,
         "max_steps"       : steps,
     }
     args["predictor"]  |= {
         "default_root_dir": save_dir,
         "source"          : data,
-        "devices"         : device,
+        "devices"         : devices,
         "resize"          : resize,
         "benchmark"       : benchmark,
         "save_image"      : save_image,

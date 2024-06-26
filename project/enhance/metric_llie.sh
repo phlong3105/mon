@@ -12,13 +12,13 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-model="hvi_cidnet_[extra]"
+model="gcenet_b2"
 data=(
-    # "dicm"
-    # "lime"
-    # "mef"
-    # "npe"
-    # "vv"
+    "dicm"
+    "lime"
+    "mef"
+    "npe"
+    "vv"
     "lol_v1"
     "lol_v2_real"
     "lol_v2_synthetic"
@@ -37,6 +37,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --target-dir "${data_dir}/${task}/${data[i]}/test/hq" \
         --result-file "${current_dir}" \
         --name "${model}" \
+        --devices "cuda:3" \
         --metric "psnr" \
         --metric "ssimc" \
         --metric "psnry" \

@@ -134,6 +134,7 @@ def measure_metric_pyiqa(
     target_dir : mon.Path | None,
     result_file: mon.Path | str,
     imgsz      : int,
+    devices    : int | list[int] | str,
     resize     : bool,
     metric     : list[str],
     use_gt_mean: bool,
@@ -167,8 +168,9 @@ def measure_metric_pyiqa(
     image_files = sorted(image_files)
     num_items   = len(image_files)
     
-    device      = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    metric      = _METRICS if ("all" in metric or "*" in metric) else metric
+    devices     = devices[0] if len(devices) == 1 else devices
+    devices     = torch.device(("cpu" if not torch.cuda.is_available() else devices))
+    metric      = _METRICS   if ("all" in metric or "*" in metric) else metric
     metric      = [m.lower() for m in metric]
     values      = {m: []     for m in metric}
     results     = {}
@@ -181,7 +183,7 @@ def measure_metric_pyiqa(
         metric_f[m] = pyiqa.InferenceModel(
             metric_name = m,
             as_loss     = False,
-            device      = device,
+            device      = devices,
         )
     mon.enable_print()
     need_target = any(mon.EXTRA_METRICS[m]["metric_mode"] == "FR" for m in metric)
@@ -194,7 +196,7 @@ def measure_metric_pyiqa(
             total       = len(image_files),
             description = f"[bright_yellow] Measuring"
         ):
-            image = mon.read_image(path=image_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+            image = mon.read_image(path=image_file, to_rgb=True, to_tensor=True, normalize=True).to(device=devices)
             if torch.any(image.isnan()):
                 continue
             if resize:
@@ -207,7 +209,7 @@ def measure_metric_pyiqa(
                 if temp.exists():
                     target_file = temp
             if target_file is not None and target_file.exists():
-                target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+                target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=devices)
                 if resize:
                     target = mon.resize(target, (h, w))
             else:
@@ -250,7 +252,8 @@ def update_results(results: dict, new_values: dict) -> dict:
 @click.option("--target-dir",     type=click.Path(exists=False), default=None, help="Ground-truth directory.")
 @click.option("--result-file",    type=str,                      default=None, help="Result file.")
 @click.option("--name",           type=str,                      default=None, help="Model's fullname.")
-@click.option("--imgsz",          type=int,                      default=256)
+@click.option("--devices",        type=str,                      default=None, help="Running devices.")
+@click.option("--imgsz",          type=int,                      default=512)
 @click.option("--resize",         is_flag=True)
 @click.option("--metric",         type=str, multiple=True, help="Measuring metric.")
 @click.option("--use-gt-mean",    is_flag=True)
@@ -264,6 +267,7 @@ def main(
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     name          : str,
+    devices       : int | list[int] | str,
     imgsz         : int,
     resize        : bool,
     metric        : list[str],
@@ -304,6 +308,7 @@ def main(
                 input_dir   = input_dir,
                 target_dir  = target_dir,
                 result_file = result_file,
+                devices     = devices,
                 imgsz       = imgsz,
                 resize      = resize,
                 metric      = metric,
