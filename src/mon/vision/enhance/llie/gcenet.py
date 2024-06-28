@@ -877,6 +877,78 @@ class GCENetB2(GCENet):
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         return c1, c2, x_gf, y
 
+
+@MODELS.register(name="gcenet_b3")
+class GCENetB3(GCENet):
+    """GCENet-B3 (Guided Curve Estimation Network) model with simple guided filter.
+    
+    See Also: :class:`GCENet`
+    """
+    
+    def __init__(
+        self,
+        in_channels : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 12,
+        radius      : int   = 3,
+        eps         : float = 1e-3,
+        gamma       : float = 2.8,
+        weights     : Any   = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name         = "gcenet_b3",
+            in_channels  = in_channels,
+            num_channels = num_channels,
+            num_iters    = num_iters,
+            radius       = radius,
+            eps          = eps,
+            gamma        = gamma,
+            weights      = weights,
+            *args, **kwargs
+        )
+    
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        # Symmetric Loss
+        i = input
+        c1, c2, gf, o = self.forward(input=i,  *args, **kwargs)
+        loss = self.loss(i, c1, o)
+        return o, loss
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        x    = input
+        # Guided Filter
+        # x_gf = self.gf(x, x)
+        # Enhancement
+        c1   = self.en(x)
+        # Enhancement loop
+        if not self.predicting:
+            y  = x
+            c2 = None
+            for i in range(self.num_iters):
+                y = y + c1 * (torch.pow(y, 2) - y)
+        else:
+            y  = x
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            for i in range(0, self.num_iters):
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+        y_ = kornia.filters.bilateral_blur(y, 3, 0.1, 0.1)
+        return c1, c2, y, y_
+    
 # endregion
 
 

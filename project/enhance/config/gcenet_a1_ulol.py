@@ -33,11 +33,11 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
+	"num_channels": 32,		# The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
-	"radius"	  : 3,
-	"eps"		  : 1e-3,
-	"gamma"		  : 2.8,
+	"radius"      : 3,
+	"eps"	      : 1e-4,
+	"gamma"	      : 2.4,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
