@@ -37,7 +37,7 @@ model = {
 	"num_iters"   : 15,             # The number of progressive loop.
 	"radius"      : 3,
 	"eps"	      : 1e-4,
-	"gamma"	      : 2.4,
+	"gamma"	      : 2.6,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,

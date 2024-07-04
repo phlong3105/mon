@@ -41,7 +41,7 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
-    device    = mon.set_device(args.device)
+    devices   = mon.set_device(args.devices)
     seed      = args.seed
     imgsz     = args.imgsz
     resize    = args.resize
@@ -55,7 +55,7 @@ def predict(args: argparse.Namespace):
     cudnn.enabled   = True
     
     # Model
-    model = Network().to(device)
+    model = Network().to(devices)
     model.load_state_dict(torch.load(str(weights)))
     for p in model.parameters():
         p.requires_grad = False
@@ -92,7 +92,7 @@ def predict(args: argparse.Namespace):
             ):
                 image_path      = meta["path"]
                 # input           = Variable(images, volatile=True).to(device)
-                input           = images.to(device)
+                input           = images.to(devices)
                 # console.log(f"Processing {u_name}")
                 start_time      = time.time()
                 u_list, r_list  = model(input)
@@ -124,7 +124,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--devices",    type=str, default=None, help="Running devices.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -138,7 +138,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    device    : str,
+    devices   : str,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -153,7 +153,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -165,7 +165,7 @@ def main(
         "data"      : data,
         "fullname"  : fullname,
         "save_dir"  : save_dir,
-        "device"    : device,
+        "devices"   : devices,
         "imgsz"     : imgsz,
         "resize"    : resize,
         "benchmark" : benchmark,

@@ -217,7 +217,6 @@ def get_guided_brightness_enhancement_map_prior(
         attn = torch.pow((1 - v), gamma)
     elif isinstance(input, np.ndarray):
         if denoise_ksize is not None:
-            # input = filtering.guided_filter(input, input, denoise_ksize)
             input = cv2.medianBlur(input, denoise_ksize)
         hsv = cv2.cvtColor(input, cv2.COLOR_RGB2HSV)
         if hsv.dtype != np.float64:

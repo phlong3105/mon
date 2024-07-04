@@ -1,4 +1,4 @@
-#!/usr/bin/edenoised1nv python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "gcenet_a2"
-data_name  = "ulol"
-root       = _root_dir / "run"
+model_name = "zero_dce++"
+data_name  = "sice_mix"
+root       = _root_dir / "train"
 fullname   = f"{model_name}_{data_name}"
 image_size = [512, 512]
 seed	   = 100
@@ -33,14 +33,10 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
-	"num_iters"   : 15,             # The number of progressive loop.
-	"radius"	  : 3,
-	"eps"		  : 1e-4,
-	"gamma"		  : 2.6,
 	"weights"     : None,           # The model's weights.
+	"loss"        : None,           # Loss function for training the model.
 	"metrics"     : {
-	    "train": None,
+	    "train": None,  # [{"name": "psnr"}],
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
 		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
@@ -66,15 +62,15 @@ model = {
 
 datamodule = {
     "name"      : data_name,
-    "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
+    "root"      : mon.DATA_DIR / "llie",        # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
 		A.Resize(width=image_size[0], height=image_size[1]),
-		# A.Flip(),
-		# A.Rotate(),
+		A.Flip(),
+		A.Rotate(),
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 16,            # The number of samples in one forward pass.
+    "batch_size": 8,             # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.
@@ -86,7 +82,7 @@ datamodule = {
 # region Training
 
 trainer = default.trainer | {
-	"callbacks"        : [
+	"callbacks"       : [
 		default.log_training_progress,
 		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
 		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
@@ -99,7 +95,6 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 200,
 }
 
 # endregion

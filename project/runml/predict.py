@@ -65,8 +65,9 @@ def predict(args: dict) -> str:
     save_root = save_dir if save_dir not in [None, "None", ""] else model.root
     save_dir  = mon.Path(save_root) / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
-    debug_save_dir = mon.Path(save_root) / f"{data_name}_debug"
-    debug_save_dir.mkdir(parents=True, exist_ok=True)
+    if save_debug:
+        debug_save_dir = mon.Path(save_root) / f"{data_name}_debug"
+        debug_save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     with torch.no_grad():
@@ -91,10 +92,11 @@ def predict(args: dict) -> str:
                     input = aug(input=input)
                
                 # Forward
-                start_time = time.time()
                 if isinstance(input, torch.Tensor):
+                    start_time = time.time()
                     output = model(input=input, augment=None, profile=False, out_index=-1)
                 elif isinstance(input, list | tuple):
+                    start_time = time.time()
                     output = []
                     for i in input:
                         o = model(input=i, augment=None, profile=False, out_index=-1)
