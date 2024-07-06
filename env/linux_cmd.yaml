@@ -55,14 +55,14 @@ dependencies:
       # Required: Deep Learning
       - einops                 # A new flavor of deep learning operations.
       - fvcore                 # Collection of common code shared among different research projects in FAIR computer vision team.
-      - lightning>=2.2.3       # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+      - lightning>=2.3.2       # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
       - onnxruntime            # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
       - tensorboard            # TensorFlow's Visualization Toolkit.
       - tensorflow             # TensorFlow is an open source machine learning framework for everyone.
       - thop                   # Count the MACs / FLOPs of your PyTorch model.
-      - torch>=2.3.0           # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+      - torch>=2.3.1           # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio             # Simple audio I/O for pytorch.
-      - torchmetrics>=1.3.2    # Collection of PyTorch native metrics for easy evaluating machine learning models.
+      - torchmetrics>=1.4.0    # Collection of PyTorch native metrics for easy evaluating machine learning models.
       - torchvision            # Image and video datasets and models for Torch deep learning.
       # Optional: Documentation
       - markdown               # Python implementation of Markdown.
