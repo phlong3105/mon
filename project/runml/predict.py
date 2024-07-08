@@ -156,7 +156,7 @@ def predict(args: dict) -> str:
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",    type=str, default=None, help="Running devices.")
+@click.option("--device",     type=str, default=None, help="Running devices.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -171,7 +171,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    devices   : int | list[int] | str,
+    device    : int | list[int] | str,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -191,7 +191,7 @@ def main(
     data     = data     or args["predictor"]["source"]
     fullname = fullname or args["fullname"]
     save_dir = save_dir or args["predictor"]["default_root_dir"]
-    devices  = devices  or args["predictor"]["devices"]
+    devices  = device   or args["predictor"]["devices"]
     imgsz    = imgsz    or args["image_size"]
     
     # Parse arguments

@@ -68,7 +68,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",    type=str, default=None, help="Running devices.")
+@click.option("--device",     type=str, default=None, help="Running device.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -82,7 +82,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    devices   : str,
+    device    : str,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -107,7 +107,7 @@ def main(
         "data"      : data,
         "fullname"  : fullname,
         "save_dir"  : save_dir,
-        "devices"   : devices,
+        "device"    : device,
         "imgsz"     : imgsz,
         "resize"    : resize,
         "benchmark" : benchmark,

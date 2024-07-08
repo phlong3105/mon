@@ -34,15 +34,15 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
-    devices   = mon.set_device(args.devices)
+    device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
     
     # Model
     scale_factor = 12
-    net          = mmodel.enhance_net_nopool(scale_factor, conv_type="dsc").to(devices)
-    net.load_state_dict(torch.load(weights, map_location=devices))
+    net          = mmodel.enhance_net_nopool(scale_factor, conv_type="dsc").to(device)
+    net.load_state_dict(torch.load(weights, map_location=device))
     net.eval()
     
     # Benchmark
@@ -79,8 +79,8 @@ def predict(args: argparse.Namespace):
                 image_path    = meta["path"]
                 data_lowlight = utils.image_from_path(str(image_path))
                 # Scale image to have the resolution of multiple of 4
-                data_lowlight = utils.scale_image(data_lowlight, scale_factor, devices) if scale_factor != 1 else data_lowlight
-                data_lowlight = data_lowlight.to(devices)
+                data_lowlight = utils.scale_image(data_lowlight, scale_factor, device) if scale_factor != 1 else data_lowlight
+                data_lowlight = data_lowlight.to(device)
                 start_time    = time.time()
                 enhanced_image, params_maps = net(data_lowlight)
                 run_time      = (time.time() - start_time)
@@ -103,7 +103,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",    type=str, default=None, help="Running devices.")
+@click.option("--device",     type=str, default=None, help="Running device.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -117,7 +117,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    devices   : str,
+    device    : str,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -132,7 +132,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir  or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    devices  = mon.parse_device(devices)
+    device   = mon.parse_device(device)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -144,7 +144,7 @@ def main(
         "data"      : data,
         "fullname"  : fullname,
         "save_dir"  : save_dir,
-        "devices"   : devices,
+        "device"    : device,
         "imgsz"     : imgsz,
         "resize"    : resize,
         "benchmark" : benchmark,

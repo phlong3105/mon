@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import os
 import random
 import socket
 import time
@@ -40,7 +39,7 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
-    devices   = mon.set_device(args.devices)
+    device    = mon.set_device(args.device)
     launcher  = args.launcher
     imgsz     = args.imgsz
     resize    = args.resize
@@ -50,7 +49,7 @@ def predict(args: argparse.Namespace):
     opt           = Logger.parse(args)
     opt           = Logger.dict_to_nonedict(opt)  # Convert to NoneDict, which return None for missing key.
     opt["phase"]  = "test"
-    opt["device"] = devices
+    opt["device"] = device
     
     # Distributed training settings
     opt["dist"] = False
@@ -145,7 +144,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",           type=str, default=None, help="Source data directory.")
 @click.option("--fullname",       type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",       type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",        type=str, default=None, help="Running devices.")
+@click.option("--device",         type=str, default=None, help="Running device.")
 @click.option("--local-rank",     type=int, default=0)
 @click.option("--launcher",       type=click.Choice(["none", "pytorch"]), default="none", help="Job launcher.")
 @click.option("--phase",          type=click.Choice(["train", "val"]), default="train", help="Run either train(training) or val(generation).")
@@ -167,7 +166,7 @@ def main(
     data          : str,
     fullname      : str,
     save_dir      : str,
-    devices       : str,
+    device        : str,
     local_rank    : int,
     launcher      : str,
     phase         : str,
@@ -191,7 +190,7 @@ def main(
     # Prioritize input args --> config file args
     weights  = weights  or args.get("weights")
     fullname = fullname or args.get("fullname")
-    devices  = devices   or args.get("devices")
+    device   = device   or args.get("device")
     imgsz    = imgsz    or args.get("imgsz")
     verbose  = verbose  or args.get("verbose")
     
@@ -200,7 +199,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    devices  = mon.parse_device(devices)
+    device   = mon.parse_device(device)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -211,7 +210,7 @@ def main(
     args["data"]           = data
     args["fullname"]       = fullname
     args["save_dir"]       = save_dir
-    args["devices"]        = devices
+    args["device"]         = device
     args["local_rank"]     = local_rank
     args["launcher"]       = launcher
     args["phase"]          = phase

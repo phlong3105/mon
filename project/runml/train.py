@@ -93,7 +93,7 @@ def train(args: dict) -> str:
 @click.option("--model",    type=str, default=None, help="Model name.")
 @click.option("--fullname", type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir", type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",  type=str, default=None, help="Running devices.")
+@click.option("--device",   type=str, default=None, help="Running devices.")
 @click.option("--epochs",   type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",    type=int, default=None, help="Stop training once this number of steps is reached.")
 @click.option("--exist-ok", is_flag=True)
@@ -105,7 +105,7 @@ def main(
     model   : str,
     fullname: str,
     save_dir: str,
-    devices : str,
+    device  : str,
     epochs  : int,
     steps   : int,
     exist_ok: bool,
@@ -121,9 +121,9 @@ def main(
     root     = root     or args["root"]
     weights  = weights  or args["model"]["weights"]
     fullname = fullname or args["fullname"]
-    devices  = devices  or args["trainer"]["devices"]
-    epochs   = epochs if epochs > 0 else args["trainer"]["max_epochs"]
-    steps    = steps  if steps  > 0 else args["trainer"]["max_steps"]
+    devices  = device   or args["trainer"]["devices"]
+    epochs   = epochs   if epochs > 0 else args["trainer"]["max_epochs"]
+    steps    = steps    if steps  > 0 else args["trainer"]["max_steps"]
     
     # Parse arguments
     root     = mon.Path(root)

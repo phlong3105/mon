@@ -122,7 +122,7 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    devices  = mon.set_device(args.devices)
+    device   = mon.set_device(args.device)
     launcher = args.launcher
     
     # Override options with args
@@ -144,7 +144,7 @@ def train(args: argparse.Namespace):
     opt["datasets"]["val"]["dataroot_gt"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_gt"]
     opt["datasets"]["val"]["dataroot_lq"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_lq"]
     
-    opt["device"] = devices
+    opt["device"] = device
     
     # Parse options, set distributed setting, set ramdom seed
     # device   = args.device
@@ -391,7 +391,7 @@ def train(args: argparse.Namespace):
 @click.option("--model",      type=str, default=None, help="Model name.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",    type=str, default=None, help="Running devices.")
+@click.option("--device",     type=str, default=None, help="Running device.")
 @click.option("--launcher",   type=click.Choice(["none", "pytorch", "slurm"]), default="none", help="Job launcher.")
 @click.option("--local-rank", type=int, default=0)
 @click.option("--epochs",     type=int, default=300,  help="Stop training once this number of epochs is reached.")
@@ -405,7 +405,7 @@ def main(
     model     : str,
     fullname  : str,
     save_dir  : str,
-    devices   : str,
+    device   : str,
     launcher  : str,
     local_rank: int,
     epochs    : int,
@@ -423,7 +423,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    devices  = mon.parse_device(devices)
+    device   = mon.parse_device(device)
     
     # Update arguments
     args = {
@@ -434,7 +434,7 @@ def main(
         "fullname"  : fullname,
         "save_dir"  : save_dir,
         "weights"   : weights,
-        "devices"   : devices,
+        "device"    : device,
         "local_rank": local_rank,
         "launcher"  : launcher,
         "epochs"    : epochs,

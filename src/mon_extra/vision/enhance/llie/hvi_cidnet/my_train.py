@@ -45,7 +45,7 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    devices  = mon.set_device(args.devices)
+    device   = mon.set_device(args.device)
     imgsz    = args.imgsz
     epochs   = args.epochs
     verbose  = args.verbose
@@ -63,7 +63,7 @@ def train(args: argparse.Namespace):
     cudnn.benchmark = True
     
     # Model
-    model = CIDNet().to(devices)
+    model = CIDNet().to(device)
     if args.start_epoch > 0:
         model.load_state_dict(torch.load(str(weights), map_location=lambda storage, loc: storage))
     model.train()
@@ -74,14 +74,14 @@ def train(args: argparse.Namespace):
     E_weight  = args.E_weight
     P_weight  = 1.0
     
-    L1_loss   = L1Loss(loss_weight=L1_weight, reduction="mean").to(devices)
-    D_loss    = SSIM(weight=D_weight).to(devices)
-    E_loss    = EdgeLoss(loss_weight=E_weight).to(devices)
+    L1_loss   = L1Loss(loss_weight=L1_weight, reduction="mean").to(device)
+    D_loss    = SSIM(weight=D_weight).to(device)
+    E_loss    = EdgeLoss(loss_weight=E_weight).to(device)
     P_loss    = PerceptualLoss(
         layer_weights     = {"conv1_2": 1, "conv2_2": 1, "conv3_4": 1, "conv4_4": 1},
         perceptual_weight = P_weight,
         criterion         = "mse",
-    ).to(devices)
+    ).to(device)
     
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=float(args.lr))
@@ -244,8 +244,8 @@ def train(args: argparse.Namespace):
             ):
                 # Forward
                 im1, im2, path1, path2 = batch[0], batch[1], batch[2], batch[3]
-                im1         = im1.to(devices)
-                im2         = im2.to(devices)
+                im1         = im1.to(device)
+                im2         = im2.to(device)
                 output_rgb  = model(im1)
                 gt_rgb      = im2
                 output_hvi  = model.HVIT(output_rgb)
@@ -330,7 +330,7 @@ def train(args: argparse.Namespace):
 @click.option("--model",    type=str, default=None, help="Model name.")
 @click.option("--fullname", type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir", type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",  type=str, default=None, help="Running devices.")
+@click.option("--device",   type=str, default=None, help="Running devices.")
 @click.option("--epochs",   type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",    type=int, default=None, help="Stop training once this number of steps is reached.")
 @click.option("--exist-ok", is_flag=True)
@@ -342,7 +342,7 @@ def main(
     model   : str,
     fullname: str,
     save_dir: str,
-    devices : str,
+    device  : str,
     epochs  : int,
     steps   : int,
     exist_ok: bool,
@@ -357,7 +357,7 @@ def main(
     # Parse arguments
     weights  = weights  or args.get("weights")
     fullname = fullname or args.get("fullname")
-    devices  = devices  or args.get("devices")
+    device   = device   or args.get("device")
     epochs   = epochs   or args.get("epochs")
     exist_ok = exist_ok or args.get("exist_ok")
     verbose  = verbose  or args.get("verbose")
@@ -367,7 +367,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    devices  = mon.parse_device(devices)
+    device   = mon.parse_device(device)
     
     # Update arguments
     args["root"]     = root
@@ -376,7 +376,7 @@ def main(
     args["model"]    = model
     args["fullname"] = fullname
     args["save_dir"] = save_dir
-    args["devices"]  = devices
+    args["device"]   = device
     args["epochs"]   = epochs
     args["steps"]    = steps
     args["exist_ok"] = exist_ok

@@ -102,13 +102,13 @@ def predict(args: argparse.Namespace):
     # General config
     data      = args.data
     save_dir  = args.save_dir
-    devices   = mon.set_device(args.devices)
+    device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
     
     # Model
-    model = Inference(args).to(devices)
+    model = Inference(args).to(device)
     model.eval()
     
     # Benchmark
@@ -161,7 +161,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",    type=str, default=None, help="Running devices.")
+@click.option("--device",     type=str, default=None, help="Running device.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -175,7 +175,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    devices   : str,
+    device    : str,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -191,7 +191,7 @@ def main(
     adjust_model_weights    = mon.ZOO_DIR / "mon_extra/vision/enhance/llie/uretinexnet/weights/uretinexnet_L_adjust.pth"
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    devices  = mon.parse_device(devices)
+    device   = mon.parse_device(device)
     ratio    = 5
     imgsz    = mon.parse_hw(imgsz)[0]
     
@@ -207,7 +207,7 @@ def main(
         "fullname"               : fullname,
         "save_dir"               : save_dir,
         "ratio"                  : ratio,
-        "devices"                : devices,
+        "device"                 : device,
         "imgsz"                  : imgsz,
         "resize"                 : resize,
         "benchmark"              : benchmark,

@@ -99,13 +99,13 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
-    devices   = mon.set_device(args.devices)
+    device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
     
     # Model
-    Imgnet = Image_network().to(devices)
+    Imgnet = Image_network().to(device)
     Imgnet.load_state_dict(torch.load(weights))
     Imgnet.eval()
     
@@ -143,9 +143,9 @@ def predict(args: argparse.Namespace):
                 image      = (np.asarray(image) / 255.0)
                 image      = torch.from_numpy(image).float()
                 image      = image.permute(2, 0, 1)
-                image      = image.to(devices).unsqueeze(0)
+                image      = image.to(device).unsqueeze(0)
                 histogram  = get_hist(str(image_path))
-                histogram  = histogram.to(devices).unsqueeze(0)
+                histogram  = histogram.to(device).unsqueeze(0)
                 
                 h0, w0 = mon.get_image_size(image)
                 if resize:
@@ -178,7 +178,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",    type=str, default=None, help="Running devices.")
+@click.option("--device",     type=str, default=None, help="Running device.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -192,7 +192,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    devices   : str,
+    device    : str,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -208,7 +208,7 @@ def main(
     # Prioritize input args --> config file args
     weights  = weights  or args.get("weights")
     fullname = fullname or args.get("name")
-    devices  = devices  or args.get("devices")
+    device   = device   or args.get("device")
     imgsz    = imgsz    or args.get("imgsz")
     verbose  = verbose  or args.get("verbose")
     
@@ -217,7 +217,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir  or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    devices  = mon.parse_device(devices)
+    device   = mon.parse_device(device)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -228,7 +228,7 @@ def main(
     args["data"]       = data
     args["fullname"]   = fullname
     args["save_dir"]   = save_dir
-    args["devices"]    = devices
+    args["device"]     = device
     args["imgsz"]      = imgsz
     args["resize"]     = resize
     args["benchmark"]  = benchmark

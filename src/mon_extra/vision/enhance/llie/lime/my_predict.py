@@ -27,7 +27,7 @@ def predict(args: argparse.Namespace):
     weights   = args.weights[0] if isinstance(args.weights, list) else args.weights
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
-    devices   = mon.set_device(args.devices)
+    device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
@@ -85,7 +85,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--devices",    type=str, default=None, help="Running devices.")
+@click.option("--device",     type=str, default=None, help="Running device.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--gamma",      type=float,   default=0.6,  help="Gamma correction parameter.")
 @click.option("--lambda_",    type=float,   default=0.15, help="The weight for balancing the two terms in the illumination refinement optimization objective.")
@@ -107,7 +107,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    devices   : str,
+    device    : str,
     imgsz     : int,
     gamma     : float,
     lambda_   : float,
@@ -129,7 +129,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    devices  = mon.parse_device(devices)
+    device   = mon.parse_device(device)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -141,7 +141,7 @@ def main(
         "data"      : data,
         "fullname"  : fullname,
         "save_dir"  : save_dir,
-        "devices"   : devices,
+        "device"    : device,
         "imgsz"     : imgsz,
         "gamma"     : gamma,
         "lambda_"   : lambda_,
