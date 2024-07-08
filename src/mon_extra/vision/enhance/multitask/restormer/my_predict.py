@@ -68,18 +68,18 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
-    device    = args.device
+    devices   = args.devices
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
     
-    device = device[0] if isinstance(device, list) else device
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+    devices   = devices[0] if isinstance(devices, list) else devices
+    os.environ["CUDA_VISIBLE_DEVICES"] = f"{devices}"
+    devices   = torch.device(f"cuda:{devices}" if torch.cuda.is_available() else "cpu")
     
     # Override options with args
     opt           = parse(args.opt, is_train=False)
-    opt["device"] = device
+    opt["device"] = devices
     
     # Load model
     '''
@@ -103,7 +103,7 @@ def predict(args: argparse.Namespace):
     '''
     opt["path"]["pretrain_network_g"] = str(weights)
     model = create_model(opt)
-    model.to(device)
+    model.to(devices)
     model.eval()
     
     # Measure efficiency score
@@ -138,7 +138,7 @@ def predict(args: argparse.Namespace):
                     image = load_gray_img(image_path)
                 else:
                     image = load_img(image_path)
-                input = torch.from_numpy(image).float().div(255.0).permute(2, 0, 1).unsqueeze(0).to(device)
+                input = torch.from_numpy(image).float().div(255.0).permute(2, 0, 1).unsqueeze(0).to(devices)
                 
                 # Pad the input if not_multiple_of 8
                 height, width = input.shape[2], input.shape[3]
@@ -203,7 +203,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",         type=str, default=None, help="Source data directory.")
 @click.option("--fullname",     type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",     type=str, default=None, help="Optional saving directory.")
-@click.option("--device",       type=str, default=None, help="Running devices.")
+@click.option("--devices",      type=str, default=None, help="Running devices.")
 @click.option("--imgsz",        type=int, default=None, help="Image sizes.")
 @click.option("--tile",         type=int, default=None, help="Tile size (e.g 720). None means testing on the original resolution image.")
 @click.option("--tile-overlap", type=int, default=32,   help="Overlapping of different tiles.")
@@ -219,7 +219,7 @@ def main(
     data        : str,
     fullname    : str,
     save_dir    : str,
-    device      : str,
+    devices     : str,
     imgsz       : int,
     tile        : int,
     tile_overlap: int,
@@ -242,7 +242,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -255,7 +255,7 @@ def main(
         "fullname"    : fullname,
         "save_dir"    : save_dir,
         "weights"     : weights,
-        "device"      : device,
+        "devices"     : devices,
         "imgsz"       : imgsz,
         "tile"        : tile,
         "tile_overlap": tile_overlap,

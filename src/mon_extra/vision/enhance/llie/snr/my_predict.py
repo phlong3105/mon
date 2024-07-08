@@ -34,7 +34,7 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
-    device    = mon.set_device(args.device)
+    devices   = mon.set_device(args.devices)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
@@ -42,7 +42,7 @@ def predict(args: argparse.Namespace):
     # Override options with args
     opt           = option.parse(args.opt, is_train=False)
     opt           = option.dict_to_nonedict(opt)
-    opt["device"] = device
+    opt["device"] = devices
     
     # Load model
     opt["path"]["pretrain_model_G"] = str(weights)
@@ -80,8 +80,8 @@ def predict(args: argparse.Namespace):
                 image_nf   = image_nf * 1.0 / 255.0
                 image_nf   = torch.from_numpy(np.ascontiguousarray(np.transpose(image_nf, (2, 0, 1)))).float()
                 image      = torch.from_numpy(np.ascontiguousarray(np.transpose(image,    (2, 0, 1)))).float()
-                image      = image.unsqueeze(0).to(device)
-                image_nf   = image_nf.unsqueeze(0).to(device)
+                image      = image.unsqueeze(0).to(devices)
+                image_nf   = image_nf.unsqueeze(0).to(devices)
                 
                 start_time = time.time()
                 model.feed_data(
@@ -118,7 +118,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",       type=str, default=None, help="Source data directory.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--devices",    type=str, default=None, help="Running devices.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
 @click.option("--benchmark",  is_flag=True)
@@ -132,7 +132,7 @@ def main(
     data      : str,
     fullname  : str,
     save_dir  : str,
-    device    : str,
+    devices   : str,
     imgsz     : int,
     resize    : bool,
     benchmark : bool,
@@ -149,7 +149,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -162,7 +162,7 @@ def main(
         "data"      : data,
         "fullname"  : fullname,
         "save_dir"  : save_dir,
-        "device"    : device,
+        "devices"   : devices,
         "imgsz"     : imgsz,
         "resize"    : resize,
         "benchmark" : benchmark,

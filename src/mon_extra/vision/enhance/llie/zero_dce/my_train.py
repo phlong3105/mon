@@ -36,7 +36,7 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    device    = mon.set_device(args.device)
+    devices   = mon.set_device(args.devices)
     epochs   = args.epochs
     verbose  = args.verbose
     
@@ -45,7 +45,7 @@ def train(args: argparse.Namespace):
     weights_dir.mkdir(parents=True, exist_ok=True)
     
     # Model
-    DCE_net = mmodel.enhance_net_nopool().to(device)
+    DCE_net = mmodel.enhance_net_nopool().to(devices)
     DCE_net.apply(weights_init)
     if mon.Path(weights).is_weights_file():
         DCE_net.load_state_dict(torch.load(weights))
@@ -78,7 +78,7 @@ def train(args: argparse.Namespace):
             description = f"[bright_yellow] Predicting"
         ):
             for iteration, img_lowlight in enumerate(train_loader):
-                img_lowlight = img_lowlight.to(device)
+                img_lowlight = img_lowlight.to(devices)
                 enhanced_image_1, enhanced_image, A = DCE_net(img_lowlight)
                 
                 loss_tv  = 200 * L_tv(A)
@@ -109,7 +109,7 @@ def train(args: argparse.Namespace):
 @click.option("--model",      type=str, default=None, help="Model name.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--devices",    type=str, default=None, help="Running devices.")
 @click.option("--local-rank", type=int, default=-1,   help="DDP parameter, do not modify.")
 @click.option("--epochs",     type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
@@ -123,7 +123,7 @@ def main(
     fullname  : str,
     save_dir  : str,
     local_rank: int,
-    device    : str,
+    devices   : str,
     epochs    : int,
     steps     : int,
     exist_ok  : bool,
@@ -138,7 +138,7 @@ def main(
     # Parse arguments
     weights  = weights  or args.get("weights")
     fullname = fullname or args.get("fullname")
-    device   = device   or args.get("device")
+    devices  = devices  or args.get("devices")
     epochs   = epochs   or args.get("epochs")
     exist_ok = exist_ok or args.get("exist_ok")
     verbose  = verbose  or args.get("verbose")
@@ -148,7 +148,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     
     # Update arguments
     args["root"]       = root
@@ -157,7 +157,7 @@ def main(
     args["model"]      = model
     args["fullname"]   = fullname
     args["save_dir"]   = save_dir
-    args["device"]     = device
+    args["devices"]    = devices
     args["local_rank"] = local_rank
     args["epochs"]     = epochs
     args["steps"]      = steps

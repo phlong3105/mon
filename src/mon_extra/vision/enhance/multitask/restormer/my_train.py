@@ -114,12 +114,12 @@ def train(args: argparse.Namespace):
     save_dir = mon.Path(args.save_dir)
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    device   = args.device
+    devices  = args.devices
     launcher = args.launcher
     
-    device = device[0] if isinstance(device, list) else device
-    os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
-    device = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
+    devices  = devices[0] if isinstance(devices, list) else devices
+    os.environ["CUDA_VISIBLE_DEVICES"] = f"{devices}"
+    devices  = torch.device(f"cuda:{devices}" if torch.cuda.is_available() else "cpu")
     
     # Override options with args
     opt = parse(args.opt, is_train=True)
@@ -140,7 +140,7 @@ def train(args: argparse.Namespace):
     opt["datasets"]["val"]["dataroot_gt"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_gt"]
     opt["datasets"]["val"]["dataroot_lq"]   = mon.DATA_DIR / opt["datasets"]["val"]["dataroot_lq"]
 
-    opt["device"] = device
+    opt["device"] = devices
     
     if launcher == "none":
         opt["dist"] = False
@@ -351,7 +351,7 @@ def train(args: argparse.Namespace):
 @click.option("--model",      type=str, default=None, help="Model name.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--devices",    type=str, default=None, help="Running devices.")
 @click.option("--local-rank", type=int, default=0)
 @click.option("--launcher",   type=click.Choice(["none", "pytorch", "slurm"]), default="none", help="Job launcher.")
 @click.option("--epochs",     type=int, default=300,  help="Stop training once this number of epochs is reached.")
@@ -365,7 +365,7 @@ def main(
     model     : str,
     fullname  : str,
     save_dir  : str,
-    device    : str,
+    devices   : str,
     local_rank: int,
     launcher  : str,
     epochs    : int,
@@ -384,7 +384,7 @@ def main(
     project  = root.name
     save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     
     # Update arguments
     args = {
@@ -396,7 +396,7 @@ def main(
         "project"   : project,
         "fullname"  : fullname,
         "save_dir"  : save_dir,
-        "device"    : device,
+        "devices"   : devices,
         "local_rank": local_rank,
         "launcher"  : launcher,
         "epochs"    : epochs,

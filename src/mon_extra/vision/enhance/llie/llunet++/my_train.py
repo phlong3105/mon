@@ -32,7 +32,7 @@ _current_dir  = _current_file.parents[0]
 
 # region Train
 
-def train_epoch(train_loader, model, criterion, optimizer, device):
+def train_epoch(train_loader, model, criterion, optimizer, devices):
     loss_meters = AverageMeter()
     model.train()
     with mon.get_progress_bar() as pbar:
@@ -41,8 +41,8 @@ def train_epoch(train_loader, model, criterion, optimizer, device):
             total       = len(train_loader),
             description = f"[bright_yellow] Training"
         ):
-            input  = input.to(device)
-            target = target.to(device)
+            input  = input.to(devices)
+            target = target.to(devices)
             output = model(input)
             loss   = criterion(output, target)
             optimizer.zero_grad()
@@ -53,10 +53,10 @@ def train_epoch(train_loader, model, criterion, optimizer, device):
     return loss_meters.avg
 
 
-def val_epoch(val_loader, model, criterion, device):
+def val_epoch(val_loader, model, criterion, devices):
     loss_meters = AverageMeter()
-    psnr_meters = mon.PeakSignalNoiseRatio().to(device)
-    ssim_meters = mon.StructuralSimilarityIndexMeasure().to(device)
+    psnr_meters = mon.PeakSignalNoiseRatio().to(devices)
+    ssim_meters = mon.StructuralSimilarityIndexMeasure().to(devices)
     model.eval()
     with mon.get_progress_bar() as pbar:
         for input, target, meta in pbar.track(
@@ -64,8 +64,8 @@ def val_epoch(val_loader, model, criterion, device):
             total       = len(val_loader),
             description = f"[bright_yellow] Validating"
         ):
-            input  = input.to(device)
-            target = target.to(device)
+            input  = input.to(devices)
+            target = target.to(devices)
             output = model(input)
             loss   = criterion(output, target)
             loss_meters.update(loss.item(), input.size(0))
@@ -80,7 +80,7 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    device    = mon.set_device(args.device)
+    devices   = mon.set_device(args.devices)
     imgsz    = args.imgsz
     epochs   = args.epochs
     verbose  = args.verbose
@@ -93,11 +93,11 @@ def train(args: argparse.Namespace):
     cudnn.benchmark = True
     
     # Model
-    model = NestedUNet().to(device)
+    model = NestedUNet().to(devices)
     model.train()
     
     # Loss
-    criterion = Loss(*args.loss_weights).to(device)
+    criterion = Loss(*args.loss_weights).to(devices)
     
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -113,7 +113,7 @@ def train(args: argparse.Namespace):
         "to_tensor" : True,
         "cache_data": False,
         "batch_size": args.batch_size,
-        "devices"   : device,
+        "devices"   : devices,
         "shuffle"   : True,
         "verbose"   : verbose,
     }
@@ -139,8 +139,8 @@ def train(args: argparse.Namespace):
     
     # Training
     for epoch in range(epochs):
-        train_loss  = train_epoch(train_dataloader, model, criterion, optimizer, device)
-        val_results = val_epoch(val_dataloader, model, criterion, device)
+        train_loss  = train_epoch(train_dataloader, model, criterion, optimizer, devices)
+        val_results = val_epoch(val_dataloader, model, criterion, devices)
         val_loss    = float(val_results[0])
         val_psnr    = float(val_results[1].cpu().detach().numpy())
         val_ssim    = float(val_results[2].cpu().detach().numpy())
@@ -200,7 +200,7 @@ def train(args: argparse.Namespace):
 @click.option("--model",      type=str, default=None, help="Model name.")
 @click.option("--fullname",   type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
+@click.option("--devices",    type=str, default=None, help="Running devices.")
 @click.option("--local-rank", type=int, default=-1,   help="DDP parameter, do not modify.")
 @click.option("--epochs",     type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
@@ -214,7 +214,7 @@ def main(
     fullname  : str,
     save_dir  : str,
     local_rank: int,
-    device    : str,
+    devices   : str,
     epochs    : int,
     steps     : int,
     exist_ok  : bool,
@@ -229,7 +229,7 @@ def main(
     # Parse arguments
     weights  = weights  or args.get("weights")
     fullname = fullname or args.get("fullname")
-    device   = device   or args.get("device")
+    devices  = devices  or args.get("devices")
     epochs   = epochs   or args.get("epochs")
     exist_ok = exist_ok or args.get("exist_ok")
     verbose  = verbose  or args.get("verbose")
@@ -239,7 +239,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     
     # Update arguments
     args["root"]       = root
@@ -248,7 +248,7 @@ def main(
     args["model"]      = model
     args["fullname"]   = fullname
     args["save_dir"]   = save_dir
-    args["device"]     = device
+    args["devices"]    = devices
     args["local_rank"] = local_rank
     args["epochs"]     = epochs
     args["steps"]      = steps

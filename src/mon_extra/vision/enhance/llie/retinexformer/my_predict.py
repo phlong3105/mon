@@ -32,7 +32,7 @@ def predict(args: argparse.Namespace):
     weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
-    device    = mon.set_device(args.device)
+    devices   = mon.set_device(args.devices)
     imgsz     = args.imgsz
     resize    = args.resize
     benchmark = args.benchmark
@@ -43,7 +43,7 @@ def predict(args: argparse.Namespace):
     # print("export CUDA_VISIBLE_DEVICES=" + gpu_list)
     opt           = parse(args.opt, is_train=False)
     opt["dist"]   = False
-    opt["device"] = device
+    opt["device"] = devices
     
     # Model
     model      = create_model(opt).net_g
@@ -57,7 +57,7 @@ def predict(args: argparse.Namespace):
         model.load_state_dict(new_checkpoint)
     
     print("===>Testing using weights: ", weights)
-    model.to(device)
+    model.to(devices)
     # model = nn.DataParallel(model)
     model.eval()
     
@@ -101,7 +101,7 @@ def predict(args: argparse.Namespace):
                 padh  = H - h if h % factor != 0 else 0
                 padw  = W - w if w % factor != 0 else 0
                 input = F.pad(images, (0, padw, 0, padh), 'reflect')
-                input = input.to(device)
+                input = input.to(devices)
                 
                 start_time = time.time()
                 restored = model(input)
@@ -132,7 +132,7 @@ def predict(args: argparse.Namespace):
 @click.option("--data",         type=str, default=None, help="Source data directory.")
 @click.option("--fullname",     type=str, default=None, help="Save results to root/run/predict/fullname.")
 @click.option("--save-dir",     type=str, default=None, help="Optional saving directory.")
-@click.option("--device",       type=str, default=None, help="Running devices.")
+@click.option("--devices",      type=str, default=None, help="Running devices.")
 @click.option("--imgsz",        type=int, default=None, help="Image sizes.")
 @click.option("--tile",         type=int, default=None, help="Tile size (e.g 720). None means testing on the original resolution image.")
 @click.option("--tile-overlap", type=int, default=32,   help="Overlapping of different tiles.")
@@ -148,7 +148,7 @@ def main(
     data        : str,
     fullname    : str,
     save_dir    : str,
-    device      : str,
+    devices     : str,
     imgsz       : int,
     tile        : int,
     tile_overlap: int,
@@ -167,7 +167,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir  or root / "run" / "predict" / model
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     imgsz    = mon.parse_hw(imgsz)[0]
     
     # Update arguments
@@ -180,7 +180,7 @@ def main(
         "data"        : data,
         "fullname"    : fullname,
         "save_dir"    : save_dir,
-        "device"      : device,
+        "devices"     : devices,
         "imgsz"       : imgsz,
         "tile"        : tile,
         "tile_overlap": tile_overlap,

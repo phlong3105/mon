@@ -4,15 +4,12 @@
 from __future__ import annotations
 
 import argparse
-import os
 import socket
-import time
 
 import click
 import cv2
 import numpy as np
 import torch
-import torch.backends.cudnn as cudnn
 import torch.optim
 import torch.optim
 from torch.utils.tensorboard import SummaryWriter
@@ -62,14 +59,14 @@ def dfs_freeze(model):
         dfs_freeze(child)
         
 
-def eval(val_loader, model, device):
-    psnr_meters = mon.PeakSignalNoiseRatio().to(device)
-    ssim_meters = mon.StructuralSimilarityIndexMeasure().to(device)
+def eval(val_loader, model, devices):
+    psnr_meters = mon.PeakSignalNoiseRatio().to(devices)
+    ssim_meters = mon.StructuralSimilarityIndexMeasure().to(devices)
     model.eval()
     for iteration, (low, gt, hist) in enumerate(val_loader):
-        low  = low.to(device)
-        gt   = gt.to(device)
-        hist = hist.to(device)
+        low  = low.to(devices)
+        gt   = gt.to(devices)
+        hist = hist.to(devices)
         img, tf, w, _ = model(low, hist)
         psnr_meters.update(img, gt)
         ssim_meters.update(img, gt)
@@ -83,7 +80,7 @@ def train(args: argparse.Namespace):
     weights  = args.weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     save_dir = mon.Path(args.save_dir)
-    device   = mon.set_device(args.device)
+    devices  = mon.set_device(args.devices)
     epochs   = args.epochs
     verbose  = args.verbose
     
@@ -94,7 +91,7 @@ def train(args: argparse.Namespace):
     # Model
     Imgnet = Image_network()
     Imgnet.apply(weights_init)
-    Imgnet = Imgnet.to(device)
+    Imgnet = Imgnet.to(devices)
     Imgnet.train()
     
     num_params = 0
@@ -103,10 +100,10 @@ def train(args: argparse.Namespace):
     console.log("# of Imgnet params : %d" % num_params)
     
     # Loss
-    loss_c = torch.nn.MSELoss().to(device)
-    loss_e = myloss.entropy_loss().to(device)
+    loss_c = torch.nn.MSELoss().to(devices)
+    loss_e = myloss.entropy_loss().to(devices)
     cos    = torch.nn.CosineSimilarity(dim=1)
-    loss_t = myloss.totalvariation_loss().to(device)
+    loss_t = myloss.totalvariation_loss().to(devices)
     
     cont_c        = 0.5
     cont_e        = 0.2
@@ -173,13 +170,13 @@ def train(args: argparse.Namespace):
             
             for iteration, (low, gt, hist) in enumerate(train_loader):
                 Imgnet.train()
-                low  = low.to(device)
-                gt   = gt.to(device)
-                hist = hist.to(device)
+                low  = low.to(devices)
+                gt   = gt.to(devices)
+                hist = hist.to(devices)
                 
                 # Forward
                 img, tf, w, _ = Imgnet(low, hist)
-                img  = img.to(device)
+                img  = img.to(devices)
                 
                 # Loss
                 loss_img = loss_c(img, gt)
@@ -269,7 +266,7 @@ def train(args: argparse.Namespace):
                 loss_2     = loss_1
             
             # Eval
-            psnr, ssim = eval(val_loader, Imgnet, device)
+            psnr, ssim = eval(val_loader, Imgnet, devices)
             writer.add_scalar("psnr", psnr, epoch + 1)
             writer.add_scalar("ssim", ssim, epoch + 1)
             print()
@@ -297,7 +294,7 @@ def train(args: argparse.Namespace):
 @click.option("--model",    type=str, default=None, help="Model name.")
 @click.option("--fullname", type=str, default=None, help="Save results to root/run/train/fullname.")
 @click.option("--save-dir", type=str, default=None, help="Optional saving directory.")
-@click.option("--device",   type=str, default=None, help="Running devices.")
+@click.option("--devices",  type=str, default=None, help="Running devices.")
 @click.option("--epochs",   type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",    type=int, default=None, help="Stop training once this number of steps is reached.")
 @click.option("--exist-ok", is_flag=True)
@@ -309,7 +306,7 @@ def main(
     model     : str,
     fullname  : str,
     save_dir  : str,
-    device    : str,
+    devices   : str,
     epochs    : int,
     steps     : int,
     exist_ok  : bool,
@@ -324,7 +321,7 @@ def main(
     # Parse arguments
     weights  = weights  or args.get("weights")
     fullname = fullname or args.get("fullname")
-    device   = device   or args.get("device")
+    devices  = devices  or args.get("devices")
     epochs   = epochs   or args.get("epochs")
     exist_ok = exist_ok or args.get("exist_ok")
     verbose  = verbose  or args.get("verbose")
@@ -334,7 +331,7 @@ def main(
     weights  = mon.to_list(weights)
     save_dir = save_dir or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
+    devices  = mon.parse_device(devices)
     
     # Update arguments
     args["root"]     = root
@@ -343,7 +340,7 @@ def main(
     args["model"]    = model
     args["fullname"] = fullname
     args["save_dir"] = save_dir
-    args["device"]   = device
+    args["devices"]  = devices
     args["epochs"]   = epochs
     args["steps"]    = steps
     args["exist_ok"] = exist_ok

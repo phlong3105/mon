@@ -91,7 +91,7 @@ def predict(args: argparse.Namespace):
                 description = f"[bright_yellow] Predicting"
             ):
                 image_path      = meta["path"]
-                # input           = Variable(images, volatile=True).to(device)
+                # input           = Variable(images, volatile=True).to(devices)
                 input           = images.to(devices)
                 # console.log(f"Processing {u_name}")
                 start_time      = time.time()

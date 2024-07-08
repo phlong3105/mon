@@ -397,7 +397,7 @@ def main(
         devices_    = mon.list_devices()
         devices_str = utils.parse_menu_string(devices_)
         devices     = "auto" if model_name in mon.list_mon_models(mode=mode, task=task) and mode == "train" else devices
-        devices     = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=devices or "cuda:0")
+        devices     = click.prompt(click.style(f"Devices {devices_str}", fg="bright_green", bold=True), type=str, default=devices or "cuda:0")
         devices	    = devices_[int(devices)] if mon.is_int(devices) else devices
         # Training Flags
         if mode in ["train", "online", "instance"]:
