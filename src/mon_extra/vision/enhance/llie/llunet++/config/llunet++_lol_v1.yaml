@@ -1,18 +1,18 @@
 # General config
-root        :
-weights     :
-model       :
+root        : ~
+weights     : ~
+model       : ~
 data        : "lol_v1"
-fullname    :
-save_dir    :
+fullname    : ~
+save_dir    : ~
 device      : 0
 epochs      : 100
-steps       :
+steps       : ~
 imgsz       : 384
-resize      :
-benchmark   :
-save_image  :
-use_data_dir:
+resize      : ~
+benchmark   : ~
+save_image  : ~
+use_data_dir: ~
 exist_ok    : False
 verbose     : True
 

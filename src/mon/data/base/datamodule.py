@@ -147,7 +147,7 @@ class DataModule(lightning.LightningDataModule, ABC):
             self.classlabels = self.classlabels or getattr(self.test, "classlabels", None)
             return data.DataLoader(
                 dataset            = self.test,
-                batch_size         = self.batch_size,
+                batch_size         = 1,  # self.batch_size,
                 shuffle            = False,
                 num_workers        = self.num_workers,
                 pin_memory         = True,
