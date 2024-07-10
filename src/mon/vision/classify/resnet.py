@@ -345,7 +345,7 @@ class ResNet18(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet18-f37072fd.pth",
-            "path"       : "resnet/resnet18_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -370,7 +370,7 @@ class ResNet34(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet34-b627a593.pth",
-            "path"       : "resnet/resnet34_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -396,13 +396,13 @@ class ResNet50(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet50-11ad3fa6.pth",
-            "path"       : "resnet/resnet50_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/resnet50-0676ba61.pth",
-            "path"       : "resnet/resnet50_imagenet1k_v2.pth",
+            "path"       : "resnet/resnet50/imagenet1k_v2/resnet50_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -428,13 +428,13 @@ class ResNet101(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet101-63fe2227.pth",
-            "path"       : "resnet/resnet101_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/resnet101-cd907fc2.pth",
-            "path"       : "resnet/resnet101_imagenet1k_v2.pth",
+            "path"       : "resnet/resnet101/imagenet1k_v2/resnet101_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -460,13 +460,13 @@ class ResNet152(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet152-394f9c45.pth",
-            "path"       : "resnet/resnet152_imagenet1k_v1.pth",
+            "path"       : "resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/resnet152-f82ba261.pth",
-            "path"       : "resnet/resnet152_imagenet1k_v2.pth",
+            "path"       : "resnet/resnet152/imagenet1k_v2/resnet152_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -496,13 +496,13 @@ class ResNeXt50_32X4D(ResNet):
     _zoo: dict = {
         "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth",
-            "path"       : "resnext50_32x4d-imagenet1k-v1.pth",
+            "path"       : "resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k-v2": {
             "url"        : "https://download.pytorch.org/models/resnext50_32x4d-1a0047aa.pth",
-            "path"       : "resnext50_32x4d-imagenet1k-v2.pth",
+            "path"       : "resnet/resnext50_32x4d/imagenet1k_v2/resnext50_32x4d_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -530,13 +530,13 @@ class ResNeXt101_32X8D(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth",
-            "path"       : "resnext101_32x8d_imagenet1k_v1.pth",
+            "path"       : "resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/resnext101_32x8d-110c445d.pth",
-            "path"       : "resnext101_32x8d_imagenet1k_v2.pth",
+            "path"       : "resnet/resnext101_32x8d/imagenet1k_v2/resnext101_32x8d_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -564,7 +564,7 @@ class ResNeXt101_64X4D(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth",
-            "path"       : "resnext101_64x4d_imagenet1k_v1.pth",
+            "path"       : "resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -596,13 +596,13 @@ class WideResNet50(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth",
-            "path"       : "wide_resnet50_imagenet1k_v1.pth",
+            "path"       : "resnet/wide_resnet50/imagenet1k_v1/wide_resnet50_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/wide_resnet50_2-9ba9bcbe.pth",
-            "path"       : "wide_resnet50_imagenet1k_v2.pth",
+            "path"       : "resnet/wide_resnet50/imagenet1k_v2/wide_resnet50_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -629,13 +629,13 @@ class WideResNet101(ResNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth",
-            "path"       : "wide_resnet101_imagenet1k_v1.pth",
+            "path"       : "resnet/wide_resnet101/imagenet1k_v1/wide_resnet101_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/wide_resnet101_2-d733dc28.pth",
-            "path"       : "wide_resnet101_imagenet1k_v2.pth",
+            "path"       : "resnet/wide_resnet101/imagenet1k_v2/wide_resnet101_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },

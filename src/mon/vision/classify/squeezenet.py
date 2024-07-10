@@ -176,7 +176,7 @@ class SqueezeNet1_0(SqueezeNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/squeezenet1_0-b66bff10.pth",
-            "path"       : "squeezenet/squeezenet1_0_imagenet1k_v1.pth",
+            "path"       : "squeezenet/squeezenet1_0/imagenet1k_v1/squeezenet1_0_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -204,7 +204,7 @@ class SqueezeNet1_1(SqueezeNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth",
-            "path"       : "squeezenet/squeezenet1_1_imagenet1k_v1.pth",
+            "path"       : "squeezenet/squeezenet1_1/imagenet1k_v1/squeezenet1_1_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

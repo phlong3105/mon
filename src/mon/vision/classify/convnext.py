@@ -225,9 +225,9 @@ class ConvNeXtBase(ConvNeXt):
     """
     
     _zoo: dict = {
-        "imagenet1k-v1": {
+        "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
-            "path"       : "convnext/convnext_base_imagenet1k_v1.pth",
+            "path"       : "convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -260,7 +260,7 @@ class ConvNeXtTiny(ConvNeXt):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
-            "path"       : "convnext/convnext_tiny_imagenet1k_v1.pth",
+            "path"       : "convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -291,9 +291,9 @@ class ConvNeXtSmall(ConvNeXt):
     """
     
     _zoo: dict = {
-        "imagenet1k-v1": {
+        "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_small-0c510722.pth",
-            "path"       : "convnext/convnext_small_imagenet1k_v1.pth",
+            "path"       : "convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -325,7 +325,7 @@ class ConvNeXtLarge(ConvNeXt):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
-            "path"       : "convnext/convnext_large_imagenet1k_v1.pth",
+            "path"       : "convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

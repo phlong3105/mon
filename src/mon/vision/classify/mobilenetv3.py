@@ -312,13 +312,13 @@ class MobileNetV3_Large(MobileNetV3):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
-            "path"       : "mobilenetv3/mobilenetv3_large_imagenet1k_v1.pth",
+            "path"       : "mobilenetv3/mobilenetv3_large/imagenet1k_v1/mobilenetv3_large_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_v2": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v3_large-5c1a4163.pth",
-            "path"       : "mobilenetv3/mobilenetv3_large_imagenet1k_v2.pth",
+            "path"       : "mobilenetv3/mobilenetv3_large/imagenet1k_v2/mobilenetv3_large_imagenet1k_v2.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -345,7 +345,7 @@ class MobileNetV3_Small(MobileNetV3):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
-            "path"       : "mobilenetv3/mobilenetv3_small_imagenet1k_v1.pth",
+            "path"       : "mobilenetv3/mobilenetv3_small/imagenet1k_v1/mobilenetv3_small_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

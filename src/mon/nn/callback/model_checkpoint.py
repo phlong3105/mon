@@ -297,7 +297,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         
         if del_filepath and self._should_remove_checkpoint(trainer, del_filepath, filepath):
             self._remove_checkpoint(trainer, del_filepath)
-            
+    
     def _parse_metric_name(self) -> str | None:
         if self.monitor is None:
             return None

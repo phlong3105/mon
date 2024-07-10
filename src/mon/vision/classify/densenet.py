@@ -291,7 +291,7 @@ class DenseNet121(DenseNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet121-a639ec97.pth",
-            "path"       : "densenet/densenet121_imagenet1k_v1.pth",
+            "path"       : "densenet/densenet121/imagenet1k_v1/densenet121_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -318,7 +318,7 @@ class DenseNet161(DenseNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet161-8d451a50.pth",
-            "path"       : "densenet/densenet161_imagenet1k_v1.pth",
+            "path"       : "densenet/densenet161/imagenet1k_v1/densenet161_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -345,7 +345,7 @@ class DenseNet169(DenseNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
-            "path"       : "densenet/densenet169_imagenet1k_v1.pth",
+            "path"       : "densenet/densenet169/imagenet1k_v1/densenet169_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -372,7 +372,7 @@ class DenseNet201(DenseNet):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet201-c1103571.pth",
-            "path"       : "densenet/densenet201_imagenet1k_v1.pth",
+            "path"       : "densenet/densenet201/imagenet1k_v1/densenet201_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

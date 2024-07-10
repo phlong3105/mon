@@ -138,7 +138,7 @@ class VGG11(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg11-8a719046.pth",
-            "path"       : "vgg/vgg11_imagenet1k_v1.pth",
+            "path"       : "vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -163,7 +163,7 @@ class VGG11_BN(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
-            "path"       : "vgg/vgg11_bn_imagenet1k_v1.pth",
+            "path"       : "vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -188,7 +188,7 @@ class VGG13(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13-19584684.pth",
-            "path"       : "vgg/vgg13_imagenet1k_v1.pth",
+            "path"       : "vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -213,7 +213,7 @@ class VGG13_BN(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
-            "path"       : "vgg/vgg13_bn_imagenet1k_v1.pth",
+            "path"       : "vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -238,13 +238,7 @@ class VGG16(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16-397923af.pth",
-            "path"       : "vgg/vgg16_imagenet1k_v1.pth",
-            "num_classes": 1000,
-            "map": {},
-        },
-        "imagenet1k_features": {
-            "url"        : "https://download.pytorch.org/models/vgg16_features-amdegroot-88682ab5.pth",
-            "path"       : "vgg/vgg16_imagenet1k_features.pth",
+            "path"       : "vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -269,7 +263,7 @@ class VGG16_BN(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
-            "path"       : "vgg/vgg16_bn_imagenet1k_v1.pth",
+            "path"       : "vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -294,7 +288,7 @@ class VGG19(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
-            "path"       : "vgg/vgg19_imagenet1k_v1.pth",
+            "path"       : "vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -319,7 +313,7 @@ class VGG19_BN(VGG):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
-            "path"       : "vgg/vgg19_bn_imagenet1k_v1.pth",
+            "path"       : "vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

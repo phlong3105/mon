@@ -114,9 +114,9 @@ class LogTrainingProgress(callbacks.Callback):
         
         # Close log file
         self._logger.write(
-            f"\nEpochs,{elapsed_epoch}"
-            f"Seconds,{elapsed_time:.3f}"
-            f"Hours,{elapsed_hours:.3f}\n"
+            f"\nEpochs,{elapsed_epoch},"
+            f"Seconds,{elapsed_time:.3f},"
+            f"Hours,{elapsed_hours:.3f},\n"
         )
         self._logger.flush()
         self._logger.close()

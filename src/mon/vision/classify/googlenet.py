@@ -141,7 +141,7 @@ class GoogleNet(base.ImageClassificationModel):
     _zoo   : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/googlenet-1378be20.pth",
-            "path"       : "googlenet/googlenet_imagenet1k_v1.pth",
+            "path"       : "googlenet/googlenet/imagenet1k_v1/googlenet_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

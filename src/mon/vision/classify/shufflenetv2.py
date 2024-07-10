@@ -219,7 +219,7 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth",
-            "path"       : "shufflenetv2/shufflenetv2_x0_5_imagenet1k_v1.pth",
+            "path"       : "shufflenet/shufflenetv2_x0_5/imagenet1k_v1/shufflenetv2_x0_5_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -246,7 +246,7 @@ class ShuffleNetV2_X1_0(ShuffleNetV2):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth",
-            "path"       : "shufflenetv2/shufflenetv2_x1_0_imagenet1k_v1.pth",
+            "path"       : "shufflenet/shufflenetv2_x1_0/imagenet1k_v1/shufflenetv2_x1_0_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -273,7 +273,7 @@ class ShuffleNetV2_X1_5(ShuffleNetV2):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x1_5-3c479a10.pth",
-            "path"       : "shufflenetv2/shufflenetv2_x1_5_imagenet1k_v1.pth",
+            "path"       : "shufflenet/shufflenetv2_x1_5/imagenet1k_v1/shufflenetv2_x1_5_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -300,7 +300,7 @@ class ShuffleNetV2_X2_0(ShuffleNetV2):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x2_0-8be3c8ee.pth",
-            "path"       : "shufflenetv2/shufflenetv2_x2_0_imagenet1k_v1.pth",
+            "path"       : "shufflenet/shufflenetv2_x2_0/imagenet1k_v1/shufflenetv2_x2_0_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

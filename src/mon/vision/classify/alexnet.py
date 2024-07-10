@@ -34,7 +34,7 @@ class AlexNet(base.ImageClassificationModel):
     _zoo   : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
-            "path"       : "alexnet/alexnet_imagenet1k_v1.pth",
+            "path"       : "alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },

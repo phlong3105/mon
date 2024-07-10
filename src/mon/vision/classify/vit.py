@@ -352,19 +352,19 @@ class ViT_B_16(VisionTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
-            "path"       : "vit/vit_b_16_imagenet1k_v1.pth",
+            "path"       : "vit/vit_b_16/imagenet1k_v1/vit_b_16_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_16_swag-9ac1b537.pth",
-            "path"       : "vit/vit_b_16_swag_imagenet1k_v1.pth",
+            "path"       : "vit/vit_b_16_swag/imagenet1k_v1/vit_b_16_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_linear_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_16_lc_swag-4e70ced5.pth",
-            "path"       : "vit/vit_b_16_lc_swag_imagenet1k_v1.pth",
+            "path"       : "vit/vit_b_16_lc_swag/imagenet1k_v1/vit_b_16_lc_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -395,7 +395,7 @@ class ViT_B_32(VisionTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_32-d86f8d99.pth",
-            "path"       : "vit/vit_b_32_imagenet1k_v1.pth",
+            "path"       : "vit/vit_b_32/imagenet1k_v1/vit_b_32_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -426,19 +426,19 @@ class ViT_L_16(VisionTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_16-852ce7e3.pth",
-            "path"       : "vit/vit_l_16_imagenet1k_v1.pth",
+            "path"       : "vit/vit_l_16/imagenet1k_v1/vit_l_16_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_16_swag-4f3808c9.pth",
-            "path"       : "vit/vit_l_16_swag_imagenet1k_v1.pth",
+            "path"       : "vit/vit_l_16_swag/imagenet1k_v1/vit_l_16_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_linear_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_16_lc_swag-4d563306.pth",
-            "path"       : "vit/vit_l_16_lc_swag_imagenet1k_v1.pth",
+            "path"       : "vit/vit_l_16_lc_swag/imagenet1k_v1/vit_l_16_lc_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -469,7 +469,7 @@ class ViT_L_32(VisionTransformer):
     _zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_32-c7638314.pth",
-            "path"       : "vit/vit_l_32_imagenet1k_v1.pth",
+            "path"       : "vit/vit_l_32/imagenet1k_v1/vit_l_32_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -500,13 +500,13 @@ class ViT_H_14(VisionTransformer):
     _zoo: dict = {
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/vit_h_14_swag-80465313.pth",
-            "path"       : "vit/vit_h_14_swag_imagenet1k_v1.pth",
+            "path"       : "vit/vit_h_14_swag/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
         "imagenet1k_swag_linear_v1": {
             "url"        : "https://download.pytorch.org/models/vit_h_14_lc_swag-c1eb923e.pth",
-            "path"       : "vit/vit_h_14_lc_swag_imagenet1k_v1.pth",
+            "path"       : "vit/vit_h_14_lc_swag/imagenet1k_v1/vit_h_14_lc_swag_imagenet1k_v1.pth",
             "num_classes": 1000,
             "map": {},
         },
