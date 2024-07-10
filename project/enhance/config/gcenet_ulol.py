@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/edenoised1nv python
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ _root_dir     = _current_file.parents[1]
 
 # region Basic
 
-model_name = "gcenet"
+model_name = "gcenet_a1"
 data_name  = "ulol"
 root       = _root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -33,11 +33,11 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
+	"num_channels": 32,		# The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
-	"radius"	  : 3,
-	"eps"		  : 1e-4,
-	"gamma"		  : 0.1,
+	"radius"      : 3,
+	"eps"	      : 1e-4,
+	"gamma"	      : 2.6,
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -74,7 +74,7 @@ datamodule = {
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 16,            # The number of samples in one forward pass.
+    "batch_size": 32,            # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.

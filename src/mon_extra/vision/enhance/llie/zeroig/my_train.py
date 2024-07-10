@@ -54,7 +54,7 @@ def train(args: argparse.Namespace):
     debug_dir.mkdir(parents=True, exist_ok=True)
     
     # Log
-    log_file   = save_dir / "log.txt"
+    log_file   = save_dir / "log" / "log.txt"
     log_format = "%(asctime)s %(message)s"
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format=log_format, datefmt="%m/%d %I:%M:%S %p")
     fh = logging.FileHandler(str(log_file))

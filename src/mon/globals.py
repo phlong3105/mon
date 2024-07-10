@@ -722,26 +722,6 @@ EXTRA_METRICS     = {
 }
 EXTRA_MODELS      = {
     # region detect
-        # region supergradients
-            "yolo_nas_s": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
-                "torch_distributed_launch": False,
-            },
-            "yolo_nas_m": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
-                "torch_distributed_launch": False,
-            },
-            "yolo_nas_l": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "multitask" / "supergradients" / "src" / "super_gradients",
-                "torch_distributed_launch": False,
-            },
-        # endregion
         # region yolor
             "yolor_d6": {
                 "tasks"    : [Task.DETECT],
@@ -890,12 +870,6 @@ EXTRA_MODELS      = {
                 "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "enlightengan",
                 "torch_distributed_launch": True,
             },
-            "gcenet"       : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.ZEROSHOT, Scheme.UNSUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "gcenet",
-                "torch_distributed_launch": True,
-            },
             "gsad"         : {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
@@ -1014,6 +988,12 @@ EXTRA_MODELS      = {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.ZEROSHOT],
                 "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_didce",
+                "torch_distributed_launch": True,
+            },
+            "zeroig"       : {
+                "tasks"    : [Task.LLIE],
+                "schemes"  : [Scheme.ZEROSHOT],
+                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zeroig",
                 "torch_distributed_launch": True,
             },
         # endregion

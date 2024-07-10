@@ -351,10 +351,10 @@ class GCENet(base.LowLightImageEnhancementModel):
         name        : str   = "gcenet",
         in_channels : int   = 3,
         num_channels: int   = 32,
-        num_iters   : int   = 13,
+        num_iters   : int   = 15,
         radius      : int   = 3,
-        eps         : float = 1e-3,
-        gamma       : float = 2.8,
+        eps         : float = 1e-4,
+        gamma       : float = 2.6,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -586,25 +586,25 @@ class GCENet(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x    = input
-        # Guided Filter
-        x_gf = self.gf(x, x)
+        x  = input
         # Enhancement
-        c1   = self.en(x_gf)
+        c1 = self.en(x)
         # Enhancement loop
-        if not self.predicting:
+        if self.gamma in [None, 0.0]:
             y  = x
             c2 = None
             for i in range(self.num_iters):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
                 y = b + d + c1 * (torch.pow(d, 2) - d)
-        return c1, c2, x_gf, y
+        # Guided Filter
+        y_gf = self.gf(x, y)
+        return c1, c2, y, y_gf
     
     @staticmethod
     def pair_downsampler(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
@@ -629,10 +629,10 @@ class GCENetA1(GCENet):
         self,
         in_channels : int   = 3,
         num_channels: int   = 32,
-        num_iters   : int   = 12,
+        num_iters   : int   = 15,
         radius      : int   = 3,
-        eps         : float = 1e-3,
-        gamma       : float = 2.8,
+        eps         : float = 1e-4,
+        gamma       : float = 2.6,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -700,10 +700,10 @@ class GCENetA2(GCENet):
         self,
         in_channels : int   = 3,
         num_channels: int   = 32,
-        num_iters   : int   = 12,
+        num_iters   : int   = 15,
         radius      : int   = 3,
-        eps         : float = 1e-3,
-        gamma       : float = 2.8,
+        eps         : float = 1e-4,
+        gamma       : float = 2.6,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -759,10 +759,10 @@ class GCENetB1(GCENet):
         self,
         in_channels : int   = 3,
         num_channels: int   = 32,
-        num_iters   : int   = 12,
+        num_iters   : int   = 15,
         radius      : int   = 3,
-        eps         : float = 1e-3,
-        gamma       : float = 2.8,
+        eps         : float = 1e-4,
+        gamma       : float = 2.6,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -830,10 +830,10 @@ class GCENetB2(GCENet):
         self,
         in_channels : int   = 3,
         num_channels: int   = 32,
-        num_iters   : int   = 12,
+        num_iters   : int   = 15,
         radius      : int   = 3,
-        eps         : float = 1e-3,
-        gamma       : float = 2.8,
+        eps         : float = 1e-4,
+        gamma       : float = 2.6,
         weights     : Any   = None,
         *args, **kwargs
     ):

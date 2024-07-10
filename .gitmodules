@@ -4,14 +4,8 @@
 [submodule "src/mon_extra/vision/detect/yolov9"]
 	path = src/mon_extra/vision/detect/yolov9
 	url  = https://github.com/phlong3105/yolov9
-[submodule "src/mon_extra/vision/multitask/automl"]
-	path = src/mon_extra/vision/multitask/automl
-	url  = https://github.com/phlong3105/automl
-[submodule "src/mon_extra/vision/multitask/supergradients"]
-	path = src/mon_extra/vision/multitask/supergradients
-	url  = https://github.com/phlong3105/supergradients
-[submodule "src/mon_extra/vision/multitask/ultralytics"]
-	path = src/mon_extra/vision/multitask/ultralytics
+[submodule "src/mon_extra/vision/ultralytics"]
+	path = src/mon_extra/vision/ultralytics
 	url  = https://github.com/phlong3105/ultralytics
 [submodule "tool/XAnyLabeling"]
 	path = tool/XAnyLabeling
