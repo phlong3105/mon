@@ -6,12 +6,12 @@
 from __future__ import annotations
 
 __all__ = [
-    "Uformer",
-    "UformerB",
-    "UformerS",
-    "UformerSFastleff",
-    "UformerSNoshift",
-    "UformerT",
+    "UformerB_RE",
+    "UformerSFastleff_RE",
+    "UformerSNoshift_RE",
+    "UformerS_RE",
+    "UformerT_RE",
+    "Uformer_RE",
 ]
 
 import math
@@ -422,14 +422,14 @@ class LeWinTransformerBlock(nn.Module):
         assert 0 <= self.shift_size < self.window_size, ":paramL`shift_size` must in :math:`[0 - :param`window_size`]`"
 
         if modulator:
-            self.modulator = nn.Embedding(window_size * window_size, channels)  # modulator
+            self.modulator = nn.Embedding(window_size * window_size, in_channels)  # modulator
         else:
             self.modulator = None
 
         if cross_modulator:
-            self.cross_modulator = nn.Embedding(window_size * window_size, channels)  # cross_modulator
+            self.cross_modulator = nn.Embedding(window_size * window_size, in_channels)  # cross_modulator
             self.cross_attn = Attention(
-                channels         = channels,
+                in_channels      = in_channels,
                 num_heads        = num_heads,
                 qkv_bias         = qkv_bias,
                 qk_scale         = qk_scale,
@@ -437,13 +437,13 @@ class LeWinTransformerBlock(nn.Module):
                 proj_drop        = dropout,
                 token_projection = token_projection,
             )
-            self.norm_cross = norm_layer(channels)
+            self.norm_cross = norm_layer(in_channels)
         else:
             self.cross_modulator = None
 
-        self.norm1 = norm_layer(channels)
+        self.norm1 = norm_layer(in_channels)
         self.attn  = nn.WindowAttention(
-            channels         = channels,
+            channels         = in_channels,
             window_size      = core.to_2tuple(self.window_size),
             num_heads        = num_heads,
             qkv_bias         = qkv_bias,
@@ -454,25 +454,25 @@ class LeWinTransformerBlock(nn.Module):
         )
 
         self.drop_path      = nn.DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
-        self.norm2          = norm_layer(channels)
-        mlp_hidden_channels = int(channels * mlp_ratio)
+        self.norm2          = norm_layer(in_channels)
+        mlp_hidden_channels = int(in_channels * mlp_ratio)
         if token_mlp in ["ffn", "mlp"]:
             self.mlp = MLP(
-                in_channels     = channels,
+                in_channels     = in_channels,
                 hidden_channels = mlp_hidden_channels,
                 act_layer       = act_layer,
                 dropout         = dropout,
             )
         elif token_mlp == "leff":
             self.mlp = LeFF(
-                channels        = channels,
+                channels        = in_channels,
                 hidden_channels = mlp_hidden_channels,
                 act_layer       = act_layer,
                 dropout         = dropout,
             )
         elif token_mlp == "fastleff":
             self.mlp = FastLeFF(
-                in_channels  = channels,
+                in_channels  = in_channels,
                 out_channels = mlp_hidden_channels,
                 act_layer    = act_layer,
                 dropout      = dropout,
@@ -698,8 +698,8 @@ class BasicUformerLayer(nn.Module):
 
 # region Model
 
-@MODELS.register(name="uformer")
-class Uformer(base.MultiTaskImageEnhancementModel):
+@MODELS.register(name="uformer_re")
+class Uformer_RE(base.MultiTaskImageEnhancementModel):
     """A General U-Shaped Transformer (Uformer) Network.
     
     References:
@@ -1103,8 +1103,8 @@ class Uformer(base.MultiTaskImageEnhancementModel):
         return y
     
 
-@MODELS.register(name="uformer_t")
-class UformerT(Uformer):
+@MODELS.register(name="uformer_t_re")
+class UformerT_RE(Uformer_RE):
     """Uformer Tiny model.
     
     References:
@@ -1115,7 +1115,7 @@ class UformerT(Uformer):
     
     def __init__(self, args, **kwargs):
         super().__init__(
-            name             = "uformer_t",
+            name             = "uformer_t_re",
             embed_channels   = 16,
             window_size      = 8,
             token_projection = "linear",
@@ -1126,8 +1126,8 @@ class UformerT(Uformer):
         )
 
 
-@MODELS.register(name="uformer_s")
-class UformerS(Uformer):
+@MODELS.register(name="uformer_s_re")
+class UformerS_RE(Uformer_RE):
     """Uformer Small model.
     
     References:
@@ -1142,7 +1142,7 @@ class UformerS(Uformer):
         *args, **kwargs
     ):
         super().__init__(
-            name             = "uformer_s",
+            name             = "uformer_s_re",
             image_size       = image_size,
             embed_channels   = 32,
             window_size      = 8,
@@ -1154,8 +1154,8 @@ class UformerS(Uformer):
         )
 
 
-@MODELS.register(name="uformer_s_noshift")
-class UformerSNoshift(Uformer):
+@MODELS.register(name="uformer_s_noshift_re")
+class UformerSNoshift_RE(Uformer_RE):
     
     _zoo: dict = {}
     
@@ -1165,7 +1165,7 @@ class UformerSNoshift(Uformer):
         *args, **kwargs
     ):
         super().__init__(
-            name             = "uformer_s_noshift",
+            name             = "uformer_s_noshift_re",
             image_size       = image_size,
             embed_channels   = 32,
             window_size      = 8,
@@ -1177,8 +1177,8 @@ class UformerSNoshift(Uformer):
         )
 
 
-@MODELS.register(name="uformer_s_fastleff")
-class UformerSFastleff(Uformer):
+@MODELS.register(name="uformer_s_fastleff_re")
+class UformerSFastleff_RE(Uformer_RE):
     
     _zoo: dict = {}
     
@@ -1188,7 +1188,7 @@ class UformerSFastleff(Uformer):
         *args, **kwargs
     ):
         super().__init__(
-            name             = "uformer_s_fastleff",
+            name             = "uformer_s_fastleff_re",
             image_size       = image_size,
             embed_channels   = 32,
             depths           = [1, 2, 8, 8, 2, 8, 8, 2, 1],
@@ -1201,8 +1201,8 @@ class UformerSFastleff(Uformer):
         )
 
 
-@MODELS.register(name="uformer_b")
-class UformerB(Uformer):
+@MODELS.register(name="uformer_b_re")
+class UformerB_RE(Uformer_RE):
     """Uformer Big model.
     
     References:
@@ -1258,7 +1258,7 @@ class UformerB(Uformer):
         *args, **kwargs
     ):
         super().__init__(
-            name             = "uformer_b",
+            name             = "uformer_b_re",
             image_size       = image_size,
             dd_in            = dd_in,
             embed_channels   = 32,

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "HINet",
+    "HINet_RE",
 ]
 
 from typing import Any, Sequence
@@ -195,8 +195,8 @@ class SupervisedAttentionModule(nn.Module):
 
 # region Model
 
-@MODELS.register(name="hinet")
-class HINet(base.MultiTaskImageEnhancementModel):
+@MODELS.register(name="hinet_re")
+class HINet_RE(base.MultiTaskImageEnhancementModel):
     """Half-Instance Normalization Network.
     
     Args:
@@ -272,7 +272,7 @@ class HINet(base.MultiTaskImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "hinet",
+            name        = "hinet_re",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs

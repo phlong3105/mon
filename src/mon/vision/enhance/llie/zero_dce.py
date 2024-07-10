@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCE",
+    "ZeroDCE_RE",
 ]
 
 from typing import Any, Literal
@@ -110,8 +110,8 @@ class Loss(nn.Loss):
 
 # region Model
 
-@MODELS.register(name="zero_dce")
-class ZeroDCE(base.LowLightImageEnhancementModel):
+@MODELS.register(name="zero_dce_re")
+class ZeroDCE_RE(base.LowLightImageEnhancementModel):
     """Zero-DCE (Zero-Reference Deep Curve Estimation) model.
     
     Args:
@@ -128,7 +128,7 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
     
     _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
     _zoo   : dict = {}
-
+    
     def __init__(
         self,
         in_channels : int = 3,
@@ -138,7 +138,7 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "zero_dce",
+            name        = "zerodce_re",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs

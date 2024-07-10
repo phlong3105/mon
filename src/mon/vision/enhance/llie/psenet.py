@@ -11,7 +11,7 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "PSENet",
+    "PSENet_RE",
 ]
 from typing import Any, Literal
 
@@ -200,8 +200,8 @@ class UnetTMO(nn.Module):
 
 # region Model
 
-@MODELS.register(name="psenet")
-class PSENet(base.LowLightImageEnhancementModel):
+@MODELS.register(name="psenet_re")
+class PSENet_RE(base.LowLightImageEnhancementModel):
     """PSENet (PSENet: Progressive Self-Enhancement Network for Unsupervised
     Extreme-Light Image Enhancement) models.
     
@@ -226,7 +226,7 @@ class PSENet(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "psenet",
+            name        = "psenet_re",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs

@@ -198,12 +198,12 @@ def parse_model_fullname(
     assert name not in [None, ""], f"Model's name must be given."
     fullname = name
     if data not in [None, ""]:
-        fullname = f"{fullname}-{data}"
+        fullname = f"{fullname}_{data}"
     if suffix not in [None, ""]:
         _fullname = core.snakecase(fullname)
         _suffix   = core.snakecase(suffix)
         if _suffix not in _fullname:
-            fullname = f"{fullname}-{core.kebabize(suffix)}"
+            fullname = f"{fullname}_{core.kebabize(suffix)}"
     return fullname
 
 
@@ -362,12 +362,12 @@ class Model(lightning.LightningModule, ABC):
             root /= self.fullname
         self._root      = root
         self._debug_dir = root / "debug"
-        self._ckpt_dir  = root / "weights"
+        self._ckpt_dir  = root  # / "weights"
     
     @property
     def ckpt_dir(self) -> core.Path:
         if self._ckpt_dir is None:
-            self._ckpt_dir = self.root / "weights"
+            self._ckpt_dir = self.root  # / "weights"
         return self._ckpt_dir
     
     @property
@@ -381,7 +381,7 @@ class Model(lightning.LightningModule, ABC):
         """Specify the path of the model's pretrained weights directory in
         :attr:`ZOO_DIR`.
         """
-        return ZOO_DIR / self.name / "weights"
+        return ZOO_DIR / self.name  # / "weights"
     
     # endregion
     

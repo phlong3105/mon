@@ -31,7 +31,7 @@ learning_rate_monitor = {
 log_training_progress = {
 	"name"                  : "log_training_progress",
 	"dirpath"               : None,             # Directory to save the log file.
-	"filename"              : "train_log.csv",  # Log filename.
+	"filename"              : "log.csv",        # Log filename.
 	"every_n_epochs"        : 1,                # Log every n epochs.
 	"every_n_train_steps"   : None,             # Log every n training steps.
 	"train_time_interval"   : None,             # Log every n seconds.
@@ -109,7 +109,7 @@ datamodule = {
 tensorboard = {
     "save_dir"         : None,    # Save directory.
     "name"             : "",      # Experiment name ("" = no per-experiment subdirectory).
-    "version"          : "log",   # '/save_dir/name/version/'.
+    "version"          : "",      # '/save_dir/name/version/'.
     "sub_dir"          : None,    # Subdirectory to group TensorBoard logs: '/save_dir/name/version/sub_dir/'
     "log_graph"        : False,   # Adds the computational graph to tensorboard.
     "default_hp_metric": True,

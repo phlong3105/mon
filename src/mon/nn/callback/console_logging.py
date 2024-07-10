@@ -52,7 +52,7 @@ class LogTrainingProgress(callbacks.Callback):
     def __init__(
         self,
         dirpath               : core.Path,
-        filename              : str              = "train_log.csv",
+        filename              : str              = "log.csv",
         every_n_epochs        : int       | None = 1,
         every_n_train_steps   : int       | None = None,
         train_time_interval   : timedelta | None = None,
@@ -79,8 +79,8 @@ class LogTrainingProgress(callbacks.Callback):
     def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str):
         """Called when fit, validate, test, predict, or tune begins."""
         dirpath = self._dirpath or core.Path(trainer.default_root_dir)
-        if str(dirpath.stem) != "log":
-            dirpath /= "log"
+        # if str(dirpath.stem) != "log":
+        #     dirpath /= "log"
         dirpath = trainer.strategy.broadcast(dirpath)
         self._dirpath = core.Path(dirpath)
     

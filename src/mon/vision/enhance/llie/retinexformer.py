@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-	"Retinexformer",
+	"Retinexformer_RE",
 ]
 
 import math
@@ -379,8 +379,8 @@ class RetinexFormerSingleStage(nn.Module):
 
 # region Model
 
-@MODELS.register(name="retinexformer")
-class Retinexformer(base.LowLightImageEnhancementModel):
+@MODELS.register(name="retinexformer_re")
+class Retinexformer_RE(base.LowLightImageEnhancementModel):
 	"""`Retinexformer: One-stage Retinex-based Transformer for Low-light Image
 	Enhancement <https://arxiv.org/abs/2303.06705>`__.
 	
@@ -484,7 +484,7 @@ class Retinexformer(base.LowLightImageEnhancementModel):
 		*args, **kwargs
 	):
 		super().__init__(
-			name        = "retinexformer",
+			name        = "retinexformer_re",
 			in_channels = in_channels,
 			weights     = weights,
 			*args, **kwargs

@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCEPP",
+    "ZeroDCEpp_RE",
 ]
 
 from typing import Any, Literal
@@ -111,8 +111,8 @@ class Loss(nn.Loss):
 
 # region Model
 
-@MODELS.register(name="zero_dce++")
-class ZeroDCEPP(base.LowLightImageEnhancementModel):
+@MODELS.register(name="zero_dce++_re")
+class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
     """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
     
     Args:
@@ -152,7 +152,7 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "zero_dce++",
+            name        = "zero_dce++_re",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs

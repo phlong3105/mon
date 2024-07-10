@@ -11,7 +11,7 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDiDCE",
+    "ZeroDiDCE_RE",
 ]
 
 from typing import Any, Literal
@@ -115,8 +115,8 @@ class Loss(nn.Loss):
 
 # region Model
 
-@MODELS.register(name="zero_didce")
-class ZeroDiDCE(base.LowLightImageEnhancementModel):
+@MODELS.register(name="zero_didce_re")
+class ZeroDiDCE_RE(base.LowLightImageEnhancementModel):
     """Zero-DiDCE (Zero-Reference Dual-Illumination Deep Curve Estimation) model.
     
     Args:

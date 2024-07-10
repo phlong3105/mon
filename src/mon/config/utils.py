@@ -272,7 +272,8 @@ def list_weights_files(model: str, project_root: str | core.Path | None = None) 
         weights_files = sorted(list(train_dir.rglob(f"*")))
         weights_files = [f for f in weights_files if f.is_weights_file()]
     # Search for weights in ZOO_DIR
-    zoo_dir = ZOO_DIR / "mon_extra" if is_extra_model(model) else ZOO_DIR / "mon"
+    zoo_dir = ZOO_DIR
+    # zoo_dir = ZOO_DIR / "mon_extra" if is_extra_model(model) else ZOO_DIR / "mon"
     for path in sorted(list(zoo_dir.rglob(f"*"))):
         if path.is_weights_file():
             weights_files.append(path)

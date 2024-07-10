@@ -11,7 +11,7 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "HVICIDNet"
+    "HVICIDNet_RE"
 ]
 
 import os
@@ -466,8 +466,8 @@ class I_LCA(nn.Module):
 
 # region Model
 
-@MODELS.register(name="hvi_cidnet")
-class HVICIDNet(base.LowLightImageEnhancementModel):
+@MODELS.register(name="hvi_cidnet_re")
+class HVICIDNet_RE(base.LowLightImageEnhancementModel):
     """HVI-CIDNet (You Only Need One Color Space: An Efficient Network for
     Low-light Image Enhancement) models.
     
@@ -495,7 +495,7 @@ class HVICIDNet(base.LowLightImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name        = "hvi_cidnet",
+            name        = "hvi_cidnet_re",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs

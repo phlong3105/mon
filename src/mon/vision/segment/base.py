@@ -27,6 +27,6 @@ class SegmentationModel(nn.Model, ABC):
     
     @property
     def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "mon" / "vision" / "segment" / self.name
+        return ZOO_DIR / "vision" / "segment" / self.name
     
 # endregion
