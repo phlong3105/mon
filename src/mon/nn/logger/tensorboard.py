@@ -66,7 +66,7 @@ class FileWriter(tensorboard.FileWriter):
         flush_secs     : int = 120,
         filename_suffix: str = ""
     ):
-        """Creates a `FileWriter` and an event file. On construction the writer
+        """Creates a `FileWriter` and an event file. On construction, the writer
         creates a new event file in :param:`log_dir`. The other arguments to the
         constructor control the asynchronous writes to the event file.
 
@@ -168,9 +168,7 @@ class TensorBoardLogger(loggers.TensorBoardLogger):
         if self._experiment is not None:
             return self._experiment
         if not rank_zero_only.rank == 0:
-            raise ValueError(
-                f"Tried to initialize log dirs in non 'global_rank=0'."
-            )
+            raise ValueError(f"Tried to initialize log dirs in non 'global_rank=0'.")
         if self.root_dir:
             self._fs.makedirs(self.root_dir, exist_ok=True)
         self._experiment = SummaryWriter(log_dir=self.log_dir, **self._kwargs)
