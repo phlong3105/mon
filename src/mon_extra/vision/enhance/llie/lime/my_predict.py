@@ -77,7 +77,7 @@ def predict(args: argparse.Namespace):
 
 # region Main
 
-if __name__ == "__main__":
+def main() -> str:
     args = mon.parse_predict_args()
     args.gamma   = 0.6   # Gamma correction parameter
     args.lambda_ = 0.15  # The weight for balancing the two terms in the illumination refinement optimization objective
@@ -89,4 +89,7 @@ if __name__ == "__main__":
     args.eps     = 1e-3  # Constant to avoid computation instability
     predict(args)
 
+
+if __name__ == "__main__":
+    main()
 # endregion

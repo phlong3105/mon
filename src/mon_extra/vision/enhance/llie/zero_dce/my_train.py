@@ -102,96 +102,12 @@ def train(args: argparse.Namespace):
 
 # region Main
 
-@click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--arch",       type=str, default=None, help="Model architecture.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--project",    type=str, default=None, help="Project name.")
-@click.option("--variant",    type=str, default=None, help="Variant name.")
-@click.option("--fullname",   type=str, default=None, help="Fullname to save the model's weight.")
-@click.option("--save-dir",   type=str, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--local-rank", type=int, default=-1,   help="DDP parameter, do not modify.")
-@click.option("--epochs",     type=int, default=None, help="Stop training once this number of epochs is reached.")
-@click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
-@click.option("--exist-ok",   is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    config    : str,
-    arch      : str,
-    model     : str,
-    root      : str,
-    project   : str,
-    variant   : str,
-    fullname  : str,
-    save_dir  : str,
-    weights   : str,
-    device    : str,
-    local_rank: int,
-    epochs    : int,
-    steps     : int,
-    exist_ok  : bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Get config args
-    config = mon.parse_config_file(project_root=_current_dir / "config", config=config)
-    args   = mon.load_config(config)
-    
-    # Parse arguments
-    model    = model    or args.get("model")
-    data     =             args.get("data")
-    root     = root     or args.get("root")
-    project  = project  or args.get("project")
-    variant  = variant  or args.get("variant")
-    fullname = fullname or args.get("fullname")
-    save_dir = save_dir or args.get("save_dir")
-    weights  = weights  or args.get("weights")
-    device   = device   or args.get("device")
-    epochs   = epochs   or args.get("epochs")
-    steps    = steps    or args.get("steps")
-    exist_ok = exist_ok or args.get("exist_ok")
-    verbose  = verbose  or args.get("verbose")
-    
-    # Prioritize input args --> config file args
-    root     = mon.Path(root)
-    save_dir = save_dir or mon.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
-    save_dir = mon.Path(save_dir)
-    weights  = mon.to_list(weights)
-    device   = mon.parse_device(device)
-    
-    # Update arguments
-    args["hostname"]   = hostname
-    args["config"]     = config
-    args["opt"]        = config
-    args["arch"]       = arch
-    args["model"]      = model
-    args["root"]       = root
-    args["project"]    = project
-    args["variant"]    = variant
-    args["fullname"]   = fullname
-    args["save_dir"]   = save_dir
-    args["weights"]    = weights
-    args["device"]     = device
-    args["epochs"]     = epochs
-    args["local_rank"] = local_rank
-    args["steps"]      = steps
-    args["exist_ok"]   = exist_ok
-    args["verbose"]    = verbose
-    args = argparse.Namespace(**args)
-    
-    if not exist_ok:
-        mon.delete_dir(paths=mon.Path(args.save_dir))
-        
+def main() -> str:
+    args = mon.parse_train_args()
     train(args)
-    return str(args.save_dir)
 
 
 if __name__ == "__main__":
-    args = mon.parse_predict_args()
-    train(args)
+    main()
 
 # endregion

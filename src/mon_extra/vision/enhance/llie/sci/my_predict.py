@@ -94,9 +94,13 @@ def predict(args: argparse.Namespace):
 
 # region Main
 
-if __name__ == "__main__":
+def main() -> str:
     args = mon.parse_predict_args()
     args.weights = args.weights or mon.ZOO_DIR / "vision/enhance/llie/sci/sci/lol_v1/sci_lol_v1_pretrained.pt"
     predict(args)
 
+
+if __name__ == "__main__":
+    main()
+    
 # endregion

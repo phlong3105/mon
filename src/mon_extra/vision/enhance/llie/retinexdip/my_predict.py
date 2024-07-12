@@ -392,8 +392,12 @@ def predict(args: argparse.Namespace):
 
 # region Main
 
-if __name__ == "__main__":
+def main() -> str:
     args = mon.parse_predict_args()
     predict(args)
+
+
+if __name__ == "__main__":
+    main()
 
 # endregion

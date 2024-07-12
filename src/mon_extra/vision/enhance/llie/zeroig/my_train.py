@@ -157,8 +157,12 @@ def train(args: argparse.Namespace):
 
 # region Main
 
-if __name__ == "__main__":
-    args = mon.parse_predict_args()
+def main() -> str:
+    args = mon.parse_train_args()
     train(args)
+
+
+if __name__ == "__main__":
+    main()
 
 # endregion

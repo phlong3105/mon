@@ -151,7 +151,7 @@ def predict(args: argparse.Namespace):
 
 # region Main
 
-if __name__ == "__main__":
+def main() -> str:
     args = mon.parse_predict_args()
     args.decom_model_low_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_init_low.pth"
     args.unfolding_model_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_unfolding.pth"
@@ -159,4 +159,8 @@ if __name__ == "__main__":
     args.ratio = 5
     predict(args)
 
+
+if __name__ == "__main__":
+    main()
+    
 # endregion

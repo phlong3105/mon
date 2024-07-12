@@ -597,168 +597,78 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
 # region Main
 
-@click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--arch",       type=str, default=None, help="Model architecture.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--project",    type=str, default=None, help="Project name.")
-@click.option("--variant",    type=str, default=None, help="Variant name.")
-@click.option("--fullname",   type=str, default=None, help="Fullname to save the model's weight.")
-@click.option("--save-dir",   type=str, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--device",     type=str,   default=None, help="Running devices.")
-@click.option("--local-rank", type=int,   default=-1,   help="DDP parameter, do not modify.")
-@click.option("--epochs",     type=int,   default=None, help="Stop training once this number of epochs is reached.")
-@click.option("--steps",      type=int,   default=None, help="Stop training once this number of steps is reached.")
-@click.option("--conf",       type=float, default=None, help="Confidence threshold.")
-@click.option("--iou",        type=float, default=None, help="IoU threshold.")
-@click.option("--max-det",    type=int,   default=None, help="Max detections per image.")
-@click.option("--exist-ok",   is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    config    : str,
-    arch      : str,
-    model     : str,
-    root      : str,
-    project   : str,
-    variant   : str,
-    fullname  : str,
-    save_dir  : str,
-    weights   : str,
-    local_rank: int,
-    device    : str,
-    epochs    : int,
-    steps     : int,
-    conf      : float,
-    iou       : float,
-    max_det   : int,
-    exist_ok  : bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Get config args
-    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = mon.load_config(config)
-    
-    # Prioritize input args --> config file args
-    model    = model    or args.get("model")
-    data     = args.get("data")
-    root     = root     or args.get("root")
-    project  = project  or args.get("project")
-    variant  = variant  or args.get("variant")
-    fullname = fullname or args.get("name")
-    weights  = weights  or args.get("weights")
-    device   = device   or args.get("device")
-    hyp      = args.get("hyp")
-    epochs   = epochs   or args.get("epochs")
-    conf     = conf     or args.get("conf")
-    iou      = iou      or args.get("iou")
-    max_det  = max_det  or args.get("max_det")
-    exist_ok = exist_ok or args.get("exist_ok")
-    verbose  = verbose  or args.get("verbose")
-    
+def main() -> str:
     # Parse arguments
-    model    = mon.Path(model)
-    model    = model if model.exists() else _current_dir / "config" / model.name
-    model    = str(model.config_file())
-    data     = mon.Path(data)
-    data     = data  if data.exists() else _current_dir / "data" / data.name
-    data     = str(data.config_file())
-    root     = mon.Path(root)
-    project  = root.name or project
-    save_dir = save_dir  or root / "run" / "train" / fullname
-    save_dir = mon.Path(save_dir)
-    weights  = mon.to_list(weights)
-    hyp      = mon.Path(hyp)
-    hyp      = hyp if hyp.exists() else _current_dir / "data" / hyp.name
-    hyp      = hyp.yaml_file()
-    
-    # Update arguments
-    args["config"]     = config
-    
-    args["root"]       = root
-    
-    args["weights"]    = weights
-    args["model"]      = model
-    args["data"]       = data
-    args["root"]       = root
-    args["project"]    = project
-    args["name"]       = fullname
-    args["save_dir"]   = save_dir
-    args["device"]     = device
-    args["local_rank"] = local_rank
-    args["hyp"]        = str(hyp)
-    args["epochs"]     = epochs
-    args["steps"]      = steps
-    args["conf"]       = conf
-    args["iou"]        = iou
-    args["max_det"]    = max_det
-    args["exist_ok"]   = exist_ok
-    args["verbose"]    = verbose
-    
-    opt = argparse.Namespace(**args)
-    
-    if not exist_ok:
-        mon.delete_dir(paths=mon.Path(opt.save_dir))
-    mon.Path(opt.save_dir).mkdir(parents=True, exist_ok=True)
+    args        = mon.parse_train_args()
+    model       = mon.Path(args.model)
+    model       = model if model.exists() else _current_dir / "config" / model.name
+    model       = str(model.config_file())
+    data_       = mon.Path(args.data)
+    data_       = data_ if data_.exists() else _current_dir / "data" / data_.name
+    data_       = str(data_.config_file())
+    hyp         = mon.Path(args.hyp)
+    hyp         = hyp if hyp.exists() else _current_dir / "data" / hyp.name
+    hyp         = hyp.yaml_file()
+    args.model  = model
+    args.source = args.data
+    args.data   = data_
+    args.hyp    = str(hyp)
     
     # Set DDP variables
-    opt.total_batch_size = opt.batch_size
-    opt.world_size       = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else  1
-    opt.global_rank      = int(os.environ["RANK"])       if "RANK"       in os.environ else -1
+    args.total_batch_size = args.batch_size
+    args.world_size       = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else  1
+    args.global_rank      = int(os.environ["RANK"])       if "RANK"       in os.environ else -1
     
-    set_logging(opt.global_rank)
-    if opt.global_rank in [-1, 0]:
+    set_logging(args.global_rank)
+    if args.global_rank in [-1, 0]:
         check_git_status()
     
     # Resume
-    if opt.resume:  # resume an interrupted run
-        ckpt = opt.resume if isinstance(opt.resume, str) else get_latest_run()  # specified or most recent path
+    if args.resume:  # resume an interrupted run
+        ckpt = args.resume if isinstance(args.resume, str) else get_latest_run()  # specified or most recent path
         assert os.path.isfile(ckpt), "ERROR: --resume checkpoint does not exist"
-        with open(mon.Path(ckpt).parent.parent / "opt.yaml") as f:
+        with open(mon.Path(ckpt).parent.parent / "args.yaml") as f:
             opt = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))  # replace
-        opt.model, opt.weights, opt.resume = "", ckpt, True
+        args.model, args.weights, args.resume = "", ckpt, True
         logger.info("Resuming training from %s" % ckpt)
     else:
-        # opt.hyp = opt.hyp or ('hyp.finetune.yaml' if opt.weights else 'hyp.scratch.yaml')
-        opt.data     = check_file(opt.data)   # check files
-        opt.model    = check_file(opt.model)  # check files
-        opt.hyp      = check_file(opt.hyp)    # check files
-        assert len(opt.model) or len(opt.weights), "either --config or --weights must be specified"
-        opt.imgsz    = mon.to_list(opt.imgsz)
-        opt.imgsz.extend([opt.imgsz[-1]] * (2 - len(opt.imgsz)))  # extend to 2 sizes (train, test)
-        opt.name     = "evolve" if opt.evolve else opt.name
-        opt.save_dir = increment_path(mon.Path(opt.save_dir), exist_ok=opt.exist_ok | opt.evolve)  # increment run
+        # args.hyp = args.hyp or ('hyp.finetune.yaml' if args.weights else 'hyp.scratch.yaml')
+        args.data     = check_file(args.data)   # check files
+        args.model    = check_file(args.model)  # check files
+        args.hyp      = check_file(args.hyp)    # check files
+        assert len(args.model) or len(args.weights), "either --config or --weights must be specified"
+        args.imgsz    = mon.to_list(args.imgsz)
+        args.imgsz.extend([args.imgsz[-1]] * (2 - len(args.imgsz)))  # extend to 2 sizes (train, test)
+        args.name     = "evolve" if args.evolve else args.name
+        args.save_dir = increment_path(mon.Path(args.save_dir), exist_ok=args.exist_ok | args.evolve)  # increment run
     
     # DDP mode
-    device = select_device(opt.device, batch_size=opt.batch_size)
-    if opt.local_rank != -1:
-        assert torch.cuda.device_count() > opt.local_rank
-        torch.cuda.set_device(opt.local_rank)
-        device = torch.device("cuda", opt.local_rank)
+    device = select_device(args.device, batch_size=args.batch_size)
+    if args.local_rank != -1:
+        assert torch.cuda.device_count() > args.local_rank
+        torch.cuda.set_device(args.local_rank)
+        device = torch.device("cuda", args.local_rank)
         dist.init_process_group(backend="nccl", init_method="env://")  # distributed backend
-        assert opt.batch_size % opt.world_size == 0, "--batch-size must be multiple of CUDA device count"
-        opt.batch_size = opt.total_batch_size // opt.world_size
+        assert args.batch_size % args.world_size == 0, "--batch-size must be multiple of CUDA device count"
+        args.batch_size = args.total_batch_size // args.world_size
     
     # Hyperparameters
-    with open(opt.hyp) as f:
+    with open(args.hyp) as f:
         hyp = yaml.load(f, Loader=yaml.FullLoader)  # load hyps
         if "box" not in hyp:
             warn(
                 'Compatibility: %s missing "box" which was renamed from "giou" in %s' %
-                 (opt.hyp, 'https://github.com/ultralytics/yolov5/pull/1120')
+                 (args.hyp, 'https://github.com/ultralytics/yolov5/pull/1120')
             )
             hyp["box"] = hyp.pop("giou")
     
     # Train
     logger.info(opt)
-    if not opt.evolve:
+    if not args.evolve:
         tb_writer = None  # init loggers
-        if opt.global_rank in [-1, 0]:
-            logger.info(f'Start Tensorboard with "tensorboard --logdir {opt.project}", view at http://localhost:6006/')
-            tb_writer = SummaryWriter(opt.save_dir)  # Tensorboard
+        if args.global_rank in [-1, 0]:
+            logger.info(f'Start Tensorboard with "tensorboard --logdir {args.project}", view at http://localhost:6006/')
+            tb_writer = SummaryWriter(args.save_dir)  # Tensorboard
         train(hyp, opt, device, tb_writer, wandb)
     
     # Evolve hyperparameters (optional)
@@ -795,12 +705,12 @@ def main(
             "mixup"          : (1, 0.0, 1.0),     # image mixup (probability)
         }
         
-        assert opt.local_rank == -1, "DDP mode not implemented for --evolve"
-        opt.notest, opt.nosave = True, True  # only test/save final epoch
+        assert args.local_rank == -1, "DDP mode not implemented for --evolve"
+        args.notest, args.nosave = True, True  # only test/save final epoch
         # ei = [isinstance(x, (int, float)) for x in hyp.values()]  # evolvable indices
-        yaml_file = mon.Path(opt.save_dir) / "hyp_evolved.yaml"  # save best result here
-        if opt.bucket:
-            os.system("gsutil cp gs://%s/evolve.txt ." % opt.bucket)  # download evolve.txt if exists
+        yaml_file = mon.Path(args.save_dir) / "hyp_evolved.yaml"  # save best result here
+        if args.bucket:
+            os.system("gsutil cp gs://%s/evolve.txt ." % args.bucket)  # download evolve.txt if exists
         
         for _ in range(300):  # generations to evolve
             if mon.Path("evolve.txt").exists():  # if evolve.txt exists: select best hyps and mutate
@@ -838,7 +748,7 @@ def main(
             results = train(hyp.copy(), opt, device, wandb=wandb)
             
             # Write mutation results
-            print_mutation(hyp.copy(), results, yaml_file, opt.bucket)
+            print_mutation(hyp.copy(), results, yaml_file, args.bucket)
         
         # Plot results
         plot_evolution(yaml_file)
@@ -847,7 +757,7 @@ def main(
             f"Command to train a new model with these hyperparameters: $ python train.py --hyp {yaml_file}"
         )
         
-        return str(opt.save_dir)
+        return str(args.save_dir)
         
 
 if __name__ == "__main__":

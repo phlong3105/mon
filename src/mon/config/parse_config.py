@@ -67,6 +67,7 @@ def parse_train_args() -> argparse.Namespace:
     steps      = input_args.get("steps")    or args.get("steps")
     exist_ok   = input_args.get("exist_ok") or args.get("exist_ok")
     verbose    = input_args.get("verbose")  or args.get("verbose")
+    extra_args = input_args.get("extra_args")
     
     # Parse arguments
     save_dir = save_dir or mon.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
@@ -93,7 +94,8 @@ def parse_train_args() -> argparse.Namespace:
     args["steps"]      = steps
     args["exist_ok"]   = exist_ok
     args["verbose"]    = verbose
-    args = argparse.Namespace(**args)
+    args |= extra_args
+    args  = argparse.Namespace(**args)
     
     if not exist_ok:
         mon.delete_dir(paths=mon.Path(save_dir))
@@ -258,6 +260,7 @@ def parse_predict_args() -> argparse.Namespace:
     save_image = input_args.get("save_image") or args.get("save_image")
     save_debug = input_args.get("save_debug") or args.get("save_debug")
     verbose    = input_args.get("verbose")    or args.get("verbose")
+    extra_args = input_args.get("extra_args")
     
     # Parse arguments
     save_dir = save_dir or mon.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
@@ -285,7 +288,8 @@ def parse_predict_args() -> argparse.Namespace:
     args["save_image"] = save_image
     args["save_debug"] = save_debug
     args["verbose"]    = verbose
-    args = argparse.Namespace(**args)
+    args |= extra_args
+    args  = argparse.Namespace(**args)
     
     save_dir.mkdir(parents=True, exist_ok=True)
     mon.copy_file(src=config, dst=save_dir / "config.py")
