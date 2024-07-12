@@ -216,7 +216,9 @@ class Model(lightning.LightningModule, ABC):
         
     Args:
         name: The model's name. Default: ``None`` mean it will be
-            :attr:`self.__class__.__name__`. .
+            :attr:`self.__class__.__name__`.
+        arch: The model's architecture. Default: ``None`` mean it will be
+            :attr:`self.__class__.__name__`.
         root: The root directory of the model. It is used to save the model
             checkpoint during training: {root}/{fullname}.
         fullname: The model's fullname to save the checkpoint or weights. It
@@ -263,6 +265,7 @@ class Model(lightning.LightningModule, ABC):
             >>> )
     """
     
+    _arch  : str          = ""  # The model's architecture.
     _tasks : list[Task]   = []  # A list of tasks that the model can perform.
     _scheme: list[Scheme] = []  # A list of learning schemes that the model can perform.
     _zoo   : dict         = {}  # A dictionary containing all pretrained weights of the model.
@@ -290,7 +293,7 @@ class Model(lightning.LightningModule, ABC):
         self.verbose       = verbose
         # For saving/loading
         self.name          = name
-        self.fullname      = fullname  # root/fullname
+        self.fullname      = fullname
         self._debug_dir    = None
         self._ckpt_dir     = None
         self.root          = root
@@ -310,6 +313,12 @@ class Model(lightning.LightningModule, ABC):
     
     # region Model Metadata
     
+    @classmethod
+    @property
+    def arch(cls) -> str:
+        """Return the model's architecture."""
+        return cls._arch
+
     @classmethod
     @property
     def tasks(cls) -> list[Task]:
@@ -358,8 +367,8 @@ class Model(lightning.LightningModule, ABC):
     @root.setter
     def root(self, root: Any):
         root = core.Path(root)
-        if root.name != self.fullname:
-            root /= self.fullname
+        # if root.name != self.fullname:
+        #     root /= self.fullname
         self._root      = root
         self._debug_dir = root / "debug"
         self._ckpt_dir  = root  # / "weights"

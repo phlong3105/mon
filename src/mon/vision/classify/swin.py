@@ -177,6 +177,7 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "swin"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -290,7 +291,7 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="swin_t")
+@MODELS.register(name="swin_t", arch="swin")
 class Swin_T(SwinTransformer):
     """swin_tiny architecture from
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
@@ -321,7 +322,7 @@ class Swin_T(SwinTransformer):
         )
 
 
-@MODELS.register(name="swin_s")
+@MODELS.register(name="swin_s", arch="swin")
 class Swin_S(SwinTransformer):
     """swin_small architecture from
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
@@ -352,7 +353,7 @@ class Swin_S(SwinTransformer):
         )
 
 
-@MODELS.register(name="swin_b")
+@MODELS.register(name="swin_b", arch="swin")
 class Swin_B(SwinTransformer):
     """swin_base architecture from
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
@@ -383,7 +384,7 @@ class Swin_B(SwinTransformer):
         )
         
 
-@MODELS.register(name="swin_v2_t")
+@MODELS.register(name="swin_v2_t", arch="swin")
 class Swin_V2_T(SwinTransformer):
     """swin_v2_tiny architecture from
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
@@ -416,7 +417,7 @@ class Swin_V2_T(SwinTransformer):
         )
         
 
-@MODELS.register(name="swin_v2_s")
+@MODELS.register(name="swin_v2_s", arch="swin")
 class Swin_V2_S(SwinTransformer):
     """swin_v2_small architecture from
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
@@ -449,7 +450,7 @@ class Swin_V2_S(SwinTransformer):
         )
         
 
-@MODELS.register(name="swin_v2_b")
+@MODELS.register(name="swin_v2_b", arch="swin")
 class Swin_V2_B(SwinTransformer):
     """swin_v2_base architecture from
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows

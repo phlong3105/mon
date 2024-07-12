@@ -350,7 +350,7 @@ class ORSNet(nn.Module):
 
 # region Model
 
-@MODELS.register(name="mprnet")
+@MODELS.register(name="mprnet", arch="mprnet")
 class MPRNet(base.MultiTaskImageEnhancementModel):
 	"""Multi-Stage Progressive Image Restoration.
 	
@@ -370,6 +370,7 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 	See Also: :class:`base.MultiTaskImageEnhancementModel`
 	"""
 	
+	_arch  : str  = "mprnet"
 	_tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW]
 	_scheme: list[Scheme] = [Scheme.SUPERVISED]
 	_zoo   : dict = {}

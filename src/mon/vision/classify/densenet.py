@@ -171,6 +171,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "densenet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -280,7 +281,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="densenet121")
+@MODELS.register(name="densenet121", arch="densenet")
 class DenseNet121(DenseNet):
     """Densenet-121 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
@@ -307,7 +308,7 @@ class DenseNet121(DenseNet):
         )
 
 
-@MODELS.register(name="densenet161")
+@MODELS.register(name="densenet161", arch="densenet")
 class DenseNet161(DenseNet):
     """Densenet-161 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
@@ -334,7 +335,7 @@ class DenseNet161(DenseNet):
         )
 
 
-@MODELS.register(name="densenet169")
+@MODELS.register(name="densenet169", arch="densenet")
 class DenseNet169(DenseNet):
     """Densenet-169 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
@@ -361,7 +362,7 @@ class DenseNet169(DenseNet):
         )
 
 
-@MODELS.register(name="densenet201")
+@MODELS.register(name="densenet201", arch="densenet")
 class DenseNet201(DenseNet):
     """Densenet-201 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.

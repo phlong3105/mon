@@ -214,7 +214,7 @@ class SupervisedAttentionModule(nn.Module):
 
 # region Model
 
-@MODELS.register(name="finet")
+@MODELS.register(name="finet", arch="finet")
 class FINet(base.MultiTaskImageEnhancementModel):
     """Fractional-Instance Normalization Network.
     
@@ -234,6 +234,7 @@ class FINet(base.MultiTaskImageEnhancementModel):
     See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
+    _arch  : str  = "finet"
     _tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW]
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
@@ -259,11 +260,8 @@ class FINet(base.MultiTaskImageEnhancementModel):
         weights     : Any        = None,
         *args, **kwargs
     ):
-        variant = core.to_int(variant)
-        variant = f"{variant:03d}" if isinstance(variant, int) else None
         super().__init__(
             name        = "finet",
-            variant     = variant,
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs

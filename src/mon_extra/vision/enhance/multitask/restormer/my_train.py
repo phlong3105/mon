@@ -127,11 +127,11 @@ def train(args: argparse.Namespace):
     experiments_root = save_dir
     opt["path"]["root"]               = str(experiments_root)
     opt["path"]["experiments_root"]   = str(experiments_root)
-    opt["path"]["models"]             = str(experiments_root / "weights")
+    opt["path"]["models"]             = str(experiments_root)
     opt["path"]["training_states"]    = str(experiments_root / "training_state")
     opt["path"]["log"]                = str(experiments_root)
-    opt["path"]["tb_logger"]          = str(experiments_root / "tb_logger")
-    opt["logger"]["wandb"]            = str(experiments_root / "wandb")
+    opt["path"]["tb_logger"]          = str(experiments_root )
+    opt["logger"]["wandb"]            = str(experiments_root)
     opt["path"]["visualization"]      = str(experiments_root / "visualization")
     opt["path"]["pretrain_network_g"] = str(weights)
     
@@ -344,76 +344,8 @@ def train(args: argparse.Namespace):
 
 # region Main
 
-@click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/train/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running device.")
-@click.option("--local-rank", type=int, default=0)
-@click.option("--launcher",   type=click.Choice(["none", "pytorch", "slurm"]), default="none", help="Job launcher.")
-@click.option("--epochs",     type=int, default=300,  help="Stop training once this number of epochs is reached.")
-@click.option("--steps",      type=int, default=None, help="Stop training once this number of steps is reached.")
-@click.option("--exist-ok",   is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    local_rank: int,
-    launcher  : str,
-    epochs    : int,
-    steps     : int,
-    exist_ok  : bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Get config args
-    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
-    
-    # Parse arguments
-    root     = mon.Path(root)
-    weights  = mon.to_list(weights)
-    project  = root.name
-    save_dir = save_dir or root / "run" / "train" / fullname
-    save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
-    
-    # Update arguments
-    args = {
-        "root"      : root,
-        "config"    : config,
-        "opt"       : config,
-        "weights"   : weights,
-        "model"     : model,
-        "project"   : project,
-        "fullname"  : fullname,
-        "save_dir"  : save_dir,
-        "device"    : device,
-        "local_rank": local_rank,
-        "launcher"  : launcher,
-        "epochs"    : epochs,
-        "steps"     : steps,
-        "exist_ok"  : exist_ok,
-        "verbose"   : verbose,
-    }
-    args = argparse.Namespace(**args)
-    
-    if not exist_ok:
-        mon.delete_dir(paths=mon.Path(args.save_dir))
-    
-    train(args)
-    return str(args.save_dir)
-
-
 if __name__ == "__main__":
-    main()
+    args = mon.parse_predict_args()
+    train(args)
 
 # endregion

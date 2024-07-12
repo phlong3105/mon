@@ -191,6 +191,7 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
+    _arch  : str  = "mobilenet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -301,7 +302,7 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="mobilenetv3_large")
+@MODELS.register(name="mobilenetv3_large", arch="mobilenet")
 class MobileNetV3_Large(MobileNetV3):
     """MobileNetV3 architecture from `Searching for MobileNetV3
     <https://arxiv.org/abs/1905.02244>`__.
@@ -334,7 +335,7 @@ class MobileNetV3_Large(MobileNetV3):
         )
 
 
-@MODELS.register(name="mobilenetv3_small")
+@MODELS.register(name="mobilenetv3_small", arch="mobilenet")
 class MobileNetV3_Small(MobileNetV3):
     """MobileNetV3 architecture from `Searching for MobileNetV3
     <https://arxiv.org/abs/1905.02244>`__.

@@ -111,7 +111,7 @@ class Loss(nn.Loss):
 
 # region Model
 
-@MODELS.register(name="zero_dce++_re")
+@MODELS.register(name="zero_dce++_re", arch="zero_dce++")
 class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
     """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
     
@@ -129,6 +129,7 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "zero_dce++"
     _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
     _zoo   : dict = {
         "sice_mix" : {

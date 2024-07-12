@@ -24,9 +24,9 @@ _current_dir  = _current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
-    weights   = args.weights[0] if isinstance(args.weights, list) else args.weights
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
+    weights   = args.weights[0] if isinstance(args.weights, list) else args.weights
     device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
@@ -77,92 +77,16 @@ def predict(args: argparse.Namespace):
 
 # region Main
 
-@click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running device.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--gamma",      type=float,   default=0.6,  help="Gamma correction parameter.")
-@click.option("--lambda_",    type=float,   default=0.15, help="The weight for balancing the two terms in the illumination refinement optimization objective.")
-@click.option("--lime",       is_flag=True, default=True, help="Use the LIME method. By default, the DUAL method is used.")
-@click.option("--sigma",      type=int,     default=3,    help="Spatial standard deviation for spatial affinity based Gaussian weights.")
-@click.option("--bc",         type=float,   default=1,    help="Parameter for controlling the influence of Mertens's contrast measure.")
-@click.option("--bs",         type=float,   default=1,    help="Parameter for controlling the influence of Mertens's saturation measure.")
-@click.option("--be",         type=float,   default=1,    help="Parameter for controlling the influence of Mertens's well exposedness measure.")
-@click.option("--eps",        type=float,   default=1e-3, help="Constant to avoid computation instability.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    gamma     : float,
-    lambda_   : float,
-    lime      : bool,
-    sigma     : int,
-    bc        : float,
-    bs        : float,
-    be        : float,
-    eps       : float,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Parse arguments
-    root     = mon.Path(root)
-    weights  = mon.to_list(weights)
-    save_dir = save_dir or root / "run" / "predict" / model
-    save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
-    imgsz    = mon.parse_hw(imgsz)[0]
-    
-    # Update arguments
-    args = {
-        "root"      : root,
-        "config"    : config,
-        "weights"   : weights,
-        "model"     : model,
-        "data"      : data,
-        "fullname"  : fullname,
-        "save_dir"  : save_dir,
-        "device"    : device,
-        "imgsz"     : imgsz,
-        "gamma"     : gamma,
-        "lambda_"   : lambda_,
-        "lime"      : lime,
-        "sigma"     : sigma,
-        "bc"        : bc,
-        "bs"        : bs,
-        "be"        : be,
-        "eps"       : eps,
-        "resize"    : resize,
-        "benchmark" : benchmark,
-        "save_image": save_image,
-        "verbose"   : verbose
-    }
-    args = argparse.Namespace(**args)
-    
-    predict(args)
-    return str(args.save_dir)
-
-
 if __name__ == "__main__":
-    main()
+    args = mon.parse_predict_args()
+    args.gamma   = 0.6   # Gamma correction parameter
+    args.lambda_ = 0.15  # The weight for balancing the two terms in the illumination refinement optimization objective
+    args.lime    = True  # Use the LIME method. By default, the DUAL method is used
+    args.sigma   = 3     # Spatial standard deviation for spatial affinity based Gaussian weights
+    args.bc      = 1     # Parameter for controlling the influence of Mertens's contrast measure
+    args.bs      = 1     # Parameter for controlling the influence of Mertens's saturation measure
+    args.be      = 1     # Parameter for controlling the influence of Mertens's well exposedness measure
+    args.eps     = 1e-3  # Constant to avoid computation instability
+    predict(args)
 
 # endregion

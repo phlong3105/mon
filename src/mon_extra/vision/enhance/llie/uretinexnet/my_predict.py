@@ -7,10 +7,8 @@ from __future__ import annotations
 
 import argparse
 import copy
-import socket
 import time
 
-import click
 import torchvision.transforms as transforms
 
 import mon
@@ -103,7 +101,7 @@ def predict(args: argparse.Namespace):
     data      = args.data
     save_dir  = args.save_dir
     device    = mon.set_device(args.device)
-    imgsz     = args.imgsz
+    imgsz     = args.imgsz[0]
     resize    = args.resize
     benchmark = args.benchmark
     
@@ -153,74 +151,12 @@ def predict(args: argparse.Namespace):
 
 # region Main
 
-@click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running device.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Parse arguments
-    root     = mon.Path(root)
-    decom_model_low_weights = mon.ZOO_DIR / "mon_extra/vision/enhance/llie/uretinexnet/weights/uretinexnet_init_low.pth"
-    unfolding_model_weights = mon.ZOO_DIR / "mon_extra/vision/enhance/llie/uretinexnet/weights/uretinexnet_unfolding.pth"
-    adjust_model_weights    = mon.ZOO_DIR / "mon_extra/vision/enhance/llie/uretinexnet/weights/uretinexnet_L_adjust.pth"
-    save_dir = save_dir or root / "run" / "predict" / model
-    save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
-    ratio    = 5
-    imgsz    = mon.parse_hw(imgsz)[0]
-    
-    # Update arguments
-    args = {
-        "root"                   : root,
-        "config"                 : config,
-        "decom_model_low_weights": decom_model_low_weights,
-        "unfolding_model_weights": unfolding_model_weights,
-        "adjust_model_weights"   : adjust_model_weights,
-        "model"                  : model,
-        "data"                   : data,
-        "fullname"               : fullname,
-        "save_dir"               : save_dir,
-        "ratio"                  : ratio,
-        "device"                 : device,
-        "imgsz"                  : imgsz,
-        "resize"                 : resize,
-        "benchmark"              : benchmark,
-        "save_image"             : save_image,
-        "verbose"                : verbose
-    }
-    args = argparse.Namespace(**args)
-    
-    predict(args)
-    return str(args.save_dir)
-
-
 if __name__ == "__main__":
-    main()
+    args = mon.parse_predict_args()
+    args.decom_model_low_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_init_low.pth"
+    args.unfolding_model_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_unfolding.pth"
+    args.adjust_model_weights    = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_l_adjust.pth"
+    args.ratio = 5
+    predict(args)
 
 # endregion

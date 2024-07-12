@@ -321,6 +321,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "efficientnet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -444,7 +445,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="efficientnet_b0")
+@MODELS.register(name="efficientnet_b0", arch="efficientnet")
 class EfficientNet_B0(EfficientNet):
     """EfficientNet B0 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -477,7 +478,7 @@ class EfficientNet_B0(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b1")
+@MODELS.register(name="efficientnet_b1", arch="efficientnet")
 class EfficientNet_B1(EfficientNet):
     """EfficientNet B1 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -516,7 +517,7 @@ class EfficientNet_B1(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b2")
+@MODELS.register(name="efficientnet_b2", arch="efficientnet")
 class EfficientNet_B2(EfficientNet):
     """EfficientNet B2 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -549,7 +550,7 @@ class EfficientNet_B2(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b3")
+@MODELS.register(name="efficientnet_b3", arch="efficientnet")
 class EfficientNet_B3(EfficientNet):
     """EfficientNet B3 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -582,7 +583,7 @@ class EfficientNet_B3(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b4")
+@MODELS.register(name="efficientnet_b4", arch="efficientnet")
 class EfficientNet_B4(EfficientNet):
     """EfficientNet B4 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -615,7 +616,7 @@ class EfficientNet_B4(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b5")
+@MODELS.register(name="efficientnet_b5", arch="efficientnet")
 class EfficientNet_B5(EfficientNet):
     """EfficientNet B5 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -649,7 +650,7 @@ class EfficientNet_B5(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b6")
+@MODELS.register(name="efficientnet_b6", arch="efficientnet")
 class EfficientNet_B6(EfficientNet):
     """EfficientNet B6 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -683,7 +684,7 @@ class EfficientNet_B6(EfficientNet):
         )
    
    
-@MODELS.register(name="efficientnet_b7")
+@MODELS.register(name="efficientnet_b7", arch="efficientnet")
 class EfficientNet_B7(EfficientNet):
     """EfficientNet B7 model architecture from the `EfficientNet: Rethinking
     Model Scaling for Convolutional Neural Networks
@@ -717,7 +718,7 @@ class EfficientNet_B7(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_v2_s")
+@MODELS.register(name="efficientnet_v2_s", arch="efficientnet")
 class EfficientNet_V2_S(EfficientNet):
     """EfficientNetV2-S architecture from `EfficientNetV2: Smaller Models and
     Faster Training <https://arxiv.org/abs/2104.00298>`__.
@@ -748,7 +749,7 @@ class EfficientNet_V2_S(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_v2_m")
+@MODELS.register(name="efficientnet_v2_m", arch="efficientnet")
 class EfficientNet_V2_M(EfficientNet):
     """EfficientNetV2-M architecture from `EfficientNetV2: Smaller Models and
     Faster Training <https://arxiv.org/abs/2104.00298>`__.
@@ -779,7 +780,7 @@ class EfficientNet_V2_M(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_v2_l")
+@MODELS.register(name="efficientnet_v2_l", arch="efficientnet")
 class EfficientNet_V2_L(EfficientNet):
     """EfficientNetV2-L architecture from `EfficientNetV2: Smaller Models and
     Faster Training <https://arxiv.org/abs/2104.00298>`__.

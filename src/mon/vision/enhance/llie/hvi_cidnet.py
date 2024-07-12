@@ -466,7 +466,7 @@ class I_LCA(nn.Module):
 
 # region Model
 
-@MODELS.register(name="hvi_cidnet_re")
+@MODELS.register(name="hvi_cidnet_re", arch="hvi_cidnet")
 class HVICIDNet_RE(base.LowLightImageEnhancementModel):
     """HVI-CIDNet (You Only Need One Color Space: An Efficient Network for
     Low-light Image Enhancement) models.
@@ -480,6 +480,7 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "hvi_cidnet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     

@@ -309,13 +309,14 @@ class VariationalAutoEncoder(nn.Module):
 
 # region Model
 
-@MODELS.register(name="zid")
+@MODELS.register(name="zid", arch="zid")
 class ZID(base.DehazingModel):
     """ZID (Zero-Shot Image Dehazing) model.
     
     See Also: :class:`base.Dehazing`
     """
     
+    _arch  : str  = "zid"
     _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
     _zoo   : dict = {}
     

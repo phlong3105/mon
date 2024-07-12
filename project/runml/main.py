@@ -44,14 +44,17 @@ def run_install(args: dict):
 
 def run_train(args: dict):
     # Get user input
-    root     = mon.Path(args["root"])
     task     = args["task"]
     mode     = args["mode"]
     config   = args["config"]
-    weights  = args["weights"]
+    arch     = args["arch"]
     model    = args["model"]
+    root     = mon.Path(args["root"])
+    project  = args["project"]
+    variant  = args["variant"]
     fullname = args["fullname"]
     save_dir = args["save_dir"]
+    weights  = args["weights"]
     device   = args["device"]
     epochs   = args["epochs"]
     steps    = args["steps"]
@@ -62,20 +65,23 @@ def run_train(args: dict):
     
     # Parse arguments
     use_extra_model = mon.is_extra_model(model)
-    model    = mon.parse_model_name(model)
     config   = mon.parse_config_file(project_root=root, config=config)
     assert config not in [None, "None", ""]
+    model    = mon.parse_model_name(model)
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
     save_dir = save_dir or root / "run" / "train" / fullname
     weights  = mon.to_str(weights, ",")
     
     kwargs   = {
-        "--root"    : str(root),
         "--config"  : config,
-        "--weights" : weights,
+        "--arch"    : arch,
         "--model"   : model,
+        "--root"    : str(root),
+        "--project" : project,
+        "--variant" : variant,
         "--fullname": fullname,
         "--save-dir": str(save_dir),
+        "--weights" : weights,
         "--device"  : device,
         "--epochs"  : epochs,
         "--steps"   : steps,
@@ -85,8 +91,8 @@ def run_train(args: dict):
     
     # Parse script file
     if use_extra_model:
-        torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
-        script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_train.py"
+        torch_distributed_launch = mon.EXTRA_MODELS[arch][model]["torch_distributed_launch"]
+        script_file = mon.EXTRA_MODELS[arch][model]["model_dir"] / "my_train.py"
         device      = mon.parse_device(device)
         if isinstance(device, list) and torch_distributed_launch:
             python_call = [
@@ -134,15 +140,18 @@ def run_train(args: dict):
 
 def run_predict(args: dict):
     # Get user input
-    root         = mon.Path(args["root"])
     task         = args["task"]
     mode         = args["mode"]
-    model        = args["model"]
     config       = args["config"]
-    weights	     = args["weights"]
+    arch         = args["arch"]
+    model        = args["model"]
     data         = args["data"]
+    root         = mon.Path(args["root"])
+    project      = args["project"]
+    variant      = args["variant"]
     fullname     = args["fullname"]
     save_dir     = args["save_dir"]
+    weights	     = args["weights"]
     device       = args["device"]
     imgsz        = args["imgsz"]
     resize       = args["resize"]
@@ -169,13 +178,16 @@ def run_predict(args: dict):
         else:
             save_dir = save_dir or root / "run" / "predict" / model
         kwargs  = {
-            "--root"    : str(root),
             "--config"  : config,
-            "--weights" : weights,
-            "--data"    : d,
+            "--arch"    : arch,
             "--model"   : model,
+            "--data"    : d,
+            "--root"    : str(root),
+            "--project" : project,
+            "--variant" : variant,
             "--fullname": fullname,
             "--save-dir": str(save_dir),
+            "--weights" : weights,
             "--device"  : device,
             "--imgsz"   : imgsz,
         }
@@ -187,8 +199,8 @@ def run_predict(args: dict):
         
         # Parse script file
         if use_extra_model:
-            torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
-            script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_predict.py"
+            torch_distributed_launch = mon.EXTRA_MODELS[arch][model]["torch_distributed_launch"]
+            script_file = mon.EXTRA_MODELS[arch][model]["model_dir"] / "my_predict.py"
             python_call = ["python"]
         else:
             script_file = _current_dir / "predict.py"
@@ -226,15 +238,18 @@ def run_predict(args: dict):
 
 def run_online(args: dict):
     # Get user input
-    root         = mon.Path(args["root"])
     task         = args["task"]
     mode         = args["mode"]
-    model        = args["model"]
     config       = args["config"]
-    weights	     = args["weights"]
+    arch         = args["arch"]
+    model        = args["model"]
     data         = args["data"]
+    root         = mon.Path(args["root"])
+    project      = args["project"]
+    variant      = args["variant"]
     fullname     = args["fullname"]
     save_dir     = args["save_dir"]
+    weights	     = args["weights"]
     device       = args["device"]
     epochs       = args["epochs"]
     steps        = args["steps"]
@@ -262,13 +277,16 @@ def run_online(args: dict):
         else:
             save_dir = save_dir or root / "run" / "predict" / model
         kwargs  = {
-            "--root"    : str(root),
             "--config"  : config,
-            "--weights" : weights,
-            "--data"    : d,
+            "--arch"    : arch,
             "--model"   : model,
+            "--data"    : d,
+            "--root"    : str(root),
+            "--project" : project,
+            "--variant" : variant,
             "--fullname": fullname,
             "--save-dir": str(save_dir),
+            "--weights" : weights,
             "--device"  : device,
             "--imgsz"   : imgsz,
         }
@@ -280,8 +298,8 @@ def run_online(args: dict):
         
         # Parse script file
         if use_extra_model:
-            torch_distributed_launch = mon.EXTRA_MODELS[model]["torch_distributed_launch"]
-            script_file = mon.EXTRA_MODELS[model]["model_dir"] / "my_online.py"
+            torch_distributed_launch = mon.EXTRA_MODELS[arch][model]["torch_distributed_launch"]
+            script_file = mon.EXTRA_MODELS[arch][model]["model_dir"] / "my_online.py"
             python_call = ["python"]
         else:
             script_file = _current_dir / "online.py"
@@ -321,9 +339,12 @@ def run_online(args: dict):
 @click.option("--root",     type=click.Path(exists=True), help="Project root.")
 @click.option("--task",     type=str, default=None,       help="Running task.")
 @click.option("--mode",     type=str, default="predict",  help="Running mode.")
+@click.option("--arch",     type=str, default=None,       help="Running architecture.")
 @click.option("--model",    type=str, default=None,       help="Running model.")
 @click.option("--config",   type=str, default=None,   	  help="Running config.")
 @click.option("--data",     type=str, default=None,       help="Predict dataset.")
+@click.option("--project",  type=str, default=None,       help="Project name.")
+@click.option("--variant",  type=str, default=None,       help="Variant name.")
 @click.option("--save-dir", type=str, default=None,       help="Optional saving directory.")
 @click.option("--weights",  type=str, default=None,       help="Weights paths.")
 @click.option("--device",   type=str, default=None,       help="Running devices.")
@@ -336,9 +357,12 @@ def main(
     root    : str,
     task    : str,
     mode    : str,
+    arch    : str,
     model   : str,
     config  : str,
     data    : str,
+    project : str,
+    variant : str,
     save_dir: str,
     weights : str,
     device  : int | list[int] | str,
@@ -360,8 +384,13 @@ def main(
     mode       = _modes[int(mode)] if mon.is_int(mode) else mode
     
     if mode in ["install", "train", "predict", "online", "instance"]:
+        # Architecture
+        archs_       = mon.list_archs(project_root=root, task=task, mode=mode)
+        archs_str_   = utils.parse_menu_string(archs_)
+        arch	     = click.prompt(click.style(f"Architecture {archs_str_}", fg="bright_green", bold=True), type=str, default=arch)
+        arch 	     = archs_[int(arch)] if mon.is_int(arch) else arch
         # Model
-        models_      = mon.list_models(project_root=root, mode=mode, task=task)
+        models_      = mon.list_models(project_root=root, task=task, mode=mode, arch=arch)
         models_str_  = utils.parse_menu_string(models_)
         model	     = click.prompt(click.style(f"Model {models_str_}", fg="bright_green", bold=True), type=str, default=model)
         model 	     = models_[int(model)] if mon.is_int(model) else model
@@ -372,6 +401,14 @@ def main(
         configs_str_ = utils.parse_menu_string(configs_)
         config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
         config       = configs_[int(config)] if mon.is_int(config) else config
+        # Project
+        project      = project if project not in [None, "None", ""] else ""
+        project      = click.prompt(click.style(f"Project: {project}", fg="bright_green", bold=True), type=str, default=project)
+        project      = None if project in [None, "None", ""] else project
+        # Variant
+        variant      = variant if variant not in [None, "None", ""] else ""
+        variant      = click.prompt(click.style(f"Variant: {variant}", fg="bright_green", bold=True), type=str, default=variant)
+        variant      = None if variant in [None, "None", ""] else variant
         # Weights    
         weights_     = mon.list_weights_files(project_root=root, model=model)
         weights_str_ = utils.parse_menu_string(weights_)
@@ -440,14 +477,17 @@ def main(
         run_install(args)
     elif mode in ["train"]:
         args = {
-            "root"    : root,
             "task"    : task,
             "mode"    : mode,
             "config"  : config,
-            "weights" : weights,
+            "arch"    : arch,
             "model"   : model,
+            "root"    : root,
+            "project" : project,
+            "variant" : variant,
             "fullname": fullname,
             "save_dir": save_dir,
+            "weights" : weights,
             "device"  : device,
             "epochs"  : epochs,
             "steps"   : steps,
@@ -457,15 +497,18 @@ def main(
         run_train(args=args)
     elif mode in ["predict"]:
         args = {
-            "root"        : root,
             "task"        : task,
             "mode"        : mode,
             "config"      : config,
-            "weights"     : weights,
+            "arch"        : arch,
             "model"       : model,
             "data"        : data,
+            "root"        : root,
+            "project"     : project,
+            "variant"     : variant,
             "fullname"    : fullname,
             "save_dir"    : save_dir,
+            "weights"     : weights,
             "device"      : device,
             "imgsz"       : imgsz,
             "resize" 	  : resize,
@@ -478,15 +521,18 @@ def main(
         run_predict(args=args)
     elif mode in ["online", "instance"]:
         args = {
-            "root"        : root,
             "task"        : task,
             "mode"        : mode,
             "config"      : config,
-            "weights"     : weights,
+            "arch"        : arch,
             "model"       : model,
             "data"        : data,
+            "root"        : root,
+            "project"     : project,
+            "variant"     : variant,
             "fullname"    : fullname,
             "save_dir"    : save_dir,
+            "weights"     : weights,
             "device"      : device,
             "epochs"      : epochs,
             "steps"       : steps,

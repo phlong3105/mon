@@ -260,7 +260,7 @@ InceptionOutputs = namedtuple("InceptionOutputs", ["logits", "aux_logits"])
 InceptionOutputs.__annotations__ = {"logits": torch.Tensor, "aux_logits": torch.Tensor | None}
 
 
-@MODELS.register(name="inception3")
+@MODELS.register(name="inception3", arch="inception")
 class Inception3(base.ImageClassificationModel):
     """Inception v3 model architecture from
     `Rethinking the Inception Architecture for Computer Vision <http://arxiv.org/abs/1512.00567>`_.
@@ -273,6 +273,7 @@ class Inception3(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "inception"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {
         "imagenet1k_v1": {

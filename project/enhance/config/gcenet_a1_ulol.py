@@ -17,6 +17,8 @@ _root_dir     = _current_file.parents[1]
 model_name = "gcenet_a1"
 data_name  = "ulol"
 root       = _root_dir / "run"
+project    = None
+variant    = None
 fullname   = f"{model_name}_{data_name}"
 image_size = [512, 512]
 seed	   = 100
@@ -33,7 +35,7 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,		# The number of input and output channels for subsequent layers.
+	"num_channels": 32,		        # The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
 	"radius"      : 3,
 	"eps"	      : 1e-4,

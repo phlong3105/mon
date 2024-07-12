@@ -325,6 +325,7 @@ class RegNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "regnet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -425,7 +426,7 @@ class RegNet(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="regnet_y_400mf")
+@MODELS.register(name="regnet_y_400mf", arch="regnet")
 class RegNet_Y_400MF(RegNet):
     """RegNetY_400MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -459,7 +460,7 @@ class RegNet_Y_400MF(RegNet):
         )
 
 
-@MODELS.register(name="regnet_y_800mf")
+@MODELS.register(name="regnet_y_800mf", arch="regnet")
 class RegNet_Y_800MF(RegNet):
     """RegNetY_800MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -493,7 +494,7 @@ class RegNet_Y_800MF(RegNet):
         )
     
 
-@MODELS.register(name="regnet_y_1_6gf")
+@MODELS.register(name="regnet_y_1_6gf", arch="regnet")
 class RegNet_Y_1_6GF(RegNet):
     """RegNetY_1.6GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -527,7 +528,7 @@ class RegNet_Y_1_6GF(RegNet):
         )
 
 
-@MODELS.register(name="regnet_y_3_2gf")
+@MODELS.register(name="regnet_y_3_2gf", arch="regnet")
 class RegNet_Y_3_2GF(RegNet):
     """RegNetY_3.2GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -561,7 +562,7 @@ class RegNet_Y_3_2GF(RegNet):
         )
 
 
-@MODELS.register(name="regnet_y_8gf")
+@MODELS.register(name="regnet_y_8gf", arch="regnet")
 class RegNet_Y_8GF(RegNet):
     """RegNetY_8GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -595,7 +596,7 @@ class RegNet_Y_8GF(RegNet):
         )
         
 
-@MODELS.register(name="regnet_y_16gf")
+@MODELS.register(name="regnet_y_16gf", arch="regnet")
 class RegNet_Y_16GF(RegNet):
     """RegNetY_16GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -641,7 +642,7 @@ class RegNet_Y_16GF(RegNet):
         )
      
 
-@MODELS.register(name="regnet_y_32gf")
+@MODELS.register(name="regnet_y_32gf", arch="regnet")
 class RegNet_Y_32GF(RegNet):
     """RegNetY_32GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -687,7 +688,7 @@ class RegNet_Y_32GF(RegNet):
         )
     
 
-@MODELS.register(name="regnet_y_128gf")
+@MODELS.register(name="regnet_y_128gf", arch="regnet")
 class RegNet_Y_128GF(RegNet):
     """RegNetY_128GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -721,7 +722,7 @@ class RegNet_Y_128GF(RegNet):
         )
         
  
-@MODELS.register(name="regnet_x_400mf")
+@MODELS.register(name="regnet_x_400mf", arch="regnet")
 class RegNet_X_400MF(RegNet):
     """RegNetY_400MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -755,7 +756,7 @@ class RegNet_X_400MF(RegNet):
         )
    
 
-@MODELS.register(name="regnet_x_800mf")
+@MODELS.register(name="regnet_x_800mf", arch="regnet")
 class RegNet_X_800MF(RegNet):
     """RegNetY_800MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -789,7 +790,7 @@ class RegNet_X_800MF(RegNet):
         )
   
 
-@MODELS.register(name="regnet_x_1_6gf")
+@MODELS.register(name="regnet_x_1_6gf", arch="regnet")
 class RegNet_X_1_6GF(RegNet):
     """RegNetX_1.6GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -823,7 +824,7 @@ class RegNet_X_1_6GF(RegNet):
         )
       
       
-@MODELS.register(name="regnet_x_3_2gf")
+@MODELS.register(name="regnet_x_3_2gf", arch="regnet")
 class RegNet_X_3_2GF(RegNet):
     """RegNetX_3.2GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -857,7 +858,7 @@ class RegNet_X_3_2GF(RegNet):
         )
 
 
-@MODELS.register(name="regnet_x_8gf")
+@MODELS.register(name="regnet_x_8gf", arch="regnet")
 class RegNet_X_8GF(RegNet):
     """RegNetX_8GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -891,7 +892,7 @@ class RegNet_X_8GF(RegNet):
         )
 
 
-@MODELS.register(name="regnet_x_16gf")
+@MODELS.register(name="regnet_x_16gf", arch="regnet")
 class RegNet_X_16GF(RegNet):
     """RegNetX_16GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
@@ -925,7 +926,7 @@ class RegNet_X_16GF(RegNet):
         )
 
 
-@MODELS.register(name="regnet_x32gf")
+@MODELS.register(name="regnet_x32gf", arch="regnet")
 class RegNetX_32GF(RegNet):
     """RegNetX_32GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.

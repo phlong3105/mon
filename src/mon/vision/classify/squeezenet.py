@@ -67,6 +67,7 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "squeezenet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
 
@@ -164,7 +165,7 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
         return y
 
 
-@MODELS.register(name="squeezenet1_0")
+@MODELS.register(name="squeezenet1_0", arch="squeezenet")
 class SqueezeNet1_0(SqueezeNet):
     """SqueezeNet model architecture from the `SqueezeNet: AlexNet-level
     accuracy with 50x fewer parameters and <0.5MB model size
@@ -190,7 +191,7 @@ class SqueezeNet1_0(SqueezeNet):
         )
        
 
-@MODELS.register(name="squeezenet1_1")
+@MODELS.register(name="squeezenet1_1", arch="squeezenet")
 class SqueezeNet1_1(SqueezeNet):
     """SqueezeNet 1.1 model from the `official SqueezeNet repo
     <https://github.com/DeepScale/SqueezeNet/tree/master/SqueezeNet_v1.1>`__.

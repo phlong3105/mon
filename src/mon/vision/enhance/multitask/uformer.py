@@ -698,7 +698,7 @@ class BasicUformerLayer(nn.Module):
 
 # region Model
 
-@MODELS.register(name="uformer_re")
+@MODELS.register(name="uformer_re", arch="uformer")
 class Uformer_RE(base.MultiTaskImageEnhancementModel):
     """A General U-Shaped Transformer (Uformer) Network.
     
@@ -708,6 +708,7 @@ class Uformer_RE(base.MultiTaskImageEnhancementModel):
     See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
+    _arch  : str  = "uformer"
     _tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES, Task.LLIE]
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
@@ -1103,7 +1104,7 @@ class Uformer_RE(base.MultiTaskImageEnhancementModel):
         return y
     
 
-@MODELS.register(name="uformer_t_re")
+@MODELS.register(name="uformer_t_re", arch="uformer")
 class UformerT_RE(Uformer_RE):
     """Uformer Tiny model.
     
@@ -1126,7 +1127,7 @@ class UformerT_RE(Uformer_RE):
         )
 
 
-@MODELS.register(name="uformer_s_re")
+@MODELS.register(name="uformer_s_re", arch="uformer")
 class UformerS_RE(Uformer_RE):
     """Uformer Small model.
     
@@ -1154,7 +1155,7 @@ class UformerS_RE(Uformer_RE):
         )
 
 
-@MODELS.register(name="uformer_s_noshift_re")
+@MODELS.register(name="uformer_s_noshift_re", arch="uformer")
 class UformerSNoshift_RE(Uformer_RE):
     
     _zoo: dict = {}
@@ -1177,7 +1178,7 @@ class UformerSNoshift_RE(Uformer_RE):
         )
 
 
-@MODELS.register(name="uformer_s_fastleff_re")
+@MODELS.register(name="uformer_s_fastleff_re", arch="uformer")
 class UformerSFastleff_RE(Uformer_RE):
     
     _zoo: dict = {}
@@ -1201,7 +1202,7 @@ class UformerSFastleff_RE(Uformer_RE):
         )
 
 
-@MODELS.register(name="uformer_b_re")
+@MODELS.register(name="uformer_b_re", arch="uformer")
 class UformerB_RE(Uformer_RE):
     """Uformer Big model.
     

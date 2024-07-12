@@ -89,7 +89,7 @@ class InvertedResidual(nn.Module):
 
 # region Model
 
-@MODELS.register(name="mobilenetv2")
+@MODELS.register(name="mobilenetv2", arch="mobilenet")
 class MobileNetV2(base.ImageClassificationModel):
     """MobileNetV2 architecture from the `MobileNetV2: Inverted Residuals and
     Linear Bottlenecks <https://arxiv.org/abs/1801.04381>`_ paper.
@@ -97,6 +97,7 @@ class MobileNetV2(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "mobilenet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {
         "imagenet1k_v1": {

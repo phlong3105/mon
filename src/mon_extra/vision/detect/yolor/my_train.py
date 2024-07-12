@@ -598,12 +598,15 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 # region Main
 
 @click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str,   default=None, help="Project root.")
-@click.option("--config",     type=str,   default=None, help="Model config.")
-@click.option("--weights",    type=str,   default=None, help="Weights paths.")
-@click.option("--model",      type=str,   default=None, help="Model name.")
-@click.option("--fullname",   type=str,   default=None, help="Save results to root/run/train/fullname.")
-@click.option("--save-dir",   type=str,   default=None, help="Optional saving directory.")
+@click.option("--config",     type=str, default=None, help="Model config.")
+@click.option("--arch",       type=str, default=None, help="Model architecture.")
+@click.option("--model",      type=str, default=None, help="Model name.")
+@click.option("--root",       type=str, default=None, help="Project root.")
+@click.option("--project",    type=str, default=None, help="Project name.")
+@click.option("--variant",    type=str, default=None, help="Variant name.")
+@click.option("--fullname",   type=str, default=None, help="Fullname to save the model's weight.")
+@click.option("--save-dir",   type=str, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
+@click.option("--weights",    type=str, default=None, help="Weights paths.")
 @click.option("--device",     type=str,   default=None, help="Running devices.")
 @click.option("--local-rank", type=int,   default=-1,   help="DDP parameter, do not modify.")
 @click.option("--epochs",     type=int,   default=None, help="Stop training once this number of epochs is reached.")
@@ -614,12 +617,15 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 @click.option("--exist-ok",   is_flag=True)
 @click.option("--verbose",    is_flag=True)
 def main(
-    root      : str,
     config    : str,
-    weights   : str,
+    arch      : str,
     model     : str,
+    root      : str,
+    project   : str,
+    variant   : str,
     fullname  : str,
     save_dir  : str,
+    weights   : str,
     local_rank: int,
     device    : str,
     epochs    : int,
@@ -637,12 +643,13 @@ def main(
     args     = mon.load_config(config)
     
     # Prioritize input args --> config file args
-    root     = root     or args.get("root")
-    weights  = weights  or args.get("weights")
     model    = model    or args.get("model")
     data     = args.get("data")
-    project  = args.get("project")
+    root     = root     or args.get("root")
+    project  = project  or args.get("project")
+    variant  = variant  or args.get("variant")
     fullname = fullname or args.get("name")
+    weights  = weights  or args.get("weights")
     device   = device   or args.get("device")
     hyp      = args.get("hyp")
     epochs   = epochs   or args.get("epochs")
@@ -653,24 +660,26 @@ def main(
     verbose  = verbose  or args.get("verbose")
     
     # Parse arguments
-    root     = mon.Path(root)
-    weights  = mon.to_list(weights)
     model    = mon.Path(model)
     model    = model if model.exists() else _current_dir / "config" / model.name
     model    = str(model.config_file())
     data     = mon.Path(data)
     data     = data  if data.exists() else _current_dir / "data" / data.name
     data     = str(data.config_file())
+    root     = mon.Path(root)
     project  = root.name or project
     save_dir = save_dir  or root / "run" / "train" / fullname
     save_dir = mon.Path(save_dir)
+    weights  = mon.to_list(weights)
     hyp      = mon.Path(hyp)
     hyp      = hyp if hyp.exists() else _current_dir / "data" / hyp.name
     hyp      = hyp.yaml_file()
     
     # Update arguments
-    args["root"]       = root
     args["config"]     = config
+    
+    args["root"]       = root
+    
     args["weights"]    = weights
     args["model"]      = model
     args["data"]       = data

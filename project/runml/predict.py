@@ -13,7 +13,9 @@ import torch
 
 import mon
 
-console = mon.console
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
+_current_dir  = _current_file.parents[0]
 
 
 # region Predict
@@ -149,13 +151,16 @@ def predict(args: dict) -> str:
 # region Main
 
 @click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
 @click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
+@click.option("--arch",       type=str, default=None, help="Model architecture.")
 @click.option("--model",      type=str, default=None, help="Model name.")
 @click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
+@click.option("--root",       type=str, default=None, help="Project root.")
+@click.option("--project",    type=str, default=None, help="Project name.")
+@click.option("--variant",    type=str, default=None, help="Variant name.")
+@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/arch/model/data or root/run/predict/arch/project/variant.")
 @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
+@click.option("--weights",    type=str, default=None, help="Weights paths.")
 @click.option("--device",     type=str, default=None, help="Running devices.")
 @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
 @click.option("--resize",     is_flag=True)
@@ -164,13 +169,16 @@ def predict(args: dict) -> str:
 @click.option("--save-debug", is_flag=True)
 @click.option("--verbose",    is_flag=True)
 def main(
-    root      : str,
     config    : str,
-    weights   : str,
+    arch      : str,
     model     : str,
     data      : str,
+    root      : str,
+    project   : str,
+    variant   : str,
     fullname  : str,
     save_dir  : str,
+    weights   : str,
     device    : int | list[int] | str,
     imgsz     : int,
     resize    : bool,
@@ -182,29 +190,35 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = mon.parse_config_file(project_root=root, config=config)
-    args     = mon.load_config(config)
+    config = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args   = mon.load_config(config)
     
     # Prioritize input args --> config file args
-    root     = root     or args["root"]
-    weights  = weights  or args["model"]["weights"]
+    model    = model    or args["model_name"]
     data     = data     or args["predictor"]["source"]
+    root     = root     or args["root"]
+    project  = project  or args["project"]
+    variant  = variant  or args["variant"]
     fullname = fullname or args["fullname"]
     save_dir = save_dir or args["predictor"]["default_root_dir"]
+    weights  = weights  or args["model"]["weights"]
     devices  = device   or args["predictor"]["devices"]
     imgsz    = imgsz    or args["image_size"]
     
     # Parse arguments
     root     = mon.Path(root)
+    save_dir = save_dir or mon.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
+    save_dir = mon.Path(save_dir)
     weights  = mon.to_list(weights)
     weights  = weights[0] if isinstance(weights, list | tuple) else weights
-    save_dir = save_dir or root / "run" / "predict" / model
-    save_dir = mon.Path(save_dir)
     
     # Update arguments
     args["hostname"]    = hostname
     args["config"]      = config
+    args["arch"]        = arch
     args["root"]        = root
+    args["project"]     = project
+    args["variant"]     = variant
     args["fullname"]    = fullname
     args["image_size"]  = imgsz
     args["verbose"]     = verbose

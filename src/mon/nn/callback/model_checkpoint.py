@@ -187,10 +187,10 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 metric_name = self._parse_metric_name()
                 if metric_name:
                     filename += f"_{metric_name}"
-            
+        if self.filename != "":
+            filename = f"{self.filename}_{filename}"
         if prefix:
             filename = self.CHECKPOINT_JOIN_CHAR.join([prefix, filename])
-        
         return filename
     
     def __resolve_ckpt_dir(self, trainer: "pl.Trainer") -> str:

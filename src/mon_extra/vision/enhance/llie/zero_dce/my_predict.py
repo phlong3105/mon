@@ -5,10 +5,8 @@ from __future__ import annotations
 
 import argparse
 import copy
-import socket
 import time
 
-import click
 import numpy as np
 import torch
 import torch.optim
@@ -27,10 +25,10 @@ _current_dir  = _current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
-    weights   = args.weights
-    weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     data      = args.data
     save_dir  = args.save_dir
+    weights   = args.weights
+    weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize
@@ -90,77 +88,8 @@ def predict(args: argparse.Namespace):
 
 # region Main
 
-@click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--device",     type=str, default=None, help="Running device.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    root      : str,
-    config    : str,
-    weights   : str,
-    model     : str,
-    data      : str,
-    fullname  : str,
-    save_dir  : str,
-    device    : str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool,
-) -> str:
-    hostname = socket.gethostname().lower()
-    
-    # Get config args
-    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = mon.load_config(config)
-    
-    # Prioritize input args --> config file args
-    weights  = weights  or args.get("weights")
-    fullname = fullname or args.get("fullname")
-    device   = device   or args.get("device")
-    imgsz    = imgsz    or args.get("imgsz")
-    verbose  = verbose  or args.get("verbose")
-    
-    # Parse arguments
-    root     = mon.Path(root)
-    weights  = mon.to_list(weights)
-    save_dir = save_dir or root / "run" / "predict" / model
-    save_dir = mon.Path(save_dir)
-    device   = mon.parse_device(device)
-    imgsz    = mon.parse_hw(imgsz)[0]
-    
-    # Update arguments
-    args["root"]       = root
-    args["config"]     = config
-    args["weights"]    = weights
-    args["model"]      = model
-    args["data"]       = data
-    args["name"]       = fullname
-    args["save_dir"]   = save_dir
-    args["device"]     = device
-    args["imgsz"]      = imgsz
-    args["resize"]     = resize
-    args["benchmark"]  = benchmark
-    args["save_image"] = save_image
-    args["verbose"]    = verbose
-    args = argparse.Namespace(**args)
-    
-    predict(args)
-    return str(args.save_dir)
-
-
 if __name__ == "__main__":
-    main()
+    args = mon.parse_predict_args()
+    predict(args)
     
 # endregion

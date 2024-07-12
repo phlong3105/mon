@@ -23,13 +23,14 @@ console = core.console
 
 # region Model
 
-@MODELS.register(name="alexnet")
+@MODELS.register(name="alexnet", arch="alexnet")
 class AlexNet(base.ImageClassificationModel):
     """AlexNet.
     
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "alexnet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {
         "imagenet1k_v1": {

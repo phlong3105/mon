@@ -13,7 +13,9 @@ from lightning.pytorch import callbacks as lcallbacks
 import mon
 import mon.core.utils
 
-console = mon.console
+console       = mon.console
+_current_file = mon.Path(__file__).absolute()
+_current_dir  = _current_file.parents[0]
 
 
 # region Train
@@ -87,24 +89,30 @@ def train(args: dict) -> str:
 # region Main
 
 @click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",     type=str, default=None, help="Project root.")
 @click.option("--config",   type=str, default=None, help="Model config.")
-@click.option("--weights",  type=str, default=None, help="Weights paths.")
+@click.option("--arch",     type=str, default=None, help="Model architecture.")
 @click.option("--model",    type=str, default=None, help="Model name.")
-@click.option("--fullname", type=str, default=None, help="Save results to root/run/train/fullname.")
-@click.option("--save-dir", type=str, default=None, help="Optional saving directory.")
+@click.option("--root",     type=str, default=None, help="Project root.")
+@click.option("--project",  type=str, default=None, help="Project name.")
+@click.option("--variant",  type=str, default=None, help="Variant name.")
+@click.option("--fullname", type=str, default=None, help="Fullname to save the model's weight.")
+@click.option("--save-dir", type=str, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
+@click.option("--weights",  type=str, default=None, help="Weights paths.")
 @click.option("--device",   type=str, default=None, help="Running devices.")
 @click.option("--epochs",   type=int, default=None, help="Stop training once this number of epochs is reached.")
 @click.option("--steps",    type=int, default=None, help="Stop training once this number of steps is reached.")
 @click.option("--exist-ok", is_flag=True)
 @click.option("--verbose",  is_flag=True)
 def main(
-    root    : str,
     config  : str,
-    weights : str,
+    arch    : str,
     model   : str,
+    root    : str,
+    project : str,
+    variant : str,
     fullname: str,
     save_dir: str,
+    weights : str,
     device  : str,
     epochs  : int,
     steps   : int,
@@ -114,30 +122,37 @@ def main(
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = mon.parse_config_file(project_root=root, config=config)
-    args     = mon.load_config(config)
+    config = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args   = mon.load_config(config)
     
     # Prioritize input args --> config file args
+    model    = model    or args["model_name"]
+    data     =             args["data_name"]
     root     = root     or args["root"]
-    weights  = weights  or args["model"]["weights"]
+    project  = project  or args["project"]
+    variant  = variant  or args["variant"]
     fullname = fullname or args["fullname"]
+    weights  = weights  or args["model"]["weights"]
     devices  = device   or args["trainer"]["devices"]
     epochs   = epochs   if epochs > 0 else args["trainer"]["max_epochs"]
     steps    = steps    if steps  > 0 else args["trainer"]["max_steps"]
     
     # Parse arguments
     root     = mon.Path(root)
+    save_dir = save_dir or mon.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
+    save_dir = mon.Path(save_dir)
     weights  = mon.to_list(weights)
     weights  = weights[0] if isinstance(weights, list | tuple) else weights
-    save_dir = save_dir  or root / "run" / "train" / fullname
-    save_dir = mon.Path(save_dir)
     devices  = mon.parse_device(devices)
     devices  = mon.to_int_list(devices) if "auto" not in devices else devices
     
     # Update arguments
     args["hostname"]  = hostname
     args["config"]    = config
+    args["arch"]      = arch
     args["root"]      = root
+    args["project"]   = project
+    args["variant"]   = variant
     args["fullname"]  = fullname
     args["verbose"]   = verbose
     args["model"]    |= {

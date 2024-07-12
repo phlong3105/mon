@@ -336,13 +336,14 @@ class DenoiseNet(nn.Module):
 
 # region Model
 
-@MODELS.register(name="gcenet")
+@MODELS.register(name="gcenet", arch="gcenet")
 class GCENet(base.LowLightImageEnhancementModel):
     """GCENet (Guided Curve Estimation Network) model.
     
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "gcenet"
     _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
     _zoo   : dict = {}
     
@@ -618,7 +619,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         return output1, output2
 
 
-@MODELS.register(name="gcenet_a1")
+@MODELS.register(name="gcenet_a1", arch="gcenet")
 class GCENetA1(GCENet):
     """GCENet-A1 (Guided Curve Estimation Network) model with simple guided filter.
     
@@ -689,7 +690,7 @@ class GCENetA1(GCENet):
         return c1, c2, y, y_gf
 
 
-@MODELS.register(name="gcenet_a2")
+@MODELS.register(name="gcenet_a2", arch="gcenet")
 class GCENetA2(GCENet):
     """GCENet-A2 (Guided Curve Estimation Network) model with simple guided filter.
     
@@ -748,7 +749,7 @@ class GCENetA2(GCENet):
         return c1, c2, y, y_gf
 
 
-@MODELS.register(name="gcenet_b1")
+@MODELS.register(name="gcenet_b1", arch="gcenet")
 class GCENetB1(GCENet):
     """GCENet-B1 (Guided Curve Estimation Network) model with simple guided filter.
     
@@ -819,7 +820,7 @@ class GCENetB1(GCENet):
         return c1, c2, x_gf, y
 
 
-@MODELS.register(name="gcenet_b2")
+@MODELS.register(name="gcenet_b2", arch="gcenet")
 class GCENetB2(GCENet):
     """GCENet-B2 (Guided Curve Estimation Network) model with simple guided filter.
     

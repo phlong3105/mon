@@ -45,10 +45,10 @@ def load_classes(path):
 
 
 def predict(opt, save_img: bool = False):
-    weights  = opt.weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     source   = opt.source
     save_dir = mon.Path(opt.save_dir)
+    weights  = opt.weights
+    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     view_img = opt.view_img
     save_txt = opt.save_txt
     imgsz    = opt.imgsz
@@ -211,15 +211,18 @@ def predict(opt, save_img: bool = False):
 # region Main
 
 @click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--root",         type=str,   default=None, help="Project root.")
-@click.option("--config",       type=str,   default=None, help="Model config.")
-@click.option("--weights",      type=str,   default=None, help="Weights paths.")
-@click.option("--model",        type=str,   default=None, help="Model name.")
-@click.option("--data",         type=str,   default=None, help="Source data directory.")
-@click.option("--fullname",     type=str,   default=None, help="Save results to root/run/predict/fullname.")
-@click.option("--save-dir",     type=str,   default=None, help="Optional saving directory.")
-@click.option("--device",       type=str,   default=None, help="Running devices.")
-@click.option("--imgsz",        type=int,   default=None, help="Image sizes.")
+@click.option("--config",       type=str, default=None, help="Model config.")
+@click.option("--arch",         type=str, default=None, help="Model architecture.")
+@click.option("--model",        type=str, default=None, help="Model name.")
+@click.option("--data",         type=str, default=None, help="Source data directory.")
+@click.option("--root",         type=str, default=None, help="Project root.")
+@click.option("--project",      type=str, default=None, help="Project name.")
+@click.option("--variant",      type=str, default=None, help="Variant name.")
+@click.option("--fullname",     type=str, default=None, help="Save results to root/run/predict/arch/model/data or root/run/predict/arch/project/variant.")
+@click.option("--save-dir",     type=str, default=None, help="Optional saving directory.")
+@click.option("--weights",      type=str, default=None, help="Weights paths.")
+@click.option("--device",       type=str, default=None, help="Running devices.")
+@click.option("--imgsz",        type=int, default=None, help="Image sizes.")
 @click.option("--conf",         type=float, default=None, help="Confidence threshold.")
 @click.option("--iou",          type=float, default=None, help="IoU threshold.")
 @click.option("--max-det",      type=int,   default=None, help="Max detections per image.")
@@ -228,16 +231,20 @@ def predict(opt, save_img: bool = False):
 @click.option("--agnostic-nms", is_flag=True)
 @click.option("--benchmark",    is_flag=True)
 @click.option("--save-image",   is_flag=True)
+@click.option("--save-debug",   is_flag=True)
 @click.option("--verbose",      is_flag=True)
 def main(
-    root        : str,
     config      : str,
-    weights     : str,
+    arch        : str,
     model       : str,
     data        : str,
+    root        : str,
+    project     : str,
+    variant     : str,
     fullname    : str,
     save_dir    : str,
-    device      : str,
+    weights     : str,
+    device      : int | list[int] | str,
     imgsz       : int,
     conf        : float,
     iou         : float,
@@ -247,54 +254,63 @@ def main(
     agnostic_nms: bool,
     benchmark   : bool,
     save_image  : bool,
+    save_debug  : bool,
     verbose     : bool,
 ) -> str:
     hostname = socket.gethostname().lower()
     
     # Get config args
-    config   = mon.parse_config_file(project_root=_current_dir / "config", config=config)
-    args     = mon.load_config(config)
+    config = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    args   = mon.load_config(config)
     
     # Prioritize input args --> config file args
-    root         = root         or args.get("root")
-    weights      = weights      or args.get("weights")
     model        = model        or args.get("model")
-    source       = data         or args.get("data")
-    project      = args.get("project")
+    data         = data         or args.get("data")
+    root         = root         or args.get("root")
+    project      = project      or args.get("project")
+    variant      = variant      or args.get("variant")
     fullname     = fullname     or args.get("name")
+    save_dir     = save_dir     or args.get("save_dir")
+    weights      = weights      or args.get("weights")
     device       = device       or args.get("device")
     imgsz        = imgsz        or args.get("imgsz")
     conf         = conf         or args.get("conf")
     iou          = iou          or args.get("iou")
     max_det      = max_det      or args.get("max_det")
+    resize       = resize       or args.get("resize")
     augment      = augment      or args.get("augment")
     agnostic_nms = agnostic_nms or args.get("agnostic_nms")
+    benchmark    = benchmark    or args.get("benchmark")
+    save_image   = save_image   or args.get("save_image")
+    save_debug   = save_debug   or args.get("save_debug")
     verbose      = verbose      or args.get("verbose")
     
     # Parse arguments
-    root     = mon.Path(root)
-    weights  = mon.to_list(weights)
     model    = mon.Path(model)
     model    = model if model.exists() else _current_dir / "config" / model.name
-    model    = str(model.config_file())
+    model    = model.config_file()
     data_    = mon.Path(args.get("data"))
     data_    = data_ if data_.exists() else _current_dir / "data" / data_.name
     data_    = str(data_.config_file())
+    root     = mon.Path(root)
     project  = root.name or project
-    save_dir = save_dir or root / "run" / "predict" / model
+    save_dir = save_dir or mon.parse_save_dir(root/"run"/"train", arch, model.stem, data, project, variant)
     save_dir = mon.Path(save_dir)
+    weights  = mon.to_list(weights)
     imgsz    = mon.to_list(imgsz)
     
     # Update arguments
-    args["root"]         = root
-    args["config"]       = config
-    args["weights"]      = weights
+    args["config"]       = str(config)
     args["model"]        = model
     args["data"]         = data_
-    args["source"]       = source
+    args["source"]       = data
+    args["root"]         = root
     args["project"]      = project
+    args["variant"]      = variant
     args["name"]         = fullname
+    args["fullname"]     = fullname
     args["save_dir"]     = save_dir
+    args["weights"]      = weights
     args["device"]       = device
     args["imgsz"]        = imgsz
     args["conf"]         = conf
@@ -302,8 +318,11 @@ def main(
     args["max_det"]      = max_det
     args["augment"]      = augment
     args["agnostic_nms"] = agnostic_nms
+    args["resize"]       = resize
+    args["benchmark"]    = benchmark
+    args["save_image"]   = save_image
+    args["save_debug"]   = save_debug
     args["verbose"]      = verbose
-    
     opt = argparse.Namespace(**args)
     
     with torch.no_grad():

@@ -135,7 +135,7 @@ class UNetConvBlock(nn.Module):
 
 # region Model
 
-@MODELS.register(name="llunet++_re")
+@MODELS.register(name="llunet++_re", arch="llunet++")
 class LLUnetpp_RE(base.LowLightImageEnhancementModel):
     """LLUnet++ (LLUnet++: UNet++ Based Nested Skip Connections Network for
     Low-Light Image Enhancement) model.
@@ -146,6 +146,7 @@ class LLUnetpp_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "llunet++"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     

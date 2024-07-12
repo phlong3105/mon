@@ -186,6 +186,7 @@ class ResNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "resnet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -334,7 +335,7 @@ class ResNet(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="resnet18")
+@MODELS.register(name="resnet18", arch="resnet")
 class ResNet18(ResNet):
     """ResNet-18 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
@@ -360,7 +361,7 @@ class ResNet18(ResNet):
         )
 
 
-@MODELS.register(name="resnet34")
+@MODELS.register(name="resnet34", arch="resnet")
 class ResNet34(ResNet):
     """ResNet-34 from `Deep Residual Learning for Image Recognition <https://arxiv.org/abs/1512.03385>`__.
     
@@ -385,7 +386,7 @@ class ResNet34(ResNet):
         )
 
 
-@MODELS.register(name="resnet50")
+@MODELS.register(name="resnet50", arch="resnet")
 class ResNet50(ResNet):
     """ResNet-50 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
@@ -417,7 +418,7 @@ class ResNet50(ResNet):
         )
 
 
-@MODELS.register(name="resnet101")
+@MODELS.register(name="resnet101", arch="resnet")
 class ResNet101(ResNet):
     """ResNet-101 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
@@ -449,7 +450,7 @@ class ResNet101(ResNet):
         )
 
 
-@MODELS.register(name="resnet152")
+@MODELS.register(name="resnet152", arch="resnet")
 class ResNet152(ResNet):
     """ResNet-152 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
@@ -485,7 +486,7 @@ class ResNet152(ResNet):
 
 # region ResNeXt
 
-@MODELS.register(name="resnext50_32x4d")
+@MODELS.register(name="resnext50_32x4d", arch="resnet")
 class ResNeXt50_32X4D(ResNet):
     """ResNeXt-50 32x4d model from `Aggregated Residual Transformation for Deep
     Neural Networks <https://arxiv.org/abs/1611.05431>`__.
@@ -519,7 +520,7 @@ class ResNeXt50_32X4D(ResNet):
         )
 
 
-@MODELS.register(name="resnext101_32x8d")
+@MODELS.register(name="resnext101_32x8d", arch="resnet")
 class ResNeXt101_32X8D(ResNet):
     """ResNeXt-101 32x8d model from `Aggregated Residual Transformation for
     Deep Neural Networks <https://arxiv.org/abs/1611.05431>`__.
@@ -553,7 +554,7 @@ class ResNeXt101_32X8D(ResNet):
         )
 
 
-@MODELS.register(name="resnext101_64x4d")
+@MODELS.register(name="resnext101_64x4d", arch="resnet")
 class ResNeXt101_64X4D(ResNet):
     """ResNeXt-101 32x8d model from `Aggregated Residual Transformation for
     Deep Neural Networks <https://arxiv.org/abs/1611.05431>`__.
@@ -585,7 +586,7 @@ class ResNeXt101_64X4D(ResNet):
 
 # region WideResNet
 
-@MODELS.register(name="wide_resnet50")
+@MODELS.register(name="wide_resnet50", arch="resnet")
 class WideResNet50(ResNet):
     """Wide ResNet-50-2 model from `Wide Residual Networks
     <https://arxiv.org/abs/1605.07146>`__.
@@ -618,7 +619,7 @@ class WideResNet50(ResNet):
         )
 
 
-@MODELS.register(name="wide_resnet101")
+@MODELS.register(name="wide_resnet101", arch="resnet")
 class WideResNet101(ResNet):
     """Wide ResNet-101-2 model from `Wide Residual Networks
     <https://arxiv.org/abs/1605.07146>`__.

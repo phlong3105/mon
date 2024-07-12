@@ -107,6 +107,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "convnext"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -216,7 +217,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="convnext_base")
+@MODELS.register(name="convnext_base", arch="convnext")
 class ConvNeXtBase(ConvNeXt):
     """ConvNeXt Base model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
@@ -249,7 +250,7 @@ class ConvNeXtBase(ConvNeXt):
         )
 
 
-@MODELS.register(name="convnext_tiny")
+@MODELS.register(name="convnext_tiny", arch="convnext")
 class ConvNeXtTiny(ConvNeXt):
     """ConvNeXt Tiny model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
@@ -282,7 +283,7 @@ class ConvNeXtTiny(ConvNeXt):
         )
 
 
-@MODELS.register(name="convnext_small")
+@MODELS.register(name="convnext_small", arch="convnext")
 class ConvNeXtSmall(ConvNeXt):
     """ConvNeXt Small model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
@@ -315,7 +316,7 @@ class ConvNeXtSmall(ConvNeXt):
         )
         
         
-@MODELS.register(name="convnext_large")
+@MODELS.register(name="convnext_large", arch="convnext")
 class ConvNeXtLarge(ConvNeXt):
     """ConNeXt-Large.
     

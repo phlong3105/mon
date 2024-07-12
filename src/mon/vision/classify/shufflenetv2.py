@@ -124,6 +124,7 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "shufflenet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
 
@@ -207,7 +208,7 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         return y
 
 
-@MODELS.register(name="shufflenetv2_x0_5")
+@MODELS.register(name="shufflenetv2_x0_5", arch="shufflenet")
 class ShuffleNetV2_x0_5(ShuffleNetV2):
     """ShuffleNetV2 architecture with 0.5x output channels, as described in
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design
@@ -234,7 +235,7 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
         )
 
 
-@MODELS.register(name="shufflenetv2_x1_0")
+@MODELS.register(name="shufflenetv2_x1_0", arch="shufflenet")
 class ShuffleNetV2_X1_0(ShuffleNetV2):
     """ShuffleNetV2 architecture with 1.0x output channels, as described in
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design
@@ -261,7 +262,7 @@ class ShuffleNetV2_X1_0(ShuffleNetV2):
         )
 
 
-@MODELS.register(name="shufflenetv2_x1_5")
+@MODELS.register(name="shufflenetv2_x1_5", arch="shufflenet")
 class ShuffleNetV2_X1_5(ShuffleNetV2):
     """ShuffleNetV2 architecture with 1.5x output channels, as described in
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design
@@ -288,7 +289,7 @@ class ShuffleNetV2_X1_5(ShuffleNetV2):
         )
 
 
-@MODELS.register(name="shufflenetv2_x2_0")
+@MODELS.register(name="shufflenetv2_x2_0", arch="shufflenet")
 class ShuffleNetV2_X2_0(ShuffleNetV2):
     """ShuffleNetV2 architecture with 2.0x output channels, as described in
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design

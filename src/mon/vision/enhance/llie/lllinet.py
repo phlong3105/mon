@@ -151,13 +151,14 @@ class UNetConvBlock(nn.Module):
 
 # region Model
 
-@MODELS.register(name="lllinet")
+@MODELS.register(name="lllinet", arch="lllinet")
 class LLLINet(base.LowLightImageEnhancementModel):
     """LLHINet (Low-Light Learnable Instance Normalization Network) models.
     
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "lllinet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -285,7 +286,7 @@ class LLLINet(base.LowLightImageEnhancementModel):
     # endregion
 
 
-@MODELS.register(name="lllinet_hvi")
+@MODELS.register(name="lllinet_hvi", arch="lllinet")
 class LLLINetHVI(base.LowLightImageEnhancementModel):
     """LLHINet (Low-Light Learnable Instance Normalization Network) models.
     
@@ -306,6 +307,7 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
     ):
         super().__init__(
             name         = "lllinet_hvi",
+            arch         = "lllinet",
             in_channels  = in_channels,
             out_channels = out_channels,
             weights      = weights,

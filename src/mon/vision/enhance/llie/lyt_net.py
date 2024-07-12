@@ -186,7 +186,7 @@ class Denoiser(nn.Module):
 
 # region Model
 
-@MODELS.register(name="lyt_net")
+@MODELS.register(name="lyt_net", arch="lyt_net")
 class LYTNet(base.LowLightImageEnhancementModel):
     """LYT-Net (LYT-Net: Lightweight YUV Transformer-based Network for Low-Light
     Image Enhancement) model.
@@ -197,6 +197,7 @@ class LYTNet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "lyt_net"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
 

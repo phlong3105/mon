@@ -720,291 +720,325 @@ EXTRA_METRICS     = {
     "tv"                 : {"metric_mode": "NR", "lower_is_better": False, },
     "uranker"            : {"metric_mode": "NR", "lower_is_better": False, },
 }
-EXTRA_MODELS      = {
+EXTRA_MODELS      = {  # architecture/model (+ variant)
     # region detect
-        # region yolor
-            "yolor_d6": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
-                "torch_distributed_launch": True,
-            },
-            "yolor_e6": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
-                "torch_distributed_launch": True,
-            },
-            "yolor_p6": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
-                "torch_distributed_launch": True,
-            },
-            "yolor_w6": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
-                "torch_distributed_launch": True,
-            },
-        # endregion
-        # region yolov7
-            "yolov7"    : {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
-                "torch_distributed_launch": True,
-            },
-            "yolov7_d6" : {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
-                "torch_distributed_launch": True,
-            },
-            "yolov7_e6" : {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
-                "torch_distributed_launch": True,
-            },
-            "yolov7_e6e": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
-                "torch_distributed_launch": True,
-            },
-            "yolov7_w6" : {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
-                "torch_distributed_launch": True,
-            },
-            "yolov7x"   : {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
-                "torch_distributed_launch": True,
-            },
-        # endregion
-        # region ultralytics
-            "yolov8n": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
-                "torch_distributed_launch": False,
-            },
-            "yolov8s": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
-                "torch_distributed_launch": False,
-            },
-            "yolov8m": {
-                "tasks"    : [Task.DETECT],
-                "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
-                "torch_distributed_launch": False,
-            },
-            "yolov8l": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
-                "torch_distributed_launch": False,
-            },
-            "yolov8x": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
-                "torch_distributed_launch": False,
-            },
-            "yolov9c_ultralytics": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
-                "torch_distributed_launch": True,
-            },
-            "yolov9e_ultralytics": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
-                "torch_distributed_launch": True,
-            },
-        # endregion
-        # region yolov9
-            "gelan_c" : {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
-                "torch_distributed_launch": True,
-            },
-            "gelan_e" : {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
-                "torch_distributed_launch": True,
-            },
-            "yolov9_c": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
-                "torch_distributed_launch": True,
-            },
-            "yolov9_e": {
-                "tasks"    : [Task.DETECT],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
-                "torch_distributed_launch": True,
-            },
-        # endregion
+    "yolor"        : {
+        "yolor_d6": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
+            "torch_distributed_launch": True,
+        },
+        "yolor_e6": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
+            "torch_distributed_launch": True,
+        },
+        "yolor_p6": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
+            "torch_distributed_launch": True,
+        },
+        "yolor_w6": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolor",
+            "torch_distributed_launch": True,
+        },
+    },
+    "yolov7"       : {
+        "yolov7"    : {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
+            "torch_distributed_launch": True,
+        },
+        "yolov7_d6" : {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
+            "torch_distributed_launch": True,
+        },
+        "yolov7_e6" : {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
+            "torch_distributed_launch": True,
+        },
+        "yolov7_e6e": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
+            "torch_distributed_launch": True,
+        },
+        "yolov7_w6" : {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
+            "torch_distributed_launch": True,
+        },
+        "yolov7x"   : {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov7",
+            "torch_distributed_launch": True,
+        },
+    },
+    "yolov8"       : {
+        "yolov8n": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
+            "torch_distributed_launch": False,
+        },
+        "yolov8s": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
+            "torch_distributed_launch": False,
+        },
+        "yolov8m": {
+            "tasks"    : [Task.DETECT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
+            "torch_distributed_launch": False,
+        },
+        "yolov8l": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
+            "torch_distributed_launch": False,
+        },
+        "yolov8x": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "ultralytics",
+            "torch_distributed_launch": False,
+        },
+    },
+    "yolov9"       : {
+        "gelan_c" : {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
+            "torch_distributed_launch": True,
+        },
+        "gelan_e" : {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
+            "torch_distributed_launch": True,
+        },
+        "yolov9_c": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
+            "torch_distributed_launch": True,
+        },
+        "yolov9_e": {
+            "tasks"    : [Task.DETECT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "detect" / "yolov9",
+            "torch_distributed_launch": True,
+        },
+    },
     # endregion
-    # region enhance
-        # region llie
-            "dccnet"       : {
+    # region enhance/llie
+    "dccnet"       : {
+        "dccnet": {
                 "tasks"    : [Task.LLIE],
                 "schemes"  : [Scheme.SUPERVISED],
                 "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "dccnet",
                 "torch_distributed_launch": True,
             },
-            "enlightengan" : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.UNSUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "enlightengan",
-                "torch_distributed_launch": True,
-            },
-            "gsad"         : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "gsad",
-                "torch_distributed_launch": True,
-            },
-            "hvi_cidnet"   : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "hvi_cidnet",
-                "torch_distributed_launch": True,
-            },
-            "kind"         : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "kind",
-                "torch_distributed_launch": True,
-            },
-            "lime"         : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.TRADITIONAL],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "lime",
-                "torch_distributed_launch": True,
-            },
-            "llflow"       : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "llflow",
-                "torch_distributed_launch": True,
-            },
-            "llunet++"     : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "llunet++",
-                "torch_distributed_launch": True,
-            },
-            "mtfe"         : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "mtfe",
-                "torch_distributed_launch": True,
-            },
-            "pie"          : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.TRADITIONAL],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "pie",
-                "torch_distributed_launch": True,
-            },
-            "retinexformer": {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "retinexformer",
-                "torch_distributed_launch": True,
-            },
-            "retinexnet"   : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "retinexnet",
-                "torch_distributed_launch": True,
-            },
-            "ruas"         : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "ruas",
-                "torch_distributed_launch": True,
-            },
-            "sci"          : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "sci",
-                "torch_distributed_launch": True,
-            },
-            "sgz"          : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "sgz",
-                "torch_distributed_launch": True,
-            },
-            "snr"          : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "snr",
-                "torch_distributed_launch": True,
-            },
-            "stablellve"   : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "stablellve",
-                "torch_distributed_launch": True,
-            },
-            "uretinexnet"  : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "uretinexnet",
-                "torch_distributed_launch": True,
-            },
-            "utvnet"       : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "utvnet",
-                "torch_distributed_launch": True,
-            },
-            "zero_dce"     : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce",
-                "torch_distributed_launch": True,
-            },
-            "zero_dce++"   : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce++",
-                "torch_distributed_launch": True,
-            },
-            "zero_didce"   : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_didce",
-                "torch_distributed_launch": True,
-            },
-            "zeroig"       : {
-                "tasks"    : [Task.LLIE],
-                "schemes"  : [Scheme.ZEROSHOT],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zeroig",
-                "torch_distributed_launch": True,
-            },
-        # endregion
-        # region multitask
-            "restormer"    : {
-                "tasks"    : [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LLIE],
-                "schemes"  : [Scheme.SUPERVISED],
-                "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "multitask" / "restormer",
-                "torch_distributed_launch": True,
-            },
-        # endregion
+    },
+    "enlightengan" : {
+        "enlightengan": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.UNSUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "enlightengan",
+            "torch_distributed_launch": True,
+        },
+    },
+    "gsad"         : {
+        "gsad": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "gsad",
+            "torch_distributed_launch": True,
+        },
+    },
+    "hvi_cidnet"   : {
+        "hvi_cidnet": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "hvi_cidnet",
+            "torch_distributed_launch": True,
+        },
+    },
+    "kind"         : {
+        "kind": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "kind",
+            "torch_distributed_launch": True,
+        },
+    },
+    "lime"         : {
+        "lime": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.TRADITIONAL],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "lime",
+            "torch_distributed_launch": True,
+        },
+    },
+    "llflow"       : {
+        "llflow": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "llflow",
+            "torch_distributed_launch": True,
+        },
+    },
+    "llunet++"     : {
+        "llunet++": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "llunet++",
+            "torch_distributed_launch": True,
+        },
+    },
+    "mtfe"         : {
+        "mtfe": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "mtfe",
+            "torch_distributed_launch": True,
+        },
+    },
+    "pie"          : {
+        "pie": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.TRADITIONAL],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "pie",
+            "torch_distributed_launch": True,
+        },
+    },
+    "retinexformer": {
+        "retinexformer": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "retinexformer",
+            "torch_distributed_launch": True,
+        },
+    },
+    "retinexnet"   : {
+        "retinexnet": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "retinexnet",
+            "torch_distributed_launch": True,
+        },
+    },
+    "ruas"         : {
+        "ruas": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "ruas",
+            "torch_distributed_launch": True,
+        },
+    },
+    "sci"          : {
+        "sci": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "sci",
+            "torch_distributed_launch": True,
+        },
+    },
+    "sgz"          : {
+        "sgz": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "sgz",
+            "torch_distributed_launch": True,
+        },
+    },
+    "snr"          : {
+        "snr": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "snr",
+            "torch_distributed_launch": True,
+        },
+    },
+    "stablellve"   : {
+        "stablellve": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "stablellve",
+            "torch_distributed_launch": True,
+        },
+    },
+    "uretinexnet"  : {
+        "uretinexnet": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "uretinexnet",
+            "torch_distributed_launch": True,
+        },
+    },
+    "utvnet"       : {
+        "utvnet": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "utvnet",
+            "torch_distributed_launch": True,
+        },
+    },
+    "zero_dce"     : {
+        "zero_dce": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce",
+            "torch_distributed_launch": True,
+        },
+    },
+    "zero_dce++"   : {
+        "zero_dce++": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce++",
+            "torch_distributed_launch": True,
+        },
+    },
+    "zero_didce"   : {
+        "zero_didce": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_didce",
+            "torch_distributed_launch": True,
+        },
+    },
+    "zeroig"       : {
+        "zeroig": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zeroig",
+            "torch_distributed_launch": True,
+        },
+    },
+    # endregion
+    # region enhance/multitask
+    "restormer"    : {
+        "restormer": {
+            "tasks"    : [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "multitask" / "restormer",
+            "torch_distributed_launch": True,
+        },
+    },
     # endregion
 }
 
@@ -1025,7 +1059,7 @@ LOGGERS       = factory.Factory(name="Loggers")
 LOSSES        = factory.Factory(name="Losses")
 LR_SCHEDULERS = factory.Factory(name="LRSchedulers")
 METRICS       = factory.Factory(name="Metrics")
-MODELS        = factory.Factory(name="Models")
+MODELS        = factory.ModelFactory(name="Models")
 MOTIONS       = factory.Factory(name="Motions")
 OBJECTS       = factory.Factory(name="Objects")
 OPTIMIZERS    = factory.Factory(name="Optimizers")

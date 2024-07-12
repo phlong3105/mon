@@ -195,7 +195,7 @@ class SupervisedAttentionModule(nn.Module):
 
 # region Model
 
-@MODELS.register(name="hinet_re")
+@MODELS.register(name="hinet_re", arch="hinet")
 class HINet_RE(base.MultiTaskImageEnhancementModel):
     """Half-Instance Normalization Network.
     
@@ -215,6 +215,7 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
     See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
+    _arch  : str  = "hinet"
     _tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES]
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {

@@ -379,7 +379,7 @@ class RetinexFormerSingleStage(nn.Module):
 
 # region Model
 
-@MODELS.register(name="retinexformer_re")
+@MODELS.register(name="retinexformer_re", arch="retinexformer")
 class Retinexformer_RE(base.LowLightImageEnhancementModel):
 	"""`Retinexformer: One-stage Retinex-based Transformer for Low-light Image
 	Enhancement <https://arxiv.org/abs/2303.06705>`__.
@@ -390,6 +390,7 @@ class Retinexformer_RE(base.LowLightImageEnhancementModel):
 	See Also: :class:`base.LowLightImageEnhancementModel`
 	"""
 	
+	_arch  : str  = "retinexformer"
 	_scheme: list[Scheme] = [Scheme.SUPERVISED]
 	_zoo   : dict = {
 		"fivek" : {

@@ -127,7 +127,7 @@ GoogLeNetOutputs = namedtuple("GoogLeNetOutputs", ["logits", "aux_logits2", "aux
 GoogLeNetOutputs.__annotations__ = {"logits": torch.Tensor, "aux_logits2": torch.Tensor | None, "aux_logits1": torch.Tensor | None}
 
 
-@MODELS.register(name="googlenet")
+@MODELS.register(name="googlenet", arch="googlenet")
 class GoogleNet(base.ImageClassificationModel):
     """GoogLeNet (Inception v1) model architecture from
     `Going Deeper with Convolutions <http://arxiv.org/abs/1409.4842>`_.
@@ -137,6 +137,7 @@ class GoogleNet(base.ImageClassificationModel):
     
     constants = ["aux_logits", "transform_input"]
     
+    _arch  : str  = "googlenet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {
         "imagenet1k_v1": {

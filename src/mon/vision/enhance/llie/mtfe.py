@@ -390,7 +390,7 @@ class AttentionBlock(nn.Module):
 
 # region Model
 
-@MODELS.register(name="mtfe")
+@MODELS.register(name="mtfe", arch="mtfe")
 class MTFE(base.LowLightImageEnhancementModel):
     """MTFE (Multiple Transformation Function Estimation for Image Enhancement)
     models.
@@ -404,6 +404,7 @@ class MTFE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "mtfe"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
 

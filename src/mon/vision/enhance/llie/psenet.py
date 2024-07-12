@@ -200,7 +200,7 @@ class UnetTMO(nn.Module):
 
 # region Model
 
-@MODELS.register(name="psenet_re")
+@MODELS.register(name="psenet_re", arch="psenet")
 class PSENet_RE(base.LowLightImageEnhancementModel):
     """PSENet (PSENet: Progressive Self-Enhancement Network for Unsupervised
     Extreme-Light Image Enhancement) models.
@@ -211,6 +211,7 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "psenet"
     _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
     _zoo   : dict = {}
     

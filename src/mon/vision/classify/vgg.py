@@ -38,6 +38,7 @@ class VGG(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "vgg"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -127,7 +128,7 @@ cfgs: dict[str, list[str | int]] = {
 }
 
 
-@MODELS.register(name="vgg11")
+@MODELS.register(name="vgg11", arch="vgg")
 class VGG11(VGG):
     """VGG-11 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
@@ -152,7 +153,7 @@ class VGG11(VGG):
         )
 
 
-@MODELS.register(name="vgg11_bn")
+@MODELS.register(name="vgg11_bn", arch="vgg")
 class VGG11_BN(VGG):
     """VGG-11-B from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
@@ -177,7 +178,7 @@ class VGG11_BN(VGG):
         )
 
 
-@MODELS.register(name="vgg13")
+@MODELS.register(name="vgg13", arch="vgg")
 class VGG13(VGG):
     """VGG-13 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
@@ -202,7 +203,7 @@ class VGG13(VGG):
         )
 
 
-@MODELS.register(name="vgg13_bn")
+@MODELS.register(name="vgg13_bn", arch="vgg")
 class VGG13_BN(VGG):
     """VGG-13-BN from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
@@ -227,7 +228,7 @@ class VGG13_BN(VGG):
         )
 
 
-@MODELS.register(name="vgg16")
+@MODELS.register(name="vgg16", arch="vgg")
 class VGG16(VGG):
     """VGG-16 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
@@ -252,7 +253,7 @@ class VGG16(VGG):
         )
 
 
-@MODELS.register(name="vgg16_bn")
+@MODELS.register(name="vgg16_bn", arch="vgg")
 class VGG16_BN(VGG):
     """VGG-16-BN from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
@@ -277,7 +278,7 @@ class VGG16_BN(VGG):
         )
 
 
-@MODELS.register(name="vgg19")
+@MODELS.register(name="vgg19", arch="vgg")
 class VGG19(VGG):
     """VGG-19 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
@@ -302,7 +303,7 @@ class VGG19(VGG):
         )
 
 
-@MODELS.register(name="vgg19_bn")
+@MODELS.register(name="vgg19_bn", arch="vgg")
 class VGG19_BN(VGG):
     """VGG-19-BN from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.

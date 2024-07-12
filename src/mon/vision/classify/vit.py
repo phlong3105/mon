@@ -174,6 +174,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
+    _arch  : str  = "vit"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -341,7 +342,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
 ViT = VisionTransformer
 
 
-@MODELS.register(name="vit_b_16")
+@MODELS.register(name="vit_b_16", arch="vit")
 class ViT_B_16(VisionTransformer):
     """vit_b_16 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
@@ -384,7 +385,7 @@ class ViT_B_16(VisionTransformer):
         )
 
 
-@MODELS.register(name="vit_b_32")
+@MODELS.register(name="vit_b_32", arch="vit")
 class ViT_B_32(VisionTransformer):
     """vit_b_32 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
@@ -415,7 +416,7 @@ class ViT_B_32(VisionTransformer):
         )
 
 
-@MODELS.register(name="vit_l_16")
+@MODELS.register(name="vit_l_16", arch="vit")
 class ViT_L_16(VisionTransformer):
     """vit_l_16 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
@@ -458,7 +459,7 @@ class ViT_L_16(VisionTransformer):
         )
 
 
-@MODELS.register(name="vit_l_32")
+@MODELS.register(name="vit_l_32", arch="vit")
 class ViT_L_32(VisionTransformer):
     """vit_l_32 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
@@ -489,7 +490,7 @@ class ViT_L_32(VisionTransformer):
         )
       
 
-@MODELS.register(name="vit_h_14")
+@MODELS.register(name="vit_h_14", arch="vit")
 class ViT_H_14(VisionTransformer):
     """vit_h_14 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.

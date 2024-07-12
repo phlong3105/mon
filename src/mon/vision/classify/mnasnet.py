@@ -143,6 +143,7 @@ class MNASNet(base.ImageClassificationModel, ABC):
     # Version 2 adds depth scaling in the initial stages of the network.
     _version = 2
     
+    _arch  : str  = "mnasnet"
     _scheme: list[Scheme] = [Scheme.SUPERVISED]
     _zoo   : dict = {}
     
@@ -230,7 +231,7 @@ class MNASNet(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="mnasnet0_5")
+@MODELS.register(name="mnasnet0_5", arch="mnasnet")
 class MNASNet0_5(MNASNet):
     """MNASNet with depth multiplier of 0.5 from `MnasNet: Platform-Aware
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_
@@ -256,7 +257,7 @@ class MNASNet0_5(MNASNet):
         )
 
 
-@MODELS.register(name="mnasnet0_75")
+@MODELS.register(name="mnasnet0_75", arch="mnasnet")
 class MNASNet0_75(MNASNet):
     """MNASNet with depth multiplier of 0.75 from `MnasNet: Platform-Aware
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_
@@ -282,7 +283,7 @@ class MNASNet0_75(MNASNet):
         )
         
         
-@MODELS.register(name="mnasnet1_0")
+@MODELS.register(name="mnasnet1_0", arch="mnasnet")
 class MNASNet1_0(MNASNet):
     """MNASNet with depth multiplier of 1.0 from `MnasNet: Platform-Aware
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_
@@ -308,7 +309,7 @@ class MNASNet1_0(MNASNet):
         )
         
         
-@MODELS.register(name="mnasnet1_3")
+@MODELS.register(name="mnasnet1_3", arch="mnasnet")
 class MNASNet1_3(MNASNet):
     """MNASNet with depth multiplier of 1.3 from `MnasNet: Platform-Aware
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_

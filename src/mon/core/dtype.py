@@ -14,6 +14,7 @@ from __future__ import annotations
 __all__ = [
     "Enum",
     "concat_lists",
+    "flatten_models_dict",
     "get_module_vars",
     "intersect_dicts",
     "intersect_ordered_dicts",
@@ -142,6 +143,17 @@ def shuffle_dict(x: dict) -> dict:
     for key in keys:
         shuffled[key] = x[key]
     return shuffled
+
+
+def flatten_models_dict(x: dict) -> dict:
+    """Flatten a nested dictionary of models into a single dictionary."""
+    new_dict = {}
+    for k1, v1 in x.items():
+        for k2, v2 in v1.items():
+            if isinstance(v2, dict):
+                v2["arch"] = k1
+            new_dict[k2] = v2
+    return new_dict
 
 # endregion
 

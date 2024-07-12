@@ -167,7 +167,7 @@ class Loss(nn.Loss):
 # region Model
 
 # noinspection PyMethodMayBeStatic
-@MODELS.register(name="rrdnet")
+@MODELS.register(name="rrdnet", arch="rrdnet")
 class RRDNet(base.LowLightImageEnhancementModel):
     """RRDNet (Zero-Shot Restoration of Underexposed Images via Robust Retinex
     Decomposition) model.
@@ -182,6 +182,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
+    _arch  : str  = "rrdnet"
     _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
     _zoo   : dict = {}
     

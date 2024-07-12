@@ -24,7 +24,7 @@ console = core.console
 
 # region Model
 
-@MODELS.register(name="zsn2n")
+@MODELS.register(name="zsn2n", arch="zsn2n")
 class ZSN2N(base.DenoisingModel):
     """ZS-N2N (Zero-Shot Noise2Noise).
     
@@ -38,6 +38,7 @@ class ZSN2N(base.DenoisingModel):
     See Also: :class:`base.DenoisingModel`.
     """
     
+    _arch  : str  = "zsn2n"
     _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
     _zoo   : dict = {}
     
