@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 import argparse
-import socket
 
-import click
 import torch
 import torch.optim
 

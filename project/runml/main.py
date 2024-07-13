@@ -65,7 +65,12 @@ def run_train(args: dict):
     
     # Parse arguments
     use_extra_model = mon.is_extra_model(model)
-    config   = mon.parse_config_file(project_root=root, config=config)
+    config = mon.parse_config_file(
+        project_root = root,
+        model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
+        weights_path = weights,
+        config       = config,
+    )
     assert config not in [None, "None", ""]
     model    = mon.parse_model_name(model)
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
@@ -165,10 +170,15 @@ def run_predict(args: dict):
     
     # Parse arguments
     use_extra_model = mon.is_extra_model(model)
-    model    = mon.parse_model_name(model)
-    config   = mon.parse_config_file(project_root=root, config=config)
+    config = mon.parse_config_file(
+        project_root = root,
+        model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
+        weights_path = weights,
+        config       = config,
+    )
     config   = config or "default"
     # assert config not in [None, "None", ""]
+    model    = mon.parse_model_name(model)
     fullname = fullname if fullname not in [None, "None", ""] else model
     weights  = mon.to_str(weights, ",")
     
@@ -265,9 +275,14 @@ def run_online(args: dict):
     
     # Parse arguments
     use_extra_model = mon.is_extra_model(model)
-    model    = mon.parse_model_name(model)
-    config   = mon.parse_config_file(project_root=root, config=config)
+    config = mon.parse_config_file(
+        project_root = root,
+        model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
+        weights_path = weights,
+        config       = config,
+    )
     assert config not in [None, "None", ""]
+    model    = mon.parse_model_name(model)
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
     weights  = mon.to_str(weights, ",")
     
