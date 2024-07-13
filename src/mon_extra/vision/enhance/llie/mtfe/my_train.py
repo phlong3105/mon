@@ -77,7 +77,6 @@ def train(args: argparse.Namespace):
     # General config
     save_dir = mon.Path(args.save_dir)
     weights  = args.weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     device   = mon.set_device(args.device)
     epochs   = args.epochs
     verbose  = args.verbose

@@ -282,18 +282,17 @@ def parse_config_file(
     if config_.is_config_file():
         return config_
     # Check for config file in ``'config'`` directory in ``project_root``.
-    config_dirs = core.Path(project_root / "config").subdirs(recursive=True)
-    # for config_dir in config_dirs:
-    #     config_ = config_dir / config.name
-    #     if config_.is_config_file():
-    #         return config_
-    for config_dir in config_dirs:
-        config_ = (config_dir / config.name).config_file()
-        if config_.is_config_file():
-            return config_
+    if project_root not in [None, "None", ""]:
+        config_dirs  = [core.Path(project_root / "config")]
+        config_dirs += core.Path(project_root / "config").subdirs(recursive=True)
+        for config_dir in config_dirs:
+            config_ = (config_dir / config.name).config_file()
+            if config_.is_config_file():
+                return config_
     # Check for config file in ``'config'`` directory in ``model_root``.
     if model_root not in [None, "None", ""]:
-        config_dirs = core.Path(model_root / "config").subdirs(recursive=True)
+        config_dirs  = [core.Path(model_root / "config")]
+        config_dirs += core.Path(model_root / "config").subdirs(recursive=True)
         for config_dir in config_dirs:
             config_ = (config_dir / config.name).config_file()
             if config_.is_config_file():

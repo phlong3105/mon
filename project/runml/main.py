@@ -74,7 +74,7 @@ def run_train(args: dict):
     assert config not in [None, "None", ""]
     model    = mon.parse_model_name(model)
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
-    save_dir = save_dir or root / "run" / "train" / fullname
+    # save_dir = save_dir or utils.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
     weights  = mon.to_str(weights, ",")
     
     kwargs   = {
@@ -145,26 +145,25 @@ def run_train(args: dict):
 
 def run_predict(args: dict):
     # Get user input
-    task         = args["task"]
-    mode         = args["mode"]
-    config       = args["config"]
-    arch         = args["arch"]
-    model        = args["model"]
-    data         = args["data"]
-    root         = mon.Path(args["root"])
-    project      = args["project"]
-    variant      = args["variant"]
-    fullname     = args["fullname"]
-    save_dir     = args["save_dir"]
-    weights	     = args["weights"]
-    device       = args["device"]
-    imgsz        = args["imgsz"]
-    resize       = args["resize"]
-    benchmark    = args["benchmark"]
-    save_image   = args["save_image"]
-    save_debug   = args["save_debug"]
-    use_data_dir = args["use_data_dir"]
-    verbose      = args["verbose"]
+    task       = args["task"]
+    mode       = args["mode"]
+    config     = args["config"]
+    arch       = args["arch"]
+    model      = args["model"]
+    data       = args["data"]
+    root       = mon.Path(args["root"])
+    project    = args["project"]
+    variant    = args["variant"]
+    fullname   = args["fullname"]
+    save_dir   = args["save_dir"]
+    weights    = args["weights"]
+    device     = args["device"]
+    imgsz      = args["imgsz"]
+    resize     = args["resize"]
+    benchmark  = args["benchmark"]
+    save_image = args["save_image"]
+    save_debug = args["save_debug"]
+    verbose    = args["verbose"]
     
     assert root.exists()
     
@@ -180,13 +179,13 @@ def run_predict(args: dict):
     # assert config not in [None, "None", ""]
     model    = mon.parse_model_name(model)
     fullname = fullname if fullname not in [None, "None", ""] else model
+    # if use_data_dir:
+    #     save_dir = save_dir or mon.parse_save_dir(mon.DATA_DIR/task.value/"#predict", arch, model, None, project, variant)
+    # else:
+    #     save_dir = save_dir or mon.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
     weights  = mon.to_str(weights, ",")
     
     for d in data:
-        if use_data_dir:
-            save_dir = save_dir or mon.DATA_DIR / task.value / "#predict" / model
-        else:
-            save_dir = save_dir or root / "run" / "predict" / model
         kwargs  = {
             "--config"  : config,
             "--arch"    : arch,

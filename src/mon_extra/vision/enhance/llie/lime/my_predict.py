@@ -26,7 +26,7 @@ def predict(args: argparse.Namespace):
     # General config
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
-    weights   = args.weights[0] if isinstance(args.weights, list) else args.weights
+    weights   = args.weights
     device    = mon.set_device(args.device)
     imgsz     = args.imgsz
     resize    = args.resize

@@ -38,7 +38,6 @@ def train(args: argparse.Namespace):
     # General config
     save_dir = mon.Path(args.save_dir)
     weights  = args.weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     device   = mon.set_device(args.device)
     epochs   = args.epochs
     seed     = args.seed
@@ -59,7 +58,7 @@ def train(args: argparse.Namespace):
     fh.setFormatter(logging.Formatter(log_format))
     logging.getLogger().addHandler(fh)
     logging.info("train file name = %s", os.path.split(__file__))
-    logging.info("gpu device = %s" % args.gpu)
+    logging.info("gpu device = %s" % device)
     logging.info("args = %s", args)
     
     # Model
@@ -73,7 +72,7 @@ def train(args: argparse.Namespace):
         sys.exit(1)
     
     model = Network()
-    if mon.Path(weights).is_weights_file():
+    if weights is not None and mon.Path(weights).is_weights_file():
         model.load_state_dict(torch.load(weights))
     utils.save(model, str(weights_dir / "initial_weights.pt"))
     model.enhance.in_conv.apply(model.enhance_weights_init)
@@ -130,7 +129,8 @@ def train(args: argparse.Namespace):
                 losses.append(loss.item())
                 logging.info("train-epoch %03d %03d %f", epoch, idx, loss)
             logging.info("train-epoch %03d %f", epoch, np.average(losses))
-            utils.save(model, str(weights_dir / f"weights_{epoch}.pt"))
+            # utils.save(model, str(weights_dir / f"weights_{epoch}.pt"))
+            utils.save(model, str(weights_dir / f"last.pt"))
             
             if epoch % 50 == 0 and total_step != 0:
                 model.eval()
@@ -150,7 +150,7 @@ def train(args: argparse.Namespace):
                         (debug_dir / "denoise").mkdir(parents=True, exist_ok=True)
                         (debug_dir / "enhance").mkdir(parents=True, exist_ok=True)
                         Image.fromarray(H3).save(str(debug_dir / "denoise" / f"{input_name}_denoise_{epoch}.png"), "PNG")
-                        Image.fromarray(H2).save(str(debug_dir / "denoise" / f"{input_name}_enhance_{epoch}.png"), 'PNG')
+                        Image.fromarray(H2).save(str(debug_dir / "enhance" / f"{input_name}_enhance_{epoch}.png"), 'PNG')
 
 # endregion
 

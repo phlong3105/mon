@@ -65,7 +65,6 @@ def predict(args: argparse.Namespace):
     data      = args.data
     save_dir  = mon.Path(args.save_dir)
     weights   = args.weights
-    weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     device    = args.device
     imgsz     = args.imgsz
     resize    = args.resize

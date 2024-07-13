@@ -33,7 +33,6 @@ def train(args: argparse.Namespace):
     # General config
     save_dir = mon.Path(args.save_dir)
     weights  = args.weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     device   = mon.set_device(args.device)
     epochs   = args.epochs
     verbose  = args.verbose
@@ -45,7 +44,7 @@ def train(args: argparse.Namespace):
     # Model
     DCE_net = mmodel.enhance_net_nopool().to(device)
     DCE_net.apply(weights_init)
-    if mon.Path(weights).is_weights_file():
+    if weights is not None and mon.Path(weights).is_weights_file():
         DCE_net.load_state_dict(torch.load(weights))
     DCE_net.train()
     
