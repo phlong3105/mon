@@ -133,7 +133,7 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
         
     save_dir.mkdir(parents=True, exist_ok=True)
     if config is not None and config.is_config_file():
-        core.copy_file(src=config, dst=save_dir / config.name)
+        core.copy_file(src=config, dst=save_dir / f"config.{config.suffix}")
     
     return args
     
@@ -335,7 +335,7 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     
     save_dir.mkdir(parents=True, exist_ok=True)
     if config is not None and config.is_config_file():
-        core.copy_file(src=config, dst=save_dir / config.name)
+        core.copy_file(src=config, dst=save_dir / f"config.{config.suffix}")
     
     return args
 
