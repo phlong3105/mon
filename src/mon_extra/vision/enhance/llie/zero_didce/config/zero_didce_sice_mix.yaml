@@ -1,9 +1,9 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : ~
-model       : ~
-data        : ~
+arch        : "zero_didce"
+model       : "zero_didce"
+data        : "sice_mix"
 root        : ~
 project     : ~
 variant     : ~

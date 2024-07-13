@@ -78,7 +78,7 @@ def predict(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_predict_args()
+    args = mon.parse_predict_args(model_root=_current_dir)
     args.gamma   = 0.6   # Gamma correction parameter
     args.lambda_ = 0.15  # The weight for balancing the two terms in the illumination refinement optimization objective
     args.lime    = True  # Use the LIME method. By default, the DUAL method is used

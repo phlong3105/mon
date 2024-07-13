@@ -114,7 +114,7 @@ def predict(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_predict_args()
+    args = mon.parse_predict_args(model_root=_current_dir)
     args.weights = args.weights or mon.ZOO_DIR / "vision/enhance/llie/ruas/ruas/lol_v1/ruas_lol_v1_pretrained.pt"
     predict(args)
 

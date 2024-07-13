@@ -341,7 +341,7 @@ def test(
 
 def main() -> str:
     # Parse args
-    args        = mon.parse_predict_args()
+    args        = mon.parse_predict_args(model_root=_current_dir)
     model       = mon.Path(args.model)
     model       = model if model.exists() else _current_dir / "config" / model.name
     model       = str(model.config_file())

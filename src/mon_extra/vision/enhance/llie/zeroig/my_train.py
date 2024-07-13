@@ -158,7 +158,7 @@ def train(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_train_args()
+    args = mon.parse_train_args(model_root=_current_dir)
     train(args)
 
 

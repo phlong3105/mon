@@ -3,7 +3,7 @@ hostname    : ~
 config      : ~
 arch        : "zero_dce++"
 model       : "zero_dce++"
-data        : ~
+data        : "sice_mix"
 root        : ~
 project     : ~
 variant     : ~

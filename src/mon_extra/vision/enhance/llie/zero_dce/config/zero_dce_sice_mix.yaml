@@ -1,9 +1,9 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "zero_dce++"
-model       : "zero_dce++"
-data        : ~
+arch        : "zero_dce"
+model       : "zero_dce"
+data        : "sice_mix"
 root        : ~
 project     : ~
 variant     : ~
@@ -25,9 +25,9 @@ exist_ok    : False
 verbose     : True
 
 # Model Specific
-scale_factor    : 1
-train_batch_size: 8
-val_batch_size  : 8
+load_pretrain   : False
+train_batch_size: 32
+val_batch_size  : 4
 num_workers     : 4
 lr              : 0.0001
 weight_decay    : 0.0001
