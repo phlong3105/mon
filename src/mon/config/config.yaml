@@ -10,12 +10,12 @@ variant     : ~
 fullname    : ~
 save_dir    : ~
 weights     : ~
-device      : 0
-local_rank  : -1
+device      : ~
+local_rank  : ~
 launcher    : ~
-epochs      : 200
+epochs      : ~
 steps       : ~
-imgsz       : 512
+imgsz       : ~
 resize      : ~
 benchmark   : True
 save_image  : True
@@ -25,12 +25,3 @@ exist_ok    : False
 verbose     : True
 
 # Model Specific
-load_pretrain   : False
-train_batch_size: 32
-val_batch_size  : 4
-num_workers     : 4
-lr              : 0.0001
-weight_decay    : 0.0001
-grad_clip_norm  : 0.1
-display_iter    : 10
-checkpoint_iter : 10

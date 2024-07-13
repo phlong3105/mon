@@ -11,7 +11,8 @@ __all__ = [
 import argparse
 import socket
 
-import mon
+from mon import core
+from mon.config import utils
 
 
 # region Train
@@ -39,17 +40,23 @@ def _parse_train_args() -> argparse.Namespace:
     return args
 
 
-def parse_train_args() -> argparse.Namespace:
+def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Namespace:
     hostname = socket.gethostname().lower()
     
     # Get input args
     input_args = vars(_parse_predict_args())
     config     = input_args.get("config")
-    root       = mon.Path(input_args.get("root"))
+    root       = core.Path(input_args.get("root"))
+    weights    = input_args.get("weights")
     
     # Get config args
-    config = mon.parse_config_file(project_root=root / "config", config=config)
-    args   = mon.load_config(config)
+    config = utils.parse_config_file(
+        project_root = root,
+        model_root   = model_root,
+        weights_path = weights,
+        config       = config,
+    )
+    args   = utils.load_config(config)
     
     # Prioritize input args --> config file args
     arch       = input_args.get("arch")     or args.get("arch")
@@ -70,10 +77,10 @@ def parse_train_args() -> argparse.Namespace:
     extra_args = input_args.get("extra_args")
     
     # Parse arguments
-    save_dir = save_dir or mon.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
-    save_dir = mon.Path(save_dir)
-    weights  = mon.to_list(weights)
-    device   = mon.parse_device(device)
+    save_dir = save_dir or utils.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
+    save_dir = core.Path(save_dir)
+    weights  = core.to_list(weights)
+    device   = core.parse_device(device)
     
     # Update arguments
     args["hostname"]   = hostname
@@ -98,10 +105,11 @@ def parse_train_args() -> argparse.Namespace:
     args  = argparse.Namespace(**args)
     
     if not exist_ok:
-        mon.delete_dir(paths=mon.Path(save_dir))
+        core.delete_dir(paths=core.Path(save_dir))
         
     save_dir.mkdir(parents=True, exist_ok=True)
-    mon.copy_file(src=config, dst=save_dir / "config.py")
+    if config is not None and config.is_config_file():
+        core.copy_file(src=config, dst=save_dir / "config.py")
     
     return args
     
@@ -232,17 +240,23 @@ def _parse_predict_args() -> argparse.Namespace:
     return args
 
 
-def parse_predict_args() -> argparse.Namespace:
+def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Namespace:
     hostname = socket.gethostname().lower()
     
     # Get input args
     input_args = vars(_parse_predict_args())
     config     = input_args.get("config")
-    root       = mon.Path(input_args.get("root"))
+    root       = core.Path(input_args.get("root"))
+    weights    = input_args.get("weights")
     
     # Get config args
-    config = mon.parse_config_file(project_root=root / "config", config=config)
-    args   = mon.load_config(config)
+    config = utils.parse_config_file(
+        project_root = root,
+        model_root   = model_root,
+        weights_path = weights,
+        config       = config,
+    )
+    args   = utils.load_config(config)
     
     # Prioritize input args --> config file args
     arch       = input_args.get("arch")       or args.get("arch")
@@ -263,11 +277,11 @@ def parse_predict_args() -> argparse.Namespace:
     extra_args = input_args.get("extra_args")
     
     # Parse arguments
-    save_dir = save_dir or mon.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
-    save_dir = mon.Path(save_dir)
-    weights  = mon.to_list(weights)
-    device   = mon.parse_device(device)
-    imgsz    = mon.parse_hw(imgsz)
+    save_dir = save_dir or utils.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
+    save_dir = core.Path(save_dir)
+    weights  = core.to_list(weights)
+    device   = core.parse_device(device)
+    imgsz    = core.parse_hw(imgsz)
     
     # Update arguments
     args["hostname"]   = hostname
@@ -292,7 +306,8 @@ def parse_predict_args() -> argparse.Namespace:
     args  = argparse.Namespace(**args)
     
     save_dir.mkdir(parents=True, exist_ok=True)
-    mon.copy_file(src=config, dst=save_dir / "config.py")
+    if config is not None and config.is_config_file():
+        core.copy_file(src=config, dst=save_dir / "config.py")
     
     return args
 

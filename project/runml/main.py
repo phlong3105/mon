@@ -397,7 +397,8 @@ def main(
         model_name   = mon.parse_model_name(model)
     if mode in ["train", "predict", "online", "instance"]:
         # Config
-        configs_     = mon.list_configs(project_root=root, model=model)
+        model_dir    = mon.EXTRA_MODELS[arch][model]["model_dir"] if mon.is_extra_model(model) else None
+        configs_     = mon.list_configs(project_root=root, model_root=model_dir, model=model)
         configs_str_ = utils.parse_menu_string(configs_)
         config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")
         config       = configs_[int(config)] if mon.is_int(config) else config

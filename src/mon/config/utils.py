@@ -218,12 +218,22 @@ def parse_model_name(model: str) -> str:
 
 # region Config
 
-def list_config_files(project_root: str | core.Path, model: str | None = None) -> list[core.Path]:
+def list_config_files(
+    project_root: str | core.Path,
+    model_root  : str | core.Path | None = None,
+    model       : str | None             = None
+) -> list[core.Path]:
     """List configuration files in the given :param:`project`."""
-    assert project_root not in [None, "None", ""]
-    project_root = core.Path(project_root)
-    config_dir   = project_root / "config"
-    config_files = list(config_dir.files(recursive=True))
+    config_files = []
+    if project_root not in [None, "None", ""]:
+        project_root        = core.Path(project_root)
+        project_config_dir  = project_root / "config"
+        config_files       += list(project_config_dir.files(recursive=True))
+    if model_root not in [None, "None", ""]:
+        model_root        = core.Path(model_root)
+        model_config_dir  = model_root / "config"
+        config_files     += list(model_config_dir.files(recursive=True))
+    #
     config_files = [
         cf for cf in config_files
         if (
@@ -239,8 +249,12 @@ def list_config_files(project_root: str | core.Path, model: str | None = None) -
     return config_files
 
 
-def list_configs(project_root: str | core.Path, model: str | None = None) -> list[str]:
-    config_files = list_config_files(project_root=project_root, model=model)
+def list_configs(
+    project_root: str | core.Path,
+    model_root  : str | core.Path | None = None,
+    model       : str | None             = None
+) -> list[str]:
+    config_files = list_config_files(project_root=project_root, model_root=model_root, model=model)
     config_files = [str(f.name) for f in config_files]
     # if is_extra_model(model):
     #     config_files = [EXTRA_MODEL_STR in f for f in config_files]
@@ -249,30 +263,49 @@ def list_configs(project_root: str | core.Path, model: str | None = None) -> lis
     return config_files
 
 
-def parse_config_file(config: str | core.Path, project_root: str | core.Path) -> core.Path | None:
+def parse_config_file(
+    config      : str | core.Path,
+    project_root: str | core.Path,
+    model_root  : str | core.Path | None = None,
+    weights_path: str | core.Path | None = None,
+) -> core.Path | None:
     # assert config not in [None, "None", ""]
     if config in [None, "None", ""]:
         error_console.log(f"No configuration given.")
         return None
-    #
+    # Check ``config`` itself
     config = core.Path(config)
     if config.is_config_file():
         return config
-    #
+    # Check for other config file extensions in the same directory
     config_ = config.config_file()
     if config_.is_config_file():
         return config_
-    #
-    config_dirs = core.Path(project_root).subdirs(recursive=True)
-    for config_dir in config_dirs:
-        config_ = config_dir / config.name
-        if config_.is_config_file():
-            return config_
+    # Check for config file in ``'config'`` directory in ``project_root``.
+    config_dirs = core.Path(project_root / "config").subdirs(recursive=True)
+    # for config_dir in config_dirs:
+    #     config_ = config_dir / config.name
+    #     if config_.is_config_file():
+    #         return config_
     for config_dir in config_dirs:
         config_ = (config_dir / config.name).config_file()
         if config_.is_config_file():
             return config_
-    #
+    # Check for config file in ``'config'`` directory in ``model_root``.
+    config_dirs = core.Path(model_root / "config").subdirs(recursive=True)
+    for config_dir in config_dirs:
+        config_ = (config_dir / config.name).config_file()
+        if config_.is_config_file():
+            return config_
+    # Check for config file that comes along with ``weights_path``.
+    if weights_path is not None:
+        weights_path = weights_path[0] if isinstance(weights_path, list) else weights_path
+        weights_path = core.Path(weights_path)
+        if weights_path.is_weights_file():
+            config_ = (weights_path.parent / "config.py").config_file()
+            if config_.is_config_file():
+                return config_
+    # That's it.
     error_console.log(f"No configuration is found at {config}.")
     return None  # config
 
