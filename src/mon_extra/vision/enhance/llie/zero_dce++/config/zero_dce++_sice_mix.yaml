@@ -4,6 +4,7 @@ config      : ~
 arch        : "zero_dce++"
 model       : "zero_dce++"
 data        : "sice_mix"
+data_dir    : ~
 root        : ~
 project     : ~
 variant     : ~

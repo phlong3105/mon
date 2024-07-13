@@ -1,23 +1,32 @@
-# General config
-root        : ~
-weights     : ~  # (== model_pretrain)
+# Basic
+hostname    : ~
+config      : ~
+arch        : "zeroig"
 model       : "zeroig"
-data        : "llie/lol_v2_synthetic/test/lq"
-fullname    : "zeroig_lol_v2_synthetic"
+data        : "lol_v2_synthetic"
+data_dir    : "llie/lol_v2_synthetic/test/lq"
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "zeroig_lol_v1"
 save_dir    : ~
-device      : 0
+weights     : ~
+device      : ~
+local_rank  : ~
+launcher    : ~
 epochs      : 2001
 steps       : ~
-seed        : 2
 imgsz       : 512
 resize      : ~
-benchmark   : ~
-save_image  : ~
-use_data_dir: ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
 exist_ok    : False
 verbose     : True
 
-# Training
+# Model Specific
+seed       : 2
 batch_size : 32
 num_workers: 0
 lr         : 0.0003

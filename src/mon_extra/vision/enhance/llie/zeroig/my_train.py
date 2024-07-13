@@ -88,7 +88,7 @@ def train(args: argparse.Namespace):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.9, 0.999), weight_decay=3e-4)
     
     # Data I/O
-    data          = mon.DATA_DIR / args.data
+    data          = mon.DATA_DIR / args.data_dir
     train_dataset = DataLoader(img_dir=data, task="train")
     test_dataset  = DataLoader(img_dir=data, task="test")
     train_loader  = torch.utils.data.DataLoader(

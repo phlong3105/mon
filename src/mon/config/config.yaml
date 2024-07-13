@@ -4,6 +4,7 @@ config      : ~
 arch        : ~
 model       : ~
 data        : ~
+data_dir    : ~
 root        : ~
 project     : ~
 variant     : ~
