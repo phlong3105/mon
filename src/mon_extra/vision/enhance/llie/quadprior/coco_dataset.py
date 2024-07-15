@@ -1,18 +1,17 @@
-import torchvision
-from torchvision import transforms
-import torch
-from PIL import Image
-import io
-import random
-import os
-import webdataset as wds  # pylint: disable=import-outside-toplevel
 import copy
 import glob
+import random
+
+import torch
+import torchvision
+from PIL import Image
 from torch.utils.data import Dataset
-import pandas as pd
+from torchvision import transforms
+
 
 def create_webdataset(data_dir, image_size=[512,512], random_flip=True):
     return ImageDataset(data_dir, image_size, random_flip)
+
 
 class RandomNoise(object):
     def __init__(self, max_poisson=0.8, max_gaussian=0.4):

@@ -925,6 +925,22 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "torch_distributed_launch": True,
         },
     },
+    "psenet"       : {
+        "psenet": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "psenet",
+            "torch_distributed_launch": False,
+        }
+    },
+    "quadprior"    : {
+        "quadprior": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "quadprior",
+            "torch_distributed_launch": False,
+        }
+    },
     "retinexformer": {
         "retinexformer": {
             "tasks"    : [Task.LLIE],

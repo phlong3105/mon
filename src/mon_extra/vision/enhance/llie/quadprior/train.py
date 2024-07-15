@@ -53,37 +53,37 @@ dataset = create_webdataset(
 )
 
 dataloader = wds.WebLoader(
-    dataset          =   dataset,
-    batch_size       =   batch_size,
-    num_workers      =   2,
-    pin_memory       =   False,
-    prefetch_factor  =   2,
+    dataset         = dataset,
+    batch_size      = batch_size,
+    num_workers     = 2,
+    pin_memory      = False,
+    prefetch_factor = 2,
 )
 
 logger = ImageLogger(batch_frequency=logger_freq)
 checkpoint_callback = ModelCheckpoint(
-    dirpath                   =     'checkpoints',
-    filename                  =     name + '-{epoch:02d}-{step}',
-    monitor                   =     'step',
-    save_last                 =     False,
-    save_top_k                =     -1,
-    verbose                   =     True,
-    every_n_train_steps       =     10000,   # How frequent to save checkpoint
-    save_on_train_epoch_end   =     True,
+    dirpath                 = 'checkpoints',
+    filename                = name + '-{epoch:02d}-{step}',
+    monitor                 = 'step',
+    save_last               = False,
+    save_top_k              = -1,
+    verbose                 = True,
+    every_n_train_steps     = 10000,   # How frequent to save checkpoint
+    save_on_train_epoch_end = True,
 )
 
 strategy = DeepSpeedStrategy(
-    stage                     =     2, 
-    offload_optimizer         =     True, 
-    cpu_checkpointing         =     True
+    stage             = 2,
+    offload_optimizer = True,
+    cpu_checkpointing = True
 )
 
-trainer = pl.Trainer(devices                   =     number_of_gpu,
-                     strategy                  =     strategy,
-                     precision                 =     16,
-                     sync_batchnorm            =     True,
-                     accelerator               =     'gpu',
-                     callbacks                 =     [logger, checkpoint_callback])
+trainer = pl.Trainer(devices        = number_of_gpu,
+                     strategy       = strategy,
+                     precision      = 16,
+                     sync_batchnorm = True,
+                     accelerator    = 'gpu',
+                     callbacks      = [logger, checkpoint_callback])
 
 # Train
 trainer.fit(model, dataloader)
