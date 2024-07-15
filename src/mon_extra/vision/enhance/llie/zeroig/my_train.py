@@ -36,6 +36,7 @@ def save_images(tensor):
 
 def train(args: argparse.Namespace):
     # General config
+    fullname = args.fullname
     save_dir = mon.Path(args.save_dir)
     weights  = args.weights
     device   = mon.set_device(args.device)
@@ -130,7 +131,8 @@ def train(args: argparse.Namespace):
                 logging.info("train-epoch %03d %03d %f", epoch, idx, loss)
             logging.info("train-epoch %03d %f", epoch, np.average(losses))
             # utils.save(model, str(weights_dir / f"weights_{epoch}.pt"))
-            utils.save(model, str(weights_dir / f"last.pt"))
+            # utils.save(model, str(weights_dir / f"last.pt"))
+            utils.save(model, str(weights_dir / f"{fullname}.pt"))
             
             if epoch % 50 == 0 and total_step != 0:
                 model.eval()

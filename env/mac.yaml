@@ -32,6 +32,7 @@ dependencies:
       - PyYAML                 # YAML parser and emitter for Python.
       - pyhumps                # Convert strings between snake case, camel case and pascal case in Python.
       - pytest                 # Simple powerful testing with Python.
+      - readchar               # Library to easily read single chars and key strokes.
       - requests               # Requests is an elegant and simple HTTP library for Python, built with ♥.
       - rich                   # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
       - scipy                  # Scientific Library for Python.

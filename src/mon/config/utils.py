@@ -381,7 +381,10 @@ def list_datasets(
 
 # region Weights
 
-def list_weights_files(model: str, project_root: str | core.Path | None = None) -> list[core.Path]:
+def list_weights_files(
+    model       : str,
+    project_root: str | core.Path | None = None,
+) -> list[core.Path]:
     from mon.globals import ZOO_DIR
     
     weights_files = []
@@ -399,7 +402,7 @@ def list_weights_files(model: str, project_root: str | core.Path | None = None) 
             weights_files.append(path)
     # Remove duplicate and sort
     model_name    = parse_model_name(model)
-    weights_files = [f for f in weights_files if f"{model_name}_" in str(f)]
+    weights_files = [f for f in weights_files if f"{model_name}" in str(f)]
     weights_files = core.unique(weights_files)
     weights_files = sorted(weights_files)
     return weights_files

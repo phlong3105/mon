@@ -1,0 +1,32 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "zeroig"
+model       : "zeroig"
+data        : "dicm"
+data_dir    : "llie/dicm/test/lq"
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "zeroig_dicm"
+save_dir    : ~
+weights     : ~
+device      : ~
+local_rank  : ~
+launcher    : ~
+epochs      : 2001
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+seed       : 2
+batch_size : 1
+num_workers: 0
+lr         : 0.0003
