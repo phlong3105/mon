@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 __all__ = [
+    "parse_online_input_args",
     "parse_predict_args",
+    "parse_predict_input_args",
     "parse_train_args",
+    "parse_train_input_args",
 ]
 
 import argparse
@@ -39,8 +42,8 @@ def _float_or_none(value) -> float | None:
 
 # region Train
 
-def _parse_train_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="predict")
+def parse_train_input_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="train")
     parser.add_argument("--config",     type=_str_or_none, default=None, help="Model config.")
     parser.add_argument("--arch",       type=_str_or_none, default=None, help="Model architecture.")
     parser.add_argument("--model",      type=_str_or_none, default=None, help="Model name.")
@@ -66,7 +69,7 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
     hostname = socket.gethostname().lower()
     
     # Get input args
-    input_args = vars(_parse_train_args())
+    input_args = vars(parse_train_input_args())
     config     = input_args.get("config")
     root       = core.Path(input_args.get("root"))
     weights    = input_args.get("weights")
@@ -133,7 +136,7 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
         
     save_dir.mkdir(parents=True, exist_ok=True)
     if config is not None and config.is_config_file():
-        core.copy_file(src=config, dst=save_dir / f"config.{config.suffix}")
+        core.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
     
     return args
     
@@ -240,7 +243,7 @@ def parse_train_args() -> argparse.Namespace:
 
 # region Predict
 
-def _parse_predict_args() -> argparse.Namespace:
+def parse_predict_input_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="predict")
     parser.add_argument("--config",     type=_str_or_none, default=None, help="Model config.")
     parser.add_argument("--arch",       type=_str_or_none, default=None, help="Model architecture.")
@@ -258,11 +261,9 @@ def _parse_predict_args() -> argparse.Namespace:
     parser.add_argument("--benchmark",  action="store_true")
     parser.add_argument("--save-image", action="store_true")
     parser.add_argument("--save-debug", action="store_true")
-    
     parser.add_argument("--verbose",    action="store_true")
     parser.add_argument("extra_args",   nargs=argparse.REMAINDER, help="Additional arguments")
     args = parser.parse_args()
-    # args.imgsz = int(args.imgsz)
     return args
 
 
@@ -270,7 +271,7 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     hostname = socket.gethostname().lower()
     
     # Get input args
-    input_args = vars(_parse_predict_args())
+    input_args = vars(parse_predict_input_args())
     config     = input_args.get("config")
     root       = core.Path(input_args.get("root"))
     weights    = input_args.get("weights")
@@ -335,7 +336,7 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     
     save_dir.mkdir(parents=True, exist_ok=True)
     if config is not None and config.is_config_file():
-        core.copy_file(src=config, dst=save_dir / f"config.{config.suffix}")
+        core.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
     
     return args
 
@@ -442,5 +443,38 @@ def parse_predict_args() -> argparse.Namespace:
     
     return command()
 '''
+
+# endregion
+
+
+# region Online
+
+def parse_online_input_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="online")
+    parser.add_argument("--config",     type=_str_or_none, default=None, help="Model config.")
+    parser.add_argument("--arch",       type=_str_or_none, default=None, help="Model architecture.")
+    parser.add_argument("--model",      type=_str_or_none, default=None, help="Model name.")
+    parser.add_argument("--root",       type=_str_or_none, default=None, help="Project root.")
+    parser.add_argument("--project",    type=_str_or_none, default=None, help="Project name.")
+    parser.add_argument("--variant",    type=_str_or_none, default=None, help="Variant name.")
+    parser.add_argument("--fullname",   type=_str_or_none, default=None, help="Fullname to save the model's weight.")
+    parser.add_argument("--save-dir",   type=_str_or_none, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
+    parser.add_argument("--weights",    type=_str_or_none, default=None, help="Weights paths.")
+    parser.add_argument("--device",     type=_str_or_none, default=None, help="Running devices.")
+    parser.add_argument("--local-rank", type=_int_or_none, default=-1,   help="DDP parameter, do not modify.")
+    parser.add_argument("--launcher",   type=_str_or_none, choices=["none", "pytorch", "slurm"], default="none", help="DDP parameter, do not modify.")
+    parser.add_argument("--epochs",     type=_int_or_none, default=-1,   help="Stop training once this number of epochs is reached.")
+    parser.add_argument("--steps",      type=_int_or_none, default=-1,   help="Stop training once this number of steps is reached.")
+    parser.add_argument("--imgsz",      type=_int_or_none, default=None, help="Image sizes.")
+    parser.add_argument("--resize",     action="store_true")
+    parser.add_argument("--benchmark",  action="store_true")
+    parser.add_argument("--save-image", action="store_true")
+    parser.add_argument("--save-debug", action="store_true")
+    parser.add_argument("--verbose",    action="store_true")
+    parser.add_argument("--exist-ok",   action="store_true")
+    parser.add_argument("--verbose",    action="store_true")
+    parser.add_argument("extra_args",   nargs=argparse.REMAINDER, help="Additional arguments")
+    args = parser.parse_args()
+    return args
 
 # endregion

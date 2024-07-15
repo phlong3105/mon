@@ -135,7 +135,7 @@ def train(args: argparse.Namespace):
             utils.save(model, str(weights_dir / f"{fullname}.pt"))
             
             # if epoch % 50 == 0 and total_step != 0:
-            if epoch % 100 and total_step != 0:
+            if epoch % 500 == 0 and total_step != 0:
                 model.eval()
                 with torch.no_grad():
                     for idx, (input, img_name) in enumerate(test_loader):

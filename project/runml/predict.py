@@ -8,7 +8,6 @@ from __future__ import annotations
 import socket
 import time
 
-import click
 import torch
 
 import mon
@@ -150,67 +149,47 @@ def predict(args: dict) -> str:
 
 # region Main
 
-@click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--config",     type=str, default=None, help="Model config.")
-@click.option("--arch",       type=str, default=None, help="Model architecture.")
-@click.option("--model",      type=str, default=None, help="Model name.")
-@click.option("--data",       type=str, default=None, help="Source data directory.")
-@click.option("--root",       type=str, default=None, help="Project root.")
-@click.option("--project",    type=str, default=None, help="Project name.")
-@click.option("--variant",    type=str, default=None, help="Variant name.")
-@click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/arch/model/data or root/run/predict/arch/project/variant.")
-@click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-@click.option("--weights",    type=str, default=None, help="Weights paths.")
-@click.option("--device",     type=str, default=None, help="Running devices.")
-@click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-@click.option("--resize",     is_flag=True)
-@click.option("--benchmark",  is_flag=True)
-@click.option("--save-image", is_flag=True)
-@click.option("--save-debug", is_flag=True)
-@click.option("--verbose",    is_flag=True)
-def main(
-    config    : str,
-    arch      : str,
-    model     : str,
-    data      : str,
-    root      : str,
-    project   : str,
-    variant   : str,
-    fullname  : str,
-    save_dir  : str,
-    weights   : str,
-    device    : int | list[int] | str,
-    imgsz     : int,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    save_debug: bool,
-    verbose   : bool,
-) -> str:
+def parse_predict_args(model_root: str | mon.Path | None = None) -> dict:
     hostname = socket.gethostname().lower()
     
+    # Get input args
+    input_args = vars(mon.parse_predict_input_args())
+    config     = input_args.get("config")
+    root       = mon.Path(input_args.get("root"))
+    
     # Get config args
-    config = mon.parse_config_file(project_root=_current_dir / "config", config=config)
+    config = mon.parse_config_file(
+        project_root = root,
+        model_root   = model_root,
+        weights_path = None,
+        config       = config,
+    )
     args   = mon.load_config(config)
     
     # Prioritize input args --> config file args
-    model    = model    or args["model_name"]
-    data     = data     or args["predictor"]["source"]
-    root     = root     or args["root"]
-    project  = project  or args["project"]
-    variant  = variant  or args["variant"]
-    fullname = fullname or args["fullname"]
-    save_dir = save_dir or args["predictor"]["default_root_dir"]
-    weights  = weights  or args["model"]["weights"]
-    devices  = device   or args["predictor"]["devices"]
-    imgsz    = imgsz    or args["image_size"]
+    arch       = input_args.get("arch")
+    model      = input_args.get("model")      or args.get("model_name")
+    data       = input_args.get("data")       or args["predictor"]["source"]
+    project    = input_args.get("project")    or args.get("project")
+    variant    = input_args.get("variant")    or args.get("variant")
+    fullname   = input_args.get("fullname")   or args.get("fullname")
+    save_dir   = input_args.get("save_dir")   or args["predictor"]["default_root_dir"]
+    weights    = input_args.get("weights")    or args["model"]["weights"]
+    devices    = input_args.get("device")     or args["predictor"]["devices"]
+    imgsz      = input_args.get("imgsz")      or args.get("image_size")
+    resize     = input_args.get("resize")     or args.get("resize")
+    benchmark  = input_args.get("benchmark")  or args.get("benchmark")
+    save_image = input_args.get("save_image") or args.get("save_image")
+    save_debug = input_args.get("save_debug") or args.get("save_debug")
+    verbose    = input_args.get("verbose")    or args.get("verbose")
+    extra_args = input_args.get("extra_args")
     
     # Parse arguments
-    root     = mon.Path(root)
     save_dir = save_dir or mon.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
     save_dir = mon.Path(save_dir)
     weights  = mon.to_list(weights)
-    weights  = weights[0] if isinstance(weights, list | tuple) else weights
+    weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
+    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     
     # Update arguments
     args["hostname"]    = hostname
@@ -242,7 +221,16 @@ def main(
         "verbose"         : verbose,
     }
     
-    return predict(args=args)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    if config is not None and config.is_config_file():
+        mon.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
+        
+    return args
+
+
+def main():
+    args = parse_predict_args()
+    predict(args)
 
 
 if __name__ == "__main__":
