@@ -8,8 +8,6 @@ from __future__ import annotations
 import subprocess
 
 import click
-import keyboard
-import readchar
 
 import mon
 import utils

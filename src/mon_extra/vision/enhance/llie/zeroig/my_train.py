@@ -75,7 +75,7 @@ def train(args: argparse.Namespace):
     model = Network()
     if weights is not None and mon.Path(weights).is_weights_file():
         model.load_state_dict(torch.load(weights))
-    utils.save(model, str(weights_dir / "initial_weights.pt"))
+    # utils.save(model, str(weights_dir / "initial_weights.pt"))
     model.enhance.in_conv.apply(model.enhance_weights_init)
     model.enhance.conv.apply(model.enhance_weights_init)
     model.enhance.out_conv.apply(model.enhance_weights_init)
@@ -134,7 +134,8 @@ def train(args: argparse.Namespace):
             # utils.save(model, str(weights_dir / f"last.pt"))
             utils.save(model, str(weights_dir / f"{fullname}.pt"))
             
-            if epoch % 50 == 0 and total_step != 0:
+            # if epoch % 50 == 0 and total_step != 0:
+            if epoch % 100 and total_step != 0:
                 model.eval()
                 with torch.no_grad():
                     for idx, (input, img_name) in enumerate(test_loader):
@@ -149,10 +150,14 @@ def train(args: argparse.Namespace):
                         input_name = "%s" % image_name
                         H3 = save_images(H3)
                         H2 = save_images(H2)
-                        (debug_dir / "denoise").mkdir(parents=True, exist_ok=True)
-                        (debug_dir / "enhance").mkdir(parents=True, exist_ok=True)
-                        Image.fromarray(H3).save(str(debug_dir / "denoise" / f"{input_name}_denoise_{epoch}.png"), "PNG")
-                        Image.fromarray(H2).save(str(debug_dir / "enhance" / f"{input_name}_enhance_{epoch}.png"), 'PNG')
+                        # (debug_dir / "denoise").mkdir(parents=True, exist_ok=True)
+                        # (debug_dir / "enhance").mkdir(parents=True, exist_ok=True)
+                        # Image.fromarray(H3).save(str(debug_dir / "denoise" / f"{input_name}_denoise_{epoch}.png"), "PNG")
+                        # Image.fromarray(H2).save(str(debug_dir / "enhance" / f"{input_name}_enhance_{epoch}.png"), "PNG")
+                        (debug_dir / "denoise" / f"{epoch}").mkdir(parents=True, exist_ok=True)
+                        (debug_dir / "enhance" / f"{epoch}").mkdir(parents=True, exist_ok=True)
+                        Image.fromarray(H3).save(str(debug_dir / "denoise" / f"{epoch}" / f"{input_name}.png"), "PNG")
+                        Image.fromarray(H2).save(str(debug_dir / "enhance" / f"{epoch}" / f"{input_name}.png"), "PNG")
 
 # endregion
 

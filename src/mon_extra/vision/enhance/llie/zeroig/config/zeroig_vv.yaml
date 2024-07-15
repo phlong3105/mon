@@ -3,12 +3,12 @@ hostname    : ~
 config      : ~
 arch        : "zeroig"
 model       : "zeroig"
-data        : "lol_v2_real"
-data_dir    : "llie/lol_v2_real/test/lq"
+data        : "vv"
+data_dir    : "llie/vv/test/lq"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "zeroig_lol_v1"
+fullname    : "zeroig_vv"
 save_dir    : ~
 weights     : ~
 device      : ~
