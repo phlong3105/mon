@@ -4,9 +4,9 @@
 [submodule "src/mon_extra/vision/detect/yolov9"]
 	path = src/mon_extra/vision/detect/yolov9
 	url  = https://github.com/phlong3105/yolov9
+[submodule "src/mon_extra/vision/ultralytics"]
+	path = src/mon_extra/vision/ultralytics
+	url  = https://github.com/phlong3105/ultralytics
 [submodule "tool/XAnyLabeling"]
 	path = tool/XAnyLabeling
 	url  = https://github.com/phlong3105/XAnyLabeling
-[submodule "src/mon_extra/vision/ultralytics"]
-	path = src/mon_extra/vision/ultralytics
-	url = https://github.com/phlong3105/ultralytics
