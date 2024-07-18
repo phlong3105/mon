@@ -105,13 +105,15 @@ def predict(args: argparse.Namespace):
     # General config
     data        = args.data
     save_dir    = args.save_dir
-    weights     = args.weights
+    # weights     = args.weights or mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_coco_final.ckpt"
+    weights     = mon.ZOO_DIR / args.weights
     device      = mon.set_device(args.device)
-    imgsz       = args.imgsz
+    imgsz       = args.imgsz[0]
     resize      = args.resize
     benchmark   = args.benchmark
+    use_float16 = args.use_float16
     
-    config_path = args.config_path
+    config_path = _current_dir / args.config_path  # "./models/cldm_v15.yaml"
     init_ckpt   = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_init.ckpt"
     ae_ckpt     = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/ae_epoch=00_step=7000.ckpt"
     
@@ -135,7 +137,7 @@ def predict(args: argparse.Namespace):
     # Load bypass decoder
     model.change_first_stage(ae_ckpt)
     
-    if args.use_float16:
+    if use_float16:
         model = model.to(device).to(dtype=torch.float16)
     else:
         model = model.to(device)
@@ -157,7 +159,8 @@ def predict(args: argparse.Namespace):
                 description = f"[bright_yellow] Predicting"
             ):
                 image_path  = meta["path"]
-                input_image = cv2.imread(image_path)
+                input_image = cv2.imread(str(image_path))
+                h0, w0      = input_image.shape[0], input_image.shape[1]
                 start_time  = time.time()
                 # if you set num_samples > 1, process will return multiple results
                 output      = process(
@@ -165,10 +168,12 @@ def predict(args: argparse.Namespace):
                     input_image      = input_image,
                     num_samples      = 1,
                     image_resolution = imgsz,
+                    use_float16      = use_float16,
                 )[0]
                 run_time    = (time.time() - start_time)
+                output      = mon.resize(output, (h0, w0))
                 output_path = save_dir / image_path.name
-                cv2.imwrite(output_path, output)
+                cv2.imwrite(str(output_path), output)
                 sum_time += run_time
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")

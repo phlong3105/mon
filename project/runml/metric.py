@@ -251,7 +251,8 @@ def update_results(results: dict, new_values: dict) -> dict:
 @click.option("--input-dir",      type=click.Path(exists=True),  default=None, help="Image directory.")
 @click.option("--target-dir",     type=click.Path(exists=False), default=None, help="Ground-truth directory.")
 @click.option("--result-file",    type=str,                      default=None, help="Result file.")
-@click.option("--name",           type=str,                      default=None, help="Model's fullname.")
+@click.option("--arch",           type=str,                      default=None, help="Model's architecture.")
+@click.option("--model",          type=str,                      default=None, help="Model's fullname.")
 @click.option("--device",         type=str,                      default=None, help="Running devices.")
 @click.option("--imgsz",          type=int,                      default=512)
 @click.option("--resize",         is_flag=True)
@@ -266,7 +267,8 @@ def main(
     input_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
-    name          : str,
+    arch          : str,
+    model         : str,
     device        : int | list[int] | str,
     imgsz         : int,
     resize        : bool,
@@ -322,8 +324,8 @@ def main(
     
     # Show results
     if verbose:
-        console.rule(f"[bold red] {name}")
-        console.log(f"{name}")
+        console.rule(f"[bold red] {model}")
+        console.log(f"{model}")
         console.log(f"{input_dir.name}")
         for m, v in results.items():
             console.log(f"{m:<10}: {v:.10f}")
@@ -356,7 +358,7 @@ def main(
                 
                 for m, v in results.items():
                     f.write(f"{f'{m}':<10}\t")
-            f.write(f"{f'{name}':<10}\t{f'{input_dir.name}':<10}\t")
+            f.write(f"{f'{model}':<10}\t{f'{input_dir.name}':<10}\t")
             for m, v in results.items():
                 f.write(f"{v:.10f}\t")
             f.write(f"\n")

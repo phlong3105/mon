@@ -451,7 +451,9 @@ def main(
     # Training Flags
     if mode in ["train", "online", "instance"]:  # Epochs
         epochs = click.prompt(click.style(f"Epochs              ", fg="bright_yellow", bold=True), type=int, default=epochs)
+        epochs = None if epochs < 0 else epochs
         steps  = click.prompt(click.style(f"Steps               ", fg="bright_yellow", bold=True), type=int, default=steps)
+        steps  = None if steps  < 0 else steps
     # Predict Flags
     if mode in ["predict", "online", "instance"]:  # Image size
         imgsz_       = imgsz

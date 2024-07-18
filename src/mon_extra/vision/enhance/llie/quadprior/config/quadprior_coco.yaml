@@ -4,18 +4,19 @@ config      : ~
 arch        : "quadprior"
 model       : "quadprior"
 data        : "coco"
-data_dir    : "coco/coco2017/images/{train2017,unlabeled2017}/*.*"
+# data_dir    : "coco/coco2017/images/{train2017,unlabeled2017}/*.*"
+data_dir    : "coco/coco2017/images/*/*.*"
 root        : ~
 project     : ~
 variant     : ~
 fullname    : "quadprior_coco"
 save_dir    : ~
-weights     : ~
+weights     : "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_coco_final.ckpt"
 device      : ~
 local_rank  : ~
 launcher    : ~
 epochs      : 5
-steps       : 140000
+steps       : 2000000  # 140000
 imgsz       : 512
 resize      : ~
 benchmark   : True
@@ -26,7 +27,7 @@ exist_ok    : False
 verbose     : True
 
 # Model Specific
-config_path     : "./models/cldm_v15.yaml"
+config_path     : "models/cldm_v15.yaml"
 batch_size      : 4
 num_workers     : 2
 prefetch_factor : 2
@@ -34,3 +35,4 @@ lr              : 1e-4
 logger_freq     : 1000
 sd_locked       : True
 only_mid_control: False
+use_float16     : False

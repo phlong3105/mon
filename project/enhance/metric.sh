@@ -12,6 +12,7 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
+arch="gcenet"
 model="zerodce"
 data=(
     "dicm"
@@ -27,16 +28,18 @@ data=(
 # Run
 cd "${runml_dir}" || exit
 for (( i=0; i<${#data[@]}; i++ )); do
-    input_dir="${data_dir}/${task}/predict/${model}/${data[i]}"
+    input_dir="${data_dir}/${task}/predict/${arch}/${model}/${data[i]}"
     if ! [ -d "${input_dir}" ]; then
-        input_dir="${current_dir}/run/predict/${model}/${data[i]}"
+        input_dir="${current_dir}/run/predict/${arch}/${model}/${data[i]}"
     fi
 
     python -W ignore metric.py \
         --input-dir "${input_dir}" \
         --target-dir "${data_dir}/${task}/${data[i]}/test/high" \
         --result-file "${current_dir}" \
-        --name "${model}" \
+        --arch "${arch}" \
+        --model "${model}" \
+        --device "cuda:0" \
         --metric "psnr" \
         --metric "ssim" \
         --metric "lpips" \

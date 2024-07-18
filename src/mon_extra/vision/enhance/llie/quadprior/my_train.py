@@ -30,20 +30,21 @@ def train(args: argparse.Namespace):
     fullname         = args.fullname
     save_dir         = mon.Path(args.save_dir)
     weights          = args.weights
-    device           = mon.set_device(args.device)
+    device           = mon.parse_device(args.device)
+    device           = mon.to_int_list(device) if "auto" not in device else device
     epochs           = args.epochs
     steps            = args.steps
     
     batch_size       = args.batch_size
     num_workers      = args.num_workers
     prefetch_factor  = args.prefetch_factor
-    learning_rate    = args.lr
+    learning_rate    = float(args.lr)
     logger_freq      = args.logger_freq
     sd_locked        = args.sd_locked
     only_mid_control = args.only_mid_control
     verbose          = args.verbose
     
-    config_path      = args.config_path  # "./models/cldm_v15.yaml"
+    config_path      = _current_dir / args.config_path  # "./models/cldm_v15.yaml"
     init_ckpt        = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_init.ckpt"
     pretrained_ckpt  = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_coco_final.ckpt"
     
@@ -75,7 +76,7 @@ def train(args: argparse.Namespace):
     
     # Data I/O
     data       = mon.DATA_DIR / args.data_dir
-    dataset    = create_webdataset(data_dir=data)
+    dataset    = create_webdataset(data_dir=str(data))
     dataloader = wds.WebLoader(
         dataset         = dataset,
         batch_size      = batch_size,
@@ -85,7 +86,7 @@ def train(args: argparse.Namespace):
     )
     
     # Callback
-    logger = ImageLogger(batch_frequency=logger_freq)
+    logger = ImageLogger(save_dir=str(save_dir), batch_frequency=logger_freq)
     checkpoint_callback = ModelCheckpoint(
         dirpath                 = str(save_dir),
         filename                = fullname + "-{epoch:02d}-{step}",
@@ -105,13 +106,15 @@ def train(args: argparse.Namespace):
         cpu_checkpointing = True
     )
     trainer = pl.Trainer(
-        devices        = device,
-        strategy       = strategy,
-        max_steps      = steps,
-        precision      = 16,
-        sync_batchnorm = True,
-        accelerator    = "gpu",
-        callbacks      = [logger, checkpoint_callback],
+        default_root_dir = str(save_dir),
+        devices          = device,
+        strategy         = "auto",  # strategy,
+        # max_epochs       = epochs,
+        max_steps        = steps,
+        precision        = 16,
+        sync_batchnorm   = True,
+        accelerator      = "gpu",
+        callbacks        = [logger, checkpoint_callback],
     )
     
     # Train

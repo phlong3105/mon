@@ -84,8 +84,10 @@ def predict(args: argparse.Namespace):
     # Data I/O
     console.log(f"[bold red]{data}")
     data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
-    save_dir = save_dir / data_name
+    save_dir  = save_dir / data_name
+    save_dir2 = save_dir.parent / f"{data_name}_denoise"
     save_dir.mkdir(parents=True, exist_ok=True)
+    save_dir2.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     for p in model.parameters():
@@ -118,7 +120,7 @@ def predict(args: argparse.Namespace):
                 output          = save_images(output)
                 # output_path     = save_dir / image_path.name
                 # torchvision.utils.save_image(enhanced_image, str(output_path))
-                Image.fromarray(output).save(str(save_dir  / f"{image_path.stem}_denoise.png"), "PNG")
+                Image.fromarray(output).save(str(save_dir2 / f"{image_path.stem}.png"), "PNG")
                 Image.fromarray(enhance).save(str(save_dir / f"{image_path.stem}.png"), "PNG")
                 sum_time += run_time
         avg_time = float(sum_time / len(data_loader))

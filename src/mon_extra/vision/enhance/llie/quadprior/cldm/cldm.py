@@ -1,26 +1,25 @@
-import einops
-import torch
-import torch as th
-import torch.nn as nn
 import pickle
 
-from ldm.modules.diffusionmodules.util import (
-    conv_nd,
-    linear,
-    zero_module,
-    timestep_embedding,
-)
-
-from einops import rearrange, repeat
-from torchvision.utils import make_grid
-from ldm.modules.attention import SpatialTransformer
-from ldm.modules.diffusionmodules.openaimodel import UNetModel, TimestepEmbedSequential, ResBlock, Downsample, AttentionBlock
-from ldm.models.diffusion.ddpm import LatentDiffusion
-from ldm.util import log_txt_as_img, exists, instantiate_from_config
-from ldm.models.diffusion.ddim import DDIMSampler
-from deepspeed.ops.adam import FusedAdam, DeepSpeedCPUAdam
-
+import torch
+import torch.nn as nn
 from ciconv2d import PriorConv2d
+from deepspeed.ops.adam import DeepSpeedCPUAdam
+from einops import rearrange, repeat
+from ldm.models.diffusion.ddim import DDIMSampler
+from ldm.models.diffusion.ddpm import LatentDiffusion
+from ldm.modules.attention import SpatialTransformer
+from ldm.modules.diffusionmodules.openaimodel import (
+    AttentionBlock, Downsample, ResBlock, TimestepEmbedSequential,
+    UNetModel,
+)
+from ldm.modules.diffusionmodules.util import (conv_nd, linear, timestep_embedding, zero_module)
+from ldm.util import exists, instantiate_from_config
+from torchvision.utils import make_grid
+
+import mon
+
+_current_file = mon.Path(__file__).absolute()
+_current_dir  = _current_file.parents[0]
 
 
 class ControlledUnetModel(UNetModel):
@@ -323,7 +322,7 @@ class ControlLDM(LatentDiffusion):
         self.control_key = control_key
         self.only_mid_control = only_mid_control
         self.control_scales = [1.0] * 13
-        with open("empty_embedding.pkl", 'rb') as f:
+        with open((_current_dir.parent / "empty_embedding.pkl"), 'rb') as f:
             self.cond_txt_empty = pickle.load(f)
 
     @torch.no_grad()
