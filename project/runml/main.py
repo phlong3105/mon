@@ -364,7 +364,7 @@ def run_online(args: dict):
 @click.option("--device",   type=str, default=None,       help="Running devices.")
 @click.option("--epochs",   type=int, default=-1,   	  help="Training epochs.")
 @click.option("--steps",    type=int, default=-1,   	  help="Training steps.")
-@click.option("--imgsz",    type=int, default=512,        help="Image size.")
+@click.option("--imgsz",    type=int, default=-1,         help="Image size.")
 @click.option("--exist-ok", is_flag=True,                 help="Exist OK.")
 @click.option("--verbose",  is_flag=True,                 help="Verbosity.")
 def main(
@@ -460,7 +460,8 @@ def main(
         imgsz        = click.prompt(click.style(f"Image size          ", fg="bright_yellow", bold=True), type=str, default=imgsz)
         imgsz        = mon.to_int_list(imgsz)
         imgsz        = imgsz[0] if len(imgsz) == 1 else imgsz
-        resize       = "yes" if imgsz != imgsz_ else "no"
+        imgsz        = None if imgsz < 0 else imgsz
+        resize       = "no"  # "yes" if imgsz != imgsz_ else "no"
         resize       = click.prompt(click.style(f"Resize?     [yes/no]", fg="bright_yellow", bold=True), type=str, default=resize)
         resize       = True if resize       == "yes" else False
         benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")

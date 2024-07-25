@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="quadprior"
-model="quadprior"
+arch="zeroig"
+model="zeroig"
 data=(
     "dicm"
     "lime"

@@ -8,18 +8,18 @@ from loss import *
 from siren import INF
 from utils import *
 
-parser = argparse.ArgumentParser(description='CoLIE')
-parser.add_argument('--input_folder', type=str, default='input/')
-parser.add_argument('--output_folder', type=str, default='output/')
-parser.add_argument('--down_size', type=int, default=256, help='downsampling size')
-parser.add_argument('--epochs', type=int, default=100)
-parser.add_argument('--window', type=int, default=1, help='context window size')
-parser.add_argument('--L', type=float, default=0.5)
+parser = argparse.ArgumentParser(description="CoLIE")
+parser.add_argument("--input_folder",  type=str,   default="input/")
+parser.add_argument("--output_folder", type=str,   default="output/")
+parser.add_argument("--down_size",     type=int,   default=256, help="downsampling size")
+parser.add_argument("--epochs",        type=int,   default=100)
+parser.add_argument("--window",        type=int,   default=1,   help="context window size")
+parser.add_argument("--L",             type=float, default=0.5)
 # loss function weights parameters
-parser.add_argument('--alpha', type=float, required=True)
-parser.add_argument('--beta', type=float, required=True)
-parser.add_argument('--gamma', type=float, required=True)
-parser.add_argument('--delta', type=float, required=True)
+parser.add_argument("--alpha", type=float, required=True)
+parser.add_argument("--beta",  type=float, required=True)
+parser.add_argument("--gamma", type=float, required=True)
+parser.add_argument("--delta", type=float, required=True)
 opt = parser.parse_args()
 
 

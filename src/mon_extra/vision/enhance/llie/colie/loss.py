@@ -11,14 +11,14 @@ class L_exp(nn.Module):
 
     def forward(self, x):
         mean = self.pool(x) ** 0.5
-        d = torch.abs(torch.mean(torch.pow(mean - torch.FloatTensor([self.mean_val] ).cuda(),2)))
+        d = torch.abs(torch.mean(torch.pow(mean - torch.FloatTensor([self.mean_val] ).cuda(), 2)))
         return d
 
 
 class L_TV(nn.Module):
     
     def __init__(self):
-        super(L_TV,self).__init__()
+        super(L_TV, self).__init__()
 
     def forward(self, x):
         batch_size = x.size()[0]

@@ -845,6 +845,14 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     },
     # endregion
     # region enhance/llie
+    "colie"        : {
+        "colie": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "colie",
+            "torch_distributed_launch": False,
+        },
+    },
     "dccnet"       : {
         "dccnet": {
                 "tasks"    : [Task.LLIE],

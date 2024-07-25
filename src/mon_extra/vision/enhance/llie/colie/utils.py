@@ -56,9 +56,9 @@ def get_patches(img, KERNEL_SIZE):
 
     for i in range(KERNEL_SIZE):
         for j in range(KERNEL_SIZE):
-            kernel[int(torch.sum(kernel).item()),0,i,j] = 1
+            kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
 
-    pad = nn.ReflectionPad2d(KERNEL_SIZE//2)
+    pad       = nn.ReflectionPad2d(KERNEL_SIZE // 2)
     im_padded = pad(img)
 
     extracted = torch.nn.functional.conv2d(im_padded, kernel, padding=0).squeeze(0)
