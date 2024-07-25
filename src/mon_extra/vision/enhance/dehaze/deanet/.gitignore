@@ -1,0 +1,8 @@
+experiment/
+trained_models/*
+!trained_models/README.md
+dataset/*
+!dataset/README.md
+**/__pycache__
+**/.ipynb_checkpoints
+.history/

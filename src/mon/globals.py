@@ -844,6 +844,15 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
         },
     },
     # endregion
+    # region enhance/dehaze
+    "zid"          : {
+        "zid": {
+            "tasks"    : [Task.DEHAZE],
+            "schemes"  : [Scheme.ZEROSHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "dehaze" / "zid",
+            "torch_distributed_launch": False,
+        },
+    },
     # region enhance/llie
     "colie"        : {
         "colie": {
