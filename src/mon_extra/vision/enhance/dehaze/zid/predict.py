@@ -214,14 +214,14 @@ def dehaze(args: argparse.Namespace):
     else:
         output_dir = core.Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "t").mkdir(parents=True, exist_ok=True)
-    (output_dir / "a").mkdir(parents=True, exist_ok=True)
+    (output_dir /    "t").mkdir(parents=True, exist_ok=True)
+    (output_dir /    "a").mkdir(parents=True, exist_ok=True)
     (output_dir / "mask").mkdir(parents=True, exist_ok=True)
-
+    
     image_files = list(input_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
-
+    
     num_iters = args.num_iters
     with core.get_progress_bar() as pbar:
         for f in pbar.track(

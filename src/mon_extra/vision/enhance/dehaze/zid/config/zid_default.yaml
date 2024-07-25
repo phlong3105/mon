@@ -1,0 +1,26 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "zid"
+model       : "zid"
+data        : ~
+data_dir    : ~
+root        : ~
+project     : ~
+variant     : ~
+fullname    : ~
+save_dir    : ~
+weights     : ~
+device      : 0
+local_rank  : -1
+launcher    : ~
+epochs      : 500  # Number of iterations per image
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+exist_ok    : False
+verbose     : True
