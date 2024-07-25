@@ -66,9 +66,9 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer    = mon.Timer()
     target_b = 0.70
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -80,17 +80,17 @@ def predict(args: argparse.Namespace):
                 image       = np.asarray(image, np.float32).transpose((2, 0, 1)) / 255.0
                 image       = torch.from_numpy(image).float()
                 image       = image.cuda().unsqueeze(0)
-                start_time  = time.time()
+                timer.tick()
                 bright_low  = torch.mean(image)
                 bright_high = torch.ones_like(bright_low) * target_b + 0.5 * bright_low
                 ratio       = torch.div(bright_high, bright_low)
                 _, _, enhanced_image = model(L=image, ratio=ratio)
                 # enhanced_image = enhanced_image.detach().cpu()[0]
-                run_time    = (time.time() - start_time)
+                timer.tock()
                 output_path = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time   += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
     
 # endregion

@@ -117,9 +117,9 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     img_multiple_of = 8
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -147,9 +147,9 @@ def predict(args: argparse.Namespace):
                 
                 if args.tile is None:
                     # Test on the original resolution image
-                    start_time = time.time()
+                    timer.tick()
                     restored = model(input)
-                    run_time = (time.time() - start_time)
+                    timer.tock()
                 else:
                     # Test the image tile by tile
                     b, c, h, w   = input.shape
@@ -168,9 +168,9 @@ def predict(args: argparse.Namespace):
                             out_patch_mask = torch.ones_like(out_patch)
                             E[..., h_idx:(h_idx + tile), w_idx:(w_idx + tile)].add_(out_patch)
                             W[..., h_idx:(h_idx + tile), w_idx:(w_idx + tile)].add_(out_patch_mask)
-                    start_time = time.time()
-                    restored   = E.div_(W)
-                    run_time   = (time.time() - start_time)
+                    timer.tick()
+                    restored = E.div_(W)
+                    timer.tock()
                 
                 restored = torch.clamp(restored, 0, 1)
                 # Unpad the output
@@ -183,8 +183,8 @@ def predict(args: argparse.Namespace):
                     save_img(output_path, restored)
                 else:
                     save_gray_img(output_path, restored)
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
     
 # endregion

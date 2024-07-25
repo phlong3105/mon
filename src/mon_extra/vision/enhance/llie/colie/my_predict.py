@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import time
 
 import torch.optim
 
@@ -61,7 +60,7 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
-    sum_time = 0
+    timer = mon.Timer()
     with mon.get_progress_bar() as pbar:
         for images, target, meta in pbar.track(
             sequence    = data_loader,
@@ -87,7 +86,7 @@ def predict(args: argparse.Namespace):
             coords     = get_coords(imgsz, imgsz)
             patches    = get_patches(img_v_lr, window)
             # Training
-            start_time = time.time()
+            timer.tick()
             for epoch in range(epochs):
                 img_siren.train()
                 optimizer.zero_grad()
@@ -109,13 +108,13 @@ def predict(args: argparse.Namespace):
             img_rgb_fixed = hsv2rgb_torch(img_hsv_fixed)
             img_rgb_fixed = img_rgb_fixed / torch.max(img_rgb_fixed)
             # img_rgb_fixed = mon.resize(img_rgb_fixed, (h0, w0))
-            run_time      = (time.time() - start_time)
+            timer.tock()
             output_path   = save_dir / image_path.name
             Image.fromarray(
                 (torch.movedim(img_rgb_fixed, 1, -1)[0].detach().cpu().numpy() * 255).astype(np.uint8)
             ).save(str(output_path))
-            sum_time += run_time
-    avg_time = float(sum_time / len(data_loader))
+    # avg_time = float(timer.total_time / len(data_loader))
+    avg_time   = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 
 # endregion

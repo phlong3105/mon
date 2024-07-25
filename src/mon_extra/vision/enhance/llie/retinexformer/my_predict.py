@@ -5,10 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
-import socket
-import time
 
-import click
 import torch
 import torch.nn.functional as F
 from skimage.util import img_as_ubyte
@@ -73,9 +70,9 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer  = mon.Timer()
+    factor = 4
     with torch.no_grad():
-        factor   = 4
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -101,9 +98,9 @@ def predict(args: argparse.Namespace):
                 input = F.pad(images, (0, padw, 0, padh), 'reflect')
                 input = input.to(device)
                 
-                start_time = time.time()
+                timer.tick()
                 restored = model(input)
-                run_time = (time.time() - start_time)
+                timer.tock()
                 
                 # Unpad images to original dimensions
                 restored = restored[:, :, :h, :w]
@@ -113,8 +110,8 @@ def predict(args: argparse.Namespace):
                 
                 output_path = save_dir / image_path.name
                 utils.save_img(str(output_path), img_as_ubyte(restored))
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
        
 # endregion

@@ -6,10 +6,7 @@
 from __future__ import annotations
 
 import argparse
-import socket
-import time
 
-import click
 import cv2
 
 import mon
@@ -39,7 +36,7 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
-    sum_time = 0
+    timer = mon.Timer()
     with mon.get_progress_bar() as pbar:
         for images, target, meta in pbar.track(
             sequence    = data_loader,
@@ -51,7 +48,7 @@ def predict(args: argparse.Namespace):
             h, w, c    = image.shape
             if resize:
                 image = cv2.resize(image, (imgsz, imgsz))
-            start_time     = time.time()
+            timer.tick()
             enhanced_image = enhance_image_exposure(
                 im      = image,
                 gamma   = args.gamma,
@@ -63,13 +60,13 @@ def predict(args: argparse.Namespace):
                 be      = args.be,
                 eps     = args.eps
             )
-            run_time = (time.time() - start_time)
+            timer.tock()
             if resize:
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
             output_path = save_dir / image_path.name
             cv2.imwrite(str(output_path), enhanced_image)
-            sum_time += run_time
-    avg_time = float(sum_time / len(data_loader))
+    # avg_time = float(timer.total_time / len(data_loader))
+    avg_time   = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 
 # endregion

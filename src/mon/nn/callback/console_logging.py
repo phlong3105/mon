@@ -16,7 +16,6 @@ import math
 import time
 from copy import deepcopy
 from datetime import timedelta
-from timeit import default_timer as timer
 from typing import Any
 
 import lightning.pytorch as pl
@@ -64,7 +63,7 @@ class LogTrainingProgress(callbacks.Callback):
         self._filename    = core.Path(filename).stem
         self._candidates  = collections.OrderedDict()
         self._start_epoch = 0
-        self._start_time  = 0
+        self._timer       = core.Timer()
         self._logger      = None
         self._verbose     = verbose
         
@@ -88,7 +87,7 @@ class LogTrainingProgress(callbacks.Callback):
         """Called when the train begins."""
         self._candidates  = self._init_candidates(trainer, pl_module)
         self._start_epoch = int(trainer.current_epoch)
-        self._start_time  = timer()
+        self._timer.start()
         
         # Create log file
         log_file       = self._dirpath / f"{core.Path(self._filename).stem}.csv"
@@ -107,9 +106,8 @@ class LogTrainingProgress(callbacks.Callback):
     
     def on_train_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
         """Called when the train ends."""
-        end_time      = timer()
         elapsed_epoch = int(trainer.current_epoch) - self._start_epoch
-        elapsed_time  = end_time - self._start_time
+        elapsed_time  = self._timer.tock()
         elapsed_hours = elapsed_time / 3600
         
         # Close log file

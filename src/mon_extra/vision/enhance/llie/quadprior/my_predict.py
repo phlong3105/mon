@@ -9,7 +9,6 @@ disable_verbosity()
 
 import argparse
 import random
-import time
 
 import cv2
 import einops
@@ -150,8 +149,8 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -161,7 +160,7 @@ def predict(args: argparse.Namespace):
                 image_path  = meta["path"]
                 input_image = cv2.imread(str(image_path))
                 h0, w0      = input_image.shape[0], input_image.shape[1]
-                start_time  = time.time()
+                timer.tick()
                 # if you set num_samples > 1, process will return multiple results
                 output      = process(
                     model, diffusion_sampler,
@@ -170,12 +169,12 @@ def predict(args: argparse.Namespace):
                     image_resolution = imgsz,
                     use_float16      = use_float16,
                 )[0]
-                run_time    = (time.time() - start_time)
+                timer.tock()
                 output      = mon.resize(output, (h0, w0))
                 output_path = save_dir / image_path.name
                 cv2.imwrite(str(output_path), output)
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

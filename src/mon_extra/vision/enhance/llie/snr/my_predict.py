@@ -58,8 +58,8 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -79,7 +79,7 @@ def predict(args: argparse.Namespace):
                 image      = image.unsqueeze(0).to(device)
                 image_nf   = image_nf.unsqueeze(0).to(device)
                 
-                start_time = time.time()
+                timer.tick()
                 model.feed_data(
                     data = {
                         "idx": meta["id"],
@@ -89,7 +89,7 @@ def predict(args: argparse.Namespace):
                     need_GT=False
                 )
                 model.test()
-                run_time   = (time.time() - start_time)
+                timer.tock()
                 
                 visuals        = model.get_current_visuals(need_GT=False)
                 enhanced_image = util.tensor2img(visuals["rlt"])  # uint8
@@ -97,8 +97,8 @@ def predict(args: argparse.Namespace):
                 output_path    = save_dir / image_path.name
                 cv2.imwrite(str(output_path), enhanced_image)
                 # torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
     
 # endregion

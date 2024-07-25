@@ -8,7 +8,6 @@ from __future__ import annotations
 import argparse
 import logging
 import random
-import time
 
 import cv2
 import torch
@@ -95,8 +94,8 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -109,7 +108,7 @@ def predict(args: argparse.Namespace):
                 raw_img     = transforms.Resize((h // 16 * 16, w // 16 * 16))(raw_img)
                 # raw_img     = transforms.Resize(((h // 16 * 16) // 2, (w // 16 * 16) // 2))(raw_img)  # For large image
                 raw_img     = transform(F.to_tensor(raw_img)).unsqueeze(0).cuda()
-                start_time  = time.time()
+                timer.tick()
                 diffusion.feed_data(
                     data = {
                         "LQ": raw_img,
@@ -117,14 +116,14 @@ def predict(args: argparse.Namespace):
                     }
                 )
                 diffusion.test(continous=False)
-                run_time    = (time.time() - start_time)
+                timer.tock()
                 visuals     = diffusion.get_current_visuals()
                 normal_img  = Metrics.tensor2img(visuals["HQ"])
                 normal_img  = cv2.resize(normal_img, (w, h))
                 output_path = save_dir / image_path.name
                 util.save_img(normal_img, str(output_path))
-                sum_time   += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

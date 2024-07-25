@@ -17,7 +17,7 @@ from ultralytics.yolo.utils import checks, ops
 
 from mon import core
 from mon.globals import DETECTORS
-from mon.vision import track
+from mon.vision import track_old
 from mon.vision.detect import base
 
 console = core.console
@@ -99,7 +99,7 @@ class YOLOv8(base.Detector):
         input  : torch.Tensor,
         pred   : torch.Tensor,
         *args, **kwargs
-    ) -> list[np.ndarray] | list[list[track.Instance]]:
+    ) -> list[np.ndarray] | list[list[track_old.Instance]]:
         """Postprocessing step.
 
         Args:
@@ -134,7 +134,7 @@ class YOLOv8(base.Detector):
                 for *xyxy, conf, cls in p:
                     classlabel = self.classlabels.get_class(key="id", value=cls)
                     instances.append(
-                        track.Instance(
+                        track_old.Instance(
                             bbox        = xyxy,
                             confidence  = conf,
                             classlabel  = classlabel,

@@ -4,10 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import socket
-import time
-
-import click
 
 import mon
 from model import RetinexNet
@@ -51,14 +47,15 @@ def predict(args: argparse.Namespace):
             image_paths.append(image_path)
     
     # Predicting
-    start_time = time.time()
+    timer = mon.Timer()
     model.predict(
         image_paths,
         res_dir  = str(save_dir),
         ckpt_dir = str(weights),
     )
-    run_time   = (time.time() - start_time)
-    avg_time   = float(run_time / len(image_paths))
+    timer.tock()
+    # avg_time = float(timer.total_time / len(data_loader))
+    avg_time   = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 
 # endregion

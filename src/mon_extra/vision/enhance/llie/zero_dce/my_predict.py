@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import time
 
 import numpy as np
 import torch
@@ -59,8 +58,8 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -73,13 +72,13 @@ def predict(args: argparse.Namespace):
                 data_lowlight = torch.from_numpy(data_lowlight).float()
                 data_lowlight = data_lowlight.permute(2, 0, 1)
                 data_lowlight = data_lowlight.to(device).unsqueeze(0)
-                start_time    = time.time()
+                timer.tick()
                 _, enhanced_image, _ = DCE_net(data_lowlight)
-                run_time      = (time.time() - start_time)
+                timer.tock()
                 output_path   = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

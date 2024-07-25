@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import pathlib
 import sys
-import time
 from collections import namedtuple
 
 import torch.nn as nn
@@ -228,23 +227,24 @@ def predict(args: argparse.Namespace):
     (debug_dir / "mask").mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path  = meta["path"]
-                image       = prepare_hazy_image(str(image_path))
-                start_time  = time.time()
-                dh          = Dehaze(str(image_path.stem), image, epochs, clip=True, output_path=str(save_dir))
+                image_path = meta["path"]
+                image      = prepare_hazy_image(str(image_path))
+                timer.tick()
+                dh = Dehaze(str(image_path.stem), image, epochs, clip=True, output_path=str(save_dir))
                 dh.optimize()
                 dh.finalize()
-                run_time    = (time.time() - start_time)
-                sum_time   += run_time
-        avg_time = float(sum_time / len(data_loader))
+                timer.tock()
+        
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

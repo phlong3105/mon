@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import copy
 import os
-import time
 
 import torch
 import torchvision
@@ -64,8 +63,8 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -77,13 +76,13 @@ def predict(args: argparse.Namespace):
                 # Scale image to have the resolution of multiple of 4
                 data_lowlight = utils.scale_image(data_lowlight, scale_factor, device) if scale_factor != 1 else data_lowlight
                 data_lowlight = data_lowlight.to(device)
-                start_time    = time.time()
+                timer.tick()
                 enhanced_image, params_maps = net(data_lowlight)
-                run_time      = (time.time() - start_time)
+                timer.tock()
                 output_path   = save_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time     += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
         
 # endregion

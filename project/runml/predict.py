@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import socket
-import time
 
 import torch
 
@@ -71,8 +70,8 @@ def predict(args: dict) -> str:
         debug_save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -94,10 +93,10 @@ def predict(args: dict) -> str:
                
                 # Forward
                 if isinstance(input, torch.Tensor):
-                    start_time = time.time()
+                    timer.tick()
                     output = model(input=input, augment=None, profile=False, out_index=-1)
                 elif isinstance(input, list | tuple):
-                    start_time = time.time()
+                    timer.tick()
                     output = []
                     for i in input:
                         o = model(input=i, augment=None, profile=False, out_index=-1)
@@ -105,7 +104,7 @@ def predict(args: dict) -> str:
                         output.append(o)
                 else:
                     raise TypeError()
-                run_time = time.time() - start_time
+                timer.tock()
                 
                 # Forward (Debug)
                 if save_debug and isinstance(input, torch.Tensor):
@@ -137,9 +136,9 @@ def predict(args: dict) -> str:
                         for k, v in debug_output.items():
                             path = debug_save_dir / f"{meta['stem']}_{k}.png"
                             mon.write_image(path, v, denormalize=True)
-                    
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
         
         return str(save_dir)

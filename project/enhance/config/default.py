@@ -15,12 +15,12 @@ from mon.globals import Task
 
 # List all tasks that are performed in this project.
 TASKS = [
-    Task.DEBLUR,
-    Task.DEHAZE,
-    Task.DENOISE,
-    Task.DERAIN,
-    Task.DESNOW,
-    Task.INPAINT,
+    Task.DEBLURRING,
+    Task.DEHAZING,
+    Task.DENOISING,
+    Task.DERAINING,
+    Task.DESNOWING,
+    Task.INPAINTING,
     Task.LES,
     Task.LLIE,
 ]

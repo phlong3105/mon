@@ -31,6 +31,7 @@ import mon.core.logging
 import mon.core.pathlib
 import mon.core.pointcloud
 import mon.core.rich
+import mon.core.timer
 import mon.core.typing
 import mon.core.utils
 import mon.core.video
@@ -52,6 +53,7 @@ from mon.core.rich import (
 	print_table,
 	set_terminal_size,
 )
+from mon.core.timer import *
 from mon.core.typing import (
 	_callable, _ratio_2_t, _ratio_3_t, _ratio_any_t, _scalar_or_tuple_1_t,
 	_scalar_or_tuple_2_t, _scalar_or_tuple_3_t, _scalar_or_tuple_4_t,
