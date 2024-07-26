@@ -10,7 +10,7 @@
 
 - `🐈 mon` is an all-in-one research framework built using [Python](https://www.python.org/) and [PyTorch](https://pytorch.org/). 
 - It covers a wide range of research topics in computer vision and machine learning.
-- The full documentation of the framework [can be found here](http://phlong.net/mon/) (still work-in-progress).
+- The development guidelines of the framework [can be found here](docs/styleguide.md) (still work-in-progress).
 
 ## Installation
 
@@ -18,8 +18,17 @@
 git clone https://phlong3105@github.com/phlong3105/mon
 cd mon
 chmod +x install.sh
+
+# On Linux
+conda init bash
 bash -i install.sh
+
+# On Mac
+conda init zsh
+zsh -i install.sh
 ```
+
+The code is fully compatible with [PyTorch](https://pytorch.org/) >= 2.0.
 
 ## Directory Organization
 
@@ -57,10 +66,13 @@ If you find our work useful, please cite the following:
     publisher    = {GitHub},
     journal      = {GitHub repository},
     howpublished = {https://github.com/phlong3105/mon},
-    year         = {2022},
+    year         = {2024},
 }
 ```
 
 ## Contact
 If you have any questions, feel free to contact `Long H. Pham` 
 ([longpham3105@gmail.com](longpham3105@gmail.com) or [phlong@skku.edu](phlong@skku.edu))
+
+
+<script type="text/javascript" id="clustrmaps" src="//clustrmaps.com/map_v2.js?d=mDDi2z1vAnHUyVPYInDSCoHgluvZPEfpCcbRFeggx3o&cl=ffffff&w=a"></script>

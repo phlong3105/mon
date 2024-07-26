@@ -109,13 +109,12 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - "Get Started":
-      - "Quick Glance": get-started/quick-glance.md
-  - "Guides":
-      - "Style Guide": guide/styleguide.md
-  - "Reference":
-      - reference/index.md
-
+  - Guideline: styleguide.md
+  - Glossary: glossary.md
+  # - Home: index.md
+  # - "Guides":
+  #     - "Style Guide": styleguide.md
+  
 plugins:
   - mkdocstrings
   - search
