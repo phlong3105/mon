@@ -10,3 +10,9 @@
 [submodule "tool/XAnyLabeling"]
 	path = tool/XAnyLabeling
 	url  = https://github.com/phlong3105/XAnyLabeling
+[submodule "src/mon_extra/multimodal/clip"]
+	path = src/mon_extra/multimodal/clip
+	url  = https://github.com/phlong3105/clip
+[submodule "src/mon_extra/multimodal/openclip"]
+	path = src/mon_extra/multimodal/openclip
+	url  = https://github.com/phlong3105/openclip
