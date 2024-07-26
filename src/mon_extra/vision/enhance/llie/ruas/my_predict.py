@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import time
 
 import numpy as np
 import torch
@@ -78,23 +77,20 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path      = meta["path"]
-                # input           = Variable(images, volatile=True).to(device)
-                input           = images.to(device)
-                # console.log(f"Processing {u_name}")
-                start_time      = time.time()
-                u_list, r_list  = model(input)
-                run_time        = (time.time() - start_time)
-                sum_time       += run_time
-                output_path     = save_dir / image_path.name
+                image_path = meta["path"]
+                input      = images.to(device)
+                timer.tick()
+                u_list, r_list = model(input)
+                timer.tock()
+                output_path = save_dir / image_path.name
                 save_images(u_list[-1], str(output_path))
                 # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
                 # save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
@@ -104,7 +100,8 @@ def predict(args: argparse.Namespace):
                 elif args.model == "upe" or args.model == "dark":
                     save_images(u_list[-2], u_path)
                 """
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

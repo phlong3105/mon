@@ -130,8 +130,8 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    sum_time = 0
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,

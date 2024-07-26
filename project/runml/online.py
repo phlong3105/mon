@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import socket
-import time
 
 import torch
 
@@ -64,8 +63,8 @@ def online_learning(args: dict) -> str:
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -80,9 +79,9 @@ def online_learning(args: dict) -> str:
                     input  = mon.resize(input, imgsz)
                 
                 # Forward
-                start_time = time.time()
-                output     = model.fit_one(input=input)
-                run_time   = time.time() - start_time
+                timer.tick()
+                output = model.fit_one(input=input)
+                timer.tock()
                 
                 # Post-process
                 output = output[-1] if isinstance(output, list | tuple) else output
@@ -95,8 +94,9 @@ def online_learning(args: dict) -> str:
                     mon.write_image(output_path, output, denormalize=True)
                     if data_writer is not None:
                         data_writer.write_batch(data=output)
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+        
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
         
         return str(save_dir)

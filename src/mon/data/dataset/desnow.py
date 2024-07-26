@@ -29,7 +29,7 @@ __all__ = [
 from typing import Literal
 
 from mon import core
-from mon.data import base
+from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console           = core.console
@@ -39,7 +39,7 @@ _default_root_dir = DATA_DIR / "desnow"
 # region Dataset
 
 @DATASETS.register(name="gtsnow")
-class GTSnow(base.ImageEnhancementDataset):
+class GTSnow(dataset.ImageEnhancementDataset):
     """GT-Snow dataset.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -56,7 +56,7 @@ class GTSnow(base.ImageEnhancementDataset):
         patterns = [
             self.root / "gtsnow" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -64,11 +64,11 @@ class GTSnow(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
@@ -78,12 +78,12 @@ class GTSnow(base.ImageEnhancementDataset):
                 path  = path[:-9] + "C-000.png"
                 path  = path.replace("/lq/", "/hq/")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="kitti_snow")
-class KITTISnow(base.ImageEnhancementDataset):
+class KITTISnow(dataset.ImageEnhancementDataset):
     """KITTI-Snow dataset.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -100,7 +100,7 @@ class KITTISnow(base.ImageEnhancementDataset):
         patterns = [
             self.root / "kitti_snow" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -108,23 +108,23 @@ class KITTISnow(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="kitti_snow_s")
-class KITTISnowS(base.ImageEnhancementDataset):
+class KITTISnowS(dataset.ImageEnhancementDataset):
     """KITTI-Snow-S dataset.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -141,7 +141,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
         patterns = [
             self.root / "kitti_snow_s" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 
             for pattern in patterns:
@@ -150,23 +150,23 @@ class KITTISnowS(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="kitti_snow_m")
-class KITTISnowM(base.ImageEnhancementDataset):
+class KITTISnowM(dataset.ImageEnhancementDataset):
     """KITTI-Snow-M dataset.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -183,7 +183,7 @@ class KITTISnowM(base.ImageEnhancementDataset):
         patterns = [
             self.root / "kitti_snow_m" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -191,23 +191,23 @@ class KITTISnowM(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="kitti_snow_l")
-class KITTISnowL(base.ImageEnhancementDataset):
+class KITTISnowL(dataset.ImageEnhancementDataset):
     """KITTI-Snow-L dataset.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -224,7 +224,7 @@ class KITTISnowL(base.ImageEnhancementDataset):
         patterns = [
             self.root / "kitti_snow_l" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -232,23 +232,23 @@ class KITTISnowL(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="snow100k")
-class Snow100K(base.ImageEnhancementDataset):
+class Snow100K(dataset.ImageEnhancementDataset):
     """Snow100K dataset.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -265,7 +265,7 @@ class Snow100K(base.ImageEnhancementDataset):
         patterns = [
             self.root / "snow100k" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -273,23 +273,23 @@ class Snow100K(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="snow100k_s")
-class Snow100KS(base.ImageEnhancementDataset):
+class Snow100KS(dataset.ImageEnhancementDataset):
     """Snow100K-S dataset.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -306,7 +306,7 @@ class Snow100KS(base.ImageEnhancementDataset):
         patterns = [
             self.root / "snow100k_s" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -314,23 +314,23 @@ class Snow100KS(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
     
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="snow100k_m")
-class Snow100KM(base.ImageEnhancementDataset):
+class Snow100KM(dataset.ImageEnhancementDataset):
     """Snow100K-M dataset.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -347,7 +347,7 @@ class Snow100KM(base.ImageEnhancementDataset):
         patterns = [
             self.root / "snow100k_m" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -355,23 +355,23 @@ class Snow100KM(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="snow100k_l")
-class Snow100KL(base.ImageEnhancementDataset):
+class Snow100KL(dataset.ImageEnhancementDataset):
     """Snow100K-L dataset.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -388,7 +388,7 @@ class Snow100KL(base.ImageEnhancementDataset):
         patterns = [
             self.root / "snow100k_l" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -396,18 +396,18 @@ class Snow100KL(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 # endregion
@@ -416,7 +416,7 @@ class Snow100KL(base.ImageEnhancementDataset):
 # region Datamodule
 
 @DATAMODULES.register(name="gtsnow")
-class GTSnowDataModule(base.DataModule):
+class GTSnowDataModule(datamodule.DataModule):
     """GT-Snow datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -448,7 +448,7 @@ class GTSnowDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="kitti_snow")
-class KITTISnowDataModule(base.DataModule):
+class KITTISnowDataModule(datamodule.DataModule):
     """KITTI-Snow datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -481,7 +481,7 @@ class KITTISnowDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="kitti_snow_s")
-class KITTISnowSDataModule(base.DataModule):
+class KITTISnowSDataModule(datamodule.DataModule):
     """KITTI-Snow-S datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -514,7 +514,7 @@ class KITTISnowSDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="kitti_snow_m")
-class KITTISnowMDataModule(base.DataModule):
+class KITTISnowMDataModule(datamodule.DataModule):
     """KITTI-Snow-M datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -547,7 +547,7 @@ class KITTISnowMDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="kitti_snow_l")
-class KITTISnowLDataModule(base.DataModule):
+class KITTISnowLDataModule(datamodule.DataModule):
     """KITTI-Snow-L datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -580,7 +580,7 @@ class KITTISnowLDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="snow100k")
-class Snow100KDataModule(base.DataModule):
+class Snow100KDataModule(datamodule.DataModule):
     """Snow100K datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -613,7 +613,7 @@ class Snow100KDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="snow100k_s")
-class Snow100KSDataModule(base.DataModule):
+class Snow100KSDataModule(datamodule.DataModule):
     """Snow100K-S datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -646,7 +646,7 @@ class Snow100KSDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="snow100k_m")
-class Snow100KMDataModule(base.DataModule):
+class Snow100KMDataModule(datamodule.DataModule):
     """Snow100K-M datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -679,7 +679,7 @@ class Snow100KMDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="snow100k_l")
-class Snow100KLDataModule(base.DataModule):
+class Snow100KLDataModule(datamodule.DataModule):
     """Snow100K-L datamodule.
     
     See Also: :class:`base.DataModule`.

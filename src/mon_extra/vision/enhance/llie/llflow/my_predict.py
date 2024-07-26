@@ -8,10 +8,7 @@ from __future__ import annotations
 import argparse
 import copy
 import os
-import socket
-import time
 
-import click
 import cv2
 import numpy as np
 import torch
@@ -119,8 +116,8 @@ def predict(args: argparse.Namespace):
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -131,7 +128,7 @@ def predict(args: argparse.Namespace):
                 lr         = imread(str(image_path))
                 raw_shape  = lr.shape
                 
-                start_time = time.time()
+                timer.tick()
                 lr, padding_params = auto_padding(lr)
                 his = hiseq_color_cv2_img(lr)
                 if opt.get("histeq_as_input", False):
@@ -154,12 +151,11 @@ def predict(args: argparse.Namespace):
                     ]
                 )
                 # assert raw_shape == sr.shape
-                run_time  = (time.time() - start_time)
-                sum_time += run_time
-                
+                timer.tock()
                 output_path = save_dir / image_path.name
                 imwrite(str(output_path), sr)
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

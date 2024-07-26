@@ -92,9 +92,9 @@ def predict(args: argparse.Namespace):
     # Predicting
     for p in model.parameters():
         p.requires_grad = False
-        
+    
+    timer = mon.Timer()
     with torch.no_grad():
-        sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, target, meta in pbar.track(
                 sequence    = data_loader,
@@ -113,17 +113,17 @@ def predict(args: argparse.Namespace):
                 data_lowlight   = data_lowlight.permute(2, 0, 1)
                 data_lowlight   = data_lowlight.to(device).unsqueeze(0)
                 input           = Variable(data_lowlight, volatile=True).to(device)
-                start_time      = time.time()
+                timer.tick()
                 enhance, output = model(input)
-                run_time        = (time.time() - start_time)
+                timer.tock()
                 enhance         = save_images(enhance)
                 output          = save_images(output)
                 # output_path     = save_dir / image_path.name
                 # torchvision.utils.save_image(enhanced_image, str(output_path))
                 Image.fromarray(output).save(str(save_dir2 / f"{image_path.stem}.png"), "PNG")
                 Image.fromarray(enhance).save(str(save_dir / f"{image_path.stem}.png"), "PNG")
-                sum_time += run_time
-        avg_time = float(sum_time / len(data_loader))
+        # avg_time = float(timer.total_time / len(data_loader))
+        avg_time   = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

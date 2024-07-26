@@ -15,7 +15,7 @@ from mon.globals import Task
 
 # List all tasks that are performed in this project.
 TASKS = [
-    Task.DETECT,
+    Task.DETECTION,
 ]
 
 # List all models that are used in this project.

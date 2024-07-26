@@ -31,7 +31,7 @@ __all__ = [
 from typing import Literal
 
 from mon import core
-from mon.data import base
+from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console           = core.console
@@ -41,7 +41,7 @@ _default_root_dir = DATA_DIR / "derain"
 # region Dataset
 
 @DATASETS.register(name="gtrain")
-class GTRain(base.ImageEnhancementDataset):
+class GTRain(dataset.ImageEnhancementDataset):
     """GT-Rain dataset consists 26124 train and 1793 val pairs of rain/no-rain images.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -58,7 +58,7 @@ class GTRain(base.ImageEnhancementDataset):
         patterns = [
             self.root / "gtrain" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -66,11 +66,11 @@ class GTRain(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
@@ -83,12 +83,12 @@ class GTRain(base.ImageEnhancementDataset):
                     path = path[:-9] + "C-000.png"
                 path  = path.replace("/lq/", "/hq/")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain100")
-class Rain100(base.ImageEnhancementDataset):
+class Rain100(dataset.ImageEnhancementDataset):
     """Rain100 dataset consists 100 pairs of rain/no-rain test images.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -105,7 +105,7 @@ class Rain100(base.ImageEnhancementDataset):
         patterns = [
             self.root / "rain100" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -113,23 +113,23 @@ class Rain100(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain100h")
-class Rain100H(base.ImageEnhancementDataset):
+class Rain100H(dataset.ImageEnhancementDataset):
     """Rain100H dataset consists 100 pairs of rain/no-rain test images and 100
     pairs of rain/no-rain train-val images.
     
@@ -147,7 +147,7 @@ class Rain100H(base.ImageEnhancementDataset):
         patterns = [
             self.root / "rain100h" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -155,23 +155,23 @@ class Rain100H(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain100l")
-class Rain100L(base.ImageEnhancementDataset):
+class Rain100L(dataset.ImageEnhancementDataset):
     """Rain100L dataset consists 100 pairs of rain/no-rain test images and 200
     pairs of rain/no-rain train-val images.
     
@@ -189,7 +189,7 @@ class Rain100L(base.ImageEnhancementDataset):
         patterns = [
             self.root / "rain100l" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -197,23 +197,23 @@ class Rain100L(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain12")
-class Rain12(base.ImageEnhancementDataset):
+class Rain12(dataset.ImageEnhancementDataset):
     """Rain12 dataset consists 12 pairs of rain/no-rain images.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -230,7 +230,7 @@ class Rain12(base.ImageEnhancementDataset):
         patterns = [
             self.root / "rain12" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -238,23 +238,23 @@ class Rain12(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain1200")
-class Rain1200(base.ImageEnhancementDataset):
+class Rain1200(dataset.ImageEnhancementDataset):
     """Rain1200 dataset consists 1200 pairs of rain/no-rain test images and
     12,000 pairs of rain/no-rain train images.
     
@@ -279,7 +279,7 @@ class Rain1200(base.ImageEnhancementDataset):
             patterns = [
                 self.root / "rain1200" / self.split_str / "lq"
             ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -287,23 +287,23 @@ class Rain1200(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain13k")
-class Rain13K(base.ImageEnhancementDataset):
+class Rain13K(dataset.ImageEnhancementDataset):
     """Rain13K dataset consists 13k pairs of rain/no-rain train images.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -337,7 +337,7 @@ class Rain13K(base.ImageEnhancementDataset):
                 self.root / "rain800" / self.split_str / "lq",
             ]
         
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -345,23 +345,23 @@ class Rain13K(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain1400")
-class Rain1400(base.ImageEnhancementDataset):
+class Rain1400(dataset.ImageEnhancementDataset):
     """Rain1400 dataset consists 1400 pairs of rain/no-rain test images and
     12,600 pairs of rain/no-rain train images.
     
@@ -379,7 +379,7 @@ class Rain1400(base.ImageEnhancementDataset):
         patterns = [
             self.root / "rain1400" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -387,23 +387,23 @@ class Rain1400(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain2800")
-class Rain2800(base.ImageEnhancementDataset):
+class Rain2800(dataset.ImageEnhancementDataset):
     """Rain2800 dataset consists 2800 pairs of rain/no-rain test images.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -420,7 +420,7 @@ class Rain2800(base.ImageEnhancementDataset):
         patterns = [
             self.root / "rain2800" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -428,23 +428,23 @@ class Rain2800(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="rain800")
-class Rain800(base.ImageEnhancementDataset):
+class Rain800(dataset.ImageEnhancementDataset):
     """Rain800 dataset consists 800 pairs of rain/no-rain train-val images.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -461,7 +461,7 @@ class Rain800(base.ImageEnhancementDataset):
         patterns = [
             self.root / "rain800" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -469,18 +469,18 @@ class Rain800(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 # endregion
@@ -489,7 +489,7 @@ class Rain800(base.ImageEnhancementDataset):
 # region Datamodule
 
 @DATAMODULES.register(name="gtrain")
-class GTRainDataModule(base.DataModule):
+class GTRainDataModule(datamodule.DataModule):
     """GT-Rain datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -522,7 +522,7 @@ class GTRainDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain100")
-class Rain100DataModule(base.DataModule):
+class Rain100DataModule(datamodule.DataModule):
     """Rain100 datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -555,7 +555,7 @@ class Rain100DataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain100h")
-class Rain100HDataModule(base.DataModule):
+class Rain100HDataModule(datamodule.DataModule):
     """Rain100H datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -588,7 +588,7 @@ class Rain100HDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain100l")
-class Rain100LDataModule(base.DataModule):
+class Rain100LDataModule(datamodule.DataModule):
     """Rain100L datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -621,7 +621,7 @@ class Rain100LDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain12")
-class Rain12DataModule(base.DataModule):
+class Rain12DataModule(datamodule.DataModule):
     """Rain12 datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -654,7 +654,7 @@ class Rain12DataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain1200")
-class Rain1200DataModule(base.DataModule):
+class Rain1200DataModule(datamodule.DataModule):
     """Rain1200 datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -687,7 +687,7 @@ class Rain1200DataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain13k")
-class Rain13KDataModule(base.DataModule):
+class Rain13KDataModule(datamodule.DataModule):
     """Rain13K datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -721,7 +721,7 @@ class Rain13KDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain1400")
-class Rain1400DataModule(base.DataModule):
+class Rain1400DataModule(datamodule.DataModule):
     """Rain1400 datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -754,7 +754,7 @@ class Rain1400DataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain2800")
-class Rain2800DataModule(base.DataModule):
+class Rain2800DataModule(datamodule.DataModule):
     """Rain2800 datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -787,7 +787,7 @@ class Rain2800DataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="rain800")
-class Rain800DataModule(base.DataModule):
+class Rain800DataModule(datamodule.DataModule):
     """Rain800 datamodule.
     
     See Also: :class:`base.DataModule`.
