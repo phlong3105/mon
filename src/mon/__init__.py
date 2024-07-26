@@ -19,4 +19,4 @@ from mon.globals import *
 from mon.nn import *
 from mon.vision import *
 
-__version__ = "1.4.5"
+__version__ = "1.4.7"
