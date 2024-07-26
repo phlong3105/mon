@@ -342,7 +342,7 @@ def tensor2pose(cfg, label_tensor):
     r"""Convert output tensor to a numpy pose map.
 
     Args:
-        label_tensor (3D/4D/5D tensor): Label tensor.
+        label_tensor (3D/4D/5D tensor): Annotation tensor.
 
     Returns:
         (HxWx3 numpy array or list of numpy arrays): Pose map.

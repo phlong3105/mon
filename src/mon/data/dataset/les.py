@@ -29,19 +29,19 @@ import torch
 import torchvision.transforms as TT
 
 from mon import core
-from mon.data import base
+from mon.data import datastruct
 from mon.data.augment import transform
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console           = core.console
-ClassLabels       = base.ClassLabels
+ClassLabels       = datastruct.ClassLabels
 _default_root_dir = DATA_DIR / "les"
 
 
 # region Dataset
 
 @DATASETS.register(name="flare7k++")
-class Flare7KPP(base.UnlabeledImageDataset):
+class Flare7KPP(datastruct.UnlabeledImageDataset):
     """Flare7K++-Real dataset consists of 100 flare/clear image pairs.
     
     See Also: :class:`base.UnlabeledImageDataset`.
@@ -65,8 +65,8 @@ class Flare7KPP(base.UnlabeledImageDataset):
         verbose        : bool               = True,
         *args, **kwargs
     ):
-        self.scattering_flare: list[base.ImageLabel] = []
-        self.reflective_flare: list[base.ImageLabel] = []
+        self.scattering_flare: list[datastruct.ImageAnnotation] = []
+        self.reflective_flare: list[datastruct.ImageAnnotation] = []
         super().__init__(
             root        = root,
             split       = split,
@@ -136,7 +136,7 @@ class Flare7KPP(base.UnlabeledImageDataset):
         patterns = [
             self.root / "flare7k++" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -144,7 +144,7 @@ class Flare7KPP(base.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self._images.append(image)
         
         self._get_reflective_flare()
@@ -154,7 +154,7 @@ class Flare7KPP(base.UnlabeledImageDataset):
         patterns = [
             self.root / "flare7k++" / self.split_str / "pattern" / "reflective_flare"
         ]
-        self.reflective_flare: list[base.ImageLabel] = []
+        self.reflective_flare: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -162,14 +162,14 @@ class Flare7KPP(base.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} reflective flare"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self.reflective_flare.append(image)
     
     def _get_scattering_flare(self):
         patterns = [
             self.root / "flare7k++" / self.split_str / "pattern" / "scattering_flare" / "compound_flare"
         ]
-        self.scattering_flare: list[base.ImageLabel] = []
+        self.scattering_flare: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -177,7 +177,7 @@ class Flare7KPP(base.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} reflective flare"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self.reflective_flare.append(image)
     
     def cache_data(self, path: core.Path):
@@ -204,7 +204,7 @@ class Flare7KPP(base.UnlabeledImageDataset):
     
 
 @DATASETS.register(name="flare7k++_real")
-class Flare7KPPReal(base.ImageEnhancementDataset):
+class Flare7KPPReal(datastruct.ImageEnhancementDataset):
     """Flare7K++-Real dataset consists of 100 flare/clear image pairs.
     
     See Also: :class:`base.UnlabeledImageDataset`.
@@ -221,7 +221,7 @@ class Flare7KPPReal(base.ImageEnhancementDataset):
         patterns = [
             self.root / "flare7k++_real" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -229,23 +229,23 @@ class Flare7KPPReal(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = datastruct.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="flare7k++_syn")
-class Flare7KPPSyn(base.ImageEnhancementDataset):
+class Flare7KPPSyn(datastruct.ImageEnhancementDataset):
     """Flare7K++-Syn dataset consists of 100 flare/clear image pairs.
 
     See Also: :class:`base.UnlabeledImageDataset`.
@@ -262,7 +262,7 @@ class Flare7KPPSyn(base.ImageEnhancementDataset):
         patterns = [
             self.root / "flare7k++_syn" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -270,23 +270,23 @@ class Flare7KPPSyn(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = datastruct.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="flarereal800")
-class FlareReal800(base.ImageEnhancementDataset):
+class FlareReal800(datastruct.ImageEnhancementDataset):
     """FlareReal800 dataset consists of 800 flare/clear image pairs.
     
     See Also: :class:`base.UnlabeledImageDataset`.
@@ -303,7 +303,7 @@ class FlareReal800(base.ImageEnhancementDataset):
         patterns = [
             self.root / "flarereal800" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -311,23 +311,23 @@ class FlareReal800(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self._images.append(image)
     
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = datastruct.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="ledlight")
-class LEDLight(base.ImageEnhancementDataset):
+class LEDLight(datastruct.ImageEnhancementDataset):
     """LEDLight dataset consists of 100 flare/clear image pairs.
 
     See Also: :class:`base.UnlabeledImageDataset`.
@@ -344,7 +344,7 @@ class LEDLight(base.ImageEnhancementDataset):
         patterns = [
             self.root / "ledlight" / self.split_str / "lq"
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -352,23 +352,23 @@ class LEDLight(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[base.ImageLabel] = []
+        self._labels: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = base.ImageLabel(path=path.image_file())
+                label = datastruct.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="lighteffect")
-class LightEffect(base.UnlabeledImageDataset):
+class LightEffect(datastruct.UnlabeledImageDataset):
     """LightEffect dataset consists 961 flare images.
 
     See Also: :class:`base.UnlabeledImageDataset`.
@@ -386,7 +386,7 @@ class LightEffect(base.UnlabeledImageDataset):
             # self.root / self.split / "light-effect" / "clear",
             self.root / "lighteffect" / self.split_str / "lq",
         ]
-        self._images: list[base.ImageLabel] = []
+        self._images: list[datastruct.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -394,7 +394,7 @@ class LightEffect(base.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = base.ImageLabel(path=path)
+                        image = datastruct.ImageAnnotation(path=path)
                         self._images.append(image)
 
 # endregion
@@ -403,7 +403,7 @@ class LightEffect(base.UnlabeledImageDataset):
 # region Datamodule
 
 @DATAMODULES.register(name="flare7k++_real")
-class Flare7KPPRealDataModule(base.DataModule):
+class Flare7KPPRealDataModule(datastruct.DataModule):
     """Flare7K++-Real datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -436,7 +436,7 @@ class Flare7KPPRealDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="flare7k++_syn")
-class Flare7KPPSynDataModule(base.DataModule):
+class Flare7KPPSynDataModule(datastruct.DataModule):
     """Flare7K++-Syn datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -469,7 +469,7 @@ class Flare7KPPSynDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="flarereal800")
-class FlareReal800DataModule(base.DataModule):
+class FlareReal800DataModule(datastruct.DataModule):
     """FlareReal800 datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -502,7 +502,7 @@ class FlareReal800DataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="ledlight")
-class LEDLightDataModule(base.DataModule):
+class LEDLightDataModule(datastruct.DataModule):
     """LEDLight datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -535,7 +535,7 @@ class LEDLightDataModule(base.DataModule):
 
 
 @DATAMODULES.register(name="lighteffect")
-class LightEffectDataModule(base.DataModule):
+class LightEffectDataModule(datastruct.DataModule):
     """LightEffect datamodule.
 
     See Also: :class:`base.DataModule`.

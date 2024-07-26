@@ -534,7 +534,7 @@ class WeightGenerator(nn.Module):
                                              weight_norm_type='spectral')]
                     setattr(self, '%s_%d' % (l, i), nn.Sequential(*fc_layer))
 
-        # Label embedding network.
+        # Annotation embedding network.
         num_hyper_layers = self.num_hyper_layers if self.use_hyper_embed else 0
         self.label_embedding = LabelEmbedder(self.embed_cfg,
                                              num_input_channels,

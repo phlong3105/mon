@@ -16,7 +16,7 @@ import lightning
 from torch.utils import data
 
 from mon import core
-from mon.data.datastruct import dataset, label
+from mon.data.datastruct.dataset import Dataset
 
 console = core.console
 
@@ -71,7 +71,7 @@ class DataModule(lightning.LightningDataModule, ABC):
             test    = datasets.pop("test")    if "test"    in datasets else None
             predict = datasets.pop("predict") if "predict" in datasets else None
             self.dataset_kwargs = kwargs | datasets
-        elif isinstance(datasets, dataset.Dataset):
+        elif isinstance(datasets, Dataset):
             train   = datasets
             val     = datasets
             test    = datasets
@@ -86,7 +86,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     @property
     def num_classes(self) -> int:
         """The number of classes in the dataset."""
-        if isinstance(self.classlabels, label.ClassLabels):
+        if hasattr(self.classlabels, "num_classes"):
             return self.classlabels.num_classes()
         return 0
     
@@ -216,7 +216,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     def split_train_val(
         self,
-        dataset    : dataset.Dataset,
+        dataset    : Dataset,
         split_ratio: float = 0.8,
         full_train : bool  = True
     ):

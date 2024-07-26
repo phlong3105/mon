@@ -11,26 +11,26 @@ from __future__ import annotations
 __all__ = [
 	"ClassLabel",
 	"ClassLabels",
-	"ClassificationLabel",
-	"ClassificationsLabel",
-	"DetectionLabel",
-	"DetectionsLabel",
+	"ClassificationAnnotation",
+	"ClassificationsAnnotation",
+	"DetectionAnnotation",
+	"DetectionsAnnotation",
 	"DetectionsLabelCOCO",
 	"DetectionsLabelKITTI",
 	"DetectionsLabelVOC",
 	"DetectionsLabelYOLO",
-	"FrameLabel",
-	"HeatmapLabel",
-	"ImageLabel",
-	"KeypointLabel",
-	"KeypointsLabel",
+	"FrameAnnotation",
+	"HeatmapAnnotation",
+	"ImageAnnotation",
+	"KeypointAnnotation",
+	"KeypointsAnnotation",
 	"KeypointsLabelCOCO",
-	"Label",
-	"PolylineLabel",
-	"PolylinesLabel",
-	"RegressionLabel",
-	"SegmentationLabel",
-	"TemporalDetectionLabel",
+	"Annotation",
+	"PolylineAnnotation",
+	"PolylinesAnnotation",
+	"RegressionAnnotation",
+	"SegmentationAnnotation",
+	"TemporalDetectionAnnotation",
 ]
 
 import uuid
@@ -49,7 +49,7 @@ console = core.console
 
 # region Base
 
-class Label(ABC):
+class Annotation(ABC):
 	"""The base class for all label classes. A label instance represents a
 	logical collection of data associated with a particular task.
 	"""
@@ -81,7 +81,7 @@ class Label(ABC):
 
 # region ClassLabel
 
-class ClassLabel(dict, Label):
+class ClassLabel(dict, Annotation):
 	"""A class-label represents a class pre-defined in a dataset. It consists of
 	basic attributes such as ID, name, and color.
 	"""
@@ -396,9 +396,9 @@ def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
 # endregion
 
 
-# region Image Label
+# region Image Annotation
 
-class ImageLabel(Label):
+class ImageAnnotation(Annotation):
 	"""A ground-truth image label for an image.
 	
 	Args:
@@ -416,7 +416,7 @@ class ImageLabel(Label):
 	References:
 		`<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
 		
-	 See Also: :class:`Label`.
+	 See Also: :class:`Annotation`.
 	"""
 	
 	def __init__(
@@ -509,7 +509,7 @@ class ImageLabel(Label):
 		}
 
 
-class FrameLabel(Label):
+class FrameAnnotation(Annotation):
 	"""A ground-truth image label for a video frame.
 	
 	Args:
@@ -525,7 +525,7 @@ class FrameLabel(Label):
 	References:
 		`<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
 		
-	 See Also: :class:`Label`.
+	 See Also: :class:`Annotation`.
 	"""
 	
 	def __init__(
@@ -573,12 +573,12 @@ class FrameLabel(Label):
 # endregion
 
 
-# region Classification Label
+# region Classification Annotation
 
-class ClassificationLabel(Label):
+class ClassificationAnnotation(Annotation):
 	"""A classification label for an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
 		id_: A class ID of the classification data. Default: ``-1`` means unknown.
@@ -606,17 +606,17 @@ class ClassificationLabel(Label):
 		self._logits     = np.array(logits) if logits is not None else None
 	
 	@classmethod
-	def from_value(cls, value: ClassificationLabel | dict) -> ClassificationLabel:
-		"""Create a :class:`ClassificationLabel` object from an arbitrary
+	def from_value(cls, value: ClassificationAnnotation | dict) -> ClassificationAnnotation:
+		"""Create a :class:`ClassificationAnnotation` object from an arbitrary
 		:param:`value`.
 		"""
 		if isinstance(value, dict):
-			return ClassificationLabel(**value)
-		elif isinstance(value, ClassificationLabel):
+			return ClassificationAnnotation(**value)
+		elif isinstance(value, ClassificationAnnotation):
 			return value
 		else:
 			raise ValueError(
-				f":param:`value` must be a :class:`ClassificationLabel` class "
+				f":param:`value` must be a :class:`ClassificationAnnotation` class "
 				f"or a :class:`dict`, but got {type(value)}."
 			)
 	
@@ -625,30 +625,30 @@ class ClassificationLabel(Label):
 		return [self._id, self._label]
 
 
-class ClassificationsLabel(list[ClassificationLabel], Label):
+class ClassificationsAnnotation(list[ClassificationAnnotation], Annotation):
 	"""A list of classification labels for an image. It is used for multi-labels
 	or multi-classes classification tasks.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
-		seq: A list of :class:`ClassificationLabel` objects.
+		seq: A list of :class:`ClassificationAnnotation` objects.
 	"""
 	
-	def __init__(self, seq: list[ClassificationLabel | dict]):
-		super().__init__(ClassificationLabel.from_value(value=i) for i in seq)
+	def __init__(self, seq: list[ClassificationAnnotation | dict]):
+		super().__init__(ClassificationAnnotation.from_value(value=i) for i in seq)
 	
-	def __setitem__(self, index: int, item: ClassificationLabel | dict):
-		super().__setitem__(index, ClassificationLabel.from_value(item))
+	def __setitem__(self, index: int, item: ClassificationAnnotation | dict):
+		super().__setitem__(index, ClassificationAnnotation.from_value(item))
 	
-	def insert(self, index: int, item: ClassificationLabel | dict):
-		super().insert(index, ClassificationLabel.from_value(item))
+	def insert(self, index: int, item: ClassificationAnnotation | dict):
+		super().insert(index, ClassificationAnnotation.from_value(item))
 	
-	def append(self, item: ClassificationLabel | dict):
-		super().append(ClassificationLabel.from_value(item))
+	def append(self, item: ClassificationAnnotation | dict):
+		super().append(ClassificationAnnotation.from_value(item))
 	
-	def extend(self, other: list[ClassificationLabel | dict]):
-		super().extend([ClassificationLabel.from_value(item) for item in other])
+	def extend(self, other: list[ClassificationAnnotation | dict]):
+		super().extend([ClassificationAnnotation.from_value(item) for item in other])
 	
 	@property
 	def data(self) -> list | None:
@@ -665,12 +665,12 @@ class ClassificationsLabel(list[ClassificationLabel], Label):
 # endregion
 
 
-# region Regression Label
+# region Regression Annotation
 
-class RegressionLabel(Label):
+class RegressionAnnotation(Annotation):
 	"""A single regression value.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
 		value: The regression value.
@@ -696,19 +696,19 @@ class RegressionLabel(Label):
 # endregion
 
 
-# region Detection Label
+# region Detection Annotation
 
-class DetectionLabel(Label):
+class DetectionAnnotation(Annotation):
 	"""An object detection data. Usually, it is represented as a list of
 	bounding boxes (for an object with multiple parts created by an occlusion),
 	and an instance mask.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
 		id_: A class ID of the detection data. Default: ``-1`` means unknown.
 		index: An index for the object. Default: ``-1``.
-		label: Label string. Default: ``''``.
+		label: Annotation string. Default: ``''``.
 		confidence: A confidence value for the data. Default: ``1.0``.
 		bbox: A bounding box's coordinates.
 		mask: Instance segmentation masks for the object within its bounding
@@ -739,8 +739,8 @@ class DetectionLabel(Label):
 		self._mask       = mask if mask is not None else None
 	
 	@classmethod
-	def from_mask(cls, mask: np.ndarray, label: str, **kwargs) -> DetectionLabel:
-		"""Create a :class:`DetectionLabel` object with its :param:`mask`
+	def from_mask(cls, mask: np.ndarray, label: str, **kwargs) -> DetectionAnnotation:
+		"""Create a :class:`BBoxAnnotation` object with its :param:`mask`
 		attribute populated from the given full image mask. The instance mask
 		for the object is extracted by computing the bounding rectangle of the
 		non-zero values in the image mask.
@@ -748,24 +748,24 @@ class DetectionLabel(Label):
 		Args:
 			mask: A binary (0/1) 2D sequence or a binary integer tensor.
 			label: A label string.
-			**kwargs: Additional attributes for the :class:`DetectionLabel`.
+			**kwargs: Additional attributes for the :class:`BBoxAnnotation`.
 		
 		Return:
-			A :class:`DetectionLabel` object.
+			A :class:`BBoxAnnotation` object.
 		"""
 		raise NotImplementedError(f"This function has not been implemented!")
 	
 	@classmethod
-	def from_value(cls, value: DetectionLabel | dict) -> DetectionLabel:
-		"""Create a :class:`DetectionLabel` object from an arbitrary :param:`value`.
+	def from_value(cls, value: DetectionAnnotation | dict) -> DetectionAnnotation:
+		"""Create a :class:`BBoxAnnotation` object from an arbitrary :param:`value`.
 		"""
 		if isinstance(value, dict):
-			return DetectionLabel(**value)
-		elif isinstance(value, DetectionLabel):
+			return DetectionAnnotation(**value)
+		elif isinstance(value, DetectionAnnotation):
 			return value
 		else:
 			raise ValueError(
-				f":param:`value` must be a :class:`DetectionLabel` class or "
+				f":param:`value` must be a :class:`BBoxAnnotation` class or "
 				f"a :class:`dict`, but got {type(value)}."
 			)
 	
@@ -783,8 +783,8 @@ class DetectionLabel(Label):
 			self._index,
 		]
 	
-	def to_polyline(self, tolerance: int = 2, filled: bool = True) -> PolylineLabel:
-		"""Return a :class:`PolylineLabel` object of this instance. If the
+	def to_polyline(self, tolerance: int = 2, filled: bool = True) -> PolylineAnnotation:
+		"""Return a :class:`PolylineAnnotation` object of this instance. If the
 		detection has a mask, the returned polyline will trace the boundary of
 		the mask. Otherwise, the polyline will trace the bounding bbox itself.
 		
@@ -795,7 +795,7 @@ class DetectionLabel(Label):
 			filled: If ``True``, the polyline should be filled. Default: ``True``.
 		
 		Return:
-			A :class:`PolylineLabel` object.
+			A :class:`PolylineAnnotation` object.
 		"""
 		raise NotImplementedError(f"This function has not been implemented!")
 	
@@ -804,8 +804,8 @@ class DetectionLabel(Label):
 		mask      : np.ndarray | None = None,
 		image_size: _size_2_t  | None = None,
 		target    : int               = 255
-	) -> SegmentationLabel:
-		"""Return a :class:`SegmentationLabel` object of this instance. The
+	) -> SegmentationAnnotation:
+		"""Return a :class:`SegmentationAnnotation` object of this instance. The
 		detection must have an instance mask, i.e., :param:`mask` attribute must
 		be populated. You must give either :param:`mask` or :param:`frame_size`
 		to use this method.
@@ -821,34 +821,34 @@ class DetectionLabel(Label):
 				Default: ``255``.
 		
 		Return:
-			A :class:`SegmentationLabel` object.
+			A :class:`SegmentationAnnotation` object.
 		"""
 		raise NotImplementedError(f"This function has not been implemented!")
 
 
-class DetectionsLabel(list[DetectionLabel], Label):
+class DetectionsAnnotation(list[DetectionAnnotation], Annotation):
 	"""A list of object detection labels in an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
-		seq: A list of :class:`DetectionLabel` objects.
+		seq: A list of :class:`BBoxAnnotation` objects.
 	"""
 	
-	def __init__(self, seq: list[DetectionLabel | dict]):
-		super().__init__(DetectionLabel.from_value(value=i) for i in seq)
+	def __init__(self, seq: list[DetectionAnnotation | dict]):
+		super().__init__(DetectionAnnotation.from_value(value=i) for i in seq)
 	
-	def __setitem__(self, index: int, item: DetectionLabel | dict):
-		super().__setitem__(index, DetectionLabel.from_value(item))
+	def __setitem__(self, index: int, item: DetectionAnnotation | dict):
+		super().__setitem__(index, DetectionAnnotation.from_value(item))
 	
-	def insert(self, index: int, item: DetectionLabel | dict):
-		super().insert(index, DetectionLabel.from_value(item))
+	def insert(self, index: int, item: DetectionAnnotation | dict):
+		super().insert(index, DetectionAnnotation.from_value(item))
 	
-	def append(self, item: DetectionLabel | dict):
-		super().append(DetectionLabel.from_value(item))
+	def append(self, item: DetectionAnnotation | dict):
+		super().append(DetectionAnnotation.from_value(item))
 	
-	def extend(self, other: list[DetectionLabel | dict]):
-		super().extend([DetectionLabel.from_value(item) for item in other])
+	def extend(self, other: list[DetectionAnnotation | dict]):
+		super().extend([DetectionAnnotation.from_value(item) for item in other])
 	
 	@property
 	def data(self) -> list | None:
@@ -866,8 +866,8 @@ class DetectionsLabel(list[DetectionLabel], Label):
 	def bboxes(self) -> list:
 		return [i._bbox for i in self]
 	
-	def to_polylines(self, tolerance: int = 2, filled: bool = True) -> PolylinesLabel:
-		"""Return a :class:`PolylinesLabel` object of this instance. For
+	def to_polylines(self, tolerance: int = 2, filled: bool = True) -> PolylinesAnnotation:
+		"""Return a :class:`PolylinesAnnotation` object of this instance. For
 		detections with masks, the returned polylines will trace the boundaries
 		of the masks. Otherwise, the polylines will trace the bounding boxes
 		themselves.
@@ -879,7 +879,7 @@ class DetectionsLabel(list[DetectionLabel], Label):
 			filled: If ``True``, the polyline should be filled. Default: ``True``.
 	  
 		Return:
-			A :class:`PolylinesLabel` object.
+			A :class:`PolylinesAnnotation` object.
 		"""
 		raise NotImplementedError(f"This function has not been implemented!")
 	
@@ -888,8 +888,8 @@ class DetectionsLabel(list[DetectionLabel], Label):
 		mask      : np.ndarray | None = None,
 		image_size: _size_2_t  | None = None,
 		target    : int               = 255
-	) -> SegmentationLabel:
-		"""Return a :class:`SegmentationLabel` object of this instance. Only
+	) -> SegmentationAnnotation:
+		"""Return a :class:`SegmentationAnnotation` object of this instance. Only
 		detections with instance masks (i.e., their :param:`mask` attributes
 		populated) will be rendered.
 		
@@ -904,32 +904,32 @@ class DetectionsLabel(list[DetectionLabel], Label):
 				``255``.
 		
 		Return:
-			A :class:`SegmentationLabel` object.
+			A :class:`SegmentationAnnotation` object.
 		"""
 		raise NotImplementedError(f"This function has not been implemented!")
 
 
-class DetectionsLabelCOCO(DetectionsLabel):
+class DetectionsLabelCOCO(DetectionsAnnotation):
 	"""A list of object detection labels in COCO format.
 	
-	See Also: :class:`DetectionsLabel`.
+	See Also: :class:`BBoxesAnnotation`.
 	"""
 	pass
 
 
-class DetectionsLabelKITTI(DetectionsLabel):
+class DetectionsLabelKITTI(DetectionsAnnotation):
 	"""A list of object detection labels in KITTI format.
 	
-	See Also: :class:`DetectionsLabel`.
+	See Also: :class:`BBoxesAnnotation`.
 	"""
 	pass
 
 
-class DetectionsLabelVOC(DetectionsLabel):
+class DetectionsLabelVOC(DetectionsAnnotation):
 	"""A list of object detection labels in VOC format. One VOCDetections
 	corresponds to one image and one annotation `.xml` file.
 	
-	See Also: :class:`DetectionsLabel`.
+	See Also: :class:`BBoxesAnnotation`.
 	
 	Args:
 		path: Absolute path where the image file is present.
@@ -1014,7 +1014,7 @@ class DetectionsLabelVOC(DetectionsLabel):
 		objects    = annotation.get("object", [])
 		objects    = [objects] if not isinstance(objects, list) else objects
 		
-		detections: list[DetectionLabel] = []
+		detections: list[DetectionAnnotation] = []
 		for i, o in enumerate(objects):
 			name       = o.get["name"]
 			bndbox     = o.get["bndbox"]
@@ -1033,7 +1033,7 @@ class DetectionsLabelVOC(DetectionsLabel):
 				_id = -1
 			
 			detections.append(
-				DetectionLabel(
+				DetectionAnnotation(
 					id_       = _id,
 					label     = name,
 					bbox      = bbox,
@@ -1053,12 +1053,12 @@ class DetectionsLabelVOC(DetectionsLabel):
 		)
 
 
-class DetectionsLabelYOLO(DetectionsLabel):
+class DetectionsLabelYOLO(DetectionsAnnotation):
 	"""A list of object detection labels in YOLO format. YOLO label consists of
 	several bounding boxes. One YOLO label corresponds to one image and one
 	annotation file.
 	
-	See Also: :class:`DetectionsLabel`.
+	See Also: :class:`BBoxesAnnotation`.
 	"""
 	
 	@classmethod
@@ -1075,14 +1075,14 @@ class DetectionsLabelYOLO(DetectionsLabel):
 		if not path.is_txt_file():
 			raise ValueError(f":param:`path` must be a valid path to an ``.txt`` file, but got {path}.")
 		
-		detections: list[DetectionLabel] = []
+		detections: list[DetectionAnnotation] = []
 		lines = open(path, "r").readlines()
 		for l in lines:
 			d          = l.split(" ")
 			bbox       = [float(b) for b in d[1:5]]
 			confidence = float(d[5]) if len(d) >= 6 else 1.0
 			detections.append(
-				DetectionLabel(
+				DetectionAnnotation(
 					id_        = int(d[0]),
 					bbox       = np.array(bbox),
 					confidence= confidence
@@ -1091,13 +1091,13 @@ class DetectionsLabelYOLO(DetectionsLabel):
 		return cls(detections)
 
 
-class TemporalDetectionLabel(Label):
+class TemporalDetectionAnnotation(Annotation):
 	"""An object detection label in a video whose support is defined by a start
 	and end frame. Usually, it is represented as a list of bounding boxes (for
 	an object with multiple parts created by an occlusion), and an instance
 	mask.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	"""
 	
 	@property
@@ -1107,12 +1107,12 @@ class TemporalDetectionLabel(Label):
 # endregion
 
 
-# region Keypoint Label
+# region Keypoint Annotation
 
-class KeypointLabel(Label):
+class KeypointAnnotation(Annotation):
 	"""A list keypoints label for a single object in an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
 		id_: The class ID of the polyline data. Default: ``-1`` means unknown.
@@ -1143,16 +1143,16 @@ class KeypointLabel(Label):
 		self._points     = points
 	
 	@classmethod
-	def from_value(cls, value: KeypointLabel | dict) -> KeypointLabel:
-		"""Create a :class:`KeypointLabel` object from an arbitrary :param:`value`.
+	def from_value(cls, value: KeypointAnnotation | dict) -> KeypointAnnotation:
+		"""Create a :class:`KeypointAnnotation` object from an arbitrary :param:`value`.
 		"""
 		if isinstance(value, dict):
-			return KeypointLabel(**value)
-		elif isinstance(value, KeypointLabel):
+			return KeypointAnnotation(**value)
+		elif isinstance(value, KeypointAnnotation):
 			return value
 		else:
 			raise ValueError(
-				f":param:`value` must be a :class:`KeypointLabel` class or a "
+				f":param:`value` must be a :class:`KeypointAnnotation` class or a "
 				f":class:`dict`, but got {type(value)}."
 			)
 	
@@ -1168,29 +1168,29 @@ class KeypointLabel(Label):
 		]
 
 
-class KeypointsLabel(list[KeypointLabel], Label):
+class KeypointsAnnotation(list[KeypointAnnotation], Annotation):
 	"""A list of keypoint labels for multiple objects in an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
-		seq: A list of :class:`KeypointLabel` objects.
+		seq: A list of :class:`KeypointAnnotation` objects.
 	"""
 	
-	def __init__(self, seq: list[KeypointLabel | dict]):
-		super().__init__(KeypointLabel.from_value(value=i) for i in seq)
+	def __init__(self, seq: list[KeypointAnnotation | dict]):
+		super().__init__(KeypointAnnotation.from_value(value=i) for i in seq)
 	
-	def __setitem__(self, index: int, item: KeypointLabel | dict):
-		super().__setitem__(index, KeypointLabel.from_value(item))
+	def __setitem__(self, index: int, item: KeypointAnnotation | dict):
+		super().__setitem__(index, KeypointAnnotation.from_value(item))
 	
-	def insert(self, index: int, item: KeypointLabel | dict):
-		super().insert(index, KeypointLabel.from_value(item))
+	def insert(self, index: int, item: KeypointAnnotation | dict):
+		super().insert(index, KeypointAnnotation.from_value(item))
 	
-	def append(self, item: KeypointLabel | dict):
-		super().append(KeypointLabel.from_value(item))
+	def append(self, item: KeypointAnnotation | dict):
+		super().append(KeypointAnnotation.from_value(item))
 	
-	def extend(self, other: list[KeypointLabel | dict]):
-		super().extend([KeypointLabel.from_value(item) for item in other])
+	def extend(self, other: list[KeypointAnnotation | dict]):
+		super().extend([KeypointAnnotation.from_value(item) for item in other])
 	
 	@property
 	def data(self) -> list | None:
@@ -1209,23 +1209,23 @@ class KeypointsLabel(list[KeypointLabel], Label):
 		return [i._points for i in self]
 
 
-class KeypointsLabelCOCO(KeypointsLabel):
+class KeypointsLabelCOCO(KeypointsAnnotation):
 	"""A list of keypoint labels for multiple objects in COCO format.
 	
-	See Also: :class:`KeypointsLabel`.
+	See Also: :class:`KeypointsAnnotation`.
 	"""
 	pass
 
 # endregion
 
 
-# region Polyline Label
+# region Polyline Annotation
 
-class PolylineLabel(Label):
+class PolylineAnnotation(Annotation):
 	"""A set of semantically related polylines or polygons for a single object
 	in an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
 		id_: The class ID of the polyline data. Default: ``-1`` means unknown.
@@ -1273,8 +1273,8 @@ class PolylineLabel(Label):
 		label    : str = "",
 		tolerance: int = 2,
 		**kwargs
-	) -> PolylineLabel:
-		"""Create a :class:`PolylineLabel` instance with its :param:`mask`
+	) -> PolylineAnnotation:
+		"""Create a :class:`PolylineAnnotation` instance with its :param:`mask`
 		attribute populated from the given full image mask. The instance mask
 		for the object is extracted by computing the bounding rectangle of the
 		non-zero values in the image mask.
@@ -1286,24 +1286,24 @@ class PolylineLabel(Label):
 			tolerance: A tolerance, in pixels, when generating approximate
 				polygons for each region. Typical values are 1-3 pixels.
 				Default: ``2``.
-			**kwargs: additional attributes for the :class:`PolylineLabel`.
+			**kwargs: additional attributes for the :class:`PolylineAnnotation`.
 		
 		Return:
-			A :class:`PolylineLabel` object.
+			A :class:`PolylineAnnotation` object.
 		"""
 		pass
 	
 	@classmethod
-	def from_value(cls, value: PolylineLabel | dict) -> PolylineLabel:
-		"""Create a :class:`PolylineLabel` object from an arbitrary :param:`value`.
+	def from_value(cls, value: PolylineAnnotation | dict) -> PolylineAnnotation:
+		"""Create a :class:`PolylineAnnotation` object from an arbitrary :param:`value`.
 		"""
 		if isinstance(value, dict):
-			return PolylineLabel(**value)
-		elif isinstance(value, PolylineLabel):
+			return PolylineAnnotation(**value)
+		elif isinstance(value, PolylineAnnotation):
 			return value
 		else:
 			raise ValueError(
-				f":param:`value` must be a :class:`PolylineLabel` class or a "
+				f":param:`value` must be a :class:`PolylineAnnotation` class or a "
 				f":class:`dict`, but got {type(value)}."
 			)
 	
@@ -1321,8 +1321,8 @@ class PolylineLabel(Label):
 		self,
 		mask_size : _size_2_t | None = None,
 		image_size: _size_2_t | None = None,
-	) -> "DetectionLabel":
-		"""Return a :class:`DetectionLabel` object of this instance whose
+	) -> "BBoxAnnotation":
+		"""Return a :class:`BBoxAnnotation` object of this instance whose
 		bounding bbox tightly encloses the polyline. If a :param:`mask_size` is
 		provided, an instance mask of the specified size encoding the polyline
 		shape is included.
@@ -1339,7 +1339,7 @@ class PolylineLabel(Label):
 				compute the required :param:`mask_size`.
 		
 		Return:
-			A :class:`DetectionLabel` object.
+			A :class:`BBoxAnnotation` object.
 		"""
 		pass
 	
@@ -1349,8 +1349,8 @@ class PolylineLabel(Label):
 		image_size: _size_2_t  | None = None,
 		target    : int               = 255,
 		thickness : int               = 1,
-	) -> SegmentationLabel:
-		"""Return a :class:`SegmentationLabel` object of this class. Only
+	) -> SegmentationAnnotation:
+		"""Return a :class:`SegmentationAnnotation` object of this class. Only
 		object with instance masks (i.e., their :param:`mask` attributes
 		populated) will be rendered.
 		
@@ -1367,34 +1367,34 @@ class PolylineLabel(Label):
 				polylines. Default: ``1``.
 				
 		Return:
-			A :class:`SegmentationLabel` object.
+			A :class:`SegmentationAnnotation` object.
 		"""
 		pass
 
 
-class PolylinesLabel(list[PolylineLabel], Label):
+class PolylinesAnnotation(list[PolylineAnnotation], Annotation):
 	"""A list of polylines or polygon labels for multiple objects in an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
-		seq: A list of :class:`PolylineLabel` objects.
+		seq: A list of :class:`PolylineAnnotation` objects.
 	"""
 	
-	def __init__(self, seq: list[PolylineLabel | dict]):
-		super().__init__(PolylineLabel.from_value(value=i) for i in seq)
+	def __init__(self, seq: list[PolylineAnnotation | dict]):
+		super().__init__(PolylineAnnotation.from_value(value=i) for i in seq)
 	
-	def __setitem__(self, index: int, item: PolylineLabel | dict):
-		super().__setitem__(index, PolylineLabel.from_value(item))
+	def __setitem__(self, index: int, item: PolylineAnnotation | dict):
+		super().__setitem__(index, PolylineAnnotation.from_value(item))
 	
-	def insert(self, index: int, item: PolylineLabel | dict):
-		super().insert(index, PolylineLabel.from_value(item))
+	def insert(self, index: int, item: PolylineAnnotation | dict):
+		super().insert(index, PolylineAnnotation.from_value(item))
 	
-	def append(self, item: PolylineLabel | dict):
-		super().append(PolylineLabel.from_value(item))
+	def append(self, item: PolylineAnnotation | dict):
+		super().append(PolylineAnnotation.from_value(item))
 	
-	def extend(self, other: list[PolylineLabel | dict]):
-		super().extend([PolylineLabel.from_value(item) for item in other])
+	def extend(self, other: list[PolylineAnnotation | dict]):
+		super().extend([PolylineAnnotation.from_value(item) for item in other])
 	
 	@property
 	def data(self) -> list | None:
@@ -1416,8 +1416,8 @@ class PolylinesLabel(list[PolylineLabel], Label):
 		self,
 		mask_size : _size_2_t | None = None,
 		image_size: _size_2_t | None = None,
-	) -> DetectionsLabel:
-		"""Return a :class:`DetectionsLabel` object of this instance whose
+	) -> DetectionsAnnotation:
+		"""Return a :class:`BBoxesAnnotation` object of this instance whose
 		bounding boxes tightly enclose the polylines. If a :param:`mask_size`
 		is provided, an instance mask of the specified size encoding the
 		polyline shape is included.
@@ -1434,7 +1434,7 @@ class PolylinesLabel(list[PolylineLabel], Label):
 				compute the required :param:`mask_size`.
 		
 		Return:
-			A :class:`DetectionsLabel` object.
+			A :class:`BBoxesAnnotation` object.
 		"""
 		pass
 	
@@ -1444,8 +1444,8 @@ class PolylinesLabel(list[PolylineLabel], Label):
 		image_size: _size_2_t  | None = None,
 		target    : int               = 255,
 		thickness : int               = 1,
-	) -> SegmentationLabel:
-		"""Return a :class:`SegmentationLabel` object of this instance. Only
+	) -> SegmentationAnnotation:
+		"""Return a :class:`SegmentationAnnotation` object of this instance. Only
 		polylines with instance masks (i.e., their :param:`mask` attributes
 		populated) will be rendered.
 		
@@ -1462,19 +1462,19 @@ class PolylinesLabel(list[PolylineLabel], Label):
 				polylines. Default: ``1``.
 				
 		Return:
-			A :class:`SegmentationLabel` object.
+			A :class:`SegmentationAnnotation` object.
 		"""
 		pass
 
 # endregion
 
 
-# region Heatmap Label
+# region Heatmap Annotation
 
-class HeatmapLabel(Label):
+class HeatmapAnnotation(Annotation):
 	"""A heatmap label in an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
 		map: A 2D numpy array.
@@ -1491,12 +1491,12 @@ class HeatmapLabel(Label):
 # endregion
 
 
-# region Segmentation Label
+# region Segmentation Annotation
 
-class SegmentationLabel(Label):
+class SegmentationAnnotation(Annotation):
 	"""A semantic segmentation label in an image.
 	
-	See Also: :class:`Label`.
+	See Also: :class:`Annotation`.
 	
 	Args:
 		id_: The ID of the image. This can be an integer or a string. This

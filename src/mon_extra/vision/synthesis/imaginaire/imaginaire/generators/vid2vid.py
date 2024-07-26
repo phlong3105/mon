@@ -88,7 +88,7 @@ class Generator(BaseNetwork):
         self.use_segmap_as_input = \
             getattr(gen_cfg, 'use_segmap_as_input', False)
 
-        # Label / image embedding network.
+        # Annotation / image embedding network.
         self.emb_cfg = emb_cfg = getattr(gen_cfg, 'embed', None)
         self.use_embed = getattr(emb_cfg, 'use_embed', 'True')
         self.num_downsamples_embed = getattr(emb_cfg, 'num_downsamples', 5)

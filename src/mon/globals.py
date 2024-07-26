@@ -58,6 +58,7 @@ __all__ = [
     "ShapeCode",
     "Split",
     "Task",
+    "TrackState",
 ]
 
 import os
@@ -443,6 +444,72 @@ class ShapeCode(DT.Enum):
 
 # region Tracking
 
+class TrackState(DT.Enum):
+    
+    """Enumeration type for a single target track state.
+    
+    Newly created tracks are classified as `NEW` until enough evidence has been
+    collected. Then, the track state is changed to `TRACKED`. Tracks that are no
+    longer alive are classified as `REMOVED` to mark them for removal from the
+    set of active tracks.
+    """
+    NEW      = 0
+    TRACKED  = 1
+    LOST     = 2
+    REMOVED  = 3
+    REPLACED = 4
+    COUNTED  = 5
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """Return a :class:`dict` mapping :class:`str` to enums."""
+        return {
+            "new"     : cls.NEW,
+            "tracked" : cls.TRACKED,
+            "lost"    : cls.LOST,
+            "removed" : cls.REMOVED,
+            "replaced": cls.REPLACED,
+            "counted" : cls.COUNTED,
+        }
+    
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """Return a :class:`dict` mapping :class:`int` to enums."""
+        return {
+            0: cls.NEW,
+            1: cls.TRACKED,
+            2: cls.LOST,
+            3: cls.REMOVED,
+            4: cls.REPLACED,
+            5: cls.COUNTED,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> MovingState:
+        """Convert a :class:`str` to an enum."""
+        if value.lower() not in cls.str_mapping():
+            raise ValueError(f":param:`value` must be a valid enum key, but got {value.lower()}.")
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> MovingState:
+        """Convert an :class:`int` to an enum."""
+        if value not in cls.int_mapping():
+            raise ValueError(f":param:`value` must be a valid enum key, but got {value}.")
+        return cls.int_mapping()[value]
+    
+    @classmethod
+    def from_value(cls, value: MovingState | dict | str) -> MovingState | None:
+        """Convert an arbitrary value to an enum."""
+        if isinstance(value, MovingState):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        return None
+    
+    
 class MovingState(DT.Enum):
     
     """The tracking state of an object when moving through the camera."""

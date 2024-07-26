@@ -15,7 +15,7 @@ __all__ = [
 from typing import Literal
 
 from mon import core
-from mon.data import base
+from mon.data import datastruct
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Task, Split
 
 console           = core.console
@@ -25,7 +25,7 @@ _default_root_dir = DATA_DIR / "ntire"
 # region Dataset
 
 @DATASETS.register(name="ntire24_llie")
-class NTIRE24LLIE(base.ImageEnhancementDataset):
+class NTIRE24LLIE(datastruct.ImageEnhancementDataset):
 	"""NTIRE24-LLIE dataset consists of 300 low-light and normal-light image
 	pairs. They are divided into 230 training pairs and 35 validation pairs,
 	and 35 testing pairs.
@@ -58,7 +58,7 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 			]
 		else:
 			raise ValueError
-		self._images: list[base.ImageLabel] = []
+		self._images: list[datastruct.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for pattern in patterns:
 				for path in pbar.track(
@@ -66,18 +66,18 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 					description=f"Listing {self.__class__.__name__} {self.split_str} images"
 				):
 					if path.is_image_file():
-						image = base.ImageLabel(path=path)
+						image = datastruct.ImageAnnotation(path=path)
 						self._images.append(image)
 	
 	def _get_labels(self):
-		self._labels: list[base.ImageLabel] = []
+		self._labels: list[datastruct.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				self._images,
 				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				path  = img.path.replace("/lq/", "/hq/")
-				label = base.ImageLabel(path=path.image_file())
+				label = datastruct.ImageAnnotation(path=path.image_file())
 				self._labels.append(label)
 				
 # endregion
@@ -86,7 +86,7 @@ class NTIRE24LLIE(base.ImageEnhancementDataset):
 # region DataModule
 
 @DATAMODULES.register(name="ntire24_llie")
-class NTIRE24LLIEDataModule(base.DataModule):
+class NTIRE24LLIEDataModule(datastruct.DataModule):
 	"""NTIRE24-LLIE datamodule used in NTIRE 2024 Challenge
 	`<https://cvlai.net/ntire/2024/>`__
 	

@@ -110,7 +110,7 @@ class SICEDataModule(LightningDataModule):
         def get_label_fn(path):
             dirname = os.path.dirname(path)
             dirname, img_idx = os.path.split(dirname)
-            out = glob.glob(os.path.join(dirname, "Label", img_idx + ".*"))
+            out = glob.glob(os.path.join(dirname, "Annotation", img_idx + ".*"))
             return out[0]
 
         test_data = PairedDataset(data_root, "Dataset_Part2/[0-9]*/*.*", get_label_fn, resize=None, return_name=True)

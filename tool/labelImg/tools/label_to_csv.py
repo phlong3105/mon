@@ -151,7 +151,7 @@ if __name__ == "__main__":
     arg_p.add_argument("-c", "--classes",
                        type=str,
                        default=os.path.join("..", "data", "predefined_classes.txt"),
-                       help="Label classes path")
+                       help="Annotation classes path")
     args = vars(arg_p.parse_args())
 
     # Class labels

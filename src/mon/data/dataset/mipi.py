@@ -15,7 +15,7 @@ __all__ = [
 from typing import Literal
 
 from mon import core
-from mon.data import base
+from mon.data import datastruct
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Task, Split
 
 console           = core.console
@@ -25,7 +25,7 @@ _default_root_dir = DATA_DIR / "mipi"
 # region Dataset
 
 @DATASETS.register(name="mipi24_flare")
-class MIPI24Flare(base.ImageEnhancementDataset):
+class MIPI24Flare(datastruct.ImageEnhancementDataset):
 	"""Nighttime Flare Removal dataset used in MIPI 2024 Challenge
 	`<https://mipi-challenge.org/MIPI2024/index.html>`__
 	
@@ -54,7 +54,7 @@ class MIPI24Flare(base.ImageEnhancementDataset):
 			]
 		else:
 			raise ValueError
-		self._images: list[base.ImageLabel] = []
+		self._images: list[datastruct.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for pattern in patterns:
 				for path in pbar.track(
@@ -62,25 +62,25 @@ class MIPI24Flare(base.ImageEnhancementDataset):
 					description=f"Listing {self.__class__.__name__} {self.split_str} images"
 				):
 					if path.is_image_file():
-						image = base.ImageLabel(path=path)
+						image = datastruct.ImageAnnotation(path=path)
 						self._images.append(image)
 	
 	def _get_labels(self):
-		self._labels: list[base.ImageLabel] = []
+		self._labels: list[datastruct.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				self._images,
 				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				path  = img.path.replace("/lq/", "/hq/")
-				label = base.ImageLabel(path=path.image_file())
+				label = datastruct.ImageAnnotation(path=path.image_file())
 				self._labels.append(label)
 
 
 # region DataModule
 
 @DATAMODULES.register(name="mipi24_flare")
-class MIPI24FlareDataModule(base.DataModule):
+class MIPI24FlareDataModule(datastruct.DataModule):
 	"""Nighttime Flare Removal datamodule used in MIPI 2024 Challenge
 	`<https://mipi-challenge.org/MIPI2024/index.html>`__
 	

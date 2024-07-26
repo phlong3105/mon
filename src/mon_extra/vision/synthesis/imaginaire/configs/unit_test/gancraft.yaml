@@ -129,7 +129,7 @@ gen:
     keep_sky_out_avgpool: True
     sky_global_avgpool: True
 
-    # ======== Label translator ========
+    # ======== Annotation translator ========
     reduced_label_set: True
     use_label_smooth: True
     use_label_smooth_real: True

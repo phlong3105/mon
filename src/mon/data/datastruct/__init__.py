@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements the base classes for different labels, datasets,
-datamodules, and result writers.
+"""This package implements the data structures for annotations, datasets, and
+datamodules.
 
 The base classes are designed to be implemented by the user to create their
 own custom labels, datasets, datamodules, and result writers.
@@ -14,9 +14,9 @@ We try to support all possible data types: :class:`torch.Tensor`,
 
 from __future__ import annotations
 
-import mon.data.base.datamodule
-import mon.data.base.dataset
-import mon.data.base.label
-from mon.data.base.datamodule import *
-from mon.data.base.dataset import *
-from mon.data.base.label import *
+import mon.data.datastruct.annotation
+import mon.data.datastruct.datamodule
+import mon.data.datastruct.dataset
+from mon.data.datastruct.annotation import *
+from mon.data.datastruct.datamodule import *
+from mon.data.datastruct.dataset import *

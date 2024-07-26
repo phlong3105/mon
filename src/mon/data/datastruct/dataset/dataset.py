@@ -52,19 +52,19 @@ from torch.utils.data import dataset
 from torch.utils.data.dataset import *
 
 from mon import core
-from mon.data.datastruct import label as L
+from mon.data.datastruct import annotation as A
 from mon.globals import BBoxFormat, Split, Task
 
 console	= core.console
 
-ClassLabels         = L.ClassLabels
-ClassificationLabel = L.ClassificationAnnotation
-DetectionsLabel     = L.DetectionsAnnotation
-FrameLabel          = L.FrameAnnotation
-ImageLabel          = L.ImageAnnotation
-SegmentationLabel   = L.SegmentationAnnotation
-VOCDetectionsLabel  = L.DetectionsLabelVOC
-YOLODetectionsLabel = L.DetectionsLabelYOLO
+ClassLabels         = A.ClassLabels
+ClassificationLabel = A.ClassificationAnnotation
+DetectionsLabel     = A.BBoxesAnnotation
+FrameLabel          = A.FrameAnnotation
+ImageLabel          = A.ImageAnnotation
+SegmentationLabel   = A.SegmentationAnnotation
+VOCDetectionsLabel  = A.BBoxesAnnotationVOC
+YOLODetectionsLabel = A.BBoxesAnnotationYOLO
 
 
 # region Base
@@ -1865,7 +1865,7 @@ class DetectionDatasetCOCO(ImageDetectionDataset, ABC):
 		licenses    = json_data.get("licenses",    None)
 		categories  = json_data.get("categories",  None)
 		images	    = json_data.get("images",	   None)
-		annotations = json_data.get("annotations", None)
+		annos       = json_data.get("annotations", None)
 		
 		for img in images:
 			id       = img.get("id",        uuid.uuid4().int)
@@ -1884,7 +1884,7 @@ class DetectionDatasetCOCO(ImageDetectionDataset, ABC):
 			self._images[index].date_captured = img.get("date_captured", "")
 			self._images[index].shape         = (height, width, 3)
 		
-		for ann in annotations:
+		for ann in annos:
 			id          = ann.get("id"         , uuid.uuid4().int)
 			image_id    = ann.get("image_id"   , None)
 			bbox        = ann.get("bbox"       , None)

@@ -31,7 +31,7 @@ quad           : False                    # (bool) quad dataloader
 cos_lr         : False                    # (bool) cosine LR scheduler
 flat_cos_lr    : False                    # (bool) flat cosine LR scheduler
 fixed_lr       : False                    # (bool) fixed LR scheduler
-label_smoothing: 0.0                      # (float) Label smoothing epsilon
+label_smoothing: 0.0                      # (float) Annotation smoothing epsilon
 patience       : 500                      # (int) EarlyStopping patience (epochs without improvement)
 freeze         : [0]                      # (int) Freeze layers: backbone of yolov7=50, first3=0 1 2
 save_period    : -1                       # (int) Save checkpoint every x epochs (disabled if < 1)

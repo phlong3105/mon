@@ -353,7 +353,7 @@ def convert_face_landmarks_to_image(cfgdata, landmarks, output_size,
         cpu_only (bool): Output CPU tensor only.
 
     Returns:
-        (NxCxHxW tensor or list of HxWxC numpy arrays): Label maps.
+        (NxCxHxW tensor or list of HxWxC numpy arrays): Annotation maps.
     """
     h, w = output_size
     labels = connect_face_keypoints(h, w, None, None, None, None, False,

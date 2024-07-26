@@ -3,25 +3,23 @@ from collections import OrderedDict
 
 
 class TrackState(object):
-    New = 0
+    New     = 0
     Tracked = 1
-    Lost = 2
+    Lost    = 2
     Removed = 3
 
 
 class BaseTrack(object):
-    _count = 0
-
-    track_id = 0
-    is_activated = False
-    state = TrackState.New
-
-    history = OrderedDict()
-    features = []
-    curr_feature = None
-    score = 0
-    start_frame = 0
-    frame_id = 0
+    _count            = 0
+    track_id          = 0
+    is_activated      = False
+    state             = TrackState.New
+    history           = OrderedDict()
+    features          = []
+    curr_feature      = None
+    score             = 0
+    start_frame       = 0
+    frame_id          = 0
     time_since_update = 0
 
     # multi-camera

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements data writers."""
+"""This module implements data i/o classes and functions."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ __all__ = [
 	"VideoWriter",
 	"VideoWriterCV",
 	"VideoWriterFFmpeg",
+	"parse_io_worker",
 ]
 
 from abc import ABC, abstractmethod
@@ -21,6 +22,8 @@ import torch
 
 from mon import core
 from mon.core import _size_2_t
+from mon.data import datastruct
+from mon.globals import DATA_DIR, DATASETS, Split
 
 
 # region Base
@@ -90,7 +93,7 @@ class DataWriter(ABC):
 # endregion
 
 
-# region Video
+# region Video Writer
 
 class VideoWriter(DataWriter):
 	"""The base class for all video writers.
@@ -442,5 +445,72 @@ class VideoWriterFFmpeg(VideoWriter):
 			paths = [None for _ in range(len(data))]
 		for image, file in zip(data, paths):
 			self.write(data=image, path=file, denormalize=denormalize)
-			
+
+# endregion
+
+
+# region Parsing
+
+def parse_io_worker(
+	src        : core.Path | str,
+	dst        : core.Path | str,
+	denormalize: bool = False,
+	data_root  : core.Path | str = None
+) -> tuple[str, datastruct.Dataset, DataWriter]:
+	"""Parse the :param:`src` and :param:`dst` to get the correct I/O worker.
+	
+	Args:
+		src: The source of the input data.
+		dst: The destination path.
+		denormalize: If ``True``, denormalize the image to :math:`[0, 255]`.
+			Default: ``False``.
+		data_root: The root directory of all datasets, i.e., :file:`data/`.
+		
+	Return:
+		A input loader and an output writer
+	"""
+	data_name  : str          = ""
+	data_loader: datastruct.Dataset = None
+	data_writer: DataWriter   = None
+	
+	if isinstance(src, str) and src in DATASETS:
+		defaults_dict = dict(
+			zip(DATASETS[src].__init__.__code__.co_varnames[1:], DATASETS[src].__init__.__defaults__)
+		)
+		root = defaults_dict.get("root", DATA_DIR)
+		if (
+			root      not in [None, "None", ""] and
+			data_root not in [None, "None", ""] and
+			core.Path(data_root).is_dir() and
+			str(root) != str(data_root)
+		):
+			root = data_root
+		config      = {
+			"name"     : src,
+			"root"     : root,
+			"split"	   : Split.TEST,
+			"to_tensor": True,
+			"verbose"  : False,
+		}
+		data_name   = src
+		data_loader = DATASETS.build(config=config)
+	elif core.Path(src).is_dir() and core.Path(src).exists():
+		data_name   = core.Path(src).name
+		data_loader = datastruct.ImageLoader(root=src, to_tensor=True, verbose=False)
+	elif core.Path(src).is_video_file():
+		data_name   = core.Path(src).name
+		data_loader = datastruct.VideoLoaderCV(root=src, to_tensor=True, verbose=False)
+		data_writer = VideoWriterCV(
+			dst         = core.Path(dst),
+			image_size  = data_loader.imgsz,
+			frame_rate  = data_loader.fps,
+			fourcc      = "mp4v",
+			save_image  = False,
+			denormalize = denormalize,
+			verbose     = False,
+		)
+	else:
+		raise ValueError(f"Invalid input source: {src}")
+	return data_name, data_loader, data_writer
+	
 # endregion
