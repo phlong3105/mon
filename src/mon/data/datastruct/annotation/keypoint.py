@@ -20,7 +20,7 @@ console = core.console
 # region Keypoint Annotation
 
 class KeypointAnnotation(base.Annotation):
-	"""A list keypoints annotation for a single object in an image.
+	"""A list of keypoints annotation for a single object in an image.
 	
 	See Also: :class:`mon.data.datastruct.annotation.base.Annotation`.
 	

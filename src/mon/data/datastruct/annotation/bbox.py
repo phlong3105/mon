@@ -21,7 +21,7 @@ import torch
 from mon import core
 from mon.core import _size_2_t
 from mon.data.datastruct.annotation import base
-from mon.data.datastruct.annotation.category import ClassLabels
+from mon.data.datastruct.annotation.classlabel import ClassLabels
 
 console = core.console
 
@@ -60,7 +60,7 @@ class BBoxAnnotation(base.Annotation):
 		if not 0.0 <= confidence <= 1.0:
 			raise ValueError(f":param:`conf` must be between ``0.0`` and ``1.0``, but got {confidence}.")
 		if id_ <= 0 and label == "":
-			raise ValueError(f"Either :param:`id` or name must be defined, but got {id_} and {label}.")
+			raise ValueError(f"Either :param:`id` or :param:`label` must be defined, but got {id_} and {label}.")
 		self._id         = id_
 		self._index      = index
 		self._label      = label
@@ -393,7 +393,7 @@ class BBoxesAnnotationYOLO(BBoxesAnnotation):
 	
 	@classmethod
 	def from_file(cls, path: core.Path) -> BBoxesAnnotationYOLO:
-		"""Create a :class:`YOLODetectionsLabel` object from a `.txt` file.
+		"""Create a :class:`BBoxesLabelYOLO` object from a `.txt` file.
 		
 		Args:
 			path: Path to the annotation `.txt` file.
