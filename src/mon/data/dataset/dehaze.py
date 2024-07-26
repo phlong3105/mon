@@ -45,7 +45,7 @@ __all__ = [
 from typing import Literal
 
 from mon import core
-from mon.data import datastruct
+from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console           = core.console
@@ -55,7 +55,7 @@ _default_root_dir = DATA_DIR / "dehaze"
 # region Dataset
 
 @DATASETS.register(name="densehaze")
-class DenseHaze(datastruct.ImageEnhancementDataset):
+class DenseHaze(dataset.ImageEnhancementDataset):
     """Dense-Haze dataset consists of 33 pairs of real hazy and corresponding
     haze-free images.
     
@@ -73,7 +73,7 @@ class DenseHaze(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "densehaze" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -81,23 +81,23 @@ class DenseHaze(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
     
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="ihaze")
-class IHaze(datastruct.ImageEnhancementDataset):
+class IHaze(dataset.ImageEnhancementDataset):
     """I-Haze dataset consists of 35 pairs of real hazy and corresponding
     haze-free images.
     
@@ -115,7 +115,7 @@ class IHaze(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "ihaze" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -123,23 +123,23 @@ class IHaze(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
     
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="nhhaze")
-class NHHaze(datastruct.ImageEnhancementDataset):
+class NHHaze(dataset.ImageEnhancementDataset):
     """NH-Haze dataset consists 55 pairs of real hazy and corresponding
     haze-free images.
     
@@ -157,7 +157,7 @@ class NHHaze(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "nhhaze" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -165,23 +165,23 @@ class NHHaze(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="ohaze")
-class OHaze(datastruct.ImageEnhancementDataset):
+class OHaze(dataset.ImageEnhancementDataset):
     """O-Haze dataset consists of 45 pairs of real hazy and corresponding
     haze-free images.
     
@@ -199,7 +199,7 @@ class OHaze(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "ohaze" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -207,23 +207,23 @@ class OHaze(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="reside_hsts_real")
-class RESIDEHSTSReal(datastruct.UnlabeledImageDataset):
+class RESIDEHSTSReal(dataset.UnlabeledImageDataset):
     """RESIDE-HSTS-Real dataset consists of 10 real hazy images.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -240,7 +240,7 @@ class RESIDEHSTSReal(datastruct.UnlabeledImageDataset):
         patterns = [
             self.root / "reside_hsts_real" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -248,12 +248,12 @@ class RESIDEHSTSReal(datastruct.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
 
 @DATASETS.register(name="reside_hsts_syn")
-class RESIDEHSTSSyn(datastruct.ImageEnhancementDataset):
+class RESIDEHSTSSyn(dataset.ImageEnhancementDataset):
     """RESIDE-HSTS-Syn dataset consists of 10 pairs of hazy and corresponding
     haze-free images.
 
@@ -271,7 +271,7 @@ class RESIDEHSTSSyn(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "reside_hsts_syn" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -279,23 +279,23 @@ class RESIDEHSTSSyn(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="reside_its")
-class RESIDEITS(datastruct.ImageEnhancementDataset):
+class RESIDEITS(dataset.ImageEnhancementDataset):
     """RESIDE-ITS dataset consists of 13,990 pairs of hazy and corresponding
     haze-free images.
 
@@ -313,7 +313,7 @@ class RESIDEITS(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "reside_its" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -321,11 +321,11 @@ class RESIDEITS(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
@@ -334,12 +334,12 @@ class RESIDEITS(datastruct.ImageEnhancementDataset):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="reside_its_v2")
-class RESIDEITSV2(datastruct.ImageEnhancementDataset):
+class RESIDEITSV2(dataset.ImageEnhancementDataset):
     """RESIDE-ITS-V2 dataset consists of 13,990 pairs of hazy and corresponding
     haze-free images.
 
@@ -357,7 +357,7 @@ class RESIDEITSV2(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "reside_its_v2" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -365,11 +365,11 @@ class RESIDEITSV2(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
@@ -378,12 +378,12 @@ class RESIDEITSV2(datastruct.ImageEnhancementDataset):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="reside_ots")
-class RESIDEOTS(datastruct.ImageEnhancementDataset):
+class RESIDEOTS(dataset.ImageEnhancementDataset):
     """RESIDE-OTS dataset consists of 73,135 pairs of hazy and corresponding
     haze-free images.
 
@@ -401,7 +401,7 @@ class RESIDEOTS(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "reside_ots" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -409,11 +409,11 @@ class RESIDEOTS(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
@@ -422,12 +422,12 @@ class RESIDEOTS(datastruct.ImageEnhancementDataset):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="reside_rtts")
-class RESIDERTTS(datastruct.UnlabeledImageDataset):
+class RESIDERTTS(dataset.UnlabeledImageDataset):
     """RESIDE-RTTS dataset consists of 4,322 real hazy images.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -444,7 +444,7 @@ class RESIDERTTS(datastruct.UnlabeledImageDataset):
         patterns = [
             self.root / "reside_rtts" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -452,12 +452,12 @@ class RESIDERTTS(datastruct.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
 
 @DATASETS.register(name="reside_sots_indoor")
-class RESIDESOTSIndoor(datastruct.ImageEnhancementDataset):
+class RESIDESOTSIndoor(dataset.ImageEnhancementDataset):
     """RESIDE-SOTS-Indoor dataset consists of 500 pairs of hazy and
     corresponding haze-free images.
 
@@ -475,7 +475,7 @@ class RESIDESOTSIndoor(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "reside_sots_indoor " / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -483,11 +483,11 @@ class RESIDESOTSIndoor(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
@@ -496,12 +496,12 @@ class RESIDESOTSIndoor(datastruct.ImageEnhancementDataset):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="reside_sots_outdoor")
-class RESIDESOTSOutdoor(datastruct.ImageEnhancementDataset):
+class RESIDESOTSOutdoor(dataset.ImageEnhancementDataset):
     """RESIDE-SOTS-Outdoor dataset consists of 500 pairs of hazy and
     corresponding haze-free images.
 
@@ -519,7 +519,7 @@ class RESIDESOTSOutdoor(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "reside_sots_outdoor" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -527,11 +527,11 @@ class RESIDESOTSOutdoor(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
@@ -540,12 +540,12 @@ class RESIDESOTSOutdoor(datastruct.ImageEnhancementDataset):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="reside_uhi")
-class RESIDEUHI(datastruct.UnlabeledImageDataset):
+class RESIDEUHI(dataset.UnlabeledImageDataset):
     """RESIDE-UHI dataset consists of 4,809 real hazy images.
 
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -562,7 +562,7 @@ class RESIDEUHI(datastruct.UnlabeledImageDataset):
         patterns = [
             self.root / "reside_uhi" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -570,12 +570,12 @@ class RESIDEUHI(datastruct.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
 
 @DATASETS.register(name="satehaze1k")
-class SateHaze1K(datastruct.ImageEnhancementDataset):
+class SateHaze1K(dataset.ImageEnhancementDataset):
     """SateHaze1K dataset consists 1200 pairs of hazy and corresponding
     haze-free images.
     
@@ -595,7 +595,7 @@ class SateHaze1K(datastruct.ImageEnhancementDataset):
             self.root / "satehaze1k_moderate" / self.split_str / "lq",
             self.root / "satehaze1k_thick" / self.split_str / "lq",
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -603,23 +603,23 @@ class SateHaze1K(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="satehaze1k_thin")
-class SateHaze1KThin(datastruct.ImageEnhancementDataset):
+class SateHaze1KThin(dataset.ImageEnhancementDataset):
     """SateHaze1K-Thin dataset.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -636,7 +636,7 @@ class SateHaze1KThin(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "satehaze1k_thin" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -644,23 +644,23 @@ class SateHaze1KThin(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
     
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="satehaze1k_moderate")
-class SateHaze1KModerate(datastruct.ImageEnhancementDataset):
+class SateHaze1KModerate(dataset.ImageEnhancementDataset):
     """SateHaze1K-Moderate.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -677,7 +677,7 @@ class SateHaze1KModerate(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "satehaze1k_moderate" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -685,23 +685,23 @@ class SateHaze1KModerate(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 
 @DATASETS.register(name="satehaze1k_thick")
-class SateHaze1KThick(datastruct.ImageEnhancementDataset):
+class SateHaze1KThick(dataset.ImageEnhancementDataset):
     """SateHaze1K-Thick dataset.
     
     See Also: :class:`base.ImageEnhancementDataset`.
@@ -718,7 +718,7 @@ class SateHaze1KThick(datastruct.ImageEnhancementDataset):
         patterns = [
             self.root / "satehaze1k_thick" / self.split_str / "lq"
         ]
-        self._images: list[datastruct.ImageAnnotation] = []
+        self._images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -726,18 +726,18 @@ class SateHaze1KThick(datastruct.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = datastruct.ImageAnnotation(path=path)
+                        image = anno.ImageAnnotation(path=path)
                         self._images.append(image)
 
     def _get_labels(self):
-        self._labels: list[datastruct.ImageAnnotation] = []
+        self._labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self._images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
-                label = datastruct.ImageAnnotation(path=path.image_file())
+                label = anno.ImageAnnotation(path=path.image_file())
                 self._labels.append(label)
 
 # endregion
@@ -746,7 +746,7 @@ class SateHaze1KThick(datastruct.ImageEnhancementDataset):
 # region Datamodule
 
 @DATAMODULES.register(name="densehaze")
-class DenseHazeDataModule(datastruct.DataModule):
+class DenseHazeDataModule(datamodule.DataModule):
     """Dense-Haze datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -779,7 +779,7 @@ class DenseHazeDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="ihaze")
-class IHazeDataModule(datastruct.DataModule):
+class IHazeDataModule(datamodule.DataModule):
     """I-Haze datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -812,7 +812,7 @@ class IHazeDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="nhhaze")
-class NHHazeDataModule(datastruct.DataModule):
+class NHHazeDataModule(datamodule.DataModule):
     """NH-Haze datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -845,7 +845,7 @@ class NHHazeDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="ohaze")
-class OHazeDataModule(datastruct.DataModule):
+class OHazeDataModule(datamodule.DataModule):
     """O-Haze datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -878,7 +878,7 @@ class OHazeDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_hsts_real")
-class RESIDEHSTSRealDataModule(datastruct.DataModule):
+class RESIDEHSTSRealDataModule(datamodule.DataModule):
     """RESIDE-HSTS-Real datamodule.
 
      See Also: :class:`base.DataModule`.
@@ -911,7 +911,7 @@ class RESIDEHSTSRealDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_hsts_syn")
-class RESIDEHSTSSynDataModule(datastruct.DataModule):
+class RESIDEHSTSSynDataModule(datamodule.DataModule):
     """RESIDE-HSTS-Syn datamodule.
 
      See Also: :class:`base.DataModule`.
@@ -944,7 +944,7 @@ class RESIDEHSTSSynDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_its")
-class RESIDEITSDataModule(datastruct.DataModule):
+class RESIDEITSDataModule(datamodule.DataModule):
     """RESIDE-ITS datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -977,7 +977,7 @@ class RESIDEITSDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_its_v2")
-class RESIDEITSV2DataModule(datastruct.DataModule):
+class RESIDEITSV2DataModule(datamodule.DataModule):
     """RESIDE-ITS-V2 datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -1010,7 +1010,7 @@ class RESIDEITSV2DataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_ots")
-class RESIDEOTSDataModule(datastruct.DataModule):
+class RESIDEOTSDataModule(datamodule.DataModule):
     """RESIDE-OTS datamodule.
 
     See Also: :class:`base.DataModule`.
@@ -1043,7 +1043,7 @@ class RESIDEOTSDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_rtts")
-class RESIDERTTSDataModule(datastruct.DataModule):
+class RESIDERTTSDataModule(datamodule.DataModule):
     """RESIDE-RTTS datamodule.
 
      See Also: :class:`base.DataModule`.
@@ -1076,7 +1076,7 @@ class RESIDERTTSDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_sots_indoor")
-class RESIDESOTSIndoorDataModule(datastruct.DataModule):
+class RESIDESOTSIndoorDataModule(datamodule.DataModule):
     """RESIDE-SOTS-Indoor datamodule.
 
      See Also: :class:`base.DataModule`.
@@ -1109,7 +1109,7 @@ class RESIDESOTSIndoorDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_sots_outdoor")
-class RESIDESOTSOutdoorDataModule(datastruct.DataModule):
+class RESIDESOTSOutdoorDataModule(datamodule.DataModule):
     """RESIDE-SOTS-Outdoor datamodule.
 
      See Also: :class:`base.DataModule`.
@@ -1142,7 +1142,7 @@ class RESIDESOTSOutdoorDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="reside_uhi")
-class RESIDEUHIDataModule(datastruct.DataModule):
+class RESIDEUHIDataModule(datamodule.DataModule):
     """RESIDE-UHI datamodule.
 
      See Also: :class:`base.DataModule`.
@@ -1175,7 +1175,7 @@ class RESIDEUHIDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="satehaze1k")
-class SateHaze1KDataModule(datastruct.DataModule):
+class SateHaze1KDataModule(datamodule.DataModule):
     """SateHaze1K datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -1223,7 +1223,7 @@ class SateHaze1KDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="satehaze1k_thin")
-class SateHaze1KThinDataModule(datastruct.DataModule):
+class SateHaze1KThinDataModule(datamodule.DataModule):
     """SateHaze1K-Thin datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -1256,7 +1256,7 @@ class SateHaze1KThinDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="satehaze1k_moderate")
-class SateHaze1KModerateDataModule(datastruct.DataModule):
+class SateHaze1KModerateDataModule(datamodule.DataModule):
     """SateHaze1K-Moderate datamodule.
     
     See Also: :class:`base.DataModule`.
@@ -1289,7 +1289,7 @@ class SateHaze1KModerateDataModule(datastruct.DataModule):
 
 
 @DATAMODULES.register(name="satehaze1k_thick")
-class SateHaze1KThickDataModule(datastruct.DataModule):
+class SateHaze1KThickDataModule(datamodule.DataModule):
     """SateHaze1K-Thick datamodule.
     
     See Also: :class:`base.DataModule`.

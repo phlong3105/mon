@@ -16,7 +16,7 @@ import lightning
 from torch.utils import data
 
 from mon import core
-from mon.data.datastruct.dataset import Dataset
+from mon.data.datastruct.dataset import base
 
 console = core.console
 
@@ -71,7 +71,7 @@ class DataModule(lightning.LightningDataModule, ABC):
             test    = datasets.pop("test")    if "test"    in datasets else None
             predict = datasets.pop("predict") if "predict" in datasets else None
             self.dataset_kwargs = kwargs | datasets
-        elif isinstance(datasets, Dataset):
+        elif isinstance(datasets, base.Dataset):
             train   = datasets
             val     = datasets
             test    = datasets
@@ -216,7 +216,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     def split_train_val(
         self,
-        dataset    : Dataset,
+        dataset    : base.Dataset,
         split_ratio: float = 0.8,
         full_train : bool  = True
     ):

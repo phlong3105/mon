@@ -15,8 +15,8 @@ __all__ = [
 from typing import Literal
 
 from mon import core
-from mon.data import datastruct
-from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Task, Split
+from mon.data.datastruct import annotation as anno, datamodule, dataset
+from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console           = core.console
 _default_root_dir = DATA_DIR / "mipi"
@@ -25,7 +25,7 @@ _default_root_dir = DATA_DIR / "mipi"
 # region Dataset
 
 @DATASETS.register(name="mipi24_flare")
-class MIPI24Flare(datastruct.ImageEnhancementDataset):
+class MIPI24Flare(dataset.ImageEnhancementDataset):
 	"""Nighttime Flare Removal dataset used in MIPI 2024 Challenge
 	`<https://mipi-challenge.org/MIPI2024/index.html>`__
 	
@@ -54,7 +54,7 @@ class MIPI24Flare(datastruct.ImageEnhancementDataset):
 			]
 		else:
 			raise ValueError
-		self._images: list[datastruct.ImageAnnotation] = []
+		self._images: list[anno.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for pattern in patterns:
 				for path in pbar.track(
@@ -62,25 +62,25 @@ class MIPI24Flare(datastruct.ImageEnhancementDataset):
 					description=f"Listing {self.__class__.__name__} {self.split_str} images"
 				):
 					if path.is_image_file():
-						image = datastruct.ImageAnnotation(path=path)
+						image = anno.ImageAnnotation(path=path)
 						self._images.append(image)
 	
 	def _get_labels(self):
-		self._labels: list[datastruct.ImageAnnotation] = []
+		self._labels: list[anno.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				self._images,
 				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				path  = img.path.replace("/lq/", "/hq/")
-				label = datastruct.ImageAnnotation(path=path.image_file())
+				label = anno.ImageAnnotation(path=path.image_file())
 				self._labels.append(label)
 
 
 # region DataModule
 
 @DATAMODULES.register(name="mipi24_flare")
-class MIPI24FlareDataModule(datastruct.DataModule):
+class MIPI24FlareDataModule(datamodule.DataModule):
 	"""Nighttime Flare Removal datamodule used in MIPI 2024 Challenge
 	`<https://mipi-challenge.org/MIPI2024/index.html>`__
 	
