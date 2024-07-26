@@ -109,7 +109,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - "Document": styleguide.md
+  - "Guidelines": styleguide.md
   - "Glossary": glossary.md
   # - Home: index.md
   # - "Guides":
