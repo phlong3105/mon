@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "Timer",
     "check_installed_package",
     "get_gpu_device_memory",
     "get_machine_memory",

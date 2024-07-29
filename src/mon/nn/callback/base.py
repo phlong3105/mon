@@ -23,10 +23,10 @@ __all__ = [
     "ModelPruning",
     "ModelSummary",
     "OnExceptionCheckpoint",
-    "StochasticWeightAveraging",
     "SpikeDetection",
+    "StochasticWeightAveraging",
     "TQDMProgressBar",
-    "Timer",
+    "TimerCallback",
     # "TuneReportCallback",
     # "TuneReportCheckpointCallback",
 ]
@@ -56,7 +56,7 @@ OnExceptionCheckpoint         = callbacks.OnExceptionCheckpoint
 ProgressBar                   = callbacks.ProgressBar
 StochasticWeightAveraging     = callbacks.StochasticWeightAveraging
 SpikeDetection                = callbacks.SpikeDetection
-Timer                         = callbacks.Timer
+TimerCallback                 = callbacks.Timer
 TQDMProgressBar               = callbacks.TQDMProgressBar
 # TuneReportCallback            = ray.TuneReportCallback
 # TuneReportCheckpointCallback  = ray.TuneReportCheckpointCallback
@@ -73,7 +73,7 @@ CALLBACKS.register(name="model_summary"                  , module=ModelSummary)
 CALLBACKS.register(name="on_exception_checkpoint"        , module=OnExceptionCheckpoint)
 CALLBACKS.register(name="stochastic_weight_averaging"    , module=StochasticWeightAveraging)
 CALLBACKS.register(name="spike_detection"                , module=SpikeDetection)
-CALLBACKS.register(name="timer"                          , module=Timer)
+CALLBACKS.register(name="timer"                          , module=TimerCallback)
 CALLBACKS.register(name="tqdm_progress_bar"              , module=TQDMProgressBar)
 # CALLBACKS.register(name="tune_report_callback"           , module=TuneReportCallback)
 # CALLBACKS.register(name="tune_report_checkpoint_callback", module=TuneReportCheckpointCallback)

@@ -34,7 +34,7 @@ from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console           = core.console
-ClassLabels       = dataset.ClassLabels
+ClassLabels       = anno.ClassLabels
 _default_root_dir = DATA_DIR / "les"
 
 

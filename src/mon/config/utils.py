@@ -243,7 +243,7 @@ def list_config_files(
     ]
     if model not in [None, "None", ""]:
         model_name   = parse_model_name(model)
-        config_files = [cf for cf in config_files if f"{model_name}_" in cf.name]
+        config_files = [cf for cf in config_files if f"{model_name}" in cf.name]
     config_files = core.unique(config_files)
     config_files = sorted(config_files)
     return config_files
