@@ -37,8 +37,8 @@ class Embedder(ABC):
            A 2D :class:`list` of feature vectors.
         """
         pass
-        
-    
+
+
 class DeepEmbedder(Embedder, ABC):
     """The base class for all deep learning-based embedders. It loads a
     classification model pretrained on Imagenet, with classification layer
@@ -170,5 +170,5 @@ class DeepEmbedder(Embedder, ABC):
             A 2D :class:`list` of feature vectors.
         """
         pass
-    
+
 # endregion

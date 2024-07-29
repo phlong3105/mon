@@ -51,6 +51,7 @@ def iou_batch(bb_test, bb_gt):
     + (bb_gt[..., 2] - bb_gt[..., 0]) * (bb_gt[..., 3] - bb_gt[..., 1]) - wh)                                              
   return(o)
 
+
 def cal_score_dif_batch(bboxes1, bboxes2):
   """
   From SORT: Computes IOU between two bboxes in the form [x1,y1,x2,y2]
@@ -61,7 +62,7 @@ def cal_score_dif_batch(bboxes1, bboxes2):
   score2 = bboxes2[..., 4]
   score1 = bboxes1[..., 4]
 
-  return (abs(score2 - score1))
+  return abs(score2 - score1)
 
 
 def convert_bbox_to_z(bbox):
@@ -277,8 +278,8 @@ class Sort_score(object):
           ret.append(np.concatenate((d,[trk.id+1])).reshape(1,-1)) # +1 as MOT benchmark requires positive
         i -= 1
         # remove dead tracklet
-        if(trk.time_since_update > self.max_age):
+        if trk.time_since_update > self.max_age:
           self.trackers.pop(i)
-    if(len(ret)>0):
+    if len(ret) > 0:
       return np.concatenate(ret)
-    return np.empty((0,5))
+    return np.empty((0, 5))

@@ -11,7 +11,9 @@ from trackers.byte_tracker import matching
 from .basetrack import BaseTrack, TrackState
 
 class STrack(BaseTrack):
+    
     shared_kalman = KalmanFilter()
+    
     def __init__(self, tlwh, score):
 
         # wait activate
@@ -143,6 +145,7 @@ class STrack(BaseTrack):
 
 
 class BYTETracker(object):
+    
     def __init__(self, args, frame_rate=30):
         self.tracked_stracks = []  # type: list[STrack]
         self.lost_stracks = []  # type: list[STrack]

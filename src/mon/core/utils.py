@@ -219,13 +219,13 @@ def upcast(input: torch.Tensor | np.ndarray, keep_type: bool = False) -> torch.T
 
 
 def parse_hw(size: int | Sequence[int]) -> list[int]:
-    """Casts a size object to the standard :math:`[H, W]`.
+    """Casts a size object to the standard :math:`[h, w]`.
 
     Args:
         size: A size of an image, windows, or kernels, etc.
 
     Returns:
-        A size in :math:`[H, W]` format.
+        A size in :math:`[h, w]` format.
     """
     if isinstance(size, list | tuple):
         if len(size) == 3:

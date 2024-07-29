@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements geometry functions for bounding boxes."""
+"""This module implements geometry functions for bounding boxes. For handling
+geometry, :class:`np.ndarray` is used as the primary data structure.
+"""
 
 from __future__ import annotations
 
@@ -249,6 +251,10 @@ def get_enclosing_bbox(bbox: np.ndarray) -> np.ndarray:
     y2 = np.max(y_, 1).reshape(-1, 1)
     return np.hstack((x1, y1, x2, y2, bbox[:, 8:]))
 
+# endregion
+
+
+# region Association
 
 # endregion
 
@@ -430,7 +436,7 @@ def convert_bbox(
 # endregion
 
 
-# region Affine Transform
+# region Transform
 
 def clip_bbox(
     bbox      : np.ndarray,
