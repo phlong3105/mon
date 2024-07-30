@@ -64,18 +64,18 @@ class DarkFace(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "darkface" / self.split_str / "lq"
         ]
 
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -84,7 +84,7 @@ class DarkFace(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="dicm")
@@ -94,17 +94,17 @@ class DICM(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "dicm" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -113,7 +113,7 @@ class DICM(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="exdark")
@@ -123,17 +123,17 @@ class ExDark(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "exdark" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -142,7 +142,7 @@ class ExDark(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="fivek_c")
@@ -153,17 +153,17 @@ class FiveKC(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TRAIN]
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "fivek_c" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -172,18 +172,18 @@ class FiveKC(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
     def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="fivek_e")
@@ -194,17 +194,17 @@ class FiveKE(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TRAIN]
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "fivek_e" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -213,18 +213,18 @@ class FiveKE(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
     def get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="fusion")
@@ -234,17 +234,17 @@ class Fusion(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "fusion" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -253,7 +253,7 @@ class Fusion(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="lime")
@@ -263,17 +263,17 @@ class LIME(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
 
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "lime" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -282,7 +282,7 @@ class LIME(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="lol_blur")
@@ -293,18 +293,18 @@ class LOLBlur(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "lol_blur" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -313,18 +313,18 @@ class LOLBlur(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="lol_v1")
@@ -337,18 +337,18 @@ class LOLV1(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "lol_v1" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -357,18 +357,18 @@ class LOLV1(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="lol_v2_real")
@@ -382,18 +382,18 @@ class LOLV2Real(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "lol_v2_real" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -402,18 +402,18 @@ class LOLV2Real(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="lol_v2_synthetic")
@@ -427,18 +427,18 @@ class LOLV2Synthetic(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "lol_v2_synthetic" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -447,18 +447,18 @@ class LOLV2Synthetic(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="mef")
@@ -468,17 +468,17 @@ class MEF(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "mef" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -487,7 +487,7 @@ class MEF(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
       
                         
 @DATASETS.register(name="npe")
@@ -497,17 +497,17 @@ class NPE(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "npe" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -516,7 +516,7 @@ class NPE(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="sice_grad")
@@ -526,18 +526,18 @@ class SICEGrad(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN]
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "sice_grad" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -546,7 +546,7 @@ class SICEGrad(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
                         
                         
 @DATASETS.register(name="sice_mix")
@@ -557,18 +557,18 @@ class SICEMix(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN]
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "sice_mix" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -577,7 +577,7 @@ class SICEMix(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="sice_mix_v2")
@@ -587,18 +587,18 @@ class SICEMixV2(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN]
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "sice_mix_v2" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -607,7 +607,7 @@ class SICEMixV2(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
                         
 
 @DATASETS.register(name="ulol")
@@ -617,14 +617,14 @@ class ULOL(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LLIE]
-    _splits         = [Split.TRAIN]
+    tasks          = [Task.LLIE]
+    splits         = [Split.TRAIN]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "sice_mix"         / self.split_str / "lq",
             self.root / "sice_mix_v2"      / self.split_str / "lq",
@@ -641,7 +641,7 @@ class ULOL(dataset.UnlabeledImageDataset):
             self.root / "npe"              / "test"         / "lq",
             self.root / "vv"               / "test"         / "lq",
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -650,7 +650,7 @@ class ULOL(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
                         
 
 @DATASETS.register(name="vv")
@@ -660,17 +660,17 @@ class VV(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks  = [Task.LLIE]
-    _splits = [Split.TEST]
+    tasks  = [Task.LLIE]
+    splits = [Split.TEST]
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "vv" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -679,7 +679,7 @@ class VV(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 # endregion
 
@@ -693,7 +693,7 @@ class DarkFaceDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -703,10 +703,10 @@ class DarkFaceDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = DarkFace(split=Split.TEST, **self.dataset_kwargs)
             self.val   = DarkFace(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = DarkFace(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -726,7 +726,7 @@ class DICMDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -736,10 +736,10 @@ class DICMDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = DICM(split=Split.TEST, **self.dataset_kwargs)
             self.val   = DICM(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = DICM(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -759,7 +759,7 @@ class ExDarkDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -769,10 +769,10 @@ class ExDarkDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = ExDark(split=Split.TEST, **self.dataset_kwargs)
             self.val   = ExDark(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = ExDark(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -792,7 +792,7 @@ class FiveKCDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -802,10 +802,10 @@ class FiveKCDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = FiveKC(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -825,7 +825,7 @@ class FiveKEDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -835,10 +835,10 @@ class FiveKEDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = FiveKE(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -858,7 +858,7 @@ class FusionDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -868,10 +868,10 @@ class FusionDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Fusion(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Fusion(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Fusion(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -891,7 +891,7 @@ class LIMEDataModule(datamodule.DataModule):
      See Also: :class:`base.DataModule`.
      """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -901,10 +901,10 @@ class LIMEDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = LIME(split=Split.TEST, **self.dataset_kwargs)
             self.val   = LIME(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LIME(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -924,7 +924,7 @@ class LOLBlurDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -934,10 +934,10 @@ class LOLBlurDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = LOLBlur(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLBlur(split=Split.VAL,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLBlur(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -957,7 +957,7 @@ class LOLV1DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -967,10 +967,10 @@ class LOLV1DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = LOLV1(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -990,7 +990,7 @@ class LOLV2RealDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1000,10 +1000,10 @@ class LOLV2RealDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = LOLV2Real(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV2Real(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV2Real(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1023,7 +1023,7 @@ class LOLV2SyntheticDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1033,10 +1033,10 @@ class LOLV2SyntheticDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = LOLV2Synthetic(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV2Synthetic(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV2Synthetic(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1056,7 +1056,7 @@ class MEFDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1066,10 +1066,10 @@ class MEFDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = MEF(split=Split.TEST, **self.dataset_kwargs)
             self.val   = MEF(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = MEF(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1089,35 +1089,20 @@ class NPEDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
             self.get_classlabels()
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test/predict splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            stage: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: ``None``.
-        """
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = NPE(split=Split.TEST, **self.dataset_kwargs)
             self.val   = NPE(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = NPE(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1137,7 +1122,7 @@ class SICEGradDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1147,10 +1132,10 @@ class SICEGradDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = SICEGrad(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1170,7 +1155,7 @@ class SICEMixDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1180,10 +1165,10 @@ class SICEMixDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = SICEMix(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
             
         if self.classlabels is None:
@@ -1203,7 +1188,7 @@ class SICEMixV2DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1213,10 +1198,10 @@ class SICEMixV2DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = SICEMixV2(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1236,7 +1221,7 @@ class ULOLMixDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1246,10 +1231,10 @@ class ULOLMixDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = ULOL(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1269,7 +1254,7 @@ class VVDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LLIE]
+    tasks = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1279,10 +1264,10 @@ class VVDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = VV(split=Split.TEST, **self.dataset_kwargs)
             self.val   = VV(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = VV(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:

@@ -10,6 +10,8 @@ __all__ = [
 	"ClassLabels",
 ]
 
+from typing import Any
+
 from mon import core
 from mon.core.file import json
 
@@ -39,6 +41,21 @@ class ClassLabels(dict[str, ClassLabel]):
 			raise ValueError(f":param:`path` must be a ``.json`` file, but got {path}.")
 		with open(path, "r") as file:
 			return json.load(file)
+	
+	@classmethod
+	def from_value(cls, value: Any) -> ClassLabels | None:
+		"""Create a :class:`ClassLabels` object from a value."""
+		if (
+			isinstance(value, dict)
+			and all(isinstance(k, str) and isinstance(v, dict) for k, v in value.items())
+		):
+			return value
+		elif isinstance(value, list):
+			return {v["name"]: v for i, v in enumerate(value)}
+		elif isinstance(value, str | core.Path):
+			return cls.from_file(value)
+		else:
+			return None
 	
 	@property
 	def id2label(self) -> dict[int, ClassLabel]:

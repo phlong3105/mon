@@ -62,18 +62,18 @@ class DenseHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "densehaze" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -82,18 +82,18 @@ class DenseHaze(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="ihaze")
@@ -104,18 +104,18 @@ class IHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "ihaze" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -124,18 +124,18 @@ class IHaze(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="nhhaze")
@@ -146,18 +146,18 @@ class NHHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "nhhaze" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -166,18 +166,18 @@ class NHHaze(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="ohaze")
@@ -188,18 +188,18 @@ class OHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "ohaze" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -208,18 +208,18 @@ class OHaze(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="reside_hsts_real")
@@ -229,18 +229,18 @@ class RESIDEHSTSReal(dataset.UnlabeledImageDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TEST]
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TEST]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_hsts_real" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -249,7 +249,7 @@ class RESIDEHSTSReal(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="reside_hsts_syn")
@@ -260,18 +260,18 @@ class RESIDEHSTSSyn(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TEST]
-    _has_test_label = False
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TEST]
+    has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_hsts_syn" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -280,18 +280,18 @@ class RESIDEHSTSSyn(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="reside_its")
@@ -302,18 +302,18 @@ class RESIDEITS(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL]
-    _has_test_label = False
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL]
+    has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_its" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -322,20 +322,20 @@ class RESIDEITS(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="reside_its_v2")
@@ -346,18 +346,18 @@ class RESIDEITSV2(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN]
+    has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_its_v2" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -366,20 +366,20 @@ class RESIDEITSV2(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="reside_ots")
@@ -390,18 +390,18 @@ class RESIDEOTS(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN]
+    has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_ots" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -410,20 +410,20 @@ class RESIDEOTS(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="reside_rtts")
@@ -433,18 +433,18 @@ class RESIDERTTS(dataset.UnlabeledImageDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TEST]
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TEST]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_rtts" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -453,7 +453,7 @@ class RESIDERTTS(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="reside_sots_indoor")
@@ -464,18 +464,18 @@ class RESIDESOTSIndoor(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_sots_indoor " / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -484,20 +484,20 @@ class RESIDESOTSIndoor(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="reside_sots_outdoor")
@@ -508,18 +508,18 @@ class RESIDESOTSOutdoor(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_sots_outdoor" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -528,20 +528,20 @@ class RESIDESOTSOutdoor(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
                 path  = img.path.replace("/lq/", "/hq/")
                 path  = path.parent / f"{stem}.{img.path.suffix}"
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="reside_uhi")
@@ -551,18 +551,18 @@ class RESIDEUHI(dataset.UnlabeledImageDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TEST]
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TEST]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "reside_uhi" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -571,7 +571,7 @@ class RESIDEUHI(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="satehaze1k")
@@ -582,20 +582,20 @@ class SateHaze1K(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "satehaze1k_thin" / self.split_str / "lq",
             self.root / "satehaze1k_moderate" / self.split_str / "lq",
             self.root / "satehaze1k_thick" / self.split_str / "lq",
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -604,18 +604,18 @@ class SateHaze1K(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="satehaze1k_thin")
@@ -625,18 +625,18 @@ class SateHaze1KThin(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "satehaze1k_thin" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -645,18 +645,18 @@ class SateHaze1KThin(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="satehaze1k_moderate")
@@ -666,18 +666,18 @@ class SateHaze1KModerate(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "satehaze1k_moderate" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -686,18 +686,18 @@ class SateHaze1KModerate(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="satehaze1k_thick")
@@ -707,18 +707,18 @@ class SateHaze1KThick(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DEHAZE]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DEHAZE]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "satehaze1k_thick" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -727,18 +727,18 @@ class SateHaze1KThick(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 # endregion
 
@@ -752,7 +752,7 @@ class DenseHazeDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -762,10 +762,10 @@ class DenseHazeDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = DenseHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = DenseHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = DenseHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -785,7 +785,7 @@ class IHazeDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -795,10 +795,10 @@ class IHazeDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = IHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = IHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = IHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -818,7 +818,7 @@ class NHHazeDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -828,10 +828,10 @@ class NHHazeDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = NHHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = NHHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = NHHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -851,7 +851,7 @@ class OHazeDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -861,10 +861,10 @@ class OHazeDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = OHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = OHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = OHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -884,7 +884,7 @@ class RESIDEHSTSRealDataModule(datamodule.DataModule):
      See Also: :class:`base.DataModule`.
      """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -894,10 +894,10 @@ class RESIDEHSTSRealDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -917,7 +917,7 @@ class RESIDEHSTSSynDataModule(datamodule.DataModule):
      See Also: :class:`base.DataModule`.
      """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -927,10 +927,10 @@ class RESIDEHSTSSynDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDEHSTSSyn(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDEHSTSSyn(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test = RESIDEHSTSSyn(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -950,7 +950,7 @@ class RESIDEITSDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -960,10 +960,10 @@ class RESIDEITSDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDEITS(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -983,7 +983,7 @@ class RESIDEITSV2DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -993,10 +993,10 @@ class RESIDEITSV2DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDEITSV2(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   =   RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  =   RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1016,7 +1016,7 @@ class RESIDEOTSDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1026,10 +1026,10 @@ class RESIDEOTSDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDEOTS(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1049,7 +1049,7 @@ class RESIDERTTSDataModule(datamodule.DataModule):
      See Also: :class:`base.DataModule`.
      """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1059,10 +1059,10 @@ class RESIDERTTSDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDERTTS(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDERTTS(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test = RESIDERTTS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1082,7 +1082,7 @@ class RESIDESOTSIndoorDataModule(datamodule.DataModule):
      See Also: :class:`base.DataModule`.
      """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1092,10 +1092,10 @@ class RESIDESOTSIndoorDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDESOTSIndoor(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDESOTSIndoor(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test = RESIDESOTSIndoor(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1115,7 +1115,7 @@ class RESIDESOTSOutdoorDataModule(datamodule.DataModule):
      See Also: :class:`base.DataModule`.
      """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1125,10 +1125,10 @@ class RESIDESOTSOutdoorDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1148,7 +1148,7 @@ class RESIDEUHIDataModule(datamodule.DataModule):
      See Also: :class:`base.DataModule`.
      """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1158,10 +1158,10 @@ class RESIDEUHIDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1181,35 +1181,20 @@ class SateHaze1KDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
             self.get_classlabels()
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test/predict splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            stage: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: ``None``.
-        """
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = SateHaze1K(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1K(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = SateHaze1K(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1229,7 +1214,7 @@ class SateHaze1KThinDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1239,10 +1224,10 @@ class SateHaze1KThinDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = SateHaze1KThin(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1KThin(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = SateHaze1KThin(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1262,7 +1247,7 @@ class SateHaze1KModerateDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1272,10 +1257,10 @@ class SateHaze1KModerateDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = SateHaze1KModerate(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1KModerate(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = SateHaze1KModerate(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1295,7 +1280,7 @@ class SateHaze1KThickDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DEHAZE]
+    tasks = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1305,10 +1290,10 @@ class SateHaze1KThickDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = SateHaze1KThick(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1KThick(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = SateHaze1KThick(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:

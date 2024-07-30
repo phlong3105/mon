@@ -32,14 +32,14 @@ class MIPI24Flare(dataset.ImageEnhancementDataset):
 	See Also: :class:`base.ImageEnhancementDataset`.
 	"""
 	
-	_tasks  		= [Task.LES]
-	_splits 		= [Split.TRAIN, Split.VAL, Split.TEST]
-	_has_test_label = False
+	tasks  		   = [Task.LES]
+	splits 		   = [Split.TRAIN, Split.VAL, Split.TEST]
+	has_test_label = False
 	
 	def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
 		super().__init__(root=root, *args, **kwargs)
 	
-	def _get_images(self):
+	def get_images(self):
 		if self.split in [Split.TRAIN]:
 			patterns = [
 				self.root / "train" / "mipi24_flare" / "lq",
@@ -54,7 +54,7 @@ class MIPI24Flare(dataset.ImageEnhancementDataset):
 			]
 		else:
 			raise ValueError
-		self._images: list[anno.ImageAnnotation] = []
+		self.images: list[anno.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for pattern in patterns:
 				for path in pbar.track(
@@ -63,18 +63,18 @@ class MIPI24Flare(dataset.ImageEnhancementDataset):
 				):
 					if path.is_image_file():
 						image = anno.ImageAnnotation(path=path)
-						self._images.append(image)
+						self.images.append(image)
 	
-	def _get_labels(self):
-		self._labels: list[anno.ImageAnnotation] = []
+	def get_labels(self):
+		self.labels: list[anno.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
-				self._images,
+				self.images,
 				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
 				path  = img.path.replace("/lq/", "/hq/")
 				label = anno.ImageAnnotation(path=path.image_file())
-				self._labels.append(label)
+				self.labels.append(label)
 
 
 # region DataModule
@@ -87,7 +87,7 @@ class MIPI24FlareDataModule(datamodule.DataModule):
 	See Also: :class:`base.DataModule`.
 	"""
 	
-	_tasks = [Task.LES]
+	tasks = [Task.LES]
 	
 	def prepare_data(self, *args, **kwargs):
 		if self.classlabels is None:
@@ -97,10 +97,10 @@ class MIPI24FlareDataModule(datamodule.DataModule):
 		if self.can_log:
 			console.log(f"Setup [red]{self.__class__.__name__}[/red].")
 		
-		if stage in [None, "training"]:
+		if stage in [None, "train"]:
 			self.train = MIPI24Flare(split=Split.TRAIN, **self.dataset_kwargs)
 			self.val   = MIPI24Flare(split=Split.VAL, **self.dataset_kwargs)
-		if stage in [None, "testing"]:
+		if stage in [None, "test"]:
 			self.test  = MIPI24Flare(split=Split.VAL, **self.dataset_kwargs)
 		
 		if self.classlabels is None:

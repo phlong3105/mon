@@ -21,9 +21,9 @@ from mon.data.datastruct import annotation as anno
 from mon.data.datastruct.dataset import image as img
 from mon.globals import Split
 
-console             = core.console
-ClassLabels         = anno.ClassLabels
-ClassificationLabel = anno.ClassificationAnnotation
+console                  = core.console
+ClassLabels              = anno.ClassLabels
+ClassificationAnnotation = anno.ClassificationAnnotation
 
 
 # region Image Classification Dataset
@@ -46,7 +46,7 @@ class ImageClassificationDataset(img.LabeledImageDataset, ABC):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self._labels: list[ClassificationLabel] = []
+		self.labels: list[ClassificationAnnotation] = []
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -63,9 +63,9 @@ class ImageClassificationDataset(img.LabeledImageDataset, ABC):
 		torch.Tensor | np.ndarray | list | None,
 		dict | None
 	]:
-		image = self._images[index].data
-		label = self._labels[index].data if self.has_test_label else None
-		meta  = self._images[index].meta
+		image = self.images[index].data
+		label = self.labels[index].data if self.has_test_label else None
+		meta  = self.images[index].meta
 		
 		if self.transform is not None:
 			if self.has_test_label:
@@ -126,13 +126,13 @@ class ImageClassificationDirectoryTree(ImageClassificationDataset):
 	See Also: :class:`ImageClassificationDataset`.
 	"""
 	
-	def _get_images(self):
+	def get_images(self):
 		pass
 	
-	def _get_labels(self):
+	def get_labels(self):
 		pass
 	
-	def _filter(self):
+	def filter(self):
 		pass
 
 # endregion

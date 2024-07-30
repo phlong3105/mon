@@ -20,9 +20,9 @@ from mon.data.datastruct import annotation as anno
 from mon.data.datastruct.dataset import image as img
 from mon.globals import Split
 
-console           = core.console
-ClassLabels       = anno.ClassLabels
-SegmentationLabel = anno.SegmentationAnnotation
+console                = core.console
+ClassLabels            = anno.ClassLabels
+SegmentationAnnotation = anno.SegmentationAnnotation
 
 
 # region Image Segmentation Dataset
@@ -45,7 +45,7 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self._labels: list[SegmentationLabel] = []
+		self.labels: list[SegmentationAnnotation] = []
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -62,9 +62,9 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 		torch.Tensor | np.ndarray | None,
 		dict | None
 	]:
-		image = self._images[index].data
-		label = self._labels[index].data if self.has_test_label else None
-		meta  = self._images[index].meta
+		image = self.images[index].data
+		label = self.labels[index].data if self.has_test_label else None
+		meta  = self.images[index].meta
 		
 		if self.transform is not None:
 			if self.has_test_label:
@@ -84,7 +84,7 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 			
 		return image, label, meta
 		
-	def _filter(self):
+	def filter(self):
 		'''
 		keep = []
 		for i, (img, lab) in enumerate(zip(self._images, self.labels)):

@@ -9,9 +9,7 @@ __all__ = [
 	"ImageEnhancementDataset",
 	"ImageLoader",
 	"LabeledImageDataset",
-	"LabeledImageInpaintingDataset",
 	"UnlabeledImageDataset",
-	"UnlabeledImageInpaintingDataset",
 ]
 
 import glob
@@ -27,10 +25,9 @@ from mon.data.datastruct import annotation as anno
 from mon.data.datastruct.dataset import base
 from mon.globals import Split
 
-console	    = core.console
-ClassLabels = anno.ClassLabels
-FrameLabel  = anno.FrameAnnotation
-ImageLabel  = anno.ImageAnnotation
+console         = core.console
+ClassLabels     = anno.ClassLabels
+ImageAnnotation = anno.ImageAnnotation
 
 
 # region Unlabeled Image Dataset
@@ -41,8 +38,7 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 	
 	Args:
 		root: A root directory where the data is stored.
-		split: The data split to use. One of: [``'train'``, ``'val'``,
-			``'test'``, ``'predict'``]. Default: ``'train'``.
+		split: The data split to use. Default: ``'Split.TRAIN'``.
 		classlabels: :class:`ClassLabels` object. Default: ``None``.
 		transform: Transformations performed on both the input and target. We
 			use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
@@ -58,7 +54,7 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 	def __init__(
 		self,
 		root       : core.Path,
-		split      : Split 			    = Split.TRAIN,
+		split      : Split              = Split.TRAIN,
 		classlabels: ClassLabels | None = None,
 		transform  : A.Compose   | None = None,
 		to_tensor  : bool               = False,
@@ -75,32 +71,35 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 			verbose     = verbose,
 			*args, **kwargs
 		)
-		self._images: list[ImageLabel] = []
+		self.images: list[ImageAnnotation] = []
 		
+		# Get image from disk or cache
 		cache_file = self.root / f"{self.split_str}.cache"
 		if cache_data and cache_file.is_cache_file():
 			self.load_cache(path=cache_file)
 		else:
-			self._get_images()
+			self.get_images()
 		
-		self._filter()
-		self._verify()
+		# Filter and verify data
+		self.filter()
+		self.verify()
 		
+		# Cache data
 		if cache_data:
 			self.cache_data(path=cache_file)
 		else:
 			core.delete_cache(cache_file)
 		
 	def __len__(self) -> int:
-		return len(self._images)
+		return len(self.images)
 	
 	def __getitem__(self, index: int) -> tuple[
 		torch.Tensor | np.ndarray,
 		torch.Tensor | np.ndarray | None,
 		dict | None
 	]:
-		image = self._images[index].data
-		meta  = self._images[index].meta
+		image = self.images[index].data
+		meta  = self.images[index].meta
 		
 		if self.transform is not None:
 			transformed = self.transform(image=image)
@@ -115,35 +114,35 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 		"""Return the total hash value of all the files (if it has one).
 		Hash values are integers (in bytes) of all files.
 		"""
-		return sum(i.meta.get("hash", 0) for i in self._images) if self._images else 0
+		return sum(i.meta.get("hash", 0) for i in self.images) if self.images else 0
 	
 	@abstractmethod
-	def _get_images(self):
+	def get_images(self):
 		"""Get image files."""
 		pass
 	
-	def _filter(self):
+	def filter(self):
 		"""Filter unwanted samples."""
 		pass
 	
-	def _verify(self):
+	def verify(self):
 		"""Verify and check data."""
-		if not len(self._images) > 0:
+		if not len(self.images) > 0:
 			raise RuntimeError(f"No images in dataset.")
 		if self.verbose:
-			console.log(f"Number of samples: {len(self._images)}.")
+			console.log(f"Number of samples: {len(self.images)}.")
 	
 	def cache_data(self, path: core.Path):
 		"""Cache data to :param:`path`."""
-		hash = 0
+		hash_ = 0
 		if path.is_cache_file():
-			_cache = torch.load(path)
-			hash   = _cache.get("hash", 0)
+			cache = torch.load(path)
+			hash_ = cache.get("hash", 0)
 			
-		if self.hash != hash:
+		if self.hash != hash_:
 			cache = {
 				"hash"  : self.hash,
-				"images": self._images,
+				"images": self.images,
 			}
 			torch.save(cache, str(path))
 			if self.verbose:
@@ -152,11 +151,11 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 	def load_cache(self, path: core.Path):
 		"""Load cache data from :param:`path`."""
 		cache       = torch.load(path)
-		self._images = cache["images"]
+		self.images = cache["images"]
 	
 	def reset(self):
 		"""Reset and start over."""
-		self._index = 0
+		self.index = 0
 	
 	def close(self):
 		"""Stop and release."""
@@ -192,204 +191,13 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 		return input, target, meta
 
 
-class UnlabeledImageInpaintingDataset(base.UnlabeledDataset, ABC):
-	"""The base class for inpainting datasets that represent a collection of
-	images, and associated masks.
- 
-	Args:
-		root: A root directory where the data is stored.
-		split: The data split to use. One of: [``'train'``, ``'val'``,
-			``'test'``, ``'predict'``]. Default: ``'train'``.
-		classlabels: :class:`ClassLabels` object. Default: ``None``.
-		transform: Transformations performed on both the input and target. We
-			use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
-		to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-			Default: ``False``.
-		cache_data: If ``True``, cache data to disk for faster loading next
-			time. Default: ``False``.
-		verbose: Verbosity. Default: ``True``.
-	
-	See Also: :class:`UnlabeledDataset`.
-	"""
-	
-	def __init__(
-		self,
-		root       : core.Path,
-		split      : Split 			    = Split.TRAIN,
-		classlabels: ClassLabels | None = None,
-		transform  : A.Compose   | None = None,
-		to_tensor  : bool               = False,
-		cache_data : bool               = False,
-		verbose    : bool               = True,
-		*args, **kwargs
-	):
-		super().__init__(
-			root        = root,
-			split       = split,
-			classlabels = classlabels,
-			transform   = transform,
-			to_tensor   = to_tensor,
-			verbose     = verbose,
-			*args, **kwargs
-		)
-		self._images: list[ImageLabel] = []
-		self._masks : list[ImageLabel] = []
-		
-		cache_file = self.root / f"{self.split_str}.cache"
-		if cache_data and cache_file.is_cache_file():
-			self.load_cache(path=cache_file)
-		else:
-			self._get_images()
-			self._get_masks()
-		
-		self._filter()
-		self._verify()
-		
-		if cache_data:
-			self.cache_data(path=cache_file)
-		else:
-			core.delete_cache(cache_file)
-		
-	def __len__(self) -> int:
-		return len(self._images)
-	
-	def __getitem__(self, index: int) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
-		image = self._images[index].data
-		mask  = self._masks[index].data
-		meta  = self._images[index].meta
-		
-		if self.transform is not None:
-			transformed = self.transform(image=image, mask=mask)
-			image       = transformed["image"]
-			mask        = transformed["mask"]
-		
-		if self.to_tensor:
-			image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-			mask  = core.to_image_tensor(input=mask,  keepdim=False, normalize=True)
-		
-		return image, mask, None, meta
-	
-	@property
-	def hash(self) -> int:
-		"""Return the total hash value of all the files (if it has one).
-		Hash values are integers (in bytes) of all files.
-		"""
-		hash  = 0
-		hash += sum(i.meta.get("hash", 0) for i in self._images) if self._images else 0
-		hash += sum(i.meta.get("hash", 0) for i in self._masks)  if self._masks  else 0
-		return hash
-	
-	@abstractmethod
-	def _get_images(self):
-		"""Get image files."""
-		pass
-	
-	@abstractmethod
-	def _get_masks(self):
-		"""Get mask files."""
-		pass
-	
-	def _filter(self):
-		"""Filter unwanted samples."""
-		pass
-	
-	def _verify(self):
-		"""Verify and check data."""
-		if not len(self._images) > 0:
-			raise RuntimeError(f"No images in dataset.")
-		if not len(self._images) == len(self._masks):
-			raise RuntimeError(
-				f"Number of images and masks must be the same, but got "
-				f"{len(self._images)} and {len(self._masks)}."
-			)
-		if self.verbose:
-			console.log(f"Number of {self.split_str} samples: {len(self._images)}.")
-	
-	def cache_data(self, path: core.Path):
-		"""Cache data to :param:`path`."""
-		hash = 0
-		if path.is_cache_file():
-			_cache = torch.load(path)
-			hash   = _cache.get("hash", 0)
-			
-		if self.hash != hash:
-			cache = {
-				"hash"  : self.hash,
-				"images": self._images,
-				"masks" : self._masks,
-			}
-			torch.save(cache, str(path))
-			if self.verbose:
-				console.log(f"Cached data to: {path}")
-		
-	def load_cache(self, path: core.Path):
-		"""Load cache data from :param:`path`."""
-		cache        = torch.load(path)
-		self._images = cache["images"]
-		self._masks  = cache["masks"]
-		
-	def reset(self):
-		"""Reset and start over."""
-		self._index = 0
-	
-	def close(self):
-		"""Stop and release."""
-		pass
-	
-	@staticmethod
-	def collate_fn(batch) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		list | None
-	]:
-		"""Collate function used to fused input items together when using
-		:attr:`batch_size` > 1. This is used in
-		:class:`torch.utils.data.DataLoader` wrapper.
-		
-		Args:
-			batch: A list of tuples of (input, meta).
-		"""
-		input, mask, target, meta = zip(*batch)  # Transposed
-		
-		if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in input):
-			input = torch.stack(input, dim=0)
-		elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in input):
-			input = torch.cat(input, dim=0)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in input):
-			input = np.array(input)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in input):
-			input = np.concatenate(input, axis=0)
-		else:
-			raise ValueError(f"input's number of dimensions must be between ``2`` and ``4``.")
-		
-		if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in input):
-			mask = torch.stack(input, dim=0)
-		elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in input):
-			mask = torch.cat(input, dim=0)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in input):
-			mask = np.array(input)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in input):
-			mask = np.concatenate(input, axis=0)
-		else:
-			raise ValueError(f"input's number of dimensions must be between ``2`` and ``4``.")
-		
-		target = None
-		return input, mask, target, meta
-
-
 class ImageLoader(UnlabeledImageDataset):
 	"""A general image loader that retrieves and loads image(s) from a file
 	path, file path pattern, or directory.
  
 	See Also: :class:`UnlabeledImageDataset`.
     """
-		
+	
 	def __init__(
 		self,
 		root       : core.Path,
@@ -412,7 +220,7 @@ class ImageLoader(UnlabeledImageDataset):
 			*args, **kwargs
 		)
 	
-	def _get_images(self):
+	def get_images(self):
 		# A single image
 		if self.root.is_image_file():
 			paths = [self.root]
@@ -425,14 +233,14 @@ class ImageLoader(UnlabeledImageDataset):
 		else:
 			raise IOError(f"Error when listing image files.")
 		
-		self._images: list[ImageLabel] = []
+		self.images: list[ImageAnnotation] = []
 		with core.get_progress_bar() as pbar:
 			for path in pbar.track(
 				sorted(paths),
 				description=f"[bright_yellow]Listing {self.__class__.__name__} {self.split_str} images"
 			):
 				if path.is_image_file():
-					self._images.append(ImageLabel(path=path))
+					self.images.append(ImageAnnotation(path=path))
 	
 # endregion
 
@@ -444,8 +252,7 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 	
 	Args:
 		root: A root directory where the data is stored.
-		split: The data split to use. One of: [``'train'``, ``'val'``,
-			``'test'``, ``'predict'``]. Default: ``'train'``.
+		split: The data split to use. Default: ``'Split.TRAIN'``.
 		classlabels: :class:`ClassLabels` object. Default: ``None``.
 		has_test_label: If ``True``, the test set has ground-truth labels.
 			Default: ``False``.
@@ -481,29 +288,32 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 			verbose     = verbose,
 			*args, **kwargs
 		)
-		self._images: list[ImageLabel] = []
-		self._labels: list[Any]		   = []
+		self.images: list[ImageAnnotation] = []
+		self.labels: list[Any]		       = []
 		if not hasattr(self, "labels"):
-			self._labels = []
+			self.labels = []
 		
+		# Get image and label from disk or cache
 		cache_file = self.root / f"{self.split_str}.cache"
 		if cache_data and cache_file.is_file():
 			self.load_cache(path=cache_file)
 		else:
-			self._get_images()
+			self.get_images()
 			if self.has_test_label:
-				self._get_labels()
+				self.get_labels()
 		
-		self._filter()
-		self._verify()
+		# Filter and verify data
+		self.filter()
+		self.verify()
 		
+		# Cache data
 		if cache_data:
 			self.cache_data(path=cache_file)
 		else:
 			core.delete_cache(cache_file)
 	
 	def __len__(self) -> int:
-		return len(self._images)
+		return len(self.images)
 	
 	@abstractmethod
 	def __getitem__(self, index: int) -> tuple[
@@ -521,231 +331,58 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 		"""Return the total hash value of all the files (if it has one).
 		Hash values are integers (in bytes) of all files.
 		"""
-		hash  = 0
-		hash += sum(i.meta.get("hash", 0) for i in self._images) if self._images else 0
-		hash += sum(i.meta.get("hash", 0) for i in self._labels) if self._labels else 0
-		return hash
+		hash_  = 0
+		hash_ += sum(i.meta.get("hash", 0) for i in self.images) if self.images else 0
+		hash_ += sum(i.meta.get("hash", 0) for i in self.labels) if self.labels else 0
+		return hash_
 	
 	@abstractmethod
-	def _get_images(self):
+	def get_images(self):
 		"""Get image files."""
 		pass
 	
 	@abstractmethod
-	def _get_labels(self):
+	def get_labels(self):
 		"""Get label files."""
 		pass
 	
-	def _filter(self):
+	def filter(self):
 		"""Filter unwanted samples."""
 		pass
 	
-	def _verify(self):
+	def verify(self):
 		"""Verify and check data."""
-		if not len(self._images) > 0:
-			raise RuntimeError(f"No images in dataset.")
-		if self.has_test_label and not len(self._images) == len(self._labels):
-			raise RuntimeError(
-				f"Number of images and labels must be the same, but got "
-				f"{len(self._images)} and {len(self._labels)}."
-			)
-		if self.verbose:
-			console.log(f"Number of {self.split_str} samples: {len(self._images)}.")
-	
-	def cache_data(self, path: core.Path):
-		"""Cache data to :param:`path`."""
-		hash = 0
-		if path.is_cache_file():
-			_cache = torch.load(path)
-			hash   = _cache.get("hash", 0)
-			
-		if self.hash != hash:
-			cache = {
-				"hash"	: self.hash,
-				"images": self._images,
-				"labels": self._labels,
-			}
-			torch.save(cache, str(path))
-			if self.verbose:
-				console.log(f"Cached data to: {path}")
-	
-	def load_cache(self, path: core.Path):
-		"""Load cache data from :param:`path`."""
-		cache        = torch.load(path)
-		self._images = cache["images"]
-		self._labels = cache["labels"]
-	
-	def reset(self):
-		"""Reset and start over."""
-		self._index = 0
-	
-	def close(self):
-		"""Stop and release."""
-		pass
-
-
-class LabeledImageInpaintingDataset(base.LabeledDataset, ABC):
-	"""The base class for inpainting datasets that represent a collection of
-	images, associated masks, and target.
-	
-	Args:
-		root: A root directory where the data is stored.
-		split: The data split to use. One of: [``'train'``, ``'val'``,
-			``'test'``, ``'predict'``]. Default: ``'train'``.
-		classlabels: :class:`ClassLabels` object. Default: ``None``.
-		has_test_label: If ``True``, the test set has ground-truth labels.
-			Default: ``False``.
-		transform: Transformations performed on both the input and target.
-		to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
-			Default: ``False``.
-		cache_data: If ``True``, cache data to disk for faster loading next
-			time. Default: ``False``.
-		cache_images: If ``True``, cache images into memory for faster training
-			(WARNING: large datasets may exceed system RAM). Default: ``False``.
-		verbose: Verbosity. Default: ``True``.
-	
-	See Also: :class:`LabeledDataset`.
-	"""
-	
-	def __init__(
-		self,
-		root       : core.Path,
-		split      : Split         	    = Split.TRAIN,
-		classlabels: ClassLabels | None = None,
-		transform  : A.Compose   | None = None,
-		to_tensor  : bool               = False,
-		cache_data : bool               = False,
-		verbose    : bool               = True,
-		*args, **kwargs
-	):
-		super().__init__(
-			root        = root,
-			split       = split,
-			classlabels = classlabels,
-			transform   = transform,
-			to_tensor   = to_tensor,
-			verbose     = verbose,
-			*args, **kwargs
-		)
-		self._images: list[ImageLabel] = []
-		self._masks : list[ImageLabel] = []
-		self._labels: list[ImageLabel] = []
-		if not hasattr(self, "labels"):
-			self._labels = []
-		
-		cache_file = self.root / f"{self.split_str}.cache"
-		if cache_data and cache_file.is_file():
-			self.load_cache(path=cache_file)
-		else:
-			self._get_images()
-			self._get_masks()
-			if self.has_test_label:
-				self._get_labels()
-		
-		self._filter()
-		self._verify()
-		
-		if cache_data:
-			self.cache_data(path=cache_file)
-		else:
-			core.delete_cache(cache_file)
-	
-	def __len__(self) -> int:
-		return len(self._images)
-	
-	def __getitem__(self, index: int) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
-		image = self._images[index].data
-		mask  = self._masks[index].data
-		label = self._labels[index].data if self.has_test_label else None
-		meta  = self._images[index].meta
-		
-		if self.transform is not None:
-			if self.has_test_label:
-				transformed = self.transform(image=image, masks=[mask, label])
-				image       = transformed["image"]
-				masks       = transformed["masks"]
-				mask        = masks[0]
-				label       = masks[1]
-			else:
-				transformed = self.transform(image=image, mask=mask)
-				image       = transformed["image"]
-				mask        = transformed["mask"]
-			
-		if self.to_tensor:
-			if self.has_test_label:
-				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-				mask  = core.to_image_tensor(input=mask,  keepdim=False, normalize=True)
-				label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
-			else:
-				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-				mask  = core.to_image_tensor(input=mask,  keepdim=False, normalize=True)
-		
-		return image, mask, label, meta
-	
-	@property
-	def hash(self) -> int:
-		"""Return the total hash value of all the files (if it has one).
-		Hash values are integers (in bytes) of all files.
-		"""
-		hash  = 0
-		hash += sum(i.meta.get("hash", 0) for i in self._images) if self._images else 0
-		hash += sum(i.meta.get("hash", 0) for i in self._masks)  if self._masks  else 0
-		hash += sum(i.meta.get("hash", 0) for i in self._labels) if self._labels else 0
-		return hash
-	
-	@abstractmethod
-	def _get_images(self):
-		"""Get image files."""
-		pass
-	
-	@abstractmethod
-	def _get_masks(self):
-		"""Get mask files."""
-		pass
-	
-	@abstractmethod
-	def _get_labels(self):
-		"""Get label files."""
-		pass
-	
-	def _filter(self):
-		"""Filter unwanted samples."""
-		pass
-	
-	def _verify(self):
-		"""Verify and check data."""
-		if not len(self._images) > 0:
+		if not len(self.images) > 0:
 			raise RuntimeError(f"No images in dataset.")
 		if (
 			self.has_test_label
-			and not len(self._images) == len(self._masks)
-			and not len(self._images) == len(self._labels)
+			and self.split == Split.TEST
+			and not len(self.images) == len(self.labels)
 		):
 			raise RuntimeError(
-				f"Number of images, masks and labels must be the same, but got "
-				f"{len(self._images)}, {len(self._masks)}and {len(self._labels)}."
+				f"Number of images and labels must be the same, but got "
+				f"{len(self.images)} and {len(self.labels)}."
+			)
+		elif not len(self.images) == len(self.labels):
+			raise RuntimeError(
+				f"Number of images and labels must be the same, but got "
+				f"{len(self.images)} and {len(self.labels)}."
 			)
 		if self.verbose:
-			console.log(f"Number of {self.split_str} samples: {len(self._images)}.")
+			console.log(f"Number of {self.split_str} samples: {len(self.images)}.")
 	
 	def cache_data(self, path: core.Path):
 		"""Cache data to :param:`path`."""
-		hash = 0
+		hash_ = 0
 		if path.is_cache_file():
-			_cache = torch.load(path)
-			hash   = _cache.get("hash", 0)
-		
-		if self.hash != hash:
+			cache = torch.load(path)
+			hash_ = cache.get("hash", 0)
+			
+		if self.hash != hash_:
 			cache = {
 				"hash"	: self.hash,
-				"images": self._images,
-				"masks" : self._masks,
-				"labels": self._labels,
+				"images": self.images,
+				"labels": self.labels,
 			}
 			torch.save(cache, str(path))
 			if self.verbose:
@@ -753,70 +390,18 @@ class LabeledImageInpaintingDataset(base.LabeledDataset, ABC):
 	
 	def load_cache(self, path: core.Path):
 		"""Load cache data from :param:`path`."""
-		cache        = torch.load(path)
-		self._images = cache["images"]
-		self._masks  = cache["masks"]
-		self._labels = cache["labels"]
+		cache       = torch.load(path)
+		self.images = cache["images"]
+		self.labels = cache["labels"]
 	
 	def reset(self):
 		"""Reset and start over."""
-		self._index = 0
+		self.index = 0
 	
 	def close(self):
 		"""Stop and release."""
 		pass
-	
-	@staticmethod
-	def collate_fn(batch) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		list | None
-	]:
-		"""Collate function used to fused input items together when using
-		:attr:`batch_size` > 1. This is used in
-		:class:`torch.utils.data.DataLoader` wrapper.
-		
-		Args:
-			batch: A list of tuples of (input, meta).
-		"""
-		input, mask, target, meta = zip(*batch)  # Transposed
-		
-		if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in input):
-			input = torch.stack(input, dim=0)
-		elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in input):
-			input = torch.cat(input, dim=0)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in input):
-			input = np.array(input)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in input):
-			input = np.concatenate(input, axis=0)
-		else:
-			raise ValueError(f"input's number of dimensions must be between ``2`` and ``4``.")
-		
-		if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in input):
-			mask = torch.stack(input, dim=0)
-		elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in input):
-			mask = torch.cat(input, dim=0)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in input):
-			mask = np.array(input)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in input):
-			mask = np.concatenate(input, axis=0)
-		else:
-			raise ValueError(f"input's number of dimensions must be between ``2`` and ``4``.")
-		
-		if all(isinstance(t, torch.Tensor)   and t.ndim == 3 for t in target):
-			target = torch.stack(target, dim=0)
-		elif all(isinstance(t, torch.Tensor) and t.ndim == 4 for t in target):
-			target = torch.cat(target, dim=0)
-		elif all(isinstance(t, np.ndarray)   and t.ndim == 3 for t in target):
-			target = np.array(target)
-		elif all(isinstance(t, np.ndarray)   and t.ndim == 4 for t in target):
-			target = np.concatenate(target, axis=0)
-		else:
-			target = None
-			
-		return input, mask, target, meta
-	
+
 
 class ImageEnhancementDataset(LabeledImageDataset, ABC):
 	"""The base class for datasets that represent a collection of images, and a
@@ -836,7 +421,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self._labels: list[ImageLabel] = []
+		self.labels: list[ImageAnnotation] = []
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -853,9 +438,9 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 		torch.Tensor | np.ndarray | None,
 		dict | None
 	]:
-		image = self._images[index].data
-		label = self._labels[index].data if self.has_test_label else None
-		meta  = self._images[index].meta
+		image = self.images[index].data
+		label = self.labels[index].data if self.has_test_label else None
+		meta  = self.images[index].meta
 		
 		if self.transform is not None:
 			if self.has_test_label:
@@ -875,7 +460,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 		
 		return image, label, meta
 		
-	def _filter(self):
+	def filter(self):
 		'''
 		keep = []
 		for i, (img, lab) in enumerate(zip(self._images, self._labels)):

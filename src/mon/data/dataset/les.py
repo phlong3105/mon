@@ -47,8 +47,8 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LES]
-    _splits         = [Split.TRAIN]
+    tasks          = [Task.LES]
+    splits         = [Split.TRAIN]
     _has_test_label = False
     
     def __init__(
@@ -86,8 +86,8 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
         torch.Tensor | np.ndarray | None,
         dict | None
     ]:
-        image = self._images[index].data
-        meta  = self._images[index].meta
+        image = self.images[index].data
+        meta  = self.images[index].meta
         
         gamma                = np.random.uniform(1.8, 2.2)
         adjust_gamma         = transform.RandomGammaCorrection(gamma)
@@ -132,11 +132,11 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
         
         return adjust_gamma_reverse(flare), adjust_gamma_reverse(image), meta
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "flare7k++" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -145,7 +145,7 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
         
         self._get_reflective_flare()
         self._get_scattering_flare()
@@ -182,7 +182,7 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
     
     def cache_data(self, path: core.Path):
         cache = {
-            "images"    : self._images,
+            "images"    : self.images,
             "reflective": self.reflective_flare,
             "scattering": self.scattering_flare,
         }
@@ -190,7 +190,7 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
     
     def load_cache(self, path: core.Path):
         cache                 = torch.load(path)
-        self._images           = cache["images"]
+        self.images           = cache["images"]
         self.reflective_flare = cache["reflective"]
         self.scattering_flare = cache["scattering"]
     
@@ -210,18 +210,18 @@ class Flare7KPPReal(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LES]
-    _splits         = [Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.LES]
+    splits         = [Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "flare7k++_real" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -230,18 +230,18 @@ class Flare7KPPReal(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="flare7k++_syn")
@@ -251,18 +251,18 @@ class Flare7KPPSyn(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LES]
-    _splits         = [Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.LES]
+    splits         = [Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "flare7k++_syn" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -271,18 +271,18 @@ class Flare7KPPSyn(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="flarereal800")
@@ -292,18 +292,18 @@ class FlareReal800(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LES]
-    _splits         = [Split.TRAIN, Split.VAL]
-    _has_test_label = False
+    tasks          = [Task.LES]
+    splits         = [Split.TRAIN, Split.VAL]
+    has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "flarereal800" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -312,18 +312,18 @@ class FlareReal800(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
     
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="ledlight")
@@ -333,18 +333,18 @@ class LEDLight(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LES]
-    _splits         = [Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.LES]
+    splits         = [Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "ledlight" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -353,18 +353,18 @@ class LEDLight(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="lighteffect")
@@ -374,19 +374,19 @@ class LightEffect(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    _tasks          = [Task.LES]
-    _splits         = [Split.TRAIN]
+    tasks          = [Task.LES]
+    splits         = [Split.TRAIN]
     _has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             # self.root / self.split / "light-effect" / "clear",
             self.root / "lighteffect" / self.split_str / "lq",
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -395,7 +395,7 @@ class LightEffect(dataset.UnlabeledImageDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
 # endregion
 
@@ -409,7 +409,7 @@ class Flare7KPPRealDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LES]
+    tasks = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -419,10 +419,10 @@ class Flare7KPPRealDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Flare7KPPReal(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Flare7KPPReal(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Flare7KPPReal(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -442,7 +442,7 @@ class Flare7KPPSynDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LES]
+    tasks = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -452,10 +452,10 @@ class Flare7KPPSynDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Flare7KPPSyn(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Flare7KPPSyn(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Flare7KPPSyn(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -475,7 +475,7 @@ class FlareReal800DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LES]
+    tasks = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -485,10 +485,10 @@ class FlareReal800DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = FlareReal800(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = FlareReal800(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = FlareReal800(split=Split.VAL,   **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -508,7 +508,7 @@ class LEDLightDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
 
-    _tasks = [Task.LES]
+    tasks = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -518,10 +518,10 @@ class LEDLightDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = LEDLight(split=Split.TEST, **self.dataset_kwargs)
             self.val   = LEDLight(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LEDLight(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -541,7 +541,7 @@ class LightEffectDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.LES]
+    tasks = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -551,10 +551,10 @@ class LightEffectDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = LightEffect(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LightEffect(split=Split.TRAIN, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = LightEffect(split=Split.TRAIN, **self.dataset_kwargs)
 
         if self.classlabels is None:

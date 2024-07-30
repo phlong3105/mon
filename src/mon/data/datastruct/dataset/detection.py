@@ -82,9 +82,9 @@ class ImageDetectionDataset(img.LabeledImageDataset, ABC):
 		torch.Tensor | np.ndarray | None,
 		dict | None
 	]:
-		image  = self._images[index].data
+		image  = self.images[index].data
 		bboxes = self._labels[index].data if self.has_test_label else None
-		meta   = self._images[index].meta
+		meta   = self.images[index].meta
 		
 		if self.transform is not None:
 			if self.has_test_label:
@@ -104,7 +104,7 @@ class ImageDetectionDataset(img.LabeledImageDataset, ABC):
 		
 		return image, bboxes, meta
 	
-	def _filter(self):
+	def filter(self):
 		pass
 	
 	@staticmethod
@@ -175,7 +175,7 @@ class DetectionDatasetCOCO(ImageDetectionDataset, ABC):
 			*args, **kwargs
 		)
 	
-	def _get_labels(self):
+	def get_labels(self):
 		json_file = self.annotation_file()
 		if not json_file.is_json_file():
 			raise ValueError(
@@ -198,16 +198,16 @@ class DetectionDatasetCOCO(ImageDetectionDataset, ABC):
 			height   = img.get("height",     0)
 			width    = img.get("width",      0)
 			index    = -1
-			for idx, im in enumerate(self._images):
+			for idx, im in enumerate(self.images):
 				if im.name == filename:
 					index = idx
 					break
-			self._images[index].id            = id
-			self._images[index].coco_url      = img.get("coco_url", "")
-			self._images[index].flickr_url    = img.get("flickr_url", "")
-			self._images[index].license       = img.get("license", 0)
-			self._images[index].date_captured = img.get("date_captured", "")
-			self._images[index].shape         = (height, width, 3)
+			self.images[index].id            = id
+			self.images[index].coco_url      = img.get("coco_url", "")
+			self.images[index].flickr_url    = img.get("flickr_url", "")
+			self.images[index].license       = img.get("license", 0)
+			self.images[index].date_captured = img.get("date_captured", "")
+			self.images[index].shape         = (height, width, 3)
 		
 		for ann in annos:
 			id          = ann.get("id"         , uuid.uuid4().int)
@@ -221,7 +221,7 @@ class DetectionDatasetCOCO(ImageDetectionDataset, ABC):
 	def annotation_file(self) -> core.Path:
 		pass
 	
-	def _filter(self):
+	def filter(self):
 		pass
 
 
@@ -257,15 +257,15 @@ class DetectionDatasetVOC(ImageDetectionDataset, ABC):
 			*args, **kwargs
 		)
 	
-	def _get_labels(self):
+	def get_labels(self):
 		files = self.annotation_files()
 		
-		if not len(self._images) > 0:
+		if not len(self.images) > 0:
 			raise RuntimeError(f"No images in dataset.")
-		if not len(self._images) == len(files):
+		if not len(self.images) == len(files):
 			raise RuntimeError(
 				f"Number of images and files must be the same, but got "
-				f"{len(self._images)} and {len(files)}."
+				f"{len(self.images)} and {len(files)}."
 			)
 		
 		self.labels: list[BBoxesLabelVOC] = []
@@ -285,7 +285,7 @@ class DetectionDatasetVOC(ImageDetectionDataset, ABC):
 	def annotation_files(self) -> list[core.Path]:
 		pass
 	
-	def _filter(self):
+	def filter(self):
 		pass
 
 
@@ -320,15 +320,15 @@ class DetectionDatasetYOLO(ImageDetectionDataset, ABC):
 			*args, **kwargs
 		)
 	
-	def _get_labels(self):
+	def get_labels(self):
 		files = self.annotation_files()
 		
-		if not len(self._images) > 0:
+		if not len(self.images) > 0:
 			raise RuntimeError(f"No images in dataset.")
-		if not len(self._images) == len(files):
+		if not len(self.images) == len(files):
 			raise RuntimeError(
 				f"Number of images and files must be the same, but got "
-				f"{len(self._images)} and {len(files)}."
+				f"{len(self.images)} and {len(files)}."
 			)
 		
 		self._labels: list[BBoxesLabelYOLO] = []
@@ -343,7 +343,7 @@ class DetectionDatasetYOLO(ImageDetectionDataset, ABC):
 	def annotation_files(self) -> list[core.Path]:
 		pass
 	
-	def _filter(self):
+	def filter(self):
 		pass
 
 # endregion

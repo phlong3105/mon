@@ -33,11 +33,7 @@ class ImageAnnotation(base.Annotation):
     See Also: :class:`mon.data.datastruct.annotation.base.Annotation`.
     """
     
-    def __init__(
-        self,
-        path : core.Path | str,
-        *args, **kwargs
-    ):
+    def __init__(self, path: core.Path | str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if path is None or not core.Path(path).is_image_file():
             raise ValueError(f":param:`path` must be a valid path to an image file, but got {self.path}.")

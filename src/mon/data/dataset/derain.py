@@ -47,18 +47,18 @@ class GTRain(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "gtrain" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -67,13 +67,13 @@ class GTRain(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path = str(img.path)
@@ -84,7 +84,7 @@ class GTRain(dataset.ImageEnhancementDataset):
                 path  = path.replace("/lq/", "/hq/")
                 path  = core.Path(path)
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain100")
@@ -94,18 +94,18 @@ class Rain100(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "rain100" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -114,18 +114,18 @@ class Rain100(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain100h")
@@ -136,18 +136,18 @@ class Rain100H(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "rain100h" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -156,18 +156,18 @@ class Rain100H(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain100l")
@@ -178,18 +178,18 @@ class Rain100L(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
 
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "rain100l" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -198,18 +198,18 @@ class Rain100L(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain12")
@@ -219,18 +219,18 @@ class Rain12(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN]
+    has_test_label = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "rain12" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -239,18 +239,18 @@ class Rain12(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain1200")
@@ -261,14 +261,14 @@ class Rain1200(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         if self.split in [Split.TRAIN]:
             patterns = [
                 self.root / "rain1200_light" / self.split_str / "lq",
@@ -279,7 +279,7 @@ class Rain1200(dataset.ImageEnhancementDataset):
             patterns = [
                 self.root / "rain1200" / self.split_str / "lq"
             ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -288,18 +288,18 @@ class Rain1200(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain13k")
@@ -309,14 +309,14 @@ class Rain13K(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         if self.split in [Split.TRAIN]:
             patterns = [
                 self.root / "rain13k" / self.split_str / "lq",
@@ -337,7 +337,7 @@ class Rain13K(dataset.ImageEnhancementDataset):
                 self.root / "rain800" / self.split_str / "lq",
             ]
         
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -346,18 +346,18 @@ class Rain13K(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain1400")
@@ -368,18 +368,18 @@ class Rain1400(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "rain1400" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -388,18 +388,18 @@ class Rain1400(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain2800")
@@ -409,18 +409,18 @@ class Rain2800(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "rain2800" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -429,18 +429,18 @@ class Rain2800(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="rain800")
@@ -450,18 +450,18 @@ class Rain800(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    _tasks          = [Task.DERAIN]
-    _splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    _has_test_label = True
+    tasks          = [Task.DERAIN]
+    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_label = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def _get_images(self):
+    def get_images(self):
         patterns = [
             self.root / "rain800" / self.split_str / "lq"
         ]
-        self._images: list[anno.ImageAnnotation] = []
+        self.images: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -470,18 +470,18 @@ class Rain800(dataset.ImageEnhancementDataset):
                 ):
                     if path.is_image_file():
                         image = anno.ImageAnnotation(path=path)
-                        self._images.append(image)
+                        self.images.append(image)
 
-    def _get_labels(self):
-        self._labels: list[anno.ImageAnnotation] = []
+    def get_labels(self):
+        self.labels: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self._images,
+                self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
                 path  = img.path.replace("/lq/", "/hq/")
                 label = anno.ImageAnnotation(path=path.image_file())
-                self._labels.append(label)
+                self.labels.append(label)
 
 # endregion
 
@@ -495,7 +495,7 @@ class GTRainDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -505,10 +505,10 @@ class GTRainDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = GTRain(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = GTRain(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = GTRain(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -528,7 +528,7 @@ class Rain100DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -538,10 +538,10 @@ class Rain100DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain100(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Rain100(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain100(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -561,7 +561,7 @@ class Rain100HDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -571,10 +571,10 @@ class Rain100HDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain100H(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain100H(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain100H(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -594,7 +594,7 @@ class Rain100LDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -604,10 +604,10 @@ class Rain100LDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain100L(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain100L(split=Split.TRAIN, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain100L(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -627,7 +627,7 @@ class Rain12DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -637,10 +637,10 @@ class Rain12DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -660,7 +660,7 @@ class Rain1200DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -670,10 +670,10 @@ class Rain1200DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain1200(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain1200(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain1200(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -693,7 +693,7 @@ class Rain13KDataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -703,10 +703,10 @@ class Rain13KDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain13K(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain100(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             # self.test  = Rain13K(split=Split.TEST,  **self.dataset_kwargs)
             self.test  = Rain100(split=Split.TEST,  **self.dataset_kwargs)
         
@@ -727,7 +727,7 @@ class Rain1400DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -737,10 +737,10 @@ class Rain1400DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain1400(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain1400(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain1400(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -760,7 +760,7 @@ class Rain2800DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -770,10 +770,10 @@ class Rain2800DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain2800(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Rain2800(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain2800(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -793,7 +793,7 @@ class Rain800DataModule(datamodule.DataModule):
     See Also: :class:`base.DataModule`.
     """
     
-    _tasks = [Task.DERAIN]
+    tasks = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -803,10 +803,10 @@ class Rain800DataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if stage in [None, "training"]:
+        if stage in [None, "train"]:
             self.train = Rain800(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain800(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "testing"]:
+        if stage in [None, "test"]:
             self.test  = Rain800(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:

@@ -17,6 +17,7 @@ from torch.utils import data
 
 from mon import core
 from mon.data.datastruct.dataset import base
+from mon.globals import Task
 
 console = core.console
 
@@ -25,8 +26,6 @@ console = core.console
 
 class DataModule(lightning.LightningDataModule, ABC):
     """The base class for all datamodules.
-    
-    See Also: :class:`lightning.LightningDataModule`.
     
     Attributes:
         dataset_kwargs: A :class:`dict` containing datasets' default arguments.
@@ -40,9 +39,12 @@ class DataModule(lightning.LightningDataModule, ABC):
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
         verbose: Verbosity. Default: ``True``.
+    
+    
+    See Also: :class:`lightning.LightningDataModule`.
     """
     
-    tasks = []
+    tasks: list[Task] = []
     
     def __init__(
         self,
