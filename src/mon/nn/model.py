@@ -211,8 +211,8 @@ class Model(lightning.LightningModule, ABC):
     """The base class for all machine learning models.
     
     Attributes:
-        _tasks: A list of tasks that the model can perform.
-        _zoo: A :class:`dict` containing all pretrained weights of the model.
+        tasks: A list of tasks that the model can perform.
+        zoo: A :class:`dict` containing all pretrained weights of the model.
         
     Args:
         name: The model's name. Default: ``None`` mean it will be
@@ -265,10 +265,11 @@ class Model(lightning.LightningModule, ABC):
             >>> )
     """
     
-    _arch  : str          = ""  # The model's architecture.
-    _tasks : list[Task]   = []  # A list of tasks that the model can perform.
-    _scheme: list[Scheme] = []  # A list of learning schemes that the model can perform.
-    _zoo   : dict         = {}  # A dictionary containing all pretrained weights of the model.
+    arch   : str          = ""       # The model's architecture.
+    tasks  : list[Task]   = []       # A list of tasks that the model can perform.
+    schemes: list[Scheme] = []       # A list of learning schemes that the model can perform.
+    zoo    : dict         = {}       # A dictionary containing all pretrained weights of the model.
+    zoo_dir: core.Path    = ZOO_DIR  # The directory containing all pretrained weights of the model.
     
     def __init__(
         self,
@@ -290,12 +291,9 @@ class Model(lightning.LightningModule, ABC):
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.verbose       = verbose
         # For saving/loading
         self.name          = name
         self.fullname      = fullname
-        self._debug_dir    = None
-        self._ckpt_dir     = None
         self.root          = root
         # For model architecture
         self.in_channels   = in_channels
@@ -308,34 +306,9 @@ class Model(lightning.LightningModule, ABC):
         self.val_metrics   = metrics
         self.test_metrics  = metrics
         self.optims        = optimizers
-    
-    # region Properties
-    
-    # region Model Metadata
-    
-    @classmethod
-    @property
-    def arch(cls) -> str:
-        """Return the model's architecture."""
-        return cls._arch
-
-    @classmethod
-    @property
-    def tasks(cls) -> list[Task]:
-        return cls._tasks
-    
-    @classmethod
-    @property
-    def schemes(cls) -> list[Scheme]:
-        return cls._schemes
-    
-    @classmethod
-    @property
-    def zoo(cls) -> dict:
-        return cls._zoo
-    
-    # endregion
-    
+        # Misc
+        self.verbose       = verbose
+        
     # region Saving/Loading Properties
     
     @property
@@ -385,13 +358,6 @@ class Model(lightning.LightningModule, ABC):
             self._debug_dir = self.root / "debug"
         return self._debug_dir
     
-    @property
-    def zoo_dir(self) -> core.Path:
-        """Specify the path of the model's pretrained weights directory in
-        :attr:`ZOO_DIR`.
-        """
-        return ZOO_DIR / self.name  # / "weights"
-    
     # endregion
     
     # region Model Architecture Properties
@@ -413,8 +379,8 @@ class Model(lightning.LightningModule, ABC):
         if isinstance(weights, str):
             if core.Path(weights).is_weights_file():
                 weights = core.Path(weights)
-            elif weights in self._zoo:
-                weights         = self._zoo[weights]
+            elif weights in self.zoo:
+                weights         = self.zoo[weights]
                 weights["path"] = self.zoo_dir / weights.get("path", "")
                 num_classes     = getattr(weights, "num_classes", None)
                 if num_classes is not None and num_classes != self.num_classes:
@@ -558,17 +524,15 @@ class Model(lightning.LightningModule, ABC):
     
     # endregion
     
-    # endregion
-    
     # region Initialize Model
     
-    def _create_dir(self):
+    def create_dir(self):
         """Create directories before training begins."""
         for path in [self.root, self.ckpt_dir, self.debug_dir]:
             path.mkdir(parents=True, exist_ok=True)
     
     @abstractmethod
-    def _init_weights(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         """Initialize the model's weights."""
         pass
     
@@ -796,7 +760,7 @@ class Model(lightning.LightningModule, ABC):
     
     def on_fit_start(self):
         """Called at the beginning of fit."""
-        self._create_dir()
+        self.create_dir()
 
     def training_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
         """Here you compute and return the training loss, and some additional
@@ -924,7 +888,7 @@ class Model(lightning.LightningModule, ABC):
             rank_zero_only = False,
         )
         
-        if self._should_save_image():
+        if self.should_save_image():
             self._log_image(input, self.current_epoch, self.global_step)
         
         return loss
@@ -937,7 +901,7 @@ class Model(lightning.LightningModule, ABC):
 
     def on_test_start(self) -> None:
         """Called at the very beginning of testing."""
-        self._create_dir()
+        self.create_dir()
 
     def test_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
         """Operates on a single batch of data from the test set. In this step
@@ -1060,7 +1024,7 @@ class Model(lightning.LightningModule, ABC):
     
     # region Logging
     
-    def _should_save_image(self) -> bool:
+    def should_save_image(self) -> bool:
         return (
             self.trainer.is_global_zero
             and self.trainer.log_image_every_n_epochs > 0

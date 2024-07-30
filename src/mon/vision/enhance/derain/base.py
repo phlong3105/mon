@@ -27,10 +27,7 @@ class DerainingModel(base.ImageEnhancementModel, ABC):
     See Also: :class:`base.ImageEnhancementModel`.
     """
     
-    _tasks: list[Task] = [Task.DERAIN]
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "derain"
+    tasks  : list[Task] = [Task.DERAIN]
+    zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "derain"
     
 # endregion

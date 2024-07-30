@@ -343,9 +343,9 @@ class GCENet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "gcenet"
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
+    arch   : str  = "gcenet"
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -397,9 +397,9 @@ class GCENet(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
     
     def forward_loss(
@@ -898,8 +898,8 @@ class GCENetOld(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -952,9 +952,9 @@ class GCENetOld(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):

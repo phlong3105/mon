@@ -186,9 +186,9 @@ class ResNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "resnet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "resnet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -259,7 +259,7 @@ class ResNet(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
     def _make_layer(
         self,
@@ -309,7 +309,7 @@ class ResNet(base.ImageClassificationModel, ABC):
 
         return nn.Sequential(*layers)
     
-    def _init_weights(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         pass
     
     def forward(
@@ -343,7 +343,7 @@ class ResNet18(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet18-f37072fd.pth",
             "path"       : "resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pth",
@@ -368,7 +368,7 @@ class ResNet34(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet34-b627a593.pth",
             "path"       : "resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pth",
@@ -394,7 +394,7 @@ class ResNet50(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet50-11ad3fa6.pth",
             "path"       : "resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pth",
@@ -426,7 +426,7 @@ class ResNet101(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet101-63fe2227.pth",
             "path"       : "resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pth",
@@ -458,7 +458,7 @@ class ResNet152(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnet152-394f9c45.pth",
             "path"       : "resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pth",
@@ -494,7 +494,7 @@ class ResNeXt50_32X4D(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth",
             "path"       : "resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pth",
@@ -528,7 +528,7 @@ class ResNeXt101_32X8D(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth",
             "path"       : "resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pth",
@@ -562,7 +562,7 @@ class ResNeXt101_64X4D(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth",
             "path"       : "resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pth",
@@ -594,7 +594,7 @@ class WideResNet50(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth",
             "path"       : "resnet/wide_resnet50/imagenet1k_v1/wide_resnet50_imagenet1k_v1.pth",
@@ -627,7 +627,7 @@ class WideResNet101(ResNet):
     See Also: :class:`ResNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth",
             "path"       : "resnet/wide_resnet101/imagenet1k_v1/wide_resnet101_imagenet1k_v1.pth",

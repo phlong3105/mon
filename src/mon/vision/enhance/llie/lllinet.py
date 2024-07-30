@@ -158,9 +158,9 @@ class LLLINet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "lllinet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "lllinet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -220,9 +220,9 @@ class LLLINet(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
     
     def forward_loss(
@@ -293,8 +293,8 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo   : dict = {}
     
     def __init__(
         self,
@@ -363,9 +363,9 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
     
     def forward_loss(

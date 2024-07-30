@@ -211,9 +211,9 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "psenet"
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
+    arch   : str  = "psenet"
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -260,9 +260,9 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
     
     # region Forward Pass

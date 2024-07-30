@@ -129,9 +129,9 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "zero_dce++"
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {
+    arch   : str  = "zero_dce++"
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    zoo    : dict = {
         "sice_mix" : {
             "url"         : None,
             "path"        : "zero_dce++/zero_dce++_sice_mix.pt",
@@ -189,9 +189,9 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: torch.nn.Module):
+    def init_weights(self, m: torch.nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):

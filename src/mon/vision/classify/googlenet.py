@@ -137,9 +137,9 @@ class GoogleNet(base.ImageClassificationModel):
     
     constants = ["aux_logits", "transform_input"]
     
-    _arch  : str  = "googlenet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {
+    arch   : str  = "googlenet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/googlenet-1378be20.pth",
             "path"       : "googlenet/googlenet/imagenet1k_v1/googlenet_imagenet1k_v1.pth",
@@ -228,9 +228,9 @@ class GoogleNet(base.ImageClassificationModel):
         if self.weights:
             self.load_weights()
         elif init_weights:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=0.01, a=-2, b=2)
         elif isinstance(m, nn.BatchNorm2d):

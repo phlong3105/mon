@@ -126,9 +126,9 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "zero_dce"
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
+    arch   : str  = "zero_dce"
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -175,9 +175,9 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             m.weight.data.normal_(0.0, 0.02)

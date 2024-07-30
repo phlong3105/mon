@@ -107,9 +107,9 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "convnext"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "convnext"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -144,7 +144,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         self.layer_scale           = layer_scale
         
         layers: list[nn.Module] = []
-
+        
         # Stem
         firstconv_output_channels = self.block_setting[0].in_channels
         layers.append(
@@ -194,9 +194,9 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, (nn.Conv2d, nn.Linear)):
             torch.nn.init.trunc_normal_(m.weight, std=0.02)
             if m.bias is not None:
@@ -225,7 +225,7 @@ class ConvNeXtBase(ConvNeXt):
     See Also: :class:`ConvNeXt`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
             "path"       : "convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
@@ -258,7 +258,7 @@ class ConvNeXtTiny(ConvNeXt):
     See Also: :class:`ConvNeXt`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
             "path"       : "convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
@@ -291,7 +291,7 @@ class ConvNeXtSmall(ConvNeXt):
     See Also: :class:`ConvNeXt`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_small-0c510722.pth",
             "path"       : "convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
@@ -323,7 +323,7 @@ class ConvNeXtLarge(ConvNeXt):
     See Also: :class:`ConvNeXt`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
             "path"       : "convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",

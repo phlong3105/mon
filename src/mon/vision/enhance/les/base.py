@@ -27,10 +27,7 @@ class LightEffectSuppressionModel(base.ImageEnhancementModel, ABC):
     See Also: :class:`base.ImageEnhancementModel`.
     """
     
-    _tasks: list[Task] = [Task.LES]
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "les"
+    tasks  : list[Task] = [Task.LES]
+    zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "les"
     
 # endregion

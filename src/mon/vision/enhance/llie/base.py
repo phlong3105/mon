@@ -27,10 +27,7 @@ class LowLightImageEnhancementModel(base.ImageEnhancementModel, ABC):
     See Also: :class:`base.ImageEnhancementModel`.
     """
     
-    _tasks: list[Task] = [Task.LLIE]
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "llie"
+    tasks  : list[Task] = [Task.LLIE]
+    zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "llie"
     
 # endregion

@@ -708,10 +708,10 @@ class Uformer_RE(base.MultiTaskImageEnhancementModel):
     See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
-    _arch  : str  = "uformer"
-    _tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES, Task.LLIE]
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "uformer"
+    tasks  : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES, Task.LLIE]
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -993,9 +993,9 @@ class Uformer_RE(base.MultiTaskImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, std=.02)
             if isinstance(m, nn.Linear) and m.bias is not None:
@@ -1112,7 +1112,7 @@ class UformerT_RE(Uformer_RE):
         `<https://github.com/ZhendongWang6/Uformer>`__
     """
     
-    _zoo: dict = {}
+    zoo: dict = {}
     
     def __init__(self, args, **kwargs):
         super().__init__(
@@ -1135,7 +1135,7 @@ class UformerS_RE(Uformer_RE):
         `<https://github.com/ZhendongWang6/Uformer>`__
     """
     
-    _zoo: dict = {}
+    zoo: dict = {}
     
     def __init__(
         self,
@@ -1158,7 +1158,7 @@ class UformerS_RE(Uformer_RE):
 @MODELS.register(name="uformer_s_noshift_re", arch="uformer")
 class UformerSNoshift_RE(Uformer_RE):
     
-    _zoo: dict = {}
+    zoo: dict = {}
     
     def __init__(
         self,
@@ -1181,7 +1181,7 @@ class UformerSNoshift_RE(Uformer_RE):
 @MODELS.register(name="uformer_s_fastleff_re", arch="uformer")
 class UformerSFastleff_RE(Uformer_RE):
     
-    _zoo: dict = {}
+    zoo: dict = {}
     
     def __init__(
         self,
@@ -1210,7 +1210,7 @@ class UformerB_RE(Uformer_RE):
         `<https://github.com/ZhendongWang6/Uformer>`__
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "gopro" : {
             "url"        : None,
             "path"       : "uformer_b/uformer_b_gopro",

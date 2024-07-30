@@ -26,10 +26,7 @@ class DehazingModel(base.ImageEnhancementModel, ABC):
     See Also: :class:`base.ImageEnhancementModel`.
     """
     
-    _tasks: list[Task] = [Task.DEHAZE]
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "dehaze"
+    tasks  : list[Task] = [Task.DEHAZE]
+    zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "dehaze"
     
 # endregion

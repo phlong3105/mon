@@ -26,10 +26,7 @@ class DeblurringModel(base.ImageEnhancementModel, ABC):
     See Also: :class:`base.ImageEnhancementModel`.
     """
     
-    _tasks: list[Task] = [Task.DEBLUR]
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "deblur"
+    tasks  : list[Task] = [Task.DEBLUR]
+    zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "deblur"
     
 # endregion

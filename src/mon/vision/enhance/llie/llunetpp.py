@@ -146,9 +146,9 @@ class LLUnetpp_RE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "llunet++"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "llunet++"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -204,9 +204,9 @@ class LLUnetpp_RE(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
     
     def forward_loss(

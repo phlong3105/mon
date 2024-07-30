@@ -177,9 +177,9 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "swin"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "swin"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -265,9 +265,9 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
             
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, std=0.02)
             if m.bias is not None:
@@ -300,7 +300,7 @@ class Swin_T(SwinTransformer):
     See Also: :class:`SwinTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_t-704ceda3.pth",
             "path"       : "swin/swin_t/imagenet1k_v1/swin_t_imagenet1k_v1.pth",
@@ -331,7 +331,7 @@ class Swin_S(SwinTransformer):
     See Also: :class:`SwinTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_s-5e29d889.pth",
             "path"       : "swin/swin_s/imagenet1k_v1/swin_s_imagenet1k_v1.pth",
@@ -362,7 +362,7 @@ class Swin_B(SwinTransformer):
     See Also: :class:`SwinTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_b-68c6b09e.pth",
             "path"       : "swin/swin_b/imagenet1k_v1/swin_b_imagenet1k_v1.pth",
@@ -393,7 +393,7 @@ class Swin_V2_T(SwinTransformer):
     See Also: :class:`SwinTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_v2_t-b137f0e2.pth",
             "path"       : "swin/swin_v2_t/imagenet1k_v1/swin_v2_t_imagenet1k_v1.pth",
@@ -426,7 +426,7 @@ class Swin_V2_S(SwinTransformer):
     See Also: :class:`SwinTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_v2_s-637d8ceb.pth",
             "path"       : "swin/swin_v2_s/imagenet1k_v1/swin_v2_s_imagenet1k_v1.pth",
@@ -459,7 +459,7 @@ class Swin_V2_B(SwinTransformer):
     See Also: :class:`SwinTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/swin_v2_b-781e5279.pth",
             "path"       : "swin/swin_v2_b/imagenet1k_v1/swin_v2_b_imagenet1k_v1.pth",

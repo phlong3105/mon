@@ -25,8 +25,6 @@ class ImageEnhancementModel(nn.Model, ABC):
     See Also: :class:`nn.Model`.
     """
     
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / self.name
+    zoo_dir: core.Path = ZOO_DIR / "vision" / "enhance"
     
 # endregion

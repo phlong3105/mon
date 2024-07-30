@@ -124,9 +124,9 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "shufflenet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "shufflenet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
 
     def __init__(
         self,
@@ -183,9 +183,9 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         pass
     
     def forward(
@@ -217,7 +217,7 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
     See Also: :class:`ShuffleNetV2`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth",
             "path"       : "shufflenet/shufflenetv2_x0_5/imagenet1k_v1/shufflenetv2_x0_5_imagenet1k_v1.pth",
@@ -244,7 +244,7 @@ class ShuffleNetV2_X1_0(ShuffleNetV2):
     See Also: :class:`ShuffleNetV2`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth",
             "path"       : "shufflenet/shufflenetv2_x1_0/imagenet1k_v1/shufflenetv2_x1_0_imagenet1k_v1.pth",
@@ -271,7 +271,7 @@ class ShuffleNetV2_X1_5(ShuffleNetV2):
     See Also: :class:`ShuffleNetV2`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x1_5-3c479a10.pth",
             "path"       : "shufflenet/shufflenetv2_x1_5/imagenet1k_v1/shufflenetv2_x1_5_imagenet1k_v1.pth",
@@ -298,7 +298,7 @@ class ShuffleNetV2_X2_0(ShuffleNetV2):
     See Also: :class:`ShuffleNetV2`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/shufflenetv2_x2_0-8be3c8ee.pth",
             "path"       : "shufflenet/shufflenetv2_x2_0/imagenet1k_v1/shufflenetv2_x2_0_imagenet1k_v1.pth",

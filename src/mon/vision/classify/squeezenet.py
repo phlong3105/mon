@@ -67,9 +67,9 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "squeezenet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "squeezenet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
 
     def __init__(
         self,
@@ -145,9 +145,9 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         pass
     
     def forward(
@@ -174,7 +174,7 @@ class SqueezeNet1_0(SqueezeNet):
     See Also: :class:`SqueezeNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/squeezenet1_0-b66bff10.pth",
             "path"       : "squeezenet/squeezenet1_0/imagenet1k_v1/squeezenet1_0_imagenet1k_v1.pth",
@@ -202,7 +202,7 @@ class SqueezeNet1_1(SqueezeNet):
     See Also: :class:`SqueezeNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth",
             "path"       : "squeezenet/squeezenet1_1/imagenet1k_v1/squeezenet1_1_imagenet1k_v1.pth",

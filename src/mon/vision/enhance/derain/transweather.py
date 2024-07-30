@@ -742,7 +742,7 @@ class Transweather(base.DerainingModel):
 
             return x
 
-    _zoo: dict = {
+    zoo: dict = {
         "transweather-rain100l": {
             "path"        : "transweather-rain100l.pt",
             "num_channels": 32,
@@ -789,7 +789,7 @@ class Transweather(base.DerainingModel):
                 weight_ccp      = 2,
                 reduction       = "mean",
             )
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         else:
             pass #self.config_model_variant()
 
@@ -1002,7 +1002,7 @@ class Transweather(base.DerainingModel):
     def config_dir(self) -> core.Path:
         return core.Path(__file__).absolute().parent / "config"
     
-    def _init_weights(self, m):
+    def init_weights(self, m):
         if isinstance(m, nn.Linear):
             m.weight.data.trunc_()
             # torch.nn.init.trunc_normal_(m.weight, )

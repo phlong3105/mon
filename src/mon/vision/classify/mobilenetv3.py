@@ -191,9 +191,9 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    _arch  : str  = "mobilenet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "mobilenet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -272,9 +272,9 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
             if m.bias is not None:
@@ -310,7 +310,7 @@ class MobileNetV3_Large(MobileNetV3):
     See Also: :class:`MobileNetV3`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
             "path"       : "mobilenetv3/mobilenetv3_large/imagenet1k_v1/mobilenetv3_large_imagenet1k_v1.pth",
@@ -343,7 +343,7 @@ class MobileNetV3_Small(MobileNetV3):
     See Also: :class:`MobileNetV3`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
             "path"       : "mobilenetv3/mobilenetv3_small/imagenet1k_v1/mobilenetv3_small_imagenet1k_v1.pth",

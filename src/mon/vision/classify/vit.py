@@ -174,9 +174,9 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "vit"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "vit"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -295,9 +295,9 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         pass
     
     def _process_input(self, x: torch.Tensor) -> torch.Tensor:
@@ -350,7 +350,7 @@ class ViT_B_16(VisionTransformer):
     See Also: :class:`VisionTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
             "path"       : "vit/vit_b_16/imagenet1k_v1/vit_b_16_imagenet1k_v1.pth",
@@ -393,7 +393,7 @@ class ViT_B_32(VisionTransformer):
     See Also: :class:`VisionTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_32-d86f8d99.pth",
             "path"       : "vit/vit_b_32/imagenet1k_v1/vit_b_32_imagenet1k_v1.pth",
@@ -424,7 +424,7 @@ class ViT_L_16(VisionTransformer):
     See Also: :class:`VisionTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_16-852ce7e3.pth",
             "path"       : "vit/vit_l_16/imagenet1k_v1/vit_l_16_imagenet1k_v1.pth",
@@ -467,7 +467,7 @@ class ViT_L_32(VisionTransformer):
     See Also: :class:`VisionTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_32-c7638314.pth",
             "path"       : "vit/vit_l_32/imagenet1k_v1/vit_l_32_imagenet1k_v1.pth",
@@ -498,7 +498,7 @@ class ViT_H_14(VisionTransformer):
     See Also: :class:`VisionTransformer`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/vit_h_14_swag-80465313.pth",
             "path"       : "vit/vit_h_14_swag/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",

@@ -321,9 +321,9 @@ class EfficientNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "efficientnet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "efficientnet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -414,9 +414,9 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
             if m.bias is not None:
@@ -454,7 +454,7 @@ class EfficientNet_B0(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
             "path"       : "efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pth",
@@ -487,7 +487,7 @@ class EfficientNet_B1(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b1_rwightman-bac287d4.pth",
             "path"       : "efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pth",
@@ -526,7 +526,7 @@ class EfficientNet_B2(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b2_rwightman-c35c1473.pth",
             "path"       : "efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pth",
@@ -559,7 +559,7 @@ class EfficientNet_B3(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth",
             "path"       : "efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pth",
@@ -592,7 +592,7 @@ class EfficientNet_B4(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b4_rwightman-23ab8bcd.pth",
             "path"       : "efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pth",
@@ -625,7 +625,7 @@ class EfficientNet_B5(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b5_lukemelas-1a07897c.pth",
             "path"       : "efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pth",
@@ -659,7 +659,7 @@ class EfficientNet_B6(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b6_lukemelas-24a108a5.pth",
             "path"       : "efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pth",
@@ -693,7 +693,7 @@ class EfficientNet_B7(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b7_lukemelas-c5b4e57e.pth",
             "path"       : "efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pth",
@@ -726,7 +726,7 @@ class EfficientNet_V2_S(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth",
             "path"       : "efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pth",
@@ -757,7 +757,7 @@ class EfficientNet_V2_M(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_v2_m-dc08266a.pth",
             "path"       : "efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pth",
@@ -788,7 +788,7 @@ class EfficientNet_V2_L(EfficientNet):
     See Also: :class:`EfficientNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth",
             "path"       : "efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pth",

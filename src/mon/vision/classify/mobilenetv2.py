@@ -97,9 +97,9 @@ class MobileNetV2(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "mobilenet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {
+    arch   : str  = "mobilenet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
             "path"       : "mobilenet/mobilenetv2/imagenet1k_v1/mobilenetv2_imagenet1k_v1.pth",
@@ -213,9 +213,9 @@ class MobileNetV2(base.ImageClassificationModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
             if m.bias is not None:

@@ -370,10 +370,10 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 	See Also: :class:`base.MultiTaskImageEnhancementModel`
 	"""
 	
-	_arch  : str  = "mprnet"
-	_tasks : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW]
-	_scheme: list[Scheme] = [Scheme.SUPERVISED]
-	_zoo   : dict = {}
+	arch   : str  = "mprnet"
+	tasks  : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW]
+	schemes: list[Scheme] = [Scheme.SUPERVISED]
+	zoo    : dict = {}
 	
 	def __init__(
 		self,
@@ -447,9 +447,9 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 		if self.weights:
 			self.load_weights()
 		else:
-			self.apply(self._init_weights)
+			self.apply(self.init_weights)
 	
-	def _init_weights(self, m: nn.Module):
+	def init_weights(self, m: nn.Module):
 		pass
 	
 	def forward_loss(

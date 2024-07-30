@@ -404,9 +404,9 @@ class MTFE(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "mtfe"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "mtfe"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
 
     def __init__(
         self,
@@ -471,9 +471,9 @@ class MTFE(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv2d") != -1:
             m.weight.data.normal_(0.0, 0.02)

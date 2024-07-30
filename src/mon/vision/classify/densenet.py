@@ -171,9 +171,9 @@ class DenseNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "densenet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "densenet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -240,9 +240,9 @@ class DenseNet(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight)
         elif isinstance(m, nn.BatchNorm2d):
@@ -289,7 +289,7 @@ class DenseNet121(DenseNet):
     See Also: :class:`DenseNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet121-a639ec97.pth",
             "path"       : "densenet/densenet121/imagenet1k_v1/densenet121_imagenet1k_v1.pth",
@@ -316,7 +316,7 @@ class DenseNet161(DenseNet):
     See Also: :class:`DenseNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet161-8d451a50.pth",
             "path"       : "densenet/densenet161/imagenet1k_v1/densenet161_imagenet1k_v1.pth",
@@ -343,7 +343,7 @@ class DenseNet169(DenseNet):
     See Also: :class:`DenseNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
             "path"       : "densenet/densenet169/imagenet1k_v1/densenet169_imagenet1k_v1.pth",
@@ -370,7 +370,7 @@ class DenseNet201(DenseNet):
     See Also: :class:`DenseNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/densenet201-c1103571.pth",
             "path"       : "densenet/densenet201/imagenet1k_v1/densenet201_imagenet1k_v1.pth",

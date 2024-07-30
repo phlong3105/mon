@@ -325,9 +325,9 @@ class RegNet(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "regnet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "regnet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -395,9 +395,9 @@ class RegNet(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             # Note that there is no bias due to BN
             fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -434,7 +434,7 @@ class RegNet_Y_400MF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_400mf-c65dace8.pth",
             "path"       : "regnet/regnet_y_400mf/imagenet1k_v1/regnet_y_400mf_imagenet1k_v1.pth",
@@ -468,7 +468,7 @@ class RegNet_Y_800MF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_800mf-1b27b58c.pth",
             "path"       : "regnet/regnet_y_800mf/imagenet1k_v1/regnet_y_800mf_imagenet1k_v1.pth",
@@ -502,7 +502,7 @@ class RegNet_Y_1_6GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_1_6gf-b11a554e.pth",
             "path"       : "regnet/regnet_y_1_6gf/imagenet1k_v1/regnet_y_1_6gf_imagenet1k_v1.pth",
@@ -536,7 +536,7 @@ class RegNet_Y_3_2GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_3_2gf-b5a9779c.pth",
             "path"       : "regnet/regnet_y_3_2gf/imagenet1k_v1/regnet_y_3_2gf_imagenet1k_v1.pth",
@@ -570,7 +570,7 @@ class RegNet_Y_8GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_8gf-d0d0e4a8.pth",
             "path"       : "regnet/regnet_y_8gf/imagenet1k_v1/regnet_y_8gf_imagenet1k_v1.pth",
@@ -604,7 +604,7 @@ class RegNet_Y_16GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_16gf-9e6ed7dd.pth",
             "path"       : "regnet/regnet_y_16gf/imagenet1k_v1/regnet_y_16gf_imagenet1k_v1.pth",
@@ -650,7 +650,7 @@ class RegNet_Y_32GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_32gf-4dee3f7a.pth",
             "path"       : "regnet/regnet_y_32gf/imagenet1k_v1/regnet_y_32gf_imagenet1k_v1.pth",
@@ -696,7 +696,7 @@ class RegNet_Y_128GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_y_128gf_swag-c8ce3e52.pth",
             "path"       : "regnet/regnet_y_128gf_swag/imagenet1k_v1/regnet_y_128gf_swag_imagenet1k_v1.pth",
@@ -730,7 +730,7 @@ class RegNet_X_400MF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_400mf-adf1edd5.pth",
             "path"       : "regnet/regnet_x_400mf/imagenet1k_v1/regnet_x_400mf_imagenet1k_v1.pth",
@@ -764,7 +764,7 @@ class RegNet_X_800MF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_800mf-ad17e45c.pth",
             "path"       : "regnet/regnet_x_800mf/imagenet1k_v1/regnet_x_800mf_imagenet1k_v1.pth",
@@ -798,7 +798,7 @@ class RegNet_X_1_6GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_1_6gf-e3633e7f.pth",
             "path"       : "regnet/regnet_x_1_6gf/imagenet1k_v1/regnet_x_1_6gf_imagenet1k_v1.pth",
@@ -832,7 +832,7 @@ class RegNet_X_3_2GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_3_2gf-f342aeae.pth",
             "path"       : "regnet/regnet_x_3_2gf/imagenet1k_v1/regnet_x_3_2gf_imagenet1k_v1.pth",
@@ -866,7 +866,7 @@ class RegNet_X_8GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_8gf-03ceed89.pth",
             "path"       : "regnet/regnet_x_8gf/imagenet1k_v1/regnet_x_8gf_imagenet1k_v1.pth",
@@ -900,7 +900,7 @@ class RegNet_X_16GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_16gf-2007eb11.pth",
             "path"       : "regnet/regnet_x_16gf/imagenet1k_v1/regnet_x_16gf_imagenet1k_v1.pth",
@@ -934,7 +934,7 @@ class RegNetX_32GF(RegNet):
     See Also: :class:`RegNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/regnet_x_32gf-9d47f8d0.pth",
             "path"       : "regnet/regnet_x32gf/imagenet1k_v1/regnet_x32gf_imagenet1k_v1.pth",

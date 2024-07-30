@@ -142,7 +142,7 @@ class IPT(base.DerainingModel):
     See Also: :class:`mon.vision.enhance.derain.base.DerainingModel`
     """
 
-    _zoo: dict = {}
+    zoo: dict = {}
     
     def __init__(
         self,
@@ -203,7 +203,7 @@ class IPT(base.DerainingModel):
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         elif self.variant[0:2] == "01":  # Zero-DCE++ (baseline)
             self.conv1    = nn.DSConv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -215,7 +215,7 @@ class IPT(base.DerainingModel):
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         elif self.variant[0:2] == "02":
             self.conv1    = nn.BSConv2dS(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -227,7 +227,7 @@ class IPT(base.DerainingModel):
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         elif self.variant[0:2] == "03":
             self.conv1    = nn.BSConv2dU(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -239,7 +239,7 @@ class IPT(base.DerainingModel):
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         #
         elif self.variant[0:2] == "10":
             self.conv1    = nn.Conv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
@@ -257,7 +257,7 @@ class IPT(base.DerainingModel):
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         elif self.variant[0:2] == "11":
             self.conv1    = nn.Conv2d(self.in_channels,      self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -277,7 +277,7 @@ class IPT(base.DerainingModel):
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         #
         elif self.variant[0:2] == "20":
             self.conv1    = nn.Conv2d(self.in_channels,  self.num_channels, 3, 1, 1, bias=True)
@@ -297,7 +297,7 @@ class IPT(base.DerainingModel):
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.pool     = nn.MaxPool2d(2, 1)
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         else:
             raise ValueError
 
@@ -378,7 +378,7 @@ class IPT(base.DerainingModel):
     def config_dir(self) -> core.Path:
         return core.Path(__file__).absolute().parent / "config"
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):

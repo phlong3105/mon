@@ -25,10 +25,7 @@ class ImageClassificationModel(nn.Model, ABC):
     See Also: :class:`nn.Model`.
     """
     
-    _tasks: list[Task] = [Task.CLASSIFY]
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "classify"
+    tasks  : list[Task] = [Task.CLASSIFY]
+    zoo_dir: core.Path  = ZOO_DIR / "vision" / "classify"
     
 # endregion

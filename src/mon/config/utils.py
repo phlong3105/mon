@@ -95,11 +95,11 @@ def list_mon_models(
     arch   = arch         if arch not in [None, "None", ""] else None
     models = list(flatten_models.keys())
     if task is not None:
-        models = [m for m in models if task in flatten_models[m]._tasks]
+        models = [m for m in models if task in flatten_models[m].tasks]
     if mode is not None:
         models = [m for m in models if mode in flatten_models[m]._schemes]
     if arch is not None:
-        models = [m for m in models if arch in flatten_models[m]._arch]
+        models = [m for m in models if arch in flatten_models[m].arch]
     return sorted(models)
 
 
@@ -156,10 +156,10 @@ def list_mon_archs(
     mode   = Scheme(mode) if mode in ["online", "instance"] else None
     models = list(flatten_models.keys())
     if task is not None:
-        models = [m for m in models if task in flatten_models[m]._tasks]
+        models = [m for m in models if task in flatten_models[m].tasks]
     if mode is not None:
         models = [m for m in models if mode in flatten_models[m]._schemes]
-    archs  = [flatten_models[m]._arch for m in models]
+    archs  = [flatten_models[m].arch for m in models]
     archs  = [a.strip() for a in archs]
     archs  = [a for a in archs if a not in [None, "None", ""]]
     return sorted(core.unique(archs))
@@ -201,7 +201,7 @@ def list_archs(
     #
     flatten_mon_models   = core.flatten_models_dict(MODELS)
     flatten_extra_models = core.flatten_models_dict(EXTRA_MODELS)
-    mon_archs   = [flatten_mon_models[m]._arch     for m in models]
+    mon_archs   = [flatten_mon_models[m].arch for m in models]
     extra_archs = [flatten_extra_models[m]["arch"] for m in extra_models]
     archs       = mon_archs + extra_archs
     archs       = [a.strip() for a in archs]

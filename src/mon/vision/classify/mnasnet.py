@@ -143,9 +143,9 @@ class MNASNet(base.ImageClassificationModel, ABC):
     # Version 2 adds depth scaling in the initial stages of the network.
     _version = 2
     
-    _arch  : str  = "mnasnet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "mnasnet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -201,9 +201,9 @@ class MNASNet(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             if m.bias is not None:
@@ -240,7 +240,7 @@ class MNASNet0_5(MNASNet):
     See Also: :class:`MNASNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet0.5_top1_67.823-3ffadce67e.pth",
             "path"       : "mnasnet/mnasnet0_5/imagenet1k_v1/mnasnet0_5_imagenet1k_v1.pth",
@@ -266,7 +266,7 @@ class MNASNet0_75(MNASNet):
     See Also: :class:`MNASNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet0_75-7090bc5f.pth",
             "path"       : "mnasnet/mnasnet0_75/imagenet1k_v1/mnasnet0_75_imagenet1k_v1.pth",
@@ -292,7 +292,7 @@ class MNASNet1_0(MNASNet):
     See Also: :class:`MNASNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet1.0_top1_73.512-f206786ef8.pth",
             "path"       : "mnasnet/mnasnet1_0/imagenet1k_v1/mnasnet1_0_imagenet1k_v1.pth",
@@ -318,7 +318,7 @@ class MNASNet1_3(MNASNet):
     See Also: :class:`MNASNet`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mnasnet1_3-a4c69d6f.pth",
             "path"       : "mnasnet/mnasnet1_3/imagenet1k_v1/mnasnet1_3_imagenet1k_v1.pth",

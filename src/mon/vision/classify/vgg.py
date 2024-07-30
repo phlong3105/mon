@@ -38,9 +38,9 @@ class VGG(base.ImageClassificationModel, ABC):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "vgg"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "vgg"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -73,9 +73,9 @@ class VGG(base.ImageClassificationModel, ABC):
         if self.weights:
             self.load_weights()
         elif init_weights:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             if m.bias is not None:
@@ -136,7 +136,7 @@ class VGG11(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg11-8a719046.pth",
             "path"       : "vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
@@ -161,7 +161,7 @@ class VGG11_BN(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
             "path"       : "vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
@@ -186,7 +186,7 @@ class VGG13(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13-19584684.pth",
             "path"       : "vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
@@ -211,7 +211,7 @@ class VGG13_BN(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
             "path"       : "vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
@@ -236,7 +236,7 @@ class VGG16(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16-397923af.pth",
             "path"       : "vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
@@ -261,7 +261,7 @@ class VGG16_BN(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
             "path"       : "vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
@@ -286,7 +286,7 @@ class VGG19(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
             "path"       : "vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
@@ -311,7 +311,7 @@ class VGG19_BN(VGG):
     See Also: :class:`VGG`
     """
     
-    _zoo: dict = {
+    zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
             "path"       : "vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",

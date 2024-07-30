@@ -419,8 +419,8 @@ class DCCNet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo   : dict = {
         "lol_v1": {
             "url"   : None,
             "path"  : "dccnet/dccnet_lol_v1.pth",
@@ -462,9 +462,9 @@ class DCCNet(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
 
     def forward_loss(

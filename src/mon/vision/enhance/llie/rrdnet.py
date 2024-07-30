@@ -182,9 +182,9 @@ class RRDNet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "rrdnet"
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
-    _zoo   : dict = {}
+    arch   : str  = "rrdnet"
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -249,10 +249,10 @@ class RRDNet(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         self.initial_state_dict = self.state_dict()
         
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
     
     # region Forward Pass

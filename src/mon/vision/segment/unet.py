@@ -120,8 +120,8 @@ class UNet(base.SegmentationModel):
     See Also: :class:`base.SegmentationModel`
     """
     
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo   : dict = {}
     
     def __init__(
         self,
@@ -169,9 +169,9 @@ class UNet(base.SegmentationModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
     
     def forward_loss(

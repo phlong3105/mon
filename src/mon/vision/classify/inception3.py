@@ -273,9 +273,9 @@ class Inception3(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "inception"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {
+    arch   : str  = "inception"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/inception_v3_google-0cc3c7bd.pth",
             "path"       : "inception/inception3/imagenet1k_v1/inception3_imagenet1k_v1.pth",
@@ -358,9 +358,9 @@ class Inception3(base.ImageClassificationModel):
         if self.weights:
             self.load_weights()
         elif init_weights:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
         
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             stddev = float(m.stddev) if hasattr(m, "stddev") else 0.1  # type: ignore
             torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=stddev, a=-2, b=2)

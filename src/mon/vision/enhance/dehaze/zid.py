@@ -316,9 +316,9 @@ class ZID(base.DehazingModel):
     See Also: :class:`base.Dehazing`
     """
     
-    _arch  : str  = "zid"
-    _scheme: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
-    _zoo   : dict = {}
+    arch  : str  = "zid"
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    zoo   : dict = {}
     
     def __init__(
         self,
@@ -381,9 +381,9 @@ class ZID(base.DehazingModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         pass
     
     def forward_loss(

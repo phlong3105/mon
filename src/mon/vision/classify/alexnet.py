@@ -30,9 +30,9 @@ class AlexNet(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    _arch  : str  = "alexnet"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {
+    arch   : str  = "alexnet"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
             "path"       : "alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
@@ -86,9 +86,9 @@ class AlexNet(base.ImageClassificationModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
     
-    def _init_weights(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         pass
     
     def forward(

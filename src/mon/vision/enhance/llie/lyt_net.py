@@ -197,9 +197,9 @@ class LYTNet(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    _arch  : str  = "lyt_net"
-    _scheme: list[Scheme] = [Scheme.SUPERVISED]
-    _zoo   : dict = {}
+    arch   : str  = "lyt_net"
+    schemes: list[Scheme] = [Scheme.SUPERVISED]
+    zoo    : dict = {}
 
     def __init__(
         self,
@@ -246,9 +246,9 @@ class LYTNet(base.LowLightImageEnhancementModel):
         if self.weights:
             self.load_weights()
         else:
-            self.apply(self._init_weights)
+            self.apply(self.init_weights)
 
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         pass
 
     def forward_loss(

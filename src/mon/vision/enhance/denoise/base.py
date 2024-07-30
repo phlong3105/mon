@@ -27,10 +27,7 @@ class DenoisingModel(base.ImageEnhancementModel, ABC):
     See Also: :class:`base.ImageEnhancementModel`.
     """
     
-    _tasks: list[Task] = [Task.DENOISE]
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "enhance" / "denoise"
+    tasks  : list[Task] = [Task.DENOISE]
+    zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "denoise"
     
 # endregion
