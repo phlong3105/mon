@@ -3,7 +3,6 @@
 """
 from __future__ import print_function
 
-import numpy as np
 from .association import *
 
 
@@ -427,5 +426,3 @@ class OCSort(object):
         if(len(ret)>0):
             return np.concatenate(ret)
         return np.empty((0, 7))
-
-

@@ -8,11 +8,20 @@ geometry, :class:`np.ndarray` is used as the primary data structure.
 from __future__ import annotations
 
 __all__ = [
+    "bbox_area",
+    "bbox_center",
+    "bbox_center_distance",
+    "bbox_ciou",
     "bbox_coco_to_voc",
     "bbox_coco_to_yolo",
+    "bbox_corners",
+    "bbox_corners_points",
     "bbox_cxcywhn_to_xywh",
     "bbox_cxcywhn_to_xyxy",
     "bbox_cxcywhn_to_xyxyn",
+    "bbox_diou",
+    "bbox_giou",
+    "bbox_iou",
     "bbox_voc_to_coco",
     "bbox_voc_to_yolo",
     "bbox_xywh_to_cxcywhn",
@@ -28,19 +37,10 @@ __all__ = [
     "bbox_yolo_to_coco",
     "bbox_yolo_to_voc",
     "convert_bbox",
-    "get_bbox_area",
-    "get_bbox_center",
-    "get_bbox_corners",
-    "get_bbox_corners_points",
-    "get_bbox_intersection_union",
-    "get_bbox_iou",
-    "get_bbox_iou2",
     "get_enclosing_bbox",
-    "get_single_bbox_iou",
 ]
 
 import numpy as np
-import torch
 
 from mon import core
 from mon.globals import ShapeCode
@@ -50,47 +50,69 @@ console = core.console
 
 # region Property
 
-def get_bbox_area(bbox: np.ndarray) -> np.ndarray:
-    """Compute the area of bounding boxes.
+def bbox_area(bbox: np.ndarray) -> np.ndarray:
+    """Compute the area(s) of bounding box(es).
     
     Args:
-        bbox: Bounding boxes in XYXY format.
+        bbox: Bounding box(es) of shape :math:`[4]` or :math:`[N, 4]` and in
+            XYXY format.
     
     Returns:
-        The area value for each bbox.
+        A :math:`[11]`, or an :math:`[N]` array containing the area value(s).
     """
-    x1, y1, x2, y2, *_ = bbox.T
+    if bbox.ndim == 1:
+        bbox = np.expand_dims(bbox, 0)
+    assert bbox.ndim == 2, f":param:`bbox` must be 1D, but got {bbox.ndim}D."
+    x1   = bbox[..., 0]
+    y1   = bbox[..., 1]
+    x2   = bbox[..., 2]
+    y2   = bbox[..., 3]
     area = (x2 - x1) * (y2 - y1)
     return area
 
 
-def get_bbox_center(bbox: np.ndarray) -> np.ndarray:
-    """Compute the center of bounding box(es).
+def bbox_center(bbox: np.ndarray) -> np.ndarray:
+    """Compute the center(s) of bounding box(es).
     
     Args:
-        bbox: Bounding boxes in XYXY format.
+        bbox: Bounding box(es) of shape :math:`[4]` or :math:`[N, 4]` and in
+            XYXY format.
     
     Returns:
-        The center for each bbox described by the coordinates (cx, cy).
+        An :math:`[1, 2]`, or an :math:`[N, 2]` array containing the center(s) of
+        bounding box(es) in :math:`[cx, cy]` format.
     """
-    x1, y1, x2, y2, *_ = bbox.T
-    cx     = x1 + (x2 - x1) / 2
-    cy     = y1 + (y2 - y1) / 2
+    if bbox.ndim == 1:
+        bbox = np.expand_dims(bbox, 0)
+    assert bbox.ndim == 2, f":param:`bbox` must be 1D, but got {bbox.ndim}D."
+    x1     = bbox[..., 0]
+    y1     = bbox[..., 1]
+    x2     = bbox[..., 2]
+    y2     = bbox[..., 3]
+    cx     = x1 + (x2 - x1) / 2.0
+    cy     = y1 + (y2 - y1) / 2.0
     center = np.stack((cx, cy), -1)
     return center
 
 
-def get_bbox_corners(bbox: np.ndarray) -> np.ndarray:
-    """Get corners of bounding boxes.
+def bbox_corners(bbox: np.ndarray) -> np.ndarray:
+    """Get corner(s) of bounding box(es) in an array.
     
     Args:
-        bbox: Bounding boxes in XYXY format.
+        bbox: Bounding box(es) of shape :math:`[4]` or :math:`[N, 4]` and in
+            XYXY format.
     
     Returns:
-        A tensor of shape `N x 8` containing N bounding boxes each described by
-        their corner coordinates (x1 y1 x2 y2 x3 y3 x4 y4).
+        An :math:`[1, 8]`, or an :math:`[N, 8]` array containing corners of
+        bounding box(es) in :math:`[x1, y1, x2, y2, x3, y3, x4, y4]` format.
     """
-    x1, y1, x2, y2, *_ = bbox.T
+    if bbox.ndim == 1:
+        bbox = np.expand_dims(bbox, 0)
+    assert bbox.ndim == 2, f":param:`bbox` must be 1D, but got {bbox.ndim}D."
+    x1      = bbox[..., 0]
+    y1      = bbox[..., 1]
+    x2      = bbox[..., 2]
+    y2      = bbox[..., 3]
     w       = x2 - x1
     h       = y2 - y1
     c_x1    = x1
@@ -105,16 +127,24 @@ def get_bbox_corners(bbox: np.ndarray) -> np.ndarray:
     return corners
 
 
-def get_bbox_corners_points(bbox: np.ndarray) -> np.ndarray:
-    """Get corners of bounding boxes as points.
+def bbox_corners_points(bbox: np.ndarray) -> np.ndarray:
+    """Get corner(s) of bounding box(es) as points.
     
     Args:
-        bbox: Bounding boxes in XYXY format.
+        bbox: Bounding box(es) of shape :math:`[4]` or :math:`[N, 4]` and in
+            XYXY format.
     
     Returns:
-        Corners.
+        An :math:`[1, 4, 2]`, or an :math:`[N, 4, 2]` array containing corners of
+        bounding box(es) in :math:`[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]` format.
     """
-    x1, y1, x2, y2, *_ = bbox.T
+    if bbox.ndim == 1:
+        bbox = np.expand_dims(bbox, 0)
+    assert bbox.ndim == 2, f":param:`bbox` must be 1D, but got {bbox.ndim}D."
+    x1     = bbox[..., 0]
+    y1     = bbox[..., 1]
+    x2     = bbox[..., 2]
+    y2     = bbox[..., 3]
     w      = x2 - x1
     h      = y2 - y1
     c_x1   = x1
@@ -129,112 +159,8 @@ def get_bbox_corners_points(bbox: np.ndarray) -> np.ndarray:
     return points
 
 
-def get_bbox_intersection_union(
-    bbox1: np.ndarray,
-    bbox2: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
-    """Compute the intersection and union of two sets of boxes.
-    
-    References:
-        `<https://github.com/kuangliu/torchcv/blob/master/torchcv/utils/box.py>`__
-    
-    Args:
-        bbox1: The first set of boxes in XYXY format.
-        bbox2: The second set of boxes in XYXY format.
-        
-    Returns:
-        Intersection.
-        Union.
-    """
-    area1 = get_bbox_area(bbox=bbox1)
-    area2 = get_bbox_area(bbox=bbox2)
-    lt    = np.max(bbox1[:, None, :2], bbox2[:, :2])  # [N, M, 2]
-    rb    = np.min(bbox1[:, None, 2:], bbox2[:, 2:])  # [N, M, 2]
-    wh    = core.upcast(rb - lt).clamp(min=0)  # [N, M, 2]
-    inter = wh[:, :, 0] * wh[:, :, 1]  # [N, M]
-    union = area1[:, None] + area2 - inter
-    return inter, union
-
-
-def get_bbox_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
-    """Return the intersection-over-union (Jaccard index) between two sets of
-    boxes.
-    
-    Args:
-        bbox1: The first set of boxes in XYXY format.
-        bbox2: The second set of boxes of in XYXY format.
-    
-    Returns:
-        The NxM matrix containing the pairwise IoU values for every element
-        in :param:`bbox1` and :param:`bbox2`.
-    """
-    inter, union = get_bbox_intersection_union(bbox1=bbox1, bbox2=bbox2)
-    iou = inter / union
-    return iou
-
-
-def get_bbox_iou2(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
-    """From SORT: Compute IOU between two sets of boxes.
-    
-    Return intersection-over-union (Jaccard index) between two sets of boxes.
-    Both sets of boxes are expected to be in [x1, y1, x2, y2] format with
-    `0 <= x1 < x2` and `0 <= y1 < y2`.
-
-    Args:
-        bbox1: The first set of boxes of shape [N, 4].
-        bbox2: The second set of boxes of shape [M, 4].
-    
-    Returns:
-        The NxM matrix containing the pairwise IoU values for every element in
-        boxes1 and boxes2.
-    """
-    assert bbox1.ndim == 2
-    assert bbox2.ndim == 2
-    if isinstance(bbox1, np.ndarray) and type(bbox1) == type(bbox2):
-        bbox1 = np.expand_dims(bbox1, 1)
-        bbox2 = np.expand_dims(bbox2, 0)
-        xx1   = np.maximum(bbox1[..., 0], bbox2[..., 0])
-        yy1   = np.maximum(bbox1[..., 1], bbox2[..., 1])
-        xx2   = np.minimum(bbox1[..., 2], bbox2[..., 2])
-        yy2   = np.minimum(bbox1[..., 3], bbox2[..., 3])
-        w     = np.maximum(0.0, xx2 - xx1)
-        h     = np.maximum(0.0, yy2 - yy1)
-    else:
-        raise TypeError
-    wh  = w * h
-    iou = wh / ((bbox1[..., 2] - bbox1[..., 0]) *
-                (bbox1[..., 3] - bbox1[..., 1]) +
-                (bbox2[..., 2] - bbox2[..., 0]) *
-                (bbox2[..., 3] - bbox2[..., 1]) - wh)
-    return iou
-
-
-def get_single_bbox_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray | float:
-    """Return intersection-over-union (Jaccard index) between two boxes.
-    
-    Args:
-        bbox1: The first bbox of shape in XYXY format.
-        bbox2: The second bbox of shape in XYXY format.
-    
-    Returns:
-        The IoU value for :param:`bbox1` and :param:`bbox2`.
-    """
-    xx1 = np.maximum(bbox1[0], bbox2[0])
-    yy1 = np.maximum(bbox1[1], bbox2[1])
-    xx2 = np.minimum(bbox1[2], bbox2[2])
-    yy2 = np.minimum(bbox1[3], bbox2[3])
-    w   = np.maximum(0.0, xx2 - xx1)
-    h   = np.maximum(0.0, yy2 - yy1)
-    wh  = w * h
-    iou = wh / ((bbox1[2] - bbox1[0]) *
-                (bbox1[3] - bbox1[1]) +
-                (bbox2[2] - bbox2[0]) *
-                (bbox2[3] - bbox2[1]) - wh)
-    return iou
-
-
 def get_enclosing_bbox(bbox: np.ndarray) -> np.ndarray:
-    """Get an enclosing bbox for rotated corners of a bounding box.
+    """Get the enclosing bounding box(es) for rotated corners.
     
     Args:
         bbox: Bounding of shape [..., 8], containing N bounding boxes each
@@ -255,6 +181,248 @@ def get_enclosing_bbox(bbox: np.ndarray) -> np.ndarray:
 
 
 # region Association
+
+def bbox_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
+    """Compute the intersection-over-union (Jaccard index) between two (sets) of
+    bounding box(es).
+    
+    Args:
+        bbox1: Predicted bounding box(es) of shape :math:`[4]` or :math:`[N, 4]`
+            and in XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape :math:`[4]` or :math:`[M, 4]`
+            and in XYXY format.
+    
+    Returns:
+        An :math:`NxM` matrix containing the pairwise IoU values.
+    """
+    # Make sure the bboxes are in 2D arrays.
+    if bbox1.ndim == 1:
+        bbox1 = np.expand_dims(bbox1, 0)
+    if bbox2.ndim == 1:
+        bbox2 = np.expand_dims(bbox2, 0)
+    assert bbox1.ndim == 2, f":param:`bbox1` must be 1D, but got {bbox1.ndim}D."
+    assert bbox2.ndim == 2, f":param:`bbox2` must be 1D, but got {bbox2.ndim}D."
+    # Expand the dimensions of the bboxes to calculate pairwise IoU values.
+    bbox1 = np.expand_dims(bbox1, 1)
+    bbox2 = np.expand_dims(bbox2, 0)
+    # IoU calculation.
+    xx1   = np.maximum(bbox1[..., 0], bbox2[..., 0])
+    yy1   = np.maximum(bbox1[..., 1], bbox2[..., 1])
+    xx2   = np.minimum(bbox1[..., 2], bbox2[..., 2])
+    yy2   = np.minimum(bbox1[..., 3], bbox2[..., 3])
+    w     = np.maximum(0.0, xx2 - xx1)
+    h     = np.maximum(0.0, yy2 - yy1)
+    wh    = w * h
+    union = ((bbox1[..., 2] - bbox1[..., 0]) * (bbox1[..., 3] - bbox1[..., 1])
+           + (bbox2[..., 2] - bbox2[..., 0]) * (bbox2[..., 3] - bbox2[..., 1]) - wh)
+    iou   = wh / union
+    return iou
+
+
+def bbox_giou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
+    """Compute the generalized intersection-over-union (Jaccard index) between
+    two (sets) of bounding box(es).
+    
+    Args:
+        bbox1: Predicted bounding box(es) of shape :math:`[4]` or :math:`[N, 4]`
+            and in XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape :math:`[4]` or :math:`[M, 4]`
+            and in XYXY format.
+    
+    Returns:
+        An :math:`NxM` matrix containing the pairwise IoU values.
+    
+    References:
+        `<https://arxiv.org/pdf/1902.09630.pdf>`__
+    """
+    # Make sure the bboxes are in 2D arrays.
+    if bbox1.ndim == 1:
+        bbox1 = np.expand_dims(bbox1, 0)
+    if bbox2.ndim == 1:
+        bbox2 = np.expand_dims(bbox2, 0)
+    assert bbox1.ndim == 2, f":param:`bbox1` must be 1D, but got {bbox1.ndim}D."
+    assert bbox2.ndim == 2, f":param:`bbox2` must be 1D, but got {bbox2.ndim}D."
+    # Expand the dimensions of the bboxes to calculate pairwise IoU values.
+    bbox1 = np.expand_dims(bbox1, 1)
+    bbox2 = np.expand_dims(bbox2, 0)
+    # IoU calculation.
+    xx1   = np.maximum(bbox1[..., 0], bbox2[..., 0])
+    yy1   = np.maximum(bbox1[..., 1], bbox2[..., 1])
+    xx2   = np.minimum(bbox1[..., 2], bbox2[..., 2])
+    yy2   = np.minimum(bbox1[..., 3], bbox2[..., 3])
+    w     = np.maximum(0.0, xx2 - xx1)
+    h     = np.maximum(0.0, yy2 - yy1)
+    wh    = w * h
+    union = ((bbox1[..., 2] - bbox1[..., 0]) * (bbox1[..., 3] - bbox1[..., 1])
+             + (bbox2[..., 2] - bbox2[..., 0]) * (bbox2[..., 3] - bbox2[..., 1]) - wh)
+    iou   = wh / union
+    
+    xxc1  = np.minimum(bbox1[..., 0], bbox2[..., 0])
+    yyc1  = np.minimum(bbox1[..., 1], bbox2[..., 1])
+    xxc2  = np.maximum(bbox1[..., 2], bbox2[..., 2])
+    yyc2  = np.maximum(bbox1[..., 3], bbox2[..., 3])
+    wc    = xxc2 - xxc1
+    hc    = yyc2 - yyc1
+    assert (wc > 0).all() and (hc > 0).all()
+    area_enclose = wc * hc
+    giou  = iou - (area_enclose - union) / area_enclose
+    giou  = (giou + 1.0) / 2.0  # resize from (-1,1) to (0,1)
+    return giou
+
+
+def bbox_diou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
+    """Compute the distance intersection-over-union (Jaccard index) between
+    two (sets) of bounding box(es).
+    
+    Args:
+        bbox1: Predicted bounding box(es) of shape :math:`[4]` or :math:`[N, 4]`
+            and in XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape :math:`[4]` or :math:`[M, 4]`
+            and in XYXY format.
+    
+    Returns:
+        An :math:`NxM` matrix containing the pairwise IoU values.
+    
+    References:
+        `<https://arxiv.org/pdf/1902.09630.pdf>`__
+    """
+    # Make sure the bboxes are in 2D arrays.
+    if bbox1.ndim == 1:
+        bbox1 = np.expand_dims(bbox1, 0)
+    if bbox2.ndim == 1:
+        bbox2 = np.expand_dims(bbox2, 0)
+    assert bbox1.ndim == 2, f":param:`bbox1` must be 1D, but got {bbox1.ndim}D."
+    assert bbox2.ndim == 2, f":param:`bbox2` must be 1D, but got {bbox2.ndim}D."
+    # Expand the dimensions of the bboxes to calculate pairwise IoU values.
+    bbox1 = np.expand_dims(bbox1, 1)
+    bbox2 = np.expand_dims(bbox2, 0)
+    # IoU calculation.
+    xx1   = np.maximum(bbox1[..., 0], bbox2[..., 0])
+    yy1   = np.maximum(bbox1[..., 1], bbox2[..., 1])
+    xx2   = np.minimum(bbox1[..., 2], bbox2[..., 2])
+    yy2   = np.minimum(bbox1[..., 3], bbox2[..., 3])
+    w     = np.maximum(0.0, xx2 - xx1)
+    h     = np.maximum(0.0, yy2 - yy1)
+    wh    = w * h
+    union = ((bbox1[..., 2] - bbox1[..., 0]) * (bbox1[..., 3] - bbox1[..., 1])
+             + (bbox2[..., 2] - bbox2[..., 0]) * (bbox2[..., 3] - bbox2[..., 1]) - wh)
+    iou   = wh / union
+    
+    centerx1   = (bbox1[..., 0] + bbox1[..., 2]) / 2.0
+    centery1   = (bbox1[..., 1] + bbox1[..., 3]) / 2.0
+    centerx2   = (bbox2[..., 0] + bbox2[..., 2]) / 2.0
+    centery2   = (bbox2[..., 1] + bbox2[..., 3]) / 2.0
+    inner_diag = (centerx1 - centerx2) ** 2 + (centery1 - centery2) ** 2
+    
+    xxc1       = np.minimum(bbox1[..., 0], bbox2[..., 0])
+    yyc1       = np.minimum(bbox1[..., 1], bbox2[..., 1])
+    xxc2       = np.maximum(bbox1[..., 2], bbox2[..., 2])
+    yyc2       = np.maximum(bbox1[..., 3], bbox2[..., 3])
+    outer_diag = (xxc2 - xxc1) ** 2 + (yyc2 - yyc1) ** 2
+    
+    diou       = iou - inner_diag / outer_diag
+    return (diou + 1) / 2.0  # resize from (-1,1) to (0,1)
+
+
+def bbox_ciou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
+    """Compute the complete intersection-over-union (Jaccard index) between
+    two (sets) of bounding box(es).
+    
+    Args:
+        bbox1: Predicted bounding box(es) of shape :math:`[4]` or :math:`[N, 4]`
+            and in XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape :math:`[4]` or :math:`[M, 4]`
+            and in XYXY format.
+    
+    Returns:
+        An :math:`NxM` matrix containing the pairwise IoU values.
+    
+    References:
+        `<https://arxiv.org/pdf/1902.09630.pdf>`__
+    """
+    # Make sure the bboxes are in 2D arrays.
+    if bbox1.ndim == 1:
+        bbox1 = np.expand_dims(bbox1, 0)
+    if bbox2.ndim == 1:
+        bbox2 = np.expand_dims(bbox2, 0)
+    assert bbox1.ndim == 2, f":param:`bbox1` must be 1D, but got {bbox1.ndim}D."
+    assert bbox2.ndim == 2, f":param:`bbox2` must be 1D, but got {bbox2.ndim}D."
+    # Expand the dimensions of the bboxes to calculate pairwise IoU values.
+    bbox1 = np.expand_dims(bbox1, 1)
+    bbox2 = np.expand_dims(bbox2, 0)
+    # IoU calculation.
+    xx1   = np.maximum(bbox1[..., 0], bbox2[..., 0])
+    yy1   = np.maximum(bbox1[..., 1], bbox2[..., 1])
+    xx2   = np.minimum(bbox1[..., 2], bbox2[..., 2])
+    yy2   = np.minimum(bbox1[..., 3], bbox2[..., 3])
+    w     = np.maximum(0.0, xx2 - xx1)
+    h     = np.maximum(0.0, yy2 - yy1)
+    wh    = w * h
+    union = ((bbox1[..., 2] - bbox1[..., 0]) * (bbox1[..., 3] - bbox1[..., 1])
+             + (bbox2[..., 2] - bbox2[..., 0]) * (bbox2[..., 3] - bbox2[..., 1]) - wh)
+    iou   = wh / union
+    
+    centerx1   = (bbox1[..., 0] + bbox1[..., 2]) / 2.0
+    centery1   = (bbox1[..., 1] + bbox1[..., 3]) / 2.0
+    centerx2   = (bbox2[..., 0] + bbox2[..., 2]) / 2.0
+    centery2   = (bbox2[..., 1] + bbox2[..., 3]) / 2.0
+    inner_diag = (centerx1 - centerx2) ** 2 + (centery1 - centery2) ** 2
+    
+    xxc1       = np.minimum(bbox1[..., 0], bbox2[..., 0])
+    yyc1       = np.minimum(bbox1[..., 1], bbox2[..., 1])
+    xxc2       = np.maximum(bbox1[..., 2], bbox2[..., 2])
+    yyc2       = np.maximum(bbox1[..., 3], bbox2[..., 3])
+    outer_diag = (xxc2 - xxc1) ** 2 + (yyc2 - yyc1) ** 2
+    
+    w1 = bbox1[..., 2] - bbox1[..., 0]
+    h1 = bbox1[..., 3] - bbox1[..., 1]
+    w2 = bbox2[..., 2] - bbox2[..., 0]
+    h2 = bbox2[..., 3] - bbox2[..., 1]
+   
+    # Prevent dividing over zero. add one pixel shift
+    h2     = h2 + 1.0
+    h1     = h1 + 1.0
+    arctan = np.arctan(w2 / h2) - np.arctan(w1 / h1)
+    v      = (4 / (np.pi ** 2)) * (arctan ** 2)
+    S      = 1 - iou
+    alpha  = v / (S + v)
+    ciou   = iou - inner_diag / outer_diag - alpha * v
+    return (ciou + 1) / 2.0  # resize from (-1,1) to (0,1)
+
+
+def bbox_center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
+    """Measure the center distance(s) between two (sets) of bounding box(es).
+    This is a coarse implementation, we don't recommend using it only for
+    association, which can be unstable and sensitive to frame rate and object speed.
+    
+    Args:
+        bbox1: Predicted bounding box(es) of shape :math:`[4]` or :math:`[N, 4]`
+            and in XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape :math:`[4]` or :math:`[M, 4]`
+            and in XYXY format.
+    
+    Returns:
+        An :math:`NxM` matrix containing the pairwise center distance value(s).
+    """
+    # Make sure the bboxes are in 2D arrays.
+    if bbox1.ndim == 1:
+        bbox1 = np.expand_dims(bbox1, 0)
+    if bbox2.ndim == 1:
+        bbox2 = np.expand_dims(bbox2, 0)
+    assert bbox1.ndim == 2, f":param:`bbox1` must be 1D, but got {bbox1.ndim}D."
+    assert bbox2.ndim == 2, f":param:`bbox2` must be 1D, but got {bbox2.ndim}D."
+    # Expand the dimensions of the bboxes to calculate pairwise IoU values.
+    bbox1    = np.expand_dims(bbox1, 1)
+    bbox2    = np.expand_dims(bbox2, 0)
+    centerx1 = (bbox1[..., 0] + bbox2[..., 2]) / 2.0
+    centery1 = (bbox1[..., 1] + bbox2[..., 3]) / 2.0
+    centerx2 = (bbox1[..., 0] + bbox2[..., 2]) / 2.0
+    centery2 = (bbox1[..., 1] + bbox2[..., 3]) / 2.0
+    ct_dist2 = (centerx1 - centerx2) ** 2 + (centery1 - centery2) ** 2
+    ct_dist  = np.sqrt(ct_dist2)
+    # The linear rescaling is a naive version and needs more study
+    ct_dist  = ct_dist / ct_dist.max()
+    return ct_dist.max() - ct_dist  # resize to (0,1)
 
 # endregion
 
@@ -432,41 +600,5 @@ def convert_bbox(
             return bbox_yolo_to_coco(bbox=bbox, height=height, width=width)
         case _:
             raise ValueError(f"{code}.")
-
-# endregion
-
-
-# region Transform
-
-def clip_bbox(
-    bbox      : np.ndarray,
-    image_size: int | list[int],
-    drop_ratio: float = 0.0,
-) -> np.ndarray:
-    """Clip bounding boxes to an image size and removes the bounding boxes,
-    which lose too much area as a result of the augmentation.
-    
-    Args:
-        bbox: Bounding boxes of shape :math:`[..., 4]` and in XYXY format.
-        image_size: An image size in :math:`[H, W]` format.
-        drop_ratio: If the fraction of a bounding box left in the image after
-            being clipped is less than :param:`drop_ratio` the bounding box is
-            dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
-            Default: ``0.0``.
-        
-    Returns:
-        Clipped bounding boxes of shape :math:`[N, 4]`.
-    """
-    h, w       = core.parse_hw(size=image_size)
-    area       = get_bbox_area(bbox=bbox)
-    bbox[:, 0] = np.clip(0, w)  # x1
-    bbox[:, 1] = np.clip(0, h)  # y1
-    bbox[:, 2] = np.clip(0, w)  # x2
-    bbox[:, 3] = np.clip(0, h)  # y2
-    new_area   = get_bbox_area(bbox=bbox)
-    delta_area = (area - new_area) / area
-    mask       = (delta_area < (1 - drop_ratio)).to(torch.int)
-    bbox       = bbox[mask == 1, :]
-    return bbox
 
 # endregion

@@ -123,7 +123,7 @@ def random_patch_image_box(
             else:
                 b = np.array([-1, x1, y1, x2, y2], dtype=np.float64)
                 
-            max_iou = max([mon.get_single_bbox_iou(b[1:5], j[1:5]) for j in box])
+            max_iou = max([mon.bbox_iou(b[1:5], j[1:5]) for j in box])
             if max_iou <= iou_threshold:
                 box[i] = b
                 break

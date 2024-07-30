@@ -107,7 +107,7 @@ from filterpy.common import pretty_str, reshape_z
 
 
 class KalmanFilterNew(object):
-    """ Implements a Kalman filter. You are responsible for setting the
+    """Implements a Kalman filter. You are responsible for setting the
     various state variables to reasonable values; the defaults  will
     not give you a functional filter.
     For now the best documentation is my free book Kalman and Bayesian
@@ -279,7 +279,7 @@ class KalmanFilterNew(object):
     .. [2] Roger Labbe. "Kalman and Bayesian Filters in Python"
        https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python
     """
-
+    
     def __init__(self, dim_x, dim_z, dim_u=0):
         if dim_x < 1:
             raise ValueError('dim_x must be 1 or greater')
@@ -287,11 +287,11 @@ class KalmanFilterNew(object):
             raise ValueError('dim_z must be 1 or greater')
         if dim_u < 0:
             raise ValueError('dim_u must be 0 or greater')
-
+        
         self.dim_x = dim_x
         self.dim_z = dim_z
         self.dim_u = dim_u
-
+        
         self.x = zeros((dim_x, 1))        # state
         self.P = eye(dim_x)               # uncertainty covariance
         self.Q = eye(dim_x)               # process uncertainty
@@ -302,7 +302,7 @@ class KalmanFilterNew(object):
         self._alpha_sq = 1.               # fading memory control
         self.M = np.zeros((dim_x, dim_z)) # process-measurement cross correlation
         self.z = np.array([[None]*self.dim_z]).T
-
+        
         # gain and residual are computed during the innovation step. We
         # save them so that in case you want to inspect them for various
         # purposes

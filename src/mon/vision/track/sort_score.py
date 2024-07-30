@@ -6,8 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
-    "KalmanBoxTrack",
-    "SORT",
+    "KalmanBoxScoreTrack",
+    "SORTScore",
 ]
 
 from timeit import default_timer as timer
@@ -20,56 +20,28 @@ from filterpy.kalman import KalmanFilter
 from mon import core
 from mon.globals import TrackState
 from mon.vision import geometry
-from mon.vision.track import base
+from mon.vision.track import base, sort
 
 console = core.console
 
 
 # region Matching
 
-def linear_assignment(cost_matrix):
-    try:
-        import lap
-        _, x, y = lap.lapjv(cost_matrix, extend_cost=True)
-        return np.array([[y[i], i] for i in x if i >= 0])
-    except ImportError:
-        from scipy.optimize import linear_sum_assignment
-        x, y = linear_sum_assignment(cost_matrix)
-        return np.array(list(zip(x, y)))
-
-
-def convert_bbox_to_z(bbox: np.ndarray) -> np.ndarray:
-    """Convert a bounding box in the form of :math:`[x1, y1, x2, y2]` and
-    returns ``z`` in the form :math:`[x, y, s, r]` where ``x``, ``y`` is the
-    centre of the box and ``s`` is the scale/area and ``r`` is the aspect ratio.
-    """
-    w = bbox[2] - bbox[0]
-    h = bbox[3] - bbox[1]
-    x = bbox[0] + w / 2.0
-    y = bbox[1] + h / 2.0
-    s = w * h  # scale is just area
-    r = w / float(h)
-    return np.array([x, y, s, r]).reshape((4, 1))
-
-
-def convert_x_to_bbox(x: np.ndarray, score: float | None = None) -> np.ndarray:
-    """Convert a bounding box in the centre form of :math:`[x, y, s, r]` and
-    returns it in the form of :math:`[x1, y1, x2, y2]` where ``x1``, ``y1`` is
-    the top left and ``x2``, ``y2`` is the bottom right.
-    """
-    w = np.sqrt(x[2] * x[3])
-    h = x[2] / w
-    if score is None:
-        return np.array([x[0] - w / 2.0, x[1] - h / 2.0, x[0] + w / 2.0, x[1] + h / 2.0]).reshape((1, 4))
-    else:
-        return np.array([x[0] - w / 2.0, x[1] - h / 2.0, x[0] + w / 2.0, x[1] + h / 2.0, score]).reshape((1, 5))
+def score_diff_batch(bboxes1, bboxes2) -> np.ndarray:
+    bboxes2 = np.expand_dims(bboxes2, 0)
+    bboxes1 = np.expand_dims(bboxes1, 1)
+    score2  = bboxes2[..., 4]
+    score1  = bboxes1[..., 4]
+    return abs(score2 - score1)
 
 
 def associate_detections_to_tracks(
-    detections   : np.ndarray,
-    tracks       : np.ndarray,
-    iou_threshold: float = 0.3,
-    association  : str   = "giou",
+    detections           : np.ndarray,
+    tracks               : np.ndarray,
+    iou_threshold        : float = 0.3,
+    association          : str   = "giou",
+    tcm_first_step       : bool  = False,
+    tcm_first_step_weight: float = 1.0,
 ):
     """Assigns detections to tracked objects (both represented as bounding boxes)
     Returns 3 lists of matches, unmatched_detections, and unmatched_tracks
@@ -88,7 +60,11 @@ def associate_detections_to_tracks(
         if a.sum(1).max() == 1 and a.sum(0).max() == 1:
             matched_indices = np.stack(np.where(a), axis=1)
         else:
-            matched_indices = linear_assignment(-iou_matrix)
+            if tcm_first_step:
+                cost_matrix     = iou_matrix - score_diff_batch(detections, tracks) * tcm_first_step_weight
+                matched_indices = sort.linear_assignment(-cost_matrix)
+            else:
+                matched_indices = sort.linear_assignment(-iou_matrix)
     else:
         matched_indices = np.empty(shape=(0, 2))
     
@@ -122,16 +98,17 @@ def associate_detections_to_tracks(
 
 # region Track
 
-class KalmanBoxTrack(base.Track):
+class KalmanBoxScoreTrack(base.Track):
     """This class use Kalman Filter to represent the internal state of individual
-    tracked objects based on bbox.
+    tracked objects based on bbox and confidence score.
     """
     
     def __init__(
         self,
-        bbox : np.ndarray,
-        id_  : int | None = None,
-        state: TrackState = TrackState.NEW,
+        bbox         : np.ndarray,
+        det_threshold: float,
+        id_          : int | None = None,
+        state        : TrackState = TrackState.NEW,
     ):
         super().__init__(
             id_        = id_,
@@ -160,8 +137,20 @@ class KalmanBoxTrack(base.Track):
         self.kf.P         *= 10.0
         self.kf.Q[-1, -1] *= 0.01
         self.kf.Q[4:, 4:] *= 0.01
-        self.kf.x[:4]      = convert_bbox_to_z(bbox)
+        self.kf.x[:4]      = sort.convert_bbox_to_z(bbox)
         #
+        self.kf_score   = KalmanFilter(dim_x=2, dim_z=1)
+        self.kf_score.F = np.array([[1, 1],
+                                    [0, 1]])
+        self.kf_score.H = np.array([[1, 0]])
+        self.kf_score.R[0:, 0:]  *= 10.0
+        self.kf_score.P[1:, 1:]  *= 1000.0  # Give high uncertainty to the unobservable initial velocities
+        self.kf_score.P          *= 10.0
+        self.kf_score.Q[-1, -1 ] *= 0.01
+        self.kf_score.Q[1:,  1:] *= 0.01
+        self.kf_score.x[:1]       = bbox[-1]
+        #
+        self.det_threshold     = det_threshold
         self.hits              = 0
         self.hit_streak        = 0
         self.age               = 0
@@ -182,7 +171,8 @@ class KalmanBoxTrack(base.Track):
         self.time_since_update  = 0
         self.hits              += 1
         self.hit_streak        += 1
-        self.kf.update(convert_bbox_to_z(bbox))
+        self.kf.update(sort.convert_bbox_to_z(bbox))
+        self.kf_score.update(confidence)
         # Append track's history
         self.history.append(
             base.Detection(
@@ -199,45 +189,50 @@ class KalmanBoxTrack(base.Track):
             self.state = TrackState.TRACKED
     
     def predict(self):
-        """Advances the state vector and returns the predicted bounding box
-        estimate.
+        """Advances the state vector and returns the predicted bounding box and
+        confidence score estimate.
         """
         if self.kf.x[6] + self.kf.x[2] <= 0:
             self.kf.x[6] *= 0.0
             self.kf.predict()
+            self.kf_score.predict()
             self.age += 1
             if self.time_since_update > 0:
                 self.hit_streak = 0
             self.time_since_update += 1
-            self.predict_history.append(convert_x_to_bbox(self.kf.x))
-            return self.predict_history[-1]
+            self.predict_history.append(sort.convert_x_to_bbox(self.kf.x))
+            return self.predict_history[-1], np.clip(self.kf_score.x[0], self.det_threshold, 1.0)
     
     def current_state(self):
         """Returns the current bounding box estimate."""
-        return convert_x_to_bbox(self.kf.x)
-
+        return sort.convert_x_to_bbox(self.kf.x)
+    
 # endregion
 
 
 # region Tracker
 
-class SORT(base.Tracker):
+class SORTScore(base.Tracker):
     
     def __init__(
         self,
-        det_threshold: float,
-        max_age      : int   = 30,
-        min_hits     : int   = 3,
-        iou_threshold: float = 0.3,
-        association  : str   = "giou",
+        det_threshold        : float,
+        max_age              : int   = 30,
+        min_hits             : int   = 3,
+        iou_threshold        : float = 0.3,
+        association          : str   = "giou",
+        tcm_first_step       : bool  = True,
+        tcm_first_step_weight: float = 1.0,
     ):
         super().__init__()
-        self.det_threshold = det_threshold
-        self.max_age       = max_age
-        self.min_hits      = min_hits
-        self.iou_threshold = iou_threshold
-        self.association   = association
-        self.tracks: list[KalmanBoxTrack] = []
+        self.det_threshold         = det_threshold
+        self.max_age               = max_age
+        self.min_hits              = min_hits
+        self.iou_threshold         = iou_threshold
+        self.association           = association
+        self.tcm_first_step        = tcm_first_step
+        self.tcm_first_step_weight = tcm_first_step_weight
+        self.tracks: list[KalmanBoxScoreTrack] = []
     
     def update(
         self,
@@ -279,18 +274,20 @@ class SORT(base.Tracker):
         to_del        = []
         ret           = []
         for t, trk in enumerate(trks):
-            pos    = self.tracks[t].predict()[0]
-            trk[:] = [pos[0], pos[1], pos[2], pos[3], 0]
+            pos, trk_score = self.tracks[t].predict()[0]
+            trk[:] = [pos[0][0], pos[0][1], pos[0][2], pos[0][3], trk_score]
             if np.any(np.isnan(pos)):
                 to_del.append(t)
         trks = np.ma.compress_rows(np.ma.masked_invalid(trks))
         for t in reversed(to_del):
             self.tracks.pop(t)
         matched, unmatched_dets, unmatched_trks = associate_detections_to_tracks(
-            detections    = dets,
-            tracks        = trks,
-            iou_threshold = self.iou_threshold,
-            association   = self.association,
+            detections            = dets,
+            tracks                = trks,
+            iou_threshold         = self.iou_threshold,
+            association           = self.association,
+            tcm_first_step        = self.tcm_first_step,
+            tcm_first_step_weight = self.tcm_first_step_weight
         )
         # Update matched trackers with assigned detections
         for m in matched:
@@ -302,7 +299,7 @@ class SORT(base.Tracker):
             )
         # Create and initialize new tracks for unmatched detections
         for i in unmatched_dets:
-            trk = KalmanBoxTrack(dets[i, :])
+            trk = KalmanBoxScoreTrack(dets[i, :], self.det_threshold)
             self.tracks.append(trk)
         i = len(self.tracks)
         for trk in reversed(self.tracks):
@@ -319,5 +316,5 @@ class SORT(base.Tracker):
         if len(ret) > 0:
             return np.concatenate(ret)
         return np.empty((0, 5))
-
+    
 # endregion

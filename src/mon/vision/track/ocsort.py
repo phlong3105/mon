@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the SORT: A Simple, Online and Realtime Tracker."""
+"""This module implements the SORT: Observation-Centric SORT on video
+Multi-Object Tracking.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +21,6 @@ from filterpy.kalman import KalmanFilter
 
 from mon import core
 from mon.globals import TrackState
-from mon.vision import geometry
 from mon.vision.track import base
 
 console = core.console
@@ -27,15 +28,24 @@ console = core.console
 
 # region Matching
 
-def linear_assignment(cost_matrix):
-    try:
-        import lap
-        _, x, y = lap.lapjv(cost_matrix, extend_cost=True)
-        return np.array([[y[i], i] for i in x if i >= 0])
-    except ImportError:
-        from scipy.optimize import linear_sum_assignment
-        x, y = linear_sum_assignment(cost_matrix)
-        return np.array(list(zip(x, y)))
+def speed_direction(bbox1: np.ndarray, bbox2: np.ndarray):
+    cx1, cy1 = (bbox1[0] + bbox1[2]) / 2.0, (bbox1[1] + bbox1[3]) / 2.0
+    cx2, cy2 = (bbox2[0] + bbox2[2]) / 2.0, (bbox2[1] + bbox2[3]) / 2.0
+    speed    = np.array([cy2 - cy1, cx2 - cx1])
+    norm     = np.sqrt((cy2 - cy1) ** 2 + (cx2 - cx1) ** 2) + 1e-6
+    return speed / norm
+
+
+def speed_direction_batch(detections: np.ndarray, tracks: np.ndarray):
+    tracks   = tracks[..., np.newaxis]
+    cx1, cy1 = (detections[:, 0] + detections[:, 2]) / 2.0, (detections[:, 1] + detections[:, 3]) / 2.0
+    cx2, cy2 = (    tracks[:, 0] +     tracks[:, 2]) / 2.0, (    tracks[:, 1] +     tracks[:, 3]) / 2.0
+    dx       = cx1 - cx2
+    dy       = cy1 - cy2
+    norm     = np.sqrt(dx ** 2 + dy ** 2) + 1e-6
+    dx       = dx / norm
+    dy       = dy / norm
+    return dy, dx  # size: num_track x num_det
 
 
 def convert_bbox_to_z(bbox: np.ndarray) -> np.ndarray:
@@ -48,7 +58,7 @@ def convert_bbox_to_z(bbox: np.ndarray) -> np.ndarray:
     x = bbox[0] + w / 2.0
     y = bbox[1] + h / 2.0
     s = w * h  # scale is just area
-    r = w / float(h)
+    r = w / float(h + 1e-6)
     return np.array([x, y, s, r]).reshape((4, 1))
 
 
@@ -65,57 +75,15 @@ def convert_x_to_bbox(x: np.ndarray, score: float | None = None) -> np.ndarray:
         return np.array([x[0] - w / 2.0, x[1] - h / 2.0, x[0] + w / 2.0, x[1] + h / 2.0, score]).reshape((1, 5))
 
 
-def associate_detections_to_tracks(
-    detections   : np.ndarray,
-    tracks       : np.ndarray,
-    iou_threshold: float = 0.3,
-    association  : str   = "giou",
-):
-    """Assigns detections to tracked objects (both represented as bounding boxes)
-    Returns 3 lists of matches, unmatched_detections, and unmatched_tracks
-    """
-    if len(tracks) == 0:
-        return np.empty((0, 2), dtype=int), np.arange(len(detections)), np.empty((0, 5), dtype=int)
-    
-    # iou_matrix = iou_batch(detections, tracks)
-    if association == "giou":
-        iou_matrix = geometry.bbox_giou(detections, tracks)
-    else:
-        iou_matrix = geometry.bbox_iou(detections, tracks)
-    
-    if min(iou_matrix.shape) > 0:
-        a = (iou_matrix > iou_threshold).astype(np.int32)
-        if a.sum(1).max() == 1 and a.sum(0).max() == 1:
-            matched_indices = np.stack(np.where(a), axis=1)
-        else:
-            matched_indices = linear_assignment(-iou_matrix)
-    else:
-        matched_indices = np.empty(shape=(0, 2))
-    
-    unmatched_detections = []
-    for d, det in enumerate(detections):
-        if d not in matched_indices[:, 0]:
-            unmatched_detections.append(d)
-    
-    unmatched_tracks = []
-    for t, trk in enumerate(tracks):
-        if t not in matched_indices[:, 1]:
-            unmatched_tracks.append(t)
-    
-    # Filter out matched with low IOU
-    matches = []
-    for m in matched_indices:
-        if iou_matrix[m[0], m[1]] < iou_threshold:
-            unmatched_detections.append(m[0])
-            unmatched_tracks.append(m[1])
-        else:
-            matches.append(m.reshape(1, 2))
-    if len(matches) == 0:
-        matches = np.empty((0, 2), dtype=int)
-    else:
-        matches = np.concatenate(matches, axis=0)
-    
-    return matches, np.array(unmatched_detections), np.array(unmatched_tracks)
+def k_previous_observations(observations, current_age: int, k: int):
+    if len(observations) == 0:
+        return [-1, -1, -1, -1, -1]
+    for i in range(k):
+        dt = k - i
+        if current_age - dt in observations:
+            return observations[current_age - dt]
+    max_age = max(observations.keys())
+    return observations[max_age]
 
 # endregion
 
@@ -129,9 +97,11 @@ class KalmanBoxTrack(base.Track):
     
     def __init__(
         self,
-        bbox : np.ndarray,
-        id_  : int | None = None,
-        state: TrackState = TrackState.NEW,
+        bbox   : np.ndarray,
+        id_    : int | None = None,
+        state  : TrackState = TrackState.NEW,
+        delta_t: int        = 3,
+        origin : bool       = False,
     ):
         super().__init__(
             id_        = id_,

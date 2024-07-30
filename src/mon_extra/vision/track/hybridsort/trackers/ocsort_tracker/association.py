@@ -1,4 +1,3 @@
-import os
 import numpy as np
 
 
@@ -95,6 +94,7 @@ def diou_batch(bboxes1, bboxes2):
 
     return (diou + 1) / 2.0 # resize from (-1,1) to (0,1)
 
+
 def ciou_batch(bboxes1, bboxes2):
     """
     :param bbox_p: predict of bbox(N,4)(x1,y1,x2,y2)
@@ -173,17 +173,16 @@ def ct_dist(bboxes1, bboxes2):
     return ct_dist.max() - ct_dist # resize to (0,1)
 
 
-
 def speed_direction_batch(dets, tracks):
     tracks = tracks[..., np.newaxis]
-    CX1, CY1 = (dets[:,0] + dets[:,2])/2.0, (dets[:,1]+dets[:,3])/2.0
-    CX2, CY2 = (tracks[:,0] + tracks[:,2]) /2.0, (tracks[:,1]+tracks[:,3])/2.0
-    dx = CX1 - CX2 
-    dy = CY1 - CY2 
-    norm = np.sqrt(dx**2 + dy**2) + 1e-6
-    dx = dx / norm 
+    CX1, CY1 = (dets[:, 0] + dets[:, 2]) / 2.0, (dets[:, 1] + dets[:, 3]) / 2.0
+    CX2, CY2 = (tracks[:, 0] + tracks[:, 2]) / 2.0, (tracks[:, 1] + tracks[:, 3]) / 2.0
+    dx = CX1 - CX2
+    dy = CY1 - CY2
+    norm = np.sqrt(dx ** 2 + dy ** 2) + 1e-6
+    dx = dx / norm
     dy = dy / norm
-    return dy, dx # size: num_track x num_det
+    return dy, dx  # size: num_track x num_det
 
 
 def linear_assignment(cost_matrix):
@@ -215,7 +214,7 @@ def associate_detections_to_trackers(detections,trackers,iou_threshold = 0.3):
             matched_indices = linear_assignment(-iou_matrix)
     else:
         matched_indices = np.empty(shape=(0,2))
-
+    
     unmatched_detections = []
     for d, det in enumerate(detections):
         if(d not in matched_indices[:,0]):

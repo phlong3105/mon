@@ -65,7 +65,7 @@ class Detection:
     
     @property
     def bbox_center(self):
-        return geometry.get_bbox_center(bbox=self.bbox)
+        return geometry.bbox_center(bbox=self.bbox)
     
     @property
     def bbox_tl(self):
@@ -74,7 +74,7 @@ class Detection:
     
     @property
     def bbox_corners_points(self) -> np.ndarray:
-        return geometry.get_bbox_corners_points(bbox=self.bbox)
+        return geometry.bbox_corners_points(bbox=self.bbox)
 
 
 class Track(ABC):
