@@ -48,8 +48,8 @@ class Metric(torchmetrics.Metric, ABC):
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self._mode            = mode
-        self._lower_is_better = lower_is_better
+        self.mode            = mode
+        self.lower_is_better = lower_is_better
 
 # endregion
 

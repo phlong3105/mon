@@ -47,16 +47,12 @@ class Factory(dict):
     def __init__(self, name: str, mapping: dict | None = None, *args, **kwargs):
         if name in [None, ""]:
             raise ValueError(f":param:`name` must be given to create a valid factory object.")
-        mapping    = mapping or {}
-        self._name = name
+        mapping   = mapping or {}
+        self.name = name
         super().__init__(mapping)
     
     def __repr__(self) -> str:
         return self.__class__.__name__ + f"(name={self.name}, items={self})"
-    
-    @property
-    def name(self):
-        return self._name
     
     def register(
         self,
@@ -271,20 +267,6 @@ class ModelFactory(Factory):
         >>> resnet_hparams = {}
         >>> resnet         = MODEL.build(name="resnet", **resnet_hparams)
     """
-    
-    def __init__(self, name: str, mapping: dict | None = None, *args, **kwargs):
-        if name in [None, ""]:
-            raise ValueError(f":param:`name` must be given to create a valid factory object.")
-        mapping    = mapping or {}
-        self._name = name
-        super().__init__(mapping)
-    
-    def __repr__(self) -> str:
-        return self.__class__.__name__ + f"(name={self.name}, items={self})"
-    
-    @property
-    def name(self) -> str:
-        return self._name
     
     @property
     def archs(self) -> list[str]:

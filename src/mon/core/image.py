@@ -401,21 +401,21 @@ def denormalize_image_mean_std(
         input = input.to(dtype=torch.get_default_dtype()) \
             if not input.is_floating_point() else input
         shape  = input.shape
-        device = input.devices
+        device = input.device
         dtype  = input.dtype
         if isinstance(mean, float):
             mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
         elif isinstance(mean, (list, tuple)):
-            mean = torch.as_tensor(mean, dtype=dtype, device=input.devices)
+            mean = torch.as_tensor(mean, dtype=dtype, device=input.device)
         elif isinstance(mean, torch.Tensor):
-            mean = mean.to(dtype=dtype, device=input.devices)
+            mean = mean.to(dtype=dtype, device=input.device)
         
         if isinstance(std, float):
             std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
         elif isinstance(std, (list, tuple)):
-            std = torch.as_tensor(std, dtype=dtype, device=input.devices)
+            std = torch.as_tensor(std, dtype=dtype, device=input.device)
         elif isinstance(std, torch.Tensor):
-            std = std.to(dtype=dtype, device=input.devices)
+            std = std.to(dtype=dtype, device=input.device)
         
         std_inv  = 1.0 / (std + eps)
         mean_inv = -mean * std_inv
@@ -465,21 +465,21 @@ def normalize_image_mean_std(
         input = input.to(dtype=torch.get_default_dtype()) \
             if not input.is_floating_point() else input
         shape  = input.shape
-        device = input.devices
+        device = input.device
         dtype  = input.dtype
         if isinstance(mean, float):
             mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
         elif isinstance(mean, (list, tuple)):
-            mean = torch.as_tensor(mean, dtype=dtype, device=input.devices)
+            mean = torch.as_tensor(mean, dtype=dtype, device=input.device)
         elif isinstance(mean, torch.Tensor):
-            mean = mean.to(dtype=dtype, device=input.devices)
+            mean = mean.to(dtype=dtype, device=input.device)
         
         if isinstance(std, float):
             std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
         elif isinstance(std, (list, tuple)):
-            std = torch.as_tensor(std, dtype=dtype, device=input.devices)
+            std = torch.as_tensor(std, dtype=dtype, device=input.device)
         elif isinstance(std, torch.Tensor):
-            std = std.to(dtype=dtype, device=input.devices)
+            std = std.to(dtype=dtype, device=input.device)
         std += eps
         
         mean = mean.view(-1, 1, 1) if mean.ndim == 1 else mean

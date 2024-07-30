@@ -89,7 +89,7 @@ class Loss(_Loss, ABC):
             - Default: ``'mean'``.
     """
     
-    _reductions = ["none", "mean", "sum"]
+    reductions = ["none", "mean", "sum"]
     
     def __init__(
         self,
@@ -97,9 +97,9 @@ class Loss(_Loss, ABC):
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(reduction=reduction)
-        if self.reduction not in self._reductions:
+        if self.reduction not in self.reductions:
             raise ValueError(
-                f":param:`reduction` must be one of: {self._reductions}, "
+                f":param:`reduction` must be one of: {self.reductions}, "
                 f"but got {reduction}."
             )
         self.loss_weight = loss_weight
