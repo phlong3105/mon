@@ -109,7 +109,7 @@ def get_bright_channel_prior(
     
     Args:
         input: A :class:`torch.Tensor` image in :math:`[N, C, H, W]` format, or
-            a :class:`np.ndarray` image in :math:`[H, W, C]` format.
+            a :class:`numpy.ndarray` image in :math:`[H, W, C]` format.
         kernel_size: Window size.
 
     Returns:
@@ -137,7 +137,7 @@ def get_dark_channel_prior(
     
     Args:
         input: A :class:`torch.Tensor` image in :math:`[N, C, H, W]` format, or
-            a :class:`np.ndarray` image in :math:`[H, W, C]` format.
+            a :class:`numpy.ndarray` image in :math:`[H, W, C]` format.
         kernel_size: Window size.
         
     Returns:
@@ -165,7 +165,7 @@ def get_dark_channel_prior_02(
 
     Args:
         input: A :class:`torch.Tensor` image in :math:`[N, C, H, W]` format, or
-            a :class:`np.ndarray` image in :math:`[H, W, C]` format.
+            a :class:`numpy.ndarray` image in :math:`[H, W, C]` format.
         kernel_size: Window size.
 
     Returns:
@@ -200,7 +200,7 @@ def get_guided_brightness_enhancement_map_prior(
     
     Args:
         input: An image.
-        It can be a :class:`torch.Tensor` or :class:`np.ndarray` and in
+        It can be a :class:`torch.Tensor` or :class:`numpy.ndarray` and in
             :math:`[N, C, H, W]` or :math:`[H, W, C]` format.
         gamma: A parameter controls the curvature of the map.
         denoise_ksize: Window size for de-noising operation. Default: ``None``.

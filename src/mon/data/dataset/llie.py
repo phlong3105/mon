@@ -699,14 +699,14 @@ class DarkFaceDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = DarkFace(split=Split.TEST, **self.dataset_kwargs)
             self.val   = DarkFace(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = DarkFace(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -732,14 +732,14 @@ class DICMDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = DICM(split=Split.TEST, **self.dataset_kwargs)
             self.val   = DICM(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = DICM(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -765,14 +765,14 @@ class ExDarkDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = ExDark(split=Split.TEST, **self.dataset_kwargs)
             self.val   = ExDark(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = ExDark(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -798,14 +798,14 @@ class FiveKCDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = FiveKC(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -831,14 +831,14 @@ class FiveKEDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = FiveKE(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -864,14 +864,14 @@ class FusionDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Fusion(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Fusion(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Fusion(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -897,14 +897,14 @@ class LIMEDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = LIME(split=Split.TEST, **self.dataset_kwargs)
             self.val   = LIME(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LIME(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -930,14 +930,14 @@ class LOLBlurDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = LOLBlur(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLBlur(split=Split.VAL,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLBlur(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -963,14 +963,14 @@ class LOLV1DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = LOLV1(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -996,14 +996,14 @@ class LOLV2RealDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = LOLV2Real(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV2Real(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV2Real(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1029,14 +1029,14 @@ class LOLV2SyntheticDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = LOLV2Synthetic(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV2Synthetic(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV2Synthetic(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1062,14 +1062,14 @@ class MEFDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = MEF(split=Split.TEST, **self.dataset_kwargs)
             self.val   = MEF(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = MEF(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1095,16 +1095,16 @@ class NPEDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
+            - Prepare train/val/test/predict splits.
             - Apply transformations.
             - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase: The model phase. One of:
+            stage: The model phase. One of:
                 - "training" : prepares :attr:'train' and :attr:'val'.
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
@@ -1114,10 +1114,10 @@ class NPEDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = NPE(split=Split.TEST, **self.dataset_kwargs)
             self.val   = NPE(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = NPE(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1143,14 +1143,14 @@ class SICEGradDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = SICEGrad(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1176,14 +1176,14 @@ class SICEMixDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = SICEMix(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
             
         if self.classlabels is None:
@@ -1209,14 +1209,14 @@ class SICEMixV2DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = SICEMixV2(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1242,14 +1242,14 @@ class ULOLMixDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = ULOL(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1275,14 +1275,14 @@ class VVDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = VV(split=Split.TEST, **self.dataset_kwargs)
             self.val   = VV(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = VV(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:

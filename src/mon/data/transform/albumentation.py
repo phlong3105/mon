@@ -3,7 +3,7 @@
 
 """This module implements data augmentation functions by extending
 :mod:`albumentations` package. These functions are mainly applied to
-:class:`np.ndarray` images.
+:class:`numpy.ndarray` images.
 """
 
 from __future__ import annotations

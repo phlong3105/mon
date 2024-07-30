@@ -84,7 +84,7 @@ class SelfEnsembleX8(TestTimeAugment):
 	
 	def apply(self, input: torch.Tensor, *args, **kwargs) -> torch.Tensor | Sequence[torch.Tensor]:
 		"""Generate 8 instances from :attr:`input` and then stack them together.
-		to create a single :class:`torch.Tensor` or :class:`np.ndarray`.
+		to create a single :class:`torch.Tensor` or :class:`numpy.ndarray`.
 		
 		Args:
 			input: An input image in :math:`[B, C, H, W]` format.

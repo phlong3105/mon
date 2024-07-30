@@ -52,7 +52,7 @@ class DeepEmbedder(Embedder, ABC):
         device: Cuda device, i.e. ``0`` or ``0,1,2,3`` or ``'cpu'``. Default:
             ``'cpu'``.
         to_numpy: If ``True``, convert the embedded feature vectors to
-            :class:`np.ndarray`. Default: ``False``.
+            :class:`numpy.ndarray`. Default: ``False``.
     
     See Also: :class:`Embedder`.
     """

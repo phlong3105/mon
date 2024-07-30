@@ -31,6 +31,7 @@ __all__ = [
     "normalize_image_by_range",
     "normalize_image_mean_std",
     "read_image",
+    "read_image_shape",
     "to_3d_image",
     "to_4d_image",
     "to_5d_image",
@@ -168,7 +169,7 @@ def is_normalized_image(input: torch.Tensor | np.ndarray) -> bool:
         return abs(np.amax(input)) <= 1.0
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
 
@@ -316,7 +317,7 @@ def get_image_center(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
         return np.array([h / 2, w / 2])
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
 
@@ -335,7 +336,7 @@ def get_image_center4(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.nda
         return np.array([h / 2, w / 2, h / 2, w / 2])
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
 
@@ -425,7 +426,7 @@ def denormalize_image_mean_std(
         raise NotImplementedError(f"This function has not been implemented.")
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -488,7 +489,7 @@ def normalize_image_mean_std(
         raise NotImplementedError(f"This function has not been implemented.")
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -536,7 +537,7 @@ def normalize_image_by_range(
         # image = np.cip(image, new_min, new_max)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -584,7 +585,7 @@ def to_3d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
             input = np.squeeze(input, axis=0)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -644,7 +645,7 @@ def to_4d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
             input = np.squeeze(input, axis=0)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -690,7 +691,7 @@ def to_5d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
             input = np.squeeze(input, axis=0)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -730,7 +731,7 @@ def to_channel_first_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | n
             input = np.transpose(input, (0, 1, 4, 2, 3))
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -770,7 +771,7 @@ def to_channel_last_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np
             input = np.transpose(input, (0, 1, 3, 4, 2))
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return input
@@ -836,7 +837,7 @@ def to_image_tensor(
         input = input.clone()
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     input = to_channel_first_image(input=input)
@@ -887,7 +888,7 @@ def add_weighted(
         output = np.clip(output, 0, bound)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`np.ndarray` or :class:`torch.Tensor`, "
+            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
             f"but got {type(input)}."
         )
     return output
@@ -959,6 +960,17 @@ def read_image(
         image = to_image_tensor(input=image, keepdim=False, normalize=normalize)
     return image
 
+
+def read_image_shape(path: pathlib.Path) -> tuple[int, ...]:
+    """Read an image from a file path using :mod:`cv2` and get its shape  as
+    :math:`[H, W, C]`.
+    
+    Args:
+        path: An image file path.
+    """
+    image = cv2.imread(str(path))  # BGR
+    return image.shape
+    
 
 def write_image(
     path       : pathlib.Path,

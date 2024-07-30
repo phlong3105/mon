@@ -196,20 +196,20 @@ class DataModule(lightning.LightningDataModule, ABC):
         pass
     
     @abstractmethod
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
+            - Prepare train/val/test/predict splits.
             - Apply transformations.
             - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:`train` and :attr:`val`.
-                - ``'testing'``  : prepares :attr:`test`.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``       : prepares all.
+            stage: The running stage. One of:
+                - ``'train'``  : prepares :attr:`train` and :attr:`val`.
+                - ``'test'``   : prepares :attr:`test`.
+                - ``'predict'``: prepares :attr:`predict`.
+                - ``None``     : prepares all.
                 - Default: ``None``.
         """
         pass

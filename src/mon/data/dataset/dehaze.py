@@ -758,14 +758,14 @@ class DenseHazeDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = DenseHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = DenseHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = DenseHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -791,14 +791,14 @@ class IHazeDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = IHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = IHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = IHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -824,14 +824,14 @@ class NHHazeDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = NHHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = NHHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = NHHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -857,14 +857,14 @@ class OHazeDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = OHaze(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = OHaze(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = OHaze(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -890,14 +890,14 @@ class RESIDEHSTSRealDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -923,14 +923,14 @@ class RESIDEHSTSSynDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDEHSTSSyn(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDEHSTSSyn(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test = RESIDEHSTSSyn(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -956,14 +956,14 @@ class RESIDEITSDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDEITS(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -989,14 +989,14 @@ class RESIDEITSV2DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDEITSV2(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   =   RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  =   RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1022,14 +1022,14 @@ class RESIDEOTSDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDEOTS(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1055,14 +1055,14 @@ class RESIDERTTSDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDERTTS(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDERTTS(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test = RESIDERTTS(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1088,14 +1088,14 @@ class RESIDESOTSIndoorDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDESOTSIndoor(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDESOTSIndoor(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test = RESIDESOTSIndoor(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1121,14 +1121,14 @@ class RESIDESOTSOutdoorDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1154,14 +1154,14 @@ class RESIDEUHIDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
             self.val   = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -1187,16 +1187,16 @@ class SateHaze1KDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
+            - Prepare train/val/test/predict splits.
             - Apply transformations.
             - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase: The model phase. One of:
+            stage: The model phase. One of:
                 - "training" : prepares :attr:`train` and :attr:`val`.
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
@@ -1206,10 +1206,10 @@ class SateHaze1KDataModule(datamodule.DataModule):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = SateHaze1K(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1K(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = SateHaze1K(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1235,14 +1235,14 @@ class SateHaze1KThinDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = SateHaze1KThin(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1KThin(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = SateHaze1KThin(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1268,14 +1268,14 @@ class SateHaze1KModerateDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = SateHaze1KModerate(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1KModerate(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = SateHaze1KModerate(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -1301,14 +1301,14 @@ class SateHaze1KThickDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = SateHaze1KThick(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = SateHaze1KThick(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = SateHaze1KThick(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:

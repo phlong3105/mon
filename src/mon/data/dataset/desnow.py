@@ -428,14 +428,14 @@ class GTSnowDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
 
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = GTSnow(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = GTSnow(split=Split.TRAIN, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = GTSnow(split=Split.TRAIN, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -460,14 +460,14 @@ class KITTISnowDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = KITTISnow(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = KITTISnow(split=Split.TRAIN, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = KITTISnow(split=Split.TRAIN, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -493,14 +493,14 @@ class KITTISnowSDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = KITTISnowS(split=Split.TEST, **self.dataset_kwargs)
             self.val   = KITTISnowS(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = KITTISnowS(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -526,14 +526,14 @@ class KITTISnowMDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = KITTISnowM(split=Split.TEST, **self.dataset_kwargs)
             self.val   = KITTISnowM(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = KITTISnowM(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -559,14 +559,14 @@ class KITTISnowLDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = KITTISnowL(split=Split.TEST, **self.dataset_kwargs)
             self.val   = KITTISnowL(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = KITTISnowL(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -592,14 +592,14 @@ class Snow100KDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Snow100K(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Snow100K(split=Split.TRAIN, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Snow100K(split=Split.TRAIN, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -625,14 +625,14 @@ class Snow100KSDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Snow100KS(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Snow100KS(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Snow100KS(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -658,14 +658,14 @@ class Snow100KMDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Snow100KM(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Snow100KM(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Snow100KM(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -691,14 +691,14 @@ class Snow100KLDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Snow100KL(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Snow100KL(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Snow100KL(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:

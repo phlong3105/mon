@@ -17,16 +17,17 @@ from mon.data.datastruct.annotation import base
 console = core.console
 
 
-# region Regression Annotation
+# region Regression
 
 class RegressionAnnotation(base.Annotation):
 	"""A single regression value.
 	
-	See Also: :class:`mon.data.datastruct.annotation.base.Annotation`.
-	
 	Args:
 		value: The regression value.
-		confidence: A confidence value for the data. Default: ``1.0``.
+		confidence: A confidence in :math:`[0, 1]` for the regression.
+			Default: ``1.0``.
+	
+	See Also: :class:`mon.data.datastruct.annotation.base.Annotation`.
 	"""
 	
 	def __init__(
@@ -37,12 +38,12 @@ class RegressionAnnotation(base.Annotation):
 	):
 		super().__init__(*args, **kwargs)
 		if not 0.0 <= confidence <= 1.0:
-			raise ValueError(f":param:`conf` must be between ``0.0`` and ``1.0``, but got {confidence}.")
-		self._value      = value
-		self._confidence = confidence
+			raise ValueError(f":param:`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
+		self.value      = value
+		self.confidence = confidence
 	
 	@property
 	def data(self) -> list | None:
-		return [self._value]
+		return [self.value]
 
 # endregion

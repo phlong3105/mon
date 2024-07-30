@@ -99,14 +99,14 @@ class NTIRE24LLIEDataModule(datamodule.DataModule):
 		if self.classlabels is None:
 			self.get_classlabels()
 	
-	def setup(self, phase: Literal["training", "testing", None] = None):
+	def setup(self, stage: Literal["train", "test", "predict", None] = None):
 		if self.can_log:
 			console.log(f"Setup [red]{self.__class__.__name__}[/red].")
 		
-		if phase in [None, "training"]:
+		if stage in [None, "training"]:
 			self.train = NTIRE24LLIE(split=Split.TRAIN, **self.dataset_kwargs)
 			self.val   = NTIRE24LLIE(split=Split.VAL,   **self.dataset_kwargs)
-		if phase in [None, "testing"]:
+		if stage in [None, "testing"]:
 			self.test  = NTIRE24LLIE(split=Split.TEST,  **self.dataset_kwargs)
 		
 		if self.classlabels is None:

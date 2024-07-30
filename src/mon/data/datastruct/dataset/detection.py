@@ -30,10 +30,8 @@ from mon.globals import BBoxFormat, Split
 
 console	= core.console
 
-ClassLabels     = anno.ClassLabels
-BBoxesLabel     = anno.BBoxesAnnotation
-BBoxesLabelVOC  = anno.BBoxesAnnotationVOC
-BBoxesLabelYOLO = anno.BBoxesAnnotationYOLO
+ClassLabels = anno.ClassLabels
+BBoxesLabel = anno.BBoxesAnnotation
 
 
 # region Detection Dataset

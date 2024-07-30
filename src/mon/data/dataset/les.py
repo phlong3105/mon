@@ -415,14 +415,14 @@ class Flare7KPPRealDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Flare7KPPReal(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Flare7KPPReal(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Flare7KPPReal(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -448,14 +448,14 @@ class Flare7KPPSynDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Flare7KPPSyn(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Flare7KPPSyn(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Flare7KPPSyn(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -481,14 +481,14 @@ class FlareReal800DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = FlareReal800(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = FlareReal800(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = FlareReal800(split=Split.VAL,   **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -514,14 +514,14 @@ class LEDLightDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = LEDLight(split=Split.TEST, **self.dataset_kwargs)
             self.val   = LEDLight(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LEDLight(split=Split.TEST, **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -547,14 +547,14 @@ class LightEffectDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = LightEffect(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = LightEffect(split=Split.TRAIN, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = LightEffect(split=Split.TRAIN, **self.dataset_kwargs)
 
         if self.classlabels is None:

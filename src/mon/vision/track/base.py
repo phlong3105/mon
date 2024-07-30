@@ -28,6 +28,15 @@ console = core.console
 class Detection:
     """An instance of a track in a frame. This class is mainly used to wrap and
     pass data between detectors and trackers.
+    
+    Args:
+        frame_id: The frame ID or index.
+        bbox: The bounding box.
+        polygon: The polygon resulted from instance segmentation models.
+        feature: The feature used in deep tracking methods.
+        confidence: The confidence score.
+        classlabel: The class label.
+        timestamp: The timestamp when the detection is created.
     """
     
     def __init__(
@@ -85,13 +94,11 @@ class Track(ABC):
     sensor readings. It consists of a series of positional data points
     corresponding to the object's location at different times.
     
-    Components of a Track:
-        Object Identification: Identifying the object of interest to be tracked.
-        Positional Data: The coordinates (e.g., x and y positions in 2D space)
-            of the object in each frame.
-        Time Stamps: The specific times at which the object's positions are recorded.
-        Track ID: A unique identifier for each tracked object to distinguish
-            it from others in the scene.
+    Args:
+        id_: The unique ID of the track. Default: ``None``.
+        state: The state of the track. Default: :class:`TrackState.NEW`.
+        detections: The list of detections associated with the track.
+            Default: ``[]``.
     """
     
     _count: int = 0

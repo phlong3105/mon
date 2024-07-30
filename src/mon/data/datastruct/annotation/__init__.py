@@ -17,14 +17,10 @@ import mon.data.datastruct.annotation.bbox
 import mon.data.datastruct.annotation.category
 import mon.data.datastruct.annotation.classlabel
 import mon.data.datastruct.annotation.image
-import mon.data.datastruct.annotation.keypoint
-import mon.data.datastruct.annotation.polyline
 import mon.data.datastruct.annotation.value
 from mon.data.datastruct.annotation.base import *
 from mon.data.datastruct.annotation.bbox import *
 from mon.data.datastruct.annotation.category import *
 from mon.data.datastruct.annotation.classlabel import *
 from mon.data.datastruct.annotation.image import *
-from mon.data.datastruct.annotation.keypoint import *
-from mon.data.datastruct.annotation.polyline import *
 from mon.data.datastruct.annotation.value import *

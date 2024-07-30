@@ -501,14 +501,14 @@ class GTRainDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
 
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = GTRain(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = GTRain(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = GTRain(split=Split.TEST,  **self.dataset_kwargs)
 
         if self.classlabels is None:
@@ -534,14 +534,14 @@ class Rain100DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain100(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Rain100(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain100(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -567,14 +567,14 @@ class Rain100HDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain100H(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain100H(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain100H(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -600,14 +600,14 @@ class Rain100LDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain100L(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain100L(split=Split.TRAIN, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain100L(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -633,14 +633,14 @@ class Rain12DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -666,14 +666,14 @@ class Rain1200DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain1200(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain1200(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain1200(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -699,14 +699,14 @@ class Rain13KDataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain13K(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain100(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             # self.test  = Rain13K(split=Split.TEST,  **self.dataset_kwargs)
             self.test  = Rain100(split=Split.TEST,  **self.dataset_kwargs)
         
@@ -733,14 +733,14 @@ class Rain1400DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain1400(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain1400(split=Split.TEST,  **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain1400(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -766,14 +766,14 @@ class Rain2800DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain2800(split=Split.TEST, **self.dataset_kwargs)
             self.val   = Rain2800(split=Split.TEST, **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain2800(split=Split.TEST, **self.dataset_kwargs)
         
         if self.classlabels is None:
@@ -799,14 +799,14 @@ class Rain800DataModule(datamodule.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: Literal["training", "testing", None] = None):
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
        
-        if phase in [None, "training"]:
+        if stage in [None, "training"]:
             self.train = Rain800(split=Split.TRAIN, **self.dataset_kwargs)
             self.val   = Rain800(split=Split.VAL,   **self.dataset_kwargs)
-        if phase in [None, "testing"]:
+        if stage in [None, "testing"]:
             self.test  = Rain800(split=Split.TEST,  **self.dataset_kwargs)
         
         if self.classlabels is None:

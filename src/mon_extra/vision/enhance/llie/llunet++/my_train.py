@@ -116,7 +116,7 @@ def train(args: argparse.Namespace):
     }
     datamodule: mon.DataModule = mon.DATAMODULES.build(config=data_args)
     datamodule.prepare_data()
-    datamodule.setup(phase="training")
+    datamodule.setup(stage="training")
     train_dataloader = datamodule.train_dataloader
     val_dataloader   = datamodule.val_dataloader
     

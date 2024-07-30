@@ -146,7 +146,7 @@ def ciou_batch(bboxes1, bboxes2):
     alpha = v / (S+v)
     ciou = iou - inner_diag / outer_diag - alpha * v
     
-    return (ciou + 1) / 2.0 # resize from (-1,1) to (0,1)
+    return (ciou + 1) / 2.0  # resize from (-1,1) to (0,1)
 
 
 def ct_dist(bboxes1, bboxes2):

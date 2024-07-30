@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """This module implements geometry functions for bounding boxes. For handling
-geometry, :class:`np.ndarray` is used as the primary data structure.
+geometry, :class:`numpy.ndarray` is used as the primary data structure.
 """
 
 from __future__ import annotations

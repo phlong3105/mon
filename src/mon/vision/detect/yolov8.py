@@ -26,7 +26,7 @@ console = core.console
 # region YOLOv8
 
 @DETECTORS.register(name="yolov8")
-class YOLOv8(base.Detector):
+class YOLOv8(base.Detector1):
     """YOLOv8 detector.
     
     See Also: :class:`mon.vision.detect.base.Detector`.

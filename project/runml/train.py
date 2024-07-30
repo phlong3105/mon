@@ -37,7 +37,7 @@ def train(args: dict) -> str:
     # Data I/O
     datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["datamodule"])
     datamodule.prepare_data()
-    datamodule.setup(phase="training")
+    datamodule.setup(stage="train")
     
     # Trainer
     if mon.is_rank_zero():
