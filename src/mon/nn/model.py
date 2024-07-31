@@ -34,7 +34,7 @@ from mon.core import _callable
 from mon.globals import LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task, ZOO_DIR
 from mon.nn import loss as L, metric as M
 
-console       = core.console
+console      = core.console
 error_console = core.error_console
 StepOutput    = lightning.pytorch.utilities.types.STEP_OUTPUT
 EpochOutput   = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT

@@ -30,8 +30,8 @@ from basicsr.utils.dist_util import get_dist_info, init_dist
 from basicsr.utils.options import dict2str, parse
 
 console       = mon.console
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+current_file = mon.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Train

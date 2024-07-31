@@ -21,7 +21,7 @@ from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.enhance.llie import base
 
-console       = core.console
+console      = core.console
 error_console = core.error_console
 
 

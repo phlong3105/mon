@@ -12,9 +12,9 @@ from onnxruntime import InferenceSession
 from mon import core
 from mon.globals import ZOO_DIR
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 def get_relative_path(root, *args):

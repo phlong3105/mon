@@ -6,8 +6,8 @@ import pickle
 import mon
 from ldm.modules.encoders.modules import FrozenCLIPEmbedder
 
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+current_file = mon.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 model         = FrozenCLIPEmbedder().to("cuda")
 embedding     = model.encode([""]).cpu()

@@ -26,10 +26,10 @@ from mon.globals import *
 
 # region Directory
 
-_current_file = mon.Path(__file__).absolute()
+current_file = mon.Path(__file__).absolute()
 ROOT_DIR      = _current_file.parents[2]
 SRC_DIR       = _current_file.parents[1]
-PACKAGE_DIR   = _current_file.parents[0]
+PACKAGE_DIR   = current_file.parents[0]
 MON_DIR       = SRC_DIR / "mon"
 MON_EXTRA_DIR = SRC_DIR / "mon_extra"
 

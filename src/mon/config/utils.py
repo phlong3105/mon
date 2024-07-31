@@ -33,7 +33,7 @@ from typing import Any
 
 from mon import core
 
-console       = core.console
+console      = core.console
 error_console = core.error_console
 
 

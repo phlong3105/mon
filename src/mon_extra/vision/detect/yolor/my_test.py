@@ -28,8 +28,8 @@ from utils.plots import output_to_target, plot_images
 from utils.torch_utils import select_device, time_synchronized
 
 console       = mon.console
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+current_file = mon.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Test

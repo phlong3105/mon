@@ -19,8 +19,8 @@ from cldm.model import create_model, load_state_dict
 from coco_dataset import create_webdataset
 
 console       = mon.console
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+current_file = mon.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Train

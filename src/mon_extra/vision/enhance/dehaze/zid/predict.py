@@ -25,9 +25,9 @@ from utils.dcp import get_atmosphere
 from utils.image_io import *
 from utils.imresize import np_imresize
 
-console       = core.console
-_current_file = core.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 DehazeResult  = namedtuple("DehazeResult", ["learned", "t", "a"])
 
 

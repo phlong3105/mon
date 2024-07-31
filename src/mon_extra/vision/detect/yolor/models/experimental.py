@@ -10,8 +10,8 @@ from utils.google_utils import attempt_download
 from utils.torch_utils import intersect_dicts, ModelEMA, select_device, torch_distributed_zero_first
 
 console       = mon.console
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+current_file = mon.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 _root_dir     = _current_file.parents[1]
 
 

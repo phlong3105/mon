@@ -69,10 +69,10 @@ from mon.core import dtype as DT, factory, pathlib
 
 # region Directory
 
-_current_file = pathlib.Path(__file__).absolute()
+current_file = pathlib.Path(__file__).absolute()
 ROOT_DIR      = _current_file.parents[2]
 SRC_DIR       = _current_file.parents[1]
-MON_DIR       = _current_file.parents[0]
+MON_DIR       = current_file.parents[0]
 MON_EXTRA_DIR = SRC_DIR / "mon_extra"
 
 ZOO_DIR = None

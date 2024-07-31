@@ -32,7 +32,9 @@ except ImportError:
     # sys.exit(1)  # Exit and raise error
     sys.exit(0)  # Exit without error
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region YOLOv8
@@ -44,8 +46,12 @@ class YOLOv8Detector(base.Detector):
     See Also: :class:`mon.vision.detect.base.Detector`.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        config : dict | str | core.Path | None = current_dir / "config/yolov8.yaml",
+        *args, **kwargs
+    ):
+        super().__init__(config=config, *args, **kwargs)
         self.model = YOLO(model=str(self.weights), task="detect", verbose=False)
         
     def __call__(
@@ -77,11 +83,13 @@ class YOLOv8Detector(base.Detector):
         elif isinstance(images, np.ndarray) and images.ndim == 4:
             images = list(images)
         
-        # Overwrite arguments
+        # Overwrite model's configs
         self.config |= kwargs
         
         # Make predictions
         results = self.model.predict(source=images, **self.config)
+        for r in results:
+            print(r.boxes.data)  # print detection bounding boxes
         
         
 @DETECTORS.register(name="yolov8")

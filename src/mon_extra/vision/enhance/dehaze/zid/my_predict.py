@@ -25,8 +25,8 @@ if str(_root) not in sys.path:
     sys.path.append(str(_root))  # add ROOT to PATH
 
 console       = mon.console
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+current_file = mon.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 DehazeResult  = namedtuple("DehazeResult", ["learned", "t", "a"])
 
 

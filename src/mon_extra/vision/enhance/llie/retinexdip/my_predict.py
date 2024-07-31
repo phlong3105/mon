@@ -22,7 +22,7 @@ from utils.image_io import *
 
 console           = mon.console
 _current_file     = mon.Path(__file__).absolute()
-_current_dir      = _current_file.parents[0]
+_current_dir      = current_file.parents[0]
 EnhancementResult = namedtuple("EnhancementResult", ["reflection", "illumination"])
 
 torch.manual_seed(0)

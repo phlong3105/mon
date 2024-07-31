@@ -27,7 +27,7 @@ from lightning.pytorch.utilities.types import STEP_OUTPUT
 from mon import core
 from mon.globals import CALLBACKS
 
-console       = core.console
+console      = core.console
 error_console = core.error_console
 
 

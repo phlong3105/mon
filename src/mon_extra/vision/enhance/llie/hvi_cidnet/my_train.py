@@ -32,8 +32,8 @@ from measure import metrics
 from net.cidnet import CIDNet
 
 console       = mon.console
-_current_file = mon.Path(__file__).absolute()
-_current_dir  = _current_file.parents[0]
+current_file = mon.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Train
