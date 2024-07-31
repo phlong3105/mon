@@ -99,6 +99,7 @@ class YOLOv8Detector(base.Detector):
         
         return results
         
+        
 class YOLOv8(base.Detector1):
     """YOLOv8 detector.
     
