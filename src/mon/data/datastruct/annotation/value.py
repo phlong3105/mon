@@ -37,10 +37,19 @@ class RegressionAnnotation(base.Annotation):
 		*args, **kwargs
 	):
 		super().__init__(*args, **kwargs)
-		if not 0.0 <= confidence <= 1.0:
-			raise ValueError(f":param:`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
 		self.value      = value
 		self.confidence = confidence
+	
+	@property
+	def confidence(self) -> float:
+		"""The confidence of the bounding box."""
+		return self._confidence
+	
+	@confidence.setter
+	def confidence(self, confidence: float):
+		if not 0.0 <= confidence <= 1.0:
+			raise ValueError(f":param:`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
+		self._confidence = confidence
 	
 	@property
 	def data(self) -> list | None:

@@ -6,25 +6,67 @@
 from __future__ import annotations
 
 __all__ = [
-    "YOLOv8",
+    "YOLOv8Detector",
 ]
+
+import sys
 
 import numpy as np
 import torch
-from ultralytics.nn import tasks
-from ultralytics.yolo.data import augment
-from ultralytics.yolo.utils import checks, ops
 
 from mon import core
 from mon.globals import DETECTORS
 from mon.vision import track
 from mon.vision.detect import base
 
+try:
+    import ultralytics
+    from ultralytics import YOLO
+    from ultralytics.nn import tasks
+    from ultralytics.yolo.data import augment
+    from ultralytics.yolo.utils import checks, ops
+    ultralytics_available = True
+except ImportError:
+    ultralytics_available = False
+    print("The package 'ultralytics' has not been installed.")
+    # sys.exit(1)  # Exit and raise error
+    sys.exit(0)  # Exit without error
+
 console = core.console
 
 
 # region YOLOv8
 
+@DETECTORS.register(name="yolov8")
+class YOLOv8Detector(base.Detector):
+    """YOLOv8 detector.
+    
+    See Also: :class:`mon.vision.detect.base.Detector`.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model = YOLO(model=str(self.weights), task="detect", verbose=False)
+        
+    def forward(self, indexes: np.ndarray, images: np.ndarray) -> np.ndarray:
+        """Detect objects in the images.
+
+        Args:
+            indexes: A :class:`numpy.ndarray` of image indexes of shape :math:`[B]`.
+            images: Images of shape :math:`[B, H, W, C]`.
+
+        Returns:
+            A 2D :class:`numpy.ndarray` of shape :math:`[B, ..., ..., ...]`.
+        
+        Examples:
+            >>> model = YOLO('yolov8n.pt')
+            >>> results = model.predict(source='path/to/image.jpg', conf=0.25)
+            >>> for r in results:
+            ...     print(r.boxes.data)  # print detection bounding boxes
+        """
+        pass
+        
+        
 @DETECTORS.register(name="yolov8")
 class YOLOv8(base.Detector1):
     """YOLOv8 detector.
@@ -54,8 +96,7 @@ class YOLOv8(base.Detector1):
             Input tensor of shape :math:`[B, C, H, W]`.
         """
         input  = images.copy()
-        ratio  = max(self.image_size) / max(
-            core.get_image_size(input=input))
+        ratio  = max(self.image_size) / max(core.get_image_size(input=input))
         stride = self.model.stride
         stride = int(stride.max() if isinstance(stride, torch.Tensor) else stride)
         

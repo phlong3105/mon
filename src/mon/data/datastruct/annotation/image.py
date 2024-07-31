@@ -35,40 +35,31 @@ class ImageAnnotation(base.Annotation):
     
     def __init__(self, path: core.Path | str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if path is None or not core.Path(path).is_image_file():
-            raise ValueError(f":param:`path` must be a valid path to an image file, but got {self.path}.")
-        self.path  = core.Path(path)
-        self.name  = str(self.path.name)
-        self.stem  = str(self.path.stem)
+        self.path  = path
         self.image = None
-        self.shape = core.read_image_shape(path=self.path)
     
-    def load(
-        self,
-        path : core.Path | str | None = None,
-        cache: bool = False,
-    ) -> np.ndarray | None:
-        """Loads image into memory.
-        
-        Args:
-            path: The path to the image file. Default: ``None``.
-            cache: If ``True``, the image will be loaded into memory
-                and kept there. Default: ``False``.
-            
-        Return:
-            An image of shape :math:`[H, W, C]`.
-        """
-        if path is not None and core.Path(path).is_image_file():
-            self.path = core.Path(path)
-        if self.path is None or not self.path.is_image_file():
-            raise ValueError(f":param:`path` must be a valid path to an image file, but got {self.path}.")
-        
-        image      = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
-        self.shape = core.get_image_shape(input=image) if (image is not None) else self.shape
-        
-        if cache:
-            self.image = image
-        return image
+    @property
+    def path(self) -> core.Path:
+        return self._path
+    
+    @path.setter
+    def path(self, path: core.Path | str | None):
+        if path is None or not core.Path(path).is_image_file():
+            raise ValueError(f":param:`path` must be a valid path to an image file, but got {path}.")
+        self._path  = core.Path(path)
+        self._shape = core.read_image_shape(path=self._path)
+    
+    @property
+    def name(self) -> str:
+        return str(self.path.name)
+    
+    @property
+    def stem(self) -> str:
+        return str(self.path.stem)
+    
+    @property
+    def shape(self) -> tuple[int, int, int]:
+        return self._shape
     
     @property
     def data(self) -> np.ndarray | None:
@@ -89,6 +80,28 @@ class ImageAnnotation(base.Annotation):
             "shape": self.shape,
             "hash" : self.path.stat().st_size if isinstance(self.path, core.Path) else None,
         }
+    
+    def load(
+        self,
+        path : core.Path | str | None = None,
+        cache: bool = False,
+    ) -> np.ndarray | None:
+        """Loads image into memory.
+        
+        Args:
+            path: The path to the image file. Default: ``None``.
+            cache: If ``True``, the image will be loaded into memory and kept
+                there. Default: ``False``.
+            
+        Return:
+            An image of shape :math:`[H, W, C]`.
+        """
+        if path is not None:
+            self.path = path
+        image = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
+        if cache:
+            self.image = image
+        return image
 
 
 class FrameAnnotation(base.Annotation):
@@ -115,10 +128,26 @@ class FrameAnnotation(base.Annotation):
         super().__init__(*args, **kwargs)
         self.index = index
         self.frame = frame
-        self.path  = core.Path(path)     if path      is not None else None
-        self.name  = str(self.path.name) if self.path is not None else f"{index}"
-        self.stem  = str(self.path.stem)
+        self.path  = path
         self.shape = core.get_image_shape(input=frame)
+    
+    @property
+    def path(self) -> core.Path:
+        return self._path
+    
+    @path.setter
+    def path(self, path: core.Path | str | None):
+        if path is None or not core.Path(path).is_video_file():
+            raise ValueError(f":param:`path` must be a valid path to a video file, but got {path}.")
+        self._path = core.Path(path)
+    
+    @property
+    def name(self) -> str:
+        return str(self.path.name) if self.path is not None else f"{self.index}"
+    
+    @property
+    def stem(self) -> str:
+        return str(self.path.stem) if self.path is not None else f"{self.index}"
     
     @property
     def data(self) -> np.ndarray | None:
@@ -152,46 +181,33 @@ class SegmentationAnnotation(base.Annotation):
     See Also: :class:`mon.data.datastruct.annotation.base.Annotation`.
     """
     
-    def __init__(
-        self,
-        path: core.Path | str,
-        *args, **kwargs
-    ):
+    def __init__(self, path: core.Path | str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if path is None or not core.Path(path).is_image_file():
-            raise ValueError(f":param:`path` must be a valid path to an image file, but got {self.path}.")
-        self.path  = core.Path(path)
-        self.name  = str(self.path.name)
-        self.stem  = str(self.path.stem)
-        self.mask  = None
-        self.shape = core.read_image_shape(path=self.path)
+        self.path = path
+        self.mask = None
     
-    def load(
-        self,
-        path : core.Path | str | None = None,
-        cache: bool = False,
-    ) -> np.ndarray | None:
-        """Loads image into memory.
-        
-        Args:
-            path: The path to the image file. Default: ``None``.
-            cache: If ``True``, the image will be loaded into memory
-                and kept there. Default: ``False``.
-            
-        Return:
-            An image of shape :math:`[H, W, C]`.
-        """
-        if path is not None and core.Path(path).is_image_file():
-            self.path = core.Path(path)
-        if self.path is None or not self.path.is_image_file():
-            raise ValueError(f":param:`path` must be a valid path to an image file, but got {self.path}.")
-        
-        mask       = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
-        self.shape = core.get_image_shape(input=mask) if (mask is not None) else self.shape
-        
-        if cache:
-            self.mask = mask
-        return mask
+    @property
+    def path(self) -> core.Path:
+        return self._path
+    
+    @path.setter
+    def path(self, path: core.Path | str | None):
+        if path is None or not core.Path(path).is_image_file():
+            raise ValueError(f":param:`path` must be a valid path to an image file, but got {path}.")
+        self._path  = core.Path(path)
+        self._shape = core.read_image_shape(path=self._path)
+    
+    @property
+    def name(self) -> str:
+        return str(self.path.name)
+    
+    @property
+    def stem(self) -> str:
+        return str(self.path.stem)
+    
+    @property
+    def shape(self) -> tuple[int, int, int]:
+        return self._shape
     
     @property
     def data(self) -> np.ndarray | None:
@@ -209,5 +225,27 @@ class SegmentationAnnotation(base.Annotation):
             "shape": self.shape,
             "hash" : self.path.stat().st_size if isinstance(self.path, core.Path) else None,
         }
+    
+    def load(
+        self,
+        path : core.Path | str | None = None,
+        cache: bool = False,
+    ) -> np.ndarray | None:
+        """Loads image into memory.
+        
+        Args:
+            path: The path to the image file. Default: ``None``.
+            cache: If ``True``, the image will be loaded into memory
+                and kept there. Default: ``False``.
+            
+        Return:
+            An image of shape :math:`[H, W, C]`.
+        """
+        if path is not None:
+            self.path = path
+        mask = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
+        if cache:
+            self.mask = mask
+        return mask
 
 # endregion

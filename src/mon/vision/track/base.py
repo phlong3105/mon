@@ -41,21 +41,20 @@ class Detection:
     
     def __init__(
         self,
-        frame_id  : int        | None = None,
-        bbox      : np.ndarray | None = None,
+        frame_id  : int,
+        class_id  : int,
+        bbox      : np.ndarray,
+        confidence: float,
         polygon   : np.ndarray | None = None,
         feature   : np.ndarray | None = None,
-        confidence: float      | None = None,
-        classlabel: dict | int | None = None,
-        timestamp : int  | float      = timer(),
-        *args, **kwargs
+        timestamp : int | float       = timer(),
     ):
         self.frame_id   = frame_id
-        self.bbox       = np.array(bbox)    if bbox    is not None else None
+        self.class_id   = class_id
+        self.bbox       = bbox
+        self.confidence = confidence
         self.polygon    = np.array(polygon) if polygon is not None else None
         self.feature    = np.array(feature) if feature is not None else None
-        self.confidence = confidence
-        self.classlabel = classlabel
         self.timestamp  = timestamp
     
     @classmethod
@@ -73,18 +72,42 @@ class Detection:
             )
     
     @property
-    def bbox_center(self):
-        return geometry.bbox_center(bbox=self.bbox)
+    def bbox(self) -> np.ndarray:
+        """Return the bounding box of shape :math:`[4]`."""
+        return self._bbox
+    
+    @bbox.setter
+    def bbox(self, bbox: np.ndarray | list | tuple):
+        bbox = np.ndarray(bbox) if not isinstance(bbox, np.ndarray) else bbox
+        if bbox.ndim == 1 and bbox.size == 4:
+            self._bbox = bbox
+        else:
+            raise ValueError(f":param:`bbox` must be a 1D array of size 4, but got {bbox.ndim} and {bbox.size}.")
     
     @property
-    def bbox_tl(self):
+    def bbox_center(self) -> np.ndarray:
+        return geometry.bbox_center(bbox=self.bbox)[0]
+    
+    @property
+    def bbox_tl(self) -> np.ndarray:
         """The bbox's top left corner."""
         return self.bbox[0:2]
     
     @property
     def bbox_corners_points(self) -> np.ndarray:
-        return geometry.bbox_corners_points(bbox=self.bbox)
-
+        return geometry.bbox_corners_points(bbox=self.bbox)[0]
+    
+    @property
+    def confidence(self) -> float:
+        """The confidence of the bounding box."""
+        return self._confidence
+    
+    @confidence.setter
+    def confidence(self, confidence: float):
+            if not 0.0 <= confidence <= 1.0:
+                raise ValueError(f":param:`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
+            self._confidence = confidence
+    
 
 class Track(ABC):
     """The base class for all tracks.
@@ -101,7 +124,7 @@ class Track(ABC):
             Default: ``[]``.
     """
     
-    _count: int = 0
+    count: int = 0
     
     def __init__(
         self,
@@ -109,19 +132,29 @@ class Track(ABC):
         state     : TrackState = TrackState.NEW,
         detections: Detection | list[Detection] = [],
     ):
-        self.id_   = id_ or Track._count
-        Track._count += 1
-        self.state = state
+        self.id_     = id_ or Track.count
+        self.state   = state
+        self.history = detections
+        Track.count += 1
+    
+    @property
+    def history(self) -> list[Detection]:
+        """The history of the track."""
+        return self._history
+    
+    @history.setter
+    def history(self, detections: Detection | list[Detection]):
         detections = [detections] if not isinstance(detections, list) else detections
-        assert all(isinstance(d, Detection) for d in detections)
-        self.history: list[Detection] = detections
+        if not all(isinstance(d, Detection) for d in detections):
+            raise ValueError(f":param:`detections` must be a :class:`list` of :class:`Detection`, but got {type(detections)}.")
+        self._history = detections
     
     @staticmethod
     def next_id() -> int:
         """This function keeps track of the total number of tracking objects,
         which is also the track ID of the new tracking object.
         """
-        return Track._count + 1
+        return Track.count + 1
     
     @abstractmethod
     def update(self, *args, **kwargs):

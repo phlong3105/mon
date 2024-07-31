@@ -71,17 +71,12 @@ class Dataset(dataset.Dataset, ABC):
 	):
 		super().__init__()
 		self.root        = core.Path(root)
+		self.split 	     = split
 		self.classlabels = ClassLabels.from_value(classlabels)
 		self.transform   = transform
 		self.to_tensor   = to_tensor
 		self.verbose     = verbose
 		self.index		 = 0  # Use with :meth:`__iter__` and :meth`__next__`
-		
-		split = Split[split] if isinstance(split, str) else split
-		if split in self.splits:
-			self.split = split
-		else:
-			raise ValueError(f":param:`split` must be one of {self.splits}, but got {split}.")
 		
 	def __iter__(self):
 		"""Returns an iterator starting at the index ``0``."""
@@ -119,6 +114,18 @@ class Dataset(dataset.Dataset, ABC):
 	
 	def __del__(self):
 		self.close()
+	
+	@property
+	def split(self) -> Split:
+		return self._split
+	
+	@split.setter
+	def split(self, split: Split):
+		split = Split[split] if isinstance(split, str) else split
+		if split in self.splits:
+			self._split = split
+		else:
+			raise ValueError(f":param:`split` must be one of {self.splits}, but got {split}.")
 	
 	@property
 	def split_str(self) -> str:

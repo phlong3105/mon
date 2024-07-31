@@ -41,18 +41,16 @@ class BBoxAnnotation(base.Annotation):
 	def __init__(
 		self,
 		class_id  : int,
-		bbox      : np.ndarray | list,
+		bbox      : np.ndarray | list | tuple,
+		mask      : np.ndarray | list | tuple | None = None,
 		confidence: float = 1.0,
-		mask      : np.ndarray | list | None = None,
 		*args, **kwargs
 	):
 		super().__init__(*args, **kwargs)
-		if not 0.0 <= confidence <= 1.0:
-			raise ValueError(f":param:`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
 		self.class_id   = class_id
-		self.confidence = confidence
-		self.bbox       = np.ndarray(bbox) if not isinstance(bbox, np.ndarray) else bbox
+		self.bbox       = bbox
 		self.mask       = mask
+		self.confidence = confidence
 	
 	@classmethod
 	def from_mask(cls, mask: np.ndarray, label: str, **kwargs) -> BBoxAnnotation:
@@ -86,6 +84,30 @@ class BBoxAnnotation(base.Annotation):
 			)
 	
 	@property
+	def bbox(self) -> np.ndarray:
+		"""Return the bounding box of shape :math:`[4]`."""
+		return self._bbox
+	
+	@bbox.setter
+	def bbox(self, bbox: np.ndarray | list | tuple):
+		bbox = np.ndarray(bbox) if not isinstance(bbox, np.ndarray) else bbox
+		if bbox.ndim == 1 and bbox.size == 4:
+			self._bbox = bbox
+		else:
+			raise ValueError(f":param:`bbox` must be a 1D array of size 4, but got {bbox.ndim} and {bbox.size}.")
+	
+	@property
+	def confidence(self) -> float:
+		"""The confidence of the bounding box."""
+		return self._confidence
+	
+	@confidence.setter
+	def confidence(self, confidence: float):
+		if not 0.0 <= confidence <= 1.0:
+			raise ValueError(f":param:`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
+		self._confidence = confidence
+	
+	@property
 	def data(self) -> list | None:
 		"""The label's data."""
 		return [
@@ -96,7 +118,7 @@ class BBoxAnnotation(base.Annotation):
 			self.confidence,
 			self.class_id,
 		]
-
+	
 
 class BBoxesAnnotation(base.Annotation, ABC):
 	"""A list of all bounding box annotations in an image.
