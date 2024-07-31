@@ -1,22 +1,16 @@
+from ultralytics import YOLO
 
+import mon
 
-class A:
-    
-    _task = "A"
-    
-    def __init__(self):
-        self.a = 1
-    
-
-class B(A):
-    
-    _task = "B"
-    
-    def __init__(self):
-        super().__init__()
-        self.b = 2
-
-
-b = B()
-print(b.a)
-print(b._task)
+image_files = [
+    "data/horses.jpg",
+    "data/horses.jpg",
+]
+images  = [mon.read_image(image_file) for image_file in image_files]
+kwargs  = {
+    "conf": 0.10,
+}
+model   = YOLO(mon.ZOO_DIR / "vision/ultralytics/yolov8/yolov8n/coco/yolov8n_coco.pt")
+results = model.predict(source=images, **kwargs)
+for r in results:
+    print(r.boxes.data)  # print detection bounding boxes

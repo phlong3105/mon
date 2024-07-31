@@ -31,11 +31,11 @@ class Detection:
     
     Args:
         frame_id: The frame ID or index.
+        class_id: The class label.
         bbox: The bounding box.
+        confidence: The confidence score.
         polygon: The polygon resulted from instance segmentation models.
         feature: The feature used in deep tracking methods.
-        confidence: The confidence score.
-        classlabel: The class label.
         timestamp: The timestamp when the detection is created.
     """
     
@@ -116,6 +116,9 @@ class Track(ABC):
     as it moves through a sequence of frames in a video or across multiple
     sensor readings. It consists of a series of positional data points
     corresponding to the object's location at different times.
+    
+    Attributes:
+        count: The total number of tracking objects.
     
     Args:
         id_: The unique ID of the track. Default: ``None``.

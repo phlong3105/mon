@@ -48,23 +48,40 @@ class YOLOv8Detector(base.Detector):
         super().__init__(*args, **kwargs)
         self.model = YOLO(model=str(self.weights), task="detect", verbose=False)
         
-    def forward(self, indexes: np.ndarray, images: np.ndarray) -> np.ndarray:
+    def __call__(
+        self,
+        indexes: np.ndarray | list[int],
+        images : str | core.Path | list[str] | list[core.Path] | np.ndarray | torch.Tensor,
+        **kwargs,
+    ) -> np.ndarray:
         """Detect objects in the images.
 
         Args:
-            indexes: A :class:`numpy.ndarray` of image indexes of shape :math:`[B]`.
-            images: Images of shape :math:`[B, H, W, C]`.
-
-        Returns:
-            A 2D :class:`numpy.ndarray` of shape :math:`[B, ..., ..., ...]`.
+            indexes: Image indexes of shape :math:`[B]`.
+            images: The source of the image(s) to make predictions on. Accepts
+                various types including file paths, URLs, PIL images, numpy
+                arrays, and torch tensors.
+            **kwargs: Additional keyword arguments for configuring the prediction
+                process.
         
         Examples:
-            >>> model = YOLO('yolov8n.pt')
+            >>> model   = YOLO('yolov8n.pt')
             >>> results = model.predict(source='path/to/image.jpg', conf=0.25)
             >>> for r in results:
             ...     print(r.boxes.data)  # print detection bounding boxes
         """
-        pass
+        # Prepare images
+        indexes = list(indexes)
+        if isinstance(images, (str, core.Path)):
+            images = [images]
+        elif isinstance(images, np.ndarray) and images.ndim == 4:
+            images = list(images)
+        
+        # Overwrite arguments
+        self.config |= kwargs
+        
+        # Make predictions
+        results = self.model.predict(source=images, **self.config)
         
         
 @DETECTORS.register(name="yolov8")

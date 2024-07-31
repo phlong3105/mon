@@ -42,25 +42,33 @@ class Detector(ABC):
     
     def __init__(
         self,
-        config        : dict | str | core.Path | None,
-        weights       : Any,
-        image_size    : int | Sequence[int] = 640,
-        conf_threshold: float               = 0.5,
-        iou_threshold : float               = 0.3,
-        max_detections: int                 = 300,
-        device        : int | str           = "cpu",
+        config : dict | str | core.Path | None,
+        weights: Any,
+        *args, **kwargs
     ):
         super().__init__()
-        self.config         = config
-        self.weights        = weights
-        self.image_size     = image_size
-        self.conf_threshold = conf_threshold
-        self.iou_threshold  = iou_threshold
-        self.max_detections = max_detections
-        self.device         = device
-        self.model          = None
+        self.config   = config
+        self.config  |= kwargs
+        self.weights  = weights
+        self.model    = None
     
     # region Properties
+    
+    @property
+    def config(self) -> dict:
+        return self._config
+    
+    @config.setter
+    def config(self, config: dict | str | core.Path | None):
+        if isinstance(config, dict):
+            self._config = config
+        elif isinstance(config, core.Path | str):
+            config = core.Path(config)
+            if not config.is_yaml():
+                raise ValueError(f":param:`config` must be a valid path to a YAML file, but got {config}.")
+            self._config = core.read_from_file(config)
+        else:
+            self._config = {}
     
     @property
     def weights(self) -> core.Path:
@@ -85,55 +93,25 @@ class Detector(ABC):
         else:
             raise ValueError()
         self._weights = weights
-    
-    @property
-    def image_size(self) -> tuple[int, int]:
-        return self._image_size
-    
-    @image_size.setter
-    def image_size(self, image_size: int | Sequence[int]):
-        self._image_size = core.parse_hw(size=image_size)
-    
-    @property
-    def conf_threshold(self) -> float:
-        return self._conf_threshold
-    
-    @conf_threshold.setter
-    def conf_threshold(self, conf_threshold: float):
-        if not 0.0 <= conf_threshold <= 1.0:
-            raise ValueError(f":param:`conf_threshold` must be between ``0.0`` and ``1.0``, but got {conf_threshold}.")
-        self._conf_threshold = conf_threshold
-    
-    @property
-    def iou_threshold(self) -> float:
-        return self._iou_threshold
-    
-    @iou_threshold.setter
-    def iou_threshold(self, iou_threshold: float):
-        if not 0.0 <= iou_threshold <= 1.0:
-            raise ValueError(f":param:`iou_threshold` must be between ``0.0`` and ``1.0``, but got {iou_threshold}.")
-        self._iou_threshold = iou_threshold
-    
-    @property
-    def device(self) -> torch.device:
-        return self._device
-    
-    @device.setter
-    def device(self, device: int | str):
-        self._device = core.set_device(device)
-    
+        
     # endregion
     
     @abstractmethod
-    def forward(self, indexes: np.ndarray, images: np.ndarray) -> np.ndarray:
+    def __call__(
+        self,
+        indexes: np.ndarray | list[int],
+        images : str | core.Path | list[str] | list[core.Path] | np.ndarray | torch.Tensor,
+        **kwargs,
+    ) -> np.ndarray:
         """Detect objects in the images.
 
         Args:
-            indexes: A :class:`numpy.ndarray` of image indexes of shape :math:`[B]`.
-            images: Images of shape :math:`[B, H, W, C]`.
-
-        Returns:
-            A 2D :class:`numpy.ndarray` of shape :math:`[B, ..., ..., ...]`.
+            indexes: Image indexes of shape :math:`[B]`.
+            images: The source of the image(s) to make predictions on. Accepts
+                various types including file paths, URLs, PIL images, numpy
+                arrays, and torch tensors.
+            **kwargs: Additional keyword arguments for configuring the prediction
+                process.
         """
         pass
 
