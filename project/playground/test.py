@@ -13,4 +13,7 @@ kwargs  = {
 model   = YOLO(mon.ZOO_DIR / "vision/ultralytics/yolov8/yolov8n/coco/yolov8n_coco.pt")
 results = model.predict(source=images, **kwargs)
 for r in results:
-    print(r.boxes.data)  # print detection bounding boxes
+    # print(r.orig_shape)
+    # print(r)  # print detection bounding boxes
+    print(r.boxes.data)
+    # print(r.boxes.data)  # print detection bounding boxes

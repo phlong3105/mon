@@ -40,6 +40,11 @@ current_dir  = current_file.parents[0]
 # region YOLOv8
 
 @DETECTORS.register(name="yolov8")
+@DETECTORS.register(name="yolov8l")
+@DETECTORS.register(name="yolov8m")
+@DETECTORS.register(name="yolov8n")
+@DETECTORS.register(name="yolov8s")
+@DETECTORS.register(name="yolov8x")
 class YOLOv8Detector(base.Detector):
     """YOLOv8 detector.
     
@@ -87,12 +92,13 @@ class YOLOv8Detector(base.Detector):
         self.config |= kwargs
         
         # Make predictions
-        results = self.model.predict(source=images, **self.config)
-        for r in results:
-            print(r.boxes.data)  # print detection bounding boxes
+        outputs = self.model.predict(source=images, **self.config)
+        results = []
+        for r in outputs:
+            results.append(r.boxes.data)
         
+        return results
         
-@DETECTORS.register(name="yolov8")
 class YOLOv8(base.Detector1):
     """YOLOv8 detector.
     

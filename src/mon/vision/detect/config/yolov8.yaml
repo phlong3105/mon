@@ -22,7 +22,7 @@ name         : ~      # (str, optional) experiment name, results saved to 'proje
 exist_ok     : False  # (bool) whether to overwrite existing experiment
 pretrained   : True   # (bool | str) whether to use a pretrained model (bool) or a model to load weights from (str)
 optimizer    : auto   # (str) optimizer to use, choices = [SGD, Adam, Adamax, AdamW, NAdam, RAdam, RMSProp, auto]
-verbose      : True   # (bool) whether to print verbose output
+verbose      : False  # (bool) whether to print verbose output
 seed         : 0      # (int) random seed for reproducibility
 deterministic: True   # (bool) whether to enable deterministic mode
 single_cls   : False  # (bool) train multi-class data as single-class

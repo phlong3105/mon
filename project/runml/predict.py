@@ -11,7 +11,7 @@ import torch
 
 import mon
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 

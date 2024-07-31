@@ -241,10 +241,10 @@ class SORT(base.Tracker):
     
     def update(
         self,
-        detections: torch.Tensor | np.ndarray,
-        input_size: int | Sequence[int],
-        image_size: int | Sequence[int],
-        frame_id  : int | None = None,
+        det_results: torch.Tensor | np.ndarray,
+        # input_size : int | Sequence[int],
+        # image_size : int | Sequence[int],
+        frame_id   : int | None = None,
     ):
         """Requires: this method must be called once for each frame even with
         empty detections (use np.empty((0, 5)) for frames without detections).
@@ -252,16 +252,17 @@ class SORT(base.Tracker):
         Args:
             detections: A :class:`torch.Tensor` or :class:`numpy.ndarray` of
                 detections in the format of :math:`[[x1, y1, x2, y2, score, class], ...]`.
+            frame_id  : The frame number. Default is ``None``.
             input_size: The size of the input image in the format :math:`[h, w]`.
             image_size: The size of the original image in the format :math:`[h, w]`.
-            frame_id  : The frame number.
         """
         self.frame_count += 1
         # Post-process detections
-        detections    = detections.cpu().numpy() if isinstance(detections, torch.Tensor) else detections
-        scores        = detections[:,   4] * detections[:, 5]
-        bboxes        = detections[:, 0:4]  # [x1, y1, x2, y2]
-        classes       = detections[:,   5]
+        det_results   = det_results.cpu().numpy() if isinstance(det_results, torch.Tensor) else det_results
+        scores        = det_results[:,   4] * detections[:, 5]
+        bboxes        = det_results[:, 0:4]  # [x1, y1, x2, y2]
+        classes       = det_results[:,   5]
+        '''
         # Scale the detections
         input_size    = core.parse_hw(input_size)
         image_size    = core.parse_hw(image_size)
@@ -269,6 +270,7 @@ class SORT(base.Tracker):
         img_h, img_w  = image_size[0], image_size[1]
         scale         = min(float(img_h) / float(inp_h), float(img_w) / float(inp_w))
         bboxes       /= scale
+        '''
         # Filter detection with low confidence score
         dets          = np.concatenate((bboxes, np.expand_dims(scores, axis=-1)), axis=1)
         remain_ids    = scores > self.det_threshold
