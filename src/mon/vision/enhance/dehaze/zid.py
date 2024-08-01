@@ -317,7 +317,7 @@ class ZID(base.DehazingModel):
     """
     
     arch  : str  = "zid"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
     zoo   : dict = {}
     
     def __init__(

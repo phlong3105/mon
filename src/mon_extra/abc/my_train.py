@@ -63,7 +63,7 @@ def main(
     
     # Prioritize input args --> config file args
     model    = core.Path(model or args.get("model"))
-    # model    = model if model.exists() else _current_dir / "config"  / model.name
+    # model    = model if model.exists() else current_dir / "config"  / model.name
     # model    = model.config_file()
     data     = core.Path(args.get("data"))
     root     = root      or args.get("root")

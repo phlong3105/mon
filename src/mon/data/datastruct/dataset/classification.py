@@ -30,7 +30,7 @@ ClassificationAnnotation = anno.ClassificationAnnotation
 
 class ImageClassificationDataset(img.LabeledImageDataset, ABC):
 	"""The base class for labeled datasets consisting of images, and their
-	associated classification labels stored in a simple JSON format.
+	associated class ID stored in a simple JSON format.
 	
 	See Also: :class:`LabeledImageDataset`.
 	"""
@@ -46,7 +46,7 @@ class ImageClassificationDataset(img.LabeledImageDataset, ABC):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self.labels: list[ClassificationAnnotation] = []
+		self.annotations: list[ClassificationAnnotation] = []
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -63,26 +63,26 @@ class ImageClassificationDataset(img.LabeledImageDataset, ABC):
 		torch.Tensor | np.ndarray | list | None,
 		dict | None
 	]:
-		image = self.images[index].data
-		label = self.labels[index].data if self.has_test_label else None
-		meta  = self.images[index].meta
+		image    = self.images[index].data
+		class_id = self.annotations[index].data if self.has_annotations else None
+		meta     = self.images[index].meta
 		
 		if self.transform is not None:
-			if self.has_test_label:
-				transformed = self.transform(image=image, mask=label)
-				label       = transformed["mask"]
+			if self.has_annotations:
+				transformed = self.transform(image=image)
+				image       = transformed["image"]
 			else:
 				transformed = self.transform(image=image)
 				image       = transformed["image"]
 		
 		if self.to_tensor:
-			if self.has_test_label:
-				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-				label = torch.Tensor(label)
+			if self.has_annotations:
+				image    = core.to_image_tensor(input=image, keepdim=False, normalize=True)
+				class_id = torch.Tensor(class_id)
 			else:
 				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
 		
-		return image, label, meta
+		return image, class_id, meta
 		
 	@staticmethod
 	def collate_fn(batch) -> tuple[
@@ -120,8 +120,7 @@ class ImageClassificationDataset(img.LabeledImageDataset, ABC):
 
 
 class ImageClassificationDirectoryTree(ImageClassificationDataset):
-	"""A directory tree whose sub-folders define an image classification
-	dataset.
+	"""A directory tree whose sub-folders define an image classification dataset.
 	
 	See Also: :class:`ImageClassificationDataset`.
 	"""
@@ -129,7 +128,7 @@ class ImageClassificationDirectoryTree(ImageClassificationDataset):
 	def get_images(self):
 		pass
 	
-	def get_labels(self):
+	def get_annotations(self):
 		pass
 	
 	def filter(self):

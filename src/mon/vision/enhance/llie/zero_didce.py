@@ -132,7 +132,7 @@ class ZeroDiDCE_RE(base.LowLightImageEnhancementModel):
     """
     
     arch   : str  = "zero_didce"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
     zoo    : dict = {}
 
     def __init__(

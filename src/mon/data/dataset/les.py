@@ -47,9 +47,9 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LES]
-    splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks  = [Task.LES]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(
         self,
@@ -210,9 +210,9 @@ class Flare7KPPReal(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LES]
-    splits         = [Split.TEST]
-    has_test_label = True
+    tasks  = [Task.LES]
+    splits = [Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -232,16 +232,16 @@ class Flare7KPPReal(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="flare7k++_syn")
@@ -251,9 +251,9 @@ class Flare7KPPSyn(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LES]
-    splits         = [Split.TEST]
-    has_test_label = True
+    tasks  = [Task.LES]
+    splits = [Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -273,16 +273,16 @@ class Flare7KPPSyn(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="flarereal800")
@@ -292,9 +292,9 @@ class FlareReal800(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LES]
-    splits         = [Split.TRAIN, Split.VAL]
-    has_test_label = False
+    tasks  = [Task.LES]
+    splits = [Split.TRAIN, Split.VAL]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -314,16 +314,16 @@ class FlareReal800(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="ledlight")
@@ -333,9 +333,9 @@ class LEDLight(dataset.ImageEnhancementDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LES]
-    splits         = [Split.TEST]
-    has_test_label = True
+    tasks  = [Task.LES]
+    splits = [Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -355,16 +355,16 @@ class LEDLight(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="lighteffect")
@@ -374,9 +374,9 @@ class LightEffect(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LES]
-    splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks  = [Task.LES]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)

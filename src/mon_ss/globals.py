@@ -27,14 +27,14 @@ from mon.globals import *
 # region Directory
 
 current_file = mon.Path(__file__).absolute()
-ROOT_DIR      = _current_file.parents[2]
-SRC_DIR       = _current_file.parents[1]
+ROOT_DIR      = current_file.parents[2]
+SRC_DIR       = current_file.parents[1]
 PACKAGE_DIR   = current_file.parents[0]
 MON_DIR       = SRC_DIR / "mon"
 MON_EXTRA_DIR = SRC_DIR / "mon_extra"
 
 ZOO_DIR = None
-for i, parent in enumerate(_current_file.parents):
+for i, parent in enumerate(current_file.parents):
     if (parent / "zoo").is_dir():
         ZOO_DIR = parent / "zoo"
         break

@@ -29,15 +29,10 @@ class Detector(ABC):
     load weights, and striping off unnecessary training components.
 
     Args:
-        config: A detector model's config.
+        config: A detector model's config. It must include all the necessary
+            information to create a model. Accepts various types including file
+            paths and dictionaries.
         weights: A path to a pretrained weights file.
-        image_size: The desired model's input size in :math:`[H, W]` format.
-            Default: ``640``.
-        conf_threshold: An object confidence threshold. Default: ``0.5``.
-        iou_threshold: An IOU threshold for NMS. Default: ``0.3``.
-        max_detections: Maximum number of detections/image. Default: ``300``.
-        device: Running device, i.e., ``'0'`` or ``'0,1,2,3'`` or ``'cpu'``.
-            Default: ``'cpu'``.
     """
     
     def __init__(
@@ -112,6 +107,14 @@ class Detector(ABC):
                 arrays, and torch tensors.
             **kwargs: Additional keyword arguments for configuring the prediction
                 process.
+                
+        Returns:
+            A 2D :class:`numpy.ndarray` or :class:`torch.Tensor` of detections.
+            The most common format is :math:`[B, N, 6]` where :math:`B` is the
+            batch size, :math:`N` is the number of detections, and :math:`[6]`
+            usually contains :math:`[x1, y1, x2, y2, conf, class_id]`. Notice
+            that :math:`[x1, y1, x2, y2]` should be scaled back to the original
+            image size.
         """
         pass
 

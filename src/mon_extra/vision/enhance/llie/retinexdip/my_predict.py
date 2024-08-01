@@ -21,8 +21,8 @@ from net.noise import get_noise
 from utils.image_io import *
 
 console           = mon.console
-_current_file     = mon.Path(__file__).absolute()
-_current_dir      = current_file.parents[0]
+current_file     = mon.Path(__file__).absolute()
+current_dir      = current_file.parents[0]
 EnhancementResult = namedtuple("EnhancementResult", ["reflection", "illumination"])
 
 torch.manual_seed(0)
@@ -393,7 +393,7 @@ def predict(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_predict_args(model_root=_current_dir)
+    args = mon.parse_predict_args(model_root=current_dir)
     predict(args)
 
 

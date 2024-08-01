@@ -20,7 +20,7 @@ import utils
 from model import *
 from multi_read_data import DataLoader
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -165,7 +165,7 @@ def train(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_train_args(model_root=_current_dir)
+    args = mon.parse_train_args(model_root=current_dir)
     train(args)
 
 

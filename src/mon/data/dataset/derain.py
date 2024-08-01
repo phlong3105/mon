@@ -47,9 +47,9 @@ class GTRain(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -69,8 +69,8 @@ class GTRain(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
@@ -81,10 +81,10 @@ class GTRain(dataset.ImageEnhancementDataset):
                     path = path.replace("-R-", "-C-")
                 else:
                     path = path[:-9] + "C-000.png"
-                path  = path.replace("/lq/", "/hq/")
-                path  = core.Path(path)
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = path.replace("/lq/", "/hq/")
+                path = core.Path(path)
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain100")
@@ -94,9 +94,9 @@ class Rain100(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -116,16 +116,16 @@ class Rain100(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain100h")
@@ -136,9 +136,9 @@ class Rain100H(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -158,16 +158,16 @@ class Rain100H(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain100l")
@@ -178,9 +178,9 @@ class Rain100L(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -200,16 +200,16 @@ class Rain100L(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain12")
@@ -219,9 +219,9 @@ class Rain12(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN]
-    has_test_label = False
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -241,16 +241,16 @@ class Rain12(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain1200")
@@ -261,9 +261,9 @@ class Rain1200(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -290,16 +290,16 @@ class Rain1200(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain13k")
@@ -309,9 +309,9 @@ class Rain13K(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -348,16 +348,16 @@ class Rain13K(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain1400")
@@ -368,9 +368,9 @@ class Rain1400(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -390,16 +390,16 @@ class Rain1400(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain2800")
@@ -409,9 +409,9 @@ class Rain2800(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -431,16 +431,16 @@ class Rain2800(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="rain800")
@@ -450,9 +450,9 @@ class Rain800(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DERAIN]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DERAIN]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -472,16 +472,16 @@ class Rain800(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 # endregion
 

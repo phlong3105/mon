@@ -15,7 +15,7 @@ import torch
 import mon
 from onnx_model import EnlightenOnnxModel
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -37,7 +37,7 @@ def predict(args: argparse.Namespace):
     # if benchmark:
     #     model  = EnlightenOnnxModel(weights=weights)
     #     inputs = {"input": create_ndarray_f32((1, 3, 512, 512)), }
-    #     onnx_tool.model_profile(str(_current_dir/"enlighten_inference/enlighten.onnx"), inputs, None)
+    #     onnx_tool.model_profile(str(current_dir/"enlighten_inference/enlighten.onnx"), inputs, None)
     
     # Model
     model = EnlightenOnnxModel(weights=weights)
@@ -74,7 +74,7 @@ def predict(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_predict_args(model_root=_current_dir)
+    args = mon.parse_predict_args(model_root=current_dir)
     predict(args)
 
 

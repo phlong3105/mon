@@ -11,7 +11,7 @@ import torch
 
 import mon
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -92,7 +92,7 @@ def run_rrdnet():
     net     = mon.RRDNet().to(device)
     zerodce = mon.ZeroDCE(
         num_iters = 4,
-        weights   = _current_dir / "run/train/zerodce_sice_mix/weights/last.pt"
+        weights   = current_dir / "run/train/zerodce_sice_mix/weights/last.pt"
     ).to(device)
     zsn2n   = mon.ZSN2N(channels=3, num_channels=64, ).to(device)
     #
@@ -145,7 +145,7 @@ def run_cerdnet():
         num_iters    = 5,
         scale_factor = 2,
         rd_gamma     = 0.2,
-        weights      = _current_dir / "run/train/cenet_sice_mix/weights/last.pt"
+        weights      = current_dir / "run/train/cenet_sice_mix/weights/last.pt"
     ).to(device)
     #
     pred             = net.fit_one(image)

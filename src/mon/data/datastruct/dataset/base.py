@@ -168,7 +168,7 @@ class LabeledDataset(Dataset, ABC):
 	data samples.
 	
 	Attributes:
-		has_test_label: If ``True``, the test set has ground-truth labels.
+		has_test_annotations: If ``True``, the test set has ground-truth labels.
 			Default: ``False``.
 		
 	Args:
@@ -185,7 +185,7 @@ class LabeledDataset(Dataset, ABC):
 	See Also: :class:`Dataset`.
 	"""
 	
-	has_test_label: bool = False
+	has_test_annotations: bool = False
 	
 	def __init__(
 		self,
@@ -205,6 +205,14 @@ class LabeledDataset(Dataset, ABC):
 			to_tensor   = to_tensor,
 			verbose     = verbose,
 			*args, **kwargs
+		)
+	
+	@property
+	def has_annotations(self) -> bool:
+		"""Returns ``True`` if the images has accompany annotations, otherwise ``False``."""
+		return (
+			(self.has_test_annotations and self.split in [Split.TEST, Split.PREDICT])
+			or (self.split in [Split.TRAIN, Split.VAL])
 		)
 		
 # endregion

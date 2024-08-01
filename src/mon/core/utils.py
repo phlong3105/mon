@@ -170,7 +170,7 @@ def check_installed_package(package_name: str, verbose: bool = False) -> bool:
 # region Parsing
 
 def make_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]:
-    """Make an image divisible by a given stride.
+    """Make an image sizes divisible by a given stride.
     
     Args:
         input: An image size, size, or shape.

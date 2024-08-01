@@ -183,7 +183,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
     """
     
     arch   : str  = "rrdnet"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.INSTANCE]
     zoo    : dict = {}
     
     def __init__(

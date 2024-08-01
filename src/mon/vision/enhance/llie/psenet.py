@@ -212,7 +212,7 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
     """
     
     arch   : str  = "psenet"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
     zoo    : dict = {}
     
     def __init__(

@@ -254,8 +254,6 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 		root: A root directory where the data is stored.
 		split: The data split to use. Default: ``'Split.TRAIN'``.
 		classlabels: :class:`ClassLabels` object. Default: ``None``.
-		has_test_label: If ``True``, the test set has ground-truth labels.
-			Default: ``False``.
 		transform: Transformations performed on both the input and target.
 		to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
 			Default: ``False``.
@@ -288,19 +286,19 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 			verbose     = verbose,
 			*args, **kwargs
 		)
-		self.images: list[ImageAnnotation] = []
-		self.labels: list[Any]		       = []
-		if not hasattr(self, "labels"):
-			self.labels = []
+		self.images     : list[ImageAnnotation] = []
+		self.annotations: list[Any]		        = []
+		if not hasattr(self, "annotations"):
+			self.annotations = []
 		
-		# Get image and label from disk or cache
+		# Get images and annotations from disk or cache
 		cache_file = self.root / f"{self.split_str}.cache"
 		if cache_data and cache_file.is_file():
 			self.load_cache(path=cache_file)
 		else:
 			self.get_images()
-			if self.has_test_label:
-				self.get_labels()
+			if self.has_annotations:
+				self.get_annotations()
 		
 		# Filter and verify data
 		self.filter()
@@ -333,7 +331,7 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 		"""
 		hash_  = 0
 		hash_ += sum(i.meta.get("hash", 0) for i in self.images) if self.images else 0
-		hash_ += sum(i.meta.get("hash", 0) for i in self.labels) if self.labels else 0
+		hash_ += sum(i.meta.get("hash", 0) for i in self.annotations) if self.annotations else 0
 		return hash_
 	
 	@abstractmethod
@@ -342,8 +340,8 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 		pass
 	
 	@abstractmethod
-	def get_labels(self):
-		"""Get label files."""
+	def get_annotations(self):
+		"""Get annotations files."""
 		pass
 	
 	def filter(self):
@@ -354,19 +352,10 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 		"""Verify and check data."""
 		if not len(self.images) > 0:
 			raise RuntimeError(f"No images in dataset.")
-		if (
-			self.has_test_label
-			and self.split == Split.TEST
-			and not len(self.images) == len(self.labels)
-		):
+		if self.has_annotations and not len(self.images) == len(self.annotations):
 			raise RuntimeError(
-				f"Number of images and labels must be the same, but got "
-				f"{len(self.images)} and {len(self.labels)}."
-			)
-		elif not len(self.images) == len(self.labels):
-			raise RuntimeError(
-				f"Number of images and labels must be the same, but got "
-				f"{len(self.images)} and {len(self.labels)}."
+				f"Number of images and annotations must be the same, but got "
+				f"{len(self.images)} and {len(self.annotations)}."
 			)
 		if self.verbose:
 			console.log(f"Number of {self.split_str} samples: {len(self.images)}.")
@@ -380,9 +369,9 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 			
 		if self.hash != hash_:
 			cache = {
-				"hash"	: self.hash,
-				"images": self.images,
-				"labels": self.labels,
+				"hash"	     : self.hash,
+				"images"     : self.images,
+				"annotations": self.annotations,
 			}
 			torch.save(cache, str(path))
 			if self.verbose:
@@ -390,9 +379,9 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 	
 	def load_cache(self, path: core.Path):
 		"""Load cache data from :param:`path`."""
-		cache       = torch.load(path)
-		self.images = cache["images"]
-		self.labels = cache["labels"]
+		cache            = torch.load(path)
+		self.images      = cache["images"]
+		self.annotations = cache["annotations"]
 	
 	def reset(self):
 		"""Reset and start over."""
@@ -421,7 +410,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self.labels: list[ImageAnnotation] = []
+		self.annotations: list[ImageAnnotation] = []
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -439,26 +428,26 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 		dict | None
 	]:
 		image = self.images[index].data
-		label = self.labels[index].data if self.has_test_label else None
+		mask  = self.annotations[index].data if self.has_annotations else None
 		meta  = self.images[index].meta
 		
 		if self.transform is not None:
-			if self.has_test_label:
-				transformed = self.transform(image=image, mask=label)
+			if self.has_annotations:
+				transformed = self.transform(image=image, mask=mask)
 				image       = transformed["image"]
-				label       = transformed["mask"]
+				mask        = transformed["mask"]
 			else:
 				transformed = self.transform(image=image)
 				image       = transformed["image"]
 		
 		if self.to_tensor:
-			if self.has_test_label:
+			if self.has_annotations:
 				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-				label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
+				mask  = core.to_image_tensor(input=mask,  keepdim=False, normalize=True)
 			else:
 				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
 		
-		return image, label, meta
+		return image, mask, meta
 		
 	def filter(self):
 		'''

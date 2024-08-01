@@ -19,7 +19,7 @@ import utils.util as util
 from models import create_model
 from mon import RUN_DIR, ZOO_DIR
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 

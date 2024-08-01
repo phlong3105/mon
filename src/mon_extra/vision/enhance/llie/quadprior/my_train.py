@@ -18,7 +18,7 @@ from cldm.logger import ImageLogger
 from cldm.model import create_model, load_state_dict
 from coco_dataset import create_webdataset
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -44,7 +44,7 @@ def train(args: argparse.Namespace):
     only_mid_control = args.only_mid_control
     verbose          = args.verbose
     
-    config_path      = _current_dir / args.config_path  # "./models/cldm_v15.yaml"
+    config_path      = current_dir / args.config_path  # "./models/cldm_v15.yaml"
     init_ckpt        = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_init.ckpt"
     pretrained_ckpt  = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_coco_final.ckpt"
     
@@ -126,7 +126,7 @@ def train(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_train_args(model_root=_current_dir)
+    args = mon.parse_train_args(model_root=current_dir)
     train(args)
 
 

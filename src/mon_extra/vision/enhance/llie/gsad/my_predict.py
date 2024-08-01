@@ -22,7 +22,7 @@ import mon
 import options.options as option
 from utils import util
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 transform     = transforms.Lambda(lambda t: (t * 2) - 1)
@@ -132,7 +132,7 @@ def predict(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_predict_args(model_root=_current_dir)
+    args = mon.parse_predict_args(model_root=current_dir)
     predict(args)
 
 

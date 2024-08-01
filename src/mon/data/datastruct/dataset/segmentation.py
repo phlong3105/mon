@@ -45,7 +45,7 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self.labels: list[SegmentationAnnotation] = []
+		self.annotations: list[SegmentationAnnotation] = []
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -63,36 +63,28 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 		dict | None
 	]:
 		image = self.images[index].data
-		label = self.labels[index].data if self.has_test_label else None
+		mask  = self.annotations[index].data if self.has_annotations else None
 		meta  = self.images[index].meta
 		
 		if self.transform is not None:
-			if self.has_test_label:
-				transformed = self.transform(image=image, mask=label)
+			if self.has_annotations:
+				transformed = self.transform(image=image, mask=mask)
 				image       = transformed["image"]
-				label       = transformed["mask"]
+				mask        = transformed["mask"]
 			else:
-				transformed = self.transform(image=image, mask=label)
+				transformed = self.transform(image=image)
 				image       = transformed["image"]
 
 		if self.to_tensor:
-			if self.has_test_label:
+			if self.has_annotations:
 				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-				label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
+				mask  = core.to_image_tensor(input=mask,  keepdim=False, normalize=True)
 			else:
 				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
 			
-		return image, label, meta
+		return image, mask, meta
 		
 	def filter(self):
-		'''
-		keep = []
-		for i, (img, lab) in enumerate(zip(self._images, self.labels)):
-			if img.path.is_image_file() and lab.path.is_image_file():
-				keep.append(i)
-		self._images = [img for i, img in enumerate(self._images) if i in keep]
-		self._labels = [lab for i, lab in enumerate(self.labels) if i in keep]
-		'''
 		pass
 	
 	@staticmethod

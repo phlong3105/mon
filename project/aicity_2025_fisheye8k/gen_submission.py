@@ -50,7 +50,7 @@ def enlarge_bbox(bbox: list | tuple | np.ndarray, ratio: float = 0.01) -> list |
 	
 
 @click.command(name="main", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-@click.option("--predict-dir",   type=click.Path(exists=True),  default=_current_dir / "run/predict",    help="Prediction results directory.")
+@click.option("--predict-dir",   type=click.Path(exists=True),  default=current_dir / "run/predict",    help="Prediction results directory.")
 @click.option("--output-file",   type=click.Path(exists=False), default=None,                            help="Output .json file.")
 @click.option("--enlarge-ratio", type=float,                    default=0.0,                             help="Enlarge bounding bbox ratio.")
 @click.option("--format",        type=click.Choice(_bbox_formats, case_sensitive=False), default="yolo", help="Bounding bbox format.")

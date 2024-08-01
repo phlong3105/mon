@@ -75,13 +75,21 @@ class YOLOv8Detector(base.Detector):
             **kwargs: Additional keyword arguments for configuring the prediction
                 process.
         
+        Returns:
+            A 2D :class:`numpy.ndarray` or :class:`torch.Tensor` of detections.
+            The most common format is :math:`[B, N, 6]` where :math:`B` is the
+            batch size, :math:`N` is the number of detections, and :math:`[6]`
+            usually contains :math:`[x1, y1, x2, y2, conf, class_id]`. Notice
+            that :math:`[x1, y1, x2, y2]` should be scaled back to the original
+            image size.
+            
         Examples:
             >>> model   = YOLO('yolov8n.pt')
             >>> results = model.predict(source='path/to/image.jpg', conf=0.25)
             >>> for r in results:
-            ...     print(r.boxes.data)  # print detection bounding boxes
+            >>>     print(r.boxes.data)  # print detection bounding boxes
         """
-        # Prepare images
+        # Prepare input
         indexes = list(indexes)
         if isinstance(images, (str, core.Path)):
             images = [images]
@@ -89,14 +97,15 @@ class YOLOv8Detector(base.Detector):
             images = list(images)
         
         # Overwrite model's configs
-        self.config |= kwargs
+        config  = self.config | kwargs
         
         # Make predictions
-        outputs = self.model.predict(source=images, **self.config)
+        outputs = self.model.predict(source=images, **config)
+        
+        # Obtain results
         results = []
         for r in outputs:
             results.append(r.boxes.data)
-        
         return results
         
         

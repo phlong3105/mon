@@ -22,7 +22,7 @@ from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.nn import functional as F, init
-from mon.vision import filtering, prior
+from mon.vision import filtering, geometry, prior
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -281,9 +281,9 @@ class EnhanceNet(nn.Module):
         self.e_conv5 = ConvBlock(num_channels * 2, num_channels, norm=norm)
         self.e_conv6 = ConvBlock(num_channels * 2, num_channels, norm=norm)
         self.e_conv7 = ConvBlock(num_channels * 2, out_channels, norm=norm, is_last_layer=True)
-        self.apply(self._init_weights)
+        self.apply(self.init_weights)
         
-    def _init_weights(self, m: nn.Module):
+    def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             # if hasattr(m, "conv"):
@@ -344,7 +344,7 @@ class GCENet(base.LowLightImageEnhancementModel):
     """
     
     arch   : str  = "gcenet"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.ZERO_REFERENCE]
     zoo    : dict = {}
     
     def __init__(
@@ -410,11 +410,11 @@ class GCENet(base.LowLightImageEnhancementModel):
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         # Symmetric Loss 1
         i        = input
-        i1, i2   = self.pair_downsampler(i)
+        i1, i2   = geometry.pair_downsample(i)
         c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
         c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
         c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
-        o1, o2   = self.pair_downsampler(o)
+        o1, o2   = geometry.pair_downsample(o)
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
         loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
@@ -423,15 +423,15 @@ class GCENet(base.LowLightImageEnhancementModel):
         
         # Symmetric Loss 2
         # i        = input
-        # i1, i2   = self.pair_downsampler(i)
+        # i1, i2   = geometry.pair_downsample(i)
         # c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
         # c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
         # c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
         # n1       = i1 - j1
         # n2       = i2 - j2
         # n        =  i - o
-        # o_1, o_2 = self.pair_downsampler(o)
-        # n_1, n_2 = self.pair_downsampler(n)
+        # o_1, o_2 = geometry.pair_downsample(o)
+        # n_1, n_2 = geometry.pair_downsample(n)
         # mse_loss = nn.MSELoss()
         # loss_res = 0.5 * (mse_loss(i1 - n2,  j2) + mse_loss(i2 - n1, j1 ))
         # loss_con = 0.5 * (mse_loss(j1     , o_1) + mse_loss(j2     , o_2))
@@ -440,15 +440,15 @@ class GCENet(base.LowLightImageEnhancementModel):
         
         # Symmetric Loss 3
         # i        = input
-        # i1, i2   = self.pair_downsampler(i)
+        # i1, i2   = geometry.pair_downsample(i)
         # c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
         # c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
         # c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
         # n1       = i1 - j1
         # n2       = i2 - j2
         # n        =  i - o
-        # o_1, o_2 = self.pair_downsampler(o)
-        # n_1, n_2 = self.pair_downsampler(n)
+        # o_1, o_2 = geometry.pair_downsample(o)
+        # n_1, n_2 = geometry.pair_downsample(n)
         # mse_loss = nn.MSELoss()
         # loss_res = (1 / 3) * (mse_loss(i1 - n2,  j2) + mse_loss(i2 - n1, j1 ))
         # loss_noi = (1 / 3) * (mse_loss(n1     , n_1) + mse_loss(n2     , n_2))
@@ -460,11 +460,11 @@ class GCENet(base.LowLightImageEnhancementModel):
     
     def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
         i      = input
-        i1, i2 = self.pair_downsampler(i)
+        i1, i2 = geometry.pair_downsample(i)
         c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
         c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
         c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
-        o1, o2   = self.pair_downsampler(o)
+        o1, o2   = geometry.pair_downsample(o)
         #
         c_1        = c_1  * -1
         c1_1       = c1_1 * -1
@@ -607,17 +607,6 @@ class GCENet(base.LowLightImageEnhancementModel):
         y_gf = self.gf(x, y)
         return c1, c2, y, y_gf
     
-    @staticmethod
-    def pair_downsampler(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        c       = input.shape[1]
-        filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(input.device)
-        filter1 = filter1.repeat(c, 1, 1, 1)
-        filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(input.device)
-        filter2 = filter2.repeat(c, 1, 1, 1)
-        output1 = F.conv2d(input, filter1, stride=2, groups=c)
-        output2 = F.conv2d(input, filter2, stride=2, groups=c)
-        return output1, output2
-
 
 @MODELS.register(name="gcenet_a1", arch="gcenet")
 class GCENetA1(GCENet):
@@ -898,7 +887,7 @@ class GCENetOld(base.LowLightImageEnhancementModel):
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
     zoo    : dict = {}
     
     def __init__(

@@ -27,7 +27,7 @@ from utils.metrics import ap_per_class
 from utils.plots import output_to_target, plot_images
 from utils.torch_utils import select_device, time_synchronized
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -341,15 +341,15 @@ def test(
 
 def main() -> str:
     # Parse args
-    args        = mon.parse_predict_args(model_root=_current_dir)
+    args        = mon.parse_predict_args(model_root=current_dir)
     model       = mon.Path(args.model)
-    model       = model if model.exists() else _current_dir / "config" / model.name
+    model       = model if model.exists() else current_dir / "config" / model.name
     model       = str(model.config_file())
     data_       = mon.Path(args.data)
-    data_       = data_ if data_.exists() else _current_dir / "data" / data_.name
+    data_       = data_ if data_.exists() else current_dir / "data" / data_.name
     data_       = str(data_.config_file())
     names       = mon.Path(args.names)
-    names       = names if names.exists() else _current_dir / "data" / names.name
+    names       = names if names.exists() else current_dir / "data" / names.name
     names       = str(names.config_file())
     args.model  = model
     args.source = args.data
@@ -385,7 +385,7 @@ def main() -> str:
             for i in x:  # img-size
                 print("\nRunning %s point %s..." % (f, i))
                 r, _, t = test(
-                    opt        = opt,
+                    opt        = args,
                     data       = args.data,
                     weights    = weights,
                     batch_size = args.batch_size,

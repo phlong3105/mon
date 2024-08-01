@@ -69,10 +69,10 @@ def main(
     
     # Prioritize input args --> config file args
     model      = core.Path(model or args.get("model"))
-    model      = model if model.exists() else _current_dir / "config"  / model.name
+    model      = model if model.exists() else current_dir / "config"  / model.name
     model      = model.config_file()
     data_      = core.Path(args.get("data"))
-    data_      = data_ if data_.exists() else _current_dir / "data" / data_.name
+    data_      = data_ if data_.exists() else current_dir / "data" / data_.name
     data_      = data_.config_file()
     data       = data       or args.get("source")
     root       = root       or args.get("root")

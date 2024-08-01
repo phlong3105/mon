@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/edenoised1nv python
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
@@ -9,16 +9,16 @@ from mon.config import default
 
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
-_root_dir     = _current_file.parents[1]
+root_dir     = current_file.parents[1]
 
 
 # region Basic
 
-model_name = "zero_adce"
-data_name  = "sice_mix"
-root       = _root_dir / "run"
-fullname   = f"{model_name}-{data_name}"
-image_size = [512, 512]
+model_name = "d2ce"
+data_name  = "ulol"
+root       = root_dir / "run"
+fullname   = f"{model_name}_{data_name}"
+image_size = [518, 518]
 seed	   = 100
 verbose    = True
 
@@ -33,12 +33,17 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
+	"num_channels": 32,		        # The number of input and output channels for subsequent layers.
+	"num_iters"   : 15,             # The number of progressive loop.
+	"radius"      : 3,
+	"eps"	      : 1e-4,
+	"gamma"	      : 2.6,
+	"de_encoder"  : "vits",
 	"weights"     : None,           # The model's weights.
-	"loss"        : None,           # Loss function for training the model.
 	"metrics"     : {
-	    "train": None,  # [{"name": "psnr"}],
+	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : None,  # [{"name": "psnr"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
 	"optimizers"  : [
 		{
@@ -64,7 +69,13 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
-		A.Resize(width=image_size[0], height=image_size[1]),
+		A.ResizeMultipleOf(
+			height            = image_size[1],
+			width             = image_size[0],
+			keep_aspect_ratio = True,
+			multiple_of       = 14,
+			resize_method     = "lower_bound",
+		),
 		# A.Flip(),
 		# A.Rotate(),
 	]),  # Transformations performing on both the input and target.
@@ -95,6 +106,7 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
+	"max_epochs"       : 200,
 }
 
 # endregion

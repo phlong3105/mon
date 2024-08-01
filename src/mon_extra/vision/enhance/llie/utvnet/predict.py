@@ -39,15 +39,15 @@ from PIL import Image
 
 current_file = pathlib.Path(__file__).resolve()
 current_dir  = current_file.parents[0]  # root directory
-if str(_current_dir) not in sys.path:
-    sys.path.append(str(_current_dir))  # add ROOT to PATH
-current_dir  = pathlib.Path(os.path.relpath(_current_dir, pathlib.Path.cwd()))  # relative
+if str(current_dir) not in sys.path:
+    sys.path.append(str(current_dir))  # add ROOT to PATH
+current_dir  = pathlib.Path(os.path.relpath(current_dir, pathlib.Path.cwd()))  # relative
 
 import mon
 from models import network
 from mon import RUN_DIR, ZOO_DIR
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 

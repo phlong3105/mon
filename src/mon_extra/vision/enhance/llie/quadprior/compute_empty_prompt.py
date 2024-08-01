@@ -15,5 +15,5 @@ embedding     = model.encode([""]).cpu()
 print(embedding)
 print(embedding.shape)
 
-with open(str(_current_dir / "empty_embedding.pkl"), "wb") as f:
+with open(str(current_dir / "empty_embedding.pkl"), "wb") as f:
     pickle.dump(embedding, f)

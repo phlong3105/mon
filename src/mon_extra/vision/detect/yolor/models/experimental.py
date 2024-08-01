@@ -9,10 +9,10 @@ from models.common import Conv, DWConv
 from utils.google_utils import attempt_download
 from utils.torch_utils import intersect_dicts, ModelEMA, select_device, torch_distributed_zero_first
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
-_root_dir     = _current_file.parents[1]
+root_dir     = current_file.parents[1]
 
 
 class CrossConv(nn.Module):
@@ -145,7 +145,7 @@ def attempt_load(weights, map_location=None):
         config = ckpt.get("config", None)
         nc     = ckpt.get("nc", 5)
         if config is None or not mon.Path(config).is_yaml_file():
-            config = _root_dir / "config" / "yolor_d6.yaml"  # config.name
+            config = root_dir / "config" / "yolor_d6.yaml"  # config.name
         from models.yolo import Model
         _model     = Model(str(config), ch=3, nc=nc).to(map_location)  # create
         state_dict = ckpt["model"]  # to FP32

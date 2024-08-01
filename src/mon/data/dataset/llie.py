@@ -175,15 +175,15 @@ class FiveKC(dataset.UnlabeledImageDataset):
                         self.images.append(image)
     
     def _get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="fivek_e")
@@ -215,16 +215,16 @@ class FiveKE(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="fusion")
@@ -293,9 +293,9 @@ class LOLBlur(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -315,16 +315,16 @@ class LOLBlur(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="lol_v1")
@@ -337,9 +337,9 @@ class LOLV1(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -359,16 +359,16 @@ class LOLV1(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="lol_v2_real")
@@ -382,9 +382,9 @@ class LOLV2Real(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -404,16 +404,16 @@ class LOLV2Real(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="lol_v2_synthetic")
@@ -427,9 +427,9 @@ class LOLV2Synthetic(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -449,16 +449,16 @@ class LOLV2Synthetic(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="mef")
@@ -526,9 +526,9 @@ class SICEGrad(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -557,9 +557,9 @@ class SICEMix(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -587,9 +587,9 @@ class SICEMixV2(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -617,9 +617,9 @@ class ULOL(dataset.UnlabeledImageDataset):
     See Also: :class:`base.UnlabeledImageDataset`.
     """
     
-    tasks          = [Task.LLIE]
-    splits         = [Split.TRAIN]
-    _has_test_label = False
+    tasks  = [Task.LLIE]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)

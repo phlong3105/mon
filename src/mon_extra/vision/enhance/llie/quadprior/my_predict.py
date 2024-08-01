@@ -23,7 +23,7 @@ from annotator.util import HWC3, resize_image
 from cldm.model import create_model, load_state_dict
 from ldm.models.diffusion.dpm_solver import DPMSolverSampler
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -112,7 +112,7 @@ def predict(args: argparse.Namespace):
     benchmark   = args.benchmark
     use_float16 = args.use_float16
     
-    config_path = _current_dir / args.config_path  # "./models/cldm_v15.yaml"
+    config_path = current_dir / args.config_path  # "./models/cldm_v15.yaml"
     init_ckpt   = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_init.ckpt"
     ae_ckpt     = mon.ZOO_DIR / "vision/enhance/llie/quadprior/quadprior/coco/ae_epoch=00_step=7000.ckpt"
     
@@ -183,7 +183,7 @@ def predict(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_predict_args(model_root=_current_dir)
+    args = mon.parse_predict_args(model_root=current_dir)
     predict(args)
 
 

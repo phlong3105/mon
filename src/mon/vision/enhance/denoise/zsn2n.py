@@ -39,7 +39,7 @@ class ZSN2N(base.DenoisingModel):
     """
     
     arch  : str  = "zsn2n"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT, Scheme.INSTANCE]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.INSTANCE]
     zoo   : dict = {}
     
     def __init__(

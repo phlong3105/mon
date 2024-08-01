@@ -11,7 +11,7 @@ import numpy as np
 
 import mon
 
-_current_dir = mon.Path(__file__).absolute().parent
+current_dir = mon.Path(__file__).absolute().parent
 
 
 # region Functions

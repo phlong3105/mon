@@ -22,7 +22,6 @@ from torchvision.models import vgg
 from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
-from mon.vision import color
 from mon.vision.enhance.llie import base
 
 console = core.console

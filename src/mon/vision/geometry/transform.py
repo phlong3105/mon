@@ -48,6 +48,7 @@ __all__ = [
     "homography_warp",
     "homography_warp3d",
     "invert_affine_transform",
+    "pair_downsample",
     "projection_from_Rt",
     "pyrdown",
     "pyrup",
@@ -69,6 +70,7 @@ from kornia.geometry.transform import *
 from plum import dispatch
 
 from mon import core
+from mon.nn import functional as F
 
 console = core.console
 
@@ -86,6 +88,38 @@ def crop_divisible(image: PIL.Image, divisor: int = 32):
     ]
     image_cropped = image.crop(box=box)
     return image_cropped
+
+# endregion
+
+
+# region Downsample
+
+def pair_downsample(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    """The image pair downsampler, which outputs two downsampled images of half
+    the spatial resolution by averaging diagonal pixels in non-overlapping
+    patches, as shown in the below figure:
+    
+                                     ---------------------
+        ---------------------        | A1+D1/2 | A2+D2/2 |
+        | A1 | B1 | A2 | B2 |        | A3+D3/2 | A4+D4/2 |
+        | C1 | D1 | C2 | D2 |        ---------------------
+        ---------------------  ===>
+        | A3 | B3 | A4 | B4 |        ---------------------
+        | C3 | D3 | C4 | D4 |        | B1+C1/2 | B2+C2/2 |
+        ---------------------        | B3+C3/2 | B4+C4/2 |
+                                     ---------------------
+    
+    References:
+        `<https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing>`__
+    """
+    c       = input.shape[1]
+    filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(input.device)
+    filter1 = filter1.repeat(c, 1, 1, 1)
+    filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(input.device)
+    filter2 = filter2.repeat(c, 1, 1, 1)
+    output1 = F.conv2d(input, filter1, stride=2, groups=c)
+    output2 = F.conv2d(input, filter2, stride=2, groups=c)
+    return output1, output2
 
 # endregion
 

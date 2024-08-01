@@ -130,7 +130,7 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
     """
     
     arch   : str  = "zero_dce++"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZEROSHOT]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
     zoo    : dict = {
         "sice_mix" : {
             "url"         : None,

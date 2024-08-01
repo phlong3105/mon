@@ -12,7 +12,7 @@ from lightning.pytorch import callbacks as lcallbacks
 import mon
 import mon.core.utils
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 

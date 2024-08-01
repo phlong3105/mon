@@ -62,9 +62,9 @@ class DenseHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -84,16 +84,16 @@ class DenseHaze(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="ihaze")
@@ -104,9 +104,9 @@ class IHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -126,16 +126,16 @@ class IHaze(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="nhhaze")
@@ -146,9 +146,9 @@ class NHHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -168,16 +168,16 @@ class NHHaze(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="ohaze")
@@ -188,9 +188,9 @@ class OHaze(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -210,16 +210,16 @@ class OHaze(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="reside_hsts_real")
@@ -229,9 +229,9 @@ class RESIDEHSTSReal(dataset.UnlabeledImageDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TEST]
-    _has_test_label = False
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TEST]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -260,9 +260,9 @@ class RESIDEHSTSSyn(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TEST]
-    has_test_label = False
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TEST]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -282,16 +282,16 @@ class RESIDEHSTSSyn(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="reside_its")
@@ -302,9 +302,9 @@ class RESIDEITS(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL]
-    has_test_label = False
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -324,18 +324,18 @@ class RESIDEITS(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = img.path.replace("/lq/", "/hq/")
-                path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                stem = str(img.path.stem).split("_")[0]
+                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="reside_its_v2")
@@ -346,9 +346,9 @@ class RESIDEITSV2(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN]
-    has_test_label = False
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -368,18 +368,18 @@ class RESIDEITSV2(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = img.path.replace("/lq/", "/hq/")
-                path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                stem = str(img.path.stem).split("_")[0]
+                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="reside_ots")
@@ -390,9 +390,9 @@ class RESIDEOTS(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN]
-    has_test_label = False
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -412,18 +412,18 @@ class RESIDEOTS(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = img.path.replace("/lq/", "/hq/")
-                path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                stem = str(img.path.stem).split("_")[0]
+                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="reside_rtts")
@@ -433,9 +433,9 @@ class RESIDERTTS(dataset.UnlabeledImageDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TEST]
-    _has_test_label = False
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TEST]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -464,9 +464,9 @@ class RESIDESOTSIndoor(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -486,18 +486,18 @@ class RESIDESOTSIndoor(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = img.path.replace("/lq/", "/hq/")
-                path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                stem = str(img.path.stem).split("_")[0]
+                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="reside_sots_outdoor")
@@ -508,9 +508,9 @@ class RESIDESOTSOutdoor(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -530,18 +530,18 @@ class RESIDESOTSOutdoor(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                stem  = str(img.path.stem).split("_")[0]
-                path  = img.path.replace("/lq/", "/hq/")
-                path  = path.parent / f"{stem}.{img.path.suffix}"
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                stem = str(img.path.stem).split("_")[0]
+                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="reside_uhi")
@@ -551,9 +551,9 @@ class RESIDEUHI(dataset.UnlabeledImageDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TEST]
-    _has_test_label = False
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TEST]
+    has_test_annotations = False
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -582,9 +582,9 @@ class SateHaze1K(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -606,16 +606,16 @@ class SateHaze1K(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="satehaze1k_thin")
@@ -625,9 +625,9 @@ class SateHaze1KThin(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -647,16 +647,16 @@ class SateHaze1KThin(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
     
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="satehaze1k_moderate")
@@ -666,9 +666,9 @@ class SateHaze1KModerate(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -688,16 +688,16 @@ class SateHaze1KModerate(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 
 @DATASETS.register(name="satehaze1k_thick")
@@ -707,9 +707,9 @@ class SateHaze1KThick(dataset.ImageEnhancementDataset):
     See Also: :class:`base.ImageEnhancementDataset`.
     """
     
-    tasks          = [Task.DEHAZE]
-    splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_label = True
+    tasks  = [Task.DEHAZE]
+    splits = [Split.TRAIN, Split.VAL, Split.TEST]
+    has_test_annotations = True
     
     def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -729,16 +729,16 @@ class SateHaze1KThick(dataset.ImageEnhancementDataset):
                         image = anno.ImageAnnotation(path=path)
                         self.images.append(image)
 
-    def get_labels(self):
-        self.labels: list[anno.ImageAnnotation] = []
+    def get_annotations(self):
+        self.annotations: list[anno.ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} labels"
             ):
-                path  = img.path.replace("/lq/", "/hq/")
-                label = anno.ImageAnnotation(path=path.image_file())
-                self.labels.append(label)
+                path = img.path.replace("/lq/", "/hq/")
+                ann  = anno.ImageAnnotation(path=path.image_file())
+                self.annotations.append(ann)
 
 # endregion
 

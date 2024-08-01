@@ -9,14 +9,14 @@ from mon.config import default
 
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
-_root_dir     = _current_file.parents[1]
+root_dir     = current_file.parents[1]
 
 
 # region Basic
 
 model_name = "gcenet_a1"
 data_name  = "ulol"
-root       = _root_dir / "run"
+root       = root_dir / "run"
 project    = None
 variant    = None
 fullname   = f"{model_name}_{data_name}"
@@ -70,7 +70,7 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
-		A.Resize(width=image_size[0], height=image_size[1]),
+		A.Resize(height=image_size[0], width=image_size[1]),
 		# A.Flip(),
 		# A.Rotate(),
 	]),  # Transformations performing on both the input and target.

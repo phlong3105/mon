@@ -43,8 +43,20 @@ update_base_env() {
 
 read_user_input() {
     install_type=$1
-    read -e -i "$install_type" -p "Machine Type [gui, console]: " install_type
-    echo "$install_type"
+    echo -e "Install Option [gui, console, lib]"
+    echo -e "gui    : install with GUI libraries (desktop PC)"
+    echo -e "console: install without GUI libraries (server without monitor)"
+    echo -e "lib    : only install/update third-party libraries"
+    case "$OSTYPE" in
+        darwin*)
+            echo -e "Choose [gui, console, lib]: "
+            read install_type
+            ;;
+        *)
+            read -e -i "$install_type" -p "Choose [gui, console, lib]: " install_type
+            echo "$install_type"
+            ;;
+    esac
 }
 
 install_on_linux() {
@@ -57,7 +69,6 @@ install_on_linux() {
     else
         echo -e "\nInvalid machine type: $install_type"
     fi
-
     if { conda env list | grep 'mon'; } >/dev/null 2>&1; then
         echo -e "\nUpdating 'mon' environment:"
         conda env update --name mon -f "${env_yml_path}"
@@ -74,7 +85,6 @@ install_on_linux() {
         source ~/.bashrc
         echo -e "... Done"
     fi
-
     # Install FFMPEG
     if sudo -n true 2>/dev/null; then
         sudo apt-get install ffmpeg
@@ -83,6 +93,8 @@ install_on_linux() {
         apt-get install ffmpeg
         apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
     fi
+    # Cleanup
+    rm -rf $CONDA_PREFIX/lib/python3.12/site-packages/cv2/qt/plugins
 }
 
 install_on_darwin() {
@@ -105,6 +117,8 @@ install_on_darwin() {
     fi
     # Install FFMPEG
     brew install ffmpeg
+    # Cleanup
+    rm -rf $CONDA_PREFIX/lib/python3.12/site-packages/cv2/qt/plugins
 }
 
 install_third_party_library() {
@@ -112,7 +126,6 @@ install_third_party_library() {
     eval "$(conda shell.bash hook)"
     conda activate mon
     rm -rf poetry.lock
-    rm -rf $CONDA_PREFIX/lib/python3.12/site-packages/cv2/qt/plugins
     poetry install --extras "dev"
     rm -rf poetry.lock
     conda update --a --y
@@ -164,34 +177,37 @@ add_channels
 update_base_env
 
 # Install 'mon' env
-echo -e "\nInstalling 'mon' environment:"
-case "$OSTYPE" in
-    linux*)
-        install_on_linux
-        ;;
-    darwin*)
-        install_on_darwin
-        ;;
-    win*)
-        echo -e "\nWindows"
-        ;;
-    msys*)
-        echo -e "\nMSYS / MinGW / Git Bash"
-        ;;
-    cygwin*)
-        echo -e "\nCygwin"
-        ;;
-    bsd*)
-        echo -e "\nBSD"
-        ;;
-    solaris*)
-        echo -e "\nSolaris"
-        ;;
-    *)
-        echo -e "\nunknown: $OSTYPE"
-        ;;
-esac
+if [ "$install_type" == "gui" ] || [ "$install_type" == "console" ]; then
+    echo -e "\nInstalling 'mon' environment:"
+    case "$OSTYPE" in
+        linux*)
+            install_on_linux
+            ;;
+        darwin*)
+            install_on_darwin
+            ;;
+        win*)
+            echo -e "\nWindows"
+            ;;
+        msys*)
+            echo -e "\nMSYS / MinGW / Git Bash"
+            ;;
+        cygwin*)
+            echo -e "\nCygwin"
+            ;;
+        bsd*)
+            echo -e "\nBSD"
+            ;;
+        solaris*)
+            echo -e "\nSolaris"
+            ;;
+        *)
+            echo -e "\nunknown: $OSTYPE"
+            ;;
+    esac
+fi
 
+# Install third-party library
 install_third_party_library
 
 # Setup environment variables

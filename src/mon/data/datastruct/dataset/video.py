@@ -73,11 +73,11 @@ class UnlabeledVideoDataset(base.UnlabeledDataset, ABC):
 			verbose     = verbose,
 			*args, **kwargs
 		)
-		self._num_frames = 0
-		self._init_video()
+		self.num_frames = 0
+		self.init_video()
 	
 	def __len__(self) -> int:
-		return self._num_frames
+		return self.num_frames
 	
 	@abstractmethod
 	def __getitem__(self, item: int) -> tuple[
@@ -114,7 +114,7 @@ class UnlabeledVideoDataset(base.UnlabeledDataset, ABC):
 	@property
 	def is_stream(self) -> bool:
 		"""Return ``True`` if it is a video stream, i.e., unknown :attr:`frame_count`. """
-		return self._num_frames == -1
+		return self.num_frames == -1
 	
 	@property
 	def shape(self) -> list[int]:
@@ -138,7 +138,7 @@ class UnlabeledVideoDataset(base.UnlabeledDataset, ABC):
 		return self.image_size
 	
 	@abstractmethod
-	def _init_video(self):
+	def init_video(self):
 		"""Initialize the video capture object."""
 		pass
 	
@@ -171,7 +171,7 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self._video_capture = None
+		self.video_capture = None
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -195,19 +195,19 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 		torch.Tensor | np.ndarray | None,
 		dict | None
 	]:
-		if not self.is_stream and self.index >= self._num_frames:
+		if not self.is_stream and self.index >= self.num_frames:
 			self.close()
 			raise StopIteration
 		else:
 			# Read the next frame
-			if isinstance(self._video_capture, cv2.VideoCapture):
-				ret_val, frame = self._video_capture.read()
+			if isinstance(self.video_capture, cv2.VideoCapture):
+				ret_val, frame = self.video_capture.read()
 			else:
 				raise RuntimeError(f":attr`_video_capture` has not been initialized.")
 			if frame is not None:
 				frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 				frame = FrameLabel(index=self.index, path=self.root, frame=frame)
-			self._index += 1
+			self.index += 1
 			
 			# Get data
 			image = frame.data
@@ -225,64 +225,64 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 		VideoCapture::retrieve(). Set value -1 to fetch undecoded RAW video
 		streams (as Mat 8UC1).
 		"""
-		return self._video_capture.get(cv2.CAP_PROP_FORMAT)
+		return self.video_capture.get(cv2.CAP_PROP_FORMAT)
 	
 	@property
 	def fourcc(self) -> str:  # Flag=6
 		"""Return the 4-character code of codec."""
-		return str(self._video_capture.get(cv2.CAP_PROP_FOURCC))
+		return str(self.video_capture.get(cv2.CAP_PROP_FOURCC))
 	
 	@property
 	def fps(self) -> int:  # Flag=5
 		"""Return the frame rate."""
-		return int(self._video_capture.get(cv2.CAP_PROP_FPS))
+		return int(self.video_capture.get(cv2.CAP_PROP_FPS))
 	
 	@property
 	def frame_count(self) -> int:  # Flag=7
 		"""Return the number of frames in the video file."""
-		if isinstance(self._video_capture, cv2.VideoCapture):
-			return int(self._video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-		elif isinstance(self._video_capture, list):
-			return len(self._video_capture)
+		if isinstance(self.video_capture, cv2.VideoCapture):
+			return int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+		elif isinstance(self.video_capture, list):
+			return len(self.video_capture)
 		else:
 			return -1
 	
 	@property
 	def frame_height(self) -> int:  # Flag=4
 		"""Return the height of the frames in the video stream."""
-		return int(self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+		return int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
 	
 	@property
 	def frame_width(self) -> int:  # Flag=3
 		"""Return the width of the frames in the video stream."""
-		return int(self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+		return int(self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
 	
 	@property
 	def mode(self):  # Flag=10
 		"""Return the backend-specific value indicating the current capture mode."""
-		return self._video_capture.get(cv2.CAP_PROP_MODE)
+		return self.video_capture.get(cv2.CAP_PROP_MODE)
 	
 	@property
 	def pos_avi_ratio(self) -> int:  # Flag=2
 		"""Return the relative position of the video file: ``0``=start of the
 		film, ``1``=end of the film.
 		"""
-		return int(self._video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO))
+		return int(self.video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO))
 	
 	@property
 	def pos_msec(self) -> int:  # Flag=0
 		"""Return the current position of the video file in milliseconds."""
-		return int(self._video_capture.get(cv2.CAP_PROP_POS_MSEC))
+		return int(self.video_capture.get(cv2.CAP_PROP_POS_MSEC))
 	
 	@property
 	def pos_frames(self) -> int:  # Flag=1
 		"""Return the 0-based index of the frame to be decoded/captured next."""
-		return int(self._video_capture.get(cv2.CAP_PROP_POS_FRAMES))
+		return int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES))
 	
-	def _init_video(self):
+	def init_video(self):
 		root = core.Path(self.root)
 		if root.is_video_file():
-			self._video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
+			self.video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
 			num_frames = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 		elif root.is_video_stream():
 			self.video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)  # stream
@@ -290,19 +290,19 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 		else:
 			raise IOError(f"Error when reading input stream or video file!")
 		
-		if self._num_frames == 0:
-			self._num_frames = num_frames
+		if self.num_frames == 0:
+			self.num_frames = num_frames
 		
 	def reset(self):
 		"""Reset and start over."""
-		self._index = 0
-		if isinstance(self._video_capture, cv2.VideoCapture):
-			self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, self.index)
+		self.index = 0
+		if isinstance(self.video_capture, cv2.VideoCapture):
+			self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, self.index)
 	
 	def close(self):
 		"""Stop and release the current attr:`_video_capture` object."""
-		if isinstance(self._video_capture, cv2.VideoCapture):
-			self._video_capture.release()
+		if isinstance(self.video_capture, cv2.VideoCapture):
+			self.video_capture.release()
 
 
 class VideoLoaderFFmpeg(UnlabeledVideoDataset):
@@ -326,10 +326,10 @@ class VideoLoaderFFmpeg(UnlabeledVideoDataset):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
-		self._ffmpeg_cmd     = None
-		self._ffmpeg_process = None
-		self._ffmpeg_kwargs  = kwargs
-		self._video_info     = None
+		self.ffmpeg_cmd     = None
+		self.ffmpeg_process = None
+		self.ffmpeg_kwargs  = kwargs
+		self.video_info     = None
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -358,9 +358,9 @@ class VideoLoaderFFmpeg(UnlabeledVideoDataset):
 			raise StopIteration
 		else:
 			# Read the next frame
-			if self._ffmpeg_process:
+			if self.ffmpeg_process:
 				frame = core.read_video_ffmpeg(
-					process = self._ffmpeg_process,
+					process = self.ffmpeg_process,
 					width   = self.frame_width,
 					height  = self.frame_height
 				)  # Already in RGB
@@ -369,7 +369,7 @@ class VideoLoaderFFmpeg(UnlabeledVideoDataset):
 			if frame is not None:
 				frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 				frame = FrameLabel(index=self.index, path=self.root, frame=frame)
-			self._index += 1
+			self.index += 1
 			
 			# Get data
 			image = frame.data
@@ -385,49 +385,49 @@ class VideoLoaderFFmpeg(UnlabeledVideoDataset):
 	@property
 	def fourcc(self) -> str:
 		"""Return the 4-character code of codec."""
-		return self._video_info["codec_name"]
+		return self.video_info["codec_name"]
 	
 	@property
 	def fps(self) -> int:
 		"""Return the frame rate."""
-		return int(self._video_info["avg_frame_rate"].split("/")[0])
+		return int(self.video_info["avg_frame_rate"].split("/")[0])
 	
 	@property
 	def frame_count(self) -> int:
 		"""Return the number of frames in the video file."""
 		if self.root.is_video_file():
-			return int(self._video_info["nb_frames"])
+			return int(self.video_info["nb_frames"])
 		else:
 			return -1
 	
 	@property
 	def frame_width(self) -> int:
 		"""Return the width of the frames in the video stream."""
-		return int(self._video_info["width"])
+		return int(self.video_info["width"])
 	
 	@property
 	def frame_height(self) -> int:
 		"""Return the height of the frames in the video stream."""
-		return int(self._video_info["height"])
+		return int(self.video_info["height"])
 	
-	def _init_video(self):
+	def init_video(self):
 		"""Initialize ``ffmpeg`` cmd."""
 		source = str(self.root)
-		probe  = ffmpeg.probe(source, **self._ffmpeg_kwargs)
-		self._video_info = next(
+		probe  = ffmpeg.probe(source, **self.ffmpeg_kwargs)
+		self.video_info = next(
 			s for s in probe["streams"] if s["codec_type"] == "video"
 		)
 		if self.verbose:
-			self._ffmpeg_cmd = (
+			self.ffmpeg_cmd = (
 				ffmpeg
-				.input(source, **self._ffmpeg_kwargs)
+				.input(source, **self.ffmpeg_kwargs)
 				.output("pipe:", format="rawvideo", pix_fmt="rgb24")
 				.compile()
 			)
 		else:
-			self._ffmpeg_cmd = (
+			self.ffmpeg_cmd = (
 				ffmpeg
-				.input(source, **self._ffmpeg_kwargs)
+				.input(source, **self.ffmpeg_kwargs)
 				.output("pipe:", format="rawvideo", pix_fmt="rgb24")
 				.global_args("-loglevel", "quiet")
 				.compile()
@@ -436,20 +436,20 @@ class VideoLoaderFFmpeg(UnlabeledVideoDataset):
 	def reset(self):
 		"""Reset and start over."""
 		self.close()
-		self._index = 0
-		if self._ffmpeg_cmd:
-			self._ffmpeg_process = subprocess.Popen(
-				self._ffmpeg_cmd,
+		self.index = 0
+		if self.ffmpeg_cmd:
+			self.ffmpeg_process = subprocess.Popen(
+				self.ffmpeg_cmd,
 				stdout  = subprocess.PIPE,
 				bufsize = 10 ** 8
 			)
 	
 	def close(self):
 		"""Stop and release the current :attr:`ffmpeg_process`."""
-		if self._ffmpeg_process and self._ffmpeg_process.poll() is not None:
+		if self.ffmpeg_process and self.ffmpeg_process.poll() is not None:
 			# os.killpg(os.getpgid(self.ffmpeg_process.pid), signal.SIGTERM)
-			self._ffmpeg_process.terminate()
-			self._ffmpeg_process.wait()
-			self._ffmpeg_process = None
+			self.ffmpeg_process.terminate()
+			self.ffmpeg_process.wait()
+			self.ffmpeg_process = None
 
 # endregion

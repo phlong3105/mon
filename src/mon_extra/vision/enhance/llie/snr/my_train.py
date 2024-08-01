@@ -22,7 +22,7 @@ from data.data_sampler import DistIterSampler
 from models import create_model
 from utils import util
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -352,7 +352,7 @@ def train(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_train_args(model_root=_current_dir)
+    args = mon.parse_train_args(model_root=current_dir)
     train(args)
 
 

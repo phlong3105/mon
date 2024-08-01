@@ -33,9 +33,9 @@ class NTIRE24LLIE(dataset.ImageEnhancementDataset):
 	See Also: :class:`base.ImageEnhancementDataset`.
 	"""
 	
-	tasks          = [Task.LLIE]
-	splits         = [Split.TRAIN, Split.VAL, Split.TEST]
-	has_test_label = False
+	tasks  = [Task.LLIE]
+	splits = [Split.TRAIN, Split.VAL, Split.TEST]
+	has_test_annotations = False
 	
 	def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
 		super().__init__(root=root, *args, **kwargs)
@@ -69,16 +69,16 @@ class NTIRE24LLIE(dataset.ImageEnhancementDataset):
 						image = anno.ImageAnnotation(path=path)
 						self.images.append(image)
 	
-	def get_labels(self):
-		self.labels: list[anno.ImageAnnotation] = []
+	def get_annotations(self):
+		self.annotations: list[anno.ImageAnnotation] = []
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				self.images,
 				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
-				path  = img.path.replace("/lq/", "/hq/")
-				label = anno.ImageAnnotation(path=path.image_file())
-				self.labels.append(label)
+				path = img.path.replace("/lq/", "/hq/")
+				ann  = anno.ImageAnnotation(path=path.image_file())
+				self.annotations.append(ann)
 				
 # endregion
 

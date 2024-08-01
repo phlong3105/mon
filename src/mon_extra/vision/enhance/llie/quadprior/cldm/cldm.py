@@ -322,7 +322,7 @@ class ControlLDM(LatentDiffusion):
         self.control_key = control_key
         self.only_mid_control = only_mid_control
         self.control_scales = [1.0] * 13
-        with open((_current_dir.parent / "empty_embedding.pkl"), 'rb') as f:
+        with open((current_dir.parent / "empty_embedding.pkl"), 'rb') as f:
             self.cond_txt_empty = pickle.load(f)
 
     @torch.no_grad()

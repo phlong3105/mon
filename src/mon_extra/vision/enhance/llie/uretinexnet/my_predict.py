@@ -17,7 +17,7 @@ from network.decom import Decom
 from network.Math_Module import P, Q
 from utils import *
 
-console       = mon.console
+console      = mon.console
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
@@ -152,7 +152,7 @@ def predict(args: argparse.Namespace):
 # region Main
 
 def main() -> str:
-    args = mon.parse_predict_args(model_root=_current_dir)
+    args = mon.parse_predict_args(model_root=current_dir)
     args.decom_model_low_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_init_low.pth"
     args.unfolding_model_weights = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_unfolding.pth"
     args.adjust_model_weights    = mon.ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet/lol_v1/uretinexnet_lol_v1_l_adjust.pth"

@@ -34,7 +34,7 @@ def run_install(args: dict):
     if use_extra_model:
         requirement_file = mon.EXTRA_MODELS[model]["model_dir"] / "requirements.txt"
         if requirement_file.is_txt_file():
-            result = subprocess.run(["pip", "install", "-r", f"{str(requirement_file)}"], cwd=_current_dir)
+            result = subprocess.run(["pip", "install", "-r", f"{str(requirement_file)}"], cwd=current_dir)
             print(result)
             
 # endregion
@@ -110,7 +110,7 @@ def run_train(args: dict):
         else:
             python_call = ["python"]
     else:
-        script_file = _current_dir / "train.py"
+        script_file = current_dir / "train.py"
         python_call = ["python"]
     
     # Parse arguments
@@ -133,7 +133,7 @@ def run_train(args: dict):
             args_call +
             flags
         )
-        result = subprocess.run(command, cwd=_current_dir)
+        result = subprocess.run(command, cwd=current_dir)
         print(result)
     else:
         raise ValueError(f"Cannot find Python training script file at: {script_file}.")
@@ -212,7 +212,7 @@ def run_predict(args: dict):
             script_file = mon.EXTRA_MODELS[arch][model]["model_dir"] / "my_predict.py"
             python_call = ["python"]
         else:
-            script_file = _current_dir / "predict.py"
+            script_file = current_dir / "predict.py"
             python_call = ["python"]
         
         # Parse arguments
@@ -235,7 +235,7 @@ def run_predict(args: dict):
                 args_call +
                 flags
             )
-            result = subprocess.run(command, cwd=_current_dir)
+            result = subprocess.run(command, cwd=current_dir)
             print(result)
         else:
             raise ValueError(f"Cannot find Python predicting script file at: {script_file}.")
@@ -316,7 +316,7 @@ def run_online(args: dict):
             script_file = mon.EXTRA_MODELS[arch][model]["model_dir"] / "my_online.py"
             python_call = ["python"]
         else:
-            script_file = _current_dir / "online.py"
+            script_file = current_dir / "online.py"
             python_call = ["python"]
         
         # Parse arguments
@@ -339,7 +339,7 @@ def run_online(args: dict):
                 args_call +
                 flags
             )
-            result = subprocess.run(command, cwd=_current_dir)
+            result = subprocess.run(command, cwd=current_dir)
             print(result)
         else:
             raise ValueError(f"Cannot find Python predicting script file at: {script_file}.")

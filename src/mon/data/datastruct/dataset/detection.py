@@ -65,7 +65,7 @@ class ImageDetectionDataset(img.LabeledImageDataset, ABC):
 					transforms  = transform.transforms,
 					bbox_params = A.BboxParams(format=str(self._bbox_format.value))
 				)
-		self._labels: list[BBoxesLabel] = []
+		self.annotations: list[BBoxesLabel] = []
 		super().__init__(
 			root        = root,
 			split       = split,
@@ -83,11 +83,11 @@ class ImageDetectionDataset(img.LabeledImageDataset, ABC):
 		dict | None
 	]:
 		image  = self.images[index].data
-		bboxes = self._labels[index].data if self.has_test_label else None
+		bboxes = self.annotations[index].data if self.has_annotations else None
 		meta   = self.images[index].meta
 		
 		if self.transform is not None:
-			if self.has_test_label:
+			if self.has_annotations:
 				transformed = self.transform(image=image, bboxes=bboxes)
 				image       = transformed["image"]
 				bboxes      = transformed["bboxes"]
@@ -96,7 +96,7 @@ class ImageDetectionDataset(img.LabeledImageDataset, ABC):
 				image       = transformed["image"]
 		
 		if self.to_tensor:
-			if self.has_test_label:
+			if self.has_annotations:
 				image  = core.to_image_tensor(input=image, keepdim=False, normalize=True)
 				bboxes = torch.Tensor(bboxes)
 			else:
@@ -175,7 +175,7 @@ class DetectionDatasetCOCO(ImageDetectionDataset, ABC):
 			*args, **kwargs
 		)
 	
-	def get_labels(self):
+	def get_annotations(self):
 		json_file = self.annotation_file()
 		if not json_file.is_json_file():
 			raise ValueError(
@@ -257,7 +257,7 @@ class DetectionDatasetVOC(ImageDetectionDataset, ABC):
 			*args, **kwargs
 		)
 	
-	def get_labels(self):
+	def get_annotations(self):
 		files = self.annotation_files()
 		
 		if not len(self.images) > 0:
@@ -268,7 +268,7 @@ class DetectionDatasetVOC(ImageDetectionDataset, ABC):
 				f"{len(self.images)} and {len(files)}."
 			)
 		
-		self.labels: list[BBoxesLabelVOC] = []
+		self.annotations: list[BBoxesLabelVOC] = []
 		with core.get_progress_bar() as pbar:
 			for f in pbar.track(
 				files,
@@ -320,7 +320,7 @@ class DetectionDatasetYOLO(ImageDetectionDataset, ABC):
 			*args, **kwargs
 		)
 	
-	def get_labels(self):
+	def get_annotations(self):
 		files = self.annotation_files()
 		
 		if not len(self.images) > 0:
@@ -331,13 +331,13 @@ class DetectionDatasetYOLO(ImageDetectionDataset, ABC):
 				f"{len(self.images)} and {len(files)}."
 			)
 		
-		self._labels: list[BBoxesLabelYOLO] = []
+		self.annotations: list[BBoxesLabelYOLO] = []
 		with core.get_progress_bar() as pbar:
 			for f in pbar.track(
 				files,
 				description=f"Listing {self.__class__.__name__} {self.split_str} labels"
 			):
-				self._labels.append(BBoxesLabelYOLO.from_file(path=f))
+				self.annotations.append(BBoxesLabelYOLO.from_file(path=f))
 	
 	@abstractmethod
 	def annotation_files(self) -> list[core.Path]:
