@@ -11,17 +11,16 @@ __all__ = [
     "D2CE",
 ]
 
-import sys
 from typing import Any, Literal
 
 import torch
 
 from mon import core, nn
 from mon.core import _callable
-from mon.globals import MODELS, Scheme, ZOO_DIR
+from mon.globals import MODELS, Scheme
 from mon.vision import filtering, geometry, prior
-from mon.vision.enhance.llie import base
 from mon.vision.depth import depth_anything_v2
+from mon.vision.enhance.llie import base
 
 console = core.console
 
@@ -170,9 +169,9 @@ class EnhanceNet(nn.Module):
         self.e_conv2 = ConvBlock(num_channels,     num_channels, norm=norm)
         self.e_conv3 = ConvBlock(num_channels,     num_channels, norm=norm)
         self.e_conv4 = ConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv5 = ConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv6 = ConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv7 = ConvBlock(num_channels * 2, out_channels, norm=norm, is_last_layer=True)
+        self.e_conv5 = ConvBlock(num_channels * 2 + 1, num_channels, norm=norm)
+        self.e_conv6 = ConvBlock(num_channels * 2 + 1, num_channels, norm=norm)
+        self.e_conv7 = ConvBlock(num_channels * 2 + 1, out_channels, norm=norm, is_last_layer=True)
         self.apply(self.init_weights)
     
     def init_weights(self, m: nn.Module):
@@ -190,58 +189,18 @@ class EnhanceNet(nn.Module):
                 m.weight.data.normal_(1.0, 0.02)
                 m.bias.data.fill_(0)
     
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, depth: torch.Tensor | None = None) -> torch.Tensor:
         x   = input
+        d   = depth
         x1  = self.e_conv1(x)
         x2  = self.e_conv2(x1)
         x3  = self.e_conv3(x2)
         x4  = self.e_conv4(x3)
-        x5  = self.e_conv5(torch.cat([x3, x4], 1))
-        x6  = self.e_conv6(torch.cat([x2, x5], 1))
-        x_r = self.e_conv7(torch.cat([x1, x6], 1))
+        x5  = self.e_conv5(torch.cat([x3, x4, d], 1))
+        x6  = self.e_conv6(torch.cat([x2, x5, d], 1))
+        x_r = self.e_conv7(torch.cat([x1, x6, d], 1))
         return x_r
 
-
-class DepthNet(nn.Module):
-    
-    model_configs = {
-        "vits": {"encoder": "vits", "features": 64,  "out_channels": [48,   96,   192,  384 ]},
-        "vitb": {"encoder": "vitb", "features": 128, "out_channels": [96,   192,  384,  768 ]},
-        "vitl": {"encoder": "vitl", "features": 256, "out_channels": [256,  512,  1024, 1024]},
-        "vitg": {"encoder": "vitg", "features": 384, "out_channels": [1536, 1536, 1536, 1536]},
-    }
-    pretrained_weights = {
-        "vits": ZOO_DIR / "vision/depth/depth_anything_v2/depth_anything_v2_vits/depth_anything_v2_vits.pth",
-        "vitb": ZOO_DIR / "vision/depth/depth_anything_v2/depth_anything_v2_vitb/depth_anything_v2_vitb.pth",
-        "vitl": ZOO_DIR / "vision/depth/depth_anything_v2/depth_anything_v2_vitl/depth_anything_v2_vitl.pth",
-        "vitg": None,
-    }
-    
-    def __init__(self, encoder: Literal["vits", "vitb", "vitl", "vitg"] = "vits"):
-        super().__init__()
-        self.encoder = encoder
-        self.depth_anything_v2 = DepthAnythingV2(**self.model_configs[encoder])
-    
-    @property
-    def encoder(self) -> str:
-        return self._encoder
-    
-    @encoder.setter
-    def encoder(self, encoder: str):
-        if encoder not in self.model_configs:
-            raise ValueError(f":param:`encoder` must be one of {list(self.model_configs.keys())}, but got {encoder}.")
-        self._encoder = encoder
-    
-    def load_weights(self):
-        self.depth_anything_v2.load_state_dict(torch.load(str(self.pretrained_weights[self.encoder])))
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = self.depth_anything_v2(x)
-        y = y.unsqueeze(1)
-        # Normalize the depth map in the range [0, 1].
-        y = (y - y.min()) / (y.max() - y.min())
-        return y
 
 # endregion
 
@@ -303,7 +262,7 @@ class D2CE(base.LowLightImageEnhancementModel):
             in_channels  = self.in_channels,
             num_channels = self.num_channels,
             num_iters    = self.num_iters,
-            norm         = nn.AdaptiveBatchNorm2d,
+            norm         = None,  # nn.AdaptiveBatchNorm2d,
         )
         self.gf = filtering.GuidedFilter(radius=self.radius, eps=self.eps)
         
@@ -315,9 +274,8 @@ class D2CE(base.LowLightImageEnhancementModel):
             self.load_weights()
         else:
             self.apply(self.init_weights)
-            # self.de.load_weights()
         
-        # Freeze the DepthNet
+        # Freeze DepthAnythingV2 model
         self.de.eval()
         
     def init_weights(self, m: nn.Module):
@@ -389,9 +347,9 @@ class D2CE(base.LowLightImageEnhancementModel):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         x  = input
         # Enhancement
-        # d  = self.de(x)
+        d  = self.de(x)
         # xd = torch.concat([x, d], 1)
-        c1 = self.en(x)
+        c1 = self.en(x, d)
         # Enhancement loop
         if self.gamma in [None, 0.0]:
             y  = x
@@ -400,16 +358,16 @@ class D2CE(base.LowLightImageEnhancementModel):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            # c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-            c2 = 1.0 - self.de(x)
+            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            # c2 = 1.0 - self.de(x)
             for i in range(0, self.num_iters):
-                # b = y * (1 - c2)
-                # d = y * c2
-                # y = b + d + c1 * (torch.pow(d, 2) - d)
-                y = c1 * c2 * (torch.pow(y, 2) - y)
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+                # y = c1 * c2 * (torch.pow(y, 2) - y)
         # Guided Filter
-        # y_gf = self.gf(x, y)
-        y_gf = y
+        y_gf = self.gf(x, y)
+        # y_gf = y
         return c1, c2, y, y_gf
     
 # endregion
