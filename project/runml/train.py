@@ -118,9 +118,9 @@ def parse_train_args(model_root: str | mon.Path | None = None) -> dict:
     local_rank = input_args.get("local_rank")
     launcher   = input_args.get("launcher")
     epochs     = input_args.get("epochs")
-    epochs     = epochs     if epochs > 0 else args["trainer"]["max_epochs"]
+    epochs     = epochs if epochs not in [-1, None] else args["trainer"]["max_epochs"]
     steps      = input_args.get("steps")
-    steps      = steps      if steps  > 0 else args["trainer"]["max_steps"]
+    steps      = steps  if steps  not in [-1, None] else args["trainer"]["max_steps"]
     exist_ok   = input_args.get("exist_ok") or args.get("exist_ok")
     verbose    = input_args.get("verbose")  or args.get("verbose")
     extra_args = input_args.get("extra_args")
@@ -132,7 +132,8 @@ def parse_train_args(model_root: str | mon.Path | None = None) -> dict:
     weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     devices  = mon.parse_device(devices)
-    devices  = mon.to_int_list(devices) if "auto" not in devices else devices
+    devices  = mon.to_int_list(devices) if "auto" not in devices else "auto"
+    devices  = len(devices) if isinstance(devices, list | tuple) else devices
     
     # Update arguments
     args["hostname"]  = hostname
