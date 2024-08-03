@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="zeroig"
-model="zeroig"
+arch="d2ce"
+model="d2ce"
 data=(
     "dicm"
     "lime"

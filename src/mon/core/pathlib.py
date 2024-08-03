@@ -16,6 +16,7 @@ __all__ = [
     "delete_cache",
     "delete_dir",
     "delete_files",
+    "get_ckpt_file",
     "get_config_file",
     "get_files",
     "get_image_file",
@@ -231,6 +232,14 @@ class Path(type(pathlib.Path())):
         paths = [p for p in paths if p.is_file()]
         return paths
     
+    def ckpt_file(self) -> Path | None:
+        """Return the YAML file with the given path."""
+        return get_ckpt_file(self)
+    
+    def config_file(self) -> Path:
+        """Return the configuration file type with the given path."""
+        return get_config_file(self)
+    
     def latest_file(self) -> Path | None:
         """Return the latest file, in other words, the file with the last
         created time, in a :class:`dict`.
@@ -249,10 +258,6 @@ class Path(type(pathlib.Path())):
     def yaml_file(self) -> Path:
         """Return the YAML file with the given path."""
         return get_yaml_file(self)
-    
-    def config_file(self) -> Path:
-        """Return the configuration file type with the given path."""
-        return get_config_file(self)
     
     def copy_to(self, dst: Path | str, replace: bool = True):
         """Copy a file to a new location.
@@ -290,6 +295,30 @@ def is_url(url: str) -> bool:
 
 
 # region Obtainment
+
+def get_ckpt_file(path: Path) -> Path:
+    """Get the ckpt file of an arbitrary extension from the given path."""
+    for ext in [".ckpt"]:
+        temp = path.parent / f"{path.stem}{ext}"
+        if temp.is_yaml_file():
+            return temp
+    return path
+
+
+def get_config_file(path: Path) -> Path:
+    """Get the configuration file of an arbitrary extension from the given path.
+    Most common extensions are: [``.config``, ``.cfg``, ``.json``, ``.yaml``, or ``.yml``].
+    """
+    from mon.globals import CONFIG_FILE_FORMATS
+    for ext in CONFIG_FILE_FORMATS:
+        temp           = path.parent / f"{path.stem}{ext}"
+        temp_snakecase = path.parent / f"{humps.snakecase(path.stem)}{ext}"
+        if temp.is_config_file():
+            return temp
+        if temp_snakecase.is_config_file():
+            return temp_snakecase
+    return path
+
 
 def get_files(regex: str, recursive: bool = False) -> list[Path]:
     """Get all files matching the given regular expression.
@@ -349,21 +378,6 @@ def get_yaml_file(path: Path) -> Path:
         temp = path.parent / f"{path.stem}{ext}"
         if temp.is_yaml_file():
             return temp
-    return path
-
-
-def get_config_file(path: Path) -> Path:
-    """Get the configuration file of an arbitrary extension from the given path.
-    Most common extensions are: [``.config``, ``.cfg``, ``.json``, ``.yaml``, or ``.yml``].
-    """
-    from mon.globals import CONFIG_FILE_FORMATS
-    for ext in CONFIG_FILE_FORMATS:
-        temp           = path.parent / f"{path.stem}{ext}"
-        temp_snakecase = path.parent / f"{humps.snakecase(path.stem)}{ext}"
-        if temp.is_config_file():
-            return temp
-        if temp_snakecase.is_config_file():
-            return temp_snakecase
     return path
 
 

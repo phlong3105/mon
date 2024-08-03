@@ -12,6 +12,7 @@ __all__ = [
 ]
 
 import os
+import time
 from datetime import timedelta
 from typing import Any
 from weakref import proxy
@@ -84,6 +85,26 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         )
         self._last_epoch_saved = 0
     
+    def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
+        super().setup(trainer, pl_module, stage)
+        # Make sure that we have the correct filename (1)
+        if (
+            hasattr(pl_module, "fullname")
+            and pl_module.fullname is not None
+            and self.filename is None
+        ):
+            self.filename = pl_module.fullname
+    
+    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+        self._last_time_checked = time.monotonic()
+        # Make sure that we have the correct filename (2)
+        if (
+            hasattr(pl_module, "fullname")
+            and pl_module.fullname is not None
+            and self.filename is None
+        ):
+            self.filename = pl_module.fullname
+        
     def state_key(self) -> str:
         return self._generate_state_key(
             monitor                 = self.monitor,
@@ -187,7 +208,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 metric_name = self._parse_metric_name()
                 if metric_name:
                     filename += f"_{metric_name}"
-        if self.filename != "":
+        if self.filename not in [None, "None", ""]:
             filename = f"{self.filename}_{filename}"
         if prefix:
             filename = self.CHECKPOINT_JOIN_CHAR.join([prefix, filename])
@@ -209,7 +230,8 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
             return self.dirpath
         else:
             # if no loggers, use default_root_dir
-            dirpath = os.path.join(trainer.default_root_dir, "weights")
+            # dirpath = os.path.join(trainer.default_root_dir, "weights")
+            dirpath = trainer.default_root_dir
             core.Path(dirpath).mkdir(parents=True, exist_ok=True)
             return dirpath
     

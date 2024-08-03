@@ -165,13 +165,13 @@ class EnhanceNet(nn.Module):
     ):
         super().__init__()
         out_channels = 3  # in_channels * num_iters
-        self.e_conv1 = ConvBlock(in_channels,      num_channels, norm=norm)
+        self.e_conv1 = ConvBlock(in_channels  + 1, num_channels, norm=norm)
         self.e_conv2 = ConvBlock(num_channels,     num_channels, norm=norm)
         self.e_conv3 = ConvBlock(num_channels,     num_channels, norm=norm)
         self.e_conv4 = ConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv5 = ConvBlock(num_channels * 2 + 1, num_channels, norm=norm)
-        self.e_conv6 = ConvBlock(num_channels * 2 + 1, num_channels, norm=norm)
-        self.e_conv7 = ConvBlock(num_channels * 2 + 1, out_channels, norm=norm, is_last_layer=True)
+        self.e_conv5 = ConvBlock(num_channels * 2, num_channels, norm=norm)
+        self.e_conv6 = ConvBlock(num_channels * 2, num_channels, norm=norm)
+        self.e_conv7 = ConvBlock(num_channels * 2, out_channels, norm=norm, is_last_layer=True)
         self.apply(self.init_weights)
     
     def init_weights(self, m: nn.Module):
@@ -192,15 +192,14 @@ class EnhanceNet(nn.Module):
     def forward(self, input: torch.Tensor, depth: torch.Tensor | None = None) -> torch.Tensor:
         x   = input
         d   = depth
-        x1  = self.e_conv1(x)
+        x1  = self.e_conv1(torch.cat([x, d],  1))
         x2  = self.e_conv2(x1)
         x3  = self.e_conv3(x2)
         x4  = self.e_conv4(x3)
-        x5  = self.e_conv5(torch.cat([x3, x4, d], 1))
-        x6  = self.e_conv6(torch.cat([x2, x5, d], 1))
-        x_r = self.e_conv7(torch.cat([x1, x6, d], 1))
+        x5  = self.e_conv5(torch.cat([x3, x4], 1))
+        x6  = self.e_conv6(torch.cat([x2, x5], 1))
+        x_r = self.e_conv7(torch.cat([x1, x6], 1))
         return x_r
-
 
 # endregion
 
@@ -348,7 +347,6 @@ class D2CE(base.LowLightImageEnhancementModel):
         x  = input
         # Enhancement
         d  = self.de(x)
-        # xd = torch.concat([x, d], 1)
         c1 = self.en(x, d)
         # Enhancement loop
         if self.gamma in [None, 0.0]:
@@ -359,12 +357,10 @@ class D2CE(base.LowLightImageEnhancementModel):
         else:
             y  = x
             c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-            # c2 = 1.0 - self.de(x)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
                 y = b + d + c1 * (torch.pow(d, 2) - d)
-                # y = c1 * c2 * (torch.pow(y, 2) - y)
         # Guided Filter
         y_gf = self.gf(x, y)
         # y_gf = y

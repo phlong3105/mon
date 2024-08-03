@@ -430,7 +430,6 @@ class LearnableInstanceNorm2d(nn.InstanceNorm2d):
         
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         self._check_input_dim(input)
-        
         x          = input
         b, c, h, w = x.shape
         x_norm     = F.instance_norm(

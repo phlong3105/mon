@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "ExtraModel",
     "Model",
     "check_weights_loaded",
     "get_epoch_from_checkpoint",
@@ -83,7 +84,10 @@ def get_latest_checkpoint(dirpath: core.Path) -> str | None:
 		dirpath: The directory that contains the checkpoints.
 	"""
     dirpath = core.Path(dirpath)
-    ckpt    = dirpath.latest_file()
+    ckpts   = dirpath.files(recursive=True)
+    ckpts   = [ckpt for ckpt in ckpts if ckpt.is_torch_file()]
+    ckpts   = sorted(ckpts, key=lambda x: x.stat().st_mtime, reverse=True)
+    ckpt    = ckpts[0] if ckpts else None
     if ckpt is None:
         error_console.log(f"[red]Cannot find checkpoint file {dirpath}.")
     return ckpt
@@ -94,9 +98,10 @@ def get_latest_checkpoint(dirpath: core.Path) -> str | None:
 # region Weights
 
 def load_state_dict(
-    model    : nn.Module,
-    weights  : dict | str | core.Path,
-    overwrite: bool = False,
+    model       : nn.Module,
+    weights     : dict | str | core.Path,
+    weights_only: bool = False,
+    overwrite   : bool = False,
 ) -> dict:
     """Load state dict from the given :param:`weights`. If :param:`weights`
     contains a URL, download it.
@@ -129,7 +134,7 @@ def load_state_dict(
         error_console.log(f"{path} is not a weights file.")
     
     # Load state dict
-    weights_state_dict = torch.load(str(path), map_location=model.device)
+    weights_state_dict = torch.load(str(path), weights_only=weights_only, map_location=model.device)
     weights_state_dict = weights_state_dict.get("state_dict", weights_state_dict)
     model_state_dict   = copy.deepcopy(model.state_dict())
     new_state_dict     = {}
@@ -152,12 +157,13 @@ def load_state_dict(
 
 
 def load_weights(
-    model    : nn.Module,
-    weights  : dict | str | core.Path,
-    overwrite: bool = False,
+    model       : nn.Module,
+    weights     : dict | str | core.Path,
+    weights_only: bool = True,
+    overwrite   : bool = False,
 ) -> nn.Module:
     """Load weights to model."""
-    model_state_dict = load_state_dict(model=model, weights=weights)
+    model_state_dict = load_state_dict(model=model, weights=weights, weights_only=True)
     model.load_state_dict(model_state_dict)
     return model
 
@@ -211,13 +217,15 @@ class Model(lightning.LightningModule, ABC):
     """The base class for all machine learning models.
     
     Attributes:
+        arch: The model's architecture. Default: ``None`` mean it will be
+            :attr:`self.__class__.__name__`.
         tasks: A list of tasks that the model can perform.
+        schemes: A list of learning schemes that the model can perform.
         zoo: A :class:`dict` containing all pretrained weights of the model.
+        zoo_dir: The directory containing all pretrained weights of the model.
         
     Args:
         name: The model's name. Default: ``None`` mean it will be
-            :attr:`self.__class__.__name__`.
-        arch: The model's architecture. Default: ``None`` mean it will be
             :attr:`self.__class__.__name__`.
         root: The root directory of the model. It is used to save the model
             checkpoint during training: {root}/{fullname}.
@@ -344,12 +352,12 @@ class Model(lightning.LightningModule, ABC):
         #     root /= self.fullname
         self._root      = root
         self._debug_dir = root / "debug"
-        self._ckpt_dir  = root  # / "weights"
+        self._ckpt_dir  = root
     
     @property
     def ckpt_dir(self) -> core.Path:
         if self._ckpt_dir is None:
-            self._ckpt_dir = self.root  # / "weights"
+            self._ckpt_dir = self.root
         return self._ckpt_dir
     
     @property
@@ -391,10 +399,9 @@ class Model(lightning.LightningModule, ABC):
                 weights = None
         elif isinstance(weights, core.Path):
             assert weights.is_weights_file(), \
-                (f":param:`weights` must be a valid path to a weight file, "
-                 f"but got {weights}.")
+                f":param:`weights` must be a valid path to a weight file, but got {weights}."
         elif isinstance(weights, dict):
-            pass
+            pass  # No need to do anything here
         self._weights = weights or self._weights
         
         # endregion
@@ -540,19 +547,19 @@ class Model(lightning.LightningModule, ABC):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
-        self.weights = weights
+        self.weights = weights or self.weights
         
         # Get the state_dict
         state_dict = None
         if isinstance(self.weights, core.Path | str) and core.Path(self.weights).is_weights_file():
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
-            state_dict = load_state_dict(model=self, weights=self.weights)
+            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=True)
             state_dict = getattr(state_dict, "state_dict", state_dict)
         elif isinstance(self.weights, dict):
             if "path" in self.weights:
-                path = self.weights["path"]
-                if core.Path(path).is_weights_file():
-                    state_dict = load_state_dict(model=self, weights=self.weights)
+                path = core.Path(self.weights["path"])
+                if path.is_weights_file():
+                    state_dict = load_state_dict(model=self, weights=path, weights_only=True)
                     state_dict = getattr(state_dict, "state_dict", state_dict)
             else:
                 state_dict = getattr(self.weights, "state_dict", self.weights)
@@ -778,7 +785,7 @@ class Model(lightning.LightningModule, ABC):
                 - ``None``, training will skip to the next batch.
         """
         # Forward
-        input, target, extra = batch[0], batch[1], batch[2:]
+        input, target, meta = batch[0], batch[1], batch[2:]
         results = self.forward_loss(input=input, target=target, *args, **kwargs)
         if len(results) == 2:
             pred, loss = results
@@ -858,7 +865,7 @@ class Model(lightning.LightningModule, ABC):
             - Any object or value.
             - ``None``, validation will skip to the next batch.
         """
-        input, target, extra = batch[0], batch[1], batch[2:]
+        input, target, meta = batch[0], batch[1], batch[2:]
         results = self.forward_loss(input=input, target=target, *args, **kwargs)
         if len(results) == 2:
             pred, loss = results
@@ -877,7 +884,7 @@ class Model(lightning.LightningModule, ABC):
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
                 log_dict[f"val/{metric.name}"] = metric(pred, target)
-                
+        
         self.log_dict(
             dictionary     = log_dict,
             prog_bar       = False,
@@ -888,8 +895,15 @@ class Model(lightning.LightningModule, ABC):
             rank_zero_only = False,
         )
         
-        if self.should_save_image():
-            self._log_image(input, self.current_epoch, self.global_step)
+        if self.should_log_image():
+            self.log_image(
+                epoch  = self.current_epoch,
+                step   = self.global_step,
+                input  = input,
+                pred   = pred,
+                target = target,
+                extra  = extra,
+            )
         
         return loss
     
@@ -917,7 +931,7 @@ class Model(lightning.LightningModule, ABC):
                 - Any object or value.
                 - ``None``, testing will skip to the next batch.
         """
-        input, target, extra = batch[0], batch[1], batch[2:]
+        input, target, meta = batch[0], batch[1], batch[2:]
         results = self.forward_loss(input=input, target=target, *args, **kwargs)
         if len(results) == 2:
             pred, loss = results
@@ -1024,33 +1038,90 @@ class Model(lightning.LightningModule, ABC):
     
     # region Logging
     
-    def should_save_image(self) -> bool:
+    def should_log_image(self) -> bool:
+        """Check if we should save debug images."""
+        log_image_every_n_epochs = getattr(self.trainer, "log_image_every_n_epochs", 0)
         return (
             self.trainer.is_global_zero
-            and self.trainer.log_image_every_n_epochs > 0
-            and self.current_epoch % self.trainer.log_image_every_n_epochs == 0
+            and log_image_every_n_epochs > 0
+            and self.current_epoch % log_image_every_n_epochs == 0
         )
     
     def log_image(
         self,
-        dictionary: dict,
-        epoch     : int,
-        step      : int,
-        extension : str = "jpg"
+        epoch    : int,
+        step     : int,
+        input    : torch.Tensor,
+        pred     : torch.Tensor,
+        target   : torch.Tensor | None = None,
+        extra    : list         | None = None,
+        extension: str = ".jpg"
     ):
         """Log debug images to :attr:`debug_dir`."""
+        '''
         epoch = int(epoch)
         step  = int(step)
         for k, v in dictionary.items():
             v = core.denormalize_image(v)
             for i, image in enumerate(v):
-                save_file = self.debug_dir / f"{k}_{epoch:06d}_{step:8d}_{i:2d}.{extension}"
+                save_file = self.debug_dir / f"{k}_{epoch:06d}_{step:8d}_{i:2d}{extension}"
                 torchvision.utils.save_image(image, str(save_file))
-                
-    def print_debug(self):
-        """Print debug info to console during training and validating."""
+        '''
         pass
     
     # endregion
     
+# endregion
+
+
+# region Extra Model
+
+class ExtraModel(Model, ABC):
+    """A wrapper model that wraps around another model defined in :mod:`mon_extra`.
+    This is useful when we want to add the third-party models to :mod:`mon`'s models.
+    without reimplementing the entire model.
+    
+    Args:
+        model: The model to wrap around. To make thing simple, we agree on
+            the following naming convention: ``'model'``.
+    
+    Todo:
+        Usually, we only need to define the model architecture and load the
+        pretrained weights. The training should be performed using the original
+        package's script.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model = None
+    
+    def load_weights(self, weights: Any = None, overwrite: bool = False):
+        """Load weights. It only loads the intersection layers of matching keys
+        and shapes between the current model and weights.
+        """
+        self.weights = weights or self.weights
+        
+        # Get the state_dict
+        state_dict = None
+        if isinstance(self.weights, core.Path | str) and core.Path(self.weights).is_weights_file():
+            self.zoo_dir.mkdir(parents=True, exist_ok=True)
+            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=True)
+            state_dict = getattr(state_dict, "state_dict", state_dict)
+        elif isinstance(self.weights, dict):
+            if "path" in self.weights:
+                path = core.Path(self.weights["path"])
+                if path.is_weights_file():
+                    state_dict = load_state_dict(model=self, weights=path, weights_only=True)
+                    state_dict = getattr(state_dict, "state_dict", state_dict)
+            else:
+                state_dict = getattr(self.weights, "state_dict", self.weights)
+        else:
+            error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
+        
+        if state_dict is not None:
+            state_dict = {k.replace("model.", ""): v for k, v in state_dict.items()}
+            self.model.load_state_dict(state_dict=state_dict)
+            if self.verbose:
+                console.log(f"Load model's weights from: {self.weights}!")
+                
 # endregion

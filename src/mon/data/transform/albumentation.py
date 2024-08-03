@@ -12,6 +12,7 @@ from typing import Literal
 
 # noinspection PyPackageRequirements,PyUnresolvedReferences
 import albumentations
+import cv2
 from albumentations import *
 from albumentations.augmentations.geometric import functional as fgeometric
 from albumentations.core.pydantic import InterpolationType, ProbabilityType

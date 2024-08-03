@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements FINet (Fractional Instance Normalization Network)
+"""This module implements LINet (Learnable Instance Normalization Network)
 models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "FINet",
+    "LINet",
 ]
 
-from typing import Any, Literal, Sequence
+from typing import Any, Sequence
 
 import torch
 
@@ -31,27 +31,20 @@ class UNetConvBlock(nn.Module):
         self,
         in_channels : int,
         out_channels: int,
-        p           : float,
-        scheme      : Literal[
-                        "half",
-                        "bipartite",
-                        "checkerboard",
-                        "random",
-                        "adaptive",
-                        "attention",
-                    ],
+        r           : float,
+        eps         : float,
         downsample  : bool,
         relu_slope  : float,
         use_csff    : bool = False,
-        use_fin     : bool = False,
+        use_norm    : bool = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.downsample = downsample
         self.use_csff   = use_csff
-        self.p          = p
-        self.scheme     = scheme
-
+        self.r          = r
+        self.eps        = eps
+        
         self.identity   = nn.Conv2d(in_channels, out_channels, 1, 1, 0)
         self.conv_1     = nn.Conv2d(in_channels, out_channels, 3, 1, 1, bias=True)
         self.relu_1     = nn.LeakyReLU(relu_slope, inplace=False)
@@ -62,13 +55,13 @@ class UNetConvBlock(nn.Module):
             self.csff_enc = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
             self.csff_dec = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
 
-        if use_fin:
-            self.norm = nn.FractionalInstanceNorm2d_Old2(
+        if use_norm:
+            self.norm = nn.LearnableInstanceNorm2d(
                 num_features = out_channels,
-                p            = self.p,
-                scheme       = scheme,
+                r            = self.r,
+                eps          = self.eps,
             )
-        self.use_fin = use_fin
+        self.use_norm = use_norm
 
         if downsample:
             self.downsample = nn.Conv2d(out_channels, out_channels, 4, 2, 1, bias=False)
@@ -81,7 +74,7 @@ class UNetConvBlock(nn.Module):
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         x = input
         y = self.conv_1(x)
-        if self.use_fin:
+        if self.use_norm:
             y = self.norm(y)
         y  = self.relu_1(y)
         y  = self.relu_2(self.conv_2(y))
@@ -116,11 +109,11 @@ class UNetUpBlock(nn.Module):
         self.conv_block = UNetConvBlock(
             in_channels  = in_channels,
             out_channels = out_channels,
-            p            = 0,
-            scheme       = "half",
+            r            = 0,
+            eps          = 1e-5,
             downsample   = False,
             relu_slope   = relu_slope,
-            use_fin      = False,
+            use_norm     = False,
         )
 
     def forward(self, input: torch.Tensor, bridge: torch.Tensor) -> torch.Tensor:
@@ -214,9 +207,9 @@ class SupervisedAttentionModule(nn.Module):
 
 # region Model
 
-@MODELS.register(name="finet", arch="finet")
-class FINet(base.MultiTaskImageEnhancementModel):
-    """Fractional-Instance Normalization Network.
+@MODELS.register(name="linet", arch="linet")
+class LINet(base.MultiTaskImageEnhancementModel):
+    """LINet (Learnable Instance Normalization Network) model.
     
     Args:
         channels: The first layer's input channel. Default: ``3`` for RGB image.
@@ -227,63 +220,38 @@ class FINet(base.MultiTaskImageEnhancementModel):
             Normalization. Default: ``0``.
         in_pos_right: The layer index to end applying the Instance
             Normalization. Default: ``4``.
-        scheme: The scheme of the Instance Normalization. Default: ``'half'``.
-        p: The probability of applying the Instance Normalization.
+        r: The initial probability of applying the Instance Normalization.
             Default: ``0.5``.
+        eps: The epsilon value for the Instance Normalization. Default: ``1e-5``.
         
     See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
-    arch   : str  = "finet"
-    tasks  : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW]
+    arch   : str  = "linet"
+    tasks  : list[Task]   = [Task.DEBLUR, Task.DEHAZE, Task.DENOISE, Task.DERAIN, Task.DESNOW]
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
 
     def __init__(
         self,
-        variant     : str | None = None,
-        in_channels : int          = 3,
-        num_channels: int          = 64,
-        depth       : int          = 5,
-        relu_slope  : float        = 0.2,
-        in_pos_left : int          = 0,
-        in_pos_right: int          = 4,
-        scheme      : Literal[
-                        "half",
-                        "bipartite",
-                        "checkerboard",
-                        "random",
-                        "adaptive",
-                        "attention",
-                      ]          = "half",
-        p           : float | None = 0.5,
-        weights     : Any        = None,
+        in_channels : int   = 3,
+        num_channels: int   = 64,
+        depth       : int   = 5,
+        relu_slope  : float = 0.2,
+        in_pos_left : int   = 0,
+        in_pos_right: int   = 4,
+        r           : float = 0.5,
+        eps         : float = 1e-5,
+        weights     : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
-            name        = "finet",
+            name        = "linet",
             in_channels = in_channels,
             weights     = weights,
             *args, **kwargs
         )
         
-        # Experiment: [0-5][00-10]: x-scheme, yy-p
-        if isinstance(self.variant, str) and self.variant.isnumeric():
-            scheme = int(self.variant[0:1])
-            p      = int(self.variant[1:3])
-            if scheme == 0:
-                scheme = "half"
-            elif scheme == 1:
-                scheme = "bipartite"
-            elif scheme == 2:
-                scheme = "checkerboard"
-            elif scheme == 3:
-                scheme = "random"
-            elif scheme == 4:
-                scheme = "adaptive"
-            elif scheme == 5:
-                scheme = "attention"
-                
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
             in_channels  = self.weights.get("in_channels" , in_channels)
@@ -292,8 +260,8 @@ class FINet(base.MultiTaskImageEnhancementModel):
             relu_slope   = self.weights.get("relu_slope"  , relu_slope)
             in_pos_left  = self.weights.get("in_pos_left" , in_pos_left)
             in_pos_right = self.weights.get("in_pos_right", in_pos_right)
-            p            = self.weights.get("p"           , p)
-            scheme       = self.weights.get("scheme"      , scheme)
+            r            = self.weights.get("r"           , r)
+            eps          = self.weights.get("eps"         , eps)
             
         self.in_channels  = in_channels
         self.num_channels = num_channels
@@ -301,8 +269,8 @@ class FINet(base.MultiTaskImageEnhancementModel):
         self.relu_slope   = relu_slope
         self.in_pos_left  = in_pos_left
         self.in_pos_right = in_pos_right
-        self.p            = p
-        self.scheme       = scheme
+        self.r            = r
+        self.eps          = eps
         
         # Construct model
         self.down_path_1 = nn.ModuleList()
@@ -310,12 +278,12 @@ class FINet(base.MultiTaskImageEnhancementModel):
         self.conv_01     = nn.Conv2d(self.in_channels, self.num_channels, 3, 1, 1)
         self.conv_02     = nn.Conv2d(self.in_channels, self.num_channels, 3, 1, 1)
 
-        prev_channels    = self.num_channels
+        prev_channels   = self.num_channels
         for i in range(self.depth):  # 0,1,2,3,4
-            use_fin    = True if self.in_pos_left <= i <= self.in_pos_right else False
+            use_norm   = True if self.in_pos_left <= i <= self.in_pos_right else False
             downsample = True if (i + 1) < self.depth else False
-            self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.p, self.scheme, downsample, self.relu_slope, use_fin=use_fin))
-            self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.p, self.scheme, downsample, self.relu_slope, use_csff=downsample, use_fin=use_fin))
+            self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.r, self.eps, downsample, self.relu_slope, use_norm=use_norm))
+            self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.r, self.eps, downsample, self.relu_slope, use_csff=downsample, use_norm=use_norm))
             prev_channels = (2 ** i) * self.num_channels
 
         self.up_path_1   = nn.ModuleList()
@@ -348,6 +316,10 @@ class FINet(base.MultiTaskImageEnhancementModel):
                 if not m.bias is None:
                     nn.init.constant_(m.bias, 0)
     
+    def get_all_lin_layers(self) -> dict[str, nn.Module]:
+        """Get all :class:`LearnableInstanceNorm2d` layers in the model."""
+        return {n: m for n, m in self.named_modules() if isinstance(m, nn.LearnableInstanceNorm2d)}
+    
     def forward_loss(
         self,
         input : torch.Tensor,
@@ -355,14 +327,21 @@ class FINet(base.MultiTaskImageEnhancementModel):
         *args, **kwargs
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor | None]:
         pred = self.forward(input=input, *args, **kwargs)
+        # Loss
         if self.loss:
             loss = 0
             for p in pred:
                 loss += self.loss(p, target)
         else:
             loss = None
-        return pred[-1], loss
-
+        # Extra Information
+        extra = {
+            name: getattr(module, "r", torch.Tensor([0.0])).mean()
+            for name, module in self.get_all_lin_layers().items()
+        }
+        # print(extra)
+        return pred[-1], loss, extra
+    
     def forward(
         self,
         input    : torch.Tensor,
@@ -388,7 +367,7 @@ class FINet(base.MultiTaskImageEnhancementModel):
             decs.append(x1)
 
         # SAM
-        sam_feats, y1 = self.sam12(input=[x1, x])
+        sam_feats, y1 = self.sam12(x1, x)
 
         # Stage 2
         x2     = self.conv_02(x)
@@ -405,6 +384,6 @@ class FINet(base.MultiTaskImageEnhancementModel):
 
         y2 = self.last(x2)
         y2 = y2 + x
-        return [y1, y2]
+        return y1, y2
 
 # endregion

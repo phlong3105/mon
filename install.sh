@@ -41,24 +41,6 @@ update_base_env() {
     echo -e "... Done"
 }
 
-read_user_input() {
-    install_type=$1
-    echo -e "Install Option [gui, console, lib]"
-    echo -e "gui    : install with GUI libraries (desktop PC)"
-    echo -e "console: install without GUI libraries (server without monitor)"
-    echo -e "lib    : only install/update third-party libraries"
-    case "$OSTYPE" in
-        darwin*)
-            echo -e "Choose [gui, console, lib]: "
-            read install_type
-            ;;
-        *)
-            read -e -i "$install_type" -p "Choose [gui, console, lib]: " install_type
-            echo "$install_type"
-            ;;
-    esac
-}
-
 install_on_linux() {
     echo -e "\nLinux / WSL"
     # Create `mon` env
@@ -170,7 +152,13 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 root_dir=$current_dir
 
-install_type=$(read_user_input "${1:-"gui"}")
+# Input
+echo -e "Install Options:"
+echo -e "    - gui    : install with GUI libraries (desktop PC)"
+echo -e "    - console: install without GUI libraries (server without monitor)"
+echo -e "    - lib    : only install/update third-party libraries"
+install_type="gui"
+read -e -i "$install_type" -p "Choose [gui, console, lib]: " install_type
 
 # Update 'base' env
 add_channels

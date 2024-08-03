@@ -65,15 +65,15 @@ def run_train(args: dict):
     
     # Parse arguments
     use_extra_model = mon.is_extra_model(model)
-    config = mon.parse_config_file(
+    model    = mon.parse_model_name(model)
+    fullname = fullname if fullname not in [None, "None", ""] else config.stem
+    config   = mon.parse_config_file(
         project_root = root,
         model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
         weights_path = weights,
         config       = config,
     )
     assert config not in [None, "None", ""]
-    model    = mon.parse_model_name(model)
-    fullname = fullname if fullname not in [None, "None", ""] else config.stem
     # save_dir = save_dir or utils.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
     weights  = mon.to_str(weights, ",")
     
@@ -169,16 +169,15 @@ def run_predict(args: dict):
     
     # Parse arguments
     use_extra_model = mon.is_extra_model(model)
-    config = mon.parse_config_file(
+    model    = mon.parse_model_name(model)
+    fullname = fullname if fullname not in [None, "None", ""] else model
+    config   = mon.parse_config_file(
         project_root = root,
         model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
         weights_path = weights,
         config       = config,
     )
     config   = config or "default"
-    # assert config not in [None, "None", ""]
-    model    = mon.parse_model_name(model)
-    fullname = fullname if fullname not in [None, "None", ""] else model
     # if use_data_dir:
     #     save_dir = save_dir or mon.parse_save_dir(mon.DATA_DIR/task.value/"#predict", arch, model, None, project, variant)
     # else:
@@ -274,15 +273,15 @@ def run_online(args: dict):
     
     # Parse arguments
     use_extra_model = mon.is_extra_model(model)
-    config = mon.parse_config_file(
+    model    = mon.parse_model_name(model)
+    fullname = fullname if fullname not in [None, "None", ""] else config.stem
+    config   = mon.parse_config_file(
         project_root = root,
         model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
         weights_path = weights,
         config       = config,
     )
     assert config not in [None, "None", ""]
-    model    = mon.parse_model_name(model)
-    fullname = fullname if fullname not in [None, "None", ""] else config.stem
     weights  = mon.to_str(weights, ",")
     
     for d in data:
@@ -408,7 +407,7 @@ def main(
     model 	     = models_[int(model)] if mon.is_int(model) else model
     model_name   = mon.parse_model_name(model)
     # Config
-    model_dir    = mon.EXTRA_MODELS[arch][model]["model_dir"] if mon.is_extra_model(model) else None
+    model_dir    = mon.EXTRA_MODELS[arch][model_name]["model_dir"] if mon.is_extra_model(model) else None
     configs_     = mon.list_configs(project_root=root, model_root=model_dir, model=model)
     configs_str_ = utils.parse_menu_string(configs_)
     config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")

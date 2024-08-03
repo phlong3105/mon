@@ -647,20 +647,20 @@ class MemoryUnit(DT.Enum):
 class Task(DT.Enum):
     """Task types."""
     
-    CLASSIFY = "classify"
-    DEBLUR   = "deblur"
-    DEHAZE   = "dehaze"
-    DENOISE  = "denoise"
-    DEPTH    = "depth"
-    DERAIN   = "derain"
-    DESNOW   = "desnow"
-    DETECT   = "detect"
-    INPAINT  = "inpaint"
-    LES      = "les"
-    LLIE     = "llie"
-    POSE     = "pose"
-    SEGMENT  = "segment"
-    TRACK    = "track"
+    CLASSIFY = "classify"  # classification
+    DEBLUR   = "deblur"    # deblurring
+    DEHAZE   = "dehaze"    # dehazing
+    DENOISE  = "denoise"   # denoising
+    DEPTH    = "depth"     # depth estimation
+    DERAIN   = "derain"    # deraining
+    DESNOW   = "desnow"    # desnowing
+    DETECT   = "detect"    # object detection
+    INPAINT  = "inpaint"   # inpainting
+    LES      = "les"       # light effect suppression
+    LLIE     = "llie"      # low-light image enhancement
+    POSE     = "pose"      # pose estimation
+    SEGMENT  = "segment"   # semantic segmentation
+    TRACK    = "track"     # object tracking
 
 
 class RunMode(DT.Enum):
@@ -684,6 +684,7 @@ class Scheme(DT.Enum):
     ONE_SHOT       = "one-shot"        # one-shot learning
     ZERO_SHOT      = "zero-shot"       # zero-shot learning
     ZERO_REFERENCE = "zero-reference"  # zero-reference learning
+    INFERENCE_ONLY = "inference only"  # inference only
     
 
 class Split(DT.Enum):

@@ -106,7 +106,7 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 			image	    = transformed["image"]
 		if self.to_tensor:
 			image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-		
+
 		return image, None, meta
 	
 	@property

@@ -13,11 +13,15 @@ import sys
 
 import numpy as np
 import torch
-
 from mon import core
 from mon.globals import DETECTORS
 from mon.vision import track
 from mon.vision.detect import base
+
+console       = core.console
+error_console = core.error_console
+current_file  = core.Path(__file__).absolute()
+current_dir   = current_file.parents[0]
 
 try:
     import ultralytics
@@ -28,13 +32,9 @@ try:
     ultralytics_available = True
 except ImportError:
     ultralytics_available = False
-    print("The package 'ultralytics' has not been installed.")
+    error_console.log("The package 'ultralytics' has not been installed.")
     # sys.exit(1)  # Exit and raise error
     sys.exit(0)  # Exit without error
-
-console      = core.console
-current_file = core.Path(__file__).absolute()
-current_dir  = current_file.parents[0]
 
 
 # region YOLOv8

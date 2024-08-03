@@ -1,15 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
-import numpy as np
-import sys
-import matplotlib.pyplot as plt
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # Traditional Convolution
+
 class TC(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(TC, self).__init__()
@@ -25,7 +22,9 @@ class TC(nn.Module):
 
 
 # Depthwise Separable Convolution
+
 class DSC(nn.Module):
+    
     def __init__(self, in_ch, out_ch):
         super(DSC, self).__init__()
         self.depth_conv = nn.Conv2d(
@@ -72,18 +71,15 @@ class enhance_net_nopool(nn.Module):
             print("conv type is not available")
 
         #   zerodce DWC + p-shared
-        self.e_conv1 = self.conv(3, number_f)
-
+        self.e_conv1 = self.conv(3,  number_f)
         self.e_conv2 = self.conv(number_f, number_f)
         self.e_conv3 = self.conv(number_f, number_f)
         self.e_conv4 = self.conv(number_f, number_f)
-
         self.e_conv5 = self.conv(number_f * 2, number_f)
         self.e_conv6 = self.conv(number_f * 2, number_f)
         self.e_conv7 = self.conv(number_f * 2, 3)
 
     def enhance(self, x, x_r):
-
         x = x + x_r * (torch.pow(x, 2) - x)
         x = x + x_r * (torch.pow(x, 2) - x)
         x = x + x_r * (torch.pow(x, 2) - x)
@@ -92,7 +88,6 @@ class enhance_net_nopool(nn.Module):
         x = x + x_r * (torch.pow(x, 2) - x)
         x = x + x_r * (torch.pow(x, 2) - x)
         enhance_image = x + x_r * (torch.pow(x, 2) - x)
-
         return enhance_image
 
     def forward(self, x):

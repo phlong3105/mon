@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
+
 class fpn_module(nn.Module):
     def __init__(self, numClass):
         super(fpn_module, self).__init__()
@@ -89,6 +90,7 @@ class fpn(nn.Module):
         c2, c3, c4, c5 = self.resnet.forward(x)
         return self.fpn.forward(c2, c3, c4, c5)
 
+
 class FocalLoss(nn.Module):
 
     # def __init__(self, device, gamma=0, eps=1e-7, size_average=True):
@@ -124,6 +126,7 @@ class FocalLoss(nn.Module):
             loss = batch_loss
         return loss
 
+
 def one_hot(index, classes):
     size = index.size()[:1] + (classes,) + index.size()[1:]
     view = index.size()[:1] + (1,) + index.size()[1:]
@@ -138,10 +141,12 @@ def one_hot(index, classes):
 
     return mask.scatter_(1, index, ones)
 
+
 def get_NoGT_target(inputs):
     sfmx_inputs = F.log_softmax(inputs, dim=1)
     target = torch.argmax(sfmx_inputs, dim=1)
     return target
+
 
 def resize_target(target, size):
     new_target = np.zeros((target.shape[0], size, size), np.int32)

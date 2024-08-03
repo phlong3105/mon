@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import cv2
+
 import mon
 from mon import albumentation as A
 from mon.config import default
@@ -18,7 +20,7 @@ model_name = "d2ce"
 data_name  = "ulol"
 root       = root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [518, 518]
+image_size = [504, 504]
 seed	   = 100
 verbose    = True
 
@@ -69,19 +71,21 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
+		# A.Resize(height=image_size[0], width=image_size[1], interpolation=cv2.INTER_AREA),
 		A.ResizeMultipleOf(
-			height            = image_size[1],
-			width             = image_size[0],
-			keep_aspect_ratio = True,
+			height            = image_size[0],
+			width             = image_size[1],
+			keep_aspect_ratio = False,
 			multiple_of       = 14,
 			resize_method     = "lower_bound",
+			interpolation     = cv2.INTER_AREA,
 		),
 		# A.Flip(),
 		# A.Rotate(),
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 32,            # The number of samples in one forward pass.
+    "batch_size": 4,             # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.
@@ -95,18 +99,29 @@ datamodule = {
 trainer = default.trainer | {
 	"callbacks"        : [
 		default.log_training_progress,
-		default.model_checkpoint | {"monitor": "val/psnr", "mode": "max"},
-		default.model_checkpoint | {"monitor": "val/ssim", "mode": "max", "save_last": True},
+		default.model_checkpoint | {
+			"filename": fullname,
+			"monitor" : "val/psnr",
+			"mode"    : "max"
+		},
+		default.model_checkpoint | {
+			"filename" : fullname,
+			"monitor"  : "val/ssim",
+			"mode"     : "max",
+			"save_last": True,
+		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
 	"gradient_clip_val": 0.1,
+	"log_image_every_n_epochs": 1,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 200,
+	"max_epochs"       : 50,
+	"strategy"         : "ddp_find_unused_parameters_true",
 }
 
 # endregion
