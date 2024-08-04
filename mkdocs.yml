@@ -108,7 +108,7 @@ markdown_extensions:
   - pymdownx.tilde
 
 nav:
-  - Home: index.md
+  - Home: README.md
   - "Guidelines": styleguide.md
   - "Glossary": glossary.md
   
