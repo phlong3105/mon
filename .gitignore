@@ -22,5 +22,6 @@ project/*/data/*/
 project/*/run/*/
 project/openss
 run/*/
+site/
 src/project/*/
 zoo/*/
