@@ -6,15 +6,13 @@
 #  blue grey, black, white
 # ]
 
-docs_dir: "."
-site_dir: "docs/site"
 site_name: MON
 
 copyright: Copyright &copy; 2021 - 2024 Long H. Pham
 
 theme:
   name: "material"
-  favicon: docs/asset/cat-40.png
+  favicon: asset/cat-40.png
   features:
     - announce.dismiss
     - header.autohide
@@ -36,7 +34,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   language: en
-  logo: docs/asset/cat-80.png
+  logo: asset/cat-80.png
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
@@ -72,10 +70,10 @@ extra:
       link: https://www.linkedin.com/in/long-pham-1755807a
 
 extra_css:
-  - docs/stylesheet/extra.css
+  - stylesheet/extra.css
 
 extra_javascript:
-  - docs/javascript/extra.js
+  - javascript/extra.js
 
 markdown_extensions:
   # Python Markdown
@@ -110,12 +108,9 @@ markdown_extensions:
   - pymdownx.tilde
 
 nav:
-  - Home: README.md
-  - "Guidelines": docs/styleguide.md
-  - "Glossary": docs/glossary.md
-  # - Home: index.md
-  # - "Guides":
-  #     - "Style Guide": styleguide.md
+  - Home: index.md
+  - "Guidelines": styleguide.md
+  - "Glossary": glossary.md
   
 plugins:
   - mkdocstrings

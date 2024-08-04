@@ -16,7 +16,6 @@ archive/
 build/
 data/*/
 dist/
-docs/site/
 env/anaconda3.sh
 env/anaconda3_arm64.sh
 project/*/data/*/
