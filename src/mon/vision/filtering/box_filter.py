@@ -82,8 +82,8 @@ def box_filter(
     References:
         `<https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py>`__
     """
-    assert kernel_size is not None or radius is not None, \
-        "Either :param:`kernel_size` or :param:`radius` must be provided."
+    if kernel_size is None and radius is None:
+        raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
     radius = radius or int((kernel_size - 1) / 2)
     assert image.dim() == 4
     return diff_y(diff_x(image.cumsum(dim=2), radius).cumsum(dim=3), radius)
@@ -115,8 +115,8 @@ def box_filter(
     Returns:
         A filtered image.
     """
-    assert kernel_size is not None or radius is not None, \
-        "Either :param:`kernel_size` or :param:`radius` must be provided."
+    if kernel_size is None and radius is None:
+        raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
     ddepth      = kwargs.get("ddepth",     -1)
     anchor      = kwargs.get("anchor",     (-1, -1))
     normalize   = kwargs.get("normalize",  False)
@@ -150,8 +150,8 @@ def box_filter_conv(
     Returns:
         A filtered image.
     """
-    assert kernel_size is not None or radius is not None, \
-        "Either :param:`kernel_size` or :param:`radius` must be provided."
+    if kernel_size is None and radius is None:
+        raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
     kernel_size = kernel_size or 2 * radius + 1
     b, c, h, w  = image.shape
     # Create a 2D box kernel with all values as 1
@@ -174,8 +174,8 @@ class BoxFilter(nn.Module):
         radius     : int | None = None,
     ):
         super().__init__()
-        assert kernel_size is not None or radius is not None, \
-            "Either :param:`kernel_size` or :param:`radius` must be provided."
+        if kernel_size is None and radius is None:
+            raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
         self.kernel_size = kernel_size or 2 * radius + 1
         self.radius      = int((self.kernel_size - 1) / 2)
         

@@ -22,7 +22,7 @@ from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.nn import functional as F, init
-from mon.vision import filtering, geometry, prior
+from mon.vision import filtering, geometry
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -408,18 +408,23 @@ class GCENet(base.LowLightImageEnhancementModel):
         target: torch.Tensor | None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        i = input
+        c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
+        loss = self.loss(i, c1, o)
+        return o, loss
+
         # Symmetric Loss 1
-        i        = input
-        i1, i2   = geometry.pair_downsample(i)
-        c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
-        c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
-        o1, o2   = geometry.pair_downsample(o)
-        mse_loss = nn.MSELoss()
-        loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
-        loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
-        loss_enh = self.loss(i, c_1, o)
-        loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
+        # i        = input
+        # i1, i2   = geometry.pair_downsample(i)
+        # c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
+        # c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
+        # c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
+        # o1, o2   = geometry.pair_downsample(o)
+        # mse_loss = nn.MSELoss()
+        # loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
+        # loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
+        # loss_enh = self.loss(i, c_1, o)
+        # loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
         
         # Symmetric Loss 2
         # i        = input
@@ -598,7 +603,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            c2 = nn.brightness_attention_map(x, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
@@ -646,7 +651,7 @@ class GCENetA1(GCENet):
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         # Symmetric Loss
         i = input
-        c1, c2, gf, o = self.forward(input=i,  *args, **kwargs)
+        c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
         loss = self.loss(i, c1, o)
         return o, loss
     
@@ -669,7 +674,7 @@ class GCENetA1(GCENet):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            c2 = nn.brightness_attention_map(x, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
@@ -728,7 +733,7 @@ class GCENetA2(GCENet):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            c2 = nn.brightness_attention_map(x, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
@@ -801,7 +806,7 @@ class GCENetB1(GCENet):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
+            c2 = nn.brightness_attention_map(x_gf, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
@@ -860,7 +865,7 @@ class GCENetB2(GCENet):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = prior.get_guided_brightness_enhancement_map_prior(x_gf, self.gamma, 9)
+            c2 = nn.brightness_attention_map(x_gf, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
@@ -999,7 +1004,7 @@ class GCENetOld(base.LowLightImageEnhancementModel):
                 y = y + l * (torch.pow(y, 2) - y)
         else:
             y = x
-            g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            g = nn.brightness_attention_map(x, self.gamma, 9)
             for _ in range(self.num_iters):
                 b = y * (1 - g)
                 d = y * g

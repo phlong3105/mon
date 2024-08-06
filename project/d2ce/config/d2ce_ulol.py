@@ -16,11 +16,11 @@ root_dir     = current_file.parents[1]
 
 # region Basic
 
-model_name = "linet"
-data_name  = "satehaze1k"
+model_name = "d2ce"
+data_name  = "ulol"
 root       = root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
-image_size = [512, 512]
+image_size = [504, 504]
 seed	   = 100
 verbose    = True
 
@@ -35,19 +35,13 @@ model = {
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 64,		        # The number of input and output channels for subsequent layers.
-	"depth" 	  : 5,              # The number of blocks in the model.
-	"relu_slope"  : 0.2,            # The slope of the Leaky ReLU activation function.
-	"in_pos_left" : 0,		        # The layer index to begin applying the Instance Normalization.
-	"in_pos_right": 4,              # The layer index to end applying the Instance Normalization
-	"r"           : 0.5,            # The initial probability of applying the Instance Normalization.
-	"eps"	      : 1e-5,           # The epsilon value for the Instance Normalization.
+	"num_channels": 32,		        # The number of input and output channels for subsequent layers.
+	"num_iters"   : 15,             # The number of progressive loop.
+	"radius"      : 3,
+	"eps"	      : 1e-4,
+	"gamma"	      : 2.6,
+	"de_encoder"  : "vits",
 	"weights"     : None,           # The model's weights.
-	"loss"		 : {
-		"name"       : "l1_loss",
-		# "loss_weight": 0.5,
-		# "to_y"       : True,
-	},
 	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
@@ -57,23 +51,11 @@ model = {
 		{
             "optimizer"          : {
 	            "name"        : "adam",
-	            "lr"          : 0.0002,
-	            "weight_decay": 0,
+	            "lr"          : 0.00005,
+	            "weight_decay": 0.00001,
 	            "betas"       : [0.9, 0.99],
 			},
-			"lr_scheduler"       : {
-				"scheduler": {
-					"name"      : "cosine_annealing_lr",
-					"T_max"     : 400000,
-					"eta_min"   : 1e-7,
-					"last_epoch": -1
-				},
-				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
-				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
-				"monitor"  : "train/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
-				"strict"   : True,
-				"name"     : None,
-			},
+			"lr_scheduler"       : None,
 			"network_params_only": True,
         }
     ],          # Optimizer(s) for training model.
@@ -87,15 +69,23 @@ model = {
 
 datamodule = {
     "name"      : data_name,
-    "root"      : mon.DATA_DIR / "dehaze",  # A root directory where the data is stored.
+    "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
-		A.Resize(height=image_size[0], width=image_size[1], interpolation=cv2.INTER_AREA),
-		A.Flip(p=0.5),
-		A.Rotate(p=0.5),
+		# A.Resize(height=image_size[0], width=image_size[1], interpolation=cv2.INTER_AREA),
+		A.ResizeMultipleOf(
+			height            = image_size[0],
+			width             = image_size[1],
+			keep_aspect_ratio = False,
+			multiple_of       = 14,
+			resize_method     = "lower_bound",
+			interpolation     = cv2.INTER_AREA,
+		),
+		# A.Flip(),
+		# A.Rotate(),
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 8,             # The number of samples in one forward pass.
+    "batch_size": 4,             # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.
@@ -125,12 +115,12 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
-	"gradient_clip_val": 0.01,
+	"gradient_clip_val": 0.1,
 	"log_image_every_n_epochs": 1,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 200,
+	"max_epochs"       : 50,
 	"strategy"         : "ddp_find_unused_parameters_true",
 }
 

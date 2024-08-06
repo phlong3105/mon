@@ -120,7 +120,7 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 50,
+	"max_epochs"       : 3,
 	"strategy"         : "ddp_find_unused_parameters_true",
 }
 

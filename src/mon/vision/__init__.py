@@ -11,7 +11,6 @@ import mon.vision.enhance
 import mon.vision.feature
 import mon.vision.filtering
 import mon.vision.geometry
-import mon.vision.prior
 import mon.vision.segment
 import mon.vision.track
 import mon.vision.utils
@@ -21,7 +20,6 @@ from mon.vision.enhance import *
 from mon.vision.feature import *
 from mon.vision.filtering import *
 from mon.vision.geometry import *
-from mon.vision.prior import *
 from mon.vision.segment import *
 from mon.vision.track import *
 from mon.vision.utils import *

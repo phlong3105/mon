@@ -11,14 +11,15 @@ __all__ = [
     "D2CE",
 ]
 
-from typing import Any, Literal
+from typing import Any, Literal, Sequence
 
+import kornia.filters
 import torch
 
 from mon import core, nn
-from mon.core import _callable
+from mon.core import _callable, _size_2_t
 from mon.globals import MODELS, Scheme
-from mon.vision import filtering, geometry, prior
+from mon.vision import filtering, geometry
 from mon.vision.depth import depth_anything_v2
 from mon.vision.enhance.llie import base
 
@@ -123,6 +124,70 @@ class Loss(nn.Loss):
 
 # region Module
 
+class DepthBoundaryAware(nn.Module):
+    """Compute the edges of the depth map using the Sobel operator.
+    
+    Args:
+        eps: Threshold weak edges. Default: ``1e-6``.
+        normalized: If ``True``, L1 norm of the kernel is set to ``1``.
+            Default: ``True``.
+    """
+    
+    def __init__(
+        self,
+        eps       : float = 0.05,
+        normalized: bool  = False,
+    ):
+        super().__init__()
+        self.eps        = eps
+        self.normalized = normalized
+        self.sobel      = kornia.filters.Sobel(normalized=self.normalized, eps=1e-8)
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x     = input
+        g     = self.sobel(x)
+        g_max = torch.max(g)
+        g     = g / g_max
+        g     = (g > self.eps).float()
+        return g
+
+
+class MoE(nn.Module):
+    """Mixture of Experts Layer."""
+    
+    def __init__(
+        self,
+        in_channels : list[int],
+        out_channels: int,
+        dim         : _size_2_t,
+    ):
+        super().__init__()
+        self.in_channels  = in_channels
+        self.out_channels = out_channels
+        self.num_experts  = len(self.in_channels)
+        self.dim          = core.parse_hw(dim)
+        # Resize & linear
+        self.resize  = nn.Upsample(size=self.dim, mode="bilinear", align_corners=False)
+        linears      = []
+        for in_c in range(self.in_channels):
+            linears.append(nn.Linear(in_c, self.out_channels))
+        self.linears = linears
+        # Conv & softmax
+        self.conv    = nn.Linear(self.out_channels * self.num_experts, self.out_channels)
+        self.softmax = nn.Softmax(dim=1)
+    
+    def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
+        if len(input) != self.num_experts:
+            raise ValueError(f"Expected {self.num_experts} inputs, but got {len(input)}")
+        r = []
+        for i, inp in enumerate(input):
+            r.append(self.linears[i](self.resize(inp)))
+        o_s = torch.cat(r, dim=1)
+        w   = self.softmax(self.conv(o_s))
+        o_w = [r[i] * w[:, i] for i in enumerate(r)]
+        o   = torch.sum(o_w, dim=1)
+        
+        
 class ConvBlock(nn.Module):
     
     def __init__(
@@ -162,18 +227,24 @@ class EnhanceNet(nn.Module):
         num_channels: int,
         num_iters   : int,
         norm        : nn.Module | None = nn.AdaptiveBatchNorm2d,
+        eps         : float = 0.05,
     ):
         super().__init__()
-        out_channels = 3  # in_channels * num_iters
-        self.e_conv1 = ConvBlock(in_channels  + 1, num_channels, norm=norm)
-        self.e_conv2 = ConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv3 = ConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv4 = ConvBlock(num_channels,     num_channels, norm=norm)
+        in_channels  = in_channels + 1
+        out_channels = 3
+        #
+        self.dba     = DepthBoundaryAware(eps=eps, normalized=False)
+        # Encoder
+        self.e_conv1 = ConvBlock(in_channels,  num_channels, norm=norm)
+        self.e_conv2 = ConvBlock(num_channels, num_channels, norm=norm)
+        self.e_conv3 = ConvBlock(num_channels, num_channels, norm=norm)
+        self.e_conv4 = ConvBlock(num_channels, num_channels, norm=norm)
+        # Decoder
         self.e_conv5 = ConvBlock(num_channels * 2, num_channels, norm=norm)
         self.e_conv6 = ConvBlock(num_channels * 2, num_channels, norm=norm)
         self.e_conv7 = ConvBlock(num_channels * 2, out_channels, norm=norm, is_last_layer=True)
         self.apply(self.init_weights)
-    
+        
     def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -189,16 +260,19 @@ class EnhanceNet(nn.Module):
                 m.weight.data.normal_(1.0, 0.02)
                 m.bias.data.fill_(0)
     
-    def forward(self, input: torch.Tensor, depth: torch.Tensor | None = None) -> torch.Tensor:
-        x   = input
-        d   = depth
-        x1  = self.e_conv1(torch.cat([x, d],  1))
-        x2  = self.e_conv2(x1)
-        x3  = self.e_conv3(x2)
-        x4  = self.e_conv4(x3)
-        x5  = self.e_conv5(torch.cat([x3, x4], 1))
-        x6  = self.e_conv6(torch.cat([x2, x5], 1))
-        x_r = self.e_conv7(torch.cat([x1, x6], 1))
+    def forward(self, input: torch.Tensor, depth: torch.Tensor | None) -> torch.Tensor:
+        x    = input
+        d    = depth
+        edge = self.dba(d)
+        x    = torch.cat([x, edge], 1)
+        #
+        x1   = self.e_conv1(x)
+        x2   = self.e_conv2(x1)
+        x3   = self.e_conv3(x2)
+        x4   = self.e_conv4(x3)
+        x5   = self.e_conv5(torch.cat([x3, x4], 1))
+        x6   = self.e_conv6(torch.cat([x2, x5], 1))
+        x_r  = self.e_conv7(torch.cat([x1, x6], 1))
         return x_r
 
 # endregion
@@ -262,6 +336,7 @@ class D2CE(base.LowLightImageEnhancementModel):
             num_channels = self.num_channels,
             num_iters    = self.num_iters,
             norm         = None,  # nn.AdaptiveBatchNorm2d,
+            eps          = 0.05,
         )
         self.gf = filtering.GuidedFilter(radius=self.radius, eps=self.eps)
         
@@ -298,42 +373,6 @@ class D2CE(base.LowLightImageEnhancementModel):
         loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
         loss_enh = self.loss(i, c_1, o)
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
-        
-        # Symmetric Loss 2
-        # i        = input
-        # i1, i2   = geometry.pair_downsample(i)
-        # c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
-        # c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        # c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
-        # n1       = i1 - j1
-        # n2       = i2 - j2
-        # n        =  i - o
-        # o_1, o_2 = geometry.pair_downsample(o)
-        # n_1, n_2 = geometry.pair_downsample(n)
-        # mse_loss = nn.MSELoss()
-        # loss_res = 0.5 * (mse_loss(i1 - n2,  j2) + mse_loss(i2 - n1, j1 ))
-        # loss_con = 0.5 * (mse_loss(j1     , o_1) + mse_loss(j2     , o_2))
-        # loss_enh = self.loss(i, c_1, o)
-        # loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
-        
-        # Symmetric Loss 3
-        # i        = input
-        # i1, i2   = geometry.pair_downsample(i)
-        # c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
-        # c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        # c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
-        # n1       = i1 - j1
-        # n2       = i2 - j2
-        # n        =  i - o
-        # o_1, o_2 = geometry.pair_downsample(o)
-        # n_1, n_2 = geometry.pair_downsample(n)
-        # mse_loss = nn.MSELoss()
-        # loss_res = (1 / 3) * (mse_loss(i1 - n2,  j2) + mse_loss(i2 - n1, j1 ))
-        # loss_noi = (1 / 3) * (mse_loss(n1     , n_1) + mse_loss(n2     , n_2))
-        # loss_con = (1 / 3) * (mse_loss(j1     , o_1) + mse_loss(j2     , o_2))
-        # loss_enh = self.loss(i, c_1, o)
-        # loss     = 0.5 * (loss_res + loss_con + loss_noi) + 0.5 * loss_enh
-        
         return o, loss
     
     def forward(
@@ -356,7 +395,7 @@ class D2CE(base.LowLightImageEnhancementModel):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+            c2 = nn.brightness_attention_map(x, self.gamma, 9)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2

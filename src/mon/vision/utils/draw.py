@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements drawing functions."""
+"""This module implements displaying functions (e.g., drawing, viewing, etc).
+"""
 
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ import cv2
 import numpy as np
 
 
-# region Geometry
+# region Drawing
 
 def draw_bbox(
     image     : np.ndarray,

@@ -36,6 +36,7 @@ import mon.nn.loss
 import mon.nn.metric
 import mon.nn.model
 import mon.nn.optimizer
+import mon.nn.prior
 import mon.nn.runner
 import mon.nn.strategy
 import mon.nn.utils
@@ -47,6 +48,7 @@ from mon.nn.loss import *
 from mon.nn.metric import *
 from mon.nn.model import *
 from mon.nn.optimizer import *
+from mon.nn.prior import *
 from mon.nn.runner import *
 from mon.nn.strategy import *
 from mon.nn.utils import *
