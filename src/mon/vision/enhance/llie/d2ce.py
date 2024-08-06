@@ -133,19 +133,14 @@ class DepthBoundaryAware(nn.Module):
             Default: ``True``.
     """
     
-    def __init__(
-        self,
-        eps       : float = 0.05,
-        normalized: bool  = False,
-    ):
+    def __init__(self, eps: float = 0.05, normalized: bool = False):
         super().__init__()
         self.eps        = eps
         self.normalized = normalized
-        self.sobel      = kornia.filters.Sobel(normalized=self.normalized, eps=1e-8)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x     = input
-        g     = self.sobel(x)
+        g     = nn.boundary_aware_prior(x, eps=1e-6, normalized=self.normalized)
         g_max = torch.max(g)
         g     = g / g_max
         g     = (g > self.eps).float()

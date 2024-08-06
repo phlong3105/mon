@@ -8,6 +8,7 @@ from __future__ import annotations
 __all__ = [
     "atmospheric_prior",
     "blur_spot_prior",
+    "boundary_aware_prior",
     "bright_channel_prior",
     "bright_spot_prior",
     "brightness_attention_map",
@@ -25,7 +26,31 @@ from mon import core
 from mon.core import _size_2_t
 
 
-# region Intensity & Gradient
+# region Intensity & Gradient Prior
+
+@dispatch
+def atmospheric_prior(input: np.ndarray, kernel_size: _size_2_t = 15, p: float = 0.0001) -> np.ndarray:
+    """Get the atmosphere light in the (RGB) image data.
+
+    Args:
+        input: An RBG image in :math:`[H, W, C]` format.
+        kernel_size: Window for the dark channel. Default: ``15``.
+        p: Percentage of pixels for estimating the atmosphere light. Default: ``0.0001``.
+
+    Returns:
+        A 3-element array containing atmosphere light :math:`([0, L-1])` for
+        each channel.
+    """
+    input      = input.transpose(1, 2, 0)
+    # Reference CVPR09, 4.4
+    dark       = dark_channel_prior_02(input=input, kernel_size=kernel_size)
+    m, n       = dark.shape
+    flat_i     = input.reshape(m * n, 3)
+    flat_dark  = dark.ravel()
+    search_idx = (-flat_dark).argsort()[:int(m * n * p)]  # find top M * N * p indexes
+    # Return the highest intensity for each channel
+    return np.max(flat_i.take(search_idx, axis=0), axis=0)
+
 
 @dispatch
 def blur_spot_prior(input: np.ndarray, threshold: int = 250) -> bool:
@@ -53,34 +78,6 @@ def bright_spot_prior(input: np.ndarray) -> bool:
     # Check bright spot condition based on variance of binary image
     is_bright = True if 5000 < binary_var < 8500 else False
     return is_bright
-
-
-@dispatch
-def atmospheric_prior(
-    input      : np.ndarray,
-    kernel_size: _size_2_t = 15,
-    p          : float     = 0.0001,
-) -> np.ndarray:
-    """Get the atmosphere light in the (RGB) image data.
-
-    Args:
-        input: An RBG image in :math:`[H, W, C]` format.
-        kernel_size: Window for the dark channel. Default: ``15``.
-        p: Percentage of pixels for estimating the atmosphere light. Default: ``0.0001``.
-
-    Returns:
-        A 3-element array containing atmosphere light :math:`([0, L-1])` for
-        each channel.
-    """
-    input      = input.transpose(1, 2, 0)
-    # Reference CVPR09, 4.4
-    dark       = dark_channel_prior_02(input=input, kernel_size=kernel_size)
-    m, n       = dark.shape
-    flat_i     = input.reshape(m * n, 3)
-    flat_dark  = dark.ravel()
-    search_idx = (-flat_dark).argsort()[:int(m * n * p)]  # find top M * N * p indexes
-    # Return the highest intensity for each channel
-    return np.max(flat_i.take(search_idx, axis=0), axis=0)
 
 
 @dispatch
@@ -157,7 +154,7 @@ def dark_channel_prior_02(input: np.ndarray, kernel_size: _size_2_t) -> np.ndarr
     """Get the dark channel prior from an RGB image.
 
     Args:
-        input: A  :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
+        input: A :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
         kernel_size: Window size.
 
     Returns:
@@ -171,6 +168,55 @@ def dark_channel_prior_02(input: np.ndarray, kernel_size: _size_2_t) -> np.ndarr
         dcp[i, j] = np.min(padded[i:i + w, j:j + w, :])  # CVPR09, eq.5
     return dcp
 
+
+@dispatch
+def boundary_aware_prior(input: np.ndarray, eps: float = 0.05, normalized: bool = False) -> np.ndarray:
+    """Get the boundary prior from an RGB image.
+    
+    Args:
+        input: A :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
+        eps: Threshold to remove weak edges. Default: ``1e-6``.
+        normalized: If ``True``, L1 norm of the kernel is set to ``1``.
+            Default: ``True``.
+        
+    Returns:
+        A boundary aware prior as a binary image.
+    """
+    h, w, c = input.shape
+    if c == 3:
+        input = cv2.cvtColor(input, cv2.COLOR_RGB2GRAY)
+    
+    from mon.vision.filtering import sobel_filter
+    gradient = sobel_filter(input, kernel_size=3)
+    g_max    = np.max(gradient)
+    gradient = gradient / g_max
+    boundary = (gradient > eps).float()
+    return boundary
+
+
+@dispatch
+def boundary_aware_prior(input: torch.Tensor, eps: float = 0.05, normalized: bool = False) -> np.ndarray:
+    """Get the boundary prior from an RGB image.
+    
+    Args:
+        input: A :class:`torch.Tensor` RGB image in :math:`[N, C, H, W]` format.
+        eps: Threshold to remove weak edges. Default: ``1e-6``.
+        normalized: If ``True``, L1 norm of the kernel is set to ``1``.
+            Default: ``True``.
+        
+    Returns:
+        A boundary aware prior as a binary image.
+    """
+    gradient = kornia.filters.sobel(input, normalized=normalized, eps=1e-6)
+    g_max    = torch.max(gradient)
+    gradient = gradient / g_max
+    boundary = (gradient > eps).float()
+    return boundary
+
+# endregion
+
+
+# region Self-Attention Map
 
 @dispatch
 def brightness_attention_map(
