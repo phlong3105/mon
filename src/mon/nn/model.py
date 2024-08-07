@@ -685,10 +685,7 @@ class Model(lightning.LightningModule, ABC):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> (
-        tuple[torch.Tensor, torch.Tensor | None] |
-        tuple[torch.Tensor, torch.Tensor | None, torch.Tensor | None]
-    ):
+    ) -> dict | None:
         """Forward pass with loss value. Loss function may need more arguments
         beside the ground-truth and prediction values. For calculating the
         metrics, we only need the final predictions and ground-truth.
@@ -696,15 +693,20 @@ class Model(lightning.LightningModule, ABC):
         Args:
             input: An input of shape :math:`[B, C, H, W]`.
             target: A ground-truth of shape :math:`[B, C, H, W]`. Default: ``None``.
-            
+        
         Return:
-            Prediction, loss, and extra values.
+            A :class:`dict` of all predictions with corresponding names. Note
+            that the dictionary must contain the key ``'loss'`` and ``'pred'``.
+            Default: ``None``.
         """
         pred = self.forward(input=input, *args, **kwargs)
         pred = pred[-1] if isinstance(pred, list | tuple) else pred
         loss = self.loss(pred, target)
-        return pred, loss
-    
+        return {
+            "pred": pred,
+            "loss": loss,
+        }
+        
     def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
         """Forward pass for debugging. This function is used to visualize the
         intermediate layers of the model.
@@ -713,7 +715,8 @@ class Model(lightning.LightningModule, ABC):
             input: An input of shape :math:`[B, C, H, W]`.
             
         Return:
-            Prediction. Default: ``None``.
+            A :class:`dict` of all predictions with corresponding names.
+            Default: ``None``.
         """
         return None
     
@@ -787,26 +790,27 @@ class Model(lightning.LightningModule, ABC):
         # Forward
         input, target, meta = batch[0], batch[1], batch[2:]
         results = self.forward_loss(input=input, target=target, *args, **kwargs)
-        if len(results) == 2:
-            pred, loss = results
-            extra      = None
-        else:
-            pred, loss, extra = results
+        pred    = results.pop("pred", None)
+        loss    = results.pop("loss", None)
         
-        # Log
-        log_dict = {
+        # Log data
+        log_images = {}
+        log_values = {
             f"step"      : self.current_epoch,
             f"train/loss": loss,
         }
-        if extra is not None and isinstance(extra, dict):
-            for k, v in extra.items():
-                log_dict[f"train/{k}"] = v
+        for k, v in results.items():
+            if core.is_image(v):
+                log_images[k] = v
+            else:
+                log_values[f"train/{k}"] = v
+        
+        # Log values
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
-                log_dict[f"train/{metric.name}"] = metric(pred, target)
-        
+                log_values[f"train/{metric.name}"] = metric(pred, target)
         self.log_dict(
-            dictionary     = log_dict,
+            dictionary     = log_values,
             prog_bar       = False,
             logger         = True,
             on_step        = False,
@@ -814,7 +818,7 @@ class Model(lightning.LightningModule, ABC):
             sync_dist      = True,
             rank_zero_only = False,
         )
-
+        
         return loss
 
     def on_train_epoch_end(self):
@@ -867,26 +871,27 @@ class Model(lightning.LightningModule, ABC):
         """
         input, target, meta = batch[0], batch[1], batch[2:]
         results = self.forward_loss(input=input, target=target, *args, **kwargs)
-        if len(results) == 2:
-            pred, loss = results
-            extra      = None
-        else:
-            pred, loss, extra = results
+        pred    = results.pop("pred", None)
+        loss    = results.pop("loss", None)
         
-        # Log
-        log_dict = {
+        # Log data
+        log_images = {}
+        log_values = {
             f"step"    : self.current_epoch,
             f"val/loss": loss,
         }
-        if extra is not None and isinstance(extra, dict):
-            for k, v in extra.items():
-                log_dict[f"val/{k}"] = v
+        for k, v in results.items():
+            if core.is_image(v):
+                log_images[k] = v
+            else:
+                log_values[f"val/{k}"] = v
+                
+        # Log values
         if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
-                log_dict[f"val/{metric.name}"] = metric(pred, target)
-        
+                log_values[f"val/{metric.name}"] = metric(pred, target)
         self.log_dict(
-            dictionary     = log_dict,
+            dictionary     = log_values,
             prog_bar       = False,
             logger         = True,
             on_step        = False,
@@ -895,6 +900,7 @@ class Model(lightning.LightningModule, ABC):
             rank_zero_only = False,
         )
         
+        # Log images
         if self.should_log_image():
             self.log_image(
                 epoch  = self.current_epoch,
@@ -902,7 +908,7 @@ class Model(lightning.LightningModule, ABC):
                 input  = input,
                 pred   = pred,
                 target = target,
-                extra  = extra,
+                extra  = log_images,
             )
         
         return loss
@@ -933,26 +939,27 @@ class Model(lightning.LightningModule, ABC):
         """
         input, target, meta = batch[0], batch[1], batch[2:]
         results = self.forward_loss(input=input, target=target, *args, **kwargs)
-        if len(results) == 2:
-            pred, loss = results
-            extra      = None
-        else:
-            pred, loss, extra = results
+        pred    = results.pop("pred", None)
+        loss    = results.pop("loss", None)
         
-        # Log
-        log_dict = {
+        # Log data
+        log_images = {}
+        log_values = {
             f"step"     : self.current_epoch,
             f"test/loss": loss,
         }
-        if extra is not None and isinstance(extra, dict):
-            for k, v in extra.items():
-                log_dict[f"test/{k}"] = v
+        for k, v in results.items():
+            if core.is_image(v):
+                log_images[k] = v
+            else:
+                log_values[f"test/{k}"] = v
+        
+        # Log values
         if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
-                log_dict[f"test/{metric.name}"] = metric(pred, target)
-       
+                log_values[f"test/{metric.name}"] = metric(pred, target)
         self.log_dict(
-            dictionary     = log_dict,
+            dictionary     = log_values,
             prog_bar       = False,
             logger         = True,
             on_step        = False,
@@ -960,6 +967,17 @@ class Model(lightning.LightningModule, ABC):
             sync_dist      = True,
             rank_zero_only = False,
         )
+        
+        # Log images
+        if self.should_log_image():
+            self.log_image(
+                epoch  = self.current_epoch,
+                step   = self.global_step,
+                input  = input,
+                pred   = pred,
+                target = target,
+                extra  = log_images,
+            )
         
         return loss
     

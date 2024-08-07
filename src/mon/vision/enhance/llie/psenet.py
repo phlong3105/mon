@@ -276,7 +276,10 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
         pred           = self.forward(input=input, *args, **kwargs)
         gamma, enhance = pred
         loss           = self.loss(enhance, target, gamma)
-        return enhance, loss
+        return {
+            "pred": enhance,
+            "loss": loss,
+        }
 
     def forward(
         self,

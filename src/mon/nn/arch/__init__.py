@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements deep learning architectures."""
+"""This package implements architectures and mechanisms."""
 
 from __future__ import annotations
 

@@ -275,7 +275,10 @@ class RRDNet(base.LowLightImageEnhancementModel):
             reflectance  = reflectance,
             noise        = noise,
         ) if self.loss else None
-        return pred, loss
+        return {
+            "pred": pred,
+            "loss": loss,
+        }
     
     def forward(
         self,

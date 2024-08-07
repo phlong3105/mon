@@ -465,7 +465,10 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
 				loss += self.loss(p, target)
 		else:
 			loss = None
-		return pred[-1], loss
+		return {
+			"pred": pred[-1],
+			"loss": loss,
+		}
 	
 	def forward(
 		self,

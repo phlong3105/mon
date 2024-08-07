@@ -13,7 +13,6 @@ __all__ = [
 
 from typing import Any, Literal, Sequence
 
-import kornia.filters
 import torch
 
 from mon import core, nn
@@ -124,30 +123,10 @@ class Loss(nn.Loss):
 
 # region Module
 
-class DepthBoundaryAware(nn.Module):
-    """Compute the edges of the depth map using the Sobel operator.
-    
-    Args:
-        eps: Threshold weak edges. Default: ``1e-6``.
-        normalized: If ``True``, L1 norm of the kernel is set to ``1``.
-            Default: ``True``.
-    """
-    
-    def __init__(self, eps: float = 0.05, normalized: bool = False):
-        super().__init__()
-        self.eps        = eps
-        self.normalized = normalized
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x     = input
-        g     = nn.boundary_aware_prior(x, eps=1e-6, normalized=self.normalized)
-        g_max = torch.max(g)
-        g     = g / g_max
-        g     = (g > self.eps).float()
-        return g
+DepthBoundaryAware = nn.BoundaryAwarePrior
 
 
-class MoE(nn.Module):
+class MixtureOfExperts(nn.Module):
     """Mixture of Experts Layer."""
     
     def __init__(
@@ -181,8 +160,8 @@ class MoE(nn.Module):
         w   = self.softmax(self.conv(o_s))
         o_w = [r[i] * w[:, i] for i in enumerate(r)]
         o   = torch.sum(o_w, dim=1)
-        
-        
+
+
 class ConvBlock(nn.Module):
     
     def __init__(
@@ -254,7 +233,7 @@ class EnhanceNet(nn.Module):
             elif classname.find("BatchNorm") != -1:
                 m.weight.data.normal_(1.0, 0.02)
                 m.bias.data.fill_(0)
-    
+
     def forward(self, input: torch.Tensor, depth: torch.Tensor | None) -> torch.Tensor:
         x    = input
         d    = depth
@@ -293,10 +272,12 @@ class D2CE(base.LowLightImageEnhancementModel):
         in_channels : int   = 3,
         num_channels: int   = 32,
         num_iters   : int   = 15,
-        radius      : int   = 3,
-        eps         : float = 1e-4,
-        gamma       : float = 2.6,
         de_encoder  : Literal["vits", "vitb", "vitl"] = "vits",
+        dba_eps     : float = 0.05,
+        gf_radius   : int   = 3,
+        gf_eps      : float = 1e-4,
+        bam_gamma   : float = 2.6,
+        bam_ksize   : int   = 9,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -312,28 +293,37 @@ class D2CE(base.LowLightImageEnhancementModel):
             in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
             num_iters    = self.weights.get("num_iters"   , num_iters)
-            radius       = self.weights.get("radius"      , radius)
-            eps          = self.weights.get("eps"         , eps)
-            gamma        = self.weights.get("gamma"       , gamma)
             de_encoder   = self.weights.get("de_encoder"  , de_encoder)
+            dba_eps      = self.weights.get("dba_eps"     , dba_eps)
+            gf_radius    = self.weights.get("gf_radius"   , gf_radius)
+            gf_eps       = self.weights.get("gf_eps"      , gf_eps)
+            bam_gamma    = self.weights.get("bam_gamma"   , bam_gamma)
+            bam_ksize    = self.weights.get("bam_ksize"   , bam_ksize)
         self.in_channels  = in_channels or self.in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
-        self.radius       = radius
-        self.eps          = eps
-        self.gamma        = gamma
         self.de_encoder   = de_encoder
+        self.dba_eps      = dba_eps
+        self.gf_radius    = gf_radius
+        self.gf_eps       = gf_eps
+        self.bam_gamma    = bam_gamma
+        self.bam_ksize    = bam_ksize
         
         # Construct model
-        self.de = depth_anything_v2.DepthAnythingV2_ViTS(weights="da_2k")
-        self.en = EnhanceNet(
+        self.de  = depth_anything_v2.build_depth_anything_v2(
+            encoder     = self.de_encoder,
+            in_channels = self.in_channels,
+            weights     = "da_2k",
+        )
+        self.en  = EnhanceNet(
             in_channels  = self.in_channels,
             num_channels = self.num_channels,
             num_iters    = self.num_iters,
             norm         = None,  # nn.AdaptiveBatchNorm2d,
-            eps          = 0.05,
+            eps          = self.dba_eps,
         )
-        self.gf = filtering.GuidedFilter(radius=self.radius, eps=self.eps)
+        self.gf  = filtering.GuidedFilter(radius=self.gf_radius, eps=self.gf_eps)
+        self.bam = nn.BrightnessAttentionMap(gamma=self.bam_gamma, denoise_ksize = self.bam_ksize)
         
         # Loss
         self._loss = Loss(reduction="mean")
@@ -368,7 +358,10 @@ class D2CE(base.LowLightImageEnhancementModel):
         loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
         loss_enh = self.loss(i, c_1, o)
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
-        return o, loss
+        return {
+            "pred": o,
+            "loss": loss,
+        }
     
     def forward(
         self,
@@ -390,14 +383,13 @@ class D2CE(base.LowLightImageEnhancementModel):
                 y = y + c1 * (torch.pow(y, 2) - y)
         else:
             y  = x
-            c2 = nn.brightness_attention_map(x, self.gamma, 9)
+            c2 = self.bam(x)
             for i in range(0, self.num_iters):
                 b = y * (1 - c2)
                 d = y * c2
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
-        # y_gf = y
         return c1, c2, y, y_gf
     
 # endregion

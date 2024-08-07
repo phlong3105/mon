@@ -133,9 +133,10 @@ def is_image(input: torch.Tensor, bits: int = 8) -> bool:
             image is an 8-bit image :math:`[0-255]` or not.
 
     Raises:
-        TypeException: if all the input tensor has not 1) a shape
-        :math:`[3, H, W]`, 2) :math:`[0, 1]` for :class:`float` or
-        :math:`[0, 255]` for :class:`int`, 3) and raises is ``True``.
+        TypeException: if all the input tensor has not
+        1) a shape :math:`[3, H, W]`,
+        2) :math:`[0, 1]` for :class:`float` or :math:`[0, 255]` for :class:`int`,
+        3) and raises is ``True``.
     
     Example:
         >>> img = torch.rand(2, 3, 4, 4)
@@ -145,10 +146,12 @@ def is_image(input: torch.Tensor, bits: int = 8) -> bool:
     res = is_color_or_image(input)
     if not res:
         return False
-    if input.dtype in [torch.float16, torch.float32, torch.float64] \
-        and (input.min() < 0.0 or input.max() > 1.0):
+    if (
+        input.dtype in [torch.float16, torch.float32, torch.float64]
+        and (input.min() < 0.0 or input.max() > 1.0)
+    ):
         return False
-    elif input.min() < 0 or input.max() > 2**bits - 1:
+    elif input.min() < 0 or input.max() > 2 ** bits - 1:
         return False
     return True
 

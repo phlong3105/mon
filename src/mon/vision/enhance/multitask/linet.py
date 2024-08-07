@@ -339,8 +339,10 @@ class LINet(base.MultiTaskImageEnhancementModel):
             name: getattr(module, "r", torch.Tensor([0.0])).mean()
             for name, module in self.get_all_lin_layers().items()
         }
-        # print(extra)
-        return pred[-1], loss, extra
+        return {
+            "pred": pred[-1],
+            "loss": loss,
+        } | extra
     
     def forward(
         self,

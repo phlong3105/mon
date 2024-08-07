@@ -182,7 +182,10 @@ class UNet(base.SegmentationModel):
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
         pred = self.forward(input=input, *args, **kwargs)
         loss = self.loss(pred, target)
-        return pred, loss
+        return {
+            "pred": pred,
+            "loss": loss,
+        }
     
     def forward(
         self,

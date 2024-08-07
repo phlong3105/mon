@@ -100,8 +100,11 @@ class ZSN2N(base.DenoisingModel):
         loss_cons = 0.5 * (mse_loss(pred1, denoised1) + mse_loss(pred2, denoised2))
         loss      = loss_res + loss_cons
         # loss      = nn.reduce_loss(loss=loss, reduction="mean")
-        #
-        return noisy_denoised, loss
+        
+        return {
+            "pred": noisy_denoised,
+            "loss": loss,
+        }
     
     def forward(
         self,

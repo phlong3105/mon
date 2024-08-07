@@ -50,7 +50,7 @@ def conv(
         elif downsample_mode in ["lanczos2", "lanczos3"]:
             downsampler = nn.CustomDownsample(
                 in_channels   = out_channels,
-                factor        = stride,
+                scale_factor  = stride,
                 kernel_type   = downsample_mode,
                 phase         = 0.5,
                 preserve_size = True,
@@ -407,7 +407,10 @@ class ZID(base.DehazingModel):
         ambient_val  = nn.Parameter(data=torch.cuda.FloatTensor(atmosphere.reshape((1, 3, 1, 1))), requires_grad=False)
         loss        += self.mse_loss(ambient, ambient_val * torch.ones_like(ambient))
         
-        return pred[-1], loss
+        return {
+            "pred": pred[-1],
+            "loss": loss,
+        }
     
     def forward(
         self,

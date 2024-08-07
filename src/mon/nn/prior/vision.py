@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements vision priors (e.g, image, video, shape, etc.)."""
+"""This module implements priors used for vision tasks (e.g, image, video,
+shape, etc.).
+"""
 
 from __future__ import annotations
 
 __all__ = [
+    "BoundaryAwarePrior",
+    "BrightnessAttentionMap",
     "atmospheric_prior",
     "blur_spot_prior",
     "boundary_aware_prior",
@@ -21,6 +25,7 @@ import kornia
 import numpy as np
 import torch
 from plum import dispatch
+from torch import nn
 
 from mon import core
 from mon.core import _size_2_t
@@ -171,7 +176,7 @@ def dark_channel_prior_02(input: np.ndarray, kernel_size: _size_2_t) -> np.ndarr
 
 @dispatch
 def boundary_aware_prior(input: np.ndarray, eps: float = 0.05, normalized: bool = False) -> np.ndarray:
-    """Get the boundary prior from an RGB image.
+    """Get the boundary prior from an RGB or grayscale image.
     
     Args:
         input: A :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
@@ -195,12 +200,12 @@ def boundary_aware_prior(input: np.ndarray, eps: float = 0.05, normalized: bool 
 
 
 @dispatch
-def boundary_aware_prior(input: torch.Tensor, eps: float = 0.05, normalized: bool = False) -> np.ndarray:
-    """Get the boundary prior from an RGB image.
+def boundary_aware_prior(input: torch.Tensor, eps: float = 0.05, normalized: bool = False) -> torch.Tensor:
+    """Get the boundary prior from an RGB or grayscale image.
     
     Args:
         input: A :class:`torch.Tensor` RGB image in :math:`[N, C, H, W]` format.
-        eps: Threshold to remove weak edges. Default: ``1e-6``.
+        eps: Threshold to remove weak edges. Default: ``0.05``.
         normalized: If ``True``, L1 norm of the kernel is set to ``1``.
             Default: ``True``.
         
@@ -212,6 +217,26 @@ def boundary_aware_prior(input: torch.Tensor, eps: float = 0.05, normalized: boo
     gradient = gradient / g_max
     boundary = (gradient > eps).float()
     return boundary
+
+
+class BoundaryAwarePrior(nn.Module):
+    """Get the boundary prior from an RGB or grayscale image.
+    
+    Args:
+        eps: Threshold weak edges. Default: ``0.05``.
+        normalized: If ``True``, L1 norm of the kernel is set to ``1``.
+            Default: ``True``.
+    """
+    
+    def __init__(self, eps: float = 0.05, normalized: bool = False):
+        super().__init__()
+        self.eps        = eps
+        self.normalized = normalized
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        g = boundary_aware_prior(x, eps=self.eps, normalized=self.normalized)
+        return g
 
 # endregion
 
@@ -284,5 +309,36 @@ def brightness_attention_map(
     v   = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
     bam = torch.pow((1 - v), gamma)
     return bam
+
+
+class BrightnessAttentionMap(nn.Module):
+    """Get the Brightness Attention Map (BAM) prior from an RGB image.
+    
+    This is a self-attention map extracted from the V-channel of a low-light
+    image. This map is multiplied to convolutional activations of all layers in
+    the enhancement network. Brighter regions are given lower weights to avoid
+    over-saturation, while preserving image details and enhancing the contrast
+    in the dark regions effectively.
+    
+    Equation: :math:`I_{attn} = (1 - I_{V})^{\gamma}`, where :math:`\gamma \geq 1`.
+    
+    Args:
+        gamma: A parameter controls the curvature of the map.
+        denoise_ksize: Window size for de-noising operation. Default: ``None``.
+    """
+    
+    def __init__(
+        self,
+        gamma        : float            = 2.5,
+        denoise_ksize: _size_2_t | None = None
+    ):
+        super().__init__()
+        self.gamma         = gamma
+        self.denoise_ksize = denoise_ksize
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        g = brightness_attention_map(x, gamma=self.gamma, denoise_ksize=self.denoise_ksize)
+        return g
 
 # endregion

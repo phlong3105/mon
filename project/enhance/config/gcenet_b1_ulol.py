@@ -35,9 +35,10 @@ model = {
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
-	"radius"	  : 3,
-	"eps"		  : 1e-4,
-	"gamma"		  : 2.0,
+	"gf_radius"   : 3,              # The radius for GuidedFilter.
+	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
+	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap.
+	"bam_ksize"   : 9,			    # The kernel size for BrightnessAttentionMap.
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,

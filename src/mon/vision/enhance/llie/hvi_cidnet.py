@@ -596,11 +596,12 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
         loss_rgb   = self.loss(pred_rgb, target_rgb)
         loss_hvi   = self.loss(pred_hvi, target_hvi)
         loss       = loss_rgb + self.hvi_weight * loss_hvi
-        extra      = {
-            "hvi_k": float(self.trans.density_k.item())
+        return {
+            "pred" : pred_rgb,
+            "loss" : loss,
+            "hvi_k": float(self.trans.density_k.item()),
         }
-        return pred_rgb, loss, extra
-
+    
     def forward(
         self,
         input    : torch.Tensor,
