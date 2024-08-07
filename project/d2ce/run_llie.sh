@@ -17,6 +17,7 @@ python -W ignore main.py \
     --task "llie" \
     --mode "predict" \
     --data "1,3,4,9,10,12,6,7,8" \
+    --imgsz 504 \
     --verbose \
     "$@"
 

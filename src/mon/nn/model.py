@@ -536,16 +536,16 @@ class Model(lightning.LightningModule, ABC):
         state_dict = None
         if isinstance(self.weights, core.Path | str) and core.Path(self.weights).is_weights_file():
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
-            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=True)
-            state_dict = getattr(state_dict, "state_dict", state_dict)
+            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=False)
+            state_dict = state_dict.get("state_dict", state_dict)
         elif isinstance(self.weights, dict):
             if "path" in self.weights:
                 path = core.Path(self.weights["path"])
                 if path.is_weights_file():
-                    state_dict = load_state_dict(model=self, weights=path, weights_only=True)
-                    state_dict = getattr(state_dict, "state_dict", state_dict)
+                    state_dict = load_state_dict(model=self, weights=path, weights_only=False)
+                    state_dict = state_dict.get("state_dict", state_dict)
             else:
-                state_dict = getattr(self.weights, "state_dict", self.weights)
+                state_dict = self.weights.get("state_dict", self.weights)
         else:
             error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
         
@@ -1107,15 +1107,15 @@ class ExtraModel(Model, ABC):
         if isinstance(self.weights, core.Path | str) and core.Path(self.weights).is_weights_file():
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
             state_dict = load_state_dict(model=self, weights=self.weights, weights_only=False)
-            state_dict = getattr(state_dict, "state_dict", state_dict)
+            state_dict = state_dict.get("state_dict", state_dict)
         elif isinstance(self.weights, dict):
             if "path" in self.weights:
                 path = core.Path(self.weights["path"])
                 if path.is_weights_file():
                     state_dict = load_state_dict(model=self, weights=path, weights_only=False)
-                    state_dict = getattr(state_dict, "state_dict", state_dict)
+                    state_dict = state_dict.get("state_dict", state_dict)
             else:
-                state_dict = getattr(self.weights, "state_dict", self.weights)
+                state_dict = self.weights.get("state_dict", self.weights)
         else:
             error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
         

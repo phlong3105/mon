@@ -362,28 +362,23 @@ class D2CE(base.LowLightImageEnhancementModel):
     
     def on_fit_start(self):
         super().on_fit_start()
-        # Freeze DepthAnythingV2 model again to be safe
-        self.de.eval()
+        self.de.eval()  # Freeze DepthAnythingV2 model
     
     def on_train_start(self) -> None:
         super().on_train_start()
-        # Freeze DepthAnythingV2 model
-        self.de.eval()
+        self.de.eval()  # Freeze DepthAnythingV2 model
     
     def on_validation_start(self) -> None:
         super().on_validation_start()
-        # Freeze DepthAnythingV2 model
-        self.de.eval()
+        self.de.eval()  # Freeze DepthAnythingV2 model
         
     def on_test_start(self) -> None:
         super().on_test_start()
-        # Freeze DepthAnythingV2 model
-        self.de.eval()
+        self.de.eval()  # Freeze DepthAnythingV2 model
     
     def on_predict_start(self) -> None:
         super().on_predict_start()
-        # Freeze DepthAnythingV2 model
-        self.de.eval()
+        self.de.eval()  # Freeze DepthAnythingV2 model
     
     def forward_loss(
         self,
@@ -394,23 +389,33 @@ class D2CE(base.LowLightImageEnhancementModel):
         # Symmetric Loss
         i        = input
         i1, i2   = geometry.pair_downsample(i)
-        c1_1, c1_2, d, e, gf1, j1 = self.forward(input=i1, *args, **kwargs)
-        c2_1, c2_2, d, e, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        c_1 , c_2 , d, e, gf , o  = self.forward(input=i,  *args, **kwargs)
+        c1_1, c1_2, d1, e1, gf1, j1 = self.forward(input=i1, *args, **kwargs)
+        c2_1, c2_2, d2, e2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
+        c_1 , c_2 , d,  e,  gf , o  = self.forward(input=i,  *args, **kwargs)
         o1, o2   = geometry.pair_downsample(o)
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
         loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
         loss_enh = self.loss(i, c_1, o)
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
-        # Prepare output
-        # d = torch.concat([d, d, d], dim=1)
-        # e = torch.concat([e, e, e], dim=1)
         return {
             "pred" : o,
             "loss" : loss,
             "depth": d,
             "edge" : e,
+        }
+    
+    def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
+        i  = input
+        c_1, c_2, d, e, gf, o = self.forward(input=i, *args, **kwargs)
+        return {
+            "i"  : i,
+            "c_1": c_1,
+            "c_2": c_2,
+            "d"  : d,
+            "e"  : e,
+            "gf" : gf,
+            "o"  : o,
         }
     
     def forward(
@@ -421,11 +426,12 @@ class D2CE(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, ...]:
-        self.de.eval()
-        x  = input
+        x = input
         # Enhancement
         de    = self.de(x)
+        de    = de.detach()  # Must call detach() else error
         c1, e = self.en(x, de)
+        e     = e.detach()   # Must call detach() else error
         # Enhancement loop
         if self.bam_gamma in [None, 0.0]:
             y  = x

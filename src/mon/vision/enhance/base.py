@@ -67,7 +67,8 @@ class ImageEnhancementModel(nn.Model, ABC):
             cv2.imwrite(str(output_path), combined)
             
             for k, v in extra.items():
+                v_i = v[i]
                 extra_path = save_dir / f"{i}_{k}{extension}"
-                cv2.imwrite(str(extra_path), cv2.cvtColor(v[i], cv2.COLOR_RGB2BGR))
+                cv2.imwrite(str(extra_path), v_i)
             
 # endregion
