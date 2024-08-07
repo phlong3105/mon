@@ -578,7 +578,7 @@ class GCENetA1(GCENet):
     """
     
     def __init__(self, *args, **kwargs):
-        super().__init__(name="gcenet_a1",*args, **kwargs)
+        super().__init__(name="gcenet_a1", *args, **kwargs)
     
     def forward_loss(
         self,

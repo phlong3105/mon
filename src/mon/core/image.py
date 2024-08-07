@@ -528,7 +528,7 @@ def normalize_image_by_range(
     if isinstance(input, torch.Tensor):
         input = input.clone()
         # input = input.to(dtype=torch.get_default_dtype()) if not input.is_floating_point() else input
-        input = input.to(dtype=torch.float32)
+        input = input.to(dtype=torch.get_default_dtype())
         ratio = (new_max - new_min) / (max - min)
         input = (input - min) * ratio + new_min
         # image = torch.clamp(image, new_min, new_max)
@@ -537,7 +537,7 @@ def normalize_image_by_range(
         input = input.astype(np.float32)
         ratio = (new_max - new_min) / (max - min)
         input = (input - min) * ratio + new_min
-        # image = np.cip(image, new_min, new_max)
+        # image = np.clip(image, new_min, new_max)
     else:
         raise TypeError(
             f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "

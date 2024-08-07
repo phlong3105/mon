@@ -19,7 +19,7 @@ transform = A.Compose([
 		resize_method     = "lower_bound",
 		interpolation     = cv2.INTER_AREA,
 	),
-	A.NormalizeImageMeanStd(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+	# A.NormalizeImageMeanStd(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
 image = cv2.imread("data/01.jpg")

@@ -9,6 +9,9 @@ from __future__ import annotations
 
 __all__ = [
     "D2CE",
+    "D2CE_Baseline",
+    "D2CE_Depth",
+    "D2CE_Edge",
 ]
 
 from typing import Any, Literal, Sequence
@@ -202,21 +205,28 @@ class EnhanceNet(nn.Module):
         num_iters   : int,
         norm        : nn.Module | None = nn.AdaptiveBatchNorm2d,
         eps         : float = 0.05,
+        use_depth   : bool  = False,
+        use_edge    : bool  = False,
     ):
         super().__init__()
-        in_channels  = in_channels + 1
-        out_channels = 3
-        #
+        self.use_depth     = use_depth
+        self.use_edge      = use_edge
+        in_channels       += 1 if self.use_depth else 0
+        in_channels       += 1 if self.use_edge  else 0
+        self.in_channels   = in_channels
+        self.num_channels  = num_channels
+        self.out_channels  = 3
+        # Depth Boundary Aware
         self.dba     = DepthBoundaryAware(eps=eps, normalized=False)
         # Encoder
-        self.e_conv1 = ConvBlock(in_channels,  num_channels, norm=norm)
-        self.e_conv2 = ConvBlock(num_channels, num_channels, norm=norm)
-        self.e_conv3 = ConvBlock(num_channels, num_channels, norm=norm)
-        self.e_conv4 = ConvBlock(num_channels, num_channels, norm=norm)
+        self.e_conv1 = ConvBlock(self.in_channels,  self.num_channels, norm=norm)
+        self.e_conv2 = ConvBlock(self.num_channels, self.num_channels, norm=norm)
+        self.e_conv3 = ConvBlock(self.num_channels, self.num_channels, norm=norm)
+        self.e_conv4 = ConvBlock(self.num_channels, self.num_channels, norm=norm)
         # Decoder
-        self.e_conv5 = ConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv6 = ConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv7 = ConvBlock(num_channels * 2, out_channels, norm=norm, is_last_layer=True)
+        self.e_conv5 = ConvBlock(self.num_channels * 2, self.num_channels, norm=norm)
+        self.e_conv6 = ConvBlock(self.num_channels * 2, self.num_channels, norm=norm)
+        self.e_conv7 = ConvBlock(self.num_channels * 2, self.out_channels, norm=norm, is_last_layer=True)
         self.apply(self.init_weights)
         
     def init_weights(self, m: nn.Module):
@@ -235,19 +245,21 @@ class EnhanceNet(nn.Module):
                 m.bias.data.fill_(0)
 
     def forward(self, input: torch.Tensor, depth: torch.Tensor | None) -> tuple[torch.Tensor, torch.Tensor]:
-        x    = input
-        d    = depth
-        edge = self.dba(d)
-        x    = torch.cat([x, edge], 1)
-        #
-        x1   = self.e_conv1(x)
-        x2   = self.e_conv2(x1)
-        x3   = self.e_conv3(x2)
-        x4   = self.e_conv4(x3)
-        x5   = self.e_conv5(torch.cat([x3, x4], 1))
-        x6   = self.e_conv6(torch.cat([x2, x5], 1))
-        x_r  = self.e_conv7(torch.cat([x1, x6], 1))
-        return x_r, edge
+        x   = input
+        d   = depth
+        e   = self.dba(d)
+        if self.use_depth:
+            x = torch.cat([x, d], 1)
+        if self.use_edge:
+            x = torch.cat([x, e], 1)
+        x1  = self.e_conv1(x)
+        x2  = self.e_conv2(x1)
+        x3  = self.e_conv3(x2)
+        x4  = self.e_conv4(x3)
+        x5  = self.e_conv5(torch.cat([x3, x4], 1))
+        x6  = self.e_conv6(torch.cat([x2, x5], 1))
+        x_r = self.e_conv7(torch.cat([x1, x6], 1))
+        return x_r, e
 
 # endregion
 
@@ -278,6 +290,8 @@ class D2CE(base.LowLightImageEnhancementModel):
         gf_eps      : float = 1e-4,
         bam_gamma   : float = 2.6,
         bam_ksize   : int   = 9,
+        use_depth   : bool  = True,
+        use_edge    : bool  = True,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -299,6 +313,8 @@ class D2CE(base.LowLightImageEnhancementModel):
             gf_eps       = self.weights.get("gf_eps"      , gf_eps)
             bam_gamma    = self.weights.get("bam_gamma"   , bam_gamma)
             bam_ksize    = self.weights.get("bam_ksize"   , bam_ksize)
+            use_depth    = self.weights.get("use_depth"   , use_depth)
+            use_edge     = self.weights.get("use_edge"    , use_edge)
         self.in_channels  = in_channels or self.in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
@@ -308,6 +324,8 @@ class D2CE(base.LowLightImageEnhancementModel):
         self.gf_eps       = gf_eps
         self.bam_gamma    = bam_gamma
         self.bam_ksize    = bam_ksize
+        self.use_depth    = use_depth
+        self.use_edge     = use_edge
         
         # Construct model
         self.de  = depth_anything_v2.build_depth_anything_v2(
@@ -321,9 +339,11 @@ class D2CE(base.LowLightImageEnhancementModel):
             num_iters    = self.num_iters,
             norm         = None,  # nn.AdaptiveBatchNorm2d,
             eps          = self.dba_eps,
+            use_depth    = self.use_depth,
+            use_edge     = self.use_edge,
         )
         self.gf  = filtering.GuidedFilter(radius=self.gf_radius, eps=self.gf_eps)
-        self.bam = nn.BrightnessAttentionMap(gamma=self.bam_gamma, denoise_ksize = self.bam_ksize)
+        self.bam = nn.BrightnessAttentionMap(gamma=self.bam_gamma, denoise_ksize=self.bam_ksize)
         
         # Loss
         self._loss = Loss(reduction="mean")
@@ -345,6 +365,26 @@ class D2CE(base.LowLightImageEnhancementModel):
         # Freeze DepthAnythingV2 model again to be safe
         self.de.eval()
     
+    def on_train_start(self) -> None:
+        super().on_train_start()
+        # Freeze DepthAnythingV2 model
+        self.de.eval()
+    
+    def on_validation_start(self) -> None:
+        super().on_validation_start()
+        # Freeze DepthAnythingV2 model
+        self.de.eval()
+        
+    def on_test_start(self) -> None:
+        super().on_test_start()
+        # Freeze DepthAnythingV2 model
+        self.de.eval()
+    
+    def on_predict_start(self) -> None:
+        super().on_predict_start()
+        # Freeze DepthAnythingV2 model
+        self.de.eval()
+    
     def forward_loss(
         self,
         input : torch.Tensor,
@@ -364,8 +404,8 @@ class D2CE(base.LowLightImageEnhancementModel):
         loss_enh = self.loss(i, c_1, o)
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
         # Prepare output
-        d = torch.concat([d, d, d], dim=1)
-        e = torch.concat([e, e, e], dim=1)
+        # d = torch.concat([d, d, d], dim=1)
+        # e = torch.concat([e, e, e], dim=1)
         return {
             "pred" : o,
             "loss" : loss,
@@ -381,6 +421,7 @@ class D2CE(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, ...]:
+        self.de.eval()
         x  = input
         # Enhancement
         de    = self.de(x)
@@ -401,5 +442,41 @@ class D2CE(base.LowLightImageEnhancementModel):
         # Guided Filter
         y_gf = self.gf(x, y)
         return c1, c2, de, e, y, y_gf
+
+
+@MODELS.register(name="d2ce_baseline", arch="d2ce")
+class D2CE_Baseline(D2CE):
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name      = "d2ce_baseline",
+            use_depth = False,
+            use_edge  = False,
+            *args, **kwargs
+        )
+
+
+@MODELS.register(name="d2ce_depth", arch="d2ce")
+class D2CE_Depth(D2CE):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name      = "d2ce_depth",
+            use_depth = True,
+            use_edge  = False,
+            *args, **kwargs
+        )
+
+
+@MODELS.register(name="d2ce_edge", arch="d2ce")
+class D2CE_Edge(D2CE):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name      = "d2ce_edge",
+            use_depth = False,
+            use_edge  = True,
+            *args, **kwargs
+        )
+        
 # endregion

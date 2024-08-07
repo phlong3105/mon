@@ -16,7 +16,7 @@ root_dir     = current_file.parents[1]
 
 # region Basic
 
-model_name = "d2ce"
+model_name = "d2ce_depth"
 data_name  = "ulol"
 root       = root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -43,8 +43,6 @@ model = {
 	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
 	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap.
 	"bam_ksize"   : 9,			    # The kernel size for BrightnessAttentionMap.
-	"use_depth"   : True,           # If ``True``, use depth map.
-	"use_edge"    : True,           # If ``True``, use edge map.
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
