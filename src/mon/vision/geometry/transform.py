@@ -113,9 +113,9 @@ def pair_downsample(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         `<https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing>`__
     """
     c       = input.shape[1]
-    filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(input.device)
+    filter1 = torch.Tensor([[[[0, 0.5], [0.5, 0]]]]).to(input.dtype).to(input.device)
     filter1 = filter1.repeat(c, 1, 1, 1)
-    filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(input.device)
+    filter2 = torch.Tensor([[[[0.5, 0], [0, 0.5]]]]).to(input.dtype).to(input.device)
     filter2 = filter2.repeat(c, 1, 1, 1)
     output1 = F.conv2d(input, filter1, stride=2, groups=c)
     output2 = F.conv2d(input, filter2, stride=2, groups=c)

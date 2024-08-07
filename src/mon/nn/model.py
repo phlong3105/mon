@@ -9,7 +9,6 @@ from __future__ import annotations
 __all__ = [
     "ExtraModel",
     "Model",
-    "check_weights_loaded",
     "get_epoch_from_checkpoint",
     "get_global_step_from_checkpoint",
     "get_latest_checkpoint",
@@ -107,14 +106,12 @@ def load_state_dict(
     contains a URL, download it.
     """
     path = None
-    map  = {}
-    
+    url  = None
+
     # Obtain weight's path
     if isinstance(weights, dict):
-        assert "path" in weights and "url" in weights
         path = weights.get("path", path)
-        url  = weights.get("url",  None)
-        map  = weights.get("map",  map)
+        url  = weights.get("url",  url)
         if path is not None and url is not None:
             path = core.Path(path)
             core.mkdirs(paths=[path.parent], exist_ok=True)
@@ -135,10 +132,11 @@ def load_state_dict(
     
     # Load state dict
     weights_state_dict = torch.load(str(path), weights_only=weights_only, map_location=model.device)
+    '''
     weights_state_dict = weights_state_dict.get("state_dict", weights_state_dict)
     model_state_dict   = copy.deepcopy(model.state_dict())
     new_state_dict     = {}
-
+    
     for k, v in weights_state_dict.items():
         replace = False
         for k1, k2 in map.items():
@@ -154,6 +152,8 @@ def load_state_dict(
             model_state_dict[k] = v
     
     return model_state_dict
+    '''
+    return weights_state_dict
 
 
 def load_weights(
@@ -167,23 +167,6 @@ def load_weights(
     model.load_state_dict(model_state_dict)
     return model
 
-
-def check_weights_loaded(
-    old_state_dict: dict,
-    new_state_dict: dict,
-    verbose       : bool = False,
-) -> bool:
-    # Manually check if weights have been loaded
-    if verbose:
-        console.log(f"Checking layer's weights")
-    for k, v in new_state_dict.items():
-        new_state_dict[k] = float(torch.sum(new_state_dict[k] - old_state_dict[k]))
-        if verbose:
-            if new_state_dict[k] == 0.0:
-                console.log(f"{k}: ❌")
-            else:
-                console.log(f"{k}: ✅")
-    
 # endregion
 
 
@@ -1072,7 +1055,7 @@ class Model(lightning.LightningModule, ABC):
         input    : torch.Tensor,
         pred     : torch.Tensor,
         target   : torch.Tensor | None = None,
-        extra    : list         | None = None,
+        extra    : dict         | None = None,
         extension: str = ".jpg"
     ):
         """Log debug images to :attr:`debug_dir`."""
@@ -1111,7 +1094,7 @@ class ExtraModel(Model, ABC):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model = None
+        self.model: nn.Module = None
     
     def load_weights(self, weights: Any = None, overwrite: bool = False):
         """Load weights. It only loads the intersection layers of matching keys
@@ -1123,13 +1106,13 @@ class ExtraModel(Model, ABC):
         state_dict = None
         if isinstance(self.weights, core.Path | str) and core.Path(self.weights).is_weights_file():
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
-            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=True)
+            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=False)
             state_dict = getattr(state_dict, "state_dict", state_dict)
         elif isinstance(self.weights, dict):
             if "path" in self.weights:
                 path = core.Path(self.weights["path"])
                 if path.is_weights_file():
-                    state_dict = load_state_dict(model=self, weights=path, weights_only=True)
+                    state_dict = load_state_dict(model=self, weights=path, weights_only=False)
                     state_dict = getattr(state_dict, "state_dict", state_dict)
             else:
                 state_dict = getattr(self.weights, "state_dict", self.weights)
@@ -1137,7 +1120,6 @@ class ExtraModel(Model, ABC):
             error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
         
         if state_dict is not None:
-            state_dict = {k.replace("model.", ""): v for k, v in state_dict.items()}
             self.model.load_state_dict(state_dict=state_dict)
             if self.verbose:
                 console.log(f"Load model's weights from: {self.weights}!")

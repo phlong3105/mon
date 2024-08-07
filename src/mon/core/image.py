@@ -110,7 +110,7 @@ def is_color_image(input: torch.Tensor | np.ndarray) -> bool:
 
 def is_gray_image(input: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is a gray image. It is assumed that the
-    image has ones channel.
+    image has one channel.
     """
     if get_image_num_channels(input=input) in [1] or len(input.shape) == 2:
         return True
@@ -527,8 +527,8 @@ def normalize_image_by_range(
     #     return image
     if isinstance(input, torch.Tensor):
         input = input.clone()
-        input = input.to(dtype=torch.get_default_dtype()) \
-            if not input.is_floating_point() else input
+        # input = input.to(dtype=torch.get_default_dtype()) if not input.is_floating_point() else input
+        input = input.to(dtype=torch.float32)
         ratio = (new_max - new_min) / (max - min)
         input = (input - min) * ratio + new_min
         # image = torch.clamp(image, new_min, new_max)
@@ -782,7 +782,7 @@ def to_channel_last_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np
 
 def to_image_nparray(
     input      : torch.Tensor | np.ndarray,
-    keepdim    : bool = True,
+    keepdim    : bool = False,
     denormalize: bool = False,
 ) -> np.ndarray:
     """Convert an image to :class:`numpy.ndarray`.
@@ -814,7 +814,7 @@ def to_image_nparray(
 
 def to_image_tensor(
     input    : torch.Tensor | np.ndarray,
-    keepdim  : bool = True,
+    keepdim  : bool = False,
     normalize: bool = False,
     device   : Any  = None,
 ) -> torch.Tensor:

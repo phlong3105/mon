@@ -12,7 +12,6 @@ from typing import Literal
 
 # noinspection PyPackageRequirements,PyUnresolvedReferences
 import albumentations
-import cv2
 from albumentations import *
 from albumentations.augmentations.geometric import functional as fgeometric
 from albumentations.core.pydantic import InterpolationType, ProbabilityType
@@ -63,6 +62,34 @@ class CropPatch(DualTransform):
 			c = np.random.randint(0, w - self.patch_size)
 		return {"r": r, "c": c}
 
+# endregion
+
+
+# region Normalize
+
+class NormalizeImageMeanStd(DualTransform):
+	"""Normalize image by given :attr:`mean` and :attr:`std`."""
+	
+	def __init__(
+		self,
+		mean        : Sequence[float] = [0.485, 0.456, 0.406],
+		std         : Sequence[float] = [0.229, 0.224, 0.225],
+		always_apply: bool            = True,
+		p           : float           = 1.0,
+	):
+		super().__init__(
+			always_apply = always_apply,
+			p            = p,
+		)
+		self.mean = mean
+		self.std  = std
+	
+	def apply(self, img: np.ndarray, **params) -> np.ndarray:
+		return (img - self.mean) / self.std
+	
+	def apply_to_mask(self, img: np.ndarray, **params) -> np.ndarray:
+		return (img - self.mean) / self.std
+		
 # endregion
 
 

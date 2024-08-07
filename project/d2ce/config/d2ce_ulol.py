@@ -82,8 +82,12 @@ datamodule = {
 			resize_method     = "lower_bound",
 			interpolation     = cv2.INTER_AREA,
 		),
-		# A.Flip(),
-		# A.Rotate(),
+		A.NormalizeImageMeanStd(
+			mean = [0.485, 0.456, 0.406],
+			std  = [0.229, 0.224, 0.225]
+		),
+		A.Flip(),
+		A.Rotate(),
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.

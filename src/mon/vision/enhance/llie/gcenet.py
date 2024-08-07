@@ -553,7 +553,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         # Enhancement
         c1 = self.en(x)
         # Enhancement loop
-        if self.gamma in [None, 0.0]:
+        if self.bam_gamma in [None, 0.0]:
             y  = x
             c2 = None
             for i in range(self.num_iters):
@@ -607,7 +607,7 @@ class GCENetA1(GCENet):
         # Enhancement
         c1 = self.en(x)
         # Enhancement loop
-        if self.gamma in [None, 0.0]:
+        if self.bam_gamma in [None, 0.0]:
             y  = x
             c2 = None
             for i in range(self.num_iters):
@@ -646,7 +646,7 @@ class GCENetA2(GCENet):
         # Enhancement
         c1 = self.en(x)
         # Enhancement loop
-        if self.gamma in [None, 0.0]:
+        if self.bam_gamma in [None, 0.0]:
             y  = x
             c2 = None
             for i in range(self.num_iters):
