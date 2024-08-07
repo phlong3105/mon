@@ -588,7 +588,7 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         pred_rgb   = self.forward(input=input, *args, **kwargs)
         pred_hvi   = self.rgb_to_hvi(pred_rgb)
         target_rgb = target

@@ -345,8 +345,8 @@ class D2CE(base.LowLightImageEnhancementModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        # Symmetric Loss 1
+    ) -> dict | None:
+        # Symmetric Loss
         i        = input
         i1, i2   = geometry.pair_downsample(i)
         c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)

@@ -87,7 +87,7 @@ class ZSN2N(base.DenoisingModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         # Symmetry
         noisy1, noisy2       = self.pair_downsampler(input)
         pred1                = noisy1 - self.forward(input=noisy1)

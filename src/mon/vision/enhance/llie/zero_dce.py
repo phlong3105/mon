@@ -190,7 +190,7 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         pred            = self.forward(input=input, *args, **kwargs)
         adjust, enhance = pred
         loss            = self.loss(input, adjust, enhance)

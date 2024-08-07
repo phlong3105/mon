@@ -411,7 +411,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         i    = input
         c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
         loss = self.loss(i, c1, o)
@@ -585,7 +585,7 @@ class GCENetA1(GCENet):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         # Symmetric Loss
         i = input
         c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
@@ -678,7 +678,7 @@ class GCENetB1(GCENet):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         # Symmetric Loss
         i = input
         c1, c2, gf, o = self.forward(input=i,  *args, **kwargs)
@@ -848,7 +848,7 @@ class GCENetOld(base.LowLightImageEnhancementModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         pred = self.forward(input=input, *args, **kwargs)
         adjust, enhance = pred
         loss = self.loss(input, adjust, enhance)

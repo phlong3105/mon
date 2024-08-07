@@ -325,7 +325,7 @@ class LINet(base.MultiTaskImageEnhancementModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         pred = self.forward(input=input, *args, **kwargs)
         # Loss
         if self.loss:

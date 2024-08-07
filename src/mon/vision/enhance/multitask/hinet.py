@@ -341,7 +341,7 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
         input : torch.Tensor,
         target: torch.Tensor | None,
         *args, **kwargs
-    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor | None]:
+    ) -> dict | None:
         pred = self.forward(input=input, *args, **kwargs)
         if self.loss:
             loss = 0
