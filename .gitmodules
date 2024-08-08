@@ -25,3 +25,6 @@
 [submodule "tool/XAnyLabeling"]
 	path = tool/XAnyLabeling
 	url  = https://github.com/phlong3105/XAnyLabeling
+[submodule "src/mon_extra/vision/segment/sam"]
+	path = src/mon_extra/vision/segment/sam
+	url = https://github.com/phlong3105/sam

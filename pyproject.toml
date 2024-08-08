@@ -58,6 +58,7 @@ exclude = []
 [tool.poetry.dependencies]
 python            = ">=3.11, <3.13"
 depth_anything_v2 = {path="src/mon_extra/vision/depth/depth_anything_v2", develop=true}
+sam               = {path="src/mon_extra/vision/segment/sam",             develop=true}
 ultralytics       = {path="src/mon_extra/vision/ultralytics",             develop=true}
 yolor             = {path="src/mon_extra/vision/detect/yolor",            develop=true}
 yolov7            = {path="src/mon_extra/vision/detect/yolov7",           develop=true}
