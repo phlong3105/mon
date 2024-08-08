@@ -1172,6 +1172,28 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
         },
     },
     # endregion
+    # region segment
+    "sam"          : {
+        "sam_vit_b": {
+            "tasks"    : [Task.SEGMENT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam",
+            "torch_distributed_launch": True,
+        },
+        "sam_vit_h": {
+            "tasks"    : [Task.SEGMENT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam",
+            "torch_distributed_launch": True,
+        },
+        "sam_vit_l": {
+            "tasks"    : [Task.SEGMENT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam",
+            "torch_distributed_launch": True,
+        },
+    }
+    # endregion
 }
 
 # endregion

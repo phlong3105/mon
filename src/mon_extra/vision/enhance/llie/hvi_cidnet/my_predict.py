@@ -68,7 +68,13 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(
+        src         = data,
+        dst         = save_dir,
+        to_tensor   = False,
+        denormalize = True,
+        verbose     = False,
+    )
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
@@ -76,18 +82,18 @@ def predict(args: argparse.Namespace):
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for images, target, meta in pbar.track(
+            for image, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image_path     = meta["path"]
-                image          = Image.open(image_path).convert("RGB")
-                image          = (np.asarray(image) / 255.0)
-                image          = torch.from_numpy(image).float()
-                image          = image.permute(2, 0, 1)
-                image          = image.to(device).unsqueeze(0)
-                h0, w0         = mon.get_image_size(image)
+                image_path = meta["path"]
+                image      = Image.open(image_path).convert("RGB")
+                image      = (np.asarray(image) / 255.0)
+                image      = torch.from_numpy(image).float()
+                image      = image.permute(2, 0, 1)
+                image      = image.to(device).unsqueeze(0)
+                h0, w0     = mon.get_image_size(image)
                 if resize:
                     image = mon.resize(image, imgsz)
                 else:

@@ -454,24 +454,28 @@ class VideoWriterFFmpeg(VideoWriter):
 def parse_io_worker(
 	src        : core.Path | str,
 	dst        : core.Path | str,
-	denormalize: bool = False,
-	data_root  : core.Path | str = None
+	to_tensor  : bool            = False,
+	denormalize: bool            = False,
+	data_root  : core.Path | str = None,
+	verbose    : bool            = False,
 ) -> tuple[str, datastruct.Dataset, DataWriter]:
 	"""Parse the :param:`src` and :param:`dst` to get the correct I/O worker.
 	
 	Args:
 		src: The source of the input data.
 		dst: The destination path.
+		to_tensor: If ``True``, convert the image to a tensor. Default: ``False``.
 		denormalize: If ``True``, denormalize the image to :math:`[0, 255]`.
 			Default: ``False``.
 		data_root: The root directory of all datasets, i.e., :file:`data/`.
+		verbose: Verbosity. Default: ``False``.
 		
 	Return:
 		A input loader and an output writer
 	"""
-	data_name  : str          = ""
+	data_name  : str                = ""
 	data_loader: datastruct.Dataset = None
-	data_writer: DataWriter   = None
+	data_writer: DataWriter         = None
 	
 	if isinstance(src, str) and src in DATASETS:
 		defaults_dict = dict(
@@ -479,27 +483,35 @@ def parse_io_worker(
 		)
 		root = defaults_dict.get("root", DATA_DIR)
 		if (
-			root      not in [None, "None", ""] and
-			data_root not in [None, "None", ""] and
-			core.Path(data_root).is_dir() and
-			str(root) != str(data_root)
+			root not in [None, "None", ""]
+			and data_root not in [None, "None", ""]
+			and core.Path(data_root).is_dir()
+			and str(root) != str(data_root)
 		):
 			root = data_root
 		config      = {
 			"name"     : src,
 			"root"     : root,
 			"split"	   : Split.TEST,
-			"to_tensor": True,
-			"verbose"  : False,
+			"to_tensor": to_tensor,
+			"verbose"  : verbose,
 		}
 		data_name   = src
 		data_loader = DATASETS.build(config=config)
 	elif core.Path(src).is_dir() and core.Path(src).exists():
 		data_name   = core.Path(src).name
-		data_loader = datastruct.ImageLoader(root=src, to_tensor=True, verbose=False)
+		data_loader = datastruct.ImageLoader(
+			root      = src,
+			to_tensor = to_tensor,
+			verbose   = verbose,
+		)
 	elif core.Path(src).is_video_file():
 		data_name   = core.Path(src).name
-		data_loader = datastruct.VideoLoaderCV(root=src, to_tensor=True, verbose=False)
+		data_loader = datastruct.VideoLoaderCV(
+			root      = src,
+			to_tensor = to_tensor,
+			verbose   = verbose,
+		)
 		data_writer = VideoWriterCV(
 			dst         = core.Path(dst),
 			image_size  = data_loader.imgsz,
@@ -507,7 +519,7 @@ def parse_io_worker(
 			fourcc      = "mp4v",
 			save_image  = False,
 			denormalize = denormalize,
-			verbose     = False,
+			verbose     = verbose,
 		)
 	else:
 		raise ValueError(f"Invalid input source: {src}")

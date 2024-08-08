@@ -42,7 +42,7 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 		classlabels: :class:`ClassLabels` object. Default: ``None``.
 		transform: Transformations performed on both the input and target. We
 			use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
-		to_tensor: If True, convert input and target to :class:`torch.Tensor`.
+		to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
 			Default: ``False``.
 		cache_data: If ``True``, cache data to disk for faster loading next
 			time. Default: ``False``.
@@ -259,8 +259,6 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 			Default: ``False``.
 		cache_data: If ``True``, cache data to disk for faster loading next
 			time. Default: ``False``.
-		cache_images: If ``True``, cache images into memory for faster training
-			(WARNING: large datasets may exceed system RAM). Default: ``False``.
 		verbose: Verbosity. Default: ``True``.
 	
 	See Also: :class:`LabeledDataset`.

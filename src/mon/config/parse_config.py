@@ -16,6 +16,7 @@ import socket
 
 from mon import core
 from mon.config import utils
+from mon.globals import ZOO_DIR
 
 
 # region Utils
@@ -105,6 +106,13 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
     save_dir = save_dir or utils.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
     save_dir = core.Path(save_dir)
     weights  = core.to_list(weights)
+    for i, w in enumerate(weights):
+        w = core.Path(w)
+        if not w.is_weights_file():
+            if w.parts[0] in ["zoo"]:
+                weights[i] = ZOO_DIR.parent / w
+            else:
+                weights[i] = ZOO_DIR / w
     weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     device   = core.parse_device(device)
@@ -307,6 +315,13 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     save_dir = save_dir or utils.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
     save_dir = core.Path(save_dir)
     weights  = core.to_list(weights)
+    for i, w in enumerate(weights):
+        w = core.Path(w)
+        if not w.is_weights_file():
+            if w.parts[0] in ["zoo"]:
+                weights[i] = ZOO_DIR.parent / w
+            else:
+                weights[i] = ZOO_DIR / w
     weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     device   = core.parse_device(device)

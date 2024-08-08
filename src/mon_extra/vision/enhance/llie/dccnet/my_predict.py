@@ -56,7 +56,13 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(
+        src         = data,
+        dst         = save_dir,
+        to_tensor   = False,
+        denormalize = True,
+        verbose     = False,
+    )
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
@@ -64,7 +70,7 @@ def predict(args: argparse.Namespace):
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for images, target, meta in pbar.track(
+            for image, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
@@ -75,7 +81,7 @@ def predict(args: argparse.Namespace):
                 data_lowlight  = torch.from_numpy(data_lowlight).float()
                 data_lowlight  = data_lowlight.permute(2, 0, 1)
                 data_lowlight  = data_lowlight.cuda().unsqueeze(0)
-                h, w           = mon.get_image_size(images)
+                h, w           = mon.get_image_size(data_lowlight)
                 data_lowlight  = mon.resize_divisible(data_lowlight, 32)
                 timer.tick()
                 gray, color_hist, enhanced_image = color_net(data_lowlight)

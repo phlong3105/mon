@@ -144,7 +144,13 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(
+        src         = data,
+        dst         = save_dir,
+        to_tensor   = False,
+        denormalize = True,
+        verbose     = False,
+    )
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
@@ -152,13 +158,13 @@ def predict(args: argparse.Namespace):
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for images, target, meta in pbar.track(
+            for image, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
                 image_path  = meta["path"]
-                input_image = cv2.imread(str(image_path))
+                input_image = image  # cv2.imread(str(image_path))
                 h0, w0      = input_image.shape[0], input_image.shape[1]
                 timer.tick()
                 # if you set num_samples > 1, process will return multiple results

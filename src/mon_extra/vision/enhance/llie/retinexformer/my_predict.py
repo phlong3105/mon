@@ -65,7 +65,13 @@ def predict(args: argparse.Namespace):
     
     # Data I/O
     console.log(f"[bold red]{data}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=data, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(
+        src         = data,
+        dst         = save_dir,
+        to_tensor   = False,
+        denormalize = True,
+        verbose     = False,
+    )
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
     
@@ -74,7 +80,7 @@ def predict(args: argparse.Namespace):
     factor = 4
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for images, target, meta in pbar.track(
+            for image, target, meta in pbar.track(
                 sequence    = data_loader,
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
@@ -85,17 +91,17 @@ def predict(args: argparse.Namespace):
                 image_path = meta["path"]
                 
                 if resize:
-                    h0, w0 = mon.get_image_size(images)
-                    images = mon.resize(images, imgsz)
-                    console.log("Resizing images to: ", images.shape[2], images.shape[3])
+                    h0, w0 = mon.get_image_size(image)
+                    image = mon.resize(image, imgsz)
+                    console.log("Resizing images to: ", image.shape[2], image.shape[3])
                     # images = proc.resize(input=images, size=[1000, 666])
                 
                 # Padding in case images are not multiples of 4
-                h, w  = images.shape[2], images.shape[3]
+                h, w  = image.shape[2], image.shape[3]
                 H, W  = ((h + factor) // factor) * factor, ((w + factor) // factor) * factor
                 padh  = H - h if h % factor != 0 else 0
                 padw  = W - w if w % factor != 0 else 0
-                input = F.pad(images, (0, padw, 0, padh), 'reflect')
+                input = F.pad(image, (0, padw, 0, padh), 'reflect')
                 input = input.to(device)
                 
                 timer.tick()

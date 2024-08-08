@@ -9,20 +9,17 @@
 # 2. download SAM weights in directory `SAM`
 # 3. add <source> file in directory `SAM`
 
+import argparse
+
+import cv2
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-import cv2
 
-from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 
-import argparse
 parser = argparse.ArgumentParser("enlighten-anything")
 parser.add_argument('--source_dir', type=str, default='data/LOL/test15/low', help='directory of data to be segmented')
 args = parser.parse_args()
-
-
-
 
 sam_checkpoint = "./segment_anything/sam_vit_h_4b8939.pth"
 model_type = "vit_h"
@@ -30,7 +27,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 sam.to(device=device)
 mask_generator = SamAutomaticMaskGenerator(sam)
-
 
 import os
 sourcedir = args.source_dir
@@ -64,4 +60,3 @@ for i, filename in enumerate(os.listdir(sourcedir)):
             color_mask = np.concatenate([np.random.random(3), [0.35]])
             img[mask_bool] = color_mask
         cv2.imwrite(save_path, np.uint8(img * 255))
-        

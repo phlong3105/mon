@@ -175,8 +175,6 @@ class LabeledDataset(Dataset, ABC):
 		root: The root directory where the data is stored.
 		split: The data split to use. Default: ``'Split.TRAIN'``.
 		classlabels: :class:`ClassLabels` object. Default: ``None``.
-		has_test_label: If ``True``, the test set has ground-truth labels.
-			Default: ``False``.
 		transform: Transformations performed on both the input and target.
 		to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
 			Default: ``False``.

@@ -68,6 +68,7 @@ yolox             = {path="src/mon_extra/vision/detect/yolox",            develo
 [tool.poetry.extras]
 dev = [
     "depth_anything_v2",
+    "sam",
     "ultralytics",
     "yolor",
     "yolov7",
