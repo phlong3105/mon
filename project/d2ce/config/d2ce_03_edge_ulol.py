@@ -16,7 +16,7 @@ root_dir     = current_file.parents[1]
 
 # region Basic
 
-model_name = "d2ce_depth"
+model_name = "d2ce_03_edge"
 data_name  = "ulol"
 root       = root_dir / "run"
 fullname   = f"{model_name}_{data_name}"

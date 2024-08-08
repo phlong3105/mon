@@ -9,9 +9,10 @@ from __future__ import annotations
 
 __all__ = [
     "D2CE",
-    "D2CE_Baseline",
-    "D2CE_Depth",
-    "D2CE_Edge",
+    "D2CE_01_Baseline",
+    "D2CE_02_Depth",
+    "D2CE_03_Edge",
+    "D2CE_04_DepthAttention",
 ]
 
 from typing import Any, Literal, Sequence
@@ -450,39 +451,82 @@ class D2CE(base.LowLightImageEnhancementModel):
         return c1, c2, de, e, y, y_gf
 
 
-@MODELS.register(name="d2ce_baseline", arch="d2ce")
-class D2CE_Baseline(D2CE):
+@MODELS.register(name="d2ce_01_baseline", arch="d2ce")
+class D2CE_01_Baseline(D2CE):
     
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name      = "d2ce_baseline",
+            name      = "d2ce_01_baseline",
             use_depth = False,
             use_edge  = False,
             *args, **kwargs
         )
 
 
-@MODELS.register(name="d2ce_depth", arch="d2ce")
-class D2CE_Depth(D2CE):
+@MODELS.register(name="d2ce_02_depth", arch="d2ce")
+class D2CE_02_Depth(D2CE):
     
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name      = "d2ce_depth",
+            name      = "d2ce_02_depth",
             use_depth = True,
             use_edge  = False,
             *args, **kwargs
         )
 
 
-@MODELS.register(name="d2ce_edge", arch="d2ce")
-class D2CE_Edge(D2CE):
+@MODELS.register(name="d2ce_03_edge", arch="d2ce")
+class D2CE_03_Edge(D2CE):
     
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name      = "d2ce_edge",
+            name      = "d2ce_03_edge",
             use_depth = False,
             use_edge  = True,
             *args, **kwargs
         )
-        
+
+
+@MODELS.register(name="d2ce_04_depth_attention", arch="d2ce")
+class D2CE_04_DepthAttention(D2CE):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name      = "d2ce_04_depth_attention",
+            use_depth = False,
+            use_edge  = False,
+            *args, **kwargs
+        )
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, ...]:
+        x = input
+        # Enhancement
+        de    = self.de(x)
+        de    = de.detach()  # Must call detach() else error
+        c1, e = self.en(x, de)
+        e     = e.detach()   # Must call detach() else error
+        # Enhancement loop
+        if self.bam_gamma in [None, 0.0]:
+            y  = x
+            c2 = None
+            for i in range(self.num_iters):
+                y = y + c1 * (torch.pow(y, 2) - y)
+        else:
+            y  = x
+            c2 = de
+            for i in range(0, self.num_iters):
+                # b = y * (1 - c2)
+                # d = y * c2
+                y = c2 * c1 * (torch.pow(y, 2) - y)
+        # Guided Filter
+        y_gf = self.gf(x, y)
+        return c1, c2, de, e, y, y_gf
+    
 # endregion

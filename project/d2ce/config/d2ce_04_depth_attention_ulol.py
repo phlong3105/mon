@@ -16,7 +16,7 @@ root_dir     = current_file.parents[1]
 
 # region Basic
 
-model_name = "d2ce_edge"
+model_name = "d2ce_04_depth_attention"
 data_name  = "ulol"
 root       = root_dir / "run"
 fullname   = f"{model_name}_{data_name}"
@@ -73,7 +73,6 @@ datamodule = {
     "name"      : data_name,
     "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
-		# A.Resize(height=image_size[0], width=image_size[1], interpolation=cv2.INTER_AREA),
 		A.ResizeMultipleOf(
 			height            = image_size[0],
 			width             = image_size[1],
@@ -82,10 +81,6 @@ datamodule = {
 			resize_method     = "lower_bound",
 			interpolation     = cv2.INTER_AREA,
 		),
-		# A.NormalizeImageMeanStd(
-		# 	mean = [0.485, 0.456, 0.406],
-		# 	std  = [0.229, 0.224, 0.225]
-		# ),
 		# A.Flip(),
 		# A.Rotate(),
 	]),  # Transformations performing on both the input and target.
