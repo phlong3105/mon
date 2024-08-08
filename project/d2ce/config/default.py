@@ -24,6 +24,7 @@ TASKS = [
     Task.INPAINT,
     Task.LES,
     Task.LLIE,
+    Task.SEGMENT,
 ]
 
 # List all models that are used in this project.

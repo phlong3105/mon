@@ -16,7 +16,7 @@ python -W ignore main.py \
     --root "${current_dir}" \
     --task "llie" \
     --mode "predict" \
-    --data "1,3,4,9,10,12,6,7,8" \
+    --data "dicm, fusion, lime, mef, npe, vv, lol_v1, lol_v2_real, lol_v2_synthetic" \
     --imgsz 504 \
     --verbose \
     "$@"
