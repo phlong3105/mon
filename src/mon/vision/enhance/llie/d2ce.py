@@ -12,7 +12,8 @@ __all__ = [
     "D2CE_01_Baseline",
     "D2CE_02_Depth",
     "D2CE_03_Edge",
-    "D2CE_04_DepthAttention",
+    "D2CE_04_DepthBrightnessAttention",
+    "D2CE_05_DepthAttention",
 ]
 
 from typing import Any, Literal, Sequence
@@ -427,7 +428,7 @@ class D2CE(base.LowLightImageEnhancementModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, ...]:
-        x = input
+        x     = input
         # Enhancement
         de    = self.de(x)
         de    = de.detach()  # Must call detach() else error
@@ -487,12 +488,56 @@ class D2CE_03_Edge(D2CE):
         )
 
 
-@MODELS.register(name="d2ce_04_depth_attention", arch="d2ce")
-class D2CE_04_DepthAttention(D2CE):
+@MODELS.register(name="d2ce_04_depth_brightness_attention", arch="d2ce")
+class D2CE_04_DepthBrightnessAttention(D2CE):
     
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name      = "d2ce_04_depth_attention",
+            name      = "d2ce_04_depth_brightness_attention",
+            use_depth = False,
+            use_edge  = False,
+            *args, **kwargs
+        )
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : _callable = None,
+        profile  : bool      = False,
+        out_index: int       = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, ...]:
+        x = input
+        # Enhancement
+        de    = self.de(x)
+        de    = de.detach()  # Must call detach() else error
+        c1, e = self.en(x, de)
+        e     = e.detach()   # Must call detach() else error
+        # Enhancement loop
+        if self.bam_gamma in [None, 0.0]:
+            y  = x
+            c2 = None
+            for i in range(self.num_iters):
+                y = y + c1 * (torch.pow(y, 2) - y)
+        else:
+            y  = x
+            c2 = self.bam(x)
+            c2 = c2 * de
+            for i in range(0, self.num_iters):
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
+        # Guided Filter
+        y_gf = self.gf(x, y)
+        return c1, c2, de, e, y, y_gf
+
+
+@MODELS.register(name="d2ce_05_depth_attention", arch="d2ce")
+class D2CE_05_DepthAttention(D2CE):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name      = "d2ce_05_depth_attention",
             use_depth = False,
             use_edge  = False,
             *args, **kwargs
@@ -522,9 +567,9 @@ class D2CE_04_DepthAttention(D2CE):
             y  = x
             c2 = de
             for i in range(0, self.num_iters):
-                # b = y * (1 - c2)
-                # d = y * c2
-                y = c2 * c1 * (torch.pow(y, 2) - y)
+                b = y * (1 - c2)
+                d = y * c2
+                y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
         return c1, c2, de, e, y, y_gf

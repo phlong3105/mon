@@ -16,6 +16,9 @@
 [submodule "src/mon_extra/vision/detect/yolox"]
 	path = src/mon_extra/vision/detect/yolox
 	url  = https://github.com/phlong3105/yolox
+[submodule "src/mon_extra/vision/segment/sam2"]
+	path = src/mon_extra/vision/segment/sam2
+	url  = https://github.com/phlong3105/sam2
 [submodule "src/mon_extra/vision/ultralytics"]
 	path = src/mon_extra/vision/ultralytics
 	url  = https://github.com/phlong3105/ultralytics

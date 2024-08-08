@@ -460,7 +460,7 @@ def main(
         imgsz        = mon.to_int_list(imgsz)
         imgsz        = imgsz[0] if len(imgsz) == 1 else imgsz
         imgsz        = None if imgsz < 0 else imgsz
-        resize       = "yes" if imgsz_ not in [None, -1, imgsz] else "no"
+        resize       = "yes" if imgsz_ not in [None, -1] else "no"
         resize       = click.prompt(click.style(f"Resize?     [yes/no]", fg="bright_yellow", bold=True), type=str, default=resize)
         resize       = True if resize       == "yes" else False
         benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")

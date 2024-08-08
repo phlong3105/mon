@@ -13,7 +13,7 @@ data_dir="${mon_dir}/data"
 # Input
 task="llie"
 arch="d2ce"
-model="d2ce"
+model="d2ce_03_edge"
 data=(
     "dicm"
     "lime"

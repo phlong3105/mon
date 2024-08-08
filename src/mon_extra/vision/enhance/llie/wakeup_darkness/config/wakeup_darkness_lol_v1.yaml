@@ -1,0 +1,34 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "wakeup_darkness"
+model       : "wakeup_darkness"
+data        : "lol_v1"
+data_dir    : ~
+root        : ~
+project     : ~
+variant     : ~
+fullname    : ~
+save_dir    : ~
+weights     : ~
+device      : 0
+local_rank  : -1
+launcher    : ~
+epochs      : 1000
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+seed        : 2
+lr          : 0.0003
+stage       : 3
+pretrained  : "vision/enhance/llie/wakeup_darkness/pretrained/sci_difficult.pth"
+arch_       : "WithCalNet"  # "WithCalNet", "WithoutCalNet"
+frozen      : ~  # "CalEnl", "Cal", "Enl"
