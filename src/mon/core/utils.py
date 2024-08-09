@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various useful functions and data structures."""
+"""This module implements various useful utilities functions and data structures.
+"""
 
 from __future__ import annotations
 
@@ -10,12 +11,33 @@ __all__ = [
     "check_installed_package",
     "get_gpu_device_memory",
     "get_machine_memory",
+    "get_project_default_config",
+    "is_extra_model",
     "is_rank_zero",
+    "list_archs",
+    "list_config_files",
+    "list_configs",
     "list_cuda_devices",
+    "list_datasets",
     "list_devices",
+    "list_extra_archs",
+    "list_extra_datasets",
+    "list_extra_models",
+    "list_models",
+    "list_mon_archs",
+    "list_mon_datasets",
+    "list_mon_models",
+    "list_tasks",
+    "list_weights_files",
+    "load_config",
     "make_divisible",
+    "parse_config_file",
     "parse_device",
     "parse_hw",
+    "parse_menu_string",
+    "parse_model_name",
+    "parse_save_dir",
+    "parse_weights_file",
     "pynvml_available",
     "set_device",
     "set_random_seed",
@@ -23,11 +45,13 @@ __all__ = [
 ]
 
 import importlib
+import importlib.util
 import math
 import os
 import random
-from typing import Any, Sequence
 import time
+from typing import Any, Collection, Sequence
+
 import numpy as np
 import psutil
 import torch
@@ -39,6 +63,187 @@ except ImportError:
     pynvml_available = False
 
 from mon.globals import MemoryUnit
+from mon.core import rich, pathlib, dtype, file, humps
+
+console       = rich.console
+error_console = rich.error_console
+
+
+# region Config
+
+def get_project_default_config(project_root: str | pathlib.Path) -> dict:
+    if project_root in [None, "None", ""]:
+        error_console.log(f"{project_root} is not a valid project directory.")
+        return {}
+    
+    config_file = pathlib.Path(project_root) / "config" / "default.py"
+    if config_file.exists():
+        spec   = importlib.util.spec_from_file_location("default", str(config_file))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return {key: value for key, value in module.__dict__.items() if not key.startswith('__')}
+    return {}
+
+
+def list_config_files(
+    project_root: str | pathlib.Path,
+    model_root  : str | pathlib.Path | None = None,
+    model       : str | None             = None
+) -> list[pathlib.Path]:
+    """List configuration files in the given :param:`project`."""
+    config_files = []
+    if project_root not in [None, "None", ""]:
+        project_root        = pathlib.Path(project_root)
+        project_config_dir  = project_root / "config"
+        config_files       += list(project_config_dir.files(recursive=True))
+    if model_root not in [None, "None", ""]:
+        model_root        = pathlib.Path(model_root)
+        model_config_dir  = model_root / "config"
+        config_files     += list(model_config_dir.files(recursive=True))
+    #
+    config_files = [
+        cf for cf in config_files
+        if (
+            cf.is_config_file() or
+            cf.is_py_file() and cf.name != "__init__.py"
+        )
+    ]
+    if model not in [None, "None", ""]:
+        model_name   = parse_model_name(model)
+        config_files = [cf for cf in config_files if f"{model_name}" in cf.name]
+    config_files = dtype.unique(config_files)
+    config_files = sorted(config_files)
+    return config_files
+
+
+def list_configs(
+    project_root: str | pathlib.Path,
+    model_root  : str | pathlib.Path | None = None,
+    model       : str | None             = None
+) -> list[str]:
+    config_files = list_config_files(project_root=project_root, model_root=model_root, model=model)
+    config_files = [str(f.name) for f in config_files]
+    # if is_extra_model(model):
+    #     config_files = [EXTRA_MODEL_STR in f for f in config_files]
+    config_files = dtype.unique(config_files)
+    config_files = sorted(config_files, key=lambda x: (os.path.splitext(x)[1], x))
+    return config_files
+
+
+def parse_config_file(
+    config      : str | pathlib.Path,
+    project_root: str | pathlib.Path,
+    model_root  : str | pathlib.Path | None = None,
+    weights_path: str | pathlib.Path | None = None,
+) -> pathlib.Path | None:
+    # assert config not in [None, "None", ""]
+    if config in [None, "None", ""]:
+        error_console.log(f"No configuration given.")
+        return None
+    # Check ``config`` itself
+    config = pathlib.Path(config)
+    if config.is_config_file():
+        return config
+    # Check for other config file extensions in the same directory
+    config_ = config.config_file()
+    if config_.is_config_file():
+        return config_
+    # Check for config file in ``'config'`` directory in ``project_root``.
+    if project_root not in [None, "None", ""]:
+        config_dirs  = [pathlib.Path(project_root / "config")]
+        config_dirs += pathlib.Path(project_root / "config").subdirs(recursive=True)
+        for config_dir in config_dirs:
+            config_ = (config_dir / config.name).config_file()
+            if config_.is_config_file():
+                return config_
+    # Check for config file in ``'config'`` directory in ``model_root``.
+    if model_root not in [None, "None", ""]:
+        config_dirs  = [pathlib.Path(model_root / "config")]
+        config_dirs += pathlib.Path(model_root / "config").subdirs(recursive=True)
+        for config_dir in config_dirs:
+            config_ = (config_dir / config.name).config_file()
+            if config_.is_config_file():
+                return config_
+    # Check for config file that comes along with ``weights_path``.
+    if weights_path not in [None, "None", ""]:
+        weights_path = weights_path[0] if isinstance(weights_path, list) else weights_path
+        weights_path = pathlib.Path(weights_path)
+        if weights_path.is_weights_file():
+            config_ = (weights_path.parent / "config.py").config_file()
+            if config_.is_config_file():
+                return config_
+    # That's it.
+    error_console.log(f"No configuration is found at {config}.")
+    return None  # config
+
+
+def load_config(config: Any) -> dict:
+    if config is None:
+        data = None
+    elif isinstance(config, dict):
+        data = config
+    elif isinstance(config, pathlib.Path | str):
+        config = pathlib.Path(config)
+        if config.is_py_file():
+            spec   = importlib.util.spec_from_file_location(str(config.stem), str(config))
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            data  = {key: value for key, value in module.__dict__.items() if not key.startswith("__")}
+        else:
+            data = file.read_from_file(path=config)
+    else:
+        data = None
+    
+    if data is None:
+        error_console.log(f"No configuration is found at {config}. Setting an empty dictionary.")
+        data = {}
+    return data
+
+# endregion
+
+
+# region Datasets
+
+def list_mon_datasets(task: str, mode: str) -> list[str]:
+    from mon.globals import Task, Split, DATASETS
+    if mode in ["train"]:
+        split = Split("train")
+    else:
+        split = Split("test")
+    task	 = Task(task)
+    datasets = DATASETS
+    return sorted([
+        d for d in datasets
+        if (task in datasets[d].tasks and split in datasets[d].splits)
+    ])
+
+
+def list_extra_datasets(task: str, mode: str) -> list[str]:
+    from mon.globals import Task, Split, EXTRA_DATASETS
+    if mode in ["train"]:
+        split = Split("train")
+    else:
+        split = Split("test")
+    task 	 = Task(task)
+    datasets = EXTRA_DATASETS
+    return sorted([
+        d for d in datasets
+        if (task in datasets[d]["tasks"] and split in datasets[d]["splits"])
+    ])
+
+
+def list_datasets(
+    task        : str,
+    mode        : str,
+    project_root: str | pathlib.Path | None = None
+) -> list[str]:
+    datasets        = sorted(list_mon_datasets(task, mode) + list_extra_datasets(task, mode))
+    default_configs = get_project_default_config(project_root=project_root)
+    if default_configs.get("DATASETS", False) and len(default_configs["DATASETS"]) > 0:
+        datasets = [d for d in datasets if d in default_configs["DATASETS"]]
+    return datasets
+
+# endregion
 
 
 # region Device
@@ -147,6 +352,185 @@ def get_gpu_device_memory(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> 
     free  = info.free  / ratio
     used  = info.used  / ratio
     return [total, used, free]
+
+# endregion
+
+
+# region Menu
+
+def parse_menu_string(items: Sequence | Collection, num_columns: int = 4) -> str:
+    s = f"\n  "
+    for i, item in enumerate(items):
+        s += f"{f'{i}.':>6} {item}\n  "
+    s += f"{f'Other.':} (please specify)\n  "
+    
+    '''
+    w, h = mon.get_terminal_size()
+    w 	 = w if w >= 80 else 80
+    items_per_row = w // (padding + 2)
+    padding = math.floor(w / num_columns) - 8
+    
+    s   = f"\n  "
+    row = f""
+    for i, item in enumerate(items):
+        if i > 0 and i % num_columns == 0:
+            s   += f"{row}\n\t"
+            row  = f""
+        else:
+            t    = f"{f'{i}.':>4}{item}"
+            row += f"{t:<{padding}}"
+    if row != "":
+        s += f"{row}\n\t"
+    '''
+    
+    return s
+
+# endregion
+
+
+# region Models
+
+def is_extra_model(model: str) -> bool:
+    from mon.globals import MODELS, EXTRA_MODELS, EXTRA_MODEL_STR
+    use_extra_model = f"{EXTRA_MODEL_STR}" in model
+    model           = model.replace(f" {EXTRA_MODEL_STR}", "").strip()
+    mon_models      = dtype.flatten_models_dict(MODELS)
+    extra_models    = dtype.flatten_models_dict(EXTRA_MODELS)
+    return (
+        use_extra_model or
+        (model not in mon_models and model in extra_models)
+    )
+
+
+def list_mon_models(
+    task: str | None = None,
+    mode: str | None = None,
+    arch: str | None = None,
+) -> list[str]:
+    from mon.globals import Task, MODELS, Scheme
+    flatten_models = dtype.flatten_models_dict(MODELS)
+    task   = Task(task)   if task not in [None, "None", ""] else None
+    mode   = Scheme(mode) if mode in ["online", "instance"] else None
+    arch   = arch         if arch not in [None, "None", ""] else None
+    models = list(flatten_models.keys())
+    if task is not None:
+        models = [m for m in models if task in flatten_models[m].tasks]
+    if mode is not None:
+        models = [m for m in models if mode in flatten_models[m]._schemes]
+    if arch is not None:
+        models = [m for m in models if arch in flatten_models[m].arch]
+    return sorted(models)
+
+
+def list_extra_models(
+    task: str | None = None,
+    mode: str | None = None,
+    arch: str | None = None,
+) -> list[str]:
+    from mon.globals import Task, EXTRA_MODELS, Scheme
+    flatten_models = dtype.flatten_models_dict(EXTRA_MODELS)
+    task   = Task(task)   if task not in [None, "None", ""] else None
+    mode   = Scheme(mode) if mode in ["online", "instance"] else None
+    arch   = arch         if arch not in [None, "None", ""] else None
+    models = list(flatten_models.keys())
+    if task is not None:
+        models = [m for m in models if task in flatten_models[m]["tasks"]]
+    if mode is not None:
+        models = [m for m in models if mode in flatten_models[m]["schemes"]]
+    if arch is not None:
+        models = [m for m in models if arch in flatten_models[m]["arch"]]
+    return sorted(models)
+
+
+def list_models(
+    task        : str | None = None,
+    mode        : str | None = None,
+    arch        : str | None = None,
+    project_root: str | pathlib.Path | None = None
+) -> list[str]:
+    from mon.globals import EXTRA_MODEL_STR
+    models          = list_mon_models(task, mode, arch)
+    extra_models    = list_extra_models(task, mode, arch)
+    default_configs = get_project_default_config(project_root=project_root)
+    if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
+        project_models = [humps.snakecase(m) for m in default_configs["MODELS"]]
+        if len(project_models) > 0:
+            models       = [m for m in models       if humps.snakecase(m) in project_models]
+            extra_models = [m for m in extra_models if humps.snakecase(m) in project_models]
+    # Rename extra models for clarity
+    for i, m in enumerate(extra_models):
+        if m in models:
+            extra_models[i] = f"{m} {EXTRA_MODEL_STR}"
+    models = models + extra_models
+    return sorted(models)
+
+
+def list_mon_archs(
+    task: str | None = None,
+    mode: str | None = None,
+) -> list[str]:
+    from mon.globals import Task, MODELS, Scheme
+    flatten_models = dtype.flatten_models_dict(MODELS)
+    task   = Task(task)   if task not in [None, "None", ""] else None
+    mode   = Scheme(mode) if mode in ["online", "instance"] else None
+    models = list(flatten_models.keys())
+    if task is not None:
+        models = [m for m in models if task in flatten_models[m].tasks]
+    if mode is not None:
+        models = [m for m in models if mode in flatten_models[m]._schemes]
+    archs  = [flatten_models[m].arch for m in models]
+    archs  = [a.strip() for a in archs]
+    archs  = [a for a in archs if a not in [None, "None", ""]]
+    return sorted(dtype.unique(archs))
+
+
+def list_extra_archs(
+    task: str | None = None,
+    mode: str | None = None,
+) -> list[str]:
+    from mon.globals import Task, EXTRA_MODELS, Scheme
+    flatten_models = dtype.flatten_models_dict(EXTRA_MODELS)
+    task   = Task(task)   if task not in [None, "None", ""] else None
+    mode   = Scheme(mode) if mode in ["online", "instance"] else None
+    models = list(flatten_models.keys())
+    if task is not None:
+        models = [m for m in models if task in flatten_models[m]["tasks"]]
+    if mode is not None:
+        models = [m for m in models if mode in flatten_models[m]["schemes"]]
+    archs  = [flatten_models[m]["arch"] for m in models]
+    archs  = [a.strip() for a in archs]
+    archs  = [a for a in archs if a not in [None, "None", ""]]
+    return sorted(dtype.unique(archs))
+
+
+def list_archs(
+    task        : str | None = None,
+    mode        : str | None = None,
+    project_root: str | pathlib.Path | None = None
+) -> list[str]:
+    from mon.globals import MODELS, EXTRA_MODELS
+    models          = list_mon_models(task, mode)
+    extra_models    = list_extra_models(task, mode)
+    default_configs = get_project_default_config(project_root=project_root)
+    if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
+        project_models = [humps.snakecase(m) for m in default_configs["MODELS"]]
+        if len(project_models) > 0:
+            models       = [m for m in models       if humps.snakecase(m) in project_models]
+            extra_models = [m for m in extra_models if humps.snakecase(m) in project_models]
+    #
+    flatten_mon_models   = dtype.flatten_models_dict(MODELS)
+    flatten_extra_models = dtype.flatten_models_dict(EXTRA_MODELS)
+    mon_archs   = [flatten_mon_models[m].arch for m in models]
+    extra_archs = [flatten_extra_models[m]["arch"] for m in extra_models]
+    archs       = mon_archs + extra_archs
+    archs       = [a.strip() for a in archs]
+    archs       = [a for a in archs if a not in [None, "None", ""]]
+    return sorted(dtype.unique(archs))
+
+
+def parse_model_name(model: str) -> str:
+    from mon.globals import EXTRA_MODEL_STR
+    return model.replace(f" {EXTRA_MODEL_STR}", "").strip()
 
 # endregion
 
@@ -263,6 +647,57 @@ def parse_device(device: Any) -> list[int] | int | str:
 # endregion
 
 
+# region Save Dir
+
+def list_train_save_dirs(root: str | pathlib.Path) -> list[pathlib.Path]:
+    root      = pathlib.Path(root)
+    train_dir = root / "run" / "train"
+    save_dirs = sorted(list(train_dir.dirs()))
+    return save_dirs
+
+
+def parse_save_dir(
+    root   : str | pathlib.Path,
+    arch   : str | None = None,
+    model  : str | None = None,
+    data   : str | None = None,
+    project: str | None = None,
+    variant: str | None = None,
+) -> str | pathlib.Path:
+    """Parse save_dir in the following format:
+    ```
+        root              | root
+         |_ arch          |  |_ arch
+             |_ model     |      |_ project
+                 |_ data  |          |_ variant
+    ```
+    
+    Args:
+        root: The project root.
+        arch: The model's architecture.
+        model: The model's name.
+        data: The dataset's name.
+        project: The project's name. Usually used to perform ablation studies.
+            Default is ``None``.
+        variant: The variant's name. Usually used to perform ablation studies.
+            Default is ``None``.
+    """
+    save_dir = pathlib.Path(root)
+    if arch not in [None, "None", ""]:
+        save_dir /= arch
+    if project not in [None, "None", ""]:
+        save_dir = save_dir / project
+        if variant not in [None, "None", ""]:
+            save_dir = save_dir / variant
+    elif model not in [None, "None", ""]:
+        save_dir = save_dir / model
+        if data not in [None, "None", ""]:
+            save_dir = save_dir / data
+    return save_dir
+
+# endregion
+
+
 # region Seed
 
 def set_random_seed(seed: int | list[int] | tuple[int, int]):
@@ -279,6 +714,20 @@ def set_random_seed(seed: int | list[int] | tuple[int, int]):
     torch.cuda.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
+
+# endregion
+
+
+# region Tasks
+
+def list_tasks(project_root: str | pathlib.Path) -> list[str]:
+    from mon.globals import Task
+    tasks           = Task.keys()
+    default_configs = get_project_default_config(project_root=project_root)
+    if default_configs.get("TASKS", False) and len(default_configs["TASKS"]) > 0:
+        tasks = [t for t in tasks if t in default_configs["TASKS"]]
+    tasks = [t.value for t in tasks]
+    return tasks
 
 # endregion
 
@@ -363,5 +812,61 @@ class Timer:
         self.diff_time  = 0.0
         self.avg_time   = 0.0
         self.duration   = 0.0
+
+# endregion
+
+
+# region Weights
+
+def list_weights_files(
+    model       : str,
+    project_root: str | pathlib.Path | None = None,
+) -> list[pathlib.Path]:
+    from mon.globals import ZOO_DIR
+    
+    weights_files = []
+    # Search for weights in project_root
+    if project_root not in [None, "None", ""]:
+        project_root  = pathlib.Path(project_root)
+        train_dir     = project_root / "run" / "train"
+        weights_files = sorted(list(train_dir.rglob(f"*")))
+        weights_files = [f for f in weights_files if f.is_weights_file()]
+    # Search for weights in ZOO_DIR
+    zoo_dir = ZOO_DIR
+    # zoo_dir = ZOO_DIR / "mon_extra" if is_extra_model(model) else ZOO_DIR / "mon"
+    for path in sorted(list(zoo_dir.rglob(f"*"))):
+        if path.is_weights_file():
+            weights_files.append(path)
+    # Remove duplicate and sort
+    model_name    = parse_model_name(model)
+    weights_files = [f for f in weights_files if f"{model_name}" in str(f)]
+    weights_files = dtype.unique(weights_files)
+    weights_files = sorted(weights_files)
+    return weights_files
+
+
+def parse_weights_file(
+    weights: str | pathlib.Path | Sequence[str | pathlib.Path]
+) -> str | pathlib.Path | Sequence[str | pathlib.Path]:
+    """Parse weights file. If the weights file is a relative path in the ``zoo``
+    directory, then it will be converted to the absolute path. If the weights
+    file is a list with a single weights files, then it will be converted to a
+    single weights.
+    
+    Args:
+        weights: The weights file to parse.
+    """
+    from mon.globals import ZOO_DIR
+    weights = dtype.to_list(weights)
+    for i, w in enumerate(weights):
+        w = pathlib.Path(w)
+        if not w.is_weights_file():
+            if w.parts[0] in ["zoo"]:
+                weights[i] = ZOO_DIR.parent / w
+            else:
+                weights[i] = ZOO_DIR / w
+    weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
+    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    return weights
 
 # endregion

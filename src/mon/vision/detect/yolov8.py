@@ -13,6 +13,7 @@ import sys
 
 import numpy as np
 import torch
+
 from mon import core
 from mon.globals import DETECTORS
 from mon.vision import track

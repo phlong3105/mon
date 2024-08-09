@@ -34,7 +34,6 @@ import subprocess
 import sys
 import termios
 
-import numpy as np
 import rich
 import torch
 from plum import dispatch

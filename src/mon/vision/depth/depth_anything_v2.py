@@ -25,6 +25,7 @@ from abc import ABC
 from typing import Any, Literal
 
 import torch
+
 from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme, Task, ZOO_DIR

@@ -35,7 +35,6 @@ import torchmetrics
 
 from mon.globals import METRICS
 
-
 # region Image Metric
 
 ErrorRelativeGlobalDimensionlessSynthesis    = torchmetrics.image.ErrorRelativeGlobalDimensionlessSynthesis

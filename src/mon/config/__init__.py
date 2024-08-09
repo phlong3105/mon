@@ -3,7 +3,5 @@
 
 from __future__ import annotations
 
-import mon.config.parse_config
-import mon.config.utils
-from mon.config.parse_config import *
-from mon.config.utils import *
+import mon.config.parse_args
+from mon.config.parse_args import *

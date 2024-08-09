@@ -40,9 +40,9 @@ from torch import nn
 from torch.nn import functional as F
 from torchvision import models, transforms
 
-from mon.nn import prior
 from mon.core import _size_2_t
 from mon.globals import LOSSES
+from mon.nn import prior
 from mon.nn.loss import base
 
 

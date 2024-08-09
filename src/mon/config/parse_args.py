@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""This module contains functions to parse arguments for training, predicting,
+and online inference.
+"""
+
 from __future__ import annotations
 
 __all__ = [
@@ -15,8 +19,6 @@ import argparse
 import socket
 
 from mon import core
-from mon.config import utils
-from mon.globals import ZOO_DIR
 
 
 # region Utils
@@ -76,13 +78,13 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
     weights    = input_args.get("weights")
     
     # Get config args
-    config = utils.parse_config_file(
+    config = core.parse_config_file(
         project_root = root,
         model_root   = model_root,
         weights_path = weights,
         config       = config,
     )
-    args   = utils.load_config(config)
+    args   = core.load_config(config)
     
     # Prioritize input args --> config file args
     arch       = input_args.get("arch")     or args.get("arch")
@@ -103,18 +105,9 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
     extra_args = input_args.get("extra_args")
 
     # Parse arguments
-    save_dir = save_dir or utils.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
+    save_dir = save_dir or core.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
     save_dir = core.Path(save_dir)
-    weights  = core.to_list(weights)
-    for i, w in enumerate(weights):
-        w = core.Path(w)
-        if not w.is_weights_file():
-            if w.parts[0] in ["zoo"]:
-                weights[i] = ZOO_DIR.parent / w
-            else:
-                weights[i] = ZOO_DIR / w
-    weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    weights  = core.parse_weights_file(weights)
     device   = core.parse_device(device)
     
     # Update arguments
@@ -147,104 +140,6 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
         core.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
     
     return args
-    
-
-'''
-def parse_train_args() -> argparse.Namespace:
-    
-    @click.command(name="train", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-    @click.option("--config",   type=str, default=None, help="Model config.")
-    @click.option("--arch",     type=str, default=None, help="Model architecture.")
-    @click.option("--model",    type=str, default=None, help="Model name.")
-    @click.option("--root",     type=str, default=None, help="Project root.")
-    @click.option("--project",  type=str, default=None, help="Project name.")
-    @click.option("--variant",  type=str, default=None, help="Variant name.")
-    @click.option("--fullname", type=str, default=None, help="Fullname to save the model's weight.")
-    @click.option("--save-dir", type=str, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
-    @click.option("--weights",  type=str, default=None, help="Weights paths.")
-    @click.option("--device",   type=str, default=None, help="Running devices.")
-    @click.option("--epochs",   type=int, default=None, help="Stop training once this number of epochs is reached.")
-    @click.option("--steps",    type=int, default=None, help="Stop training once this number of steps is reached.")
-    @click.option("--exist-ok", is_flag=True)
-    @click.option("--verbose",  is_flag=True)
-    @click.pass_context
-    def command(
-        ctx,
-        config  : str,
-        arch    : str,
-        model   : str,
-        root    : str,
-        project : str,
-        variant : str,
-        fullname: str,
-        save_dir: str,
-        weights : str,
-        device  : str,
-        epochs  : int,
-        steps   : int,
-        exist_ok: bool,
-        verbose : bool,
-    ) -> argparse.Namespace:
-        hostname = socket.gethostname().lower()
-        
-        # Get extra args
-        extra_args = {
-            k.lstrip("--"): ctx.args[i + 1]
-            if not (i + 1 >= len(ctx.args) or ctx.args[i + 1].startswith("--")) else True
-            for i, k in enumerate(ctx.args) if k.startswith("--")
-        }
-        
-        # Get config args
-        config = mon.parse_config_file(project_root=mon.Path(root) / "config", config=config)
-        args   = mon.load_config(config)
-        
-        # Prioritize input args --> config file args
-        model    = model    or args.get("model")
-        data     =             args.get("data")
-        project  = project  or args.get("project")
-        variant  = variant  or args.get("variant")
-        fullname = fullname or args.get("fullname")
-        save_dir = save_dir or args.get("save_dir")
-        weights  = weights  or args.get("weights")
-        device   = device   or args.get("device")
-        epochs   = epochs   or args.get("epochs")
-        steps    = steps    or args.get("steps")
-        exist_ok = exist_ok or args.get("exist_ok")
-        verbose  = verbose  or args.get("verbose")
-        
-        # Parse arguments
-        root     = mon.Path(root)
-        save_dir = save_dir or mon.parse_save_dir(root/"run"/"train", arch, model, data, project, variant)
-        save_dir = mon.Path(save_dir)
-        weights  = mon.to_list(weights)
-        device   = mon.parse_device(device)
-        
-        # Update arguments
-        args["hostname"] = hostname
-        args["config"]   = config
-        args["arch"]     = arch
-        args["model"]    = model
-        args["root"]     = root
-        args["project"]  = project
-        args["variant"]  = variant
-        args["fullname"] = fullname
-        args["save_dir"] = save_dir
-        args["weights"]  = weights
-        args["device"]   = device
-        args["epochs"]   = epochs
-        args["steps"]    = steps
-        args["exist_ok"] = exist_ok
-        args["verbose"]  = verbose
-        args |= extra_args
-        args  = argparse.Namespace(**args)
-        
-        if not exist_ok:
-            mon.delete_dir(paths=mon.Path(args.save_dir))
-        
-        return args
-    
-    return command()
-'''
 
 # endregion
 
@@ -285,13 +180,13 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     weights    = input_args.get("weights")
     
     # Get config args
-    config = utils.parse_config_file(
+    config = core.parse_config_file(
         project_root = root,
         model_root   = model_root,
         weights_path = weights,
         config       = config,
     )
-    args   = utils.load_config(config)
+    args   = core.load_config(config)
     
     # Prioritize input args --> config file args
     arch       = input_args.get("arch")       or args.get("arch")
@@ -312,18 +207,9 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     extra_args = input_args.get("extra_args")
     
     # Parse arguments
-    save_dir = save_dir or utils.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
+    save_dir = save_dir or core.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
     save_dir = core.Path(save_dir)
-    weights  = core.to_list(weights)
-    for i, w in enumerate(weights):
-        w = core.Path(w)
-        if not w.is_weights_file():
-            if w.parts[0] in ["zoo"]:
-                weights[i] = ZOO_DIR.parent / w
-            else:
-                weights[i] = ZOO_DIR / w
-    weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    weights  = core.parse_weights_file(weights)
     device   = core.parse_device(device)
     imgsz    = core.parse_hw(imgsz)
     
@@ -354,110 +240,6 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
         core.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
     
     return args
-
-
-'''
-def parse_predict_args() -> argparse.Namespace:
-    
-    @click.command(name="predict", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
-    @click.option("--config",     type=str, default=None, help="Model config.")
-    @click.option("--arch",       type=str, default=None, help="Model architecture.")
-    @click.option("--model",      type=str, default=None, help="Model name.")
-    @click.option("--data",       type=str, default=None, help="Source data directory.")
-    @click.option("--root",       type=str, default=None, help="Project root.")
-    @click.option("--project",    type=str, default=None, help="Project name.")
-    @click.option("--variant",    type=str, default=None, help="Variant name.")
-    @click.option("--fullname",   type=str, default=None, help="Save results to root/run/predict/arch/model/data or root/run/predict/arch/project/variant.")
-    @click.option("--save-dir",   type=str, default=None, help="Optional saving directory.")
-    @click.option("--weights",    type=str, default=None, help="Weights paths.")
-    @click.option("--device",     type=str, default=None, help="Running devices.")
-    @click.option("--imgsz",      type=int, default=None, help="Image sizes.")
-    @click.option("--resize",     is_flag=True)
-    @click.option("--benchmark",  is_flag=True)
-    @click.option("--save-image", is_flag=True)
-    @click.option("--save-debug", is_flag=True)
-    @click.option("--verbose",    is_flag=True)
-    @click.pass_context
-    def command(
-        ctx,
-        config    : str,
-        arch      : str,
-        model     : str,
-        data      : str,
-        root      : str,
-        project   : str,
-        variant   : str,
-        fullname  : str,
-        save_dir  : str,
-        weights   : str,
-        device    : int | list[int] | str,
-        imgsz     : int,
-        resize    : bool,
-        benchmark : bool,
-        save_image: bool,
-        save_debug: bool,
-        verbose   : bool,
-    ) -> argparse.Namespace:
-        hostname = socket.gethostname().lower()
-        
-        # Get extra args
-        extra_args = {
-            k.lstrip("--"): ctx.args[i + 1]
-            if not (i + 1 >= len(ctx.args) or ctx.args[i + 1].startswith("--")) else True
-            for i, k in enumerate(ctx.args) if k.startswith("--")
-        }
-        
-        # Get config args
-        config = mon.parse_config_file(project_root=mon.Path(root) / "config", config=config)
-        args   = mon.load_config(config)
-        
-        # Prioritize input args --> config file args
-        project    = project    or args.get("project")
-        variant    = variant    or args.get("variant")
-        fullname   = fullname   or args.get("fullname")
-        save_dir   = save_dir   or args.get("save_dir")
-        weights    = weights    or args.get("weights")
-        device     = device     or args.get("device")
-        imgsz      = imgsz      or args.get("imgsz")
-        resize     = resize     or args.get("resize")
-        benchmark  = benchmark  or args.get("benchmark")
-        save_image = save_image or args.get("save_image")
-        save_debug = save_debug or args.get("save_debug")
-        verbose    = verbose    or args.get("verbose")
-        
-        # Parse arguments
-        root     = mon.Path(root)
-        save_dir = save_dir or mon.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
-        save_dir = mon.Path(save_dir)
-        weights  = mon.to_list(weights)
-        device   = mon.parse_device(device)
-        imgsz    = mon.parse_hw(imgsz)
-        
-        # Update arguments
-        args["hostname"]   = hostname
-        args["config"]     = config
-        args["arch"]       = arch
-        args["model"]      = model
-        args["data"]       = data
-        args["root"]       = root
-        args["project"]    = project
-        args["variant"]    = variant
-        args["fullname"]   = fullname
-        args["save_dir"]   = save_dir
-        args["weights"]    = weights
-        args["device"]     = device
-        args["imgsz"]      = imgsz
-        args["resize"]     = resize
-        args["benchmark"]  = benchmark
-        args["save_image"] = save_image
-        args["save_debug"] = save_debug
-        args["verbose"]    = verbose
-        args |= extra_args
-        args  = argparse.Namespace(**args)
-        return args
-    
-    return command()
-'''
 
 # endregion
 

@@ -11,7 +11,6 @@ __all__ = [
     "ModelCheckpoint",
 ]
 
-import os
 import time
 from datetime import timedelta
 from typing import Any

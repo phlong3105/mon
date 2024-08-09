@@ -15,16 +15,16 @@ from __future__ import annotations
 # everything can be accessed under one single import of ``from mon import nn``.
 # noinspection PyUnresolvedReferences
 from torch.nn import (
-	Container, functional, init, Module, ModuleDict,
-	ModuleList, ParameterDict, ParameterList, Sequential,
+    Container, functional, init, Module, ModuleDict,
+    ModuleList, ParameterDict, ParameterList, Sequential,
 )
 # noinspection PyUnresolvedReferences
 from torch.nn.parallel import DataParallel as DataParallel
 # noinspection PyUnresolvedReferences
 from torch.nn.parameter import (
-	Parameter as Parameter,
-	UninitializedBuffer as UninitializedBuffer,
-	UninitializedParameter as UninitializedParameter,
+    Parameter as Parameter,
+    UninitializedBuffer as UninitializedBuffer,
+    UninitializedParameter as UninitializedParameter,
 )
 
 # Import

@@ -11,7 +11,6 @@ __all__ = [
 ]
 
 from timeit import default_timer as timer
-from typing import Sequence
 
 import numpy as np
 import torch

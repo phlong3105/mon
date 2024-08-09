@@ -17,15 +17,13 @@ __all__ = [
     "parse_model_fullname",
 ]
 
-import copy
 from abc import ABC, abstractmethod
-from typing import Any, Sequence
+from typing import Any
 from urllib.parse import urlparse  # noqa: F401
 
 import humps
 import lightning.pytorch.utilities.types
 import torch.hub
-import torchvision.utils
 from thop.profile import *
 from torch import nn
 

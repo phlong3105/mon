@@ -29,8 +29,8 @@ import torch
 import torchvision.transforms as TT
 
 from mon import core
-from mon.data.transform import transform
 from mon.data.datastruct import annotation as anno, datamodule, dataset
+from mon.data.transform import transform
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console           = core.console

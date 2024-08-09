@@ -13,7 +13,7 @@ import functools
 import os
 import socket
 import time
-from typing import Any, Callable, Mapping, Optional
+from typing import Any, Callable
 
 from lightning.fabric.loggers.logger import rank_zero_experiment
 from lightning.pytorch import loggers
@@ -22,7 +22,6 @@ from tensorboard.compat.proto import event_pb2
 from tensorboard.compat.proto.event_pb2 import Event, SessionLog
 from tensorboard.summary.writer import event_file_writer, record_writer
 from torch.utils import tensorboard
-from typing_extensions import override
 
 from mon.globals import LOGGERS
 
