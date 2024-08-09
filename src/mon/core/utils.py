@@ -97,9 +97,9 @@ def list_config_files(
         project_config_dir  = project_root / "config"
         config_files       += list(project_config_dir.files(recursive=True))
     if model_root not in [None, "None", ""]:
-        model_root        = pathlib.Path(model_root)
-        model_config_dir  = model_root / "config"
-        config_files     += list(model_config_dir.files(recursive=True))
+        model_root          = pathlib.Path(model_root)
+        model_config_dir    = model_root / "config"
+        config_files       += list(model_config_dir.files(recursive=True))
     #
     config_files = [
         cf for cf in config_files

@@ -1163,6 +1163,14 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     },
     # endregion
     # region enhance/multitask
+    "airnet"    : {
+        "airnet": {
+            "tasks"    : [Task.DENOISE, Task.DERAIN, Task.DEHAZE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "multitask" / "airnet",
+            "torch_distributed_launch": True,
+        },
+    },
     "restormer"    : {
         "restormer": {
             "tasks"    : [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LLIE],
