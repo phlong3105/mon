@@ -80,11 +80,11 @@ class UnlabeledVideoDataset(base.UnlabeledDataset, ABC):
 		return self.num_frames
 	
 	@abstractmethod
-	def __getitem__(self, item: int) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
+	def __getitem__(self, item: int) -> dict:
+		"""Returns a dictionary containing the datapoint and metadata at the
+		given :param:`index`. The dictionary must contain the following keys:
+		{'input', 'target', 'meta'}.
+		"""
 		pass
 	
 	@property
@@ -183,11 +183,11 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 			*args, **kwargs
 		)
 	
-	def __getitem__(self, item: int) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
+	def __getitem__(self, item: int) -> dict:
+		"""Returns a dictionary containing the datapoint and metadata at the
+		given :param:`index`. The dictionary must contain the following keys:
+		{'input', 'target', 'meta'}.
+		"""
 		pass
 	
 	def __next__(self) -> tuple[
@@ -341,11 +341,11 @@ class VideoLoaderFFmpeg(UnlabeledVideoDataset):
 			*args, **kwargs
 		)
 	
-	def __getitem__(self, item: int) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
+	def __getitem__(self, item: int) -> dict:
+		"""Returns a dictionary containing the datapoint and metadata at the
+		given :param:`index`. The dictionary must contain the following keys:
+		{'input', 'target', 'meta'}.
+		"""
 		pass
 	
 	def __next__(self) -> tuple[

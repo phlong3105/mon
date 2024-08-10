@@ -596,7 +596,7 @@ def shifted_window_attention(
     position bias. It supports both shifted and non-shifted windows.
     
     Args:
-        input: An input of shape :math:`[N, C, H, W]`.
+        input: An input of shape :math:`[B, C, H, W]`.
         qkv_weight: The weight tensor of query, key, value of shape
             :math:`[in_dim, out_dim]`.
         proj_weight: The weight tensor of projection of shape
@@ -615,7 +615,7 @@ def shifted_window_attention(
         training: Training flag used by the dropout parameters. Default: ``True``.
     
     Returns:
-        The output tensor after shifted window attention of shape :math:`[N, C, H, W]`.
+        The output tensor after shifted window attention of shape :math:`[B, C, H, W]`.
     """
     b, h, w, c = input.shape
     # Pad feature maps to multiples of window size

@@ -163,8 +163,8 @@ class DeepEmbedder(Embedder, ABC):
         Args:
             indexes: A :class:`list` of image indexes.
             images: Images of shape :math:`[B, H, W, C]`.
-            input: Input tensor of shape :math:`[N, C, H, W]`.
-            pred: Prediction tensor of shape :math:`[N, C, H, W]`.
+            input: Input tensor of shape :math:`[B, C, H, W]`.
+            pred: Prediction tensor of shape :math:`[B, C, H, W]`.
 
         Returns:
             A 2D :class:`list` of feature vectors.

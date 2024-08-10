@@ -451,7 +451,7 @@ class IPT(base.DerainingModel):
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
-            input: An input of shape :math:`[N, C, H, W]`.
+            input: An input of shape :math:`[B, C, H, W]`.
             profile: Measure processing time. Default: ``False``.
             out_index: Return specific layer's output from :param:`out_index`.
                 Default: ``-1`` means the last layer.
@@ -523,7 +523,7 @@ class IPT(base.DerainingModel):
         """Forward pass once. Implement the logic for a single forward pass. Mainly used for ablation study.
 
         Args:
-            input: An input of shape :math:`[N, C, H, W]`.
+            input: An input of shape :math:`[B, C, H, W]`.
             profile: Measure processing time. Default: ``False``.
             out_index: Return specific layer's output from :param:`out_index`.
                 Default: ``-1`` means the last layer.

@@ -335,14 +335,12 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
                 nn.init.orthogonal_(m.weight, gain=gain)
                 if not m.bias is None:
                     nn.init.constant_(m.bias, 0)
-
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
-        pred = self.forward(input=input, *args, **kwargs)
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
+        pred   = self.forward(input=input, *args, **kwargs)
         if self.loss:
             loss = 0
             for p in pred:

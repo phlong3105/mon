@@ -661,28 +661,27 @@ class Model(lightning.LightningModule, ABC):
     
     # region Forward Pass
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
         """Forward pass with loss value. Loss function may need more arguments
         beside the ground-truth and prediction values. For calculating the
         metrics, we only need the final predictions and ground-truth.
 
         Args:
-            input: An input of shape :math:`[B, C, H, W]`.
-            target: A ground-truth of shape :math:`[B, C, H, W]`. Default: ``None``.
-        
+            datapoint: A :class:`dict` containing:
+                - input: An input of shape :math:`[B, C, H, W]`.
+                - target: A ground-truth of shape :math:`[B, C, H, W]`. Default: ``None``.
+                - meta: A :class:`list` containing the metadata. Default: ``None``.
+            
         Return:
             A :class:`dict` of all predictions with corresponding names. Note
             that the dictionary must contain the key ``'loss'`` and ``'pred'``.
             Default: ``None``.
         """
-        pred = self.forward(input=input, *args, **kwargs)
-        pred = pred[-1] if isinstance(pred, list | tuple) else pred
-        loss = self.loss(pred, target)
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
+        pred   = pred[-1] if isinstance(pred, list | tuple) else pred
+        loss   = self.loss(pred, target)
         return {
             "pred": pred,
             "loss": loss,
@@ -716,7 +715,7 @@ class Model(lightning.LightningModule, ABC):
         :meth:`forward_once()`.
 
         Args:
-            input: An input of shape :math:`[N, C, H, W]`.
+            input: An input of shape :math:`[B, C, H, W]`.
             augment: If ``True``, perform test-time augmentation. Usually used
                 in predicting phase. Default: ``False``.
             profile: If ``True``, measure processing time. Usually used in
@@ -758,8 +757,8 @@ class Model(lightning.LightningModule, ABC):
         metrics for e.g., the progress bar or logger.
 
         Args:
-            batch: The output of :class:`~torch.utils.data.DataLoader`. It can
-                be a :class:`torch.Tensor`, :class:`tuple` or :class:`list`.
+            batch: The output of :class:`~torch.utils.data.DataLoader`. It is a
+                :class:`dict` containing every piece of data for a datapoint.
             batch_idx: An integer displaying index of this batch.
             
         Return:
@@ -769,8 +768,10 @@ class Model(lightning.LightningModule, ABC):
                 - ``None``, training will skip to the next batch.
         """
         # Forward
-        input, target, meta = batch[0], batch[1], batch[2:]
-        results = self.forward_loss(input=input, target=target, *args, **kwargs)
+        input   = batch.get("input",  None)
+        target  = batch.get("target", None)
+        meta    = batch.get("meta",   None)
+        results = self.forward_loss(datapoint=batch, *args, **kwargs)
         pred    = results.pop("pred", None)
         loss    = results.pop("loss", None)
         
@@ -843,15 +844,18 @@ class Model(lightning.LightningModule, ABC):
         accuracy.
         
         Args:
-            batch: The output of :class:`~torch.utils.data.DataLoader`.
+            batch: The output of :class:`~torch.utils.data.DataLoader`. It is a
+                :class:`dict` containing every piece of data for a datapoint.
             batch_idx: The index of this batch.
 
         Return:
             - Any object or value.
             - ``None``, validation will skip to the next batch.
         """
-        input, target, meta = batch[0], batch[1], batch[2:]
-        results = self.forward_loss(input=input, target=target, *args, **kwargs)
+        input   = batch.get("input",  None)
+        target  = batch.get("target", None)
+        meta    = batch.get("meta",   None)
+        results = self.forward_loss(datapoint=batch, *args, **kwargs)
         pred    = results.pop("pred", None)
         loss    = results.pop("loss", None)
         
@@ -910,7 +914,8 @@ class Model(lightning.LightningModule, ABC):
         as accuracy.
 
         Args:
-            batch: The output of your :class:`~torch.utils.data.DataLoader`.
+            batch: The output of :class:`~torch.utils.data.DataLoader`. It is a
+                :class:`dict` containing every piece of data for a datapoint.
             batch_idx: The index of this batch.
 
         Return:
@@ -918,8 +923,10 @@ class Model(lightning.LightningModule, ABC):
                 - Any object or value.
                 - ``None``, testing will skip to the next batch.
         """
-        input, target, meta = batch[0], batch[1], batch[2:]
-        results = self.forward_loss(input=input, target=target, *args, **kwargs)
+        input   = batch.get("input",  None)
+        target  = batch.get("target", None)
+        meta    = batch.get("meta",   None)
+        results = self.forward_loss(datapoint=batch, *args, **kwargs)
         pred    = results.pop("pred", None)
         loss    = results.pop("loss", None)
         

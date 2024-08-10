@@ -225,14 +225,12 @@ class LLLINet(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
-        pred = self.forward(input=input, *args, **kwargs)
-        loss = self.loss(pred, target)
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
+        pred   = self.forward(input=input, *args, **kwargs)
+        loss   = self.loss(pred, target)
         return {
             "pred": pred,
             "loss": loss,
@@ -371,12 +369,10 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input      = datapoint.get("input",  None)
+        target     = datapoint.get("target", None)
+        meta       = datapoint.get("meta",   None)
         # pred = self.forward(input=input, *args, **kwargs)
         # loss = self.loss(pred, target)
         # return pred, loss

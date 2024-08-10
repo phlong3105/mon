@@ -616,16 +616,19 @@ def to_list_of_3d_image(input: Any) -> list[torch.Tensor | np.ndarray]:
     return input
 
 
-def to_4d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert a 2D, 3D, or 5D image to a 4D.
+def to_4d_image(
+    input: torch.Tensor | np.ndarray | None
+) -> torch.Tensor | np.ndarray | None:
+    """Convert a 2D, 3D, 5D, list of 3D, and list of 4D images to 4D.
 
     Args:
-        input: An image in channel-first format.
+        input: A 2D, 3D, 5D, list of 3D, and list of 4D images in channel-first
+            format.
 
     Return:
         A 4D image in channel-first format.
     """
-    if not 2 <= input.ndim <= 5:
+    if isinstance(input, torch.Tensor | np.ndarray) and not 2 <= input.ndim <= 5:
         raise ValueError(
             f":param:`input`'s number of dimensions must be between ``2`` and ``5``, "
             f"but got {input.ndim}."
@@ -646,10 +649,22 @@ def to_4d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
             input = np.expand_dims(input, axis=0)
         elif input.ndim == 5 and input.shape[0] == 1:  # 1NCHW -> NHWC
             input = np.squeeze(input, axis=0)
+    elif isinstance(input, list | tuple):
+        if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in input):
+            input = torch.stack(input, dim=0)
+        elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in input):
+            input = torch.cat(input, dim=0)
+        elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in input):
+            input = np.array(input)
+        elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in input):
+            input = np.concatenate(input, axis=0)
+        else:
+            error_console.log(f"input's number of dimensions must be between ``3`` and ``4``.")
+            input = None
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`input` must be a :class:`numpy.ndarray`, :class:`torch.Tensor`, "
+            f"or a :class:`list` of either of them, but got {type(input)}."
         )
     return input
 

@@ -82,12 +82,10 @@ class ZSN2N(base.DenoisingModel):
     
     # region Forward Pass
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
         # Symmetry
         noisy1, noisy2       = self.pair_downsampler(input)
         pred1                = noisy1 - self.forward(input=noisy1)
@@ -181,6 +179,7 @@ class ZSN2N(base.DenoisingModel):
             input = core.to_image_tensor(input, False, True)
         input = input.to(self.device)
         assert input.shape[0] == 1
+        datapoint = {"input": input, "target": None}
         
         # Training loop
         if self.verbose:
@@ -190,14 +189,14 @@ class ZSN2N(base.DenoisingModel):
                     total       = max_epochs,
                     description = f"[bright_yellow] Training"
                 ):
-                    _, loss = self.forward_loss(input=input, target=None)
+                    _, loss = self.forward_loss(datapoint=datapoint)
                     optimizer.zero_grad()
                     loss.backward(retain_graph=True)
                     optimizer.step()
                     scheduler.step()
         else:
             for _ in range(max_epochs):
-                _, loss = self.forward_loss(input=input, target=None)
+                _, loss = self.forward_loss(datapoint=datapoint)
                 optimizer.zero_grad()
                 loss.backward(retain_graph=True)
                 optimizer.step()

@@ -406,15 +406,13 @@ class GCENet(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
-        i    = input
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
+        i      = input
         c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
-        loss = self.loss(i, c1, o)
+        loss   = self.loss(i, c1, o)
         return {
             "pred": o,
             "loss": loss,
@@ -580,16 +578,14 @@ class GCENetA1(GCENet):
     def __init__(self, *args, **kwargs):
         super().__init__(name="gcenet_a1", *args, **kwargs)
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
         # Symmetric Loss
-        i = input
+        i      = input
         c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
-        loss = self.loss(i, c1, o)
+        loss   = self.loss(i, c1, o)
         return {
             "pred": o,
             "loss": loss,
@@ -673,16 +669,14 @@ class GCENetB1(GCENet):
     def __init__(self, *args, **kwargs):
         super().__init__(name="gcenet_b1", *args, **kwargs)
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
         # Symmetric Loss
-        i = input
+        i      = input
         c1, c2, gf, o = self.forward(input=i,  *args, **kwargs)
-        loss = self.loss(i, c1, o)
+        loss   = self.loss(i, c1, o)
         return {
             "pred": o,
             "loss": loss,
@@ -843,15 +837,13 @@ class GCENetOld(base.LowLightImageEnhancementModel):
             elif hasattr(m, "weight"):
                 m.weight.data.normal_(0.0, 0.02)  # 0.02
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
-        pred = self.forward(input=input, *args, **kwargs)
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
+        pred   = self.forward(input=input, *args, **kwargs)
         adjust, enhance = pred
-        loss = self.loss(input, adjust, enhance)
+        loss   = self.loss(input, adjust, enhance)
         return {
             "pred": enhance,
             "loss": loss,

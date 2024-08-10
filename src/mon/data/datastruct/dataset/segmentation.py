@@ -57,11 +57,11 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 			*args, **kwargs
 		)
 	
-	def __getitem__(self, index: int) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
+	def __getitem__(self, index: int) -> dict:
+		"""Returns a dictionary containing the datapoint and metadata at the
+		given :param:`index`. The dictionary must contain the following keys:
+		{'input', 'target', 'meta'}.
+		"""
 		image = self.images[index].data
 		mask  = self.annotations[index].data if self.has_annotations else None
 		meta  = self.images[index].meta
@@ -81,51 +81,33 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 				mask  = core.to_image_tensor(input=mask,  keepdim=False, normalize=True)
 			else:
 				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-			
-		return image, mask, meta
+		
+		return {
+			"input"   : image,
+			"target"  : mask,
+			"metadata": meta,
+		}
 		
 	def filter(self):
 		pass
 	
 	@staticmethod
-	def collate_fn(batch) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | list | None,
-		list | None
-	]:
+	def collate_fn(batch) -> dict:
 		"""Collate function used to fused input items together when using
 		:attr:`batch_size` > 1. This is used in the
 		:class:`torch.utils.data.DataLoader` wrapper.
 		
 		Args:
-			batch: a list of tuples of (input, target, meta).
+			batch: A :class:`list` of :class:`dict` of {`input`, `target`, `meta`}.
 		"""
-		input, target, meta = zip(*batch)  # Transposed
-		
-		if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in input):
-			input = torch.stack(input, dim=0)
-		elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in input):
-			input = torch.cat(input, dim=0)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in input):
-			input = np.array(input)
-		elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in input):
-			input = np.concatenate(input, axis=0)
-		else:
-			raise ValueError(
-				f"input's number of dimensions must be between ``2`` and ``4``."
-			)
-		
-		if all(isinstance(t, torch.Tensor)   and t.ndim == 3 for t in target):
-			target = torch.stack(target, dim=0)
-		elif all(isinstance(t, torch.Tensor) and t.ndim == 4 for t in target):
-			target = torch.cat(target, dim=0)
-		elif all(isinstance(t, np.ndarray)   and t.ndim == 3 for t in target):
-			target = np.array(target)
-		elif all(isinstance(t, np.ndarray)   and t.ndim == 4 for t in target):
-			target = np.concatenate(target, axis=0)
-		else:
-			target = None
-		
-		return input, target, meta
+		zipped = {k: list(v) for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))}
+		input  = core.to_4d_image(zipped.get("input"))
+		target = core.to_4d_image(zipped.get("target"))
+		meta   = zipped.get("meta")
+		return {
+			"input" : input,
+			"target": target,
+			"meta"  : meta,
+		}
 
 # endregion

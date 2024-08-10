@@ -257,13 +257,11 @@ class RRDNet(base.LowLightImageEnhancementModel):
     
     # region Forward Pass
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
-        pred = self.forward(input=input, *args, **kwargs)
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input  = datapoint.get("input",  None)
+        target = datapoint.get("target", None)
+        meta   = datapoint.get("meta",   None)
+        pred   = self.forward(input=input, *args, **kwargs)
         illumination          = pred[0]
         adjusted_illumination = pred[1]
         reflectance           = pred[2]
@@ -294,7 +292,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
         :meth:`forward_once()`.
 
         Args:
-            input: An input of shape :math:`[N, C, H, W]`.
+            input: An input of shape :math:`[B, C, H, W]`.
             augment: If ``True``, perform test-time augmentation. Usually used
                 in predicting phase. Default: ``False``.
             profile: If ``True``, measure processing time. Usually used in
@@ -362,6 +360,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
             input = core.to_image_tensor(input, False, True)
         input = input.to(self.device)
         assert input.shape[0] == 1
+        datapoint = {"input": input, "target": None}
         
         # Training loop
         with core.get_progress_bar() as pbar:
@@ -370,7 +369,7 @@ class RRDNet(base.LowLightImageEnhancementModel):
                 total       = max_epochs,
                 description = f"[bright_yellow] Training"
             ):
-                _, loss = self.forward_loss(input=input, target=None)
+                _, loss = self.forward_loss(datapoint=datapoint)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()

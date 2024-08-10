@@ -382,12 +382,10 @@ class D2CE(base.LowLightImageEnhancementModel):
         super().on_predict_start()
         self.de.eval()  # Freeze DepthAnythingV2 model
     
-    def forward_loss(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None,
-        *args, **kwargs
-    ) -> dict | None:
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        input    = datapoint.get("input",  None)
+        target   = datapoint.get("target", None)
+        meta     = datapoint.get("meta",   None)
         # Symmetric Loss
         i        = input
         i1, i2   = geometry.pair_downsample(i)

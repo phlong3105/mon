@@ -103,7 +103,7 @@ class OPEmbedder(base.Embedder, nn.Module):
 
         Args:
             indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[N, C, H, W]`.
+            images: Images of shape :math:`[B, C, H, W]`.
             norm: Whether to normalize the features.
 
         Returns:

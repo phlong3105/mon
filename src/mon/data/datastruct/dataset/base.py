@@ -89,8 +89,11 @@ class Dataset(dataset.Dataset, ABC):
 		pass
 	
 	@abstractmethod
-	def __getitem__(self, index: int) -> Any:
-		"""Returns the datapoint and metadata at the given :param:`index`."""
+	def __getitem__(self, index: int) -> dict:
+		"""Returns a dictionary containing the datapoint and metadata at the
+		given :param:`index`. The dictionary must contain the following keys:
+		{'input', 'target', 'meta'}.
+		"""
 		pass
 	
 	def __next__(self) -> Any:

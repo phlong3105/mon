@@ -267,7 +267,7 @@ class PatchMerging(nn.Module):
 		"""Forward pass.
 		
 		Args:
-			input: An input of shape :math:`[N, C, H, W]`.
+			input: An input of shape :math:`[B, C, H, W]`.
 			
 		Returns:
 			Tensor with a layout of :math:`[N, H / 2, W / 2, 2 * C]`.
@@ -312,7 +312,7 @@ class PatchMergingV2(nn.Module):
 		"""Forward pass.
 		
 		Args:
-			input: An input of shape :math:`[N, C, H, W]`.
+			input: An input of shape :math:`[B, C, H, W]`.
 			
 		Returns:
 			Tensor with a layout of :math:`[N, H / 2, W / 2, 2 * C]`.
