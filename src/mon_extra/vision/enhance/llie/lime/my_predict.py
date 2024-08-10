@@ -44,14 +44,15 @@ def predict(args: argparse.Namespace):
     # Predicting
     timer = mon.Timer()
     with mon.get_progress_bar() as pbar:
-        for image, target, meta in pbar.track(
-            sequence    = data_loader,
+        for i, datapoint in pbar.track(
+            sequence    = enumerate(data_loader),
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
+            image      = datapoint.get("input")
+            meta       = datapoint.get("meta")
             image_path = meta["path"]
-            # image      = cv2.imread(str(image_path))
-            h, w, c    = image.shape
+            h, w       = mon.get_image_size(image)
             if resize:
                 image = cv2.resize(image, (imgsz, imgsz))
             timer.tick()
@@ -71,8 +72,7 @@ def predict(args: argparse.Namespace):
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
             output_path = save_dir / image_path.name
             cv2.imwrite(str(output_path), enhanced_image)
-    # avg_time = float(timer.total_time / len(data_loader))
-    avg_time   = float(timer.avg_time)
+    avg_time = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 
 # endregion

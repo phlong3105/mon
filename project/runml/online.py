@@ -56,7 +56,13 @@ def online_learning(args: dict) -> str:
         
     # Data I/O
     console.log(f"[bold red] {source}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=source, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(
+        src         = source,
+        dst         = save_dir,
+        to_tensor   = True,
+        denormalize = True,
+        verbose     = False,
+    )
     save_dir = save_dir if save_dir not in [None, "None", ""] else model.root
     save_dir = mon.Path(save_dir)
     save_dir = save_dir / data_name
@@ -66,16 +72,18 @@ def online_learning(args: dict) -> str:
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for images, target, meta in pbar.track(
-                sequence    = data_loader,
+            for i, datapoint in pbar.track(
+                sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
                 # Input
-                images = images.to(model.device)
-                input  = images.clone()
+                image = datapoint.get("input")
+                meta  = datapoint.get("meta")
+                image = image.to(model.device)
+                input = image.clone()
                 if resize:
-                    h0, w0 = mon.get_image_size(images)
+                    h0, w0 = mon.get_image_size(image)
                     input  = mon.resize(input, imgsz)
                 
                 # Forward
@@ -94,9 +102,7 @@ def online_learning(args: dict) -> str:
                     mon.write_image(output_path, output, denormalize=True)
                     if data_writer is not None:
                         data_writer.write_batch(data=output)
-        
-        # avg_time = float(timer.total_time / len(data_loader))
-        avg_time   = float(timer.avg_time)
+        avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
         
         return str(save_dir)

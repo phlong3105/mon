@@ -58,11 +58,13 @@ def predict(args: argparse.Namespace):
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for image, target, meta in pbar.track(
-                sequence    = data_loader,
+            for i, datapoint in pbar.track(
+                sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                image          = datapoint.get("input")
+                meta           = datapoint.get("meta")
                 image_path     = meta["path"]
                 # image          = cv2.imread(str(image_path))
                 timer.tick()
@@ -70,8 +72,7 @@ def predict(args: argparse.Namespace):
                 timer.tock()
                 output_path    = save_dir / image_path.name
                 cv2.imwrite(str(output_path), enhanced_image)
-        # avg_time = float(timer.total_time / len(data_loader))
-        avg_time   = float(timer.avg_time)
+        avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

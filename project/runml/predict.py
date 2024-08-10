@@ -61,7 +61,13 @@ def predict(args: dict) -> str:
     
     # Data I/O
     console.log(f"[bold red] {source}")
-    data_name, data_loader, data_writer = mon.parse_io_worker(src=source, dst=save_dir, denormalize=True)
+    data_name, data_loader, data_writer = mon.parse_io_worker(
+        src         = source,
+        dst         = save_dir,
+        to_tensor   = True,
+        denormalize = True,
+        verbose     = False,
+    )
     save_root = save_dir if save_dir not in [None, "None", ""] else model.root
     save_dir  = mon.Path(save_root) / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -73,15 +79,17 @@ def predict(args: dict) -> str:
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for images, target, meta in pbar.track(
-                sequence    = data_loader,
+            for i, datapoint in pbar.track(
+                sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
                 # Input
-                images = images.to(model.device)
-                h0, w0 = mon.get_image_size(images)
-                input  = images.clone()
+                image  = datapoint.get("input")
+                meta   = datapoint.get("meta")
+                image  = image.to(model.device)
+                h0, w0 = mon.get_image_size(image)
+                input  = image.clone()
                 if resize:
                     input = mon.resize(input, imgsz)
                 else:
@@ -115,7 +123,7 @@ def predict(args: dict) -> str:
                 # TTA (Post)
                 for aug in augment:
                     if aug.requires_post:
-                        output = aug.postprocess(input=images, output=output)
+                        output = aug.postprocess(input=image, output=output)
                 
                 # Post-process
                 output = output[-1] if isinstance(output, list | tuple) else output
@@ -136,9 +144,7 @@ def predict(args: dict) -> str:
                         for k, v in debug_output.items():
                             path = debug_save_dir / f"{meta['stem']}_{k}.png"
                             mon.write_image(path, v, denormalize=True)
-
-        # avg_time = float(timer.total_time / len(data_loader))
-        avg_time   = float(timer.avg_time)
+        avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
         
         return str(save_dir)

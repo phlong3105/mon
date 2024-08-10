@@ -158,11 +158,13 @@ def predict(args: argparse.Namespace):
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for image, target, meta in pbar.track(
-                sequence    = data_loader,
+            for i, datapoint in pbar.track(
+                sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                image       = datapoint.get("input")
+                meta        = datapoint.get("meta")
                 image_path  = meta["path"]
                 input_image = image  # cv2.imread(str(image_path))
                 h0, w0      = input_image.shape[0], input_image.shape[1]
@@ -179,8 +181,7 @@ def predict(args: argparse.Namespace):
                 output      = mon.resize(output, (h0, w0))
                 output_path = save_dir / image_path.name
                 cv2.imwrite(str(output_path), output)
-        # avg_time = float(timer.total_time / len(data_loader))
-        avg_time   = float(timer.avg_time)
+        avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

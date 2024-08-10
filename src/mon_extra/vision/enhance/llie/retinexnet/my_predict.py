@@ -44,11 +44,12 @@ def predict(args: argparse.Namespace):
     
     image_paths = []
     with mon.get_progress_bar() as pbar:
-        for image, target, meta in pbar.track(
-            sequence    = data_loader,
+        for i, datapoint in pbar.track(
+            sequence    = enumerate(data_loader),
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
+            meta        = datapoint.get("meta")
             image_path  = meta["path"]
             image_paths.append(image_path)
     
@@ -60,8 +61,7 @@ def predict(args: argparse.Namespace):
         ckpt_dir = str(weights),
     )
     timer.tock()
-    # avg_time = float(timer.total_time / len(data_loader))
-    avg_time   = float(timer.avg_time)
+    avg_time = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 
 # endregion

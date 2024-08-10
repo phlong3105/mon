@@ -72,18 +72,19 @@ def predict(args: argparse.Namespace):
     # Predicting
     timer = mon.Timer()
     with mon.get_progress_bar() as pbar:
-        for image, target, meta in pbar.track(
-            sequence    = data_loader,
+        for i, datapoint in pbar.track(
+            sequence    = enumerate(data_loader),
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
+            image       = datapoint.get("input")
+            meta        = datapoint.get("meta")
             image_path  = meta["path"]
             timer.tick()
             restored    = model(x_query=image, x_key=image)
             timer.tock()
             output_path = save_dir / image_path.name
             save_image_tensor(restored, output_path)
-            
     avg_time = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 

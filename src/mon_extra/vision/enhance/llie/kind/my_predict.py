@@ -76,11 +76,12 @@ def predict(args: argparse.Namespace):
     with torch.no_grad():
         sum_time = 0
         with mon.get_progress_bar() as pbar:
-            for image, target, meta in pbar.track(
-                sequence    = data_loader,
+            for i, datapoint in pbar.track(
+                sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                meta        = datapoint.get("meta")
                 image_path  = meta["path"]
                 image       = Image.open(image_path)
                 image       = np.asarray(image, np.float32).transpose((2, 0, 1)) / 255.0

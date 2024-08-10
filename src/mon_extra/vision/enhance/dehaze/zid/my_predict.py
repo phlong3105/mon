@@ -236,11 +236,12 @@ def predict(args: argparse.Namespace):
     timer = mon.Timer()
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for image, target, meta in pbar.track(
-                sequence    = data_loader,
+            for i, datapoint in pbar.track(
+                sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                meta       = datapoint.get("meta")
                 image_path = meta["path"]
                 image      = prepare_hazy_image(str(image_path))
                 timer.tick()
@@ -248,9 +249,7 @@ def predict(args: argparse.Namespace):
                 dh.optimize()
                 dh.finalize()
                 timer.tock()
-        
-        # avg_time = float(timer.total_time / len(data_loader))
-        avg_time   = float(timer.avg_time)
+        avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
 # endregion

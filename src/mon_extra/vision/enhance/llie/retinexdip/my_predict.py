@@ -365,11 +365,12 @@ def predict(args: argparse.Namespace):
     sum_time = 0
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for i, (image, target, meta) in pbar.track(
+            for i, datapoint in pbar.track(
                 sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                meta         = datapoint.get("meta")
                 image_path   = meta["path"]
                 image        = Image.open(image_path).convert("RGB")
                 enhanced_image, run_time = lowlight_enhancer(str(image_path), image)

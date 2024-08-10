@@ -80,11 +80,13 @@ def predict(args: argparse.Namespace):
     factor = 4
     with torch.no_grad():
         with mon.get_progress_bar() as pbar:
-            for image, target, meta in pbar.track(
-                sequence    = data_loader,
+            for i, datapoint in pbar.track(
+                sequence    = enumerate(data_loader),
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                image = datapoint.get("input")
+                meta  = datapoint.get("meta")
                 if torch.cuda.is_available():
                     torch.cuda.ipc_collect()
                     torch.cuda.empty_cache()
@@ -92,7 +94,7 @@ def predict(args: argparse.Namespace):
                 
                 if resize:
                     h0, w0 = mon.get_image_size(image)
-                    image = mon.resize(image, imgsz)
+                    image  = mon.resize(image, imgsz)
                     console.log("Resizing images to: ", image.shape[2], image.shape[3])
                     # images = proc.resize(input=images, size=[1000, 666])
                 
@@ -116,8 +118,7 @@ def predict(args: argparse.Namespace):
                 
                 output_path = save_dir / image_path.name
                 utils.save_img(str(output_path), img_as_ubyte(restored))
-        # avg_time = float(timer.total_time / len(data_loader))
-        avg_time   = float(timer.avg_time)
+        avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
        
 # endregion
