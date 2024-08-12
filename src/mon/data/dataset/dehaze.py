@@ -48,8 +48,8 @@ from mon import core
 from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console           = core.console
-_default_root_dir = DATA_DIR / "dehaze"
+console          = core.console
+default_root_dir = DATA_DIR / "dehaze"
 
 
 # region Dataset
@@ -66,7 +66,7 @@ class DenseHaze(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -108,7 +108,7 @@ class IHaze(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -150,7 +150,7 @@ class NHHaze(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -192,7 +192,7 @@ class OHaze(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -233,10 +233,10 @@ class RESIDEHSTSReal(dataset.UnlabeledImageDataset):
     splits = [Split.TEST]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
             self.root / "reside_hsts_real" / self.split_str / "lq"
         ]
@@ -264,7 +264,7 @@ class RESIDEHSTSSyn(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -306,7 +306,7 @@ class RESIDEITS(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -350,7 +350,7 @@ class RESIDEITSV2(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -394,7 +394,7 @@ class RESIDEOTS(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -437,10 +437,10 @@ class RESIDERTTS(dataset.UnlabeledImageDataset):
     splits = [Split.TEST]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
             self.root / "reside_rtts" / self.split_str / "lq"
         ]
@@ -468,7 +468,7 @@ class RESIDESOTSIndoor(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -512,7 +512,7 @@ class RESIDESOTSOutdoor(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -555,10 +555,10 @@ class RESIDEUHI(dataset.UnlabeledImageDataset):
     splits = [Split.TEST]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
             self.root / "reside_uhi" / self.split_str / "lq"
         ]
@@ -586,7 +586,7 @@ class SateHaze1K(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -629,7 +629,7 @@ class SateHaze1KThin(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -670,7 +670,7 @@ class SateHaze1KModerate(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -711,7 +711,7 @@ class SateHaze1KThick(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL, Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):

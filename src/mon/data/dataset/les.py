@@ -33,9 +33,9 @@ from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.data.transform import transform
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console           = core.console
-ClassLabels       = anno.ClassLabels
-_default_root_dir = DATA_DIR / "les"
+console          = core.console
+ClassLabels      = anno.ClassLabels
+default_root_dir = DATA_DIR / "les"
 
 
 # region Dataset
@@ -53,7 +53,7 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
     
     def __init__(
         self,
-        root           : core.Path = _default_root_dir,
+        root           : core.Path = default_root_dir,
         split          : Split              = Split.TRAIN,
         image_size     : int                = 256,
         classlabels    : ClassLabels | None = None,
@@ -132,7 +132,7 @@ class Flare7KPP(dataset.UnlabeledImageDataset):
         
         return adjust_gamma_reverse(flare), adjust_gamma_reverse(image), meta
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
             self.root / "flare7k++" / self.split_str / "lq"
         ]
@@ -214,7 +214,7 @@ class Flare7KPPReal(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -255,7 +255,7 @@ class Flare7KPPSyn(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -296,7 +296,7 @@ class FlareReal800(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN, Split.VAL]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -337,7 +337,7 @@ class LEDLight(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -378,10 +378,10 @@ class LightEffect(dataset.UnlabeledImageDataset):
     splits = [Split.TRAIN]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
             # self.root / self.split / "light-effect" / "clear",
             self.root / "lighteffect" / self.split_str / "lq",

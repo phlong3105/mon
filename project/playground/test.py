@@ -1,19 +1,22 @@
-from ultralytics import YOLO
+import numpy as np
+import torch
 
-import mon
 
-image_files = [
-    "data/horses.jpg",
-    "data/horses.jpg",
-]
-images  = [mon.read_image(image_file) for image_file in image_files]
-kwargs  = {
-    "conf": 0.10,
-}
-model   = YOLO(mon.ZOO_DIR / "vision/ultralytics/yolov8/yolov8n/coco/yolov8n_coco.pt")
-results = model.predict(source=images, **kwargs)
-for r in results:
-    # print(r.orig_shape)
-    # print(r)  # print detection bounding boxes
-    print(r.boxes.data)
-    # print(r.boxes.data)  # print detection bounding boxes
+class A:
+    
+    a = {
+        "a": np.ndarray | torch.Tensor | None,
+    }
+    
+    def __init__(self):
+        self.b = self.a
+        print(type(self.b["a"]))
+        
+
+class B(A):
+    pass
+    
+
+b = list[B]()
+b.append(B())
+print(b, type(b))

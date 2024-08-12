@@ -10,6 +10,7 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 import torch
@@ -47,5 +48,15 @@ class Annotation(ABC):
         if isinstance(data, list):
             data = torch.Tensor([i for i in data if isinstance(i, int | float)])
         return data
-
+    
+    @staticmethod
+    def collate_fn(batch: list[Any]) -> Any:
+        """Collate function used to fused input items together when using
+		:attr:`batch_size` > 1. This is used in :class:`torch.utils.data.DataLoader` wrapper.
+		
+		Args:
+			batch: A :class:`list` of objects.
+		"""
+        return batch
+    
 # endregion

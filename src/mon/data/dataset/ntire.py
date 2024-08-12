@@ -18,8 +18,8 @@ from mon import core
 from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console           = core.console
-_default_root_dir = DATA_DIR / "ntire"
+console          = core.console
+default_root_dir = DATA_DIR / "ntire"
 
 
 # region Dataset
@@ -37,7 +37,7 @@ class NTIRE24LLIE(dataset.ImageEnhancementDataset):
 	splits = [Split.TRAIN, Split.VAL, Split.TEST]
 	has_test_annotations = False
 	
-	def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+	def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
 		super().__init__(root=root, *args, **kwargs)
 	
 	def get_images(self):

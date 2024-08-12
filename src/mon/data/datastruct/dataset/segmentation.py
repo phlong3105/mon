@@ -12,8 +12,6 @@ __all__ = [
 from abc import ABC
 
 import albumentations as A
-import numpy as np
-import torch
 
 from mon import core
 from mon.data.datastruct import annotation as anno

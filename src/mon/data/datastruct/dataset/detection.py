@@ -136,7 +136,7 @@ class ImageDetectionDataset(img.LabeledImageDataset, ABC):
 				l[:, -1] = i  # add target image index for build_targets()
 		
 		return {
-			"input" : image,
+			"input" : input,
 			"target": None,
 			"meta"  : meta,
 		}

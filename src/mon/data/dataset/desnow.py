@@ -32,8 +32,8 @@ from mon import core
 from mon.data.datastruct import annotation as anno, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console           = core.console
-_default_root_dir = DATA_DIR / "desnow"
+console          = core.console
+default_root_dir = DATA_DIR / "desnow"
 
 
 # region Dataset
@@ -49,7 +49,7 @@ class GTSnow(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -93,7 +93,7 @@ class KITTISnow(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -134,7 +134,7 @@ class KITTISnowS(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -176,7 +176,7 @@ class KITTISnowM(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -217,7 +217,7 @@ class KITTISnowL(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -258,7 +258,7 @@ class Snow100K(dataset.ImageEnhancementDataset):
     splits = [Split.TRAIN]
     has_test_annotations = False
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -299,7 +299,7 @@ class Snow100KS(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -340,7 +340,7 @@ class Snow100KM(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):
@@ -381,7 +381,7 @@ class Snow100KL(dataset.ImageEnhancementDataset):
     splits = [Split.TEST]
     has_test_annotations = True
     
-    def __init__(self, root: core.Path = _default_root_dir, *args, **kwargs):
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_images(self):

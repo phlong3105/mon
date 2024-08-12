@@ -12,6 +12,7 @@ __all__ = [
 ]
 
 import numpy as np
+import torch
 
 from mon import core
 from mon.data.datastruct.annotation import base
@@ -37,6 +38,7 @@ class ImageAnnotation(base.Annotation):
         super().__init__(*args, **kwargs)
         self.path  = path
         self.image = None
+        self.shape = None
     
     @property
     def path(self) -> core.Path:
@@ -46,8 +48,8 @@ class ImageAnnotation(base.Annotation):
     def path(self, path: core.Path | str | None):
         if path is None or not core.Path(path).is_image_file():
             raise ValueError(f":param:`path` must be a valid path to an image file, but got {path}.")
-        self._path  = core.Path(path)
-        self._shape = core.read_image_shape(path=self._path)
+        self._path = core.Path(path)
+        self.shape = core.read_image_shape(path=self._path)
     
     @property
     def name(self) -> str:
@@ -56,10 +58,6 @@ class ImageAnnotation(base.Annotation):
     @property
     def stem(self) -> str:
         return str(self.path.stem)
-    
-    @property
-    def shape(self) -> tuple[int, int, int]:
-        return self._shape
     
     @property
     def data(self) -> np.ndarray | None:
@@ -102,7 +100,17 @@ class ImageAnnotation(base.Annotation):
         if cache:
             self.image = image
         return image
-
+    
+    @staticmethod
+    def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
+        """Collate function used to fused input items together when using
+		:attr:`batch_size` > 1. This is used in :class:`torch.utils.data.DataLoader` wrapper.
+		
+		Args:
+			batch: A :class:`list` of images.
+		"""
+        return core.to_4d_image(batch)
+    
 
 class FrameAnnotation(base.Annotation):
     """An image annotation of a video frame.
@@ -166,7 +174,17 @@ class FrameAnnotation(base.Annotation):
             "shape": self.shape,
             "hash" : self.path.stat().st_size if isinstance(self.path, core.Path) else None,
         }
-
+    
+    @staticmethod
+    def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
+        """Collate function used to fused input items together when using
+		:attr:`batch_size` > 1. This is used in :class:`torch.utils.data.DataLoader` wrapper.
+		
+		Args:
+			batch: A :class:`list` of images.
+		"""
+        return core.to_4d_image(batch)
+    
 # endregion
 
 
@@ -247,5 +265,15 @@ class SegmentationAnnotation(base.Annotation):
         if cache:
             self.mask = mask
         return mask
+    
+    @staticmethod
+    def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
+        """Collate function used to fused input items together when using
+		:attr:`batch_size` > 1. This is used in :class:`torch.utils.data.DataLoader` wrapper.
+		
+		Args:
+			batch: A :class:`list` of images.
+		"""
+        return core.to_4d_image(batch)
 
 # endregion

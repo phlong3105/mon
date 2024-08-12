@@ -680,6 +680,7 @@ class Model(lightning.LightningModule, ABC):
         input  = datapoint.get("input",  None)
         target = datapoint.get("target", None)
         meta   = datapoint.get("meta",   None)
+        pred   = self.forward_once(input=input, target=target, *args, **kwargs)
         pred   = pred[-1] if isinstance(pred, list | tuple) else pred
         loss   = self.loss(pred, target)
         return {

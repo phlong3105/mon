@@ -17,8 +17,6 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 import albumentations as A
-import numpy as np
-import torch
 
 from mon import core
 from mon.data.datastruct import annotation as anno
@@ -32,72 +30,29 @@ ImageAnnotation = anno.ImageAnnotation
 
 # region Unlabeled Image Dataset
 
-class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
+class UnlabeledImageDataset(base.Dataset, ABC):
 	"""The base class for datasets that represent an unlabeled collection of
 	images. This is mainly used for unsupervised learning tasks.
 	
-	Args:
-		root: A root directory where the data is stored.
-		split: The data split to use. Default: ``'Split.TRAIN'``.
-		classlabels: :class:`ClassLabels` object. Default: ``None``.
-		transform: Transformations performed on both the input and target. We
-			use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
-		to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
-			Default: ``False``.
-		cache_data: If ``True``, cache data to disk for faster loading next
-			time. Default: ``False``.
-		verbose: Verbosity. Default: ``True``.
+	Attributes:
+		datapoint_attrs: A :class:`dict` of datapoint attributes with the keys
+			are the attribute names and the values are the attribute types. By
+			default, it must contain ``{'input', 'target'}``.
 	
-	See Also: :class:`UnlabeledDataset`.
+	See Also: :class:`mon.data.datastruct.dataset.base.Dataset`.
 	"""
 	
-	def __init__(
-		self,
-		root       : core.Path,
-		split      : Split              = Split.TRAIN,
-		classlabels: ClassLabels | None = None,
-		transform  : A.Compose   | None = None,
-		to_tensor  : bool               = False,
-		cache_data : bool               = False,
-		verbose    : bool               = True,
-		*args, **kwargs
-	):
-		super().__init__(
-			root        = root,
-			split       = split,
-			classlabels = classlabels,
-			transform   = transform,
-			to_tensor   = to_tensor,
-			verbose     = verbose,
-			*args, **kwargs
-		)
-		self.images: list[ImageAnnotation] = []
-		
-		# Get image from disk or cache
-		cache_file = self.root / f"{self.split_str}.cache"
-		if cache_data and cache_file.is_cache_file():
-			self.load_cache(path=cache_file)
-		else:
-			self.get_images()
-		
-		# Filter and verify data
-		self.filter()
-		self.verify()
-		
-		# Cache data
-		if cache_data:
-			self.cache_data(path=cache_file)
-		else:
-			core.delete_cache(cache_file)
-		
-	def __len__(self) -> int:
-		return len(self.images)
+	datapoint_attrs : dict = {
+		"input" : ImageAnnotation,
+		"target": ImageAnnotation,
+	}
 	
 	def __getitem__(self, index: int) -> dict:
 		"""Returns a dictionary containing the datapoint and metadata at the
 		given :param:`index`. The dictionary must contain the following keys:
 		{'input', 'target', 'meta'}.
 		"""
+		
 		image = self.images[index].data
 		meta  = self.images[index].meta
 		
@@ -105,7 +60,7 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 			transformed = self.transform(image=image)
 			image	    = transformed["image"]
 		if self.to_tensor:
-			image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
+			image       = core.to_image_tensor(input=image, keepdim=False, normalize=True)
 		
 		return {
 			"input" : image,
@@ -113,49 +68,10 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 			"meta"  : meta,
 		}
 	
-	@property
-	def hash(self) -> int:
-		"""Return the total hash value of all the files (if it has one).
-		Hash values are integers (in bytes) of all files.
-		"""
-		return sum(i.meta.get("hash", 0) for i in self.images) if self.images else 0
-	
 	@abstractmethod
-	def get_images(self):
-		"""Get image files."""
+	def get_data(self):
+		"""Get datapoints."""
 		pass
-	
-	def filter(self):
-		"""Filter unwanted samples."""
-		pass
-	
-	def verify(self):
-		"""Verify and check data."""
-		if not len(self.images) > 0:
-			raise RuntimeError(f"No images in dataset.")
-		if self.verbose:
-			console.log(f"Number of samples: {len(self.images)}.")
-	
-	def cache_data(self, path: core.Path):
-		"""Cache data to :param:`path`."""
-		hash_ = 0
-		if path.is_cache_file():
-			cache = torch.load(path)
-			hash_ = cache.get("hash", 0)
-			
-		if self.hash != hash_:
-			cache = {
-				"hash"  : self.hash,
-				"images": self.images,
-			}
-			torch.save(cache, str(path))
-			if self.verbose:
-				console.log(f"Cached data to: {path}")
-		
-	def load_cache(self, path: core.Path):
-		"""Load cache data from :param:`path`."""
-		cache       = torch.load(path)
-		self.images = cache["images"]
 	
 	def reset(self):
 		"""Reset and start over."""
@@ -168,8 +84,7 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 	@staticmethod
 	def collate_fn(batch) -> dict:
 		"""Collate function used to fused input items together when using
-		:attr:`batch_size` > 1. This is used in
-		:class:`torch.utils.data.DataLoader` wrapper.
+		:attr:`batch_size` > 1. This is used in :class:`torch.utils.data.DataLoader` wrapper.
 		
 		Args:
 			batch: A :class:`list` of :class:`dict` of {`input`, `target`, `meta`}.
@@ -179,8 +94,8 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 		target = None
 		meta   = zipped.get("meta")
 		return {
-			"input" : image,
-			"target": None,
+			"input" : input,
+			"target": target,
 			"meta"  : meta,
 		}
 
@@ -188,9 +103,9 @@ class UnlabeledImageDataset(base.UnlabeledDataset, ABC):
 class ImageLoader(UnlabeledImageDataset):
 	"""A general image loader that retrieves and loads image(s) from a file
 	path, file path pattern, or directory.
- 
+	
 	See Also: :class:`UnlabeledImageDataset`.
-    """
+	"""
 	
 	def __init__(
 		self,
@@ -214,7 +129,7 @@ class ImageLoader(UnlabeledImageDataset):
 			*args, **kwargs
 		)
 	
-	def get_images(self):
+	def get_data(self):
 		# A single image
 		if self.root.is_image_file():
 			paths = [self.root]
@@ -235,13 +150,13 @@ class ImageLoader(UnlabeledImageDataset):
 			):
 				if path.is_image_file():
 					self.images.append(ImageAnnotation(path=path))
-	
+
 # endregion
 
 
 # region Labeled Image Dataset
 
-class LabeledImageDataset(base.LabeledDataset, ABC):
+class LabeledImageDataset(base.Dataset, ABC):
 	"""The base class for datasets that represent a labeled collection of images.
 	
 	Args:
@@ -302,9 +217,6 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 		else:
 			core.delete_cache(cache_file)
 	
-	def __len__(self) -> int:
-		return len(self.images)
-	
 	@abstractmethod
 	def __getitem__(self, index: int) -> dict:
 		"""Returns a dictionary containing the datapoint and metadata at the
@@ -312,16 +224,6 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 		{'input', 'target', 'meta'}.
 		"""
 		pass
-	
-	@property
-	def hash(self) -> int:
-		"""Return the total hash value of all the files (if it has one).
-		Hash values are integers (in bytes) of all files.
-		"""
-		hash_  = 0
-		hash_ += sum(i.meta.get("hash", 0) for i in self.images) if self.images else 0
-		hash_ += sum(i.meta.get("hash", 0) for i in self.annotations) if self.annotations else 0
-		return hash_
 	
 	@abstractmethod
 	def get_images(self):
@@ -332,45 +234,6 @@ class LabeledImageDataset(base.LabeledDataset, ABC):
 	def get_annotations(self):
 		"""Get annotations files."""
 		pass
-	
-	def filter(self):
-		"""Filter unwanted samples."""
-		pass
-	
-	def verify(self):
-		"""Verify and check data."""
-		if not len(self.images) > 0:
-			raise RuntimeError(f"No images in dataset.")
-		if self.has_annotations and not len(self.images) == len(self.annotations):
-			raise RuntimeError(
-				f"Number of images and annotations must be the same, but got "
-				f"{len(self.images)} and {len(self.annotations)}."
-			)
-		if self.verbose:
-			console.log(f"Number of {self.split_str} samples: {len(self.images)}.")
-	
-	def cache_data(self, path: core.Path):
-		"""Cache data to :param:`path`."""
-		hash_ = 0
-		if path.is_cache_file():
-			cache = torch.load(path)
-			hash_ = cache.get("hash", 0)
-			
-		if self.hash != hash_:
-			cache = {
-				"hash"	     : self.hash,
-				"images"     : self.images,
-				"annotations": self.annotations,
-			}
-			torch.save(cache, str(path))
-			if self.verbose:
-				console.log(f"Cached data to: {path}")
-	
-	def load_cache(self, path: core.Path):
-		"""Load cache data from :param:`path`."""
-		cache            = torch.load(path)
-		self.images      = cache["images"]
-		self.annotations = cache["annotations"]
 	
 	def reset(self):
 		"""Reset and start over."""
@@ -416,29 +279,29 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 		given :param:`index`. The dictionary must contain the following keys:
 		{'input', 'target', 'meta'}.
 		"""
-		image = self.images[index].data
-		mask  = self.annotations[index].data if self.has_annotations else None
-		meta  = self.images[index].meta
+		image  = self.images[index].data
+		target = self.annotations[index].data if self.has_annotations else None
+		meta   = self.images[index].meta
 		
 		if self.transform is not None:
 			if self.has_annotations:
-				transformed = self.transform(image=image, mask=mask)
+				transformed = self.transform(image=image, mask=target)
 				image       = transformed["image"]
-				mask        = transformed["mask"]
+				target      = transformed["mask"]
 			else:
 				transformed = self.transform(image=image)
 				image       = transformed["image"]
 		
 		if self.to_tensor:
 			if self.has_annotations:
-				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-				mask  = core.to_image_tensor(input=mask,  keepdim=False, normalize=True)
+				image  = core.to_image_tensor(input=image,  keepdim=False, normalize=True)
+				target = core.to_image_tensor(input=target, keepdim=False, normalize=True)
 			else:
 				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
 		
 		return {
 			"input"   : image,
-			"target"  : mask,
+			"target"  : target,
 			"metadata": meta,
 		}
 		
@@ -454,11 +317,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 		pass
 	
 	@staticmethod
-	def collate_fn(batch) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | list | None,
-		list | None
-	]:
+	def collate_fn(batch) -> dict:
 		"""Collate function used to fused input items together when using
 		:attr:`batch_size` > 1. This is used in the
 		:class:`torch.utils.data.DataLoader` wrapper.
