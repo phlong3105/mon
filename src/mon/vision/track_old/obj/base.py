@@ -60,11 +60,11 @@ class Instance:
         self.id_         = id_
         self.roi_id      = roi_uid
         self.bbox        = np.array(bbox)    if bbox    is not None else None
-        self.polygon     = np.array(polygon) if polygon is not None else None
-        self.feature     = np.array(feature) if feature is not None else None
+        self.polygon     = np.array(polygon) if polygonImageDataset else None
+        self.feature     = np.array(feature) if featureImageDataset else None
         self.confidence  = confidence
         self.classlabel  = classlabel
-        self.frame_index = (frame_index + 1) if frame_index is not None else None
+        self.frame_index = (frame_index + 1) if frame_indexImageDataset else None
         self.timestamp   = timestamp
     
     @classmethod
@@ -102,7 +102,7 @@ class Instance:
     ) -> np.ndarray:
         """Draw the current object on the :param:`image`."""
         color = color or (self.classlabel["color"]
-                          if self.classlabel is not None else (255, 255, 255))
+                          if self.classlabelImageDataset else (255, 255, 255))
         
         if bbox:
             cv2.rectangle(
@@ -267,7 +267,7 @@ class MovingObject(list[Instance], Object):
     
     @property
     def is_countable(self) -> bool:
-        return True if (self.moi_id is not None) else False
+        return True if (self.moi_idImageDataset) else False
     
     @property
     def is_to_be_counted(self) -> bool:
@@ -370,7 +370,7 @@ class MovingObject(list[Instance], Object):
         color  : list[int] | None = None
     ) -> np.ndarray:
         """Draw the current object and its trajectory on the :param:`image`."""
-        if self.moi_id is not None:
+        if self.moi_idImageDataset:
             color = AppleRGB.values()[self.moi_id]
         else:
             color = color or self.majority_label["color"]

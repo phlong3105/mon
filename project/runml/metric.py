@@ -47,10 +47,10 @@ def measure_metric_piqa(
         "vsi"    : piqa.VSI,
     }
 
-    assert input_dir is not None and mon.Path(input_dir).is_dir()
-    # if target_dir is not None:
+    assert input_dirImageDataset and mon.Path(input_dir).is_dir()
+    # if target_dirImageDataset:
     #     assert mon.Path(target_dir).is_dir()
-    if result_file is not None:
+    if result_fileImageDataset:
         assert (mon.Path(result_file).is_dir()
                 or mon.Path(result_file).is_file()
                 or isinstance(result_file, str))
@@ -58,11 +58,11 @@ def measure_metric_piqa(
         
     input_dir   = mon.Path(input_dir)
     target_dir  = mon.Path(target_dir) \
-        if target_dir is not None \
+        if target_dirImageDataset \
         else input_dir.replace("low", "high")
     
-    result_file = mon.Path(result_file) if result_file is not None else None
-    if save_txt and result_file is not None and result_file.is_dir():
+    result_file = mon.Path(result_file) if result_fileImageDataset else None
+    if save_txt and result_fileImageDataset and result_file.is_dir():
         result_file /= "metric.txt"
         result_file.parent.mkdir(parents=True, exist_ok=True)
     
@@ -103,7 +103,7 @@ def measure_metric_piqa(
                 temp = target_dir / f"{image_file.stem}{ext}"
                 if temp.exists():
                     target_file = temp
-            if target_file is not None and target_file.exists():
+            if target_fileImageDataset and target_file.exists():
                 target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
                 if resize:
                     target = mon.resize(input=target, size=[h, w])
@@ -144,10 +144,10 @@ def measure_metric_pyiqa(
     """Measure metrics using :mod:`pyiqa` package."""
     _METRICS = list(pyiqa.DEFAULT_CONFIGS.keys())
 
-    assert input_dir is not None and mon.Path(input_dir).is_dir()
-    # if target_dir is not None:
+    assert input_dirImageDataset and mon.Path(input_dir).is_dir()
+    # if target_dirImageDataset:
     #     assert mon.Path(target_dir).is_dir()
-    if result_file is not None:
+    if result_fileImageDataset:
         assert (mon.Path(result_file).is_dir()
                 or mon.Path(result_file).is_file()
                 or isinstance(result_file, str))
@@ -155,11 +155,11 @@ def measure_metric_pyiqa(
         
     input_dir  = mon.Path(input_dir)
     target_dir = mon.Path(target_dir) \
-        if target_dir is not None \
+        if target_dirImageDataset \
         else input_dir.replace("low", "high")
     
-    result_file = mon.Path(result_file) if result_file is not None else None
-    if save_txt and result_file is not None and result_file.is_dir():
+    result_file = mon.Path(result_file) if result_fileImageDataset else None
+    if save_txt and result_fileImageDataset and result_file.is_dir():
         result_file /= "metric.txt"
         result_file.parent.mkdir(parents=True, exist_ok=True)
     
@@ -208,7 +208,7 @@ def measure_metric_pyiqa(
                 temp = target_dir / f"{image_file.stem}{ext}"
                 if temp.exists():
                     target_file = temp
-            if target_file is not None and target_file.exists():
+            if target_fileImageDataset and target_file.exists():
                 target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
                 if resize:
                     target = mon.resize(target, (h, w))
@@ -241,7 +241,7 @@ def update_results(results: dict, new_values: dict) -> dict:
                 results[m] = v
             elif results[m] is None:
                 results[m] = v
-            elif v is not None:
+            elif vImageDataset:
                 results[m] = min(results[m], v) if lower_is_better else max(results[m], v)
 
     return results
@@ -334,12 +334,12 @@ def main(
         # Headers
         if not append_results:
             for m, v in results.items():
-                if v is not None:
+                if vImageDataset:
                     message += f"{f'{m}':<10}\t"
             message += "\n"
         # Values
         for i, (m, v) in enumerate(results.items()):
-            if v is not None:
+            if vImageDataset:
                 message += f"{v:.10f}\t"
         
         if verbose:

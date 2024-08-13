@@ -448,7 +448,7 @@ class CBAM(nn.Module):
         x = input
         y = x
         y = self.channel(y)
-        if self.spatial is not None:
+        if self.spatial:
             y = self.spatial(y)
         return y
 
@@ -641,14 +641,14 @@ def shifted_window_attention(
     x = x.permute(0, 1, 3, 2, 4, 5).reshape(b * num_windows, window_size[0] * window_size[1], c)  # B*nW, Ws*Ws, C
     
     # Multi-head attention
-    if logit_scale is not None and qkv_bias is not None:
+    if logit_scale and qkv_bias:
         qkv_bias = qkv_bias.clone()
         length   = qkv_bias.numel() // 3
         qkv_bias[length : 2 * length].zero_()
     qkv     = F.linear(x, qkv_weight, qkv_bias)
     qkv     = qkv.reshape(x.size(0), x.size(1), 3, num_heads, c // num_heads).permute(2, 0, 3, 1, 4)
     q, k, v = qkv[0], qkv[1], qkv[2]
-    if logit_scale is not None:
+    if logit_scale:
         # Cosine attention
         attn        = F.normalize(q, dim=-1) @ F.normalize(k, dim=-1).transpose(-2, -1)
         logit_scale = torch.clamp(logit_scale, max=math.log(100.0)).exp()
@@ -955,7 +955,7 @@ class WindowAttention(nn.Module):
         
         attn = attn + relative_position_bias.unsqueeze(0)
         
-        if mask is not None:
+        if mask:
             nW   = mask.shape[0]
             mask = repeat(mask, 'nW m n -> nW m (n d)', d=ratio)
             attn = attn.view(b_ // nW, nW, self.num_heads, n, n * ratio) + mask.unsqueeze(1).unsqueeze(0)
@@ -1180,7 +1180,7 @@ class ScaledDotProductAttention(nn.Module):
         mask: torch.Tensor | None = None
     ) -> tuple[torch.Tensor, torch.Tensor]:
         score = torch.bmm(q, k.transpose(1, 2)) / self.sqrt_dim
-        if mask is not None:
+        if mask:
             score.masked_fill_(mask.view(score.size()), -float('Inf'))
         attn    = F.softmax(score, -1)
         context = torch.bmm(attn, v)
@@ -1452,7 +1452,7 @@ class MultiHeadAttention(nn.Module):
         key   = key.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_heads, -1, self.dim)      # BNxK_LENxD
         value = value.permute(2, 0, 1, 3).contiguous().view(batch_size * self.num_heads, -1, self.dim)    # BNxV_LENxD
 
-        if mask is not None:
+        if mask:
             mask = mask.unsqueeze(1).repeat(1, self.num_heads, 1, 1)  # BxNxQ_LENxK_LEN
 
         context, attn = self.scaled_dot_attn(query, key, value, mask)
@@ -1532,7 +1532,7 @@ class RelativeMultiHeadAttention(nn.Module):
 
         score = (content_score + pos_score) / self.sqrt_dim
 
-        if mask is not None:
+        if mask:
             mask = mask.unsqueeze(1)
             score.masked_fill_(mask, -1e9)
 

@@ -76,7 +76,7 @@ def random_patch_image_box(
         gamma = [-gamma[0], gamma[0]]
     assert isinstance(gamma, list)
     
-    if masks is not None:
+    if masksImageDataset:
         # for i, (p, m) in enumerate(zip(patch, mask)):
         #     cv2.imwrite(f"{i}_image.png", p[:, :, ::-1])
         #     cv2.imwrite(f"{i}_mask.png",  m[:, :, ::-1])
@@ -118,7 +118,7 @@ def random_patch_image_box(
             y2  = y1 + p_h
             roi = canvas[y1:y2, x1:x2]
             
-            if ids is not None:
+            if idsImageDataset:
                 b = np.array([ids[i], x1, y1, x2, y2], dtype=np.float64)
             else:
                 b = np.array([-1, x1, y1, x2, y2], dtype=np.float64)
@@ -168,9 +168,9 @@ def gen_synthetic_image(
     bbox_format      : str,
     verbose          : bool
 ):
-    assert image_dir is not None and mon.Path(image_dir).is_dir()
-    assert background_dir is not None and mon.Path(background_dir).is_dir()
-    assert label_dir is not None and mon.Path(label_dir).is_dir()
+    assert image_dirImageDataset and mon.Path(image_dir).is_dir()
+    assert background_dirImageDataset and mon.Path(background_dir).is_dir()
+    assert label_dirImageDataset and mon.Path(label_dir).is_dir()
     
     image_dir           = mon.Path(image_dir)
     background_dir      = mon.Path(background_dir)

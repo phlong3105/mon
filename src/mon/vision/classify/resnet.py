@@ -115,7 +115,7 @@ class BasicBlock(nn.Module):
         x = self.relu(x)
         x = self.conv2(x)
         x = self.bn2(x)
-        if self.downsample is not None:
+        if self.downsampleImageDataset:
             identity = self.downsample(x)
         x += identity
         y  = self.relu(x)
@@ -169,7 +169,7 @@ class Bottleneck(nn.Module):
         x = self.relu(x)
         x = self.conv3(x)
         x = self.bn3(x)
-        if self.downsample is not None:
+        if self.downsampleImageDataset:
             identity = self.downsample(x)
         x += identity
         y  = self.relu(x)
@@ -251,9 +251,9 @@ class ResNet(base.ImageClassificationModel, ABC):
         # https://arxiv.org/abs/1706.02677
         if zero_init_residual:
             for m in self.modules():
-                if isinstance(m, Bottleneck) and m.bn3.weight is not None:
+                if isinstance(m, Bottleneck) and m.bn3.weightImageDataset:
                     torch.nn.init.constant_(m.bn3.weight, 0)  # type: ignore[arg-type]
-                elif isinstance(m, BasicBlock) and m.bn2.weight is not None:
+                elif isinstance(m, BasicBlock) and m.bn2.weightImageDataset:
                     torch.nn.init.constant_(m.bn2.weight, 0)  # type: ignore[arg-type]
         
         if self.weights:

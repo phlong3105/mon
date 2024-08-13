@@ -48,34 +48,42 @@ __all__ = [
 from typing import Literal
 
 from mon import core
-from mon.data.datastruct import annotation as anno, datamodule, dataset
+from mon.data.datastruct import annotation, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console          = core.console
-default_root_dir = DATA_DIR / "llie"
+console             = core.console
+default_root_dir    = DATA_DIR / "llie"
+DatapointAttributes = annotation.DatapointAttributes
+ImageAnnotation     = annotation.ImageAnnotation
+ImageDataset        = dataset.ImageDataset
 
 
 # region Dataset
 
 @DATASETS.register(name="darkface")
-class DarkFace(dataset.UnlabeledImageDataset):
+class DarkFace(ImageDataset):
     """DarkFace dataset consists of 6490 low-light images.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def get_data(self):
         patterns = [
-            self.root / "darkface" / self.split_str / "lq"
+            self.root / "darkface" / self.split_str / "lq",
         ]
-
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -83,28 +91,35 @@ class DarkFace(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
+        
 @DATASETS.register(name="dicm")
-class DICM(dataset.UnlabeledImageDataset):
+class DICM(ImageDataset):
     """DICM dataset consists of 64 low-light images.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def get_data(self):
         patterns = [
-            self.root / "dicm" / self.split_str / "lq"
+            self.root / "dicm" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -112,28 +127,35 @@ class DICM(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 
 @DATASETS.register(name="exdark")
-class ExDark(dataset.UnlabeledImageDataset):
+class ExDark(ImageDataset):
     """ExDark dataset consists of 7363 low-light images.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def get_data(self):
         patterns = [
-            self.root / "exdark" / self.split_str / "lq"
+            self.root / "exdark" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -141,29 +163,37 @@ class ExDark(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 
 @DATASETS.register(name="fivek_c")
-class FiveKC(dataset.UnlabeledImageDataset):
+class FiveKC(ImageDataset):
     """MIT Adobe FiveK dataset with Expert C ground-truth. It consists of 5,000
     low/high image pairs.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
     def get_data(self):
         patterns = [
-            self.root / "fivek_c" / self.split_str / "lq"
+            self.root / "fivek_c" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -171,40 +201,48 @@ class FiveKC(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-    
-    def _get_labels(self):
-        self.annotations: list[anno.ImageAnnotation] = []
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
             ):
                 path = img.path.replace("/lq/", "/hq/")
-                ann  = anno.ImageAnnotation(path=path.image_file())
-                self.annotations.append(ann)
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["lq_image"] = lq_images
+        self.datapoints["hq_image"] = hq_images
 
 
 @DATASETS.register(name="fivek_e")
-class FiveKE(dataset.ImageEnhancementDataset):
+class FiveKE(ImageDataset):
     """MIT Adobe FiveK dataset with Expert E ground-truth. It consists of 5,000
     low/high image pairs.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
         
-    def get_images(self):
+    def get_data(self):
         patterns = [
-            self.root / "fivek_e" / self.split_str / "lq"
+            self.root / "fivek_e" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -212,39 +250,46 @@ class FiveKE(dataset.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-    
-    def get_annotations(self):
-        self.annotations: list[anno.ImageAnnotation] = []
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
             ):
                 path = img.path.replace("/lq/", "/hq/")
-                ann  = anno.ImageAnnotation(path=path.image_file())
-                self.annotations.append(ann)
-
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["lq_image"] = lq_images
+        self.datapoints["hq_image"] = hq_images
+        
 
 @DATASETS.register(name="fusion")
-class Fusion(dataset.UnlabeledImageDataset):
+class Fusion(ImageDataset):
     """Fusion dataset consists of 64 low-light images.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "fusion" / self.split_str / "lq"
+            self.root / "fusion" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -252,28 +297,35 @@ class Fusion(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 
 @DATASETS.register(name="lime")
-class LIME(dataset.UnlabeledImageDataset):
+class LIME(ImageDataset):
     """LIME dataset consists of 10 low-light images.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
 
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "lime" / self.split_str / "lq"
+            self.root / "lime" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -281,30 +333,37 @@ class LIME(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 
 @DATASETS.register(name="lol_blur")
-class LOLBlur(dataset.ImageEnhancementDataset):
+class LOLBlur(ImageDataset):
     """LOL-Blur dataset consists of low-light + blurred and normal-light + sharp
     image pairs.
     
-    See Also: :class:`base.ImageEnhancementDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN, Split.VAL, Split.TEST]
-    has_test_annotations = True
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = True
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
-            self.root / "lol_blur" / self.split_str / "lq"
+            self.root / "lol_blur" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -312,43 +371,50 @@ class LOLBlur(dataset.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-    
-    def get_annotations(self):
-        self.annotations: list[anno.ImageAnnotation] = []
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
             ):
                 path = img.path.replace("/lq/", "/hq/")
-                ann  = anno.ImageAnnotation(path=path.image_file())
-                self.annotations.append(ann)
-
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["lq_image"] = lq_images
+        self.datapoints["hq_image"] = hq_images
+        
 
 @DATASETS.register(name="lol_v1")
-class LOLV1(dataset.ImageEnhancementDataset):
+class LOLV1(ImageDataset):
     """LOL-v1 dataset consists of 500 low-light and normal-light image pairs.
     They are divided into 485 training pairs and 15 testing pairs. The low-light
     images contain noise produced during the photo capture process. Most of the
     images are indoor scenes. All the images have a resolution of 400×600.
     
-    See Also: :class:`base.ImageEnhancementDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN, Split.TEST]
-    has_test_annotations = True
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = True
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
-            self.root / "lol_v1" / self.split_str / "lq"
+            self.root / "lol_v1" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -356,44 +422,51 @@ class LOLV1(dataset.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-    
-    def get_annotations(self):
-        self.annotations: list[anno.ImageAnnotation] = []
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
             ):
                 path = img.path.replace("/lq/", "/hq/")
-                ann  = anno.ImageAnnotation(path=path.image_file())
-                self.annotations.append(ann)
-
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["lq_image"] = lq_images
+        self.datapoints["hq_image"] = hq_images
+        
 
 @DATASETS.register(name="lol_v2_real")
-class LOLV2Real(dataset.ImageEnhancementDataset):
+class LOLV2Real(ImageDataset):
     """LOL-v2 Real (VE-LOL) dataset consists of 500 low-light and normal-light
     image pairs. They are divided into 400 training pairs and 100 testing pairs.
     The low-light images contain noise produced during the photo capture
     process. Most of the images are indoor scenes. All the images have a
     resolution of 400×600.
     
-    See Also: :class:`base.ImageEnhancementDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN, Split.TEST]
-    has_test_annotations = True
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = True
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
-            self.root / "lol_v2_real" / self.split_str / "lq"
+            self.root / "lol_v2_real" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -401,44 +474,51 @@ class LOLV2Real(dataset.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-    
-    def get_annotations(self):
-        self.annotations: list[anno.ImageAnnotation] = []
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
             ):
                 path = img.path.replace("/lq/", "/hq/")
-                ann  = anno.ImageAnnotation(path=path.image_file())
-                self.annotations.append(ann)
-
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["lq_image"] = lq_images
+        self.datapoints["hq_image"] = hq_images
+        
 
 @DATASETS.register(name="lol_v2_synthetic")
-class LOLV2Synthetic(dataset.ImageEnhancementDataset):
+class LOLV2Synthetic(ImageDataset):
     """LOL-v2 Synthetic (VE-LOL-Syn) dataset consists of 1000 low-light and
     normal-light image pairs. They are divided into 900 training pairs and 100
     testing pairs. The low-light images contain noise produced during the photo
     capture process. Most of the images are indoor scenes. All the images have a
     resolution of 400×600.
     
-    See Also: :class:`base.ImageEnhancementDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN, Split.TEST]
-    has_test_annotations = True
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = True
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
-    def get_images(self):
+    def get_data(self):
         patterns = [
-            self.root / "lol_v2_synthetic" / self.split_str / "lq"
+            self.root / "lol_v2_synthetic" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -446,39 +526,46 @@ class LOLV2Synthetic(dataset.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-    
-    def get_annotations(self):
-        self.annotations: list[anno.ImageAnnotation] = []
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
             ):
                 path = img.path.replace("/lq/", "/hq/")
-                ann  = anno.ImageAnnotation(path=path.image_file())
-                self.annotations.append(ann)
-
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["lq_image"] = lq_images
+        self.datapoints["hq_image"] = hq_images
+        
 
 @DATASETS.register(name="mef")
-class MEF(dataset.UnlabeledImageDataset):
+class MEF(ImageDataset):
     """MEF dataset consists 17 low-light images.
 
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "mef" / self.split_str / "lq"
+            self.root / "mef" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -486,28 +573,36 @@ class MEF(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-      
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
                         
 @DATASETS.register(name="npe")
-class NPE(dataset.UnlabeledImageDataset):
+class NPE(ImageDataset):
     """NPE dataset consists 85 low-light images.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "npe" / self.split_str / "lq"
+            self.root / "npe" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -515,20 +610,24 @@ class NPE(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
+    
 @DATASETS.register(name="sice_grad")
-class SICEGrad(dataset.UnlabeledImageDataset):
+class SICEGrad(ImageDataset):
     """SICE-Grad dataset.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN]
-    has_test_annotations = False
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -537,7 +636,9 @@ class SICEGrad(dataset.UnlabeledImageDataset):
         patterns = [
             self.root / "sice_grad" / self.split_str / "lq"
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -545,30 +646,37 @@ class SICEGrad(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-                        
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
                         
 @DATASETS.register(name="sice_mix")
-class SICEMix(dataset.UnlabeledImageDataset):
+class SICEMix(ImageDataset):
     """Custom SICE dataset for training :class:`mon.vision.enhance.llie.zerodce.ZeroDCE`
     model.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN]
-    has_test_annotations = False
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "sice_mix" / self.split_str / "lq"
+            self.root / "sice_mix" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -576,29 +684,35 @@ class SICEMix(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 
 @DATASETS.register(name="sice_mix_v2")
-class SICEMixV2(dataset.UnlabeledImageDataset):
+class SICEMixV2(ImageDataset):
     """SICE-MixV2 dataset.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN]
-    has_test_annotations = False
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "sice_mix_v2" / self.split_str / "lq"
+            self.root / "sice_mix_v2" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -606,20 +720,24 @@ class SICEMixV2(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-                        
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 
 @DATASETS.register(name="ulol")
-class ULOL(dataset.UnlabeledImageDataset):
+class ULOL(ImageDataset):
     """Custom ULOL (Unsupervised LOw-Light) dataset for training.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TRAIN]
-    has_test_annotations = False
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TRAIN]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
@@ -641,7 +759,9 @@ class ULOL(dataset.UnlabeledImageDataset):
             self.root / "npe"              / "test"         / "lq",
             self.root / "vv"               / "test"         / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -649,28 +769,35 @@ class ULOL(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-                        
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 
 @DATASETS.register(name="vv")
-class VV(dataset.UnlabeledImageDataset):
+class VV(ImageDataset):
     """VV dataset consists of 24 low-light images.
     
-    See Also: :class:`base.UnlabeledImageDataset`.
+    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
-    tasks  = [Task.LLIE]
-    splits = [Split.TEST]
+    tasks : list[Task]  = [Task.LLIE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "lq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "vv" / self.split_str / "lq"
+            self.root / "vv" / self.split_str / "lq",
         ]
-        self.images: list[anno.ImageAnnotation] = []
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
@@ -678,9 +805,10 @@ class VV(dataset.UnlabeledImageDataset):
                     description=f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        image = anno.ImageAnnotation(path=path)
-                        self.images.append(image)
-
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        self.datapoints["lq_image"] = lq_images
+        
 # endregion
 
 
@@ -690,10 +818,10 @@ class VV(dataset.UnlabeledImageDataset):
 class DarkFaceDataModule(datamodule.DataModule):
     """DarkFace datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -723,10 +851,10 @@ class DarkFaceDataModule(datamodule.DataModule):
 class DICMDataModule(datamodule.DataModule):
     """DICM datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -756,10 +884,10 @@ class DICMDataModule(datamodule.DataModule):
 class ExDarkDataModule(datamodule.DataModule):
     """ExDark datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -789,10 +917,10 @@ class ExDarkDataModule(datamodule.DataModule):
 class FiveKCDataModule(datamodule.DataModule):
     """MIT Adobe FiveK datamodule with Expert C ground-truth.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -822,10 +950,10 @@ class FiveKCDataModule(datamodule.DataModule):
 class FiveKEDataModule(datamodule.DataModule):
     """MIT Adobe FiveK datamodule with Expert E ground-truth.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -855,10 +983,10 @@ class FiveKEDataModule(datamodule.DataModule):
 class FusionDataModule(datamodule.DataModule):
     """Fusion datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -888,10 +1016,10 @@ class FusionDataModule(datamodule.DataModule):
 class LIMEDataModule(datamodule.DataModule):
     """LIME datamodule.
      
-     See Also: :class:`base.DataModule`.
+     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
      """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -921,10 +1049,10 @@ class LIMEDataModule(datamodule.DataModule):
 class LOLBlurDataModule(datamodule.DataModule):
     """LOL-Blur datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -954,10 +1082,10 @@ class LOLBlurDataModule(datamodule.DataModule):
 class LOLV1DataModule(datamodule.DataModule):
     """LOLV1 datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -987,10 +1115,10 @@ class LOLV1DataModule(datamodule.DataModule):
 class LOLV2RealDataModule(datamodule.DataModule):
     """LOLV2Real datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1020,10 +1148,10 @@ class LOLV2RealDataModule(datamodule.DataModule):
 class LOLV2SyntheticDataModule(datamodule.DataModule):
     """LOL-v2 Synthetic datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1053,10 +1181,10 @@ class LOLV2SyntheticDataModule(datamodule.DataModule):
 class MEFDataModule(datamodule.DataModule):
     """MEF datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1086,10 +1214,10 @@ class MEFDataModule(datamodule.DataModule):
 class NPEDataModule(datamodule.DataModule):
     """NPE datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1119,10 +1247,10 @@ class NPEDataModule(datamodule.DataModule):
 class SICEGradDataModule(datamodule.DataModule):
     """SICE-Grad datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1152,10 +1280,10 @@ class SICEGradDataModule(datamodule.DataModule):
 class SICEMixDataModule(datamodule.DataModule):
     """SICE-Mix datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1185,10 +1313,10 @@ class SICEMixDataModule(datamodule.DataModule):
 class SICEMixV2DataModule(datamodule.DataModule):
     """SICE-MixV2 datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1218,10 +1346,10 @@ class SICEMixV2DataModule(datamodule.DataModule):
 class ULOLMixDataModule(datamodule.DataModule):
     """Custom ULOL (Unsupervised LOw-Light) datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:
@@ -1251,10 +1379,10 @@ class ULOLMixDataModule(datamodule.DataModule):
 class VVDataModule(datamodule.DataModule):
     """VV datamodule.
     
-    See Also: :class:`base.DataModule`.
+    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
-    tasks = [Task.LLIE]
+    tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
         if self.classlabels is None:

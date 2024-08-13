@@ -24,14 +24,14 @@ def convert_video(
     extension  : str,
     verbose    : bool
 ):
-    assert source is not None and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())
+    assert sourceImageDataset and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())
 
     source = mon.Path(source)
     source = [source] if mon.Path(source).is_image_file() else list(source.glob("*"))
     source = [s for s in source if s.is_image_file()]
     source = sorted(source)
 
-    if destination is not None:
+    if destinationImageDataset:
         destination = mon.Path(destination)
         destination = [destination / f"{s.stem}.{extension}" for s in source]
     else:

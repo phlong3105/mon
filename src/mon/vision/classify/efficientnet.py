@@ -393,7 +393,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
 
         # Building last several layers
         lastconv_input_channels  = inverted_residual_setting[-1].out_channels
-        lastconv_output_channels = last_channel if last_channel is not None else 4 * lastconv_input_channels
+        lastconv_output_channels = last_channel if last_channelImageDataset else 4 * lastconv_input_channels
         layers.append(
             nn.Conv2dNormAct(
                 in_channels      = lastconv_input_channels,
@@ -419,7 +419,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
-            if m.bias is not None:
+            if m.biasImageDataset:
                 torch.nn.init.zeros_(m.bias)
         elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
             torch.nn.init.ones_(m.weight)

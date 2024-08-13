@@ -78,7 +78,7 @@ class VGG(base.ImageClassificationModel, ABC):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-            if m.bias is not None:
+            if m.biasImageDataset:
                 torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.BatchNorm2d):
             torch.nn.init.constant_(m.weight, 1)

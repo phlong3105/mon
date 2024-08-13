@@ -64,7 +64,7 @@ def conv(
         to_pad = 0
 
     convolver = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=to_pad, bias=bias)
-    layers    = [x for x in [padder, convolver, downsampler] if x is not None]
+    layers    = [x for x in [padder, convolver, downsampler] if xImageDataset]
     return nn.Sequential(*layers)
 
 

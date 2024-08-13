@@ -236,37 +236,37 @@ def get_channel(
     if is_channel_first_image(input=input):
         if input.ndim == 5:
             if keep_dim:
-                return input[:, :, i1:i2, :, :] if i2 is not None else input[:, :, i1:, :, :]
+                return input[:, :, i1:i2, :, :] if i2 else input[:, :, i1:, :, :]
             else:
-                return input[:, :, i1, :, :] if i2 is not None else input[:, :, i1, :, :]
+                return input[:, :, i1, :, :] if i2 else input[:, :, i1, :, :]
         elif input.ndim == 4:
             if keep_dim:
-                return input[:, i1:i2, :, :] if i2 is not None else input[:, i1:, :, :]
+                return input[:, i1:i2, :, :] if i2 else input[:, i1:, :, :]
             else:
-                return input[:, i1, :, :] if i2 is not None else input[:, i1, :, :]
+                return input[:, i1, :, :] if i2  else input[:, i1, :, :]
         elif input.ndim == 3:
             if keep_dim:
-                return input[i1:i2, :, :] if i2 is not None else input[i1:, :, :]
+                return input[i1:i2, :, :] if i2 else input[i1:, :, :]
             else:
-                return input[i1, :, :] if i2 is not None else input[i1, :, :]
+                return input[i1, :, :] if i2 else input[i1, :, :]
         else:
             raise ValueError
     else:
         if input.ndim == 5:
             if keep_dim:
-                return input[:, :, :, :, i1:i2] if i2 is not None else input[:, :, :, :, i1:]
+                return input[:, :, :, :, i1:i2] if i2 else input[:, :, :, :, i1:]
             else:
-                return input[:, :, :, :, i1] if i2 is not None else input[:, :, :, :, i1]
+                return input[:, :, :, :, i1] if i2 else input[:, :, :, :, i1]
         elif input.ndim == 4:
             if keep_dim:
-                return input[:, :, :, i1:i2] if i2 is not None else input[:, :, :, i1:]
+                return input[:, :, :, i1:i2] if i2 else input[:, :, :, i1:]
             else:
-                return input[:, :, :, i1] if i2 is not None else input[:, :, :, i1]
+                return input[:, :, :, i1] if i2 else input[:, :, :, i1]
         elif input.ndim == 3:
             if keep_dim:
-                return input[:, :, i1:i2] if i2 is not None else input[:, :, i1:]
+                return input[:, :, i1:i2] if i2 else input[:, :, i1:]
             else:
-                return input[:, :, i1] if i2 is not None else input[:, :, i1]
+                return input[:, :, i1] if i2 else input[:, :, i1]
         else:
             raise ValueError
     
@@ -864,7 +864,7 @@ def to_image_tensor(
     input = normalize_image(input=input) if normalize else input
     # Place in memory
     input = input.contiguous()
-    if device is not None:
+    if device:
         input = input.to(device)
     return input
 

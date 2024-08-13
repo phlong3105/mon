@@ -140,7 +140,7 @@ class OPEmbedder(nn.ConvLayerParsingMixin, nn.Module):
         if isinstance(m, nn.Linear):
             m.weight.data.trunc_()
             # torch.nn.init.trunc_normal_(m.weight, )
-        if isinstance(m, nn.Linear) and m.bias is not None:
+        if isinstance(m, nn.Linear) and m.biasImageDataset:
             m.bias.data.zero_()
             # torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LayerNorm):
@@ -152,7 +152,7 @@ class OPEmbedder(nn.ConvLayerParsingMixin, nn.Module):
             fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
             fan_out //= m.groups
             m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
-            if m.bias is not None:
+            if m.biasImageDataset:
                 m.bias.data.zero_()
         
     def forward(self, images: torch.Tensor, normalization: bool = False) -> torch.Tensor:
@@ -286,7 +286,7 @@ class CBAM(nn.Module):
         f = f.permute(0, 2, 1).reshape(B, C, H, W)
         chan_att = self.channel_attention(f)
         fp = chan_att * f
-        if self.spatial_attention is not None:
+        if self.spatial_attentionImageDataset:
             fp = self.spatial_attention(fp) * fp
         fpp = fp 
         fpp = fpp.reshape(B, C, N).permute(0, 2, 1)
@@ -456,7 +456,7 @@ class Transweather(base.DerainingModel):
             if isinstance(m, nn.Linear):
                 m.weight.data.trunc_()
                 # torch.nn.init.trunc_normal_(m.weight, )
-            if isinstance(m, nn.Linear) and m.bias is not None:
+            if isinstance(m, nn.Linear) and m.biasImageDataset:
                 m.bias.data.zero_()
                 # torch.nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.LayerNorm):
@@ -468,7 +468,7 @@ class Transweather(base.DerainingModel):
                 fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 fan_out //= m.groups
                 m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
-                if m.bias is not None:
+                if m.biasImageDataset:
                     m.bias.data.zero_()
         
         def reset_drop_path(self, drop_path_rate):
@@ -628,7 +628,7 @@ class Transweather(base.DerainingModel):
             if isinstance(m, nn.Linear):
                 m.weight.data.trunc_()
                 # torch.nn.init.trunc_normal_(m.weight, )
-            if isinstance(m, nn.Linear) and m.bias is not None:
+            if isinstance(m, nn.Linear) and m.biasImageDataset:
                 m.bias.data.zero_()
                 # torch.nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.LayerNorm):
@@ -640,7 +640,7 @@ class Transweather(base.DerainingModel):
                 fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 fan_out //= m.groups
                 m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
-                if m.bias is not None:
+                if m.biasImageDataset:
                     m.bias.data.zero_()
 
         def forward_features(self, x):
@@ -1006,7 +1006,7 @@ class Transweather(base.DerainingModel):
         if isinstance(m, nn.Linear):
             m.weight.data.trunc_()
             # torch.nn.init.trunc_normal_(m.weight, )
-        if isinstance(m, nn.Linear) and m.bias is not None:
+        if isinstance(m, nn.Linear) and m.biasImageDataset:
             m.bias.data.zero_()
             # torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LayerNorm):
@@ -1018,7 +1018,7 @@ class Transweather(base.DerainingModel):
             fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
             fan_out //= m.groups
             m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
-            if m.bias is not None:
+            if m.biasImageDataset:
                 m.bias.data.zero_()
     
     def forward_loss(
@@ -1062,12 +1062,12 @@ class Transweather(base.DerainingModel):
         if augment:
             # For now just forward the input. Later, we will implement the
             # test-time augmentation.
-            if self.variant is not None:
+            if self.variantImageDataset:
                 pass # return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
             else:
                 return self.forward_once(input=input, profile=profile, *args, **kwargs)
         else:
-            if self.variant is not None:
+            if self.variantImageDataset:
                 pass # return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
             else:
                 return self.forward_once(input=input, profile=profile, *args, **kwargs)
@@ -1109,7 +1109,7 @@ class Transweather(base.DerainingModel):
 
         
         # Unsharp masking
-        if self.unsharp_sigma is not None:
+        if self.unsharp_sigmaImageDataset:
             y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
 
         return y
@@ -1307,7 +1307,7 @@ class Transweather(base.DerainingModel):
     #                     y = b + d + A[i] * (torch.pow(d, 2) - d)
 
     #     # Unsharp masking
-    #     if self.unsharp_sigma is not None:
+    #     if self.unsharp_sigma:
     #         y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
 
     #     #

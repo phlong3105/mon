@@ -23,7 +23,7 @@ def gen_yolo_label(
     output_dir: mon.Path,
     verbose   : bool
 ):
-    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert image_dirImageDataset and mon.Path(image_dir).is_dir()
 
     image_dir   = mon.Path(image_dir)
     output_dir  = output_dir or image_dir.parent / f"labels"

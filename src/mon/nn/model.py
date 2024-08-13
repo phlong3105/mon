@@ -110,7 +110,7 @@ def load_state_dict(
     if isinstance(weights, dict):
         path = weights.get("path", path)
         url  = weights.get("url",  url)
-        if path is not None and url is not None:
+        if path and url:
             path = core.Path(path)
             core.mkdirs(paths=[path.parent], exist_ok=True)
             if core.is_url(url):
@@ -372,7 +372,7 @@ class Model(lightning.LightningModule, ABC):
                 weights         = self.zoo[weights]
                 weights["path"] = self.zoo_dir / weights.get("path", "")
                 num_classes     = getattr(weights, "num_classes", None)
-                if num_classes is not None and num_classes != self.num_classes:
+                if num_classes and num_classes != self.num_classes:
                     self.num_classes = num_classes
                     console.log(f"Overriding :attr:`num_classes` with {num_classes}.")
             else:
@@ -547,7 +547,7 @@ class Model(lightning.LightningModule, ABC):
         else:
             error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
         
-        if state_dict is not None:
+        if state_dict:
             self.load_state_dict(state_dict=state_dict)
             if self.verbose:
                 console.log(f"Load model's weights from: {self.weights}!")
@@ -628,7 +628,7 @@ class Model(lightning.LightningModule, ABC):
             # Define learning rate scheduler
             if "lr_scheduler" in optim and lr_scheduler is None:
                 optim.pop("lr_scheduler")
-            elif lr_scheduler is not None and isinstance(lr_scheduler, dict):
+            elif lr_scheduler and isinstance(lr_scheduler, dict):
                 scheduler = lr_scheduler.get("scheduler", None)
                 if scheduler is None:
                     raise ValueError(f":param:`scheduler` must be defined.")
@@ -756,7 +756,7 @@ class Model(lightning.LightningModule, ABC):
     def training_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
         """Here you compute and return the training loss, and some additional
         metrics for e.g., the progress bar or logger.
-
+        
         Args:
             batch: The output of :class:`~torch.utils.data.DataLoader`. It is a
                 :class:`dict` containing every piece of data for a datapoint.
@@ -1001,7 +1001,7 @@ class Model(lightning.LightningModule, ABC):
         if ".onnx" not in str(file_path):
             file_path = core.Path(str(file_path) + ".onnx")
         
-        if input_dims is not None:
+        if input_dims:
             input_sample = torch.randn(input_dims)
         else:
             raise ValueError(f":param:`input_dims` must be defined.")
@@ -1033,7 +1033,7 @@ class Model(lightning.LightningModule, ABC):
         if ".pt" not in str(file_path):
             file_path = core.Path(str(file_path) + ".pt")
         
-        if input_dims is not None:
+        if input_dims:
             input_sample = torch.randn(input_dims)
         else:
             raise ValueError(f":param:`input_dims` must be defined.")
@@ -1125,7 +1125,7 @@ class ExtraModel(Model, ABC):
         else:
             error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
         
-        if state_dict is not None:
+        if state_dict:
             self.model.load_state_dict(state_dict=state_dict)
             if self.verbose:
                 console.log(f"Load model's weights from: {self.weights}!")

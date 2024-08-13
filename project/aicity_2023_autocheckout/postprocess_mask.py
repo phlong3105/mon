@@ -26,7 +26,7 @@ def postprocess_mask(
     verbose : bool
 ):
     """Visualize bounding boxes on images."""
-    assert mask_dir is not None and mon.Path(mask_dir).is_dir()
+    assert mask_dirImageDataset and mon.Path(mask_dir).is_dir()
     
     mask_dir   = mon.Path(mask_dir)
     mask_files = list(mask_dir.rglob("*"))

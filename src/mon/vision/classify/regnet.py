@@ -165,7 +165,7 @@ class ResBottleneckBlock(nn.Module):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        if self.proj is not None:
+        if self.projImageDataset:
             x = self.proj(x) + self.f(x)
         else:
             x = x + self.f(x)

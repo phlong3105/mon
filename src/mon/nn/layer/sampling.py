@@ -96,7 +96,7 @@ class Downsample(nn.Module):
         x = input
         if self.size and self.size == list(x[2:]):
             return x
-        if self.scale_factor is not None \
+        if self.scale_factorImageDataset \
             and isinstance(self.scale_factor, tuple) \
             and (self.scale_factor == 1.0 or all(s == 1.0 for s in self.scale_factor)):
             return x

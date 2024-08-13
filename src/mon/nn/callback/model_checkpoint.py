@@ -61,7 +61,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         auto_insert_metric_name: bool             = True,
         verbose                : bool             = False,
     ):
-        if dirpath is not None:
+        if dirpath:
             dirpath = core.Path(dirpath)
             dirpath = dirpath / "weights" if dirpath.name != "weights" else dirpath
             dirpath = str(dirpath)
@@ -89,7 +89,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         # Make sure that we have the correct filename (1)
         if (
             hasattr(pl_module, "fullname")
-            and pl_module.fullname is not None
+            and pl_module.fullname
             and self.filename is None
         ):
             self.filename = pl_module.fullname
@@ -99,7 +99,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         # Make sure that we have the correct filename (2)
         if (
             hasattr(pl_module, "fullname")
-            and pl_module.fullname is not None
+            and pl_module.fullname
             and self.filename is None
         ):
             self.filename = pl_module.fullname
@@ -224,7 +224,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         The path gets extended with subdirectory "checkpoints".
 
         """
-        if self.dirpath is not None:
+        if self.dirpath:
             # short circuit if dirpath was passed to ModelCheckpoint
             return self.dirpath
         else:
@@ -268,7 +268,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         
         current = monitor_candidates.get(self.monitor)
         if self.check_monitor_top_k(trainer, current):
-            assert current is not None
+            assert current
             self._update_best_and_save(current, trainer, monitor_candidates)
         elif self.verbose:
             if trainer.is_global_zero:

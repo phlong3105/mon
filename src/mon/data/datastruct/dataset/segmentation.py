@@ -29,7 +29,7 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 	"""The base class for datasets that represent a collection of images and a
 	set of associated semantic segmentations.
 	
-	See Also: :class:`LabeledImageDataset`.
+	See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
 	"""
 	
 	def __init__(
@@ -64,7 +64,7 @@ class ImageSegmentationDataset(img.LabeledImageDataset, ABC):
 		mask  = self.annotations[index].data if self.has_annotations else None
 		meta  = self.images[index].meta
 		
-		if self.transform is not None:
+		if self.transform:
 			if self.has_annotations:
 				transformed = self.transform(image=image, mask=mask)
 				image       = transformed["image"]

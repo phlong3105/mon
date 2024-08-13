@@ -113,15 +113,15 @@ def measure_metric(
     verbose       : bool,
 ):
     variant       = variant if variant not in [None, "", "none"] else None
-    model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
+    model_variant = f"{name}-{variant}" if variantImageDataset else f"{name}"
     console.rule(f"[bold red] {model_variant}")
 
     input_dir = input_dir.replace("MODEL", model_variant)
 
-    assert input_dir is not None and mon.Path(input_dir).is_dir()
-    assert target_dir is not None and mon.Path(target_dir).is_dir()
+    assert input_dirImageDataset and mon.Path(input_dir).is_dir()
+    assert target_dirImageDataset and mon.Path(target_dir).is_dir()
 
-    if result_file is not None:
+    if result_fileImageDataset:
         assert (mon.Path(result_file).is_dir()
                 or mon.Path(result_file).is_file()
                 or isinstance(result_file, str))
@@ -129,11 +129,11 @@ def measure_metric(
 
     input_dir  = mon.Path(input_dir)
     target_dir = mon.Path(target_dir) \
-        if target_dir is not None \
+        if target_dirImageDataset \
         else input_dir.replace("low", "labels")
 
-    result_file = mon.Path(result_file) if result_file is not None else None
-    if save_txt and result_file is not None and result_file.is_dir():
+    result_file = mon.Path(result_file) if result_fileImageDataset else None
+    if save_txt and result_fileImageDataset and result_file.is_dir():
         result_file /= "metric.txt"
         result_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -160,7 +160,7 @@ def measure_metric(
                 if temp.exists():
                     target_file = temp
 
-            if target_file is not None and target_file.exists():
+            if target_fileImageDataset and target_file.exists():
                 num_items += 1
                 target     = color_to_gray(path=str(target_file))
                 metric.add_batch(image, target)

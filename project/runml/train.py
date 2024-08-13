@@ -59,7 +59,7 @@ def train(args: dict) -> str:
     args["trainer"]["default_root_dir"]     = save_dir
     args["trainer"]["enable_checkpointing"] = any(isinstance(cb, lcallbacks.Checkpoint) for cb in callbacks)
     args["trainer"]["logger"]               = logger
-    args["trainer"]["num_sanity_val_steps"] = (0 if (ckpt is not None) else args["trainer"]["num_sanity_val_steps"])
+    args["trainer"]["num_sanity_val_steps"] = (0 if (ckptImageDataset) else args["trainer"]["num_sanity_val_steps"])
     
     trainer               = mon.Trainer(**args["trainer"])
     trainer.current_epoch = mon.get_epoch_from_checkpoint(ckpt=ckpt)
@@ -153,7 +153,7 @@ def parse_train_args(model_root: str | mon.Path | None = None) -> dict:
     args["trainer"]  |= {
         "default_root_dir": save_dir,
         "devices"         : devices,
-        "max_epochs"      : epochs if steps is not None else None,
+        "max_epochs"      : epochs if stepsImageDataset else None,
         "max_steps"       : steps,
     }
     
@@ -161,7 +161,7 @@ def parse_train_args(model_root: str | mon.Path | None = None) -> dict:
         mon.delete_dir(paths=mon.Path(save_dir))
     
     save_dir.mkdir(parents=True, exist_ok=True)
-    if config is not None and config.is_config_file():
+    if configImageDataset and config.is_config_file():
         mon.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
         
     return args

@@ -21,8 +21,8 @@ def extract_class(
     classes   : str,
     verbose   : bool,
 ):
-    assert image_dir is not None and mon.Path(image_dir).is_dir()
-    assert label_dir is not None and mon.Path(label_dir).is_dir()
+    assert image_dirImageDataset and mon.Path(image_dir).is_dir()
+    assert label_dirImageDataset and mon.Path(label_dir).is_dir()
     
     image_dir   = mon.Path(image_dir)
     label_dir   = mon.Path(label_dir)

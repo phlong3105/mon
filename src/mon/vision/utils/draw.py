@@ -69,7 +69,7 @@ def draw_bbox(
         lineType  = line_type,
         shift     = shift,
     )
-    if label is not None:
+    if labelImageDataset:
         label  = f"{label}"
         offset = int(thickness / 2)
         text_size, baseline = cv2.getTextSize(
@@ -171,7 +171,7 @@ def draw_segment(
         segment = np.array(segment)
     segment = np.array(segment).reshape((-1, 1, 2)).astype(int)
 
-    if bbox is True or (bbox in [False, None] and label is not None):
+    if bbox is True or (bbox in [False, None] and labelImageDataset):
         x, y, w, h = cv2.boundingRect(segment)
         bbox       = [x, y, x + w, y + h]
         
@@ -225,7 +225,7 @@ def draw_segment(
             lineType  = line_type,
             shift     = shift,
         )
-        if label is not None:
+        if labelImageDataset:
             label  = f"{label}"
             offset = int(thickness / 2)
             text_size, baseline = cv2.getTextSize(

@@ -27,7 +27,7 @@ def gen_bg_img(
     classes   : str,
     verbose   : bool = True,
 ):
-    # assert save_dir is not None and mon.Path(save_dir).is_dir()
+    # assert save_dirImageDataset and mon.Path(save_dir).is_dir()
     save_dir = mon.Path(save_dir)
     mon.delete_dir(save_dir)
     save_dir.parent.mkdir(parents=True, exist_ok=True)

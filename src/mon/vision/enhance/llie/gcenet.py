@@ -109,7 +109,7 @@ class Loss(nn.Loss):
         loss_col = self.loss_col(input=enhance)               if self.weight_col  > 0 else 0
         loss_exp = self.loss_exp(input=enhance)               if self.weight_exp  > 0 else 0
         loss_spa = self.loss_spa(input=enhance, target=input) if self.weight_spa  > 0 else 0
-        if adjust is not None:
+        if adjustImageDataset:
             loss_tva = self.loss_tva(input=adjust)  if self.weight_tva > 0 else 0
         else:
             loss_tva = self.loss_tva(input=enhance) if self.weight_tva > 0 else 0
@@ -244,7 +244,7 @@ class ConvBlock(nn.Module):
         super().__init__()
         self.conv = nn.DSConv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True)
         #
-        if norm is not None:
+        if normImageDataset:
             self.norm = norm(out_channels)
         else:
             self.norm = nn.Identity()

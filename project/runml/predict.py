@@ -136,7 +136,7 @@ def predict(args: dict) -> str:
                     output_path = save_dir / f"{meta['stem']}.png"
                     mon.write_image(output_path, output, denormalize=True)
                     
-                    if data_writer is not None:
+                    if data_writerImageDataset:
                         data_writer.write_batch(data=output)
                     
                     # Debug
@@ -227,7 +227,7 @@ def parse_predict_args(model_root: str | mon.Path | None = None) -> dict:
     }
     
     save_dir.mkdir(parents=True, exist_ok=True)
-    if config is not None and config.is_config_file():
+    if configImageDataset and config.is_config_file():
         mon.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
         
     return args

@@ -25,6 +25,3 @@
 [submodule "src/mon_extra/vision/ultralytics"]
 	path = src/mon_extra/vision/ultralytics
 	url  = https://github.com/phlong3105/ultralytics
-[submodule "tool/XAnyLabeling"]
-	path = tool/XAnyLabeling
-	url  = https://github.com/phlong3105/XAnyLabeling

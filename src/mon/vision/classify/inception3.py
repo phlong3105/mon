@@ -408,7 +408,7 @@ class Inception3(base.ImageClassificationModel):
         x = self.Mixed_6d(x)       # N x 768 x 17 x 17
         x = self.Mixed_6e(x)       # N x 768 x 17 x 17
         aux: torch.Tensor | None = None
-        if self.AuxLogits is not None:
+        if self.AuxLogitsImageDataset:
             if self.training:
                 aux = self.AuxLogits(x)  # N x 768 x 17 x 17
         x = self.Mixed_7a(x)  # N x 1280 x 8 x 8

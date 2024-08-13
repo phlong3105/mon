@@ -36,9 +36,9 @@ class ImageAnnotation(base.Annotation):
     
     def __init__(self, path: core.Path | str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.path  = path
-        self.image = None
-        self.shape = None
+        self.path   = path
+        self.image  = None
+        self._shape = None
     
     @property
     def path(self) -> core.Path:
@@ -48,8 +48,8 @@ class ImageAnnotation(base.Annotation):
     def path(self, path: core.Path | str | None):
         if path is None or not core.Path(path).is_image_file():
             raise ValueError(f":param:`path` must be a valid path to an image file, but got {path}.")
-        self._path = core.Path(path)
-        self.shape = core.read_image_shape(path=self._path)
+        self._path  = core.Path(path)
+        self._shape = core.read_image_shape(path=self._path)
     
     @property
     def name(self) -> str:
@@ -58,6 +58,10 @@ class ImageAnnotation(base.Annotation):
     @property
     def stem(self) -> str:
         return str(self.path.stem)
+    
+    @property
+    def shape(self) -> tuple[int, int, int]:
+        return self._shape
     
     @property
     def data(self) -> np.ndarray | None:
@@ -94,13 +98,22 @@ class ImageAnnotation(base.Annotation):
         Return:
             An image of shape :math:`[H, W, C]`.
         """
-        if path is not None:
+        if path:
             self.path = path
         image = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
         if cache:
             self.image = image
         return image
     
+    @staticmethod
+    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+        """Converts the input data to a :class:`torch.Tensor`.
+        
+        Args:
+            data: The input data.
+        """
+        return core.to_image_tensor(input=data, keepdim=False, normalize=True)
+        
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using
@@ -151,11 +164,11 @@ class FrameAnnotation(base.Annotation):
     
     @property
     def name(self) -> str:
-        return str(self.path.name) if self.path is not None else f"{self.index}"
+        return str(self.path.name) if self.path else f"{self.index}"
     
     @property
     def stem(self) -> str:
-        return str(self.path.stem) if self.path is not None else f"{self.index}"
+        return str(self.path.stem) if self.path else f"{self.index}"
     
     @property
     def data(self) -> np.ndarray | None:
@@ -174,6 +187,15 @@ class FrameAnnotation(base.Annotation):
             "shape": self.shape,
             "hash" : self.path.stat().st_size if isinstance(self.path, core.Path) else None,
         }
+    
+    @staticmethod
+    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+        """Converts the input data to a :class:`torch.Tensor`.
+        
+        Args:
+            data: The input data.
+        """
+        return core.to_image_tensor(input=data, keepdim=False, normalize=True)
     
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
@@ -201,8 +223,9 @@ class SegmentationAnnotation(base.Annotation):
     
     def __init__(self, path: core.Path | str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.path = path
-        self.mask = None
+        self.path   = path
+        self.mask   = None
+        self._shape = None
     
     @property
     def path(self) -> core.Path:
@@ -259,12 +282,21 @@ class SegmentationAnnotation(base.Annotation):
         Return:
             An image of shape :math:`[H, W, C]`.
         """
-        if path is not None:
+        if path:
             self.path = path
         mask = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
         if cache:
             self.mask = mask
         return mask
+    
+    @staticmethod
+    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+        """Converts the input data to a :class:`torch.Tensor`.
+        
+        Args:
+            data: The input data.
+        """
+        return core.to_image_tensor(input=data, keepdim=False, normalize=True)
     
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:

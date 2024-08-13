@@ -157,7 +157,7 @@ class ResizeMultipleOf(DualTransform):
 	
 	def constrain_to_multiple_of(self, x, min_val: int = 0, max_val: int | None = None):
 		y = (np.round(x / self.multiple_of) * self.multiple_of).astype(int)
-		if max_val is not None and y > max_val:
+		if max_val and y > max_val:
 			y = (np.floor(x / self.multiple_of) * self.multiple_of).astype(int)
 		if y < min_val:
 			y = (np.ceil(x / self.multiple_of) * self.multiple_of).astype(int)

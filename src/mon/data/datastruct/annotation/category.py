@@ -107,6 +107,15 @@ class ClassificationAnnotation(base.Annotation):
         return [self.class_id]
     
     @staticmethod
+    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+        """Converts the input data to a :class:`torch.Tensor`.
+        
+        Args:
+            data: The input data.
+        """
+        return torch.Tensor(data)
+    
+    @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using
         :attr:`batch_size` > 1. This is used in :class:`torch.utils.data.DataLoader` wrapper.

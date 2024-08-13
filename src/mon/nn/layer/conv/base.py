@@ -121,7 +121,7 @@ class Conv2dBn(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.conv(x)
-        if self.bn is not None:
+        if self.bnImageDataset:
             y = self.bn(y)
         return y
 

@@ -60,7 +60,7 @@ class LogTrainingProgress(callbacks.Callback):
         verbose               : bool             = True
     ):
         super().__init__()
-        self._dirpath     = core.Path(dirpath) if dirpath is not None else None
+        self._dirpath     = core.Path(dirpath) if dirpath else None
         self._filename    = core.Path(filename).stem
         self._candidates  = collections.OrderedDict()
         self._start_epoch = 0
@@ -210,12 +210,12 @@ class LogTrainingProgress(callbacks.Callback):
         self._candidates |= {"step" : None}
         # Train metrics
         self._candidates |= {"train/loss": None}
-        if pl_module.train_metrics is not None:
+        if pl_module.train_metrics:
             for m in pl_module.train_metrics:
                 self._candidates |= {f'train/{m.name}': None}
         # Val metrics
         self._candidates |= {"val/loss": None}
-        if pl_module.val_metrics is not None:
+        if pl_module.val_metrics:
             for m in pl_module.val_metrics:
                 self._candidates |= {f'val/{m.name}': None}
         
@@ -256,7 +256,7 @@ class LogTrainingProgress(callbacks.Callback):
         )
     
     def _should_log_on_train_epoch_end(self, trainer: "pl.Trainer") -> bool:
-        if self._log_on_train_epoch_end is not None:
+        if self._log_on_train_epoch_end:
             return self._log_on_train_epoch_end
         
         # If `check_val_every_n_epoch != 1`, we can't say when the validation dataloader will be loaded

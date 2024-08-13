@@ -108,7 +108,7 @@ class BatchNorm2dAct(nn.BatchNorm2d):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = super().forward(x)
-        if self.act is not None:
+        if self.act:
             y = self.act(y)
         return y
 
@@ -363,7 +363,7 @@ class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
             y     = (x_norm * alpha) + (x * (1 - alpha))
         elif self.scheme in ["adaptive"]:
             alpha = self.alpha.reshape(-1, c, 1, 1).to(x.device)
-            if self.beta1 is not None and self.beta2 is not None:
+            if self.beta1ImageDataset and self.beta2ImageDataset:
                 beta1 = self.beta1.reshape(-1, c, 1, 1).to(x.device)
                 beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
                 y     = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)
@@ -384,7 +384,7 @@ class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
                 )
             alpha = self.channel_attention(pool)
             alpha = torch.sigmoid(alpha).unsqueeze(2).unsqueeze(3).expand_as(x)
-            if self.beta1 is not None and self.beta2 is not None:
+            if self.beta1ImageDataset and self.beta2ImageDataset:
                 beta1 = self.beta1.reshape(-1, c, 1, 1).to(x.device)
                 beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
                 y = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)

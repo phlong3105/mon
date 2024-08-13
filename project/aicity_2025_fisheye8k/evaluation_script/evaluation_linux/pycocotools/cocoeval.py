@@ -129,7 +129,7 @@ class COCOeval:
         # add backward compatibility if useSegm is specified in params
         if not p.useSegm is None:
             p.iouType = 'segm' if p.useSegm == 1 else 'bbox'
-            print('useSegm (deprecated) is not None. Running {} evaluation'.format(p.iouType))
+            print('useSegm (deprecated)ImageDataset. Running {} evaluation'.format(p.iouType))
         print('Evaluate annotation type *{}*'.format(p.iouType))
         p.imgIds = list(np.unique(p.imgIds))
         if p.useCats:
@@ -438,14 +438,14 @@ class COCOeval:
                 # dimension of precision: [TxRxKxAxM]
                 s = self.eval['precision']
                 # IoU
-                if iouThr is not None:
+                if iouThrImageDataset:
                     t = np.where(iouThr == p.iouThrs)[0]
                     s = s[t]
                 s = s[:,:,:,aind,mind]
             else:
                 # dimension of recall: [TxKxAxM]
                 s = self.eval['recall']
-                if iouThr is not None:
+                if iouThrImageDataset:
                     t = np.where(iouThr == p.iouThrs)[0]
                     s = s[t]
                 s = s[:,:,aind,mind]

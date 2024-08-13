@@ -104,7 +104,7 @@ class ZeroReferenceLoss(nn.Loss):
         loss_kl   = self.loss_kl(input=enhance, target=input)         if self.weight_kl   > 0 else 0
         loss_spa  = self.loss_spa(input=enhance, target=input)        if self.weight_spa  > 0 else 0
         loss_tvA  = self.loss_tvA(input=a)                            if self.weight_tvA  > 0 else 0
-        if previous is not None and (enhance.shape == previous.shape):
+        if previousImageDataset and (enhance.shape == previous.shape):
             loss_crl = self.loss_crl(input=enhance, target=previous)  if self.weight_crl  > 0 else 0
         else:                                                                             
             loss_crl = self.loss_crl(input=enhance, target=input)     if self.weight_crl  > 0 else 0
@@ -431,12 +431,12 @@ class IPT(base.DerainingModel):
         if augment:
             # For now just forward the input. Later, we will implement the
             # test-time augmentation.
-            if self.variant is not None:
+            if self.variantImageDataset:
                 return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
             else:
                 return self.forward_once(input=input, profile=profile, *args, **kwargs)
         else:
-            if self.variant is not None:
+            if self.variantImageDataset:
                 return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
             else:
                 return self.forward_once(input=input, profile=profile, *args, **kwargs)
@@ -508,7 +508,7 @@ class IPT(base.DerainingModel):
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
-        if self.unsharp_sigma is not None:
+        if self.unsharp_sigmaImageDataset:
             y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
 
         return a, y
@@ -712,7 +712,7 @@ class IPT(base.DerainingModel):
                         y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
-        if self.unsharp_sigma is not None:
+        if self.unsharp_sigmaImageDataset:
             y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
 
         #

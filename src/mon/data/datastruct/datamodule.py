@@ -184,7 +184,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         if self.verbose:
             if self.trainer is None:
                 return True
-            elif self.trainer is not None and self.trainer.global_rank == 0:
+            elif self.trainer and self.trainer.global_rank == 0:
                 return True
         return False
     
@@ -240,10 +240,10 @@ class DataModule(lightning.LightningDataModule, ABC):
         table.add_column(" ", style="dim")
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Desc")
-        table.add_row("1", "train",       f"{len(self.train) if self.train is not None else None}")
-        table.add_row("2", "val",         f"{len(self.val) if self.val is not None else None}")
-        table.add_row("3", "test",        f"{len(self.test) if self.test is not None else None}")
-        table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels is not None else None}")
+        table.add_row("1", "train",       f"{len(self.train) if self.train else None}")
+        table.add_row("2", "val",         f"{len(self.val)   if self.val   else None}")
+        table.add_row("3", "test",        f"{len(self.test)  if self.test  else None}")
+        table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels else None}")
         table.add_row("5", "batch_size",  f"{self.batch_size}")
         table.add_row("6", "num_workers", f"{self.num_workers}")
         console.log(table)

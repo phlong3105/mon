@@ -126,7 +126,7 @@ class MFFN(nn.Module):
         if isinstance(m,nn.Linear):
             torch.nn.init.trunc_normal_(m.weight,std=0.02)
             # m.weight.data.trunc_(std=0.02)
-            if isinstance(m,nn.Linear) and m.bias is not None:
+            if isinstance(m,nn.Linear) and m.biasImageDataset:
                 # nn.init.constant_(m.bias,0)
                 m.bias.data.__contains__(0)
         elif isinstance(m,nn.LayerNorm):
@@ -138,7 +138,7 @@ class MFFN(nn.Module):
             fan_out = m.kernel_size[0]*m.kernel_size[1]*m.out_channels
             fan_out //= m.groups
             m.weight.data.normal_(0,math.sqrt(2.0/fan_out))
-            if m.bias is not None:
+            if m.biasImageDataset:
                 m.bias.data.zero_()
     def forward(self, x, H, W):
         B, N, C = x.shape

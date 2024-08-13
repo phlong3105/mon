@@ -79,7 +79,7 @@ class UNetConvBlock(nn.Module):
         y  = self.relu_1(y)
         y  = self.relu_2(self.conv_2(y))
         y += self.identity(x)
-        if enc is not None and dec is not None:
+        if encImageDataset and decImageDataset:
             assert self.use_csff
             y = y + self.csff_enc(enc) + self.csff_dec(dec)
         if self.downsample:

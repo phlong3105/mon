@@ -150,7 +150,7 @@ class SplineConv2d(nn.Conv2d):
     
     def reset_parameters(self):
         nn.init.trunc_normal_(self.weight, mean=0, std=self.init_scale)
-        if self.bias is not None:
+        if self.biasImageDataset:
             nn.init.zeros_(self.bias)
 
 

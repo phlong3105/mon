@@ -170,7 +170,7 @@ class Attention(nn.Module):
         q        = q * self.scale
         attn     = (q @ k.transpose(-2, -1))
         
-        if mask is not None:
+        if maskImageDataset:
             nW   = mask.shape[0]
             # mask = repeat(mask, 'nW m n -> nW m (n d)',d = ratio)
             attn = attn.view(b_ // nW, nW, self.num_heads, n, n) + mask.unsqueeze(1).unsqueeze(0)
@@ -316,7 +316,7 @@ class InputProj(nn.Module):
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=kernel_size // 2),
             act_layer(inplace=True)
         )
-        if norm_layer is not None:
+        if norm_layerImageDataset:
             self.norm = norm_layer(out_channels)
         else:
             self.norm = None
@@ -327,7 +327,7 @@ class InputProj(nn.Module):
         x = input
         b, c, h, w = x.shape
         x = self.proj(x).flatten(2).transpose(1, 2).contiguous()  # b h*w c
-        if self.norm is not None:
+        if self.normImageDataset:
             x = self.norm(x)
         return x
 
@@ -335,7 +335,7 @@ class InputProj(nn.Module):
         flops = 0
         # conv
         flops += h * w * self.in_channels * self.out_channels * 3 * 3
-        if self.norm is not None:
+        if self.normImageDataset:
             flops += h * w * self.out_channels
         # print("Input_proj:{%.2f}" % (flops / 1e9))
         return flops
@@ -356,9 +356,9 @@ class OutputProj(nn.Module):
         self.proj = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=kernel_size // 2),
         )
-        if act_layer is not None:
+        if act_layerImageDataset:
             self.proj.append(act_layer(inplace=True))
-        if norm_layer is not None:
+        if norm_layerImageDataset:
             self.norm = norm_layer(out_channels)
         else:
             self.norm = None
@@ -372,7 +372,7 @@ class OutputProj(nn.Module):
         w = int(math.sqrt(l))
         x = x.transpose(1, 2).view(b, c, h, w)
         x = self.proj(x)
-        if self.norm is not None:
+        if self.normImageDataset:
             x = self.norm(x)
         return x
 
@@ -380,7 +380,7 @@ class OutputProj(nn.Module):
         flops = 0
         # conv
         flops += h * w * self.in_channel * self.out_channel * 3 * 3
-        if self.norm is not None:
+        if self.normImageDataset:
             flops += h * w * self.out_channel
         # print("Output_proj:{%.2f}" % (flops / 1e9))
         return flops
@@ -500,7 +500,7 @@ class LeWinTransformerBlock(nn.Module):
         h = int(math.sqrt(l))
         w = int(math.sqrt(l))
         
-        if mask is not None:
+        if maskImageDataset:
             input_mask         = F.interpolate(mask, size=(h, w)).permute(0, 2, 3, 1)
             input_mask_windows = window_partition(input_mask, self.window_size)  # nW, win_size, win_size, 1
             attn_mask = input_mask_windows.view(-1, self.window_size * self.window_size)  # nW, win_size * win_size
@@ -533,9 +533,9 @@ class LeWinTransformerBlock(nn.Module):
             shift_mask_windows = shift_mask_windows.view(-1, self.window_size * self.window_size)  # nW, win_size*win_size
             shift_attn_mask    = shift_mask_windows.unsqueeze(1) - shift_mask_windows.unsqueeze(2)  # nW, win_size*win_size, win_size*win_size
             shift_attn_mask    = shift_attn_mask.masked_fill(shift_attn_mask != 0, float(-100.0)).masked_fill(shift_attn_mask == 0, float(0.0))
-            attn_mask          = attn_mask + shift_attn_mask if attn_mask is not None else shift_attn_mask
+            attn_mask          = attn_mask + shift_attn_mask if attn_maskImageDataset else shift_attn_mask
 
-        if self.cross_modulator is not None:
+        if self.cross_modulatorImageDataset:
             shortcut = x
             x_cross  = self.norm_cross(x)
             x_cross  = self.cross_attn(x, self.cross_modulator.weight)
@@ -556,7 +556,7 @@ class LeWinTransformerBlock(nn.Module):
         x_windows = x_windows.view(-1, self.window_size * self.window_size, c)  # nW*b, win_size*win_size, c
 
         # With_modulator
-        if self.modulator is not None:
+        if self.modulatorImageDataset:
             wmsa_in = self.with_pos_embed(x_windows, self.modulator.weight)
         else:
             wmsa_in = x_windows
@@ -584,7 +584,7 @@ class LeWinTransformerBlock(nn.Module):
     def flops(self) -> int:
         flops = 0
         h, w  = self.input_resolution
-        if self.cross_modulator is not None:
+        if self.cross_modulatorImageDataset:
             flops += self.in_channels * h * w
             flops += self.cross_attn.flops(h * w, self.window_size * self.window_size)
         # norm1
@@ -998,7 +998,7 @@ class Uformer_RE(base.MultiTaskImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, std=.02)
-            if isinstance(m, nn.Linear) and m.bias is not None:
+            if isinstance(m, nn.Linear) and m.biasImageDataset:
                 torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LayerNorm):
             torch.nn.init.constant_(m.bias, 0)

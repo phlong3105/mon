@@ -310,7 +310,7 @@ class Denoiser(nn.Module):
 	def _init_weights(self, m: nn.Module):
 		if isinstance(m, nn.Linear):
 			trunc_normal_(m.weight, std=0.02)
-			if isinstance(m, nn.Linear) and m.bias is not None:
+			if isinstance(m, nn.Linear) and m.biasImageDataset:
 				torch.nn.init.constant_(m.bias, 0)
 		elif isinstance(m, nn.LayerNorm):
 			torch.nn.init.constant_(m.bias, 0)

@@ -413,11 +413,11 @@ def list_mon_models(
     mode   = Scheme(mode) if mode in ["online", "instance"] else None
     arch   = arch         if arch not in [None, "None", ""] else None
     models = list(flatten_models.keys())
-    if task is not None:
+    if task:
         models = [m for m in models if task in flatten_models[m].tasks]
-    if mode is not None:
+    if mode:
         models = [m for m in models if mode in flatten_models[m]._schemes]
-    if arch is not None:
+    if arch:
         models = [m for m in models if arch in flatten_models[m].arch]
     return sorted(models)
 
@@ -433,11 +433,11 @@ def list_extra_models(
     mode   = Scheme(mode) if mode in ["online", "instance"] else None
     arch   = arch         if arch not in [None, "None", ""] else None
     models = list(flatten_models.keys())
-    if task is not None:
+    if task:
         models = [m for m in models if task in flatten_models[m]["tasks"]]
-    if mode is not None:
+    if mode:
         models = [m for m in models if mode in flatten_models[m]["schemes"]]
-    if arch is not None:
+    if arch:
         models = [m for m in models if arch in flatten_models[m]["arch"]]
     return sorted(models)
 
@@ -474,9 +474,9 @@ def list_mon_archs(
     task   = Task(task)   if task not in [None, "None", ""] else None
     mode   = Scheme(mode) if mode in ["online", "instance"] else None
     models = list(flatten_models.keys())
-    if task is not None:
+    if task:
         models = [m for m in models if task in flatten_models[m].tasks]
-    if mode is not None:
+    if mode:
         models = [m for m in models if mode in flatten_models[m]._schemes]
     archs  = [flatten_models[m].arch for m in models]
     archs  = [a.strip() for a in archs]
@@ -493,9 +493,9 @@ def list_extra_archs(
     task   = Task(task)   if task not in [None, "None", ""] else None
     mode   = Scheme(mode) if mode in ["online", "instance"] else None
     models = list(flatten_models.keys())
-    if task is not None:
+    if task:
         models = [m for m in models if task in flatten_models[m]["tasks"]]
-    if mode is not None:
+    if mode:
         models = [m for m in models if mode in flatten_models[m]["schemes"]]
     archs  = [flatten_models[m]["arch"] for m in models]
     archs  = [a.strip() for a in archs]

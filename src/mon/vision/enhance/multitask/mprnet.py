@@ -215,19 +215,19 @@ class Encoder(nn.Module):
 	) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
 		x = input
 		enc1 = self.encoder_level1(x)
-		if (encoder_outs is not None) and (decoder_outs is not None):
+		if (encoder_outsImageDataset) and (decoder_outsImageDataset):
 			enc1 = enc1 + self.csff_enc1(encoder_outs[0]) + self.csff_dec1(decoder_outs[0])
 		
 		x = self.down12(enc1)
 		
 		enc2 = self.encoder_level2(x)
-		if (encoder_outs is not None) and (decoder_outs is not None):
+		if (encoder_outsImageDataset) and (decoder_outsImageDataset):
 			enc2 = enc2 + self.csff_enc2(encoder_outs[1]) + self.csff_dec2(decoder_outs[1])
 		
 		x = self.down23(enc2)
 		
 		enc3 = self.encoder_level3(x)
-		if (encoder_outs is not None) and (decoder_outs is not None):
+		if (encoder_outsImageDataset) and (decoder_outsImageDataset):
 			enc3 = enc3 + self.csff_enc3(encoder_outs[2]) + self.csff_dec3(decoder_outs[2])
 		
 		return [enc1, enc2, enc3]

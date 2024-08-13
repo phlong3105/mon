@@ -139,7 +139,7 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
                     torch.nn.init.normal_(m.weight, mean=0.0, std=0.01)
                 else:
                     torch.nn.init.kaiming_uniform_(m.weight)
-                if m.bias is not None:
+                if m.biasImageDataset:
                     torch.nn.init.constant_(m.bias, 0)
         
         if self.weights:

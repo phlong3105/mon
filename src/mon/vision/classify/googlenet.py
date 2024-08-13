@@ -276,14 +276,14 @@ class GoogleNet(base.ImageClassificationModel):
         x = self.maxpool3(x)              # N x 480 x 14 x 14
         x = self.inception4a(x)           # N x 512 x 14 x 14
         aux1: torch.Tensor | None = None
-        if self.aux1 is not None:
+        if self.aux1ImageDataset:
             if self.training:
                 aux1 = self.aux1(x)
         x = self.inception4b(x)           # N x 512 x 14 x 14
         x = self.inception4c(x)           # N x 512 x 14 x 14
         x = self.inception4d(x)           # N x 528 x 14 x 14
         aux2: torch.Tensor | None = None
-        if self.aux2 is not None:
+        if self.aux2ImageDataset:
             if self.training:
                 aux2 = self.aux2(x)
         x = self.inception4e(x)           # N x 832 x 14 x 14

@@ -206,7 +206,7 @@ class MNASNet(base.ImageClassificationModel, ABC):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-            if m.bias is not None:
+            if m.biasImageDataset:
                 torch.nn.init.zeros_(m.bias)
         elif isinstance(m, nn.BatchNorm2d):
             torch.nn.init.ones_(m.weight)

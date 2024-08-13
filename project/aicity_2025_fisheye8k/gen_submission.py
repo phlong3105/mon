@@ -62,7 +62,7 @@ def gen_submission(
 	format       : str,
 	verbose      : bool,
 ):
-	assert predict_dir is not None and mon.Path(predict_dir).is_dir()
+	assert predict_dirImageDataset and mon.Path(predict_dir).is_dir()
 	
 	predict_dir = mon.Path(predict_dir)
 	data_name   = predict_dir.name

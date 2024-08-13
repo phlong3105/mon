@@ -6,52 +6,58 @@
 from __future__ import annotations
 
 __all__ = [
-	"UnlabeledVideoDataset",
+	"VideoDataset",
 	"VideoLoaderCV",
-	"VideoLoaderFFmpeg",
 ]
 
-import subprocess
-from abc import ABC, abstractmethod
+from abc import ABC
+from typing import Any
 
 import albumentations as A
 import cv2
-import ffmpeg
-import numpy as np
-import torch
 
 from mon import core
-from mon.data.datastruct import annotation as anno
+from mon.data.datastruct import annotation
 from mon.data.datastruct.dataset import base
 from mon.globals import Split
 
-console     = core.console
-ClassLabels = anno.ClassLabels
-FrameLabel  = anno.FrameAnnotation
+console             = core.console
+ClassLabels         = annotation.ClassLabels
+DatapointAttributes = annotation.DatapointAttributes
+FrameAnnotation     = annotation.FrameAnnotation
+ImageAnnotation     = annotation.ImageAnnotation
 
 
-# region Unlabeled Video Dataset
+# region Video Dataset
 
-class UnlabeledVideoDataset(base.UnlabeledDataset, ABC):
-	"""The base class for datasets that represent an unlabeled video. This is
-	mainly used for unsupervised learning tasks.
+class VideoDataset(base.Dataset, ABC):
+	"""The base class for all video-based datasets.
 	
+	Attributes:
+		datapoint_attrs: A :class:`dict` of datapoint attributes with the keys
+			are the attribute names and the values are the attribute types.
+			Must contain: {``'frame'``: :class:`FrameAnnotation`}. Note that to
+			comply with :class:`albumentations.Compose`, we will treat the first
+			key as the main image attribute.
+			
 	Args:
-		root: A data source. It can be a path to a single video file or a
-			stream.
-		split: The data split to use. One of: [``'train'``, ``'val'``,
-			``'test'``, ``'predict'``]. Default: ``'train'``.
+		root: A data source. It can be a path to a single video file or a stream.
+		split: The data split to use. Default: ``'Split.PREDICT'``.
 		classlabels: :class:`ClassLabels` object. Default: ``None``.
 		transform: Transformations performed on both the input and target. We
 			use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
-		to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-			Default: ``False``.
-		cache_data: If ``True``, cache data to disk for faster loading next
-			time. Default: ``False``.
-		verbose: Verbosity. Default: ``True``.
+		to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
+            Default: ``False``.
+        cache_data: If ``True``, cache data to disk for faster loading next
+            time. Default: ``False``.
+        verbose: Verbosity. Default: ``True``.
 	
-	See Also: :class:`UnlabeledDataset`.
+	See Also: :class:`mon.data.datastruct.dataset.base.Dataset`.
 	"""
+	
+	datapoint_attrs = DatapointAttributes({
+		"frame": FrameAnnotation,
+	})
 	
 	def __init__(
 		self,
@@ -64,106 +70,77 @@ class UnlabeledVideoDataset(base.UnlabeledDataset, ABC):
 		verbose    : bool               = True,
 		*args, **kwargs
 	):
+		self.num_frames = 0
 		super().__init__(
 			root        = root,
 			split       = split,
 			classlabels = classlabels,
 			transform   = transform,
 			to_tensor   = to_tensor,
+			cache_data  = cache_data,
 			verbose     = verbose,
 			*args, **kwargs
 		)
-		self.num_frames = 0
-		self.init_video()
+		
+	def __getitem__(self, index: int) -> dict:
+		"""Returns a dictionary containing the datapoint and metadata at the
+		given :param:`index`.
+		"""
+		# Get datapoint at the given index
+		datapoint = self.get_datapoint(index=index)
+		meta      = self.get_meta(index=index)
+		# Transform
+		if self.transform:
+			main_attr      = self.main_attribute
+			args           = {k: v for k, v in datapoint.items() if v}
+			args["image"]  = args.pop(main_attr)
+			transformed    = self.transform(**args)
+			transformed[main_attr] = transformed.pop("image")
+			datapoint     |= transformed
+		if self.to_tensor:
+			for k, v in datapoint.items():
+				to_tensor_fn = self.datapoint_attrs.get_tensor_fn(k)
+				if to_tensor_fn and v:
+					datapoint[k] = to_tensor_fn(input=v, keepdim=False, normalize=True)
+		# Return
+		return datapoint | {"meta": meta}
 	
 	def __len__(self) -> int:
+		"""Return the total number of frames in the video."""
 		return self.num_frames
 	
-	@abstractmethod
-	def __getitem__(self, item: int) -> dict:
-		"""Returns a dictionary containing the datapoint and metadata at the
-		given :param:`index`. The dictionary must contain the following keys:
-		{'input', 'target', 'meta'}.
-		"""
+	def init_transform(self, transform: A.Compose | Any = None):
+		super().init_transform(transform=transform)
+		# Add additional targets
+		if self.transform:
+			additional_targets = self.datapoint_attrs.albumentation_target_types()
+			additional_targets.pop(self.main_attribute, None)
+			additional_targets.pop("meta", None)
+			self.transform.add_targets(additional_targets)
+	
+	def filter_data(self):
+		"""Filter unwanted datapoints."""
 		pass
 	
-	@property
-	@abstractmethod
-	def fourcc(self) -> str:
-		"""Return the 4-character code of codec."""
-		pass
+	def verify_data(self):
+		"""Verify dataset."""
+		if self.__len__() <= 0:
+			raise RuntimeError(f"No datapoints in the dataset.")
+		if self.verbose:
+			console.log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
 	
-	@property
-	@abstractmethod
-	def fps(self) -> int:
-		"""Return the frame rate."""
-		pass
-	
-	@property
-	@abstractmethod
-	def frame_height(self) -> int:
-		"""Return the height of the frames in the video stream."""
-		pass
-	
-	@property
-	@abstractmethod
-	def frame_width(self) -> int:
-		"""Return the width of the frames in the video stream."""
-		pass
-	
-	@property
-	def is_stream(self) -> bool:
-		"""Return ``True`` if it is a video stream, i.e., unknown :attr:`frame_count`. """
-		return self.num_frames == -1
-	
-	@property
-	def shape(self) -> list[int]:
-		"""Return the shape of the frames in the video stream in
-		:math:`[H, W, C]` format.
-		"""
-		return [self.frame_height, self.frame_width, 3]
-	
-	@property
-	def image_size(self) -> list[int]:
-		"""Return the shape of the frames in the video stream in
-		:math:`[H, W]` format.
-		"""
-		return [self.frame_height, self.frame_width]
-	
-	@property
-	def imgsz(self) -> list[int]:
-		"""Return the shape of the frames in the video stream in
-		:math:`[H, W]` format.
-		"""
-		return self.image_size
-	
-	@abstractmethod
-	def init_video(self):
-		"""Initialize the video capture object."""
-		pass
-	
-	@abstractmethod
-	def reset(self):
-		"""Reset and start over."""
-		pass
-	
-	@abstractmethod
-	def close(self):
-		"""Stop and release."""
-		pass
 
-
-class VideoLoaderCV(UnlabeledVideoDataset):
+class VideoLoaderCV(VideoDataset):
 	"""A video loader that retrieves and loads frame(s) from a video or a stream
 	using :mod:`cv2`.
 	
-	See Also: :class:`UnlabeledVideoDataset`.
+	See Also: :class:`VideoDataset`.
 	"""
 	
 	def __init__(
 		self,
 		root       : core.Path,
-		split      : Split      	    = Split.TRAIN,
+		split      : Split      	    = Split.PREDICT,
 		classlabels: ClassLabels | None = None,
 		transform  : A.Compose   | None = None,
 		to_tensor  : bool               = False,
@@ -183,42 +160,11 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 			*args, **kwargs
 		)
 	
-	def __getitem__(self, item: int) -> dict:
-		"""Returns a dictionary containing the datapoint and metadata at the
-		given :param:`index`. The dictionary must contain the following keys:
-		{'input', 'target', 'meta'}.
-		"""
-		pass
+	@property
+	def is_stream(self) -> bool:
+		"""Return ``True`` if the input is a video stream."""
+		return self.root.is_video_stream() or self.num_frames == -1
 	
-	def __next__(self) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
-		if not self.is_stream and self.index >= self.num_frames:
-			self.close()
-			raise StopIteration
-		else:
-			# Read the next frame
-			if isinstance(self.video_capture, cv2.VideoCapture):
-				ret_val, frame = self.video_capture.read()
-			else:
-				raise RuntimeError(f":attr`_video_capture` has not been initialized.")
-			if frame is not None:
-				frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-				frame = FrameLabel(index=self.index, path=self.root, frame=frame)
-			self.index += 1
-			
-			# Get data
-			image = frame.data
-			meta  = frame.meta
-			if self.transform is not None:
-				transformed = self.transform(image=image)
-				image	    = transformed["image"]
-			if self.to_tensor:
-				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-			return image, None, meta
-			
 	@property
 	def format(self):  # Flag=8
 		"""Return the format of the Mat objects (see Mat::type()) returned by
@@ -236,16 +182,6 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 	def fps(self) -> int:  # Flag=5
 		"""Return the frame rate."""
 		return int(self.video_capture.get(cv2.CAP_PROP_FPS))
-	
-	@property
-	def frame_count(self) -> int:  # Flag=7
-		"""Return the number of frames in the video file."""
-		if isinstance(self.video_capture, cv2.VideoCapture):
-			return int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-		elif isinstance(self.video_capture, list):
-			return len(self.video_capture)
-		else:
-			return -1
 	
 	@property
 	def frame_height(self) -> int:  # Flag=4
@@ -279,7 +215,7 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 		"""Return the 0-based index of the frame to be decoded/captured next."""
 		return int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES))
 	
-	def init_video(self):
+	def get_data(self):
 		root = core.Path(self.root)
 		if root.is_video_file():
 			self.video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
@@ -290,9 +226,9 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 		else:
 			raise IOError(f"Error when reading input stream or video file!")
 		
-		if self.num_frames == 0:
+		if self.num_frames != num_frames:
 			self.num_frames = num_frames
-		
+	
 	def reset(self):
 		"""Reset and start over."""
 		self.index = 0
@@ -303,153 +239,56 @@ class VideoLoaderCV(UnlabeledVideoDataset):
 		"""Stop and release the current attr:`_video_capture` object."""
 		if isinstance(self.video_capture, cv2.VideoCapture):
 			self.video_capture.release()
-
-
-class VideoLoaderFFmpeg(UnlabeledVideoDataset):
-	"""A video loader that retrieves and loads frame(s) from a video or a stream
-	using :mod:`ffmpeg`.
 	
-	References:
-		`<https://github.com/kkroening/ffmpeg-python/tree/master/examples>`__
-	
-	See Also: :class:`UnlabeledVideoDataset`.
-	"""
-	
-	def __init__(
-		self,
-		root       : core.Path,
-		split      : Split          	= Split.TRAIN,
-		classlabels: ClassLabels | None = None,
-		transform  : A.Compose   | None = None,
-		to_tensor  : bool               = False,
-		cache_data : bool               = False,
-		verbose    : bool               = True,
-		*args, **kwargs
-	):
-		self.ffmpeg_cmd     = None
-		self.ffmpeg_process = None
-		self.ffmpeg_kwargs  = kwargs
-		self.video_info     = None
-		super().__init__(
-			root        = root,
-			split       = split,
-			classlabels = classlabels,
-			transform   = transform,
-			to_tensor   = to_tensor,
-			cache_data  = cache_data,
-			verbose     = verbose,
-			*args, **kwargs
-		)
-	
-	def __getitem__(self, item: int) -> dict:
-		"""Returns a dictionary containing the datapoint and metadata at the
-		given :param:`index`. The dictionary must contain the following keys:
-		{'input', 'target', 'meta'}.
-		"""
-		pass
-	
-	def __next__(self) -> tuple[
-		torch.Tensor | np.ndarray,
-		torch.Tensor | np.ndarray | None,
-		dict | None
-	]:
-		if not self.is_stream and self.index >= self.frame_count:
+	def get_datapoint(self, index: int) -> dict:
+		"""Get a datapoint at the given :param:`index`."""
+		if not self.is_stream and self.index >= self.num_frames:
 			self.close()
 			raise StopIteration
 		else:
 			# Read the next frame
-			if self.ffmpeg_process:
-				frame = core.read_video_ffmpeg(
-					process = self.ffmpeg_process,
-					width   = self.frame_width,
-					height  = self.frame_height
-				)  # Already in RGB
+			if isinstance(self.video_capture, cv2.VideoCapture):
+				ret_val, frame = self.video_capture.read()
 			else:
-				raise RuntimeError(f":attr`_video_capture` has not been initialized.")
-			if frame is not None:
+				raise RuntimeError(f":attr:`video_capture` has not been initialized.")
+			if frame:
 				frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-				frame = FrameLabel(index=self.index, path=self.root, frame=frame)
+				frame = FrameAnnotation(index=self.index, frame=frame, path=self.root)
 			self.index += 1
 			
 			# Get data
-			image = frame.data
-			meta  = frame.meta
-			if self.transform is not None:
-				transformed = self.transform(image=image)
-				image	    = transformed["image"]
-			if self.to_tensor:
-				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-			
-			return image, None, meta
+			datapoint = self.new_datapoint
+			for k, v in self.datapoints.items():
+				if k == self.main_attribute:
+					datapoint[k] = frame.data
+				elif v and v[index] and hasattr(v[index], "data"):
+					datapoint[k] = v[index].data
+			return datapoint
 	
-	@property
-	def fourcc(self) -> str:
-		"""Return the 4-character code of codec."""
-		return self.video_info["codec_name"]
+	def get_meta(self, index: int = 0) -> dict:
+		"""Get metadata at the given :param:`index`. By default, we will use
+		the first attribute in :attr:`datapoint_attrs` as the main image attribute.
+		"""
+		return {
+			"format"       : self.format,
+			"fourcc"       : self.fourcc,
+			"fps"          : self.fps,
+			"frame_height" : self.frame_height,
+			"frame_width"  : self.frame_width,
+			"hash"         : self.root.stat().st_size if isinstance(self.root, core.Path) else None,
+			"image_size"   : (self.frame_height, self.frame_width),
+			"imgsz" 	   : (self.frame_height, self.frame_width),
+			"index"        : index,
+			"mode"         : self.mode,
+			"name"         : str(self.root.name),
+			"num_frames"   : self.num_frames,
+			"path"         : self.root,
+			"pos_avi_ratio": self.pos_avi_ratio,
+			"pos_frames"   : self.pos_frames,
+			"pos_msec"     : self.pos_msec,
+			"shape" 	   : (self.frame_height, self.frame_width, 3),
+			"split"        : self.split_str,
+			"stem"         : str(self.root.stem),
+		}
 	
-	@property
-	def fps(self) -> int:
-		"""Return the frame rate."""
-		return int(self.video_info["avg_frame_rate"].split("/")[0])
-	
-	@property
-	def frame_count(self) -> int:
-		"""Return the number of frames in the video file."""
-		if self.root.is_video_file():
-			return int(self.video_info["nb_frames"])
-		else:
-			return -1
-	
-	@property
-	def frame_width(self) -> int:
-		"""Return the width of the frames in the video stream."""
-		return int(self.video_info["width"])
-	
-	@property
-	def frame_height(self) -> int:
-		"""Return the height of the frames in the video stream."""
-		return int(self.video_info["height"])
-	
-	def init_video(self):
-		"""Initialize ``ffmpeg`` cmd."""
-		source = str(self.root)
-		probe  = ffmpeg.probe(source, **self.ffmpeg_kwargs)
-		self.video_info = next(
-			s for s in probe["streams"] if s["codec_type"] == "video"
-		)
-		if self.verbose:
-			self.ffmpeg_cmd = (
-				ffmpeg
-				.input(source, **self.ffmpeg_kwargs)
-				.output("pipe:", format="rawvideo", pix_fmt="rgb24")
-				.compile()
-			)
-		else:
-			self.ffmpeg_cmd = (
-				ffmpeg
-				.input(source, **self.ffmpeg_kwargs)
-				.output("pipe:", format="rawvideo", pix_fmt="rgb24")
-				.global_args("-loglevel", "quiet")
-				.compile()
-			)
-	
-	def reset(self):
-		"""Reset and start over."""
-		self.close()
-		self.index = 0
-		if self.ffmpeg_cmd:
-			self.ffmpeg_process = subprocess.Popen(
-				self.ffmpeg_cmd,
-				stdout  = subprocess.PIPE,
-				bufsize = 10 ** 8
-			)
-	
-	def close(self):
-		"""Stop and release the current :attr:`ffmpeg_process`."""
-		if self.ffmpeg_process and self.ffmpeg_process.poll() is not None:
-			# os.killpg(os.getpgid(self.ffmpeg_process.pid), signal.SIGTERM)
-			self.ffmpeg_process.terminate()
-			self.ffmpeg_process.wait()
-			self.ffmpeg_process = None
-
 # endregion

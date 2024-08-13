@@ -34,7 +34,7 @@ class BasicBlock(nn.Sequential):
         m = [conv(in_channels, out_channels, kernel_size, bias=bias)]
         if bn:
             m.append(nn.BatchNorm2d(out_channels))
-        if act is not None:
+        if actImageDataset:
             m.append(act)
 
         super(BasicBlock, self).__init__(*m)

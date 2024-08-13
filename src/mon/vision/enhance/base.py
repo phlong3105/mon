@@ -47,18 +47,18 @@ class ImageEnhancementModel(nn.Model, ABC):
         
         input    = list(core.to_image_nparray(input,  keepdim=False, denormalize=True))
         pred     = list(core.to_image_nparray(pred,   keepdim=False, denormalize=True))
-        target   = list(core.to_image_nparray(target, keepdim=False, denormalize=True)) if target is not None else None
+        target   = list(core.to_image_nparray(target, keepdim=False, denormalize=True)) if targetImageDataset else None
         extra    = {
             k: list(core.to_image_nparray(v, keepdim=False, denormalize=True))
             for k, v in extra.items()
-        } if extra is not None else {}
+        } if extraImageDataset else {}
         
         assert len(input) == len(pred)
-        if target is not None:
+        if targetImageDataset:
             assert len(input) == len(target)
         
         for i in range(len(input)):
-            if target is not None:
+            if targetImageDataset:
                 combined = cv2.hconcat([input[i], pred[i], target[i]])
             else:
                 combined = cv2.hconcat([input[i], pred[i]])

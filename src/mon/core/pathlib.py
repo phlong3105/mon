@@ -386,7 +386,7 @@ def hash_files(paths: list[Path | str]) -> int:
     are integers (in bytes) of all files.
     """
     paths = dtype.to_list(paths)
-    paths = [Path(f) for f in paths if f is not None]
+    paths = [Path(f) for f in paths if f]
     return sum(f.stat().st_size for f in paths if f.is_file())
 
 # endregion

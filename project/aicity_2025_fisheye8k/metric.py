@@ -22,7 +22,7 @@ def measure_metric(
     gt_file    : str,
     verbose    : bool,
 ):
-    assert result_file is not None and mon.Path(result_file).exists()
+    assert result_fileImageDataset and mon.Path(result_file).exists()
     assert gt_file     is not None and mon.Path(gt_file).exists()
 
     coco_gt = COCO(str(gt_file))

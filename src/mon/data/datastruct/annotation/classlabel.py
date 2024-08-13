@@ -78,7 +78,7 @@ class ClassLabels(dict[str, ClassLabel]):
 		count = 0
 		for k, v in self.items():
 			id_ = v.get("id", None)
-			if (id_ is not None) and (id_ >= 0):
+			if id_ and (id_ >= 0):
 				count += 1
 		return count
 	

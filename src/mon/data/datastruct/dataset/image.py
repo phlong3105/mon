@@ -6,10 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
-	"ImageEnhancementDataset",
+	"ImageDataset",
 	"ImageLoader",
-	"LabeledImageDataset",
-	"UnlabeledImageDataset",
 ]
 
 import glob
@@ -19,59 +17,92 @@ from typing import Any
 import albumentations as A
 
 from mon import core
-from mon.data.datastruct import annotation as anno
+from mon.data.datastruct import annotation
 from mon.data.datastruct.dataset import base
 from mon.globals import Split
 
-console         = core.console
-ClassLabels     = anno.ClassLabels
-ImageAnnotation = anno.ImageAnnotation
+console             = core.console
+ClassLabels         = annotation.ClassLabels
+DatapointAttributes = annotation.DatapointAttributes
+ImageAnnotation     = annotation.ImageAnnotation
 
 
-# region Unlabeled Image Dataset
+# region Image Dataset
 
-class UnlabeledImageDataset(base.Dataset, ABC):
-	"""The base class for datasets that represent an unlabeled collection of
-	images. This is mainly used for unsupervised learning tasks.
+class ImageDataset(base.Dataset, ABC):
+	"""The base class for all image-based datasets.
 	
 	Attributes:
 		datapoint_attrs: A :class:`dict` of datapoint attributes with the keys
-			are the attribute names and the values are the attribute types. By
-			default, it must contain ``{'input', 'target'}``.
-	
+			are the attribute names and the values are the attribute types.
+			Must contain: {``'image'``: :class:`ImageAnnotation`}. Note that to
+			comply with :class:`albumentations.Compose`, we will treat the first
+			key as the main image attribute.
+		
 	See Also: :class:`mon.data.datastruct.dataset.base.Dataset`.
 	"""
 	
-	datapoint_attrs : dict = {
-		"input" : ImageAnnotation,
-		"target": ImageAnnotation,
-	}
+	datapoint_attrs = DatapointAttributes({
+		"image": ImageAnnotation,
+	})
 	
 	def __getitem__(self, index: int) -> dict:
 		"""Returns a dictionary containing the datapoint and metadata at the
-		given :param:`index`. The dictionary must contain the following keys:
-		{'input', 'target', 'meta'}.
+		given :param:`index`.
 		"""
-		
-		image = self.images[index].data
-		meta  = self.images[index].meta
-		
-		if self.transform is not None:
-			transformed = self.transform(image=image)
-			image	    = transformed["image"]
+		# Get datapoint at the given index
+		datapoint = self.get_datapoint(index=index)
+		meta      = self.get_meta(index=index)
+		# Transform
+		if self.transform:
+			main_attr      = self.main_attribute
+			args           = {k: v for k, v in datapoint.items() if v}
+			args["image"]  = args.pop(main_attr)
+			transformed    = self.transform(**args)
+			transformed[main_attr] = transformed.pop("image")
+			datapoint     |= transformed
 		if self.to_tensor:
-			image       = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-		
-		return {
-			"input" : image,
-			"target": None,
-			"meta"  : meta,
-		}
+			for k, v in datapoint.items():
+				to_tensor_fn = self.datapoint_attrs.get_tensor_fn(k)
+				if to_tensor_fn and v:
+					datapoint[k] = to_tensor_fn(input=v, keepdim=False, normalize=True)
+		# Return
+		return datapoint | {"meta": meta}
 	
-	@abstractmethod
-	def get_data(self):
-		"""Get datapoints."""
+	def __len__(self) -> int:
+		"""Return the total number of datapoints in the dataset."""
+		return len(self.datapoints[self.main_attribute])
+		
+	def init_transform(self, transform: A.Compose | Any = None):
+		super().init_transform(transform=transform)
+		# Add additional targets
+		if self.transform:
+			additional_targets = self.datapoint_attrs.albumentation_target_types()
+			additional_targets.pop(self.main_attribute, None)
+			additional_targets.pop("meta", None)
+			self.transform.add_targets(additional_targets)
+	
+	def filter_data(self):
+		"""Filter unwanted datapoints."""
 		pass
+	
+	def verify_data(self):
+		"""Verify dataset."""
+		if self.__len__() <= 0:
+			raise RuntimeError(f"No datapoints in the dataset.")
+		for k, v in self.datapoints.items():
+			if k not in self.datapoint_attrs:
+				raise RuntimeError(
+					f"Attribute ``{k}`` has not been defined in :attr:`datapoint_attrs`. "
+					f"If this is not an error, please define the attribute in the class."
+				)
+			if self.datapoint_attrs[k]:
+				if v is None:
+					raise RuntimeError(f"No ``{k}`` attributes has been defined.")
+				if v and len(v) != self.__len__():
+					raise RuntimeError(f"Number of {k} attributes does not match the number of datapoints.")
+		if self.verbose:
+			console.log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
 	
 	def reset(self):
 		"""Reset and start over."""
@@ -81,30 +112,26 @@ class UnlabeledImageDataset(base.Dataset, ABC):
 		"""Stop and release."""
 		pass
 	
-	@staticmethod
-	def collate_fn(batch) -> dict:
-		"""Collate function used to fused input items together when using
-		:attr:`batch_size` > 1. This is used in :class:`torch.utils.data.DataLoader` wrapper.
-		
-		Args:
-			batch: A :class:`list` of :class:`dict` of {`input`, `target`, `meta`}.
+	def get_datapoint(self, index: int) -> dict:
+		"""Get a datapoint at the given :param:`index`."""
+		datapoint = self.new_datapoint
+		for k, v in self.datapoints.items():
+			if v and v[index] and hasattr(v[index], "data"):
+				datapoint[k] = v[index].data
+		return datapoint
+	
+	def get_meta(self, index: int) -> dict:
+		"""Get metadata at the given :param:`index`. By default, we will use
+		the first attribute in :attr:`datapoint_attrs` as the main image attribute.
 		"""
-		zipped = {k: list(v) for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))}
-		input  = core.to_4d_image(zipped.get("input"))
-		target = None
-		meta   = zipped.get("meta")
-		return {
-			"input" : input,
-			"target": target,
-			"meta"  : meta,
-		}
+		return self.datapoints[self.main_attribute][index].meta
+		
 
-
-class ImageLoader(UnlabeledImageDataset):
+class ImageLoader(ImageDataset):
 	"""A general image loader that retrieves and loads image(s) from a file
 	path, file path pattern, or directory.
 	
-	See Also: :class:`UnlabeledImageDataset`.
+	See Also: :class:`ImageDataset`.
 	"""
 	
 	def __init__(
@@ -142,197 +169,14 @@ class ImageLoader(UnlabeledImageDataset):
 		else:
 			raise IOError(f"Error when listing image files.")
 		
-		self.images: list[ImageAnnotation] = []
+		images: list[ImageAnnotation] = []
 		with core.get_progress_bar() as pbar:
 			for path in pbar.track(
 				sorted(paths),
 				description=f"[bright_yellow]Listing {self.__class__.__name__} {self.split_str} images"
 			):
 				if path.is_image_file():
-					self.images.append(ImageAnnotation(path=path))
-
-# endregion
-
-
-# region Labeled Image Dataset
-
-class LabeledImageDataset(base.Dataset, ABC):
-	"""The base class for datasets that represent a labeled collection of images.
-	
-	Args:
-		root: A root directory where the data is stored.
-		split: The data split to use. Default: ``'Split.TRAIN'``.
-		classlabels: :class:`ClassLabels` object. Default: ``None``.
-		transform: Transformations performed on both the input and target.
-		to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
-			Default: ``False``.
-		cache_data: If ``True``, cache data to disk for faster loading next
-			time. Default: ``False``.
-		verbose: Verbosity. Default: ``True``.
-	
-	See Also: :class:`LabeledDataset`.
-	"""
-	
-	def __init__(
-		self,
-		root       : core.Path,
-		split      : Split         	    = Split.TRAIN,
-		classlabels: ClassLabels | None = None,
-		transform  : A.Compose   | None = None,
-		to_tensor  : bool               = False,
-		cache_data : bool               = False,
-		verbose    : bool               = True,
-		*args, **kwargs
-	):
-		super().__init__(
-			root        = root,
-			split       = split,
-			classlabels = classlabels,
-			transform   = transform,
-			to_tensor   = to_tensor,
-			verbose     = verbose,
-			*args, **kwargs
-		)
-		self.images     : list[ImageAnnotation] = []
-		self.annotations: list[Any]		        = []
-		if not hasattr(self, "annotations"):
-			self.annotations = []
-		
-		# Get images and annotations from disk or cache
-		cache_file = self.root / f"{self.split_str}.cache"
-		if cache_data and cache_file.is_file():
-			self.load_cache(path=cache_file)
-		else:
-			self.get_images()
-			if self.has_annotations:
-				self.get_annotations()
-		
-		# Filter and verify data
-		self.filter()
-		self.verify()
-		
-		# Cache data
-		if cache_data:
-			self.cache_data(path=cache_file)
-		else:
-			core.delete_cache(cache_file)
-	
-	@abstractmethod
-	def __getitem__(self, index: int) -> dict:
-		"""Returns a dictionary containing the datapoint and metadata at the
-		given :param:`index`. The dictionary must contain the following keys:
-		{'input', 'target', 'meta'}.
-		"""
-		pass
-	
-	@abstractmethod
-	def get_images(self):
-		"""Get image files."""
-		pass
-	
-	@abstractmethod
-	def get_annotations(self):
-		"""Get annotations files."""
-		pass
-	
-	def reset(self):
-		"""Reset and start over."""
-		self.index = 0
-	
-	def close(self):
-		"""Stop and release."""
-		pass
-
-
-class ImageEnhancementDataset(LabeledImageDataset, ABC):
-	"""The base class for datasets that represent a collection of images, and a
-	set of associated enhanced images.
-	
-	See Also: :class:`LabeledImageDataset`.
-	"""
-	
-	def __init__(
-		self,
-		root       : core.Path,
-		split      : Split          	= Split.TRAIN,
-		classlabels: ClassLabels | None = None,
-		transform  : A.Compose   | None = None,
-		to_tensor  : bool               = False,
-		cache_data : bool               = False,
-		verbose    : bool               = True,
-		*args, **kwargs
-	):
-		self.annotations: list[ImageAnnotation] = []
-		super().__init__(
-			root        = root,
-			split       = split,
-			classlabels = classlabels,
-			transform   = transform,
-			to_tensor   = to_tensor,
-			cache_data  = cache_data,
-			verbose     = verbose,
-			*args, **kwargs
-		)
-	
-	def __getitem__(self, index: int) -> dict:
-		"""Returns a dictionary containing the datapoint and metadata at the
-		given :param:`index`. The dictionary must contain the following keys:
-		{'input', 'target', 'meta'}.
-		"""
-		image  = self.images[index].data
-		target = self.annotations[index].data if self.has_annotations else None
-		meta   = self.images[index].meta
-		
-		if self.transform is not None:
-			if self.has_annotations:
-				transformed = self.transform(image=image, mask=target)
-				image       = transformed["image"]
-				target      = transformed["mask"]
-			else:
-				transformed = self.transform(image=image)
-				image       = transformed["image"]
-		
-		if self.to_tensor:
-			if self.has_annotations:
-				image  = core.to_image_tensor(input=image,  keepdim=False, normalize=True)
-				target = core.to_image_tensor(input=target, keepdim=False, normalize=True)
-			else:
-				image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-		
-		return {
-			"input"   : image,
-			"target"  : target,
-			"metadata": meta,
-		}
-		
-	def filter(self):
-		'''
-		keep = []
-		for i, (img, lab) in enumerate(zip(self._images, self._labels)):
-			if img.path.is_image_file() and lab.path.is_image_file():
-				keep.append(i)
-		self._images = [img for i, img in enumerate(self._images) if i in keep]
-		self._labels = [lab for i, lab in enumerate(self._labels) if i in keep]
-		'''
-		pass
-	
-	@staticmethod
-	def collate_fn(batch) -> dict:
-		"""Collate function used to fused input items together when using
-		:attr:`batch_size` > 1. This is used in the
-		:class:`torch.utils.data.DataLoader` wrapper.
-		
-		Args:
-			batch: A :class:`list` of :class:`dict` of {`input`, `target`, `meta`}.
-		"""
-		zipped = {k: list(v) for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))}
-		input  = core.to_4d_image(zipped.get("input"))
-		target = core.to_4d_image(zipped.get("target"))
-		meta   = zipped.get("meta")
-		return {
-			"input" : input,
-			"target": target,
-			"meta"  : meta,
-		}
+					images.append(ImageAnnotation(path=path))
+		self.datapoints["image"] = images
 
 # endregion

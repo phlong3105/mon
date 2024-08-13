@@ -171,7 +171,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
                 stage.append(block(cnf.in_channels, self.layer_scale, sd_prob))
                 stage_block_id += 1
             layers.append(nn.Sequential(*stage))
-            if cnf.out_channels is not None:
+            if cnf.out_channelsImageDataset:
                 # Downsampling
                 layers.append(
                     nn.Sequential(
@@ -184,7 +184,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         self.avgpool  = nn.AdaptiveAvgPool2d(1)
 
         lastblock = block_setting[-1]
-        lastconv_output_channels = (lastblock.out_channels if lastblock.out_channels is not None else lastblock.in_channels)
+        lastconv_output_channels = (lastblock.out_channels if lastblock.out_channelsImageDataset else lastblock.in_channels)
         self.classifier = nn.Sequential(
             norm_layer(lastconv_output_channels),
             nn.Flatten(1),
@@ -199,7 +199,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
     def init_weights(self, m: nn.Module):
         if isinstance(m, (nn.Conv2d, nn.Linear)):
             torch.nn.init.trunc_normal_(m.weight, std=0.02)
-            if m.bias is not None:
+            if m.biasImageDataset:
                 torch.nn.init.zeros_(m.bias)
     
     def forward(

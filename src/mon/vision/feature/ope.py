@@ -82,7 +82,7 @@ class OPEmbedder(base.Embedder, nn.Module):
     def init_weights(self, m):
         if isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, std=.02)
-        if isinstance(m, nn.Linear) and m.bias is not None:
+        if isinstance(m, nn.Linear) and m.biasImageDataset:
             torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.LayerNorm):
             torch.nn.init.constant_(m.bias, 0)
@@ -91,7 +91,7 @@ class OPEmbedder(base.Embedder, nn.Module):
             fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
             fan_out //= m.groups
             m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
-            if m.bias is not None:
+            if m.biasImageDataset:
                 m.bias.data.zero_()
         
     def embed(

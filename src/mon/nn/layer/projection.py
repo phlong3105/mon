@@ -110,7 +110,7 @@ class LinearProjection(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         x = input
         b_, n, c = x.shape
-        if attn_kv is not None:
+        if attn_kvImageDataset:
             attn_kv = attn_kv.unsqueeze(0).repeat(b_, 1, 1)
         else:
             attn_kv = x

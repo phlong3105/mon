@@ -27,19 +27,19 @@ def convert_video(
     extension  : str,
     verbose    : bool
 ):
-    assert source is not None and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())
+    assert sourceImageDataset and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())
 
     source = mon.Path(source)
     source = [source] if mon.Path(source).is_video_file() else list(source.glob("*"))
     source = [s for s in source if s.is_video_file()]
     
-    if destination is not None:
+    if destinationImageDataset:
         destination = mon.Path(destination)
         destination = [destination / f"{s.stem}" for s in source]
     else:
         destination = [s.parent / f"{s.stem}-convert" for s in source]
     
-    if size is not None:
+    if sizeImageDataset:
         size = mon.vision.core.image.parse_hw(size=size)
     
     for src, dst in zip(source, destination):

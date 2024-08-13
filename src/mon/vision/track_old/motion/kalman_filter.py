@@ -128,7 +128,7 @@ class KFBBoxMotion(base.Motion):
         self.kf.Q[4:, 4:] *= 0.01
         
         # Here we assume that the `MovingObject` has already been init()
-        if instance is not None:
+        if instanceImageDataset:
             if not hasattr(instance, "bbox"):
                 raise ValueError("instance must contain 'bbox' attribute.")
             self.kf.x[0:4] = box_xyxy_to_z(instance.bbox)

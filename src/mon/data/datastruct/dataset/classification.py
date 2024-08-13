@@ -67,7 +67,7 @@ class ImageClassificationDataset(img.LabeledImageDataset, ABC):
 		class_id = self.annotations[index].data if self.has_annotations else None
 		meta     = self.images[index].meta
 		
-		if self.transform is not None:
+		if self.transform:
 			if self.has_annotations:
 				transformed = self.transform(image=image)
 				image       = transformed["image"]

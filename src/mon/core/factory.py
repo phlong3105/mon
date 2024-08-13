@@ -88,7 +88,7 @@ class Factory(dict):
             raise TypeError(f":param:`name` must be a ``str``, but got {type(name)}.")
             
         # Use it as a normal method: x.register(module=SomeClass)
-        if module is not None:
+        if module:
             self.register_module(
                 module_cls  = module,
                 module_name = name,
@@ -170,16 +170,16 @@ class Factory(dict):
         """
         if (
             (name is None and config is None) or
-            (name is None and config is not None and "name" not in config)
+            (name is None and config and "name" not in config)
         ):
             return None
-        if config is not None:
+        if config:
             config_ = copy.deepcopy(config)
             name    = name or config_.pop("name", None)
             kwargs |= config_
             
         # Loop through all possible naming conventions
-        if name is not None:
+        if name:
             kebab_name  = humps.kebabize(name)
             snake_name  = humps.depascalize(humps.pascalize(name))
             pascal_name = humps.pascalize(name)
@@ -240,7 +240,7 @@ class Factory(dict):
                 )
             
             obj = self.build(name=name, to_dict=to_dict, **config)
-            if obj is not None:
+            if obj:
                 if to_dict:
                     objs |= obj
                 else:
@@ -297,7 +297,7 @@ class ModelFactory(Factory):
             raise TypeError(f":param:`name` must be a ``str``, but got {type(name)}.")
         
         # Use it as a normal method: x.register(module=SomeClass)
-        if module is not None:
+        if module:
             self.register_module(
                 module_cls  = module,
                 module_name = name,
@@ -389,17 +389,17 @@ class ModelFactory(Factory):
         """
         if (
             (name is None and config is None) or
-            (name is None and config is not None and "name" not in config)
+            (name is None and config and "name" not in config)
         ):
             return None
-        if config is not None:
+        if config:
             config_  = copy.deepcopy(config)
             name     = name or config_.pop("name", None)
             kwargs  |= config_
         arch = arch or name
         
         # Loop through all possible naming conventions
-        if name is not None:
+        if name:
             kebab_name  = humps.kebabize(name)
             snake_name  = humps.depascalize(humps.pascalize(name))
             pascal_name = humps.pascalize(name)
@@ -468,7 +468,7 @@ class ModelFactory(Factory):
                 )
             
             obj = self.build(name=name, arch=arch, to_dict=to_dict, **config)
-            if obj is not None:
+            if obj:
                 if to_dict:
                     objs |= obj
                 else:

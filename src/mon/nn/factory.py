@@ -48,13 +48,13 @@ class OptimizerFactory(factory.Factory):
         """
         if name is None and config is None:
             return None
-        if name is None and config is not None:
+        if name is None and config:
             assert "name" in config
             config_  = copy.deepcopy(config)
             name_    = config_.pop("name")
             name     = name or name_
             kwargs  |= config_
-        assert name is not None and name in self
+        assert name and name in self
         
         if hasattr(network, "named_parameters"):
             params = []
@@ -122,7 +122,7 @@ class OptimizerFactory(factory.Factory):
                 to_dict             = to_dict,
                 **kwargs
             )
-            if opt is not None:
+            if opt:
                 if to_dict:
                     optimizers |= opt
                 else:
@@ -154,13 +154,13 @@ class LRSchedulerFactory(factory.Factory):
         """
         if name is None and config is None:
             return None
-        if name is None and config is not None:
+        if name is None and config:
             assert "name" in config
             config_ = copy.deepcopy(config)
             name_   = config_.pop("name")
             name    = name or name_
             kwargs |= config_
-        assert name is not None and name in self
+        assert name and name in self
         
         if name in [
             "GradualWarmupScheduler",

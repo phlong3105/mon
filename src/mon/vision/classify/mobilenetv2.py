@@ -218,7 +218,7 @@ class MobileNetV2(base.ImageClassificationModel):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
-            if m.bias is not None:
+            if m.biasImageDataset:
                 torch.nn.init.zeros_(m.bias)
         elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
             torch.nn.init.ones_(m.weight)
