@@ -32,15 +32,13 @@ The code is fully compatible with [PyTorch](https://pytorch.org/) >= 2.0.
 
 ## Directory Organization
 
-- Look at "private.docx" for more information.
-
 ```text
 code
  |_ mon
-     |_ bin                  # Executable, main() files, CLI.
      |_ data                 # Default location to store working datasets.
      |_ docs                 # Documentation.
      |_ env                  # Environment variables.
+     |_ project              # Project-specific code.
      |_ src                  # Source code.
      |   |_ mon              # Python code.
      |       |_ config       # Configuration functionality.
@@ -48,6 +46,7 @@ code
      |       |_ data         # Data processing package.
      |       |_ nn           # Machine learning package.
      |       |_ vision       # Computer vision package.
+     |_ tools                # Tools.
      |_ zoo                  # Model zoo.
      |_ .gitignore           # 
      |_ install.sh           # Installation script.

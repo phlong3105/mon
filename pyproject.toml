@@ -18,16 +18,11 @@ authors       = [
 maintainers   = [
     "Long H. Pham <longpham3105@gmail.com>",
 ]
-readme        = "README.md"
-repository    = "https://github.com/phlong3105/one"
-documentation = "https://github.com/phlong3105/one/docs"
-keywords      = [
-    "computer vision",
-    "image processing",
-    "deep learning",
-    "research",
-]
-classifiers = [
+readme        = "docs/README.md"
+repository    = "https://github.com/phlong3105/mon"
+documentation = "https://github.com/phlong3105/mon/docs"
+keywords      = ["computer vision", "image processing", "deep learning", "research"]
+classifiers   = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
@@ -36,35 +31,41 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
 ]
-packages = [
+packages      = [
     {include="mon",       from="src"},
     {include="mon_extra", from="src"},
 ]
-include = [
+include       = [
+    ".gitignore",
+    ".gitmodules",
     "LICENSE",
-    "env/IgnoreList",
-    "env/README.md",
-    "env/docker_script.txt",
-    "env/dockerfile",
-    "env/linux_cmd.yaml",
-    "env/linux_ui.yaml",
-    "env/mac.yaml",
     "install.sh",
     "mkdocs.yml",
     "pyproject.toml",
+    "rlsync.sh",
+    # "env/IgnoreList",
+    # "env/docker_script.txt",
+    # "env/dockerfile",
+    # "env/linux_console.yaml",
+    # "env/linux_gui.yaml",
+    # "env/macos.yaml",
+    # "env/rename.sh",
+    # "env/resilio-sync.service",
+    {path="docs"},
+    {path="env" },
 ]
-exclude = []
+exclude       = []
 
 [tool.poetry.dependencies]
 python            = ">=3.11, <3.13"
 depth_anything_v2 = {path="src/mon_extra/vision/depth/depth_anything_v2", develop=true}
-sam               = {path="src/mon_extra/vision/segment/sam",             develop=true}
-sam2              = {path="src/mon_extra/vision/segment/sam2",            develop=true}
-ultralytics       = {path="src/mon_extra/vision/ultralytics",             develop=true}
-yolor             = {path="src/mon_extra/vision/detect/yolor",            develop=true}
-yolov7            = {path="src/mon_extra/vision/detect/yolov7",           develop=true}
-yolov9            = {path="src/mon_extra/vision/detect/yolov9",           develop=true}
-yolox             = {path="src/mon_extra/vision/detect/yolox",            develop=true}
+sam               = {path="src/mon_extra/vision/segment/sam"            , develop=true}
+sam2              = {path="src/mon_extra/vision/segment/sam2"           , develop=true}
+ultralytics       = {path="src/mon_extra/vision/ultralytics"            , develop=true}
+yolor             = {path="src/mon_extra/vision/detect/yolor"           , develop=true}
+yolov7            = {path="src/mon_extra/vision/detect/yolov7"          , develop=true}
+yolov9            = {path="src/mon_extra/vision/detect/yolov9"          , develop=true}
+yolox             = {path="src/mon_extra/vision/detect/yolox"           , develop=true}
 
 [tool.poetry.extras]
 dev = [
