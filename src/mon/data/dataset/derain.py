@@ -35,7 +35,7 @@ from mon.data.datastruct import annotation, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console             = core.console
-default_root_dir    = DATA_DIR / "derain"
+default_root_dir    = DATA_DIR / "enhance" / "derain"
 DatapointAttributes = annotation.DatapointAttributes
 ImageAnnotation     = annotation.ImageAnnotation
 ImageDataset        = dataset.ImageDataset
@@ -53,8 +53,8 @@ class GTRain(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -93,7 +93,7 @@ class GTRain(ImageDataset):
                 path = core.Path(path)
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -107,8 +107,8 @@ class Rain100(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -141,7 +141,7 @@ class Rain100(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -156,8 +156,8 @@ class Rain100H(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -190,7 +190,7 @@ class Rain100H(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -205,8 +205,8 @@ class Rain100L(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -239,7 +239,7 @@ class Rain100L(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -253,8 +253,8 @@ class Rain12(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -287,7 +287,7 @@ class Rain12(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -302,8 +302,8 @@ class Rain1200(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -343,7 +343,7 @@ class Rain1200(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
 
 
@@ -357,8 +357,8 @@ class Rain13K(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -407,7 +407,7 @@ class Rain13K(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -422,8 +422,8 @@ class Rain1400(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -456,7 +456,7 @@ class Rain1400(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -470,8 +470,8 @@ class Rain2800(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -505,7 +505,7 @@ class Rain2800(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -519,8 +519,8 @@ class Rain800(ImageDataset):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
-        "lq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -553,7 +553,7 @@ class Rain800(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 # endregion

@@ -206,7 +206,7 @@ class MNASNet(base.ImageClassificationModel, ABC):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-            if m.biasImageDataset:
+            if m.bias:
                 torch.nn.init.zeros_(m.bias)
         elif isinstance(m, nn.BatchNorm2d):
             torch.nn.init.ones_(m.weight)
@@ -215,20 +215,14 @@ class MNASNet(base.ImageClassificationModel, ABC):
             torch.nn.init.kaiming_uniform_(m.weight, mode="fan_out", nonlinearity="sigmoid")
             torch.nn.init.zeros_(m.bias)
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.layers(x)
         # Equivalent to global avgpool and removing H and W dimensions.
         x = x.mean([2, 3])
         y = self.classifier(x)
-        return y
+        return {"logits": y}
     
 
 @MODELS.register(name="mnasnet0_5", arch="mnasnet")

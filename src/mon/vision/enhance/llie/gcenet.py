@@ -109,7 +109,7 @@ class Loss(nn.Loss):
         loss_col = self.loss_col(input=enhance)               if self.weight_col  > 0 else 0
         loss_exp = self.loss_exp(input=enhance)               if self.weight_exp  > 0 else 0
         loss_spa = self.loss_spa(input=enhance, target=input) if self.weight_spa  > 0 else 0
-        if adjustImageDataset:
+        if adjust:
             loss_tva = self.loss_tva(input=adjust)  if self.weight_tva > 0 else 0
         else:
             loss_tva = self.loss_tva(input=enhance) if self.weight_tva > 0 else 0
@@ -244,7 +244,7 @@ class ConvBlock(nn.Module):
         super().__init__()
         self.conv = nn.DSConv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True)
         #
-        if normImageDataset:
+        if norm:
             self.norm = norm(out_channels)
         else:
             self.norm = nn.Identity()
@@ -406,24 +406,45 @@ class GCENet(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        i      = input
-        c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
-        loss   = self.loss(i, c1, o)
-        return {
-            "pred": o,
-            "loss": loss,
-        }
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        i          = datapoint.get("image")
+        i1, i2     = geometry.pair_downsample(i)
+        datapoint1 = datapoint | {"image": i1}
+        datapoint2 = datapoint | {"image": i2}
+        outputs1   = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2   = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs    = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        c1_1, c1_2, gf1, j1 = outputs1.values()
+        c2_1, c2_2, gf2, j2 = outputs2.values()
+        c_1 , c_2 , gf , o  = outputs.values()
+        o1, o2   = geometry.pair_downsample(o)
+        mse_loss = nn.MSELoss()
+        loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
+        loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
+        loss_enh = self.loss(i, c_1, o)
+        loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
-    def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
-        i      = input
-        i1, i2 = geometry.pair_downsample(i)
-        c1_1, c1_2, gf1, j1 = self.forward(input=i1, *args, **kwargs)
-        c2_1, c2_2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        c_1 , c_2 , gf , o  = self.forward(input=i,  *args, **kwargs)
+    def forward_debug(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        i          = datapoint.get("image")
+        i1, i2     = geometry.pair_downsample(i)
+        datapoint1 = datapoint | {"image": i1}
+        datapoint2 = datapoint | {"image": i2}
+        outputs1   = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2   = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs    = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Extract
+        c1_1, c1_2, gf1, j1 = outputs1.values()
+        c2_1, c2_2, gf2, j2 = outputs2.values()
+        c_1 , c_2 , gf , o  = outputs.values()
         o1, o2   = geometry.pair_downsample(o)
         #
         c_1        = c_1  * -1
@@ -539,15 +560,9 @@ class GCENet(base.LowLightImageEnhancementModel):
             "d_j_i_b"   : d_j_i_b,
         }
         
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x  = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x  = datapoint.get("image")
         # Enhancement
         c1 = self.en(x)
         # Enhancement loop
@@ -565,7 +580,12 @@ class GCENet(base.LowLightImageEnhancementModel):
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
-        return c1, c2, y, y_gf
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "guidance" : y,
+            "enhanced" : y_gf,
+        }
     
 
 @MODELS.register(name="gcenet_a1", arch="gcenet")
@@ -578,28 +598,23 @@ class GCENetA1(GCENet):
     def __init__(self, *args, **kwargs):
         super().__init__(name="gcenet_a1", *args, **kwargs)
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        # Symmetric Loss
-        i      = input
-        c1, c2, gf, o = self.forward(input=i, *args, **kwargs)
-        loss   = self.loss(i, c1, o)
-        return {
-            "pred": o,
-            "loss": loss,
-        }
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        i             = datapoint.get("image")
+        c1, c2, gf, o = outputs.values()
+        loss          = self.loss(i, c1, o)
+        # Return
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x  = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x  = datapoint.get("image")
         # Enhancement
         c1 = self.en(x)
         # Enhancement loop
@@ -617,7 +632,12 @@ class GCENetA1(GCENet):
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
-        return c1, c2, y, y_gf
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "guidance" : y,
+            "enhanced" : y_gf,
+        }
 
 
 @MODELS.register(name="gcenet_a2", arch="gcenet")
@@ -630,15 +650,9 @@ class GCENetA2(GCENet):
     def __init__(self, *args, **kwargs):
         super().__init__(name="gcenet_a2", *args, **kwargs)
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x  = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x  = datapoint.get("image")
         # Enhancement
         c1 = self.en(x)
         # Enhancement loop
@@ -656,7 +670,12 @@ class GCENetA2(GCENet):
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
-        return c1, c2, y, y_gf
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "guidance" : y,
+            "enhanced" : y_gf,
+        }
 
 
 @MODELS.register(name="gcenet_b1", arch="gcenet")
@@ -669,28 +688,23 @@ class GCENetB1(GCENet):
     def __init__(self, *args, **kwargs):
         super().__init__(name="gcenet_b1", *args, **kwargs)
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        # Symmetric Loss
-        i      = input
-        c1, c2, gf, o = self.forward(input=i,  *args, **kwargs)
-        loss   = self.loss(i, c1, o)
-        return {
-            "pred": o,
-            "loss": loss,
-        }
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        i             = datapoint.get("image")
+        c1, c2, gf, o = outputs.values()
+        loss          = self.loss(i, c1, o)
+        # Return
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x    = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x    = datapoint.get("image")
         # Guided Filter
         x_gf = self.gf(x, x)
         # Enhancement
@@ -708,7 +722,12 @@ class GCENetB1(GCENet):
                 b = y * (1 - c2)
                 d = y * c2
                 y = b + d + c1 * (torch.pow(d, 2) - d)
-        return c1, c2, x_gf, y
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "guidance" : x_gf,
+            "enhanced" : y,
+        }
 
 
 @MODELS.register(name="gcenet_b2", arch="gcenet")
@@ -721,15 +740,9 @@ class GCENetB2(GCENet):
     def __init__(self, *args, **kwargs):
         super().__init__(name="gcenet_b2", *args, **kwargs)
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x    = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x    = datapoint.get("image")
         # Guided Filter
         x_gf = self.gf(x, x)
         # Enhancement
@@ -747,7 +760,12 @@ class GCENetB2(GCENet):
                 b = y * (1 - c2)
                 d = y * c2
                 y = b + d + c1 * (torch.pow(d, 2) - d)
-        return c1, c2, x_gf, y
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "guidance" : x_gf,
+            "enhanced" : y,
+        }
     
 # endregion
 

@@ -188,15 +188,9 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
     def init_weights(self, model: nn.Module):
         pass
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.conv1(x)
         x = self.maxpool(x)
         x = self.stage2(x)
@@ -205,7 +199,7 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         x = self.conv5(x)
         x = x.mean([2, 3])  # globalpool
         y = self.fc(x)
-        return y
+        return {"logits": y}
 
 
 @MODELS.register(name="shufflenetv2_x0_5", arch="shufflenet")

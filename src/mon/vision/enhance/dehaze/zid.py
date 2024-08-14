@@ -64,7 +64,7 @@ def conv(
         to_pad = 0
 
     convolver = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding=to_pad, bias=bias)
-    layers    = [x for x in [padder, convolver, downsampler] if xImageDataset]
+    layers    = [x for x in [padder, convolver, downsampler] if x]
     return nn.Sequential(*layers)
 
 
@@ -316,9 +316,9 @@ class ZID(base.DehazingModel):
     See Also: :class:`base.Dehazing`
     """
     
-    arch  : str  = "zid"
+    arch   : str  = "zid"
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
-    zoo   : dict = {}
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -386,50 +386,59 @@ class ZID(base.DehazingModel):
     def init_weights(self, model: nn.Module):
         pass
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
-        image, ambient, mask, _ = pred
+    @classmethod
+    def assert_outputs(cls, outputs: dict) -> bool:
+        assert outputs.get("enhanced", None), \
+            "The key ``'enhanced'`` must be defined in the :param:`outputs`."
+        assert outputs.get("image", None), \
+            "The key ``'image'`` must be defined in the :param:`outputs`."
+        assert outputs.get("ambient", None), \
+            "The key ``'ambient'`` must be defined in the :param:`outputs`."
+        assert outputs.get("mask", None), \
+            "The key ``'mask'`` must be defined in the :param:`outputs`."
         
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        outputs  = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Extract
+        lq_image = datapoint.get("image")
+        image    = outputs.get("image")
+        ambient  = outputs.get("ambient")
+        mask     = outputs.get("mask")
+        enhanced = outputs.get("enhanced")
+        # Loss
         loss         = self.mse_loss(mask * image + (1 - mask) * ambient, image)
         loss        += self.ambient_net.get_loss()
         loss        += 0.005 * self.std_loss(mask)
         loss        += 0.1   * self.std_loss(ambient)
-        #
         dcp_prior    = torch.min(image.permute(0, 2, 3, 1), 3)[0]
         loss        += self.mse_loss(dcp_prior, torch.zeros_like(dcp_prior)) - 0.05
-        #
-        atmosphere   = nn.atmospheric_prior(input.detach().cpu().numpy()[0])
+        atmosphere   = nn.atmospheric_prior(lq_image.detach().cpu().numpy()[0])
         ambient_val  = nn.Parameter(data=torch.cuda.FloatTensor(atmosphere.reshape((1, 3, 1, 1))), requires_grad=False)
         loss        += self.mse_loss(ambient, ambient_val * torch.ones_like(ambient))
-        
-        return {
-            "pred": pred[-1],
-            "loss": loss,
-        }
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        x       = input
-        image   = self.image_net(x)
-        ambient = self.ambient_net(x)
-        mask    = self.mask_net(x)
-        
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x            = datapoint.get("image")
+        image        = self.image_net(x)
+        ambient      = self.ambient_net(x)
+        mask         = self.mask_net(x)
         ambient_clip = torch.clip(ambient, 0, 1)
         mask_clip    = torch.clip(mask,    0, 1)
-        mask_clip    = self.t_matting(x, mask_clip).to(x.device)
+        mask_clip    = self.t_matting(x, mask_clip).to(self.device)
         y            = torch.clip((x - ((1 - mask_clip) * ambient_clip)) / mask_clip, 0, 1)
+        return {
+            "image"   : image,
+            "ambient" : ambient,
+            "mask"    : mask,
+            "enhanced": y,
+        }
         
-        return image, ambient, mask, y
-    
     def t_matting(self, input: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
         input    = input.detach().cpu().numpy()[0]
         mask     = mask.detach().cpu().numpy()[0]

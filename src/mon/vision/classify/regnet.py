@@ -165,7 +165,7 @@ class ResBottleneckBlock(nn.Module):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        if self.projImageDataset:
+        if self.proj:
             x = self.proj(x) + self.f(x)
         else:
             x = x + self.f(x)
@@ -317,7 +317,7 @@ class BlockParams:
 # endregion
 
 
-# region ResNet
+# region Model
 
 class RegNet(base.ImageClassificationModel, ABC):
     """RegNet.
@@ -408,22 +408,16 @@ class RegNet(base.ImageClassificationModel, ABC):
         elif isinstance(m, nn.Linear):
             torch.nn.init.normal_(m.weight, mean=0.0, std=0.01)
             torch.nn.init.zeros_(m.bias)
-        
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.stem(x)
         x = self.trunk_output(x)
         x = self.avgpool(x)
         x = x.flatten(start_dim=1)
         y = self.fc(x)
-        return y
+        return {"logits": y}
     
 
 @MODELS.register(name="regnet_y_400mf", arch="regnet")

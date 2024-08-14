@@ -186,26 +186,21 @@ class ZeroDiDCE_RE(base.LowLightImageEnhancementModel):
             m.bias.data.fill_(0)
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
-        adjust, enhance = pred
-        loss   = self.loss(input, adjust, enhance)
-        return {
-            "pred": enhance,
-            "loss": loss,
-        }
-
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x    = input
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        image    = datapoint.get("image")
+        enhanced = outputs.get("enhanced")
+        adjust   = outputs.get("adjust")
+        outputs["loss"] = self.loss(image, adjust, enhanced) if self.loss else None
+        # Return
+        return outputs
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x    = datapoint.get("image")
         #
         x1   =  self.relu(self.e_conv1(x))
         x2   =  self.relu(self.e_conv2(x1))
@@ -235,7 +230,10 @@ class ZeroDiDCE_RE(base.LowLightImageEnhancementModel):
         y = x
         for i in range(b):
             y = y + x_r * (torch.pow(y, 2) - y) * ((n1 - torch.mean(y).item()) / (n3 - torch.mean(y).item()))
-        
-        return x_r, y
+        #
+        return {
+            "adjust"  : x,
+            "enhanced": y,
+        }
     
 # endregion

@@ -208,26 +208,9 @@ class LLUnetpp_RE(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
-        loss   = self.loss(pred, target)
-        return {
-            "pred": pred,
-            "loss": loss,
-        }
-
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x    = datapoint.get("image")
         #
         x0_0 = self.conv0_0(x)
         x1_0 = self.conv1_0(self.pool(x0_0))
@@ -250,7 +233,6 @@ class LLUnetpp_RE(base.LowLightImageEnhancementModel):
         #
         y    = self.final(x0_4)
         y    = torch.clamp(y, 0, 1)
-        #
-        return y
+        return {"enhanced": y}
     
 # endregion

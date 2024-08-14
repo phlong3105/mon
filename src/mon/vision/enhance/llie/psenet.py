@@ -342,7 +342,7 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
         nth_pseudo_gt = self.generate_pseudo_gt(batch[0])
         
         # Forward pass
-        if self.prev_inputImageDataset:
+        if self.prev_input:
             # Getting (n - 1)th input and (n - 1)-th pseudo gt -> calculate loss -> update model weight (handled automatically by pytorch lightning)
             input      = self.prev_input
             pseudo_gt  = self.prev_pseudo_gt

@@ -10,15 +10,16 @@ from mon import albumentation as A
 from mon.config import default
 
 current_file = mon.Path(__file__).absolute()
-current_dir  = current_file.parents[0]
-root_dir     = current_file.parents[1]
 
 
 # region Basic
 
 model_name = "d2ce_05_depth_attention"
 data_name  = "ulol"
-root       = root_dir / "run"
+root       = current_file.parents[1] / "run"
+data_root  = mon.DATA_DIR / "enhance" / "llie"
+project    = None
+variant    = None
 fullname   = f"{model_name}_{data_name}"
 image_size = [504, 504]
 seed	   = 100
@@ -69,9 +70,9 @@ model = {
 
 # region Data
 
-datamodule = {
+data = {
     "name"      : data_name,
-    "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
+    "root"      : data_root,     # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
 		A.ResizeMultipleOf(
 			height            = image_size[0],
@@ -131,7 +132,7 @@ trainer = default.trainer | {
 # region Predicting
 
 predictor = default.predictor | {
-	"default_root_dir": root,   # Default path for saving results.
+	"default_root_dir": root,  # Default path for saving results.
 }
 
 # endregion

@@ -680,8 +680,6 @@ class Scheme(DT.Enum):
     UNSUPERVISED   = "unsupervised"    # unsupervised learning
     ONLINE         = "online"          # online learning
     INSTANCE       = "instance"        # one-instance learning
-    FEW_SHOT       = "few-shot"        # few-shot learning
-    ONE_SHOT       = "one-shot"        # one-shot learning
     ZERO_SHOT      = "zero-shot"       # zero-shot learning
     ZERO_REFERENCE = "zero-reference"  # zero-reference learning
     INFERENCE_ONLY = "inference only"  # inference only

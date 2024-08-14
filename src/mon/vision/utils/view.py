@@ -119,7 +119,7 @@ def imshow(
     max_n = max_n if isinstance(max_n, int) else len(image)
     image = image[: max_n]
     
-    if labelImageDataset:
+    if label:
         label = core.to_list(x=label)
         label = label[:max_n]
         if not len(image) == len(label):
@@ -149,7 +149,7 @@ def imshow(
             input=img, keepdim=False, denormalize=denormalize)
         axs[i, j].imshow(np.asarray(img), aspect="auto")
         axs[i, j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
-        if labelImageDataset:
+        if label:
             axs[i, j].set_title(label[i])
     plt.get_current_fig_manager().set_window_title(winname)
     plt.tight_layout()
@@ -233,24 +233,24 @@ def imshow_classification(
                 [classlabels.get_name(key="id", value=v) for v in p]
                 for p in pred_topk
             ]
-        if pred_top1ImageDataset:
+        if pred_top1:
             pred_top1 = [classlabels.get_name(key="id", value=v) for v in pred_top1]
-        if targetImageDataset:
+        if target:
             target = target.clone()
             target = target.tolist()
             target = [classlabels.get_name(key="id", value=v) for v in target]
     
-    label = label[:max_n] if labelImageDataset else [f"" for _ in range(len(image))]
+    label = label[:max_n] if label else [f"" for _ in range(len(image))]
     if not len(image) == len(label):
         raise ValueError(
             f"image and label must have the same length, but got "
             f"{len(image)} and {len(label)}."
         )
     
-    if pred_top1ImageDataset and targetImageDataset:
+    if pred_top1 and target:
         label  = [f"{l} \n pred={p} gt={t}" for (l, p, t) in zip(label, pred_top1, target)]
         colors = ["darkgreen" if p == t else "red" for (p, t) in zip(pred_top1, target)]
-    elif targetImageDataset:
+    elif target:
         label  = [f"{l} \n gt={t}" for (l, t) in zip(label, target)]
         colors = ["black" for _ in range(len(image))]
     else:
@@ -289,7 +289,7 @@ def imshow_classification(
         pps = axs[1].barh(y_pos, scores, align="center", color="deepskyblue")
         axs[1].set_xlim(left=0.0)
         axs[1].set_yticks(y_pos)
-        if pred_topkImageDataset:
+        if pred_topk:
             axs[1].set_yticklabels(pred_topk[idx], horizontalalignment="left")
         # Scores
         max_width = max([rect.get_width() for rect in pps])
@@ -353,7 +353,7 @@ def imshow_enhancement(
     image  = [i[: max_n] for i in image]
     
     assert len(image) == len(header)
-    if labelImageDataset:
+    if label:
         label = core.to_list(label)
         label = label[:max_n]
         assert len(image[0]) == len(label)

@@ -21,7 +21,7 @@ from typing import Any, Literal, Sequence
 import torch
 
 from mon import core, nn
-from mon.core import _callable, _size_2_t
+from mon.core import _size_2_t
 from mon.globals import MODELS, Scheme
 from mon.vision import filtering, geometry
 from mon.vision.depth import depth_anything_v2
@@ -111,7 +111,7 @@ class Loss(nn.Loss):
         loss_col = self.loss_col(input=enhance)               if self.weight_col  > 0 else 0
         loss_exp = self.loss_exp(input=enhance)               if self.weight_exp  > 0 else 0
         loss_spa = self.loss_spa(input=enhance, target=input) if self.weight_spa  > 0 else 0
-        if adjustImageDataset:
+        if adjust:
             loss_tva = self.loss_tva(input=adjust)  if self.weight_tva > 0 else 0
         else:
             loss_tva = self.loss_tva(input=enhance) if self.weight_tva > 0 else 0
@@ -180,7 +180,7 @@ class ConvBlock(nn.Module):
         super().__init__()
         self.conv = nn.DSConv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True)
         #
-        if normImageDataset:
+        if norm:
             self.norm = norm(out_channels)
         else:
             self.norm = nn.Identity()
@@ -383,50 +383,33 @@ class D2CE(base.LowLightImageEnhancementModel):
         self.de.eval()  # Freeze DepthAnythingV2 model
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input    = datapoint.get("input",  None)
-        target   = datapoint.get("target", None)
-        meta     = datapoint.get("meta",   None)
+        # Forward
+        i          = datapoint.get("image")
+        i1, i2     = geometry.pair_downsample(i)
+        datapoint1 = datapoint | {"image": i1}
+        datapoint2 = datapoint | {"image": i2}
+        outputs1   = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2   = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs    = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
         # Symmetric Loss
-        i        = input
-        i1, i2   = geometry.pair_downsample(i)
-        c1_1, c1_2, d1, e1, gf1, j1 = self.forward(input=i1, *args, **kwargs)
-        c2_1, c2_2, d2, e2, gf2, j2 = self.forward(input=i2, *args, **kwargs)
-        c_1 , c_2 , d,  e,  gf , o  = self.forward(input=i,  *args, **kwargs)
+        c1_1, c1_2, d1, e1, gf1, j1 = outputs1.values()
+        c2_1, c2_2, d2, e2, gf2, j2 = outputs2.values()
+        c_1 , c_2 , d,  e,  gf , o  = outputs.values()
         o1, o2   = geometry.pair_downsample(o)
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
         loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
         loss_enh = self.loss(i, c_1, o)
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
-        return {
-            "pred" : o,
-            "loss" : loss,
-            "depth": d,
-            "edge" : e,
-        }
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
-    def forward_debug(self, input: torch.Tensor, *args, **kwargs) -> dict | None:
-        i  = input
-        c_1, c_2, d, e, gf, o = self.forward(input=i, *args, **kwargs)
-        return {
-            "i"  : i,
-            "c_1": c_1,
-            "c_2": c_2,
-            "d"  : d,
-            "e"  : e,
-            "gf" : gf,
-            "o"  : o,
-        }
-    
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, ...]:
-        x     = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x     = datapoint.get("image")
         # Enhancement
         de    = self.de(x)
         de    = de.detach()  # Must call detach() else error
@@ -447,7 +430,14 @@ class D2CE(base.LowLightImageEnhancementModel):
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
-        return c1, c2, de, e, y, y_gf
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "depth"    : de,
+            "edge"     : e,
+            "guidance" : y,
+            "enhanced" : y_gf,
+        }
 
 
 @MODELS.register(name="d2ce_01_baseline", arch="d2ce")
@@ -497,15 +487,9 @@ class D2CE_04_DepthBrightnessAttention(D2CE):
             *args, **kwargs
         )
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, ...]:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x     = datapoint.get("image")
         # Enhancement
         de    = self.de(x)
         de    = de.detach()  # Must call detach() else error
@@ -527,7 +511,14 @@ class D2CE_04_DepthBrightnessAttention(D2CE):
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
-        return c1, c2, de, e, y, y_gf
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "depth"    : de,
+            "edge"     : e,
+            "guidance" : y,
+            "enhanced" : y_gf,
+        }
 
 
 @MODELS.register(name="d2ce_05_depth_attention", arch="d2ce")
@@ -541,15 +532,9 @@ class D2CE_05_DepthAttention(D2CE):
             *args, **kwargs
         )
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, ...]:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x     = datapoint.get("image")
         # Enhancement
         de    = self.de(x)
         de    = de.detach()  # Must call detach() else error
@@ -570,6 +555,13 @@ class D2CE_05_DepthAttention(D2CE):
                 y = b + d + c1 * (torch.pow(d, 2) - d)
         # Guided Filter
         y_gf = self.gf(x, y)
-        return c1, c2, de, e, y, y_gf
+        return {
+            "adjust"   : c1,
+            "attention": c2,
+            "depth"    : de,
+            "edge"     : e,
+            "guidance" : y,
+            "enhanced" : y_gf,
+        }
     
 # endregion

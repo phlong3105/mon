@@ -150,13 +150,13 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         self.keys |= {"epoch": 0}
         self.keys |= {"step": 0}
         self.keys |= {"train/loss": 0}
-        if pl_module.train_metricsImageDataset:
+        if pl_module.train_metrics:
             for m in pl_module.train_metrics:
                 headers   += f"{f'train/{m.name}'},"
                 self.keys |= {f'train/{m.name}': 0}
         headers   += f"{'val/loss'},"
         self.keys |= {"val/loss": 0}
-        if pl_module.val_metricsImageDataset:
+        if pl_module.val_metrics:
             for m in pl_module.val_metrics:
                 headers   += f"{f'val/{m.name}'},"
                 self.keys |= {f'val/{m.name}': 0}
@@ -276,7 +276,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
             metrics                 = metrics,
             auto_insert_metric_name = self.auto_insert_metric_name
         )
-        if verImageDataset:
+        if ver:
             filename = self.CHECKPOINT_JOIN_CHAR.join((filename, f"v{ver}"))
         
         ckpt_name = f"{filename}{self.FILE_EXTENSION}"
@@ -294,7 +294,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
 
         The path gets extended with subdirectory "checkpoints".
         """
-        if self.dirpathImageDataset:
+        if self.dirpath:
             # Short circuit if dirpath was passed to ModelCheckpoint
             return self.dirpath
         else:
@@ -323,11 +323,11 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         trainer           : "pl.Trainer",
         monitor_candidates: dict[str, torch.Tensor]
     ):
-        assert self.monitorImageDataset
+        assert self.monitor
         
         current = monitor_candidates.get(self.monitor)
         if self.check_monitor_top_k(trainer, current):
-            assert currentImageDataset
+            assert current
             self._update_best_and_save(
                 current            = current,
                 trainer            = trainer,
@@ -415,7 +415,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 weights_only = True
             )
         
-        if del_filepathImageDataset and filepath != del_filepath:
+        if del_filepath and filepath != del_filepath:
             self._remove_checkpoint(trainer, del_filepath)
     
     def _parse_metric_name(self) -> str:

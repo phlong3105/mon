@@ -38,7 +38,7 @@ class MIPI24Flare(ImageDataset):
 	tasks : list[Task]  = [Task.LES]
 	splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
 	datapoint_attrs     = DatapointAttributes({
-		"lq_image": ImageAnnotation,
+		"image"   : ImageAnnotation,
 		"hq_image": ImageAnnotation,
 	})
 	has_test_annotations: bool = False
@@ -83,7 +83,7 @@ class MIPI24Flare(ImageDataset):
 				path = img.path.replace("/lq/", "/hq/")
 				hq_images.append(ImageAnnotation(path=path.image_file()))
 		
-		self.datapoints["lq_image"] = lq_images
+		self.datapoints["image"]    = lq_images
 		self.datapoints["hq_image"] = hq_images
 		
 		

@@ -264,21 +264,15 @@ class DenseNet(base.ImageClassificationModel, ABC):
             torch.nn.init.constant_(m.bias, 0)
         '''
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.features(x)
         x = F.relu(x, inplace=True)
         x = F.adaptive_avg_pool2d(x, (1, 1))
         x = torch.flatten(x, 1)
         y = self.classifier(x)
-        return y
+        return {"logits": y}
     
 
 @MODELS.register(name="densenet121", arch="densenet")

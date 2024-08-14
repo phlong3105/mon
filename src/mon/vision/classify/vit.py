@@ -57,7 +57,7 @@ class MLPBlock(nn.MLP):
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 torch.nn.init.xavier_uniform_(m.weight)
-                if m.biasImageDataset:
+                if m.bias:
                     torch.nn.init.normal_(m.bias, std=1e-6)
 
     def _load_from_state_dict(
@@ -212,7 +212,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         self.representation_size = representation_size
         self.norm_layer          = norm_layer
         
-        if conv_stem_configsImageDataset:
+        if conv_stem_configs:
             # As per https://arxiv.org/abs/2106.14881
             seq_proj = nn.Sequential()
             prev_channels = 3
@@ -273,14 +273,14 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
             # Init the patchify stem
             fan_in = self.conv_proj.in_channels * self.conv_proj.kernel_size[0] * self.conv_proj.kernel_size[1]
             torch.nn.init.trunc_normal_(self.conv_proj.weight, std=math.sqrt(1 / fan_in))
-            if self.conv_proj.biasImageDataset:
+            if self.conv_proj.bias:
                 torch.nn.init.zeros_(self.conv_proj.bias)
-        elif self.conv_proj.conv_lastImageDataset and isinstance(self.conv_proj.conv_last, nn.Conv2d):
+        elif self.conv_proj.conv_last and isinstance(self.conv_proj.conv_last, nn.Conv2d):
             # Init the last 1x1 conv of the conv stem
             torch.nn.init.normal_(
                 self.conv_proj.conv_last.weight, mean=0.0, std=math.sqrt(2.0 / self.conv_proj.conv_last.out_channels)
             )
-            if self.conv_proj.conv_last.biasImageDataset:
+            if self.conv_proj.conv_last.bias:
                 torch.nn.init.zeros_(self.conv_proj.conv_last.bias)
         
         if hasattr(self.heads, "pre_logits") and isinstance(self.heads.pre_logits, nn.Linear):
@@ -318,14 +318,9 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         x = x.permute(0, 2, 1)
         return x
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        profile  : bool = False,
-        out_index: int  = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         # Reshape and permute the input tensor
         x = self._process_input(x)
         n = x.shape[0]
@@ -336,7 +331,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         # Classifier "token" as used by standard language architectures
         x = x[:, 0]
         y = self.heads(x)
-        return y
+        return {"logits": y}
 
 
 ViT = VisionTransformer

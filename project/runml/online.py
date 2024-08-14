@@ -100,7 +100,7 @@ def online_learning(args: dict) -> str:
                 if save_image:
                     output_path = save_dir / f"{meta['stem']}.png"
                     mon.write_image(output_path, output, denormalize=True)
-                    if data_writerImageDataset:
+                    if data_writer:
                         data_writer.write_batch(data=output)
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
@@ -178,7 +178,7 @@ def parse_online_args(model_root: str | mon.Path | None = None) -> dict:
     args["trainer"]    |= {
         "default_root_dir": save_dir,
         "devices"         : devices,
-        "max_epochs"      : epochs if stepsImageDataset else None,
+        "max_epochs"      : epochs if steps else None,
         "max_steps"       : steps,
     }
     args["predictor"]  |= {
@@ -196,7 +196,7 @@ def parse_online_args(model_root: str | mon.Path | None = None) -> dict:
         mon.delete_dir(paths=mon.Path(save_dir))
     
     save_dir.mkdir(parents=True, exist_ok=True)
-    if configImageDataset and config.is_config_file():
+    if config and config.is_config_file():
         mon.copy_file(src=config, dst=save_dir / f"config{config.suffix}")
     
     return args

@@ -53,8 +53,8 @@ class Detection:
         self.class_id   = class_id
         self.bbox       = bbox
         self.confidence = confidence
-        self.polygon    = np.array(polygon) if polygonImageDataset else None
-        self.feature    = np.array(feature) if featureImageDataset else None
+        self.polygon    = np.array(polygon) if polygon else None
+        self.feature    = np.array(feature) if feature else None
         self.timestamp  = timestamp
     
     @classmethod

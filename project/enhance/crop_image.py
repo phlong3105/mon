@@ -43,7 +43,7 @@ def visualize_image(
     extension : str,
     verbose   : bool
 ):
-    assert input_dirImageDataset and mon.Path(input_dir).is_dir()
+    assert input_dir and mon.Path(input_dir).is_dir()
 
     output_dir  = output_dir or input_dir.parent / f"{input_dir.stem}-crop"
     output_dir  = mon.Path(output_dir)

@@ -382,16 +382,10 @@ class Inception3(base.ImageClassificationModel):
             return InceptionOutputs(x, aux)
         else:
             return x  # type: ignore[return-value]
-        
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> InceptionOutputs:
-        x = input  # N x 3 x 299 x 299
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")  # N x 3 x 299 x 299
         x = self.Conv2d_1a_3x3(x)  # N x 32 x 149 x 149
         x = self.Conv2d_2a_3x3(x)  # N x 32 x 147 x 147
         x = self.Conv2d_2b_3x3(x)  # N x 64 x 147 x 147
@@ -408,7 +402,7 @@ class Inception3(base.ImageClassificationModel):
         x = self.Mixed_6d(x)       # N x 768 x 17 x 17
         x = self.Mixed_6e(x)       # N x 768 x 17 x 17
         aux: torch.Tensor | None = None
-        if self.AuxLogitsImageDataset:
+        if self.AuxLogits:
             if self.training:
                 aux = self.AuxLogits(x)  # N x 768 x 17 x 17
         x = self.Mixed_7a(x)  # N x 1280 x 8 x 8
@@ -424,8 +418,9 @@ class Inception3(base.ImageClassificationModel):
         if torch.jit.is_scripting():
             if not aux_defined:
                 console.warn(f"Scripted Inception3 always returns ``Inception3`` :class:`tuple`")
-            return InceptionOutputs(x, aux)
+            y = InceptionOutputs(x, aux)
         else:
-            return self.eager_outputs(x, aux)
+            y = self.eager_outputs(x, aux)
+        return {"logits": y}
         
 # endregion

@@ -424,7 +424,7 @@ def main(
     weights_str_ = mon.parse_menu_string(weights_)
     weights      = click.prompt(click.style(f"Weights {weights_str_}", fg="bright_green", bold=True), type=str, default=weights or "")
     weights      = weights if weights not in [None, ""] else None
-    if weightsImageDataset:
+    if weights:
         if isinstance(weights, str):
             weights = mon.to_list(weights)
         weights = [weights_[int(w)] if mon.is_int(w) else w for w in weights]

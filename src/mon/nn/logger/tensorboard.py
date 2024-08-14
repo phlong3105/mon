@@ -103,7 +103,7 @@ class SummaryWriter(tensorboard.SummaryWriter):
                 filename_suffix = self.filename_suffix
             )
             self.all_writers = {self.file_writer.get_logdir(): self.file_writer}
-            if self.purge_stepImageDataset:
+            if self.purge_step:
                 most_recent_step = self.purge_step
                 self.file_writer.add_event(
                     Event(
@@ -136,7 +136,7 @@ def _get_rank() -> int:
     rank_keys = ("RANK", "SLURM_PROCID", "LOCAL_RANK")
     for key in rank_keys:
         rank = os.environ.get(key)
-        if rankImageDataset:
+        if rank:
             return int(rank)
     return 0
 
@@ -164,7 +164,7 @@ class TensorBoardLogger(loggers.TensorBoardLogger):
         Example:
             self.logger.experiment.some_tensorboard_function()
         """
-        if self._experimentImageDataset:
+        if self._experiment:
             return self._experiment
         if not rank_zero_only.rank == 0:
             raise ValueError(f"Tried to initialize log dirs in non 'global_rank=0'.")

@@ -363,7 +363,7 @@ class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
             y     = (x_norm * alpha) + (x * (1 - alpha))
         elif self.scheme in ["adaptive"]:
             alpha = self.alpha.reshape(-1, c, 1, 1).to(x.device)
-            if self.beta1ImageDataset and self.beta2ImageDataset:
+            if self.beta1 and self.beta2:
                 beta1 = self.beta1.reshape(-1, c, 1, 1).to(x.device)
                 beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
                 y     = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)
@@ -384,7 +384,7 @@ class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
                 )
             alpha = self.channel_attention(pool)
             alpha = torch.sigmoid(alpha).unsqueeze(2).unsqueeze(3).expand_as(x)
-            if self.beta1ImageDataset and self.beta2ImageDataset:
+            if self.beta1 and self.beta2:
                 beta1 = self.beta1.reshape(-1, c, 1, 1).to(x.device)
                 beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
                 y = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)

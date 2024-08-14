@@ -135,8 +135,6 @@ class GoogleNet(base.ImageClassificationModel):
     See Also: :class:`base.ImageClassificationModel`
     """
     
-    constants = ["aux_logits", "transform_input"]
-    
     arch   : str  = "googlenet"
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {
@@ -147,6 +145,8 @@ class GoogleNet(base.ImageClassificationModel):
             "map": {},
         },
     }
+    
+    constants = ["aux_logits", "transform_input"]
 
     def __init__(
         self,
@@ -257,15 +257,9 @@ class GoogleNet(base.ImageClassificationModel):
         else:
             return x  # type: ignore[return-value]
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> GoogLeNetOutputs:
-        x = input                         # N x 3 x 224 x 224
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")  # N x 3 x 224 x 224
         x = self.conv1(x)                 # N x 64 x 112 x 112
         x = self.maxpool1(x)              # N x 64 x 56 x 56
         x = self.conv2(x)                 # N x 64 x 56 x 56
@@ -276,14 +270,14 @@ class GoogleNet(base.ImageClassificationModel):
         x = self.maxpool3(x)              # N x 480 x 14 x 14
         x = self.inception4a(x)           # N x 512 x 14 x 14
         aux1: torch.Tensor | None = None
-        if self.aux1ImageDataset:
+        if self.aux1:
             if self.training:
                 aux1 = self.aux1(x)
         x = self.inception4b(x)           # N x 512 x 14 x 14
         x = self.inception4c(x)           # N x 512 x 14 x 14
         x = self.inception4d(x)           # N x 528 x 14 x 14
         aux2: torch.Tensor | None = None
-        if self.aux2ImageDataset:
+        if self.aux2:
             if self.training:
                 aux2 = self.aux2(x)
         x = self.inception4e(x)           # N x 832 x 14 x 14
@@ -299,8 +293,9 @@ class GoogleNet(base.ImageClassificationModel):
         if torch.jit.is_scripting():
             if not aux_defined:
                 console.warning("Scripted GoogleNet always returns GoogleNetOutputs Tuple")
-            return GoogLeNetOutputs(x, aux2, aux1)
+            y = GoogLeNetOutputs(x, aux2, aux1)
         else:
-            return self.eager_outputs(x, aux2, aux1)
-    
+            y = self.eager_outputs(x, aux2, aux1)
+        return {"logits": y}
+        
 # endregion

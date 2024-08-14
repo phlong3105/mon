@@ -78,7 +78,7 @@ class VGG(base.ImageClassificationModel, ABC):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d):
             torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-            if m.biasImageDataset:
+            if m.bias:
                 torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.BatchNorm2d):
             torch.nn.init.constant_(m.weight, 1)
@@ -87,20 +87,14 @@ class VGG(base.ImageClassificationModel, ABC):
             torch.nn.init.normal_(m.weight, 0, 0.01)
             torch.nn.init.constant_(m.bias, 0)
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.features(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         y = self.classifier(x)
-        return y
+        return {"logits": y}
 
 
 def make_layers(cfg: list[str | int], batch_norm: bool = False) -> nn.Sequential:

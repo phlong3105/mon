@@ -126,7 +126,7 @@ class MFFN(nn.Module):
         if isinstance(m,nn.Linear):
             torch.nn.init.trunc_normal_(m.weight,std=0.02)
             # m.weight.data.trunc_(std=0.02)
-            if isinstance(m,nn.Linear) and m.biasImageDataset:
+            if isinstance(m,nn.Linear) and m.bias:
                 # nn.init.constant_(m.bias,0)
                 m.bias.data.__contains__(0)
         elif isinstance(m,nn.LayerNorm):

@@ -10,13 +10,10 @@ __all__ = [
 ]
 
 import cv2
-import numpy as np
 import torch
 
 from mon import core, nn
-from mon.core import _callable
 from mon.globals import MODELS, Scheme
-from mon.nn import functional as F
 from mon.vision.enhance.denoise import base
 
 console = core.console
@@ -38,9 +35,9 @@ class ZSN2N(base.DenoisingModel):
     See Also: :class:`base.DenoisingModel`.
     """
     
-    arch  : str  = "zsn2n"
+    arch   : str  = "zsn2n"
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.INSTANCE]
-    zoo   : dict = {}
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -82,54 +79,40 @@ class ZSN2N(base.DenoisingModel):
     
     # region Forward Pass
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        # Symmetry
-        noisy1, noisy2       = self.pair_downsampler(input)
-        pred1                = noisy1 - self.forward(input=noisy1)
-        pred2                = noisy2 - self.forward(input=noisy2)
-        noisy_denoised       =  input - self.forward(input)
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        noisy                = datapoint.get("image")
+        noisy1, noisy2       = self.pair_downsampler(noisy)
+        datapoint1           = datapoint | {"image": noisy1}
+        datapoint2           = datapoint | {"image": noisy2}
+        outputs1             = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2             = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs              = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        pred1                = noisy1 - outputs1["enhanced"]
+        pred2                = noisy2 - outputs2["enhanced"]
+        noisy_denoised       =  noisy - outputs["enhanced"]
         denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
-        # Loss
         mse_loss  = nn.MSELoss()
         loss_res  = 0.5 * (mse_loss(noisy1, pred2)    + mse_loss(noisy2, pred1))
         loss_cons = 0.5 * (mse_loss(pred1, denoised1) + mse_loss(pred2, denoised2))
         loss      = loss_res + loss_cons
         # loss      = nn.reduce_loss(loss=loss, reduction="mean")
-        
-        return {
-            "pred": noisy_denoised,
-            "loss": loss,
-        }
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.act(self.conv1(x))
         x = self.act(self.conv2(x))
         y = self.conv3(x)
         if self.predicting:
             y = torch.clamp(y, 0, 1)
-        return y
-    
-    @staticmethod
-    def pair_downsampler(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        c       = input.shape[1]
-        filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(input.device)
-        filter1 = filter1.repeat(c, 1, 1, 1)
-        filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(input.device)
-        filter2 = filter2.repeat(c, 1, 1, 1)
-        output1 = F.conv2d(input, filter1, stride=2, groups=c)
-        output2 = F.conv2d(input, filter2, stride=2, groups=c)
-        return output1, output2
+        return {"enhanced": y}
     
     # endregion
     
@@ -137,14 +120,14 @@ class ZSN2N(base.DenoisingModel):
     
     def fit_one(
         self,
-        input        : torch.Tensor | np.ndarray,
+        datapoint    : dict,
         max_epochs   : int   = 3000,
         lr           : float = 0.001,
         step_size    : int   = 1000,
         gamma        : float = 0.5,
         reset_weights: bool  = True,
     ) -> torch.Tensor:
-        """Train the model with a single sample. This method is used for any
+        """Train the model with a single datapoint. This method is used for any
         learning scheme performed on one single instance such as online learning,
         zero-shot learning, one-shot learning, etc.
         
@@ -153,15 +136,12 @@ class ZSN2N(base.DenoisingModel):
             and/or scheduler.
         
         Args:
-            input: The input image tensor.
+            datapoint: A :class:`dict` containing the attributes of a datapoint.
             max_epochs: Maximum number of epochs. Default: ``3000``.
             lr: Learning rate. Default: ``0.001``.
             step_size: Period of learning rate decay. Default: ``1000``.
             gamma: A multiplicative factor of learning rate decay. Default: ``0.5``.
             reset_weights: Whether to reset the weights before training. Default: ``True``.
-        
-        Returns:
-            The denoised image.
         """
         # Initialize training components
         self.train()
@@ -173,13 +153,15 @@ class ZSN2N(base.DenoisingModel):
         else:
             optimizer = nn.Adam(self.parameters(), lr=lr)
             scheduler = nn.StepLR(optimizer, step_size=step_size, gamma=gamma)
-
+        
+        '''
         # Prepare input
         if isinstance(input, np.ndarray):
             input = core.to_image_tensor(input, False, True)
         input = input.to(self.device)
         assert input.shape[0] == 1
         datapoint = {"input": input, "target": None}
+        '''
         
         # Training loop
         if self.verbose:
@@ -189,27 +171,27 @@ class ZSN2N(base.DenoisingModel):
                     total       = max_epochs,
                     description = f"[bright_yellow] Training"
                 ):
-                    _, loss = self.forward_loss(datapoint=datapoint)
+                    outputs = self.forward_loss(datapoint=datapoint)
                     optimizer.zero_grad()
+                    loss = outputs["loss"]
                     loss.backward(retain_graph=True)
                     optimizer.step()
                     scheduler.step()
         else:
             for _ in range(max_epochs):
-                _, loss = self.forward_loss(datapoint=datapoint)
+                outputs = self.forward_loss(datapoint=datapoint)
                 optimizer.zero_grad()
+                loss = outputs["loss"]
                 loss.backward(retain_graph=True)
                 optimizer.step()
                 scheduler.step()
         
         # Post-processing
         self.eval()
-        pred = self.forward(input=input)
+        outputs = self.forward(datapoint=datapoint)
         # with torch.no_grad():
         #    pred = torch.clamp(self.forward(input=input), 0, 1)
-        self.train()
-        
-        return pred
+        return outputs
         
     # endregion
     
@@ -219,12 +201,14 @@ class ZSN2N(base.DenoisingModel):
 # region Main
 
 def run_zsn2n():
-    path    = core.Path("./data/00691.png")
-    image   = cv2.imread(str(path))
-    device  = torch.device("cuda:0")
-    net     = ZSN2N(channels=3, num_channels=64).to(device)
-    denoise = net.fit_one(image)
-    denoise = core.to_image_nparray(denoise, False, True)
+    path      = core.Path("./data/00691.png")
+    image     = cv2.imread(str(path))
+    datapoint = {"image": core.to_image_tensor(image, False, True)}
+    device    = torch.device("cuda:0")
+    net       = ZSN2N(channels=3, num_channels=64).to(device)
+    outputs   = net.fit_one(datapoint)
+    denoise   = outputs.get("enhanced")
+    denoise   = core.to_image_nparray(denoise, False, True)
     cv2.imshow("Image",    image)
     cv2.imshow("Denoised", denoise)
     cv2.waitKey(0)

@@ -70,7 +70,7 @@ class UNetConvBlock(nn.Module):
         y  = self.relu_1(y)
         y  = self.relu_2(self.conv_2(y))
         y += self.identity(x)
-        if encImageDataset and decImageDataset:
+        if enc and dec:
             assert self.use_csff
             y = y + self.csff_enc(enc) + self.csff_dec(dec)
         if self.downsample:
@@ -336,31 +336,25 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
                 if not m.bias is None:
                     nn.init.constant_(m.bias, 0)
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        target = datapoint.get("hq_image")
         if self.loss:
             loss = 0
-            for p in pred:
+            for p in outputs.values():
                 loss += self.loss(p, target)
         else:
             loss = None
-        return {
-            "pred": pred[-1],
-            "loss": loss,
-        }
-
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
-        x = input
+        outputs["loss"] = loss
+        return outputs
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
 
         # Stage 1
         x1   = self.conv_01(x)
@@ -394,6 +388,10 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
 
         y2 = self.last(x2)
         y2 = y2 + x
-        return [y1, y2]
+        
+        return {
+            "stage1"  : y1,
+            "enhanced": y2,
+        }
 
 # endregion

@@ -27,7 +27,7 @@ from mon.data.datastruct import annotation, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console             = core.console
-default_root_dir    = DATA_DIR / "les"
+default_root_dir    = DATA_DIR / "enhance" / "les"
 ImageDataset        = dataset.ImageDataset
 ClassLabels         = annotation.ClassLabels
 ImageAnnotation     = annotation.ImageAnnotation
@@ -211,7 +211,7 @@ class Flare7KPPReal(ImageDataset):
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -245,7 +245,7 @@ class Flare7KPPReal(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -259,7 +259,7 @@ class Flare7KPPSyn(ImageDataset):
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -293,7 +293,7 @@ class Flare7KPPSyn(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -307,7 +307,7 @@ class FlareReal800(ImageDataset):
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TRAIN, Split.VAL]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -341,7 +341,7 @@ class FlareReal800(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -355,7 +355,7 @@ class LEDLight(ImageDataset):
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -389,7 +389,7 @@ class LEDLight(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -426,7 +426,9 @@ class LightEffect(ImageDataset):
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
-
+        
+        self.datapoints["image"] = lq_images
+        
 # endregion
 
 

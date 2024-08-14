@@ -251,26 +251,10 @@ class LYTNet(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
-        loss   = self.loss(pred, target)
-        return {
-            "pred": pred,
-            "loss": loss,
-        }
-
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        ycbcr = color.rgb_to_ycbcr(input)
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x     = datapoint.get("image")
+        ycbcr = color.rgb_to_ycbcr(x)
         y     = ycbcr[:, 0, :, :]
         cb    = ycbcr[:, 1, :, :]
         cr    = ycbcr[:, 2, :, :]
@@ -297,6 +281,6 @@ class LYTNet(base.LowLightImageEnhancementModel):
         
         recombined = self.recombine(torch.concat([ref, lum], dim=-1))
         output     = self.final_adjustments(recombined)
-        return output
+        return {"enhanced": output}
     
 # endregion

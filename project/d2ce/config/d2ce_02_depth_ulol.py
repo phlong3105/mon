@@ -10,15 +10,16 @@ from mon import albumentation as A
 from mon.config import default
 
 current_file = mon.Path(__file__).absolute()
-current_dir  = current_file.parents[0]
-root_dir     = current_file.parents[1]
 
 
 # region Basic
 
 model_name = "d2ce_02_depth"
 data_name  = "ulol"
-root       = root_dir / "run"
+root       = current_file.parents[1] / "run"
+data_root  = mon.DATA_DIR / "enhance" / "llie"
+project    = None
+variant    = None
 fullname   = f"{model_name}_{data_name}"
 image_size = [504, 504]
 seed	   = 100
@@ -31,7 +32,7 @@ verbose    = True
 
 model = {
 	"name"        : model_name,     # The model's name.
-	"root"        : root,           # The root directory of the model.
+	"root"        : root,     # The root directory of the model.
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
@@ -69,9 +70,9 @@ model = {
 
 # region Data
 
-datamodule = {
+data = {
     "name"      : data_name,
-    "root"      : mon.DATA_DIR / "llie",  # A root directory where the data is stored.
+    "root"      : data_root,  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
 		# A.Resize(height=image_size[0], width=image_size[1], interpolation=cv2.INTER_AREA),
 		A.ResizeMultipleOf(
@@ -136,7 +137,7 @@ trainer = default.trainer | {
 # region Predicting
 
 predictor = default.predictor | {
-	"default_root_dir": root,   # Default path for saving results.
+	"default_root_dir": root,  # Default path for saving results.
 }
 
 # endregion

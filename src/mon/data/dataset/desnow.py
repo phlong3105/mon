@@ -33,7 +33,7 @@ from mon.data.datastruct import annotation, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console             = core.console
-default_root_dir    = DATA_DIR / "desnow"
+default_root_dir    = DATA_DIR / "enhance" / "desnow"
 DatapointAttributes = annotation.DatapointAttributes
 ImageAnnotation     = annotation.ImageAnnotation
 ImageDataset        = dataset.ImageDataset
@@ -51,7 +51,7 @@ class GTSnow(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -88,7 +88,7 @@ class GTSnow(ImageDataset):
                 path = core.Path(path)
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -102,7 +102,7 @@ class KITTISnow(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -136,7 +136,7 @@ class KITTISnow(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -150,7 +150,7 @@ class KITTISnowS(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -184,7 +184,7 @@ class KITTISnowS(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -198,7 +198,7 @@ class KITTISnowM(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -232,7 +232,7 @@ class KITTISnowM(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -246,7 +246,7 @@ class KITTISnowL(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -280,7 +280,7 @@ class KITTISnowL(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -294,7 +294,7 @@ class Snow100K(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -328,7 +328,7 @@ class Snow100K(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -342,7 +342,7 @@ class Snow100KS(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -376,7 +376,7 @@ class Snow100KS(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -390,7 +390,7 @@ class Snow100KM(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -424,7 +424,7 @@ class Snow100KM(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -438,7 +438,7 @@ class Snow100KL(ImageDataset):
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -472,7 +472,7 @@ class Snow100KL(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 # endregion

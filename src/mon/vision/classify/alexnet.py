@@ -37,7 +37,6 @@ class AlexNet(base.ImageClassificationModel):
             "url"        : "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
             "path"       : "alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
@@ -91,19 +90,13 @@ class AlexNet(base.ImageClassificationModel):
     def init_weights(self, model: nn.Module):
         pass
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.features(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         y = self.classifier(x)
-        return y
+        return {"logits": y}
 
 # endregion

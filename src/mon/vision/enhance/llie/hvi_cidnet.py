@@ -583,32 +583,29 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input      = datapoint.get("input",  None)
-        target     = datapoint.get("target", None)
-        meta       = datapoint.get("meta",   None)
-        pred_rgb   = self.forward(input=input, *args, **kwargs)
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        pred_rgb   = outputs.get("enhanced")
         pred_hvi   = self.rgb_to_hvi(pred_rgb)
-        target_rgb = target
-        target_hvi = self.rgb_to_hvi(target)
+        target_rgb = datapoint.get("hq_image")
+        target_hvi = self.rgb_to_hvi(target_rgb)
         loss_rgb   = self.loss(pred_rgb, target_rgb)
         loss_hvi   = self.loss(pred_hvi, target_hvi)
         loss       = loss_rgb + self.hvi_weight * loss_hvi
+        # Return
         return {
-            "pred" : pred_rgb,
-            "loss" : loss,
-            "hvi_k": float(self.trans.density_k.item()),
+            "enhanced": pred_rgb,
+            "hvi_k"   : float(self.trans.density_k.item()),
+            "loss"    : loss,
         }
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x        = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x        = datapoint.get("image")
         dtypes   = x.dtype
         hvi      = self.trans.rgb_to_hvi(x)
         i        = hvi[:, 2, :, :].unsqueeze(1).to(dtypes)
@@ -659,22 +656,9 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
         output_hvi = torch.cat([hv_0, i_dec0], dim=1) + hvi
         output_rgb = self.trans.hvi_to_rgb(output_hvi)
         
-        return output_rgb
+        return {"enhanced": output_rgb}
     
     def rgb_to_hvi(self, input: torch.Tensor) -> torch.Tensor:
         return self.trans.rgb_to_hvi(input)
-    
-    # region Training
-    
-    def on_validation_epoch_end(self):
-        super().on_validation_epoch_end()
-        if self.trainer.is_global_zero:
-            self.print_debug()
-      
-    def print_debug(self):
-        """Print debug info."""
-        console.log(f"HVI's `k`: {float(self.trans.density_k.item())}")
-
-    # endregion
-    
+        
 # endregion

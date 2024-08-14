@@ -99,10 +99,10 @@ class BSConv2dS(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw1(x)
-        if self.bn1ImageDataset:
+        if self.bn1:
             y = self.bn1(y)
         y = self.pw2(y)
-        if self.bn2ImageDataset:
+        if self.bn2:
             y = self.bn2(y)
         y = self.dw(y)
         return y
@@ -172,7 +172,7 @@ class BSConv2dU(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw(x)
-        if self.bnImageDataset:
+        if self.bn:
             y = self.bn(y)
         y = self.dw(y)
         return y

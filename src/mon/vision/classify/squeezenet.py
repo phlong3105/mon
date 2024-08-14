@@ -139,7 +139,7 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
                     torch.nn.init.normal_(m.weight, mean=0.0, std=0.01)
                 else:
                     torch.nn.init.kaiming_uniform_(m.weight)
-                if m.biasImageDataset:
+                if m.bias:
                     torch.nn.init.constant_(m.bias, 0)
         
         if self.weights:
@@ -150,19 +150,13 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
     def init_weights(self, model: nn.Module):
         pass
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.features(x)
         x = self.classifier(x)
         y = torch.flatten(x, 1)
-        return y
+        return {"logits": y}
 
 
 @MODELS.register(name="squeezenet1_0", arch="squeezenet")

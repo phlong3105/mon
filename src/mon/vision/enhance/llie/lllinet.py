@@ -214,7 +214,7 @@ class LLLINet(base.LowLightImageEnhancementModel):
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         
         # Loss
-        self._loss = Loss(*loss_weights, reduction="mean")
+        self.loss = Loss(*loss_weights, reduction="mean")
         
         # Load weights
         if self.weights:
@@ -225,26 +225,9 @@ class LLLINet(base.LowLightImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
-        loss   = self.loss(pred, target)
-        return {
-            "pred": pred,
-            "loss": loss,
-        }
-
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x    = datapoint.get("image")
         #
         x0_0 = self.conv0_0(x)
         x1_0 = self.conv1_0(self.pool(x0_0))
@@ -269,33 +252,17 @@ class LLLINet(base.LowLightImageEnhancementModel):
         y    = self.final(x0_4)
         y    = torch.clamp(y, 0, 1)
         #
-        return y
+        return {"enhanced": y}
     
-    # region Training
-    
-    def on_validation_epoch_end(self):
-        super().on_validation_epoch_end()
-        if self.trainer.is_global_zero:
-            self.print_debug()
-    
-    def print_debug(self):
-        """Print debug info."""
-        for i, (n, c) in enumerate(self.named_modules()):
-            if hasattr(c, "in_ratio"):
-                console.log(f"{n}: {c.in_ratio}")
-
-    # endregion
-
 
 @MODELS.register(name="lllinet_hvi", arch="lllinet")
-class LLLINetHVI(base.LowLightImageEnhancementModel):
+class LLLINetHVI(LLLINet):
     """LLHINet (Low-Light Learnable Instance Normalization Network) models.
     
     See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
-    schemes: list[Scheme] = [Scheme.SUPERVISED]
-    zoo   : dict = {}
+    zoo: dict = {}
     
     def __init__(
         self,
@@ -370,34 +337,28 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         pass
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input      = datapoint.get("input",  None)
-        target     = datapoint.get("target", None)
-        meta       = datapoint.get("meta",   None)
-        # pred = self.forward(input=input, *args, **kwargs)
-        # loss = self.loss(pred, target)
-        # return pred, loss
-        pred_rgb   = self.forward(input=input, *args, **kwargs)
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        pred_rgb   = outputs.get("enhanced")
         pred_hvi   = self.rgb_to_hvi(pred_rgb)
-        target_rgb = target
-        target_hvi = self.rgb_to_hvi(target)
+        target_rgb = datapoint.get("hq_image")
+        target_hvi = self.rgb_to_hvi(target_rgb)
         loss_rgb   = self.loss(pred_rgb, target_rgb)
         loss_hvi   = self.loss(pred_hvi, target_hvi)
         loss       = loss_rgb + self.hvi_weight * loss_hvi
+        # Return
         return {
-            "pred" : pred_rgb,
-            "loss" : loss,
-            "hvi_k": float(self.trans.density_k.item()),
+            "enhanced": pred_rgb,
+            "hvi_k"   : float(self.trans.density_k.item()),
+            "loss"    : loss,
         }
-    
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x    = input
+        
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x    = datapoint.get("image")
         hvi  = self.trans.rgb_to_hvi(x)
         #
         x0_0 = self.conv0_0(hvi)
@@ -422,28 +383,10 @@ class LLLINetHVI(base.LowLightImageEnhancementModel):
         #
         y    = self.final(x0_4)
         y    = self.trans.hvi_to_rgb(y)
-        #
         y    = torch.clamp(y, 0, 1)
-        #
-        return y
+        return {"enhanced": y}
     
     def rgb_to_hvi(self, input: torch.Tensor) -> torch.Tensor:
         return self.trans.rgb_to_hvi(input)
-    
-    # region Training
-    
-    def on_validation_epoch_end(self):
-        super().on_validation_epoch_end()
-        if self.trainer.is_global_zero:
-            self.print_debug()
-    
-    def print_debug(self):
-        """Print debug info."""
-        for i, (n, c) in enumerate(self.named_modules()):
-            if hasattr(c, "in_ratio"):
-                console.log(f"{n}: {c.in_ratio}")
-        console.log(f"HVI's `k`: {float(self.trans.density_k.item())}")
-        
-    # endregion
     
 # endregion

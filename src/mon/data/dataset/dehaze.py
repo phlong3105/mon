@@ -49,7 +49,7 @@ from mon.data.datastruct import annotation, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console             = core.console
-default_root_dir    = DATA_DIR / "dehaze"
+default_root_dir    = DATA_DIR / "enhance" / "dehaze"
 DatapointAttributes = annotation.DatapointAttributes
 ImageAnnotation     = annotation.ImageAnnotation
 ImageDataset        = dataset.ImageDataset
@@ -68,7 +68,7 @@ class DenseHaze(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -102,7 +102,7 @@ class DenseHaze(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
 
 
@@ -117,7 +117,7 @@ class IHaze(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -151,7 +151,7 @@ class IHaze(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
 
 
@@ -166,7 +166,7 @@ class NHHaze(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -200,7 +200,7 @@ class NHHaze(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -215,7 +215,7 @@ class OHaze(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -249,7 +249,7 @@ class OHaze(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -300,7 +300,7 @@ class RESIDEHSTSSyn(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -334,7 +334,7 @@ class RESIDEHSTSSyn(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -349,7 +349,7 @@ class RESIDEITS(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -385,7 +385,7 @@ class RESIDEITS(ImageDataset):
                 path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -400,7 +400,7 @@ class RESIDEITSV2(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -436,7 +436,7 @@ class RESIDEITSV2(ImageDataset):
                 path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -451,7 +451,7 @@ class RESIDEOTS(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -487,7 +487,7 @@ class RESIDEOTS(ImageDataset):
                 path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -501,7 +501,7 @@ class RESIDERTTS(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -538,7 +538,7 @@ class RESIDESOTSIndoor(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -574,7 +574,7 @@ class RESIDESOTSIndoor(ImageDataset):
                 path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -589,7 +589,7 @@ class RESIDESOTSOutdoor(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -625,7 +625,7 @@ class RESIDESOTSOutdoor(ImageDataset):
                 path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
 
 
@@ -639,7 +639,7 @@ class RESIDEUHI(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -676,7 +676,7 @@ class SateHaze1K(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -712,7 +712,7 @@ class SateHaze1K(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -726,7 +726,7 @@ class SateHaze1KThin(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -759,7 +759,7 @@ class SateHaze1KThin(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -773,7 +773,7 @@ class SateHaze1KModerate(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -805,7 +805,7 @@ class SateHaze1KModerate(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -819,7 +819,7 @@ class SateHaze1KThick(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -853,7 +853,7 @@ class SateHaze1KThick(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 # endregion

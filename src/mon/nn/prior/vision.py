@@ -267,7 +267,7 @@ def brightness_attention_map(
     Returns:
         A brightness attention map as prior.
     """
-    if denoise_ksizeImageDataset:
+    if denoise_ksize:
         input = cv2.medianBlur(input, denoise_ksize)
     hsv = cv2.cvtColor(input, cv2.COLOR_RGB2HSV)
     if hsv.dtype != np.float64:
@@ -302,7 +302,7 @@ def brightness_attention_map(
     Returns:
         An :class:`numpy.ndarray` brightness enhancement map as prior.
     """
-    if denoise_ksizeImageDataset:
+    if denoise_ksize:
         # input = filtering.guided_filter(input, input, denoise_ksize)
         input = kornia.filters.median_blur(input, denoise_ksize)
     hsv = kornia.color.rgb_to_hsv(input)

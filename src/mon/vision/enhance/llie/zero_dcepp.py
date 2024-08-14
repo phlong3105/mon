@@ -183,7 +183,7 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
         self.e_conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, kernel_size=3, stride=1, padding=1)
         
         # Loss
-        self._loss = Loss()
+        self.loss = Loss()
         
         # Load weights
         if self.weights:
@@ -204,26 +204,21 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
                 m.weight.data.normal_(0.0, 0.02)
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
-        adjust, enhance = pred
-        loss   = self.loss(input, adjust, enhance)
-        return {
-            "pred": enhance,
-            "loss": loss,
-        }
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        image    = datapoint.get("image")
+        enhanced = outputs.get("enhanced")
+        adjust   = outputs.get("adjust")
+        outputs["loss"] = self.loss(image, adjust, enhanced) if self.loss else None
+        # Return
+        return outputs
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         #
         x_down = x
         if self.scale_factor != 1:
@@ -244,6 +239,9 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
         for i in range(0, self.num_iters):
             y = y + x_r * (torch.pow(y, 2) - y)
         #
-        return x_r, y
+        return {
+            "adjust"  : x,
+            "enhanced": y,
+        }
 
 # endregion

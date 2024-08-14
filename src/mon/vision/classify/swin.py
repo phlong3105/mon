@@ -85,7 +85,7 @@ class SwinTransformerBlock(nn.Module):
         for m in self.mlp.modules():
             if isinstance(m, nn.Linear):
                 torch.nn.init.xavier_uniform_(m.weight)
-                if m.biasImageDataset:
+                if m.bias:
                     torch.nn.init.normal_(m.bias, std=1e-6)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -270,25 +270,19 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, std=0.02)
-            if m.biasImageDataset:
+            if m.bias:
                 torch.nn.init.zeros_(m.bias)
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         x = self.features(x)
         x = self.norm(x)
         x = self.permute(x)
         x = self.avgpool(x)
         x = self.flatten(x)
         y = self.head(x)
-        return y
+        return {"logits": y}
     
 
 @MODELS.register(name="swin_t", arch="swin")

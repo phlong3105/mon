@@ -87,7 +87,7 @@ _EXCLUDE_DIRS     = [
 # region Function
 
 def list_images(input_dir: mon.Path, verbose: bool):
-    assert input_dirImageDataset and mon.Path(input_dir).is_dir()
+    assert input_dir and mon.Path(input_dir).is_dir()
     input_dir = mon.Path(input_dir)
     
     # List all sub-directories
@@ -142,7 +142,7 @@ def plot_cv2(
 ):
     subdirs, dataset_names, image_grid, image_stem_dict = list_images(input_dir, verbose)
     
-    if output_dirImageDataset:
+    if output_dir:
         output_dir = mon.Path(output_dir)
         if output_dir.exists():
             mon.delete_dir(paths=output_dir)
@@ -165,7 +165,7 @@ def plot_cv2(
                         temp = input_dir / k / dn / f"{image_stem}{ext}"
                         if temp.exists():
                             path = temp
-                    if pathImageDataset and path.exists() and path.is_image_file():
+                    if path and path.exists() and path.is_image_file():
                         image       = cv2.imread(str(path))[..., ::-1]
                         image_dtype = image.dtype
                         if k != "zerodce++":
@@ -176,7 +176,7 @@ def plot_cv2(
                     
                 # Resize
                 for k, v in image_grid.items():
-                    if vImageDataset and image_sizeImageDataset:
+                    if v and image_size:
                         h, w          = mon.get_hw(image_size)
                         image_grid[k] = cv2.resize(v, [w, h])
                         image_shape   = v.shape
@@ -185,7 +185,7 @@ def plot_cv2(
                 for k, v in image_grid.items():
                     if v is None:
                         image_grid[k] = np.full(image_shape, 255, dtype=image_dtype)
-                    elif k == "zerodce++" and image_size is None and image_shapeImageDataset:
+                    elif k == "zerodce++" and image_size is None and image_shape:
                         image_grid[k] = cv2.resize(v, [image_shape[1], image_shape[0]])
                 
                 # Add texts
@@ -197,7 +197,7 @@ def plot_cv2(
                     v      = cv2.copyMakeBorder(v, top, bottom, left, right, cv2.BORDER_CONSTANT, None, [255, 255, 255])
                     #
                     textsize = cv2.getTextSize(k, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
-                    if textsizeImageDataset:
+                    if textsize:
                         text_x = round((v.shape[1] - textsize[0]) / 2)
                         text_y = textsize[1] + 10  # round((v.shape[0] + textsize[1]) / 2)
                         cv2.putText(v, k, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
@@ -225,7 +225,7 @@ def plot_cv2(
                 output = cv2.vconcat(row_images)
                 output = output[..., ::-1]
                 #
-                if output_dirImageDataset:
+                if output_dir:
                     result_path = output_dir / dn / f"{image_stem}.png"
                     result_path.parent.mkdir(parents=True, exist_ok=True)
                     cv2.imwrite(str(result_path), output)
@@ -246,7 +246,7 @@ def plot_cv2_diff(
 ):
     subdirs, dataset_names, image_grid, image_stem_dict = list_images(input_dir, verbose)
     
-    if output_dirImageDataset:
+    if output_dir:
         output_dir = mon.Path(output_dir)
         # if output_dir.exists():
         #     mon.delete_dir(paths=output_dir)
@@ -269,7 +269,7 @@ def plot_cv2_diff(
                         temp = input_dir / k / dn / f"{image_stem}{ext}"
                         if temp.exists():
                             path = temp
-                    if pathImageDataset and path.exists() and path.is_image_file():
+                    if path and path.exists() and path.is_image_file():
                         image       = cv2.imread(str(path))[..., ::-1]
                         image_dtype = image.dtype
                         if k != "zerodce++":
@@ -280,7 +280,7 @@ def plot_cv2_diff(
                     
                 # Resize
                 for k, v in image_grid.items():
-                    if vImageDataset and image_sizeImageDataset:
+                    if v and image_size:
                         h, w          = mon.get_hw(image_size)
                         image_grid[k] = cv2.resize(v, [w, h])
                         image_shape   = v.shape
@@ -289,7 +289,7 @@ def plot_cv2_diff(
                 for k, v in image_grid.items():
                     if v is None:
                         image_grid[k] = np.full(image_shape, 255, dtype=image_dtype)
-                    elif k == "zerodce++" and image_size is None and image_shapeImageDataset:
+                    elif k == "zerodce++" and image_size is None and image_shape:
                         image_grid[k] = cv2.resize(v, [image_shape[1], image_shape[0]])
                 
                 plot_diff = (mode == "diff" and image_grid[ref].shape != ())
@@ -313,7 +313,7 @@ def plot_cv2_diff(
                         v      = cv2.copyMakeBorder(v, top, bottom, left, right, cv2.BORDER_CONSTANT, None, [255, 255, 255])
                         #
                         textsize = cv2.getTextSize(k, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
-                        if textsizeImageDataset:
+                        if textsize:
                             text_x = round((v.shape[1] - textsize[0]) / 2)
                             text_y = textsize[1] + 10  # round((v.shape[0] + textsize[1]) / 2)
                             cv2.putText(v, k, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 2)
@@ -341,7 +341,7 @@ def plot_cv2_diff(
                     output = cv2.vconcat(row_images)
                     output = output[..., ::-1]
                     #
-                    if output_dirImageDataset:
+                    if output_dir:
                         result_path = output_dir / dn / f"{image_stem}-diff.png"
                         result_path.parent.mkdir(parents=True, exist_ok=True)
                         cv2.imwrite(str(result_path), output)
@@ -360,7 +360,7 @@ def plot_matplotlib(
 ):
     subdirs, dataset_names, image_grid, image_stem_dict = list_images(input_dir, verbose)
     
-    if output_dirImageDataset:
+    if output_dir:
         output_dir = mon.Path(output_dir)
         if output_dir.exists():
             mon.delete_dir(paths=output_dir)
@@ -383,9 +383,9 @@ def plot_matplotlib(
                         temp = input_dir / k / dn / f"{image_stem}{ext}"
                         if temp.exists():
                             path = temp
-                    if pathImageDataset and path.exists() and path.is_image_file():
+                    if path and path.exists() and path.is_image_file():
                         image = cv2.imread(str(path))[..., ::-1]
-                        if image_sizeImageDataset:
+                        if image_size:
                             h, w  = mon.get_hw(image_size)
                             image = cv2.resize(image, [w, h])
                         image_grid[k] = image
@@ -412,7 +412,7 @@ def plot_matplotlib(
                 image_grid_keys = list(image_grid.keys())
                 for i, a in enumerate(axs.flatten()):
                     k = image_grid_keys[i] if i < len(image_grid_keys) else None
-                    v = image_grid[k] if kImageDataset else None
+                    v = image_grid[k] if k else None
                     if v is None:
                         v    = np.zeros(image_shape, dtype=np.uint8)
                         v[:] = 255
@@ -425,7 +425,7 @@ def plot_matplotlib(
                     a.set_xlabel(k or "", loc="center")
                 # plt.subplots_adjust(wspace=0.0, hspace=0.0)
                 
-                if output_dirImageDataset:
+                if output_dir:
                     result_path = output_dir / dn / f"{image_stem}.png"
                     result_path.parent.mkdir(parents=True, exist_ok=True)
                     plt.savefig(result_path, dpi=500)

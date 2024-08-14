@@ -23,7 +23,7 @@ console = core.console
 class DehazingModel(base.ImageEnhancementModel, ABC):
     """The base class for all de-hazing models.
     
-    See Also: :class:`base.ImageEnhancementModel`.
+    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`.
     """
     
     tasks  : list[Task] = [Task.DEHAZE]

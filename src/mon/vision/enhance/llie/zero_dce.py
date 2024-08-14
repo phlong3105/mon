@@ -169,7 +169,7 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
         
         # Loss
-        self._loss = Loss(reduction="mean")
+        self.loss = Loss(reduction="mean")
         
         # Load weights
         if self.weights:
@@ -186,26 +186,21 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
             m.bias.data.fill_(0)
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
-        adjust, enhance = pred
-        loss   = self.loss(input, adjust, enhance)
-        return {
-            "pred": enhance,
-            "loss": loss,
-        }
-
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x    = input
+        # Forward
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        self.assert_outputs(outputs)
+        # Loss
+        image    = datapoint.get("image")
+        enhanced = outputs.get("enhanced")
+        adjust   = outputs.get("adjust")
+        outputs["loss"] = self.loss(image, adjust, enhanced) if self.loss else None
+        # Return
+        return outputs
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x    = datapoint.get("image")
         x1   =  self.relu(self.e_conv1(x))
         x2   =  self.relu(self.e_conv2(x1))
         x3   =  self.relu(self.e_conv3(x2))
@@ -213,12 +208,13 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
         x5   =  self.relu(self.e_conv5(torch.cat([x3, x4], 1)))
         x6   =  self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
         x_r  = torch.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
-        
         x_rs = torch.split(x_r, 3, dim=1)
         y    = x
         for i in range(0, self.num_iters):
             y = y + x_rs[i] * (torch.pow(y, 2) - y)
-
-        return x_r, y
+        return {
+            "adjust"  : x,
+            "enhanced": y,
+        }
     
 # endregion

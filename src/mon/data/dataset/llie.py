@@ -52,7 +52,7 @@ from mon.data.datastruct import annotation, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console             = core.console
-default_root_dir    = DATA_DIR / "llie"
+default_root_dir    = DATA_DIR / "enhance" / "llie"
 DatapointAttributes = annotation.DatapointAttributes
 ImageAnnotation     = annotation.ImageAnnotation
 ImageDataset        = dataset.ImageDataset
@@ -70,7 +70,7 @@ class DarkFace(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -93,7 +93,7 @@ class DarkFace(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         
         
 @DATASETS.register(name="dicm")
@@ -106,7 +106,7 @@ class DICM(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -129,7 +129,7 @@ class DICM(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 
 @DATASETS.register(name="exdark")
@@ -142,7 +142,7 @@ class ExDark(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -165,7 +165,7 @@ class ExDark(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 
 @DATASETS.register(name="fivek_c")
@@ -179,7 +179,7 @@ class FiveKC(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -213,7 +213,7 @@ class FiveKC(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
 
 
@@ -228,7 +228,7 @@ class FiveKE(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -262,7 +262,7 @@ class FiveKE(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -276,7 +276,7 @@ class Fusion(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -299,7 +299,7 @@ class Fusion(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 
 @DATASETS.register(name="lime")
@@ -312,7 +312,7 @@ class LIME(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -335,7 +335,7 @@ class LIME(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 
 @DATASETS.register(name="lol_blur")
@@ -349,7 +349,7 @@ class LOLBlur(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -383,7 +383,7 @@ class LOLBlur(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -400,7 +400,7 @@ class LOLV1(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -434,7 +434,7 @@ class LOLV1(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -452,7 +452,7 @@ class LOLV2Real(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -486,7 +486,7 @@ class LOLV2Real(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -504,7 +504,7 @@ class LOLV2Synthetic(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -538,7 +538,7 @@ class LOLV2Synthetic(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
@@ -552,7 +552,7 @@ class MEF(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -575,7 +575,7 @@ class MEF(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
                         
 @DATASETS.register(name="npe")
@@ -588,7 +588,7 @@ class NPE(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -612,7 +612,7 @@ class NPE(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"]    = lq_images
         
     
 @DATASETS.register(name="sice_grad")
@@ -625,7 +625,7 @@ class SICEGrad(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -648,7 +648,7 @@ class SICEGrad(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
                         
 @DATASETS.register(name="sice_mix")
@@ -662,7 +662,7 @@ class SICEMix(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
@@ -686,7 +686,7 @@ class SICEMix(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 
 @DATASETS.register(name="sice_mix_v2")
@@ -699,7 +699,7 @@ class SICEMixV2(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -722,7 +722,7 @@ class SICEMixV2(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 
 @DATASETS.register(name="ulol")
@@ -735,7 +735,7 @@ class ULOL(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -771,7 +771,7 @@ class ULOL(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 
 @DATASETS.register(name="vv")
@@ -784,7 +784,7 @@ class VV(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "lq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -807,7 +807,7 @@ class VV(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["lq_image"] = lq_images
+        self.datapoints["image"] = lq_images
         
 # endregion
 
