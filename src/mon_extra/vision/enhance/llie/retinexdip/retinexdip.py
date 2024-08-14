@@ -301,7 +301,7 @@ class Enhancement(object):
         channels  : int             = 8,
         runs      : int             = 100,
     ):
-        flops_1, params_1, avg_time_1 = mon.calculate_efficiency_score(
+        flops_1, params_1, avg_time_1 = mon.compute_efficiency_score(
             model      = self.illumination_net,
             image_size = image_size,
             channels   = channels,
@@ -309,7 +309,7 @@ class Enhancement(object):
             use_cuda   = True,
             verbose    = False,
         )
-        flops_2, params_2, avg_time_2 = mon.calculate_efficiency_score(
+        flops_2, params_2, avg_time_2 = mon.compute_efficiency_score(
             model      = self.reflection_net,
             image_size = image_size,
             channels   = channels,

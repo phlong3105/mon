@@ -6,10 +6,9 @@
 from __future__ import annotations
 
 __all__ = [
-	"calculate_efficiency_score",
+	"compute_efficiency_score",
 ]
 
-import time
 from copy import deepcopy
 
 import thop
@@ -25,7 +24,7 @@ console = core.console
 
 # region Efficiency Metric
 
-def calculate_efficiency_score(
+def compute_efficiency_score(
 	model     : nn.Module,
 	image_size: _size_2_t = 512,
 	channels  : int       = 3,
@@ -48,18 +47,19 @@ def calculate_efficiency_score(
 	# Get FLOPs and Params
 	flops, params = thop.profile(deepcopy(model), inputs=(input, ), verbose=verbose)
 	flops         = FlopCountAnalysis(model, input).total() if flops == 0 else flops
-	params        = model.params if hasattr(model, "params") and params == 0 else params
-	params        = parameter_count(model) if hasattr(model, "params") else params
+	params        = model.params               if hasattr(model, "params") and params == 0 else params
+	params        = parameter_count(model)     if hasattr(model, "params") else params
 	params        = sum(list(params.values())) if isinstance(params, dict) else params
 	g_flops       = flops * 1e-9
 	m_params      = int(params) * 1e-6
 	
 	# Get time
-	start_time = time.time()
+	timer = core.Timer()
 	for i in range(runs):
+		timer.tick()
 		_ = model(input)
-	runtime    = time.time() - start_time
-	avg_time   = runtime / runs
+		timer.tock()
+	avg_time = timer.avg_time
 	
 	# Print
 	if verbose:

@@ -14,7 +14,6 @@ from typing import Any
 import torch
 
 from mon import core, nn
-from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.vision.classify import base
 

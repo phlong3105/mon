@@ -106,11 +106,17 @@ class ImageAnnotation(base.Annotation):
         return image
     
     @staticmethod
-    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+    def to_tensor(
+        data     : torch.Tensor | np.ndarray,
+        keepdim  : bool = False,
+        normalize: bool = True
+    ) -> torch.Tensor:
         """Converts the input data to a :class:`torch.Tensor`.
         
         Args:
             data: The input data.
+            keepdim: If ``True``, keep the dimensions of the input data. Default: ``False``.
+            normalize: If ``True``, normalize the input data. Default: ``True``.
         """
         return core.to_image_tensor(input=data, keepdim=False, normalize=True)
         
@@ -189,13 +195,19 @@ class FrameAnnotation(base.Annotation):
         }
     
     @staticmethod
-    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+    def to_tensor(
+        data     : torch.Tensor | np.ndarray,
+        keepdim  : bool = False,
+        normalize: bool = True
+    ) -> torch.Tensor:
         """Converts the input data to a :class:`torch.Tensor`.
         
         Args:
             data: The input data.
+            keepdim: If ``True``, keep the dimensions of the input data. Default: ``False``.
+            normalize: If ``True``, normalize the input data. Default: ``True``.
         """
-        return core.to_image_tensor(input=data, keepdim=False, normalize=True)
+        return core.to_image_tensor(input=data, keepdim=keepdim, normalize=normalize)
     
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
@@ -290,11 +302,17 @@ class SegmentationAnnotation(base.Annotation):
         return mask
     
     @staticmethod
-    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+    def to_tensor(
+        data     : torch.Tensor | np.ndarray,
+        keepdim  : bool = False,
+        normalize: bool = True
+    ) -> torch.Tensor:
         """Converts the input data to a :class:`torch.Tensor`.
         
         Args:
             data: The input data.
+            keepdim: If ``True``, keep the dimensions of the input data. Default: ``False``.
+            normalize: If ``True``, normalize the input data. Default: ``True``.
         """
         return core.to_image_tensor(input=data, keepdim=False, normalize=True)
     

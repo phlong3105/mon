@@ -143,9 +143,12 @@ def is_image(input: torch.Tensor, bits: int = 8) -> bool:
         >>> is_image(img)
         True
     """
+    if not isinstance(input, torch.Tensor | np.ndarray):
+        return False
     res = is_color_or_image(input)
     if not res:
         return False
+    '''
     if (
         input.dtype in [torch.float16, torch.float32, torch.float64]
         and (input.min() < 0.0 or input.max() > 1.0)
@@ -153,6 +156,7 @@ def is_image(input: torch.Tensor, bits: int = 8) -> bool:
         return False
     elif input.min() < 0 or input.max() > 2 ** bits - 1:
         return False
+    '''
     return True
 
 

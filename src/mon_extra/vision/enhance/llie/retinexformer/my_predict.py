@@ -85,7 +85,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image = datapoint.get("input")
+                image = datapoint.get("image")
                 meta  = datapoint.get("meta")
                 if torch.cuda.is_available():
                     torch.cuda.ipc_collect()

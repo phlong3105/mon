@@ -28,10 +28,11 @@ from thop.profile import *
 from torch import nn
 
 from mon import core
+from mon.core import _size_2_t
 from mon.globals import LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task, ZOO_DIR
 from mon.nn import loss as L, metric as M
 
-console      = core.console
+console       = core.console
 error_console = core.error_console
 StepOutput    = lightning.pytorch.utilities.types.STEP_OUTPUT
 EpochOutput   = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
@@ -656,13 +657,19 @@ class Model(lightning.LightningModule, ABC):
         self.optims = optims
         return self.optims
     
+    def compute_efficiency_score(self, *args, **kwargs) -> tuple[float, float, float]:
+        """Compute the efficiency score of the model, including FLOPs, number
+        of parameters, and runtime.
+        """
+        error_console.log(f"[yellow]This method has not been implemented yet!")
+        return 0, 0, 0
+    
     # endregion
     
     # region Forward Pass
     
-    @classmethod
     @abstractmethod
-    def assert_datapoint(cls, datapoint: dict) -> bool:
+    def assert_datapoint(self, datapoint: dict) -> bool:
         """Check the datapoint before passing it to the :meth:`forward()`.
         Because each type of model requires different attributes in the datapoint,
         this method is used to ensure that the datapoint is valid.
@@ -672,9 +679,8 @@ class Model(lightning.LightningModule, ABC):
         """
         pass
     
-    @classmethod
     @abstractmethod
-    def assert_outputs(cls, outputs: dict) -> bool:
+    def assert_outputs(self, outputs: dict) -> bool:
         """Check the outputs after passing it to the :meth:`forward()`. Because
         each type of model returns different attributes in the outputs, this
         method is used to ensure that the outputs are valid.
@@ -756,7 +762,7 @@ class Model(lightning.LightningModule, ABC):
     @abstractmethod
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         """Forward pass. This is the primary :meth:`forward` function of the model.
-
+        
         Args:
             datapoint: A :class:`dict` containing the attributes of a datapoint.
             
@@ -774,24 +780,6 @@ class Model(lightning.LightningModule, ABC):
     # endregion
     
     # region Training
-    
-    def fit_one(self, datapoint: dict, *args, **kwargs) -> dict:
-        """Train the model with a single datapoint. This method is used for any
-        learning scheme performed on one single instance such as online learning,
-        zero-shot learning, one-shot learning, etc.
-        
-        Note:
-            In order to use this method, the model must implement the optimizer
-            and/or scheduler.
-        
-        Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
-        
-        Returns:
-            Return ``{}`` by default if the model does not support this feature.
-        """
-        error_console.log(f"[yellow]The {self.__class__.__name__} does not support this feature.")
-        return {}
     
     def on_fit_start(self):
         """Called at the beginning of fit."""
@@ -950,6 +938,26 @@ class Model(lightning.LightningModule, ABC):
         if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
                 metric.reset()
+    
+    # endregion
+    
+    # region Predicting
+    
+    @abstractmethod
+    @torch.no_grad()
+    def infer(self, datapoint: dict, *args, **kwargs) -> dict:
+        """Infer the model on a single datapoint. This method is different from
+        :meth:`forward()` in term that you may want to perform additional
+        pre-processing or post-processing steps.
+        
+        Notes:
+            If you want to perform specific pre-processing or post-processing
+            steps, you should override this method.
+        
+        Args:
+            datapoint: A :class:`dict` containing the attributes of a datapoint.
+        """
+        pass
     
     # endregion
     

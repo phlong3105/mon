@@ -63,7 +63,7 @@ def test(args):
         DCE_net.load_state_dict(torch.load(args.weights))
         h = (args.image_size // scale_factor) * scale_factor
         w = (args.image_size // scale_factor) * scale_factor
-        flops, params, avg_time = mon.calculate_efficiency_score(
+        flops, params, avg_time = mon.compute_efficiency_score(
             model      = DCE_net,
             image_size = [h, w],
             channels   = 3,

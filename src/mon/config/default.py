@@ -172,7 +172,6 @@ predictor = {
 	"source"		  : None,    # Source data.
 	"default_root_dir": None,    # Default path for saving results.
 	"devices"         : "auto",  # Running devices.
-	"augment"         : None ,   # Test-time augmentation.
     "benchmark"       : False,   # Measure efficient score.
     "save_image"      : False,   # Save result images.
 	"save_debug"      : False,   # Save debug images.

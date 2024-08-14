@@ -165,7 +165,7 @@ def main(args: argparse.Namespace):
 
     # Measure efficiency score
     if args.benchmark:
-        flops, params, avg_time = mon.calculate_efficiency_score(
+        flops, params, avg_time = mon.compute_efficiency_score(
             model      = dle_net,
             image_size = args.image_size,
             channels   = 3,

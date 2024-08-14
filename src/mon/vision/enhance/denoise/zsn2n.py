@@ -118,7 +118,7 @@ class ZSN2N(base.DenoisingModel):
     
     # region Training
     
-    def fit_one(
+    def infer(
         self,
         datapoint    : dict,
         max_epochs   : int   = 3000,
@@ -126,7 +126,7 @@ class ZSN2N(base.DenoisingModel):
         step_size    : int   = 1000,
         gamma        : float = 0.5,
         reset_weights: bool  = True,
-    ) -> torch.Tensor:
+    ) -> dict:
         """Train the model with a single datapoint. This method is used for any
         learning scheme performed on one single instance such as online learning,
         zero-shot learning, one-shot learning, etc.
@@ -206,7 +206,7 @@ def run_zsn2n():
     datapoint = {"image": core.to_image_tensor(image, False, True)}
     device    = torch.device("cuda:0")
     net       = ZSN2N(channels=3, num_channels=64).to(device)
-    outputs   = net.fit_one(datapoint)
+    outputs   = net.infer(datapoint)
     denoise   = outputs.get("enhanced")
     denoise   = core.to_image_nparray(denoise, False, True)
     cv2.imshow("Image",    image)

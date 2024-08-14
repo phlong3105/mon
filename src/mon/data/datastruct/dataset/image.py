@@ -64,8 +64,8 @@ class ImageDataset(base.Dataset, ABC):
 		if self.to_tensor:
 			for k, v in datapoint.items():
 				to_tensor_fn = self.datapoint_attrs.get_tensor_fn(k)
-				if to_tensor_fn and v:
-					datapoint[k] = to_tensor_fn(input=v, keepdim=False, normalize=True)
+				if to_tensor_fn and v is not None:
+					datapoint[k] = to_tensor_fn(data=v, keepdim=False, normalize=True)
 		# Return
 		return datapoint | {"meta": meta}
 	

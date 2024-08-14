@@ -24,11 +24,9 @@ import sys
 from abc import ABC
 from typing import Any, Literal
 
-import torch
-
 from mon import core, nn
-from mon.core import _callable
-from mon.globals import MODELS, Scheme, Task, ZOO_DIR
+from mon.globals import MODELS, Scheme
+from mon.vision.depth import base
 
 console       = core.console
 error_console = core.error_console
@@ -46,7 +44,7 @@ except ImportError:
 
 # region Model
 
-class DepthAnythingV2(nn.ExtraModel, ABC):
+class DepthAnythingV2(nn.ExtraModel, base.DepthEstimationModel, ABC):
     """This class implements a wrapper for :class:`DepthAnythingV2` models
     defined in :mod:`mon_extra.vision.depth.depth_anything_v2`.
     
@@ -54,10 +52,8 @@ class DepthAnythingV2(nn.ExtraModel, ABC):
     """
     
     arch   : str          = "depth_anything_v2"
-    tasks  : list[Task]   = [Task.DEPTH]
     schemes: list[Scheme] = [Scheme.INFERENCE_ONLY]
-    zoo    : dict = {}
-    zoo_dir: core.Path    = ZOO_DIR / "vision" / "depth"
+    zoo    : dict         = {}
     
     def __init__(
         self,
@@ -93,19 +89,13 @@ class DepthAnythingV2(nn.ExtraModel, ABC):
     def init_weights(self, model: nn.Module):
         pass
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
         y = self.model(x)
         y = (y - y.min()) / (y.max() - y.min())  # Normalize the depth map in the range [0, 1].
         y = y.unsqueeze(1)
-        return y
+        return {"depth": y}
 
 
 @MODELS.register(name="depth_anything_v2_vits", arch="depth_anything_v2")
@@ -120,7 +110,6 @@ class DepthAnythingV2_ViTS(DepthAnythingV2):
             "url"        : None,
             "path"       : "depth_anything_v2/depth_anything_v2_vits/da_2k/depth_anything_v2_vits_da_2k.pth",
             "num_classes": None,
-            "map": {},
         },
     }
     
@@ -146,7 +135,6 @@ class DepthAnythingV2_ViTB(DepthAnythingV2):
             "url"        : None,
             "path"       : "depth_anything_v2/depth_anything_v2_vitb/da_2k/depth_anything_v2_vitb_da_2k.pth",
             "num_classes": None,
-            "map": {},
         },
     }
     
@@ -172,7 +160,6 @@ class DepthAnythingV2_ViTL(DepthAnythingV2):
             "url"        : None,
             "path"       : "depth_anything_v2/depth_anything_v2_vitl/da_2k/depth_anything_v2_vitl_da_2k.pth",
             "num_classes": None,
-            "map": {},
         },
     }
     

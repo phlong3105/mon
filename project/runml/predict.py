@@ -25,7 +25,6 @@ def predict(args: dict) -> str:
     seed       = args["seed"]
     save_dir   = args["predictor"]["default_root_dir"]
     source     = args["predictor"]["source"]
-    augment    = mon.to_list(args["predictor"]["augment"])
     devices    = args["predictor"]["devices"] or "auto"
     resize     = args["predictor"]["resize"]
     benchmark  = args["predictor"]["benchmark"]
@@ -39,25 +38,22 @@ def predict(args: dict) -> str:
     # Device
     devices = torch.device(("cpu" if not torch.cuda.is_available() else devices))
     
+    # Model
+    model: mon.Model = mon.MODELS.build(config=args["model"])
+    model = model.to(devices)
+    model.eval()
+    
     # Benchmark
-    if benchmark and torch.cuda.is_available():
-        model = mon.MODELS.build(config=args["model"])
-        flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = model,
+    if benchmark and torch.cuda.is_available() and hasattr(model, "compute_efficiency_score"):
+        flops, params, avg_time = model.compute_efficiency_score(
             image_size = imgsz,
             channels   = 3,
             runs       = 100,
-            use_cuda   = True,
             verbose    = False,
         )
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
         console.log(f"Time   = {avg_time:.4f}")
-    
-    # Model
-    model: mon.Model = mon.MODELS.build(config=args["model"])
-    model = model.to(devices)
-    model.eval()
     
     # Data I/O
     console.log(f"[bold red] {source}")
@@ -76,78 +72,41 @@ def predict(args: dict) -> str:
         debug_save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
-    timer = mon.Timer()
-    with torch.no_grad():
-        with mon.get_progress_bar() as pbar:
-            for i, datapoint in pbar.track(
-                sequence    = enumerate(data_loader),
-                total       = len(data_loader),
-                description = f"[bright_yellow] Predicting"
-            ):
-                # Input
-                image  = datapoint.get("input")
-                meta   = datapoint.get("meta")
-                image  = image.to(model.device)
-                h0, w0 = mon.get_image_size(image)
-                input  = image.clone()
-                if resize:
-                    input = mon.resize(input, imgsz)
-                else:
-                    input = mon.resize_divisible(input, 32)
-                
-                # TTA (Pre)
-                for aug in augment:
-                    input = aug(input=input)
-               
-                # Forward
-                if isinstance(input, torch.Tensor):
-                    timer.tick()
-                    output = model(input=input, augment=None, profile=False, out_index=-1)
-                elif isinstance(input, list | tuple):
-                    timer.tick()
-                    output = []
-                    for i in input:
-                        o = model(input=i, augment=None, profile=False, out_index=-1)
-                        o = o[-1] if isinstance(o, list | tuple) else o
-                        output.append(o)
-                else:
-                    raise TypeError()
-                timer.tock()
-                
-                # Forward (Debug)
-                if save_debug and isinstance(input, torch.Tensor):
-                    debug_output = model.forward_debug(input=input)
-                else:
-                    debug_output = None
-                
-                # TTA (Post)
-                for aug in augment:
-                    if aug.requires_post:
-                        output = aug.postprocess(input=image, output=output)
-                
-                # Post-process
-                output = output[-1] if isinstance(output, list | tuple) else output
-                h1, w1 = mon.get_image_size(output)
-                if h1 != h0 or w1 != w0:
-                    output = mon.resize(output, (h0, w0))
-                
-                # Save
-                if save_image:
-                    output_path = save_dir / f"{meta['stem']}.png"
-                    mon.write_image(output_path, output, denormalize=True)
-                    
-                    if data_writer:
-                        data_writer.write_batch(data=output)
-                    
-                    # Debug
-                    if save_debug and isinstance(debug_output, dict):
-                        for k, v in debug_output.items():
+    run_time = []
+    with mon.get_progress_bar() as pbar:
+        for i, datapoint in pbar.track(
+            sequence    = enumerate(data_loader),
+            total       = len(data_loader),
+            description = f"[bright_yellow] Predicting"
+        ):
+            # Infer
+            meta    = datapoint.get("meta")
+            outputs = model.infer(
+                datapoint = datapoint,
+                imgsz     = imgsz,
+                resize    = resize,
+            )
+            time = outputs.pop("time", None)
+            if time:
+                run_time.append(time)
+            # Save
+            if save_image:
+                _,   output = outputs.popitem()
+                output_path = save_dir / f"{meta['stem']}.png"
+                mon.write_image(output_path, output, denormalize=True)
+                if data_writer:
+                    data_writer.write_batch(data=output)
+                # Save Debug
+                if save_debug:
+                    for k, v in outputs.items():
+                        if mon.is_image(v):
                             path = debug_save_dir / f"{meta['stem']}_{k}.png"
                             mon.write_image(path, v, denormalize=True)
-        avg_time = float(timer.avg_time)
-        console.log(f"Average time: {avg_time}")
-        
-        return str(save_dir)
+    
+    # Finish
+    avg_time = float(sum(run_time) / len(run_time))
+    console.log(f"Average time: {avg_time}")
+    return str(save_dir)
         
 # endregion
 
@@ -161,7 +120,7 @@ def parse_predict_args(model_root: str | mon.Path | None = None) -> dict:
     input_args = vars(mon.parse_predict_input_args())
     config     = input_args.get("config")
     root       = mon.Path(input_args.get("root"))
-    
+
     # Get config args
     config = mon.parse_config_file(
         project_root = root,

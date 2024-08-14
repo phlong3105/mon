@@ -45,7 +45,7 @@ def predict(args: argparse.Namespace):
     
     # Benchmark
     if benchmark:
-        flops, params, avg_time = mon.calculate_efficiency_score(
+        flops, params, avg_time = mon.compute_efficiency_score(
             model      = model,
             image_size = imgsz,
             channels   = 3,
@@ -77,7 +77,7 @@ def predict(args: argparse.Namespace):
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
-            image       = datapoint.get("input")
+            image       = datapoint.get("image")
             meta        = datapoint.get("meta")
             image_path  = meta["path"]
             timer.tick()

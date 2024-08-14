@@ -176,7 +176,7 @@ def run_predict(args: dict):
         weights_path = weights,
         config       = config,
     )
-    config   = config or "default"
+    config   = config or ""
     # if use_data_dir:
     #     save_dir = save_dir or mon.parse_save_dir(mon.DATA_DIR/task.value/"#predict", arch, model, None, project, variant)
     # else:

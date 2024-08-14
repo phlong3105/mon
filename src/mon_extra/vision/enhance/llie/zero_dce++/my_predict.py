@@ -42,7 +42,7 @@ def predict(args: argparse.Namespace):
     if benchmark:
         h = (imgsz // scale_factor) * scale_factor
         w = (imgsz // scale_factor) * scale_factor
-        flops, params, avg_time = mon.calculate_efficiency_score(
+        flops, params, avg_time = mon.compute_efficiency_score(
             model      = copy.deepcopy(DCE_net),
             image_size = [h, w],
             channels   = 3,

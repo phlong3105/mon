@@ -39,6 +39,7 @@ import mon.nn.optimizer
 import mon.nn.prior
 import mon.nn.runner
 import mon.nn.strategy
+import mon.nn.thop
 import mon.nn.utils
 from mon.nn.callback import *
 from mon.nn.factory import *
@@ -51,4 +52,5 @@ from mon.nn.optimizer import *
 from mon.nn.prior import *
 from mon.nn.runner import *
 from mon.nn.strategy import *
+from mon.nn.thop import *
 from mon.nn.utils import *

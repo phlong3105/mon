@@ -63,7 +63,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image          = datapoint.get("input")
+                image          = datapoint.get("image")
                 meta           = datapoint.get("meta")
                 image_path     = meta["path"]
                 # image          = cv2.imread(str(image_path))

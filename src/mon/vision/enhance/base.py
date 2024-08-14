@@ -15,44 +15,41 @@ import cv2
 
 from mon import core, nn
 from mon.globals import Scheme, ZOO_DIR
-from mon.nn import metric as M
+from mon.vision.model import VisionModel
 
 console = core.console
 
 
 # region Model
 
-class ImageEnhancementModel(nn.Model, ABC):
+class ImageEnhancementModel(VisionModel, ABC):
     """The base class for all image enhancement models.
     
-    See Also: :class:`nn.Model`.
+    See Also: :class:`mon.vision.model.VisionModel`.
     """
     
     zoo_dir: core.Path = ZOO_DIR / "vision" / "enhance"
     
-    @classmethod
-    def assert_datapoint(cls, datapoint: dict) -> bool:
-        assert datapoint.get("image", None), \
-            "The key ``'image'`` must be defined in the :param:`datapoint`."
-        
-        has_target = any(item in cls.schemes for item in [Scheme.SUPERVISED])
-        if has_target:
-            assert datapoint.get("hq_image", None), \
-                "The key ``'hq_image'`` must be defined in the :param:`datapoint`."
+    # region Forward Pass
     
-    @classmethod
-    def assert_outputs(cls, outputs: dict) -> bool:
-        assert outputs.get("enhanced", None), \
-            "The key ``'enhanced'`` must be defined in the :param:`outputs`."
+    def assert_datapoint(self, datapoint: dict) -> bool:
+        assert "image" in datapoint, "The key ``'image'`` must be defined in the :param:`datapoint`."
+        
+        has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
+        if has_target:
+            assert "hq_image" in datapoint, "The key ``'hq_image'`` must be defined in the :param:`datapoint`."
+            
+    def assert_outputs(self, outputs: dict) -> bool:
+        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the :param:`outputs`."
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_outputs(outputs)
         # Loss
-        pred   = outputs.get("enhanced")
-        target = datapoint.get("hq_image")
+        pred    = outputs.get("enhanced")
+        target  = datapoint.get("hq_image")
         outputs["loss"] = self.loss(pred, target) if self.loss else None
         # Return
         return outputs
@@ -61,7 +58,7 @@ class ImageEnhancementModel(nn.Model, ABC):
         self,
         datapoint: dict,
         outputs  : dict,
-        metrics  : list[M.Metric] | None = None
+        metrics  : list[nn.Metric] | None = None
     ) -> dict:
         # Check
         self.assert_datapoint(datapoint)
@@ -76,6 +73,10 @@ class ImageEnhancementModel(nn.Model, ABC):
                 results[metric_name] = metric(pred, target)
         # Return
         return results
+    
+    # endregion
+    
+    # region Logging
     
     def log_images(
         self,
@@ -120,5 +121,7 @@ class ImageEnhancementModel(nn.Model, ABC):
                 v_i = v[i]
                 extra_path = save_dir / f"{i}_{k}{extension}"
                 cv2.imwrite(str(extra_path), v_i)
-            
+    
+    # endregion
+    
 # endregion

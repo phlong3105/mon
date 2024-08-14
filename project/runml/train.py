@@ -35,7 +35,7 @@ def train(args: dict) -> str:
         console.log("[green]Done")
     
     # Data I/O
-    datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["datamodule"])
+    datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["data"])
     datamodule.prepare_data()
     datamodule.setup(stage="train")
     

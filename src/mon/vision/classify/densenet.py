@@ -21,7 +21,6 @@ import torch
 import torch.utils.checkpoint as cp
 
 from mon import core, nn
-from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.classify import base

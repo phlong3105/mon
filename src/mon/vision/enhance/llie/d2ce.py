@@ -411,7 +411,8 @@ class D2CE(base.LowLightImageEnhancementModel):
         self.assert_datapoint(datapoint)
         x     = datapoint.get("image")
         # Enhancement
-        de    = self.de(x)
+        de    = self.de(datapoint)
+        de    = de.get("depth")
         de    = de.detach()  # Must call detach() else error
         c1, e = self.en(x, de)
         e     = e.detach()   # Must call detach() else error
@@ -491,7 +492,8 @@ class D2CE_04_DepthBrightnessAttention(D2CE):
         self.assert_datapoint(datapoint)
         x     = datapoint.get("image")
         # Enhancement
-        de    = self.de(x)
+        de    = self.de(datapoint)
+        de    = de.get("depth")
         de    = de.detach()  # Must call detach() else error
         c1, e = self.en(x, de)
         e     = e.detach()   # Must call detach() else error
@@ -536,7 +538,8 @@ class D2CE_05_DepthAttention(D2CE):
         self.assert_datapoint(datapoint)
         x     = datapoint.get("image")
         # Enhancement
-        de    = self.de(x)
+        de    = self.de(datapoint)
+        de    = de.get("depth")
         de    = de.detach()  # Must call detach() else error
         c1, e = self.en(x, de)
         e     = e.detach()   # Must call detach() else error

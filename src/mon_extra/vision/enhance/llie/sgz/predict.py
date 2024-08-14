@@ -60,7 +60,7 @@ class Tester:
         if args.benchmark:
             h = (args.image_size // self.scale_factor) * self.scale_factor
             w = (args.image_size // self.scale_factor) * self.scale_factor
-            flops, params, avg_time = mon.calculate_efficiency_score(
+            flops, params, avg_time = mon.compute_efficiency_score(
                 model      = self.net,
                 image_size = [h, w],
                 channels   = 3,

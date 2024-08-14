@@ -61,7 +61,7 @@ class RegressionAnnotation(base.Annotation):
         return [self.value]
     
     @staticmethod
-    def to_tensor(data: torch.Tensor | np.ndarray) -> torch.Tensor:
+    def to_tensor(data: torch.Tensor | np.ndarray, *args, **kwargs) -> torch.Tensor:
         """Converts the input data to a :class:`torch.Tensor`.
         
         Args:

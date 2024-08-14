@@ -131,7 +131,7 @@ class Dataset(dataset.Dataset, ABC):
         """Return the total number of datapoints in the dataset."""
         pass
     
-    def __next__(self) -> Any:
+    def __next__(self) -> dict:
         """Returns the next datapoint and metadata when using :meth:`__iter__`."""
         if self.index >= self.__len__():
             raise StopIteration
