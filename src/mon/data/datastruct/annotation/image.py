@@ -119,7 +119,7 @@ class ImageAnnotation(base.Annotation):
             normalize: If ``True``, normalize the input data. Default: ``True``.
         """
         return core.to_image_tensor(input=data, keepdim=False, normalize=True)
-        
+    
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using

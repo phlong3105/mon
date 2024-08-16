@@ -294,10 +294,9 @@ class Model(lightning.LightningModule, ABC):
         self.train_metrics = None
         self.val_metrics   = None
         self.test_metrics  = None
-        self.optims        = None
+        self.optims        = optimizers
         self.init_loss(loss)
         self.init_metrics(metrics)
-        self.init_optimizers(optimizers)
         
     # region Properties
     
@@ -380,20 +379,6 @@ class Model(lightning.LightningModule, ABC):
         for path in [self.root, self.ckpt_dir, self.debug_dir]:
             path.mkdir(parents=True, exist_ok=True)
     
-    @staticmethod
-    def create_metrics(metrics: Any):
-        """Create metrics."""
-        if isinstance(metrics, M.Metric):
-            if getattr(metrics, "name", None) is None:
-                metrics.name = humps.depascalize(humps.pascalize(metrics.__class__.__name__))
-            return [metrics]
-        elif isinstance(metrics, dict):
-            return [METRICS.build(config=metrics)]
-        elif isinstance(metrics, list | tuple):
-            return [METRICS.build(config=m) if isinstance(m, dict) else m for m in metrics]
-        else:
-            return None
-    
     @abstractmethod
     def init_weights(self, model: nn.Module):
         """Initialize the model's weights."""
@@ -457,7 +442,7 @@ class Model(lightning.LightningModule, ABC):
             self.loss = LOSSES.build(config=loss)
         else:
             self.loss = loss
-        if isinstance(self.loss, nn.Module):
+        if isinstance(self.loss, L.Loss):
             self.loss.requires_grad = True
             self.loss.eval()
     
@@ -505,7 +490,21 @@ class Model(lightning.LightningModule, ABC):
                 name = f"test/{metric.name}"
                 setattr(self, name, metric)
     
-    def init_optimizers(self, optimizers: Any):
+    @staticmethod
+    def create_metrics(metrics: Any):
+        """Create metrics."""
+        if isinstance(metrics, M.Metric):
+            if getattr(metrics, "name", None) is None:
+                metrics.name = humps.depascalize(humps.pascalize(metrics.__class__.__name__))
+            return [metrics]
+        elif isinstance(metrics, dict):
+            return [METRICS.build(config=metrics)]
+        elif isinstance(metrics, list | tuple):
+            return [METRICS.build(config=m) if isinstance(m, dict) else m for m in metrics]
+        else:
+            return None
+    
+    def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your
         optimization. Normally, you need one, but for GANs you might have
         multiple.
@@ -554,6 +553,8 @@ class Model(lightning.LightningModule, ABC):
                     {"optimizer": optimizer2, "lr_scheduler": scheduler2},
                 )
         """
+        optimizers = self.optims
+        
         if optimizers is None:
             console.log(
                 f"[yellow]No optimizers have been defined! Consider subclassing "
@@ -606,9 +607,6 @@ class Model(lightning.LightningModule, ABC):
         if isinstance(optimizers, list | tuple) and len(optimizers) == 1:
             optimizers = optimizers[0]
         self.optims = optimizers
-        return self.optims
-    
-    def configure_optimizers(self):
         return self.optims
     
     def compute_efficiency_score(self, *args, **kwargs) -> tuple[float, float, float]:
