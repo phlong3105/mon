@@ -56,7 +56,7 @@ class ImageDataset(base.Dataset, ABC):
 		# Transform
 		if self.transform:
 			main_attr      = self.main_attribute
-			args           = {k: v for k, v in datapoint.items() if v}
+			args           = {k: v for k, v in datapoint.items() if v is not None}
 			args["image"]  = args.pop(main_attr)
 			transformed    = self.transform(**args)
 			transformed[main_attr] = transformed.pop("image")
@@ -99,7 +99,7 @@ class ImageDataset(base.Dataset, ABC):
 			if self.datapoint_attrs[k]:
 				if v is None:
 					raise RuntimeError(f"No ``{k}`` attributes has been defined.")
-				if v and len(v) != self.__len__():
+				if v is not None and len(v) != self.__len__():
 					raise RuntimeError(f"Number of {k} attributes does not match the number of datapoints.")
 		if self.verbose:
 			console.log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
@@ -116,7 +116,7 @@ class ImageDataset(base.Dataset, ABC):
 		"""Get a datapoint at the given :param:`index`."""
 		datapoint = self.new_datapoint
 		for k, v in self.datapoints.items():
-			if v and v[index] and hasattr(v[index], "data"):
+			if v is not None and v[index] and hasattr(v[index], "data"):
 				datapoint[k] = v[index].data
 		return datapoint
 	

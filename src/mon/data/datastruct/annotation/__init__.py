@@ -33,20 +33,20 @@ error_console = core.error_console
 
 # region Utils
 
-def get_albumentation_target_type(annotation: Annotation) -> str | None:
+def get_albumentation_target_type(annotation) -> str | None:
     """Returns the type of target that Albumentations expects.
     One of: [``'image'``, ``'mask'``, ``'bboxes'``, ``'keypoints'``, ``'values'``].
     """
-    if isinstance(annotation, ImageAnnotation):
+    if annotation in [ImageAnnotation]:
         return "image"
-    elif isinstance(annotation, BBoxAnnotation):
+    elif annotation in [BBoxAnnotation]:
         return "bboxes"
-    elif isinstance(annotation, ClassificationAnnotation | RegressionAnnotation):
+    elif annotation in [ClassificationAnnotation, RegressionAnnotation]:
         return "values"
-    elif isinstance(annotation, SegmentationAnnotation):
+    elif annotation in [SegmentationAnnotation]:
         return "mask"
     else:
-        error_console.log(f"Unknown annotation type: {type(annotation)}")
+        error_console.log(f"Unknown annotation type: {annotation}, {type(annotation)}")
         return None
 
 

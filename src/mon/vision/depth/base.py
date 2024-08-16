@@ -66,7 +66,7 @@ class DepthEstimationModel(VisionModel, ABC):
         pred    = outputs.get("depth")
         target  = datapoint.get("depth")
         results = {}
-        if metrics:
+        if metrics is not None:
             for i, metric in enumerate(metrics):
                 metric_name = getattr(metric, "name", f"metric_{i}")
                 results[metric_name] = metric(pred, target)

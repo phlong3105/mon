@@ -28,7 +28,6 @@ from thop.profile import *
 from torch import nn
 
 from mon import core
-from mon.core import _size_2_t
 from mon.globals import LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task, ZOO_DIR
 from mon.nn import loss as L, metric as M
 
@@ -208,11 +207,11 @@ class Model(lightning.LightningModule, ABC):
     Args:
         name: The model's name. Default: ``None`` mean it will be
             :attr:`self.__class__.__name__`.
-        root: The root directory of the model. It is used to save the model
-            checkpoint during training: {root}/{fullname}.
         fullname: The model's fullname to save the checkpoint or weights. It
             should have the following format: {name}-{dataset}-{suffix}.
             Default: ``None`` mean it will be the same as :param:`name`.
+        root: The root directory of the model. It is used to save the model
+            checkpoint during training: {root}/{fullname}.
         in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         out_channels: The last layer's output channels (number of classes).
             Default: ``None`` mean it will be determined during model parsing.
@@ -264,8 +263,8 @@ class Model(lightning.LightningModule, ABC):
         self,
         # For saving/loading
         name        : str | None = None,
-        root        : core.Path  = core.Path(),
         fullname    : str | None = None,
+        root        : core.Path  = core.Path(),
         # For model architecture
         in_channels : int        = 3,
         out_channels: int | None = None,
@@ -280,6 +279,7 @@ class Model(lightning.LightningModule, ABC):
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
+        self.verbose       = verbose
         # For saving/loading
         self.name          = name
         self.fullname      = fullname
@@ -287,18 +287,18 @@ class Model(lightning.LightningModule, ABC):
         # For model architecture
         self.in_channels   = in_channels
         self.out_channels  = out_channels or num_classes or self.in_channels
-        self._weights      = None
-        self.weights       = weights
+        self.weights       = None
+        self.assign_weights(weights)
         # For training
-        self.loss          = loss
-        self.train_metrics = metrics
-        self.val_metrics   = metrics
-        self.test_metrics  = metrics
+        self.loss          = None
+        self.train_metrics = None
+        self.val_metrics   = None
+        self.test_metrics  = None
         self.optims        = optimizers
-        # Misc
-        self.verbose       = verbose
+        self.init_loss(loss)
+        self.init_metrics(metrics)
         
-    # region Saving/Loading Properties
+    # region Properties
     
     @property
     def name(self) -> str:
@@ -347,49 +347,15 @@ class Model(lightning.LightningModule, ABC):
             self._debug_dir = self.root / "debug"
         return self._debug_dir
     
-    # endregion
-    
-    # region Model Architecture Properties
-    
     @property
     def num_classes(self) -> int:
+        """Just an alias to :attr:`out_channels`."""
         return self.out_channels
     
     @num_classes.setter
     def num_classes(self, num_classes: int):
+        """Just an alias to :attr:`out_channels`."""
         self.out_channels = num_classes
-    
-    @property
-    def weights(self) -> core.Path | dict:
-        return self._weights
-    
-    @weights.setter
-    def weights(self, weights: Any):
-        if isinstance(weights, str):
-            if core.Path(weights).is_weights_file():
-                weights = core.Path(weights)
-            elif weights in self.zoo:
-                weights         = self.zoo[weights]
-                weights["path"] = self.zoo_dir / weights.get("path", "")
-                num_classes     = getattr(weights, "num_classes", None)
-                if num_classes and num_classes != self.num_classes:
-                    self.num_classes = num_classes
-                    console.log(f"Overriding :attr:`num_classes` with {num_classes}.")
-            else:
-                error_console.log(f"The key ``'{weights}'`` has not been defined in :attr:`zoo`.")
-                weights = None
-        elif isinstance(weights, core.Path):
-            assert weights.is_weights_file(), \
-                f":param:`weights` must be a valid path to a weight file, but got {weights}."
-        elif isinstance(weights, dict):
-            pass  # No need to do anything here
-        self._weights = weights or self._weights
-        
-        # endregion
-    
-    # endregion
-    
-    # region Training Properties
     
     @property
     def predicting(self) -> bool:
@@ -404,97 +370,14 @@ class Model(lightning.LightningModule, ABC):
         """
         return True if not self.training and getattr(self, "_trainer", None) is None else None
     
-    @property
-    def loss(self) -> L.Loss | None:
-        """Return the model's loss functions."""
-        return self._loss
+    # endregion
     
-    @loss.setter
-    def loss(self, loss: Any):
-        """Specify the model's loss functions. This value should only be
-        defined once.
-        """
-        if isinstance(loss, L.Loss):
-            self._loss = loss
-        elif isinstance(loss, str):
-            self._loss = LOSSES.build(name=loss)
-        elif isinstance(loss, dict):
-            self._loss = LOSSES.build(config=loss)
-        else:
-            self._loss = None
-        
-        if self._loss:
-            self._loss.requires_grad = True
-            self._loss.eval()
+    # region Initialization
     
-    @property
-    def train_metrics(self) -> list[M.Metric] | None:
-        """Return the training metrics."""
-        return self._train_metrics
-    
-    @train_metrics.setter
-    def train_metrics(self, metrics: Any):
-        """Assign train metrics.
-        
-        Args:
-            metrics: One of the 2 options:
-                - Common metrics for all train_/val_/test_metrics:
-                    'metrics': {'name': 'accuracy'}
-                  or,
-                    'metrics': [{'name': 'accuracy'}, torchmetrics.Accuracy(), ...]
-                
-                - Define train_/val_/test_metrics separately:
-                    'metrics': {
-                        'train': ['name':'accuracy', torchmetrics.Accuracy(), ...],
-                        'val':   torchmetrics.Accuracy(),
-                        'test':  None,
-                    }
-        """
-        if isinstance(metrics, dict) and "train" in metrics:
-            metrics = metrics.get("train", metrics)
-        
-        self._train_metrics = self.create_metrics(metrics=metrics)
-        # This is a simple hack since LightningModule needs the metric to be
-        # defined with self.<metric>. So, here we dynamically add the metric
-        # attribute to the class.
-        if self._train_metrics:
-            for metric in self._train_metrics:
-                name = f"train/{metric.name}"
-                setattr(self, name, metric)
-    
-    @property
-    def val_metrics(self) -> list[M.Metric] | None:
-        """Return the validation metrics."""
-        return self._val_metrics
-    
-    @val_metrics.setter
-    def val_metrics(self, metrics: Any):
-        """Assign val metrics. Similar to: :meth:`self._set_train_metrics()`."""
-        if isinstance(metrics, dict) and "val" in metrics:
-            metrics = metrics.get("val", metrics)
-        
-        self._val_metrics = self.create_metrics(metrics)
-        if self._val_metrics:
-            for metric in self._val_metrics:
-                name = f"val/{metric.name}"
-                setattr(self, name, metric)
-    
-    @property
-    def test_metrics(self) -> list[M.Metric] | None:
-        """Return the testing metrics."""
-        return self._test_metrics
-    
-    @test_metrics.setter
-    def test_metrics(self, metrics: Any):
-        """Assign test metrics. Similar to: :meth:`self._set_train_metrics()`."""
-        if isinstance(metrics, dict) and "test" in metrics:
-            metrics = metrics.get("test", metrics)
-        
-        self._test_metrics = self.create_metrics(metrics)
-        if self._test_metrics:
-            for metric in self._test_metrics:
-                name = f"test/{metric.name}"
-                setattr(self, name, metric)
+    def create_dir(self):
+        """Create directories before training begins."""
+        for path in [self.root, self.ckpt_dir, self.debug_dir]:
+            path.mkdir(parents=True, exist_ok=True)
     
     @staticmethod
     def create_metrics(metrics: Any):
@@ -510,20 +393,33 @@ class Model(lightning.LightningModule, ABC):
         else:
             return None
     
-    # endregion
-    
-    # region Initialize Model
-    
-    def create_dir(self):
-        """Create directories before training begins."""
-        for path in [self.root, self.ckpt_dir, self.debug_dir]:
-            path.mkdir(parents=True, exist_ok=True)
-    
     @abstractmethod
     def init_weights(self, model: nn.Module):
         """Initialize the model's weights."""
         pass
     
+    def assign_weights(self, weights: Any):
+        if isinstance(weights, str):
+            if core.Path(weights).is_weights_file():
+                weights = core.Path(weights)
+            elif weights in self.zoo:
+                weights         = self.zoo[weights]
+                weights["path"] = self.zoo_dir / weights.get("path", "")
+                num_classes     = getattr(weights, "num_classes", None)
+                if num_classes and num_classes != self.num_classes:
+                    self.num_classes = num_classes
+                    console.log(f"Overriding :attr:`num_classes` with {num_classes}.")
+            else:
+                error_console.log(f"The key ``'{weights}'`` has not been defined in :attr:`zoo`.")
+                weights = None
+        elif isinstance(weights, core.Path):
+            assert weights.is_weights_file(), f":param:`weights` must be a valid path to a weight file, but got {weights}."
+        elif isinstance(weights, dict):
+            pass  # No need to do anything here
+        else:
+            weights = None
+        self.weights = weights
+        
     def load_weights(self, weights: Any = None, overwrite: bool = False):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
@@ -551,6 +447,62 @@ class Model(lightning.LightningModule, ABC):
             self.load_state_dict(state_dict=state_dict)
             if self.verbose:
                 console.log(f"Load model's weights from: {self.weights}!")
+    
+    def init_loss(self, loss: Any):
+        """Specify the model's loss functions. This value should only be defined once."""
+        if isinstance(loss, str):
+            self.loss = LOSSES.build(name=loss)
+        elif isinstance(loss, dict):
+            self.loss = LOSSES.build(config=loss)
+        else:
+            self.loss = loss
+        if isinstance(self.loss, nn.Module):
+            self.loss.requires_grad = True
+            self.loss.eval()
+    
+    def init_metrics(self, metrics: Any):
+        """Assign metrics.
+        
+        Args:
+            metrics: One of the 2 options:
+                - Common metrics for all train_/val_/test_metrics:
+                    'metrics': {'name': 'accuracy'}
+                  or,
+                    'metrics': [{'name': 'accuracy'}, torchmetrics.Accuracy(), ...]
+                
+                - Define train_/val_/test_metrics separately:
+                    'metrics': {
+                        'train': ['name':'accuracy', torchmetrics.Accuracy(), ...],
+                        'val':   torchmetrics.Accuracy(),
+                        'test':  None,
+                    }
+        """
+        # Train
+        train_metrics = metrics.get("train") if isinstance(metrics, dict) else metrics
+        self.train_metrics = self.create_metrics(metrics=train_metrics)
+        # This is a simple hack since LightningModule needs the metric to be
+        # defined with self.<metric>. So, here we dynamically add the metric
+        # attribute to the class.
+        if self.train_metrics:
+            for metric in self.train_metrics:
+                name = f"train/{metric.name}"
+                setattr(self, name, metric)
+        
+        # Val
+        val_metrics = metrics.get("val") if isinstance(metrics, dict) else metrics
+        self.val_metrics = self.create_metrics(val_metrics)
+        if self.val_metrics:
+            for metric in self.val_metrics:
+                name = f"val/{metric.name}"
+                setattr(self, name, metric)
+        
+        # Test
+        test_metrics = metrics.get("test") if isinstance(metrics, dict) else metrics
+        self.test_metrics = self.create_metrics(test_metrics)
+        if self.test_metrics:
+            for metric in self.test_metrics:
+                name = f"test/{metric.name}"
+                setattr(self, name, metric)
     
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your
@@ -801,7 +753,7 @@ class Model(lightning.LightningModule, ABC):
                 - ``None``, training will skip to the next batch.
         """
         # Forward
-        outputs  = self.forward_loss_metric(datapoint=batch, *args, **kwargs)
+        outputs  = self.forward_loss(datapoint=batch, *args, **kwargs)
         outputs |= self.compute_metrics(
             datapoint = batch,
             outputs   = outputs,
@@ -809,7 +761,7 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log values
         log_values  = {"step": self.current_epoch}
-        log_values |= {f"train/{k}": v for k, v in outputs.items() if not core.is_image(v)}
+        log_values |= {f"train/{k}": v for k, v in outputs.items() if v is not None and not core.is_image(v)}
         self.log_dict(
             dictionary     = log_values,
             prog_bar       = False,
@@ -846,7 +798,7 @@ class Model(lightning.LightningModule, ABC):
                 - ``None``, training will skip to the next batch.
         """
         # Forward
-        outputs  = self.forward_loss_metric(datapoint=batch, *args, **kwargs)
+        outputs  = self.forward_loss(datapoint=batch, *args, **kwargs)
         outputs |= self.compute_metrics(
             datapoint = batch,
             outputs   = outputs,
@@ -854,7 +806,7 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log values
         log_values  = {"step": self.current_epoch}
-        log_values |= {f"val/{k}": v for k, v in outputs.items() if not core.is_image(v)}
+        log_values |= {f"val/{k}": v for k, v in outputs.items() if v is not None and not core.is_image(v)}
         self.log_dict(
             dictionary     = log_values,
             prog_bar       = False,
@@ -866,7 +818,7 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log images
         if self.should_log_images():
-            data = batch | {"outputs": outputs},
+            data = batch | {"outputs": outputs}
             self.log_images(
                 epoch = self.current_epoch,
                 step  = self.global_step,
@@ -903,7 +855,7 @@ class Model(lightning.LightningModule, ABC):
                 - ``None``, training will skip to the next batch.
         """
         # Forward
-        outputs  = self.forward_loss_metric(datapoint=batch, *args, **kwargs)
+        outputs  = self.forward_loss(datapoint=batch, *args, **kwargs)
         outputs |= self.compute_metrics(
             datapoint = batch,
             outputs   = outputs,
@@ -911,7 +863,7 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log values
         log_values  = {"step": self.current_epoch}
-        log_values |= {f"test/{k}": v for k, v in outputs.items() if not core.is_image(v)}
+        log_values |= {f"test/{k}": v for k, v in outputs.items() if v is not None and not core.is_image(v)}
         self.log_dict(
             dictionary     = log_values,
             prog_bar       = False,
@@ -923,7 +875,7 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log images
         if self.should_log_images():
-            data = batch | {"outputs": outputs},
+            data = batch | {"outputs": outputs}
             self.log_images(
                 epoch = self.current_epoch,
                 step  = self.global_step,

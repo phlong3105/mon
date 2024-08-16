@@ -240,7 +240,7 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
             y = y + x_r * (torch.pow(y, 2) - y)
         #
         return {
-            "adjust"  : x,
+            "adjust"  : x_r,
             "enhanced": y,
         }
 

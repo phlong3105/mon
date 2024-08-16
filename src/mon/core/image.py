@@ -58,8 +58,10 @@ import numpy as np
 import torch
 import torchvision
 
-from mon.core import pathlib, utils
-from mon.core.rich import error_console
+from mon.core import pathlib, utils, rich
+
+console       = rich.console
+error_console = rich.error_console
 
 
 # region Assert
@@ -292,11 +294,12 @@ def get_image_num_channels(input: torch.Tensor | np.ndarray) -> int:
         input: An image in channel-last or channel-first format.
     """
     if not 2 <= input.ndim <= 4:
-        raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``2`` and ``4``, "
-            f"but got {input.ndim}."
-        )
-    if input.ndim == 4:
+        # error_console.log(
+        #     f":param:`input`'s number of dimensions must be between ``2`` and ``4``, "
+        #     f"but got {input.ndim}."
+        # )
+        c = 0
+    elif input.ndim == 4:
         if is_channel_first_image(input=input):
             _, c, h, w = list(input.shape)
         else:

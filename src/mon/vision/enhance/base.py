@@ -67,7 +67,7 @@ class ImageEnhancementModel(VisionModel, ABC):
         pred    = outputs.get("enhanced")
         target  = datapoint.get("hq_image")
         results = {}
-        if metrics:
+        if metrics is not None:
             for i, metric in enumerate(metrics):
                 metric_name = getattr(metric, "name", f"metric_{i}")
                 results[metric_name] = metric(pred, target)
@@ -90,13 +90,13 @@ class ImageEnhancementModel(VisionModel, ABC):
         save_dir = self.debug_dir / f"epoch_{epoch:04d}"
         save_dir.mkdir(parents=True, exist_ok=True)
         
-        image    = data.get("image",    None)
-        hq_image = data.get("hq_image", None)
-        outputs  = data.get("outputs",  {})
+        image    =    data.get("image",    None)
+        hq_image =    data.get("hq_image", None)
+        outputs  =    data.get("outputs",  {})
         enhanced = outputs.pop("enhanced", None)
         
         image        = list(core.to_image_nparray(image,    keepdim=False, denormalize=True))
-        hq_image     = list(core.to_image_nparray(hq_image, keepdim=False, denormalize=True)) if hq_image else None
+        hq_image     = list(core.to_image_nparray(hq_image, keepdim=False, denormalize=True)) if hq_image is not None else None
         enhanced     = list(core.to_image_nparray(enhanced, keepdim=False, denormalize=True))
         extra_images = {k: v for k, v in outputs.items() if core.is_image(v)}
         extra        = {
@@ -108,7 +108,7 @@ class ImageEnhancementModel(VisionModel, ABC):
         if hq_image:
             assert len(image) == len(hq_image)
         
-        for i in range(len(input)):
+        for i in range(len(image)):
             if hq_image:
                 combined = cv2.hconcat([image[i], enhanced[i], hq_image[i]])
             else:

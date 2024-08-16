@@ -9,6 +9,8 @@ __all__ = [
     "RichModelSummary",
 ]
 
+from typing import Any
+
 from lightning.pytorch import callbacks
 from lightning.pytorch.utilities import model_summary
 
@@ -32,10 +34,11 @@ class RichModelSummary(callbacks.RichModelSummary):
     
     @staticmethod
     def summarize(
-        summary_data        : list[tuple[str, list[str]]],
-        total_parameters    : int,
-        trainable_parameters: int,
-        model_size          : float,
+        summary_data             : list[tuple[str, list[str]]],
+        total_parameters         : int,
+        trainable_parameters     : int,
+        model_size               : float,
+        *args, **summarize_kwargs: Any,
     ):
         table = core.rich.table.Table(header_style="bold magenta")
         table.add_column(" ", style="dim")

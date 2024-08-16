@@ -662,8 +662,7 @@ class SICEMix(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     

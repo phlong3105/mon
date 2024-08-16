@@ -92,7 +92,7 @@ class VideoDataset(base.Dataset, ABC):
 		# Transform
 		if self.transform:
 			main_attr      = self.main_attribute
-			args           = {k: v for k, v in datapoint.items() if v}
+			args           = {k: v for k, v in datapoint.items() if v is not None}
 			args["image"]  = args.pop(main_attr)
 			transformed    = self.transform(**args)
 			transformed[main_attr] = transformed.pop("image")

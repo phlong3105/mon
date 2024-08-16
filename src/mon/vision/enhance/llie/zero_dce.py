@@ -193,28 +193,29 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
         # Loss
         image    = datapoint.get("image")
         enhanced = outputs.get("enhanced")
-        adjust   = outputs.get("adjust")
+        adjust   = outputs.pop("adjust")
         outputs["loss"] = self.loss(image, adjust, enhanced) if self.loss else None
         # Return
         return outputs
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        x    = datapoint.get("image")
-        x1   =  self.relu(self.e_conv1(x))
-        x2   =  self.relu(self.e_conv2(x1))
-        x3   =  self.relu(self.e_conv3(x2))
-        x4   =  self.relu(self.e_conv4(x3))
-        x5   =  self.relu(self.e_conv5(torch.cat([x3, x4], 1)))
-        x6   =  self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
-        x_r  = torch.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
-        x_rs = torch.split(x_r, 3, dim=1)
-        y    = x
+        x       = datapoint.get("image")
+        x1      =  self.relu(self.e_conv1(x))
+        x2      =  self.relu(self.e_conv2(x1))
+        x3      =  self.relu(self.e_conv3(x2))
+        x4      =  self.relu(self.e_conv4(x3))
+        x5      =  self.relu(self.e_conv5(torch.cat([x3, x4], 1)))
+        x6      =  self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
+        x_r     = torch.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
+        x_rs    = torch.split(x_r, 3, dim=1)
+        y       = x
+        outputs = {}
         for i in range(0, self.num_iters):
             y = y + x_rs[i] * (torch.pow(y, 2) - y)
-        return {
-            "adjust"  : x,
-            "enhanced": y,
-        }
+            outputs[f"adjust_{i}"] = x_rs[i]
+        outputs["adjust"]   = x_r
+        outputs["enhanced"] = y
+        return outputs
     
 # endregion

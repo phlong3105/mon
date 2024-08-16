@@ -232,7 +232,7 @@ class ZeroDiDCE_RE(base.LowLightImageEnhancementModel):
             y = y + x_r * (torch.pow(y, 2) - y) * ((n1 - torch.mean(y).item()) / (n3 - torch.mean(y).item()))
         #
         return {
-            "adjust"  : x,
+            "adjust"  : x_r,
             "enhanced": y,
         }
     

@@ -313,7 +313,7 @@ def to_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list:
                 x = x.split(s)
                 break
         x = [x] if not isinstance(x, list) else x
-    elif x:
+    elif x is not None:
         x = [x]
         return x
     elif x is None:
