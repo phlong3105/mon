@@ -21,7 +21,7 @@ from mon.data.datastruct.annotation import base
 console = core.console
 
 
-# region BBox Annotation
+# region BBox
 
 class BBoxAnnotation(base.Annotation):
     """A bounding box annotation in an image. Usually, it has a bounding box and
@@ -132,5 +132,9 @@ class BBoxesAnnotation(base.Annotation, ABC):
     @property
     def bboxes(self) -> list:
         return [i.bbox for i in self.annotations]
-
+    
+    @property
+    def confidences(self) -> list[float]:
+        return [i.confidence for i in self.annotations]
+    
 # endregion

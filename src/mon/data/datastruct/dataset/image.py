@@ -76,7 +76,7 @@ class ImageDataset(base.Dataset, ABC):
 	def init_transform(self, transform: A.Compose | Any = None):
 		super().init_transform(transform=transform)
 		# Add additional targets
-		if self.transform:
+		if isinstance(self.transform, A.Compose):
 			additional_targets = self.datapoint_attrs.albumentation_target_types()
 			additional_targets.pop(self.main_attribute, None)
 			additional_targets.pop("meta", None)

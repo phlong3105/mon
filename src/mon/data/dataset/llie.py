@@ -107,6 +107,7 @@ class DICM(ImageDataset):
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -128,8 +129,19 @@ class DICM(ImageDataset):
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
+                
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
 
 @DATASETS.register(name="exdark")
@@ -277,6 +289,7 @@ class Fusion(ImageDataset):
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -299,7 +312,18 @@ class Fusion(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
 
 @DATASETS.register(name="lime")
@@ -313,6 +337,7 @@ class LIME(ImageDataset):
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -335,7 +360,18 @@ class LIME(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
 
 @DATASETS.register(name="lol_blur")
@@ -401,6 +437,7 @@ class LOLV1(ImageDataset):
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
+        "depth"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -424,6 +461,16 @@ class LOLV1(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -434,7 +481,9 @@ class LOLV1(ImageDataset):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
+        
         self.datapoints["image"]    = lq_images
+        self.datapoints["depth"]    = depth_maps
         self.datapoints["hq_image"] = hq_images
         
 
@@ -453,6 +502,7 @@ class LOLV2Real(ImageDataset):
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
+        "depth"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -476,6 +526,16 @@ class LOLV2Real(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -487,6 +547,7 @@ class LOLV2Real(ImageDataset):
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"]    = lq_images
+        self.datapoints["depth"]    = depth_maps
         self.datapoints["hq_image"] = hq_images
         
 
@@ -528,6 +589,16 @@ class LOLV2Synthetic(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -539,6 +610,7 @@ class LOLV2Synthetic(ImageDataset):
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"]    = lq_images
+        self.datapoints["depth"]    = depth_maps
         self.datapoints["hq_image"] = hq_images
         
 
@@ -553,6 +625,7 @@ class MEF(ImageDataset):
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -574,8 +647,19 @@ class MEF(ImageDataset):
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
-        
-        self.datapoints["image"] = lq_images
+                
+                # Depth images
+                depth_maps: list[ImageAnnotation] = []
+                with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+                    for img in pbar.track(
+                        lq_images,
+                        description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+                    ):
+                        path = img.path.replace("/lq/", "/lq_dav2_c/")
+                        depth_maps.append(ImageAnnotation(path=path.image_file()))
+                
+                self.datapoints["image"] = lq_images
+                self.datapoints["depth"] = depth_maps
         
                         
 @DATASETS.register(name="npe")
@@ -588,8 +672,8 @@ class NPE(ImageDataset):
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -612,7 +696,18 @@ class NPE(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        self.datapoints["image"]    = lq_images
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
     
 @DATASETS.register(name="sice_grad")
@@ -663,6 +758,7 @@ class SICEMix(ImageDataset):
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -685,7 +781,18 @@ class SICEMix(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
 
 @DATASETS.register(name="sice_mix_v2")
@@ -699,6 +806,7 @@ class SICEMixV2(ImageDataset):
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -721,7 +829,18 @@ class SICEMixV2(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
 
 @DATASETS.register(name="ulol")
@@ -735,6 +854,7 @@ class ULOL(ImageDataset):
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -743,19 +863,19 @@ class ULOL(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "sice_mix"         / self.split_str / "lq",
-            self.root / "sice_mix_v2"      / self.split_str / "lq",
-            self.root / "lol_v1"           / self.split_str / "lq",
-            self.root / "lol_v1"           / self.split_str / "hq",
-            self.root / "lol_v2_real"      / self.split_str / "lq",
-            self.root / "lol_v2_real"      / self.split_str / "hq",
-            self.root / "lol_v2_synthetic" / self.split_str / "lq",
-            self.root / "lol_v2_synthetic" / self.split_str / "hq",
             self.root / "dicm"             / "test"         / "lq",
             self.root / "fusion"           / "test"         / "lq",
             self.root / "lime"             / "test"         / "lq",
+            self.root / "lol_v1"           / self.split_str / "hq",
+            self.root / "lol_v1"           / self.split_str / "lq",
+            self.root / "lol_v2_real"      / self.split_str / "hq",
+            self.root / "lol_v2_real"      / self.split_str / "lq",
+            self.root / "lol_v2_synthetic" / self.split_str / "hq",
+            self.root / "lol_v2_synthetic" / self.split_str / "lq",
             self.root / "mef"              / "test"         / "lq",
             self.root / "npe"              / "test"         / "lq",
+            self.root / "sice_mix"         / self.split_str / "lq",
+            self.root / "sice_mix_v2"      / self.split_str / "lq",
             self.root / "vv"               / "test"         / "lq",
         ]
         
@@ -770,7 +890,18 @@ class ULOL(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
 
 @DATASETS.register(name="vv")
@@ -784,6 +915,7 @@ class VV(ImageDataset):
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
+        "depth": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -806,7 +938,18 @@ class VV(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
+        # Depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                depth_maps.append(ImageAnnotation(path=path.image_file()))
+        
         self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
 # endregion
 

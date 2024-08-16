@@ -28,6 +28,7 @@ from mon.data.datastruct.annotation.classlabel import *
 from mon.data.datastruct.annotation.image import *
 from mon.data.datastruct.annotation.value import *
 
+console       = core.console
 error_console = core.error_console
 
 
@@ -39,7 +40,7 @@ def get_albumentation_target_type(annotation) -> str | None:
     """
     if annotation in [ImageAnnotation]:
         return "image"
-    elif annotation in [BBoxAnnotation]:
+    elif annotation in [BBoxAnnotation, BBoxesAnnotation]:
         return "bboxes"
     elif annotation in [ClassificationAnnotation, RegressionAnnotation]:
         return "values"

@@ -15,6 +15,7 @@ from mon.globals import Task
 
 # List all tasks that are performed in this project.
 TASKS = [
+	Task.SEGMENT,
     Task.DEBLUR,
     Task.DEHAZE,
     Task.DENOISE,
