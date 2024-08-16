@@ -32,8 +32,8 @@ verbose    = True
 
 model = {
 	"name"        : model_name,     # The model's name.
-	"root"        : root,           # The root directory of the model.
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
+	"root"        : root,           # The root directory of the model.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 32,		        # The number of input and output channels for subsequent layers.
