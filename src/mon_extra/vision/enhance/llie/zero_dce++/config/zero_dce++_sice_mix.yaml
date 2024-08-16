@@ -4,13 +4,13 @@ config      : ~
 arch        : "zero_dce++"
 model       : "zero_dce++"
 data        : "sice_mix"
-data_dir    : ~
+data_dir    : "data/enhance/llie/sice_mix/train/lq"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : ~
+fullname    : "zero_dce++_sice_mix"
 save_dir    : ~
-weights     : ~
+weights     : "zoo/vision/enhance/llie/zero_dce++/zero_dce++/sice_mix/zero_dce++_sice_mix.pth"
 device      : 0
 local_rank  : -1
 launcher    : ~

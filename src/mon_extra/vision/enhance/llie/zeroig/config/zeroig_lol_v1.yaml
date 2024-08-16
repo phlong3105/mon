@@ -4,14 +4,14 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "lol_v1"
-data_dir    : "llie/lol_v1/test/lq"
+data_dir    : "data/enhance/llie/lol_v1/test/lq"
 root        : ~
 project     : ~
 variant     : ~
 fullname    : "zeroig_lol_v1"
 save_dir    : ~
-weights     : ~
-device      : ~
+weights     : "zoo/vision/enhance/llie/zeroig/zeroig/lol_v1/zeroig_lol_v1.pt"
+device      : 0
 local_rank  : ~
 launcher    : ~
 epochs      : 2001

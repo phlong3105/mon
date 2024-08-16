@@ -4,14 +4,14 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "lime"
-data_dir    : "llie/lime/test/lq"
+data_dir    : "data/enhance/llie/lime/test/lq"
 root        : ~
 project     : ~
 variant     : ~
 fullname    : "zeroig_lime"
 save_dir    : ~
-weights     : ~
-device      : ~
+weights     : "zoo/vision/enhance/llie/zeroig/zeroig/lime/zeroig_lime.pt"
+device      : 0
 local_rank  : ~
 launcher    : ~
 epochs      : 2001

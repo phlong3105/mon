@@ -4,14 +4,14 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "mef"
-data_dir    : "llie/mef/test/lq"
+data_dir    : "data/enhance/llie/mef/test/lq"
 root        : ~
 project     : ~
 variant     : ~
 fullname    : "zeroig_mef"
 save_dir    : ~
-weights     : ~
-device      : ~
+weights     : "zoo/vision/enhance/llie/zeroig/zeroig/mef/zeroig_mef.pt"
+device      : 0
 local_rank  : ~
 launcher    : ~
 epochs      : 2001

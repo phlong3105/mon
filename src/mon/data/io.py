@@ -483,7 +483,7 @@ def parse_io_worker(
 		)
 		root = defaults_dict.get("root", DATA_DIR)
 		if (
-			root not in [None, "None", ""]
+			         root not in [None, "None", ""]
 			and data_root not in [None, "None", ""]
 			and core.Path(data_root).is_dir()
 			and str(root) != str(data_root)

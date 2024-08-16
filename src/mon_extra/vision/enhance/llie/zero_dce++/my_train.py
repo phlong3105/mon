@@ -82,8 +82,8 @@ def train(args: argparse.Namespace):
                 # loss_tv = 200 * L_tv(A)
                 loss_tv  = 1600 * L_tv(A)
                 loss_spa = torch.mean(L_spa(enhanced_image, img_lowlight))
-                loss_col =  5 * torch.mean(L_color(enhanced_image))
-                loss_exp = 10 * torch.mean(L_exp(enhanced_image, 0.6))
+                loss_col =    5 * torch.mean(L_color(enhanced_image))
+                loss_exp =   10 * torch.mean(L_exp(enhanced_image, 0.6))
                 loss     = loss_tv + loss_spa + loss_col + loss_exp
     
                 optimizer.zero_grad()

@@ -4,13 +4,13 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "fusion"
-data_dir    : "llie/fusion/test/lq"
+data_dir    : "data/enhance/llie/fusion/test/lq"
 root        : ~
 project     : ~
 variant     : ~
 fullname    : "zeroig_fusion"
 save_dir    : ~
-weights     : ~
+weights     : "zoo/vision/enhance/llie/zeroig/zeroig/fusion/zeroig_fusion.pt"
 device      : ~
 local_rank  : ~
 launcher    : ~

@@ -4,14 +4,14 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "vv"
-data_dir    : "llie/vv/test/lq"
+data_dir    : "data/enhance/llie/vv/test/lq"
 root        : ~
 project     : ~
 variant     : ~
 fullname    : "zeroig_vv"
 save_dir    : ~
-weights     : ~
-device      : ~
+weights     : "zoo/vision/enhance/llie/zeroig/zeroig/vv/zeroig_vv.pt"
+device      : 0
 local_rank  : ~
 launcher    : ~
 epochs      : 2001
