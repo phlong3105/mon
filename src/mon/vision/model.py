@@ -100,9 +100,8 @@ class VisionModel(nn.Model, ABC):
             imgsz: The input size. Default: ``512``.
             resize: Resize the input image to the model's input size. Default: ``False``.
         """
-        self.assert_datapoint(datapoint)
-        
         # Pre-processing
+        self.assert_datapoint(datapoint)
         image  = datapoint.get("image")
         h0, w0 = core.get_image_size(image)
         for k, v in datapoint.items():

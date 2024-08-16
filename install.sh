@@ -34,8 +34,8 @@ add_channels() {
 update_base_env() {
     echo -e "\nUpdating 'base' environment:"
     conda init bash
-    conda update -n base -c defaults conda --y
-    conda update --a --y
+    # conda update -n base -c defaults conda --y
+    # conda update --a --y
     pip install --upgrade pip
     pip install poetry
     echo -e "... Done"
@@ -110,7 +110,7 @@ install_third_party_library() {
     rm -rf poetry.lock
     poetry install --extras "dev"
     rm -rf poetry.lock
-    conda update --a --y
+    # conda update --a --y
     conda clean --a --y
 }
 

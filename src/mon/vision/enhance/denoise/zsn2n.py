@@ -14,6 +14,7 @@ import torch
 
 from mon import core, nn
 from mon.globals import MODELS, Scheme
+from mon.vision import geometry
 from mon.vision.enhance.denoise import base
 
 console = core.console
@@ -121,22 +122,26 @@ class ZSN2N(base.DenoisingModel):
     def infer(
         self,
         datapoint    : dict,
-        max_epochs   : int   = 3000,
-        lr           : float = 0.001,
-        step_size    : int   = 1000,
-        gamma        : float = 0.5,
-        reset_weights: bool  = True,
+        imgsz        : _size_2_t = 512,
+        resize       : bool      = False,
+        max_epochs   : int       = 3000,
+        lr           : float     = 0.001,
+        step_size    : int       = 1000,
+        gamma        : float     = 0.5,
+        reset_weights: bool      = True,
     ) -> dict:
-        """Train the model with a single datapoint. This method is used for any
-        learning scheme performed on one single instance such as online learning,
-        zero-shot learning, one-shot learning, etc.
+        """Infer the model on a single datapoint. This method is different from
+        :meth:`forward()` in term that you may want to perform additional
+        pre-processing or post-processing steps.
         
-        Note:
-            In order to use this method, the model must implement the optimizer
-            and/or scheduler.
+        Notes:
+            If you want to perform specific pre-processing or post-processing
+            steps, you should override this method.
         
         Args:
             datapoint: A :class:`dict` containing the attributes of a datapoint.
+            imgsz: The input size. Default: ``512``.
+            resize: Resize the input image to the model's input size. Default: ``False``.
             max_epochs: Maximum number of epochs. Default: ``3000``.
             lr: Learning rate. Default: ``0.001``.
             step_size: Period of learning rate decay. Default: ``1000``.
@@ -154,16 +159,21 @@ class ZSN2N(base.DenoisingModel):
             optimizer = nn.Adam(self.parameters(), lr=lr)
             scheduler = nn.StepLR(optimizer, step_size=step_size, gamma=gamma)
         
-        '''
-        # Prepare input
-        if isinstance(input, np.ndarray):
-            input = core.to_image_tensor(input, False, True)
-        input = input.to(self.device)
-        assert input.shape[0] == 1
-        datapoint = {"input": input, "target": None}
-        '''
+        # Pre-processing
+        self.assert_datapoint(datapoint)
+        image  = datapoint.get("image")
+        h0, w0 = core.get_image_size(image)
+        for k, v in datapoint.items():
+            if core.is_image(v):
+                if resize:
+                    datapoint[k] = geometry.resize(v, imgsz)
+                else:
+                    datapoint[k] = geometry.resize_divisible(v, 32)
+        for k, v in datapoint.items():
+            if isinstance(v, torch.Tensor):
+                datapoint[k] = v.to(self.device)
         
-        # Training loop
+        # Training
         if self.verbose:
             with core.get_progress_bar() as pbar:
                 for _ in pbar.track(
@@ -186,11 +196,25 @@ class ZSN2N(base.DenoisingModel):
                 optimizer.step()
                 scheduler.step()
         
-        # Post-processing
+        # Forward
         self.eval()
+        timer   = core.Timer()
+        timer.tick()
         outputs = self.forward(datapoint=datapoint)
         # with torch.no_grad():
         #    pred = torch.clamp(self.forward(input=input), 0, 1)
+        timer.tock()
+        self.assert_outputs(outputs)
+        
+        # Post-processing
+        for k, v in outputs.items():
+            if core.is_image(v):
+                h1, w1 = core.get_image_size(v)
+                if h1 != h0 or w1 != w0:
+                    outputs[k] = geometry.resize(v, (h0, w0))
+        
+        # Return
+        outputs["time"] = timer.avg_time
         return outputs
         
     # endregion
