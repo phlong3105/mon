@@ -137,7 +137,7 @@ class DICM(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
@@ -319,7 +319,7 @@ class Fusion(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
@@ -367,7 +367,7 @@ class LIME(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
@@ -468,7 +468,7 @@ class LOLV1(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         # HQ images
@@ -533,7 +533,7 @@ class LOLV2Real(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         # HQ images
@@ -566,6 +566,7 @@ class LOLV2Synthetic(ImageDataset):
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
+        "depth"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
@@ -596,7 +597,7 @@ class LOLV2Synthetic(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         # HQ images
@@ -655,7 +656,7 @@ class MEF(ImageDataset):
                         lq_images,
                         description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
                     ):
-                        path = img.path.replace("/lq/", "/lq_dav2_c/")
+                        path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                         depth_maps.append(ImageAnnotation(path=path.image_file()))
                 
                 self.datapoints["image"] = lq_images
@@ -703,7 +704,7 @@ class NPE(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
@@ -788,7 +789,7 @@ class SICEMix(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
@@ -836,7 +837,7 @@ class SICEMixV2(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
@@ -897,7 +898,7 @@ class ULOL(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images
@@ -945,7 +946,7 @@ class VV(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_c/")
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
                 depth_maps.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"] = lq_images

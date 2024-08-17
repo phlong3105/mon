@@ -7,7 +7,24 @@ import argparse
 
 import torch
 import torch.optim
+import argparse
+import glob
+import logging
+import os
+import subprocess
+import sys
+import time
 
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import torch.backends.cudnn as cudnn
+import torch.utils
+from PIL import Image
+
+import utils
+from dataset import ImageLowSemDataset, ImageLowSemDataset_Val
+from model import *
 import dataloader
 import model as mmodel
 import mon
@@ -18,24 +35,80 @@ current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
 
+# region Module
+
+class GradCAM:
+    
+    def __init__(self, model, target_layer):
+        self.model        = model
+        self.target_layer = target_layer
+        self.gradients    = None
+        self.activations  = None
+        self.hook_layers()
+    
+    def hook_layers(self):
+        def backward_hook(module, grad_input, grad_output):
+            self.gradients = grad_output[0]
+        
+        def forward_hook(module, input, output):
+            self.activations = output
+        
+        self.target_layer.register_forward_hook(forward_hook)
+        self.target_layer.register_backward_hook(backward_hook)
+    
+    def generate_cam(self, input_image, sem, depth, target_output):
+        self.model.zero_grad()
+        output = self.model(input_image, sem, depth)
+        
+        target = target_output  # 使用目标输出计算梯度
+        target.backward()
+        
+        gradients   = self.gradients.cpu().data.numpy()[0]
+        activations = self.activations.cpu().data.numpy()[0]
+        weights     = np.mean(gradients, axis=(1, 2))
+        
+        cam = np.zeros(activations.shape[1:], dtype=np.float32)
+        for i, w in enumerate(weights):
+            cam += w * activations[i]
+        
+        cam = np.maximum(cam, 0)
+        cam = cv2.resize(cam, (input_image.shape[2], input_image.shape[3]))
+        cam = cam - np.min(cam)
+        cam = cam / np.max(cam)
+        return cam
+
+
+def visualize_cam_on_image(image, cam, save_path):
+    image        = image.cpu().numpy().transpose(1, 2, 0)
+    cam          = cv2.resize(cam, (image.shape[1], image.shape[0]))  # 确保 cam 尺寸与 image 一致
+    heatmap      = cv2.applyColorMap(np.uint8(255 * cam), cv2.COLORMAP_JET)
+    heatmap      = np.float32(heatmap) / 255
+    cam_on_image = heatmap + np.float32(image)
+    cam_on_image = cam_on_image / np.max(cam_on_image)
+    
+    plt.imshow(np.uint8(255 * cam_on_image))
+    plt.axis("off")
+    plt.savefig(save_path)
+    plt.close()
+
+# endregion
+
+
 # region Train
-
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find("Conv") != -1:
-        m.weight.data.normal_(0.0, 0.02)
-    elif classname.find("BatchNorm") != -1:
-        m.weight.data.normal_(1.0, 0.02)
-        m.bias.data.fill_(0)
-
 
 def train(args: argparse.Namespace):
     # General config
-    save_dir = mon.Path(args.save_dir)
-    weights  = args.weights
-    device   = mon.set_device(args.device)
-    epochs   = args.epochs
-    verbose  = args.verbose
+    save_dir   = mon.Path(args.save_dir)
+    weights    = args.weights
+    device     = mon.set_device(args.device)
+    epochs     = args.epochs
+    verbose    = args.verbose
+    seed       = args.seed
+    lr         = args.lr
+    stage      = args.stage
+    pretrained = args.pretrained
+    arch_      = args.arch_
+    frozen     = args.frozen
     
     # Directory
     weights_dir = save_dir

@@ -80,8 +80,9 @@ def predict(args: dict) -> str:
             description = f"[bright_yellow] Predicting"
         ):
             # Infer
-            meta    = datapoint.get("meta")
-            outputs = model.infer(
+            meta       = datapoint.get("meta")
+            image_path = mon.Path(meta["path"])
+            outputs    = model.infer(
                 datapoint = datapoint,
                 imgsz     = imgsz,
                 resize    = resize,

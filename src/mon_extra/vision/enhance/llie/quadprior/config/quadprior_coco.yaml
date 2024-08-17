@@ -4,14 +4,14 @@ config      : ~
 arch        : "quadprior"
 model       : "quadprior"
 data        : "coco"
-# data_dir    : "coco/coco2017/images/{train2017,unlabeled2017}/*.*"
-data_dir    : "coco/coco2017/images/*/*.*"
+# data_dir    : "data/coco/coco2017/images/{train2017,unlabeled2017}/*.*"
+data_dir    : "data/coco/coco2017/images/*/*.*"
 root        : ~
 project     : ~
 variant     : ~
 fullname    : "quadprior_coco"
 save_dir    : ~
-weights     : "vision/enhance/llie/quadprior/quadprior/coco/control_sd15_coco_final.ckpt"
+weights     : "zoo/vision/enhance/llie/quadprior/quadprior/coco/control_sd15_coco_final.ckpt"
 device      : ~
 local_rank  : ~
 launcher    : ~

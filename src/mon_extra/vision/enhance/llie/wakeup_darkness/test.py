@@ -1,15 +1,14 @@
+import argparse
 import os
 import sys
+
 import numpy as np
 import torch
-import argparse
 import torch.utils
-import torch.backends.cudnn as cudnn
 from PIL import Image
-from torch.autograd import Variable
-from model import Network_woCalibrate
 
 from dataset import ImageLowSemDataset
+from model import Network_woCalibrate
 
 parser = argparse.ArgumentParser("enlighten-anything")
 parser.add_argument('--gpu', type=int, default=0, help='gpu device id')
@@ -22,7 +21,6 @@ args = parser.parse_args()
 save_path = args.test_output_dir
 os.makedirs(save_path, exist_ok=True)
 
-import subprocess
 print("sam is working...")
 # subprocess.call(['python', 'sam.py', '--source_dir', args.test_dir])
 print("sam is done...")

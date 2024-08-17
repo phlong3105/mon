@@ -1,24 +1,31 @@
-# General config
-root        : ~
-weights     : ~
-model       : ~
+# Basic
+hostname    : ~
+config      : ~
+arch        : "llunet++"
+model       : "llunet++"
 data        : "lol_v1"
-fullname    : ~
+data_dir    : "data/enhance/llie/lol_v1/train/lq"
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "lunet++_lol_v1"
 save_dir    : ~
+weights     : "zoo/vision/enhance/llie/llunet++/llunet++/lol_v1/llunet++_lol_v1_best_psnr.pt"
 device      : 0
+local_rank  : ~
+launcher    : ~
 epochs      : 100
 steps       : ~
 imgsz       : 384
 resize      : ~
-benchmark   : ~
-save_image  : ~
-use_data_dir: ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
 exist_ok    : False
 verbose     : True
 
-# Model
+# Model Specific
 loss_weights: [0.40, 0.05, 0.15, 0.40]
-
-# Training
 batch_size  : 4
 lr          : 0.00001

@@ -194,6 +194,16 @@ class VideoLoaderCV(VideoDataset):
 		return int(self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
 	
 	@property
+	def shape(self) -> tuple[int, int, int]:
+		"""Return the shape of the frames in the video stream."""
+		return self.frame_height, self.frame_width, 3
+	
+	@property
+	def imgsz(self) -> tuple[int, int]:
+		"""Return the image size of the frames in the video stream."""
+		return self.frame_height, self.frame_width
+	
+	@property
 	def mode(self):  # Flag=10
 		"""Return the backend-specific value indicating the current capture mode."""
 		return self.video_capture.get(cv2.CAP_PROP_MODE)

@@ -22,20 +22,20 @@ python train_loss.py --arc WithoutCalNet --batch_size 10
 '''
 # 该脚本命令行参数 可选项
 parser = argparse.ArgumentParser("enlighten-anything")
-parser.add_argument('--batch_size', type=int, default=10, help='batch size')
-parser.add_argument('--cuda', type=bool, default=True, help='Use CUDA to train model')
-parser.add_argument('--gpu', type=str, default='0', help='gpu device id')
-parser.add_argument('--seed', type=int, default=2, help='random seed')
-parser.add_argument('--epochs', type=int, default=1000, help='epochs')
-parser.add_argument('--lr', type=float, default=0.0003, help='learning rate')
-parser.add_argument('--stage', type=int, default=3, help='epochs')
-parser.add_argument('--save', type=str, default='exp/LOL-tgrs/', help='location of the data corpus')
-parser.add_argument('--pretrain', type=str, default='weights/pretrained_SCI/difficult.pt', help='pretrained weights directory')
-parser.add_argument('--arch', type=str, choices=['WithCalNet', 'WithoutCalNet'], required=True, help='with/without Calibrate Net')
-parser.add_argument('--frozen', type=str, default=None, choices=['CalEnl', 'Cal', 'Enl'], help='froze the original weights')
-parser.add_argument('--train_dir', type=str, default='./data/LOL/train480/low', help='training data directory')
-parser.add_argument('--val_dir', type=str, default='./data/LOL/test15/low', help='training data directory')
-parser.add_argument('--comment', type=str, default=None, help='comment')
+parser.add_argument("--batch_size", type=int,   default=10,              help="batch size")
+parser.add_argument("--cuda",       type=bool,  default=True,            help="Use CUDA to train model")
+parser.add_argument("--gpu",        type=str,   default="0",             help="gpu device id")
+parser.add_argument("--seed",       type=int,   default=2,               help="random seed")
+parser.add_argument("--epochs",     type=int,   default=1000,            help="epochs")
+parser.add_argument("--lr",         type=float, default=0.0003,          help="learning rate")
+parser.add_argument("--stage",      type=int,   default=3,               help="epochs")
+parser.add_argument("--save",       type=str,   default="exp/LOL-tgrs/", help="location of the data corpus")
+parser.add_argument("--pretrain",   type=str,   default="weights/pretrained_SCI/difficult.pt",          help="pretrained weights directory")
+parser.add_argument("--arch",       type=str,   choices=["WithCalNet", "WithoutCalNet"], required=True, help="with/without Calibrate Net")
+parser.add_argument("--frozen",     type=str,   default=None, choices=["CalEnl", "Cal", "Enl"],         help="froze the original weights")
+parser.add_argument("--train_dir",  type=str,   default="./data/LOL/train480/low", help="training data directory")
+parser.add_argument("--val_dir",    type=str,   default="./data/LOL/test15/low",   help="training data directory")
+parser.add_argument("--comment",    type=str,   default=None,                      help="comment")
 args = parser.parse_args()
 
 # 根据命令行参数进行设置
@@ -63,19 +63,16 @@ def save_images(tensor, path):
 
 
 def model_init(model):
-    if(args.pretrain==None):
+    if args.pretrain is None:
         # model.enhance.in_conv.apply(model.weights_init)
         # model.enhance.conv.apply(model.weights_init)
         # model.enhance.out_conv.apply(model.weights_init)
         # model.calibrate.in_conv.apply(model.weights_init)
         # model.calibrate.convs.apply(model.weights_init)
         # model.calibrate.out_conv.apply(model.weights_init)
-        
         # model.enhance.apply(model.weights_init)
         # model.calibrate.apply(model.weights_init)
- 
         model.apply(model.weights_init)
-
     else:
         pretrained_dict = torch.load(args.pretrain)
         model_dict = model.state_dict()
@@ -83,7 +80,7 @@ def model_init(model):
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
         
-        if(args.frozen != None):
+        if args.frozen is not None:
             for param in model.parameters():
                 param.requires_grad = False
             for param in model.enhance.fusion.parameters() if 'Enl' in args.frozen else model.enhance.parameters():
@@ -92,11 +89,12 @@ def model_init(model):
 
 
 class GradCAM:
+    
     def __init__(self, model, target_layer):
-        self.model = model
+        self.model        = model
         self.target_layer = target_layer
-        self.gradients = None
-        self.activations = None
+        self.gradients    = None
+        self.activations  = None
         self.hook_layers()
 
     def hook_layers(self):
