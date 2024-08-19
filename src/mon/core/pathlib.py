@@ -21,7 +21,7 @@ __all__ = [
     "get_files",
     "get_image_file",
     "get_next_version",
-    "get_relative_path_from_part",
+    "get_relative_path",
     "get_yaml_file",
     "hash_files",
     "is_url",
@@ -256,13 +256,9 @@ class Path(type(pathlib.Path())):
         """Return the image file with the given path."""
         return get_image_file(self)
     
-    def relative_path_from_part(self, part: Path | str) -> Path:
-        """Get the relative path to the given :param:`part` of the given :param:`path`.
-    
-        Args:
-            part: The part of the path to get the relative path from.
-        """
-        return get_relative_path_from_part(self, part)
+    def relative_path(self, start_part: Path | str) -> Path:
+        """Get the relative path starting from the given :param:`part`."""
+        return get_relative_path(self, start_part)
     
     def yaml_file(self) -> Path:
         """Return the YAML file with the given path."""
@@ -381,18 +377,18 @@ def get_next_version(path: Path | str, prefix: str | None = None) -> int:
     return max(existing_versions) + 1
 
 
-def get_relative_path_from_part(path: Path | str, part: Path | str) -> Path:
-    """Get the relative path to the given :param:`part` of the given :param:`path`.
+def get_relative_path(path: Path | str, start_part: Path | str) -> Path:
+    """Get the relative path starting from the given :param:`part`.
     
     Args:
-        path: The path to get the relative path from.
-        part: The part of the path to get the relative path from.
+        path: The path to the file.
+        start_part: The starting part of the relative path.
     """
-    path = Path(path)
-    part = str(part)
-    if part in [None, "None", "", "."] or part not in str(path):
+    path       = Path(path)
+    start_part = str(start_part)
+    if start_part in [None, "None", "", "."] or start_part not in str(path):
         return path
-    return Path(*path.parts[path.parts.index(part):])
+    return Path(*path.parts[path.parts.index(start_part):])
     
 
 def get_yaml_file(path: Path) -> Path:
