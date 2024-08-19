@@ -16,6 +16,9 @@
 [submodule "src/mon_extra/vision/detect/yolox"]
 	path = src/mon_extra/vision/detect/yolox
 	url  = https://github.com/phlong3105/yolox
+[submodule "src/mon_extra/vision/segment/fastsam"]
+	path = src/mon_extra/vision/segment/fastsam
+	url  = https://github.com/phlong3105/fastsam
 [submodule "src/mon_extra/vision/segment/sam"]
 	path = src/mon_extra/vision/segment/sam
 	url  = https://github.com/phlong3105/sam
