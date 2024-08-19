@@ -4,11 +4,11 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "lol_v2_synthetic"
-data_dir    : "data/enhance/llie/lol_v2_synthetic/test/lq"
+data_dir    : "data/enhance/llie/lol_v2_synthetic"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "zeroig_lol_v1"
+fullname    : "zeroig_lol_v2_synthetic"
 save_dir    : ~
 weights     : "zoo/vision/enhance/llie/zeroig/zeroig/lol_v2_synthetic/zeroig_lol_v2_synthetic.pt"
 device      : 0

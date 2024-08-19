@@ -54,6 +54,8 @@ def predict(args: argparse.Namespace):
     imgsz        = args.imgsz
     resize       = args.resize
     benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     mon.set_random_seed(seed)
     
@@ -120,21 +122,29 @@ def predict(args: argparse.Namespace):
                 timer.tick()
                 enhance, output = model(input)
                 timer.tock()
-                
-                # Save
-                if use_fullpath:
-                    rel_path   = image_path.relative_path(data_name)
-                    output_dir = save_dir / rel_path.parents[0]
-                    debug_dir  = save_dir / rel_path.parents[1] / f"{rel_path.parent.name}_denoise"
-                else:
-                    output_dir = save_dir / data_name
-                    debug_dir  = save_dir / f"{data_name}_denoise"
-                output_path    = save_dir / image_path.name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
                 enhance = save_images(enhance)
                 output  = save_images(output)
-                Image.fromarray(output).save(str(debug_dir   / f"{image_path.stem}.png"), "PNG")
-                Image.fromarray(enhance).save(str(output_dir / f"{image_path.stem}.png"), "PNG")
+                
+                # Save
+                if save_image:
+                    if use_fullpath:
+                        rel_path   = image_path.relative_path(data_name)
+                        output_dir = save_dir / rel_path.parents[0]
+                    else:
+                        output_dir = save_dir / data_name
+                    output_path    = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    Image.fromarray(enhance).save(str(output_dir / f"{image_path.stem}.png"), "PNG")
+                if save_debug:
+                    if use_fullpath:
+                        rel_path   = image_path.relative_path(data_name)
+                        debug_dir  = save_dir / rel_path.parents[1] / f"{rel_path.parent.name}_denoise"
+                    else:
+                        debug_dir  = save_dir / f"{data_name}_denoise"
+                    output_path    = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    Image.fromarray(output).save(str(debug_dir / f"{image_path.stem}.png"), "PNG")
+                
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 

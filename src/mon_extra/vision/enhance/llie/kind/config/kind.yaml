@@ -1,24 +1,24 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "wakeup_darkness"
-model       : "wakeup_darkness"
+arch        : "kind"
+model       : "kind"
 data        : "lol_v1"
 data_dir    : "data/enhance/llie/lol_v1"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : ~
+fullname    : "kind_lol_v1"
 save_dir    : ~
-weights     : ~
+weights     : "zoo/vision/enhance/llie/kind/kind/lol_v1"
 device      : 0
 local_rank  : -1
 launcher    : ~
-epochs      : 1000
+epochs      : 401
 steps       : ~
 imgsz       : 512
 resize      : ~
-benchmark   : True
+benchmark   : False
 save_image  : True
 save_debug  : False
 use_data_dir: False
@@ -27,9 +27,13 @@ exist_ok    : False
 verbose     : True
 
 # Model Specific
-seed        : 2
-lr          : 0.0003
-stage       : 3
-pretrained  : "zoo/vision/enhance/llie/wakeup_darkness/pretrained/sci_difficult.pth"
-arch_       : "WithCalNet"  # "WithCalNet", "WithoutCalNet"
-frozen      : ~  # "CalEnl", "Cal", "Enl"
+batch_size     : 32
+length         : 256
+steps_per_epoch: 128
+print_frequency: 10
+save_frequency : 10
+samples_dir    : "./samples"
+weights_dir    : "./checkpoints"
+learning_rate  : 0.0004
+checkpoints    : True
+noDecom        : False

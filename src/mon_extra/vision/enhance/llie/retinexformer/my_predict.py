@@ -31,6 +31,8 @@ def predict(args: argparse.Namespace):
     imgsz        = args.imgsz
     resize       = args.resize
     benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     
     # Override options with args
@@ -116,14 +118,15 @@ def predict(args: argparse.Namespace):
                 restored = torch.clamp(restored, 0, 1).cpu().detach().permute(0, 2, 3, 1).squeeze(0).numpy()
                 
                 # Save
-                if use_fullpath:
-                    rel_path = image_path.relative_path(data_name)
-                    save_dir = save_dir / rel_path.parent
-                else:
-                    save_dir = save_dir / data_name
-                output_path  = save_dir / image_path.name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                utils.save_img(str(output_path), img_as_ubyte(restored))
+                if save_image:
+                    if use_fullpath:
+                        rel_path = image_path.relative_path(data_name)
+                        save_dir = save_dir / rel_path.parent
+                    else:
+                        save_dir = save_dir / data_name
+                    output_path  = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    utils.save_img(str(output_path), img_as_ubyte(restored))
         
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")

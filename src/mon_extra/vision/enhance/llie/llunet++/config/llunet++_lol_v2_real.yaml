@@ -4,11 +4,11 @@ config      : ~
 arch        : "llunet++"
 model       : "llunet++"
 data        : "lol_v2_real"
-data_dir    : "data/enhance/llie/lol_v2_real/train/lq"
+data_dir    : "data/enhance/llie/lol_v2_real"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "lunet++_lol_v2_real"
+fullname    : "llunet++_lol_v2_real"
 save_dir    : ~
 weights     : "zoo/vision/enhance/llie/llunet++/llunet++/lol_v2_real/llunet++_lol_v2_real_best_psnr.pt"
 device      : 0

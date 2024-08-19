@@ -104,6 +104,8 @@ def predict(args: argparse.Namespace):
     imgsz        = args.imgsz[0]
     resize       = args.resize
     benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     
     # Model
@@ -149,14 +151,15 @@ def predict(args: argparse.Namespace):
                 sum_time   += run_time
                 
                 # Save
-                if use_fullpath:
-                    rel_path = image_path.relative_path(data_name)
-                    save_dir = save_dir / rel_path.parent
-                else:
-                    save_dir = save_dir / data_name
-                output_path  = save_dir / image_path.name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                torchvision.utils.save_image(enhanced_image, str(output_path))
+                if save_image:
+                    if use_fullpath:
+                        rel_path = image_path.relative_path(data_name)
+                        save_dir = save_dir / rel_path.parent
+                    else:
+                        save_dir = save_dir / data_name
+                    output_path  = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    torchvision.utils.save_image(enhanced_image, str(output_path))
         
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")

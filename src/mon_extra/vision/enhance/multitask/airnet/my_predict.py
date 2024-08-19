@@ -21,17 +21,20 @@ current_dir  = current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
-    data       = args.data
-    save_dir   = args.save_dir
-    weights    = args.weights
-    device     = mon.set_device(args.device)
-    epochs     = args.epochs
-    imgsz      = args.imgsz[0]
-    resize     = args.resize
-    benchmark  = args.benchmark
-    mode       = args.mode
-    batch_size = args.batch_size
-    opt        = argparse.Namespace(
+    data         = args.data
+    save_dir     = args.save_dir
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    epochs       = args.epochs
+    imgsz        = args.imgsz[0]
+    resize       = args.resize
+    benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
+    use_fullpath = args.use_fullpath
+    mode         = args.mode
+    batch_size   = args.batch_size
+    opt          = argparse.Namespace(
         **{
             "mode"      : mode,
             "batch_size": batch_size,
@@ -79,12 +82,22 @@ def predict(args: argparse.Namespace):
         ):
             image       = datapoint.get("image")
             meta        = datapoint.get("meta")
-            image_path  = meta["path"]
+            image_path  = mon.Path(meta["path"])
             timer.tick()
             restored    = model(x_query=image, x_key=image)
             timer.tock()
-            output_path = save_dir / image_path.name
-            save_image_tensor(restored, output_path)
+            
+            # Save
+            if save_image:
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                save_image_tensor(restored, output_path)
+   
     avg_time = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 

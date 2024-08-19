@@ -348,6 +348,8 @@ def predict(args: argparse.Namespace):
     imgsz        = args.imgsz
     resize       = args.resize
     benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     
     # Data I/O
@@ -376,14 +378,15 @@ def predict(args: argparse.Namespace):
                 sum_time    += run_time
                 
                 # Save
-                if use_fullpath:
-                    rel_path = image_path.relative_path(data_name)
-                    save_dir = save_dir / rel_path.parent
-                else:
-                    save_dir = save_dir / data_name
-                output_path  = save_dir / image_path.name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                cv2.imwrite(str(output_path), enhanced_image)
+                if save_image:
+                    if use_fullpath:
+                        rel_path = image_path.relative_path(data_name)
+                        save_dir = save_dir / rel_path.parent
+                    else:
+                        save_dir = save_dir / data_name
+                    output_path  = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    cv2.imwrite(str(output_path), enhanced_image)
                 
                 # Benchmark
                 if i == 0:

@@ -41,6 +41,8 @@ def predict(args: argparse.Namespace):
     imgsz        = args.imgsz
     resize       = args.resize
     benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     
     # Seed
@@ -99,22 +101,23 @@ def predict(args: argparse.Namespace):
                 timer.tock()
                 
                 # Save
-                if use_fullpath:
-                    rel_path = image_path.relative_path(data_name)
-                    save_dir = save_dir / rel_path.parent
-                else:
-                    save_dir = save_dir / data_name
-                output_path  = save_dir / image_path.name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                save_images(u_list[-1], str(output_path))
-                # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
-                # save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
-                """
-                if args.model == "lol":
-                    save_images(u_list[-1], u_path)
-                elif args.model == "upe" or args.model == "dark":
-                    save_images(u_list[-2], u_path)
-                """
+                if save_image:
+                    if use_fullpath:
+                        rel_path = image_path.relative_path(data_name)
+                        save_dir = save_dir / rel_path.parent
+                    else:
+                        save_dir = save_dir / data_name
+                    output_path  = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    save_images(u_list[-1], str(output_path))
+                    # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
+                    # save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
+                    """
+                    if args.model == "lol":
+                        save_images(u_list[-1], u_path)
+                    elif args.model == "upe" or args.model == "dark":
+                        save_images(u_list[-2], u_path)
+                    """
         
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
@@ -126,7 +129,6 @@ def predict(args: argparse.Namespace):
 
 def main() -> str:
     args = mon.parse_predict_args(model_root=current_dir)
-    args.weights = args.weights or mon.ZOO_DIR / "vision/enhance/llie/ruas/ruas/lol_v1/ruas_lol_v1_pretrained.pt"
     predict(args)
 
 

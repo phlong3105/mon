@@ -4,7 +4,7 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "lime"
-data_dir    : "data/enhance/llie/lime/test/lq"
+data_dir    : "data/enhance/llie/lime"
 root        : ~
 project     : ~
 variant     : ~

@@ -4,7 +4,7 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "fusion"
-data_dir    : "data/enhance/llie/fusion/test/lq"
+data_dir    : "data/enhance/llie/fusion"
 root        : ~
 project     : ~
 variant     : ~

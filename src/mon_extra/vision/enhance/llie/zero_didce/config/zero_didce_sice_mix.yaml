@@ -4,7 +4,7 @@ config      : ~
 arch        : "zero_didce"
 model       : "zero_didce"
 data        : "sice_mix"
-data_dir    : "data/enhance/llie/sice_mix/train/lq"
+data_dir    : "data/enhance/llie/sice_mix"
 root        : ~
 project     : ~
 variant     : ~

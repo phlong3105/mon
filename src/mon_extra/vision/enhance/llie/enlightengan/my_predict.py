@@ -32,6 +32,8 @@ def predict(args: argparse.Namespace):
     imgsz        = args.imgsz
     resize       = args.resize
     benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     
     # Measure efficiency score
@@ -70,14 +72,15 @@ def predict(args: argparse.Namespace):
                 timer.tock()
                 
                 # Save
-                if use_fullpath:
-                    rel_path = image_path.relative_path(data_name)
-                    save_dir = save_dir / rel_path.parent
-                else:
-                    save_dir = save_dir / data_name
-                output_path  = save_dir / image_path.name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                cv2.imwrite(str(output_path), enhanced_image)
+                if save_image:
+                    if use_fullpath:
+                        rel_path = image_path.relative_path(data_name)
+                        save_dir = save_dir / rel_path.parent
+                    else:
+                        save_dir = save_dir / data_name
+                    output_path  = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    cv2.imwrite(str(output_path), enhanced_image)
         
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")

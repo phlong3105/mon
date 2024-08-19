@@ -1,32 +1,27 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "llunet++"
-model       : "llunet++"
+arch        : "dccnet"
+model       : "dccnet"
 data        : "lol_v1"
 data_dir    : "data/enhance/llie/lol_v1"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "llunet++_lol_v1"
+fullname    : "dccnet_lol_v1"
 save_dir    : ~
-weights     : "zoo/vision/enhance/llie/llunet++/llunet++/lol_v1/llunet++_lol_v1_best_psnr.pt"
+weights     : "zoo/vision/enhance/llie/dccnet/dccnet/lol_v1/dccnet_lol_v1.pth"
 device      : 0
-local_rank  : ~
+local_rank  : -1
 launcher    : ~
-epochs      : 100
+epochs      : 400
 steps       : ~
-imgsz       : 384
+imgsz       : 512
 resize      : ~
-benchmark   : True
+benchmark   : False
 save_image  : True
 save_debug  : False
 use_data_dir: False
 use_fullpath: False
 exist_ok    : False
 verbose     : True
-
-# Model Specific
-loss_weights: [0.40, 0.05, 0.15, 0.40]
-batch_size  : 4
-lr          : 0.00001

@@ -4,7 +4,7 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "mef"
-data_dir    : "data/enhance/llie/mef/test/lq"
+data_dir    : "data/enhance/llie/mef"
 root        : ~
 project     : ~
 variant     : ~

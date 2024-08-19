@@ -4,7 +4,7 @@ config      : ~
 arch        : "mtfe"
 model       : "mtfe"
 data        : "lol_v1"
-data_dir    : "data/enhance/llie/lol_v1/train/lq"
+data_dir    : "data/enhance/llie/lol_v1"
 root        : ~
 project     : ~
 variant     : ~
@@ -16,7 +16,7 @@ local_rank  : ~
 launcher    : ~
 epochs      : 1000
 steps       : ~
-imgsz       : 512
+imgsz       : 256
 resize      : ~
 benchmark   : True
 save_image  : True

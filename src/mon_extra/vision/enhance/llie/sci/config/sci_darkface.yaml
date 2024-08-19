@@ -1,20 +1,20 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "zeroig"
-model       : "zeroig"
-data        : "vv"
-data_dir    : "data/enhance/llie/vv"
+arch        : "sci"
+model       : "sci"
+data        : "darkface"
+data_dir    : "data/enhance/llie/darkface"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "zeroig_vv"
+fullname    : "sci_darkface"
 save_dir    : ~
-weights     : "zoo/vision/enhance/llie/zeroig/zeroig/vv/zeroig_vv.pt"
+weights     : "zoo/vision/enhance/llie/sci/sci/darkface/sci_darkface.pt"
 device      : 0
-local_rank  : ~
+local_rank  : -1
 launcher    : ~
-epochs      : 2001
+epochs      : ~
 steps       : ~
 imgsz       : 512
 resize      : ~
@@ -25,9 +25,3 @@ use_data_dir: False
 use_fullpath: False
 exist_ok    : False
 verbose     : True
-
-# Model Specific
-seed       : 2
-batch_size : 1
-num_workers: 0
-lr         : 0.0003

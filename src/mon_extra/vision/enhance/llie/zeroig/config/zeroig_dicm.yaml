@@ -4,7 +4,7 @@ config      : ~
 arch        : "zeroig"
 model       : "zeroig"
 data        : "dicm"
-data_dir    : "data/enhance/llie/dicm/test/lq"
+data_dir    : "data/enhance/llie/dicm"
 root        : ~
 project     : ~
 variant     : ~

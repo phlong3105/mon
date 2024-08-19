@@ -70,6 +70,8 @@ def predict(args: argparse.Namespace):
     imgsz        = args.imgsz
     resize       = args.resize
     benchmark    = args.benchmark
+    save_image   = args.save_image
+    save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     
     device    = device[0] if isinstance(device, list) else device
@@ -186,17 +188,18 @@ def predict(args: argparse.Namespace):
                 restored = img_as_ubyte(restored[0])
                 
                 # Save
-                if use_fullpath:
-                    rel_path = image_path.relative_path(data_name)
-                    save_dir = save_dir / rel_path.parent
-                else:
-                    save_dir = save_dir / data_name
-                output_path  = save_dir / image_path.name
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                if opt["image_color"] == "RGB":
-                    save_img(output_path, restored)
-                else:
-                    save_gray_img(output_path, restored)
+                if save_image:
+                    if use_fullpath:
+                        rel_path = image_path.relative_path(data_name)
+                        save_dir = save_dir / rel_path.parent
+                    else:
+                        save_dir = save_dir / data_name
+                    output_path  = save_dir / image_path.name
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    if opt["image_color"] == "RGB":
+                        save_img(output_path, restored)
+                    else:
+                        save_gray_img(output_path, restored)
         
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")

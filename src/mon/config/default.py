@@ -169,12 +169,15 @@ trainer = {
 # region Predicting
 
 predictor = {
-	"source"		  : None,    # Source data.
 	"default_root_dir": None,    # Default path for saving results.
+	"source"		  : None,    # Source data.
 	"devices"         : "auto",  # Running devices.
+	"resize"          : False,   # Resize the input image.
     "benchmark"       : False,   # Measure efficient score.
     "save_image"      : False,   # Save result images.
 	"save_debug"      : False,   # Save debug images.
+	"use_data_dir"    : False,   # Use data directory.
+	"use_fullpath"    : False,   # Use full path.
     "verbose"         : True,    # Verbosity.
 }
 

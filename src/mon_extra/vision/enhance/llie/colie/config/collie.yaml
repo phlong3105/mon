@@ -8,7 +8,7 @@ data_dir    : ~
 root        : ~
 project     : ~
 variant     : ~
-fullname    : ~
+fullname    : "colie_sice_mix"
 save_dir    : ~
 weights     : ~
 device      : 0
