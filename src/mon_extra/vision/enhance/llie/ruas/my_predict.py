@@ -92,12 +92,15 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 image      = datapoint.get("image")
                 meta       = datapoint.get("meta")
                 image_path = mon.Path(meta["path"])
-                input      = image.to(device)
+                image      = image.to(device)
+                
+                # Infer
                 timer.tick()
-                u_list, r_list = model(input)
+                u_list, r_list = model(image)
                 timer.tock()
                 
                 # Save

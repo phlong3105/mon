@@ -260,7 +260,8 @@ def predict(args: argparse.Namespace):
                 (debug_dir /    "a").mkdir(parents=True, exist_ok=True)
                 (debug_dir / "mask").mkdir(parents=True, exist_ok=True)
                 
-                image      = prepare_hazy_image(str(image_path))
+                # Infer
+                image = prepare_hazy_image(str(image_path))
                 timer.tick()
                 dh = Dehaze(str(image_path.stem), image, epochs, clip=True, output_path=str(output_dir))
                 dh.optimize()

@@ -1179,20 +1179,6 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     },
     # endregion
     # region segment
-    "fastsam"      : {
-        "fastsam_s_sa_1b": {
-            "tasks"    : [Task.SEGMENT],
-            "schemes"  : [Scheme.SUPERVISED],
-            "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "fastsam",
-            "torch_distributed_launch": False,
-        },
-        "fastsam_x_sa_1b": {
-            "tasks"    : [Task.SEGMENT],
-            "schemes"  : [Scheme.SUPERVISED],
-            "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "fastsam",
-            "torch_distributed_launch": False,
-        },
-    },
     "mobile_sam"   : {
         "mobile_sam_vit_t": {
             "tasks"    : [Task.SEGMENT],

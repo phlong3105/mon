@@ -131,12 +131,14 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 image      = datapoint.get("image")
                 meta       = datapoint.get("meta")
                 image_path = mon.Path(meta["path"])
                 lr         = image  # imread(str(image_path))
                 raw_shape  = lr.shape
                 
+                # Infer
                 timer.tick()
                 lr, padding_params = auto_padding(lr)
                 his = hiseq_color_cv2_img(lr)

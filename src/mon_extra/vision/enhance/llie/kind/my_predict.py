@@ -82,12 +82,15 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                meta        = datapoint.get("meta")
-                image_path  = mon.Path(meta["path"])
-                image       = Image.open(image_path)
-                image       = np.asarray(image, np.float32).transpose((2, 0, 1)) / 255.0
-                image       = torch.from_numpy(image).float()
-                image       = image.cuda().unsqueeze(0)
+                # Input
+                meta       = datapoint.get("meta")
+                image_path = mon.Path(meta["path"])
+                image      = Image.open(image_path)
+                image      = np.asarray(image, np.float32).transpose((2, 0, 1)) / 255.0
+                image      = torch.from_numpy(image).float()
+                image      = image.cuda().unsqueeze(0)
+                
+                # Infer
                 start_time  = time.time()
                 bright_low  = torch.mean(image)
                 bright_high = torch.ones_like(bright_low) * target_b + 0.5 * bright_low

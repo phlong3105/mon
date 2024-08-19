@@ -134,12 +134,12 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                meta = datapoint.get("meta")
+                # Input
+                meta       = datapoint.get("meta")
+                image_path = mon.Path(meta["path"])
                 if torch.cuda.is_available():
                     torch.cuda.ipc_collect()
                     torch.cuda.empty_cache()
-                 
-                image_path = mon.Path(meta["path"])
                 if opt["image_color"] == "RGB":
                     image = load_gray_img(image_path)
                 else:

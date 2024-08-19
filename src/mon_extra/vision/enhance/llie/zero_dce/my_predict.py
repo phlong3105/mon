@@ -73,6 +73,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 meta          = datapoint.get("meta")
                 image_path    = mon.Path(meta["path"])
                 data_lowlight = Image.open(image_path).convert("RGB")
@@ -80,6 +81,8 @@ def predict(args: argparse.Namespace):
                 data_lowlight = torch.from_numpy(data_lowlight).float()
                 data_lowlight = data_lowlight.permute(2, 0, 1)
                 data_lowlight = data_lowlight.to(device).unsqueeze(0)
+                
+                # Infer
                 timer.tick()
                 _, enhanced_image, _ = DCE_net(data_lowlight)
                 timer.tock()

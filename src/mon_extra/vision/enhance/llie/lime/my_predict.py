@@ -50,12 +50,15 @@ def predict(args: argparse.Namespace):
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
+            # Input
             image      = datapoint.get("image")
             meta       = datapoint.get("meta")
             image_path = mon.Path(meta["path"])
             h, w       = mon.get_image_size(image)
             if resize:
                 image = cv2.resize(image, (imgsz, imgsz))
+            
+            # Infer
             timer.tick()
             enhanced_image = enhance_image_exposure(
                 im      = image,
@@ -69,6 +72,8 @@ def predict(args: argparse.Namespace):
                 eps     = args.eps
             )
             timer.tock()
+            
+            # Post-process
             if resize:
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
             

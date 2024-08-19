@@ -164,13 +164,16 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 image       = datapoint.get("image")
                 meta        = datapoint.get("meta")
                 image_path  = mon.Path(meta["path"])
-                input_image = image  # cv2.imread(str(image_path))
+                input_image = image
                 h0, w0      = input_image.shape[0], input_image.shape[1]
+                
+                # Infer
                 timer.tick()
-                # if you set num_samples > 1, process will return multiple results
+                # If you set num_samples > 1, process will return multiple results
                 output      = process(
                     model, diffusion_sampler,
                     input_image      = input_image,
@@ -179,6 +182,8 @@ def predict(args: argparse.Namespace):
                     use_float16      = use_float16,
                 )[0]
                 timer.tock()
+                
+                # Post-process
                 output = mon.resize(output, (h0, w0))
                 
                 # Save

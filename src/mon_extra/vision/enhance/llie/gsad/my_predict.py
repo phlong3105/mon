@@ -109,6 +109,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 meta        = datapoint.get("meta")
                 image_path  = mon.Path(meta["path"])
                 raw_img     = Image.open(image_path).convert("RGB")
@@ -116,6 +117,8 @@ def predict(args: argparse.Namespace):
                 raw_img     = transforms.Resize((h // 16 * 16, w // 16 * 16))(raw_img)
                 # raw_img     = transforms.Resize(((h // 16 * 16) // 2, (w // 16 * 16) // 2))(raw_img)  # For large image
                 raw_img     = transform(F.to_tensor(raw_img)).unsqueeze(0).cuda()
+                
+                # Infer
                 timer.tick()
                 diffusion.feed_data(
                     data = {
@@ -125,6 +128,8 @@ def predict(args: argparse.Namespace):
                 )
                 diffusion.test(continous=False)
                 timer.tock()
+                
+                # Post-process
                 visuals     = diffusion.get_current_visuals()
                 normal_img  = Metrics.tensor2img(visuals["HQ"])
                 normal_img  = cv2.resize(normal_img, (w, h))

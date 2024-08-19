@@ -145,10 +145,13 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                meta        = datapoint.get("meta")
-                image_path  = meta["path"]
+                # Input
+                meta       = datapoint.get("meta")
+                image_path = meta["path"]
+                
+                # Infer
                 enhanced_image, run_time = model.run(image_path)
-                sum_time   += run_time
+                sum_time += run_time
                 
                 # Save
                 if save_image:

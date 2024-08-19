@@ -86,19 +86,19 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                image = datapoint.get("image")
-                meta  = datapoint.get("meta")
+                # Input
+                image      = datapoint.get("image")
+                meta       = datapoint.get("meta")
+                image_path = mon.Path(meta["path"])
+                
                 if torch.cuda.is_available():
                     torch.cuda.ipc_collect()
                     torch.cuda.empty_cache()
-                image_path = mon.Path(meta["path"])
-                
                 if resize:
                     h0, w0 = mon.get_image_size(image)
                     image  = mon.resize(image, imgsz)
                     console.log("Resizing images to: ", image.shape[2], image.shape[3])
                     # images = proc.resize(input=images, size=[1000, 666])
-                
                 # Padding in case images are not multiples of 4
                 h, w  = image.shape[2], image.shape[3]
                 H, W  = ((h + factor) // factor) * factor, ((w + factor) // factor) * factor
@@ -107,10 +107,12 @@ def predict(args: argparse.Namespace):
                 input = F.pad(image, (0, padw, 0, padh), 'reflect')
                 input = input.to(device)
                 
+                # Infer
                 timer.tick()
                 restored = model(input)
                 timer.tock()
                 
+                # Post-process
                 # Unpad images to original dimensions
                 restored = restored[:, :, :h, :w]
                 if resize:

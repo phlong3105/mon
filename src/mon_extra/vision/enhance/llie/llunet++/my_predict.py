@@ -79,6 +79,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 meta       = datapoint.get("meta")
                 image_path = mon.Path(meta["path"])
                 image      = Image.open(image_path).convert("RGB")
@@ -91,9 +92,13 @@ def predict(args: argparse.Namespace):
                     image = mon.resize(image, imgsz)
                 else:
                     image = mon.resize_divisible(image, 32)
+                
+                # Infer
                 timer.tick()
                 enhanced_image = model(image)
                 timer.tock()
+                
+                # Post-process
                 enhanced_image = mon.resize(enhanced_image, (h0, w0))
                 
                 # Save

@@ -48,9 +48,12 @@ def predict(args: argparse.Namespace):
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
-            image       = datapoint.get("image")
-            meta        = datapoint.get("meta")
-            image_path  = mon.Path(meta["path"])
+            # Input
+            image      = datapoint.get("image")
+            meta       = datapoint.get("meta")
+            image_path = mon.Path(meta["path"])
+            
+            # Infer
             timer.tick()
             enhanced_image = pie.PIE(image)
             timer.tock()

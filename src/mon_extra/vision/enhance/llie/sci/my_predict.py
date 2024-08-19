@@ -83,14 +83,17 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 image      = datapoint.get("image")
                 meta       = datapoint.get("meta")
                 image_path = mon.Path(meta["path"])
                 input      = Variable(image).to(device)
+                
+                # Infer
                 timer.tick()
                 i, r = model(input)
                 timer.tock()
-               
+                
                 # Save
                 if save_image:
                     if use_fullpath:

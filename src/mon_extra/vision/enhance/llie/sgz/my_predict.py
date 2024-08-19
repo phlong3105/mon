@@ -78,12 +78,15 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 meta          = datapoint.get("meta")
                 image_path    = mon.Path(meta["path"])
                 data_lowlight = utils.image_from_path(str(image_path))
                 # Scale image to have the resolution of multiple of 4
                 data_lowlight = utils.scale_image(data_lowlight, scale_factor, device) if scale_factor != 1 else data_lowlight
                 data_lowlight = data_lowlight.to(device)
+                
+                # Infer
                 timer.tick()
                 enhanced_image, params_maps = net(data_lowlight)
                 timer.tock()

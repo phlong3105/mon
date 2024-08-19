@@ -39,7 +39,6 @@ def predict(args: argparse.Namespace):
     beta         = float(args.beta)
     gamma        = float(args.gamma)
     delta        = float(args.delta)
-    # print(window, L, alpha, beta, gamma, delta)
     
     # Benchmark
     if benchmark:
@@ -74,14 +73,6 @@ def predict(args: argparse.Namespace):
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
-            # Model
-            img_siren  = INF(patch_dim=window ** 2, num_layers=4, hidden_dim=256, add_layer=2)
-            img_siren  = img_siren.to(device)
-            # Optimizer
-            optimizer  = torch.optim.Adam(img_siren.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
-            # Loss Functions
-            l_exp      = L_exp(16, L)
-            l_TV       = L_TV()
             # Input
             meta       = datapoint.get("meta")
             image_path = mon.Path(meta["path"])
@@ -93,7 +84,17 @@ def predict(args: argparse.Namespace):
             img_v_lr   = interpolate_image(img_v, imgsz, imgsz)
             coords     = get_coords(imgsz, imgsz)
             patches    = get_patches(img_v_lr, window)
+            # Model
+            img_siren  = INF(patch_dim=window ** 2, num_layers=4, hidden_dim=256, add_layer=2)
+            img_siren  = img_siren.to(device)
+           
+            # Optimizer
+            optimizer  = torch.optim.Adam(img_siren.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
             
+            # Loss Functions
+            l_exp = L_exp(16, L)
+            l_TV  = L_TV()
+
             # Training
             timer.tick()
             for epoch in range(epochs):
@@ -105,11 +106,11 @@ def predict(args: argparse.Namespace):
                 illu_lr        = illu_res_lr + img_v_lr
                 img_v_fixed_lr = img_v_lr / (illu_lr + 1e-4)
                 #
-                loss_spa      = torch.mean(torch.abs(torch.pow(illu_lr - img_v_lr, 2))) * alpha
-                loss_tv       = l_TV(illu_lr) * beta
-                loss_exp      = torch.mean(l_exp(illu_lr)) * gamma
-                loss_sparsity = torch.mean(img_v_fixed_lr) * delta
-                loss          = loss_spa * alpha + loss_tv * beta + loss_exp * gamma + loss_sparsity * delta  # ???
+                loss_spa       = torch.mean(torch.abs(torch.pow(illu_lr - img_v_lr, 2))) * alpha
+                loss_tv        = l_TV(illu_lr) * beta
+                loss_exp       = torch.mean(l_exp(illu_lr)) * gamma
+                loss_sparsity  = torch.mean(img_v_fixed_lr) * delta
+                loss           = loss_spa * alpha + loss_tv * beta + loss_exp * gamma + loss_sparsity * delta  # ???
                 loss.backward()
                 optimizer.step()
             img_v_fixed   = filter_up(img_v_lr, img_v_fixed_lr, img_v)

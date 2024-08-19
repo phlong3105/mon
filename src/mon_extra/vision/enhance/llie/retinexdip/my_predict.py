@@ -371,11 +371,14 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                meta         = datapoint.get("meta")
-                image_path   = meta["path"]
-                image        = Image.open(image_path).convert("RGB")
+                # Input
+                meta       = datapoint.get("meta")
+                image_path = mon.Path(meta["path"])
+                image      = Image.open(str(image_path)).convert("RGB")
+                
+                # Infer
                 enhanced_image, run_time = lowlight_enhancer(str(image_path), image)
-                sum_time    += run_time
+                sum_time += run_time
                 
                 # Save
                 if save_image:

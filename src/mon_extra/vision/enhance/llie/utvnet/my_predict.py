@@ -97,13 +97,16 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                meta        = datapoint.get("meta")
-                image_path  = mon.Path(meta["path"])
-                image       = Image.open(image_path).convert("RGB")
-                image       = (np.asarray(image) / 255.0)
-                image       = torch.from_numpy(image).float()
-                image       = image.permute(2, 0, 1)
-                image       = image.to(device).unsqueeze(0)
+                # Input
+                meta       = datapoint.get("meta")
+                image_path = mon.Path(meta["path"])
+                image      = Image.open(image_path).convert("RGB")
+                image      = (np.asarray(image) / 255.0)
+                image      = torch.from_numpy(image).float()
+                image      = image.permute(2, 0, 1)
+                image      = image.to(device).unsqueeze(0)
+                
+                # Infer
                 timer.tick()
                 enhanced_image = model(image)
                 enhanced_image = enhanced_image.clamp(0, 1).cpu()

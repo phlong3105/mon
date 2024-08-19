@@ -73,6 +73,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 meta       = datapoint.get("meta")
                 image_path = mon.Path(meta["path"])
                 image      = dutil.read_img(None, str(image_path))
@@ -87,6 +88,7 @@ def predict(args: argparse.Namespace):
                 image      = image.unsqueeze(0).to(device)
                 image_nf   = image_nf.unsqueeze(0).to(device)
                 
+                # Infer
                 timer.tick()
                 model.feed_data(
                     data = {
@@ -99,6 +101,7 @@ def predict(args: argparse.Namespace):
                 model.test()
                 timer.tock()
                 
+                # Post-process
                 visuals        = model.get_current_visuals(need_GT=False)
                 enhanced_image = util.tensor2img(visuals["rlt"])  # uint8
                 enhanced_image = cv2.resize(enhanced_image, (w, h))

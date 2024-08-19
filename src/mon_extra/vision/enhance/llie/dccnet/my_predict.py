@@ -76,6 +76,7 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
+                # Input
                 meta          = datapoint.get("meta")
                 image_path    = mon.Path(meta["path"])
                 data_lowlight = Image.open(image_path)
@@ -85,9 +86,13 @@ def predict(args: argparse.Namespace):
                 data_lowlight = data_lowlight.cuda().unsqueeze(0)
                 h, w          = mon.get_image_size(data_lowlight)
                 data_lowlight = mon.resize_divisible(data_lowlight, 32)
+                
+                # Infer
                 timer.tick()
                 gray, color_hist, enhanced_image = color_net(data_lowlight)
                 timer.tock()
+                
+                # Post-process
                 enhanced_image = mon.resize(enhanced_image, (h, w))
                 
                 # Save
