@@ -82,6 +82,7 @@ def predict(args: dict) -> str:
             total       = len(data_loader),
             description = f"[bright_yellow] Predicting"
         ):
+            # Input
             meta       = datapoint.get("meta")
             image_path = mon.Path(meta["path"])
             
@@ -98,15 +99,28 @@ def predict(args: dict) -> str:
             # Save
             if save_image:
                 _,   output = outputs.popitem()
-                output_path = save_dir / f"{meta['stem']}.png"
+                if use_fullpath:
+                    rel_path   = image_path.relative_path(data_name)
+                    output_dir = save_dir / rel_path.parent
+                else:
+                    output_dir = save_dir / data_name
+                output_path  = output_dir / f"{meta['stem']}.png"
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 mon.write_image(output_path, output, denormalize=True)
+                # Save video
                 if data_writer:
                     data_writer.write_batch(data=output)
                 # Save Debug
                 if save_debug:
+                    if use_fullpath:
+                        rel_path         = image_path.relative_path(data_name)
+                        debug_output_dir = save_dir / rel_path.parents[1] / f"{rel_path.parent.name}_debug"
+                    else:
+                        debug_output_dir = save_dir / f"{data_name}_debug"
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
                     for k, v in outputs.items():
                         if mon.is_image(v):
-                            path = debug_save_dir / f"{meta['stem']}_{k}.png"
+                            path = debug_output_dir / f"{meta['stem']}_{k}.png"
                             mon.write_image(path, v, denormalize=True)
     
     # Finish
