@@ -1161,7 +1161,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     },
     # endregion
     # region enhance/multitask
-    "airnet"    : {
+    "airnet"       : {
         "airnet": {
             "tasks"    : [Task.DENOISE, Task.DERAIN, Task.DEHAZE],
             "schemes"  : [Scheme.SUPERVISED],
@@ -1179,24 +1179,32 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     },
     # endregion
     # region segment
+    "mobile_sam"   : {
+        "mobile_sam_vit_t": {
+            "tasks"    : [Task.SEGMENT],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "mobile_sam",
+            "torch_distributed_launch": False,
+        },
+    },
     "sam"          : {
         "sam_vit_b": {
             "tasks"    : [Task.SEGMENT],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam",
-            "torch_distributed_launch": True,
+            "torch_distributed_launch": False,
         },
         "sam_vit_h": {
             "tasks"    : [Task.SEGMENT],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam",
-            "torch_distributed_launch": True,
+            "torch_distributed_launch": False,
         },
         "sam_vit_l": {
             "tasks"    : [Task.SEGMENT],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam",
-            "torch_distributed_launch": True,
+            "torch_distributed_launch": False,
         },
     },
     "sam2"         : {
@@ -1204,25 +1212,25 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "tasks"    : [Task.SEGMENT],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam2",
-            "torch_distributed_launch": True,
+            "torch_distributed_launch": False,
         },
-        "sam2_hiera_l": {
+        "sam2_hiera_l" : {
             "tasks"    : [Task.SEGMENT],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam2",
-            "torch_distributed_launch": True,
+            "torch_distributed_launch": False,
         },
-        "sam2_hiera_s": {
+        "sam2_hiera_s" : {
             "tasks"    : [Task.SEGMENT],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam2",
-            "torch_distributed_launch": True,
+            "torch_distributed_launch": False,
         },
-        "sam2_hiera_t": {
+        "sam2_hiera_t" : {
             "tasks"    : [Task.SEGMENT],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "segment" / "sam2",
-            "torch_distributed_launch": True,
+            "torch_distributed_launch": False,
         },
     },
     # endregion

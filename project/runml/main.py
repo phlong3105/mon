@@ -144,25 +144,27 @@ def run_train(args: dict):
 
 def run_predict(args: dict):
     # Get user input
-    task       = args["task"]
-    mode       = args["mode"]
-    config     = args["config"]
-    arch       = args["arch"]
-    model      = args["model"]
-    data       = args["data"]
-    root       = mon.Path(args["root"])
-    project    = args["project"]
-    variant    = args["variant"]
-    fullname   = args["fullname"]
-    save_dir   = args["save_dir"]
-    weights    = args["weights"]
-    device     = args["device"]
-    imgsz      = args["imgsz"]
-    resize     = args["resize"]
-    benchmark  = args["benchmark"]
-    save_image = args["save_image"]
-    save_debug = args["save_debug"]
-    verbose    = args["verbose"]
+    task         = args["task"]
+    mode         = args["mode"]
+    config       = args["config"]
+    arch         = args["arch"]
+    model        = args["model"]
+    data         = args["data"]
+    root         = mon.Path(args["root"])
+    project      = args["project"]
+    variant      = args["variant"]
+    fullname     = args["fullname"]
+    save_dir     = args["save_dir"]
+    weights      = args["weights"]
+    device       = args["device"]
+    imgsz        = args["imgsz"]
+    resize       = args["resize"]
+    benchmark    = args["benchmark"]
+    save_image   = args["save_image"]
+    save_debug   = args["save_debug"]
+    use_data_dir = args["use_data_dir"]
+    use_fullpath = args["use_fullpath"]
+    verbose      = args["verbose"]
     
     assert root.exists()
     
@@ -198,11 +200,13 @@ def run_predict(args: dict):
             "--device"  : device,
             "--imgsz"   : imgsz,
         }
-        flags   = ["--resize"]     if resize     else []
-        flags  += ["--benchmark"]  if benchmark  else []
-        flags  += ["--save-image"] if save_image else []
-        flags  += ["--save-debug"] if save_debug else []
-        flags  += ["--verbose"]    if verbose    else []
+        flags   = ["--resize"]       if resize       else []
+        flags  += ["--benchmark"]    if benchmark    else []
+        flags  += ["--save-image"]   if save_image   else []
+        flags  += ["--save-debug"]   if save_debug   else []
+        flags  += ["--use-data-dir"] if use_data_dir else []
+        flags  += ["--use-fullpath"] if use_fullpath else []
+        flags  += ["--verbose"]      if verbose      else []
         
         # Parse script file
         if use_extra_model:
@@ -266,6 +270,7 @@ def run_online(args: dict):
     save_image   = args["save_image"]
     save_debug   = args["save_debug"]
     use_data_dir = args["use_data_dir"]
+    use_fullpath = args["use_fullpath"]
     verbose      = args["verbose"]
     
     assert root.exists()
@@ -302,11 +307,13 @@ def run_online(args: dict):
             "--device"  : device,
             "--imgsz"   : imgsz,
         }
-        flags   = ["--resize"]     if resize     else []
-        flags  += ["--benchmark"]  if benchmark  else []
-        flags  += ["--save-image"] if save_image else []
-        flags  += ["--save-debug"] if save_debug else []
-        flags  += ["--verbose"]    if verbose    else []
+        flags   = ["--resize"]       if resize       else []
+        flags  += ["--benchmark"]    if benchmark    else []
+        flags  += ["--save-image"]   if save_image   else []
+        flags  += ["--save-debug"]   if save_debug   else []
+        flags  += ["--use-data-dir"] if use_data_dir else []
+        flags  += ["--use-fullpath"] if use_fullpath else []
+        flags  += ["--verbose"]      if verbose      else []
         
         # Parse script file
         if use_extra_model:
@@ -470,6 +477,8 @@ def main(
         save_debug   = True if save_debug   == "yes" else False
         use_data_dir = click.prompt(click.style(f"Data dir?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
         use_data_dir = True if use_data_dir == "yes" else False
+        use_fullpath = click.prompt(click.style(f"Fullpath?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
+        use_fullpath = True if use_fullpath == "yes" else False
     # Common Flags
     # Exist OK?
     exist_ok = click.prompt(click.style(f"Exist OK?   [yes/no]", fg="bright_yellow", bold=True), type=str, default=exist_ok)
@@ -528,6 +537,7 @@ def main(
             "save_image"  : save_image,
             "save_debug"  : save_debug,
             "use_data_dir": use_data_dir,
+            "use_fullpath": use_fullpath,
             "verbose"     : verbose,
         }
         run_predict(args=args)
@@ -554,6 +564,7 @@ def main(
             "save_image"  : save_image,
             "save_debug"  : save_debug,
             "use_data_dir": use_data_dir,
+            "use_fullpath": use_fullpath,
             "verbose"     : verbose,
         }
         run_online(args=args)

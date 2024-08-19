@@ -340,14 +340,15 @@ def lowlight_enhancer(image_name, image):
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = args.save_dir
-    # weights   = args.weights
-    # weights   = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
-    device    = mon.set_device(args.device)
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    data         = args.data
+    save_dir     = args.save_dir
+    # weights    = args.weights
+    # weights    = weights[0] if isinstance(weights, list | tuple) and len(weights) =  = 1 else weights
+    device       = mon.set_device(args.device)
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     # Data I/O
     console.log(f"[bold red]{data}")
@@ -358,8 +359,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     sum_time = 0
@@ -374,10 +373,17 @@ def predict(args: argparse.Namespace):
                 image_path   = meta["path"]
                 image        = Image.open(image_path).convert("RGB")
                 enhanced_image, run_time = lowlight_enhancer(str(image_path), image)
-                output_path  = save_dir / image_path.name
-                # torchvision.utils.save_image(enhanced_image, str(output_path))
-                cv2.imwrite(str(output_path), enhanced_image)
                 sum_time    += run_time
+                
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                cv2.imwrite(str(output_path), enhanced_image)
                 
                 # Benchmark
                 if i == 0:

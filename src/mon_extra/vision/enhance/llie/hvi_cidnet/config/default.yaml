@@ -13,6 +13,7 @@ resize      :
 benchmark   :
 save_image  : True
 use_data_dir: False
+use_fullpath: False
 exist_ok    : False
 verbose     : True
 

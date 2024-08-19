@@ -24,13 +24,14 @@ current_dir  = current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = args.save_dir
-    weights   = args.weights
-    device    = mon.set_device(args.device)
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    data         = args.data
+    save_dir     = args.save_dir
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     # Model
     DiDCE_net = model.enhance_net_nopool().to(device)
@@ -60,8 +61,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     timer = mon.Timer()
@@ -73,7 +72,7 @@ def predict(args: argparse.Namespace):
                 description = f"[bright_yellow] Predicting"
             ):
                 meta          = datapoint.get("meta")
-                image_path    = meta["path"]
+                image_path    = mon.Path(meta["path"])
                 data_lowlight = Image.open(image_path)
                 data_lowlight = (np.asarray(data_lowlight) / 255.0)
                 data_lowlight = torch.from_numpy(data_lowlight).float()
@@ -82,8 +81,17 @@ def predict(args: argparse.Namespace):
                 timer.tick()
                 enhanced_image, a = DiDCE_net(data_lowlight)
                 timer.tock()
-                output_path   = save_dir / image_path.name
+                
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 torchvision.utils.save_image(enhanced_image, str(output_path))
+        
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 

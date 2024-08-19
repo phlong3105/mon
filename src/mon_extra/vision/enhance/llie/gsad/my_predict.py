@@ -32,13 +32,14 @@ transform     = transforms.Lambda(lambda t: (t * 2) - 1)
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = args.save_dir
-    weights   = args.weights
-    device    = mon.set_device(args.device)
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    data         = args.data
+    save_dir     = args.save_dir
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     # Override options with args
     opt           = Logger.parse(args)
@@ -96,8 +97,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     timer = mon.Timer()
@@ -109,7 +108,7 @@ def predict(args: argparse.Namespace):
                 description = f"[bright_yellow] Predicting"
             ):
                 meta        = datapoint.get("meta")
-                image_path  = meta["path"]
+                image_path  = mon.Path(meta["path"])
                 raw_img     = Image.open(image_path).convert("RGB")
                 w, h        = raw_img.size[0], raw_img.size[1]
                 raw_img     = transforms.Resize((h // 16 * 16, w // 16 * 16))(raw_img)
@@ -127,8 +126,17 @@ def predict(args: argparse.Namespace):
                 visuals     = diffusion.get_current_visuals()
                 normal_img  = Metrics.tensor2img(visuals["HQ"])
                 normal_img  = cv2.resize(normal_img, (w, h))
-                output_path = save_dir / image_path.name
+               
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 util.save_img(normal_img, str(output_path))
+       
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 

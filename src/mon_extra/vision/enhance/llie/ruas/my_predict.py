@@ -33,14 +33,15 @@ def save_images(tensor, path):
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = args.save_dir
-    weights   = args.weights
-    device    = mon.set_device(args.device)
-    seed      = args.seed
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    data         = args.data
+    save_dir     = args.save_dir
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    seed         = args.seed
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     # Seed
     mon.set_random_seed(seed)
@@ -79,8 +80,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     timer = mon.Timer()
@@ -93,12 +92,20 @@ def predict(args: argparse.Namespace):
             ):
                 image      = datapoint.get("image")
                 meta       = datapoint.get("meta")
-                image_path = meta["path"]
+                image_path = mon.Path(meta["path"])
                 input      = image.to(device)
                 timer.tick()
                 u_list, r_list = model(input)
                 timer.tock()
-                output_path = save_dir / image_path.name
+                
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 save_images(u_list[-1], str(output_path))
                 # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
                 # save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
@@ -108,6 +115,7 @@ def predict(args: argparse.Namespace):
                 elif args.model == "upe" or args.model == "dark":
                     save_images(u_list[-2], u_path)
                 """
+        
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 

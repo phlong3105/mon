@@ -18,6 +18,8 @@ __all__ = [
 import argparse
 import socket
 
+from platformdirs import user_data_dir
+
 from mon import core
 
 
@@ -148,24 +150,26 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
 
 def parse_predict_input_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="predict")
-    parser.add_argument("--config",     type=_str_or_none, default=None, help="Model config.")
-    parser.add_argument("--arch",       type=_str_or_none, default=None, help="Model architecture.")
-    parser.add_argument("--model",      type=_str_or_none, default=None, help="Model name.")
-    parser.add_argument("--data",       type=_str_or_none, default=None, help="Source data directory.")
-    parser.add_argument("--root",       type=_str_or_none, default=None, help="Project root.")
-    parser.add_argument("--project",    type=_str_or_none, default=None, help="Project name.")
-    parser.add_argument("--variant",    type=_str_or_none, default=None, help="Variant name.")
-    parser.add_argument("--fullname",   type=_str_or_none, default=None, help="Save results to root/run/predict/arch/model/data or root/run/predict/arch/project/variant.")
-    parser.add_argument("--save-dir",   type=_str_or_none, default=None, help="Optional saving directory.")
-    parser.add_argument("--weights",    type=_str_or_none, default=None, help="Weights paths.")
-    parser.add_argument("--device",     type=_str_or_none, default=None, help="Running devices.")
-    parser.add_argument("--imgsz",      type=_int_or_none, default=None, help="Image sizes.")
-    parser.add_argument("--resize",     action="store_true")
-    parser.add_argument("--benchmark",  action="store_true")
-    parser.add_argument("--save-image", action="store_true")
-    parser.add_argument("--save-debug", action="store_true")
-    parser.add_argument("--verbose",    action="store_true")
-    parser.add_argument("extra_args",   nargs=argparse.REMAINDER, help="Additional arguments")
+    parser.add_argument("--config",       type=_str_or_none, default=None, help="Model config.")
+    parser.add_argument("--arch",         type=_str_or_none, default=None, help="Model architecture.")
+    parser.add_argument("--model",        type=_str_or_none, default=None, help="Model name.")
+    parser.add_argument("--data",         type=_str_or_none, default=None, help="Source data directory.")
+    parser.add_argument("--root",         type=_str_or_none, default=None, help="Project root.")
+    parser.add_argument("--project",      type=_str_or_none, default=None, help="Project name.")
+    parser.add_argument("--variant",      type=_str_or_none, default=None, help="Variant name.")
+    parser.add_argument("--fullname",     type=_str_or_none, default=None, help="Save results to root/run/predict/arch/model/data or root/run/predict/arch/project/variant.")
+    parser.add_argument("--save-dir",     type=_str_or_none, default=None, help="Optional saving directory.")
+    parser.add_argument("--weights",      type=_str_or_none, default=None, help="Weights paths.")
+    parser.add_argument("--device",       type=_str_or_none, default=None, help="Running devices.")
+    parser.add_argument("--imgsz",        type=_int_or_none, default=None, help="Image sizes.")
+    parser.add_argument("--resize",       action="store_true")
+    parser.add_argument("--benchmark",    action="store_true")
+    parser.add_argument("--save-image",   action="store_true")
+    parser.add_argument("--save-debug",   action="store_true")
+    parser.add_argument("--use-data-dir", action="store_true")
+    parser.add_argument("--use-fullpath", action="store_true")
+    parser.add_argument("--verbose",      action="store_true")
+    parser.add_argument("extra_args",     nargs=argparse.REMAINDER, help="Additional arguments")
     args = parser.parse_args()
     return args
 
@@ -189,22 +193,24 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     args   = core.load_config(config)
     
     # Prioritize input args --> config file args
-    arch       = input_args.get("arch")       or args.get("arch")
-    model      = input_args.get("model")      or args.get("model")
-    data       = input_args.get("data")       or args.get("data")
-    project    = input_args.get("project")    or args.get("project")
-    variant    = input_args.get("variant")    or args.get("variant")
-    fullname   = input_args.get("fullname")   or args.get("fullname")
-    save_dir   = input_args.get("save_dir")   or args.get("save_dir")
-    weights    = input_args.get("weights")    or args.get("weights")
-    device     = input_args.get("device")     or args.get("device")
-    imgsz      = input_args.get("imgsz")      or args.get("imgsz")
-    resize     = input_args.get("resize")     or args.get("resize")
-    benchmark  = input_args.get("benchmark")  or args.get("benchmark")
-    save_image = input_args.get("save_image") or args.get("save_image")
-    save_debug = input_args.get("save_debug") or args.get("save_debug")
-    verbose    = input_args.get("verbose")    or args.get("verbose")
-    extra_args = input_args.get("extra_args")
+    arch         = input_args.get("arch")         or args.get("arch")
+    model        = input_args.get("model")        or args.get("model")
+    data         = input_args.get("data")         or args.get("data")
+    project      = input_args.get("project")      or args.get("project")
+    variant      = input_args.get("variant")      or args.get("variant")
+    fullname     = input_args.get("fullname")     or args.get("fullname")
+    save_dir     = input_args.get("save_dir")     or args.get("save_dir")
+    weights      = input_args.get("weights")      or args.get("weights")
+    device       = input_args.get("device")       or args.get("device")
+    imgsz        = input_args.get("imgsz")        or args.get("imgsz")
+    resize       = input_args.get("resize")       or args.get("resize")
+    benchmark    = input_args.get("benchmark")    or args.get("benchmark")
+    save_image   = input_args.get("save_image")   or args.get("save_image")
+    save_debug   = input_args.get("save_debug")   or args.get("save_debug")
+    use_data_dir = input_args.get("use_data_dir") or args.get("use_data_dir")
+    use_fullpath = input_args.get("use_fullpath") or args.get("use_fullpath")
+    verbose      = input_args.get("verbose")      or args.get("verbose")
+    extra_args   = input_args.get("extra_args")
     
     # Parse arguments
     save_dir = save_dir or core.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
@@ -214,24 +220,26 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
     imgsz    = core.parse_hw(imgsz)
     
     # Update arguments
-    args["hostname"]   = hostname
-    args["config"]     = config
-    args["arch"]       = arch
-    args["model"]      = model
-    args["data"]       = data
-    args["root"]       = root
-    args["project"]    = project
-    args["variant"]    = variant
-    args["fullname"]   = fullname
-    args["save_dir"]   = save_dir
-    args["weights"]    = weights
-    args["device"]     = device
-    args["imgsz"]      = imgsz
-    args["resize"]     = resize
-    args["benchmark"]  = benchmark
-    args["save_image"] = save_image
-    args["save_debug"] = save_debug
-    args["verbose"]    = verbose
+    args["hostname"]     = hostname
+    args["config"]       = config
+    args["arch"]         = arch
+    args["model"]        = model
+    args["data"]         = data
+    args["root"]         = root
+    args["project"]      = project
+    args["variant"]      = variant
+    args["fullname"]     = fullname
+    args["save_dir"]     = save_dir
+    args["weights"]      = weights
+    args["device"]       = device
+    args["imgsz"]        = imgsz
+    args["resize"]       = resize
+    args["benchmark"]    = benchmark
+    args["save_image"]   = save_image
+    args["save_debug"]   = save_debug
+    args["use_data_dir"] = use_data_dir
+    args["use_fullpath"] = use_fullpath
+    args["verbose"]      = verbose
     args |= extra_args
     args  = argparse.Namespace(**args)
     
@@ -248,29 +256,31 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
 
 def parse_online_input_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="online")
-    parser.add_argument("--config",     type=_str_or_none, default=None, help="Model config.")
-    parser.add_argument("--arch",       type=_str_or_none, default=None, help="Model architecture.")
-    parser.add_argument("--model",      type=_str_or_none, default=None, help="Model name.")
-    parser.add_argument("--root",       type=_str_or_none, default=None, help="Project root.")
-    parser.add_argument("--project",    type=_str_or_none, default=None, help="Project name.")
-    parser.add_argument("--variant",    type=_str_or_none, default=None, help="Variant name.")
-    parser.add_argument("--fullname",   type=_str_or_none, default=None, help="Fullname to save the model's weight.")
-    parser.add_argument("--save-dir",   type=_str_or_none, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
-    parser.add_argument("--weights",    type=_str_or_none, default=None, help="Weights paths.")
-    parser.add_argument("--device",     type=_str_or_none, default=None, help="Running devices.")
-    parser.add_argument("--local-rank", type=_int_or_none, default=-1,   help="DDP parameter, do not modify.")
-    parser.add_argument("--launcher",   type=_str_or_none, choices=["none", "pytorch", "slurm"], default="none", help="DDP parameter, do not modify.")
-    parser.add_argument("--epochs",     type=_int_or_none, default=-1,   help="Stop training once this number of epochs is reached.")
-    parser.add_argument("--steps",      type=_int_or_none, default=-1,   help="Stop training once this number of steps is reached.")
-    parser.add_argument("--imgsz",      type=_int_or_none, default=None, help="Image sizes.")
-    parser.add_argument("--resize",     action="store_true")
-    parser.add_argument("--benchmark",  action="store_true")
-    parser.add_argument("--save-image", action="store_true")
-    parser.add_argument("--save-debug", action="store_true")
-    parser.add_argument("--verbose",    action="store_true")
-    parser.add_argument("--exist-ok",   action="store_true")
-    parser.add_argument("--verbose",    action="store_true")
-    parser.add_argument("extra_args",   nargs=argparse.REMAINDER, help="Additional arguments")
+    parser.add_argument("--config",       type=_str_or_none, default=None, help="Model config.")
+    parser.add_argument("--arch",         type=_str_or_none, default=None, help="Model architecture.")
+    parser.add_argument("--model",        type=_str_or_none, default=None, help="Model name.")
+    parser.add_argument("--root",         type=_str_or_none, default=None, help="Project root.")
+    parser.add_argument("--project",      type=_str_or_none, default=None, help="Project name.")
+    parser.add_argument("--variant",      type=_str_or_none, default=None, help="Variant name.")
+    parser.add_argument("--fullname",     type=_str_or_none, default=None, help="Fullname to save the model's weight.")
+    parser.add_argument("--save-dir",     type=_str_or_none, default=None, help="Save results to root/run/train/arch/model/data or root/run/train/arch/project/variant.")
+    parser.add_argument("--weights",      type=_str_or_none, default=None, help="Weights paths.")
+    parser.add_argument("--device",       type=_str_or_none, default=None, help="Running devices.")
+    parser.add_argument("--local-rank",   type=_int_or_none, default=-1,   help="DDP parameter, do not modify.")
+    parser.add_argument("--launcher",     type=_str_or_none, choices=["none", "pytorch", "slurm"], default="none", help="DDP parameter, do not modify.")
+    parser.add_argument("--epochs",       type=_int_or_none, default=-1,   help="Stop training once this number of epochs is reached.")
+    parser.add_argument("--steps",        type=_int_or_none, default=-1,   help="Stop training once this number of steps is reached.")
+    parser.add_argument("--imgsz",        type=_int_or_none, default=None, help="Image sizes.")
+    parser.add_argument("--resize",       action="store_true")
+    parser.add_argument("--benchmark",    action="store_true")
+    parser.add_argument("--save-image",   action="store_true")
+    parser.add_argument("--save-debug",   action="store_true")
+    parser.add_argument("--use-data-dir", action="store_true")
+    parser.add_argument("--use-fullpath", action="store_true")
+    parser.add_argument("--verbose",      action="store_true")
+    parser.add_argument("--exist-ok",     action="store_true")
+    parser.add_argument("--verbose",      action="store_true")
+    parser.add_argument("extra_args",     nargs=argparse.REMAINDER, help="Additional arguments")
     args = parser.parse_args()
     return args
 

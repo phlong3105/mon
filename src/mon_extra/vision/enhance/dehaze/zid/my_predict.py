@@ -205,15 +205,16 @@ class Dehaze:
 
 def predict(args: argparse.Namespace):
     # General config
-    data       = args.data
-    save_dir   = args.save_dir
-    weights    = args.weights
-    device     = mon.set_device(args.device)
-    epochs     = args.epochs
-    imgsz      = args.imgsz
-    resize     = args.resize
-    benchmark  = args.ben
-    save_debug = args.save_debug
+    data         = args.data
+    save_dir     = args.save_dir
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    epochs       = args.epochs
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    save_debug   = args.save_debug
+    use_fullpath = args.use_fullpath
     
     # Data I/O
     console.log(f"[bold red]{data}")
@@ -224,9 +225,9 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    debug_dir = save_debug / f"{data_name}_debug"
-    save_dir  = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
+    output_dir = save_dir / data_name
+    debug_dir  = save_dir / f"{data_name}_debug"
+    output_dir.mkdir(parents=True, exist_ok=True)
     debug_dir.mkdir(parents=True, exist_ok=True)
     (debug_dir /    "t").mkdir(parents=True, exist_ok=True)
     (debug_dir /    "a").mkdir(parents=True, exist_ok=True)
@@ -242,13 +243,29 @@ def predict(args: argparse.Namespace):
                 description = f"[bright_yellow] Predicting"
             ):
                 meta       = datapoint.get("meta")
-                image_path = meta["path"]
+                image_path = mon.Path(meta["path"])
+                
+                # Save
+                if use_fullpath:
+                    rel_path   = image_path.relative_path(data_name)
+                    output_dir = save_dir / rel_path.parents[0]
+                    debug_dir  = save_dir / rel_path.parents[1] / f"{rel_path.parent.name}_debug"
+                else:
+                    output_dir = save_dir / data_name
+                    debug_dir  = save_dir / f"{data_name}_debug"
+                output_dir.mkdir(parents=True, exist_ok=True)
+                debug_dir.mkdir(parents=True, exist_ok=True)
+                (debug_dir /    "t").mkdir(parents=True, exist_ok=True)
+                (debug_dir /    "a").mkdir(parents=True, exist_ok=True)
+                (debug_dir / "mask").mkdir(parents=True, exist_ok=True)
+                
                 image      = prepare_hazy_image(str(image_path))
                 timer.tick()
-                dh = Dehaze(str(image_path.stem), image, epochs, clip=True, output_path=str(save_dir))
+                dh = Dehaze(str(image_path.stem), image, epochs, clip=True, output_path=str(output_dir))
                 dh.optimize()
                 dh.finalize()
                 timer.tock()
+                
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 

@@ -22,20 +22,21 @@ current_dir  = current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = args.save_dir
-    weights   = args.weights
-    device    = mon.set_device(args.device)
-    epochs    = args.epochs
-    imgsz     = args.imgsz[0]
-    resize    = args.resize
-    benchmark = args.benchmark
-    window    = int(args.window)
-    L         = float(args.L)
-    alpha     = float(args.alpha)
-    beta      = float(args.beta)
-    gamma     = float(args.gamma)
-    delta     = float(args.delta)
+    data         = args.data
+    save_dir     = args.save_dir
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    epochs       = args.epochs
+    imgsz        = args.imgsz[0]
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
+    window       = int(args.window)
+    L            = float(args.L)
+    alpha        = float(args.alpha)
+    beta         = float(args.beta)
+    gamma        = float(args.gamma)
+    delta        = float(args.delta)
     # print(window, L, alpha, beta, gamma, delta)
     
     # Benchmark
@@ -62,9 +63,7 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Predicting
     timer = mon.Timer()
     with mon.get_progress_bar() as pbar:
@@ -83,7 +82,7 @@ def predict(args: argparse.Namespace):
             l_TV       = L_TV()
             # Input
             meta       = datapoint.get("meta")
-            image_path = meta["path"]
+            image_path = mon.Path(meta["path"])
             img_rgb    = get_image(str(image_path))
             # h0, w0     = img_rgb.shape[0], img_rgb.shape[1]
             # img_rgb    = mon.resize(img_rgb, (imgsz, imgsz))
@@ -92,6 +91,7 @@ def predict(args: argparse.Namespace):
             img_v_lr   = interpolate_image(img_v, imgsz, imgsz)
             coords     = get_coords(imgsz, imgsz)
             patches    = get_patches(img_v_lr, window)
+            
             # Training
             timer.tick()
             for epoch in range(epochs):
@@ -116,10 +116,17 @@ def predict(args: argparse.Namespace):
             img_rgb_fixed = img_rgb_fixed / torch.max(img_rgb_fixed)
             # img_rgb_fixed = mon.resize(img_rgb_fixed, (h0, w0))
             timer.tock()
-            output_path   = save_dir / image_path.name
-            Image.fromarray(
-                (torch.movedim(img_rgb_fixed, 1, -1)[0].detach().cpu().numpy() * 255).astype(np.uint8)
-            ).save(str(output_path))
+            
+            # Save
+            if use_fullpath:
+                rel_path = image_path.relative_path(data_name)
+                save_dir = save_dir / rel_path.parent
+            else:
+                save_dir = save_dir / data_name
+            output_path  = save_dir / image_path.name
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            Image.fromarray((torch.movedim(img_rgb_fixed, 1, -1)[0].detach().cpu().numpy() * 255).astype(np.uint8)).save(str(output_path))
+    
     avg_time = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")
 

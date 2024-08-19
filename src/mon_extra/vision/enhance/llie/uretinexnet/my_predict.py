@@ -98,12 +98,13 @@ class Inference(nn.Module):
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = args.save_dir
-    device    = mon.set_device(args.device)
-    imgsz     = args.imgsz[0]
-    resize    = args.resize
-    benchmark = args.benchmark
+    data         = args.data
+    save_dir     = args.save_dir
+    device       = mon.set_device(args.device)
+    imgsz        = args.imgsz[0]
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     # Model
     model = Inference(args).to(device)
@@ -132,8 +133,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     sum_time = 0
@@ -144,12 +143,21 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                meta         = datapoint.get("meta")
-                image_path   = meta["path"]
+                meta        = datapoint.get("meta")
+                image_path  = meta["path"]
                 enhanced_image, run_time = model.run(image_path)
+                sum_time   += run_time
+                
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
                 output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 torchvision.utils.save_image(enhanced_image, str(output_path))
-                sum_time    += run_time
+        
         avg_time = float(sum_time / len(data_loader))
         console.log(f"Average time: {avg_time}")
 

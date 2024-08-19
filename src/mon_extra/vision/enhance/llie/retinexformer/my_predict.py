@@ -24,13 +24,14 @@ current_dir  = current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = mon.Path(args.save_dir)
-    weights   = args.weights
-    device    = mon.set_device(args.device)
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    data         = args.data
+    save_dir     = mon.Path(args.save_dir)
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     # Override options with args
     # gpu_list = ",".join(str(x) for x in args.gpus)
@@ -51,7 +52,7 @@ def predict(args: argparse.Namespace):
             new_checkpoint["module." + k] = checkpoint["params"][k]
         model.load_state_dict(new_checkpoint)
     
-    print("===>Testing using weights: ", weights)
+    # print("===>Testing using weights: ", weights)
     model.to(device)
     # model = nn.DataParallel(model)
     model.eval()
@@ -72,8 +73,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     timer  = mon.Timer()
@@ -90,7 +89,7 @@ def predict(args: argparse.Namespace):
                 if torch.cuda.is_available():
                     torch.cuda.ipc_collect()
                     torch.cuda.empty_cache()
-                image_path = meta["path"]
+                image_path = mon.Path(meta["path"])
                 
                 if resize:
                     h0, w0 = mon.get_image_size(image)
@@ -116,8 +115,16 @@ def predict(args: argparse.Namespace):
                     restored = mon.resize(restored, (h0, w0))
                 restored = torch.clamp(restored, 0, 1).cpu().detach().permute(0, 2, 3, 1).squeeze(0).numpy()
                 
-                output_path = save_dir / image_path.name
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 utils.save_img(str(output_path), img_as_ubyte(restored))
+        
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
        

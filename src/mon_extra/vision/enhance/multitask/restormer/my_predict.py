@@ -62,13 +62,15 @@ def get_weights_and_parameters(task, parameters):
 
 
 def predict(args: argparse.Namespace):
-    data      = args.data
-    save_dir  = mon.Path(args.save_dir)
-    weights   = args.weights
-    device    = args.device
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    # General config
+    data         = args.data
+    save_dir     = mon.Path(args.save_dir)
+    weights      = args.weights
+    device       = args.device
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     device    = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
@@ -119,8 +121,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     timer = mon.Timer()
@@ -137,7 +137,7 @@ def predict(args: argparse.Namespace):
                     torch.cuda.ipc_collect()
                     torch.cuda.empty_cache()
                  
-                image_path = meta["path"]
+                image_path = mon.Path(meta["path"])
                 if opt["image_color"] == "RGB":
                     image = load_gray_img(image_path)
                 else:
@@ -185,11 +185,19 @@ def predict(args: argparse.Namespace):
                 restored = restored.permute(0, 2, 3, 1).cpu().detach().numpy()
                 restored = img_as_ubyte(restored[0])
                 
-                output_path = save_dir / image_path.name
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 if opt["image_color"] == "RGB":
                     save_img(output_path, restored)
                 else:
                     save_gray_img(output_path, restored)
+        
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
     

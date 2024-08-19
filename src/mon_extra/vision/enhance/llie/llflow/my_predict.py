@@ -83,14 +83,15 @@ def format_measurements(meas):
 
 def predict(args: argparse.Namespace):
     # General config
-    opt       = args.opt
-    data      = args.data
-    save_dir  = mon.Path(args.save_dir)
-    weights   = args.weights
-    device    = mon.set_device(args.device)
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    opt          = args.opt
+    data         = args.data
+    save_dir     = mon.Path(args.save_dir)
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     opt            = option.parse(opt, is_train=False)
     opt["gpu_ids"] = None
@@ -118,8 +119,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     timer = mon.Timer()
@@ -132,7 +131,7 @@ def predict(args: argparse.Namespace):
             ):
                 image      = datapoint.get("image")
                 meta       = datapoint.get("meta")
-                image_path = meta["path"]
+                image_path = mon.Path(meta["path"])
                 lr         = image  # imread(str(image_path))
                 raw_shape  = lr.shape
                 
@@ -160,8 +159,17 @@ def predict(args: argparse.Namespace):
                 )
                 # assert raw_shape == sr.shape
                 timer.tock()
-                output_path = save_dir / image_path.name
+                
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 imwrite(str(output_path), sr)
+       
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 

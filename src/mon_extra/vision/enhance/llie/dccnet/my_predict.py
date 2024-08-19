@@ -26,13 +26,14 @@ current_dir  = current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
-    data      = args.data
-    save_dir  = args.save_dir
-    weights   = args.weights
-    device    = mon.set_device(args.device)
-    imgsz     = args.imgsz
-    resize    = args.resize
-    benchmark = args.benchmark
+    data         = args.data
+    save_dir     = args.save_dir
+    weights      = args.weights
+    device       = mon.set_device(args.device)
+    imgsz        = args.imgsz
+    resize       = args.resize
+    benchmark    = args.benchmark
+    use_fullpath = args.use_fullpath
     
     # Model
     color_net = mmodel.color_net().to(device)
@@ -63,8 +64,6 @@ def predict(args: argparse.Namespace):
         denormalize = True,
         verbose     = False,
     )
-    save_dir = save_dir / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
     
     # Predicting
     timer = mon.Timer()
@@ -75,22 +74,30 @@ def predict(args: argparse.Namespace):
                 total       = len(data_loader),
                 description = f"[bright_yellow] Predicting"
             ):
-                # image          = datapoint.get("image")
-                meta           = datapoint.get("meta")
-                image_path     = meta["path"]
-                data_lowlight  = Image.open(image_path)
-                data_lowlight  = (np.asarray(data_lowlight) / 255.0)
-                data_lowlight  = torch.from_numpy(data_lowlight).float()
-                data_lowlight  = data_lowlight.permute(2, 0, 1)
-                data_lowlight  = data_lowlight.cuda().unsqueeze(0)
-                h, w           = mon.get_image_size(data_lowlight)
-                data_lowlight  = mon.resize_divisible(data_lowlight, 32)
+                meta          = datapoint.get("meta")
+                image_path    = mon.Path(meta["path"])
+                data_lowlight = Image.open(image_path)
+                data_lowlight = (np.asarray(data_lowlight) / 255.0)
+                data_lowlight = torch.from_numpy(data_lowlight).float()
+                data_lowlight = data_lowlight.permute(2, 0, 1)
+                data_lowlight = data_lowlight.cuda().unsqueeze(0)
+                h, w          = mon.get_image_size(data_lowlight)
+                data_lowlight = mon.resize_divisible(data_lowlight, 32)
                 timer.tick()
                 gray, color_hist, enhanced_image = color_net(data_lowlight)
                 timer.tock()
                 enhanced_image = mon.resize(enhanced_image, (h, w))
-                output_path    = save_dir / image_path.name
+                
+                # Save
+                if use_fullpath:
+                    rel_path = image_path.relative_path(data_name)
+                    save_dir = save_dir / rel_path.parent
+                else:
+                    save_dir = save_dir / data_name
+                output_path  = save_dir / image_path.name
+                output_path.parent.mkdir(parents=True, exist_ok=True)
                 torchvision.utils.save_image(enhanced_image, str(output_path))
+        
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
 
