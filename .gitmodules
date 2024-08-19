@@ -19,6 +19,9 @@
 [submodule "src/mon_extra/vision/segment/fastsam"]
 	path = src/mon_extra/vision/segment/fastsam
 	url  = https://github.com/phlong3105/fastsam
+[submodule "src/mon_extra/vision/segment/mobile_sam"]
+	path = src/mon_extra/vision/segment/mobile_sam
+	url  = https://github.com/phlong3105/mobile_sam
 [submodule "src/mon_extra/vision/segment/sam"]
 	path = src/mon_extra/vision/segment/sam
 	url  = https://github.com/phlong3105/sam
