@@ -5,5 +5,5 @@
 
 from __future__ import annotations
 
-import mon.nn.prior.vision
-from mon.nn.prior.vision import *
+import mon.nn.modules.prior.image
+from mon.nn.modules.prior.image import *

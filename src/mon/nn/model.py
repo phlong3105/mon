@@ -24,7 +24,6 @@ from urllib.parse import urlparse  # noqa: F401
 import humps
 import lightning.pytorch.utilities.types
 import torch.hub
-from thop.profile import *
 from torch import nn
 
 from mon import core

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements priors used for vision tasks (e.g, image, video,
-shape, etc.).
-"""
+"""This module implements priors used in images."""
 
 from __future__ import annotations
 
@@ -234,9 +232,7 @@ class BoundaryAwarePrior(nn.Module):
         self.normalized = normalized
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        g = boundary_aware_prior(x, eps=self.eps, normalized=self.normalized)
-        return g
+        return boundary_aware_prior(input=input, eps=self.eps, normalized=self.normalized)
 
 # endregion
 
@@ -337,8 +333,6 @@ class BrightnessAttentionMap(nn.Module):
         self.denoise_ksize = denoise_ksize
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        g = brightness_attention_map(x, gamma=self.gamma, denoise_ksize=self.denoise_ksize)
-        return g
+        return brightness_attention_map(input=input, gamma=self.gamma, denoise_ksize=self.denoise_ksize)
 
 # endregion

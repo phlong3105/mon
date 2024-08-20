@@ -23,7 +23,7 @@ from einops import rearrange
 from torch import nn
 
 from mon.core import _size_2_t
-from mon.nn.layer import conv, linear
+from mon.nn.modules import conv, linear
 
 
 # region Embedding Q, K, V

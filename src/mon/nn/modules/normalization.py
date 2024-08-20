@@ -45,7 +45,7 @@ from torch.nn.modules.batchnorm import *
 from torch.nn.modules.instancenorm import *
 from torch.nn.modules.normalization import *
 
-from mon.nn.layer import activation, linear
+from mon.nn.modules import activation, linear
 
 
 # region Batch Normalization

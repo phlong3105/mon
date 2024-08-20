@@ -51,7 +51,7 @@ class VisionModel(nn.Model, ABC):
         datapoint = {"image": torch.rand(1, channels, h, w).to(self.device)}
         
         # Get FLOPs and Params
-        flops, params = nn.profile(deepcopy(self), inputs=datapoint, verbose=verbose)
+        flops, params = core.profile_mon_model(deepcopy(self), inputs=datapoint, verbose=verbose)
         # flops         = FlopCountAnalysis(self, datapoint).total() if flops == 0 else flops
         params        = self.params                if hasattr(self, "params") and params == 0 else params
         params        = parameter_count(self)      if hasattr(self, "params")  else params

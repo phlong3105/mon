@@ -16,7 +16,7 @@ import torch
 from torch import nn
 
 from mon.core import _size_2_t
-from mon.nn.layer import normalization
+from mon.nn.modules import normalization
 
 
 # region Blueprint Separable Convolution

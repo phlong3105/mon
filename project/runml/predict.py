@@ -8,7 +8,6 @@ from __future__ import annotations
 import socket
 
 import torch
-from platformdirs import user_data_dir
 
 import mon
 

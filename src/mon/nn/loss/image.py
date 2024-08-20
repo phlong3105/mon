@@ -42,8 +42,8 @@ from torchvision import models, transforms
 
 from mon.core import _size_2_t
 from mon.globals import LOSSES
-from mon.nn import prior
 from mon.nn.loss import base
+from mon.nn.modules import prior
 
 
 # region Loss

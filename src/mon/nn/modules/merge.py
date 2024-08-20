@@ -27,7 +27,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from mon import core
-from mon.nn.layer import normalization as norm
+from mon.nn.modules import normalization as norm
 
 
 # region Concat

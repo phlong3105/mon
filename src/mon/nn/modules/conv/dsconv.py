@@ -24,7 +24,7 @@ import torch
 from torch import nn
 
 from mon.core import _callable, _size_2_t
-from mon.nn.layer import activation
+from mon.nn.modules import activation
 
 
 # region Depthwise Separable Convolution

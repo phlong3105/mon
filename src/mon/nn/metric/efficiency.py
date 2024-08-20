@@ -11,7 +11,6 @@ __all__ = [
 
 from copy import deepcopy
 
-import thop
 import torch
 from fvcore.nn import FlopCountAnalysis, parameter_count
 from torch import nn
@@ -45,7 +44,7 @@ def compute_efficiency_score(
 		# model  = model.to(device)
 	
 	# Get FLOPs and Params
-	flops, params = thop.profile(deepcopy(model), inputs=(input, ), verbose=verbose)
+	flops, params = core.profile(deepcopy(model), inputs=(input, ), verbose=verbose)
 	flops         = FlopCountAnalysis(model, input).total() if flops == 0 else flops
 	params        = model.params               if hasattr(model, "params") and params == 0 else params
 	params        = parameter_count(model)     if hasattr(model, "params") else params

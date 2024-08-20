@@ -47,7 +47,7 @@ from torch.nn import functional as F
 from torchvision.ops.misc import SqueezeExcitation
 
 from mon.core import _size_2_t
-from mon.nn.layer import (
+from mon.nn.modules import (
     activation as act, conv, dropout as drop, flatten, linear, normalization as norm, pooling,
     projection,
 )

@@ -42,7 +42,7 @@ from torch.nn.modules.conv import *
 from torchvision.ops.misc import Conv2dNormActivation, Conv3dNormActivation, ConvNormActivation
 
 from mon.core import _size_2_t, _size_any_t
-from mon.nn.layer import normalization, padding as pad
+from mon.nn.modules import normalization, padding as pad
 
 
 # region Convolution

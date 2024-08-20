@@ -49,7 +49,7 @@ from torch.nn.modules.pooling import *
 
 from mon import core
 from mon.core import _size_2_t
-from mon.nn.layer import padding as pad
+from mon.nn.modules import padding as pad
 
 
 # region Adaptive Pool
@@ -124,7 +124,7 @@ class AdaptivePool2d(nn.Module):
         pool_type  : str  = "fast",
         flatten    : bool = False,
     ):
-        from mon.nn.layer import linear, flatten
+        from mon.nn.modules import linear, flatten
         
         super().__init__()
         self.pool_type = pool_type or ""

@@ -4,7 +4,7 @@ from functools import partial
 import torch
 
 from mon import nn
-from mon.nn.layer import (activation, conv, dropout, linear, normalization)
+from mon.nn.modules import (activation, conv, dropout, linear, normalization)
 from .drop import DropPath
 
 

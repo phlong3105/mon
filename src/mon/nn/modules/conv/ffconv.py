@@ -28,8 +28,8 @@ import torch
 from torch import nn
 
 from mon.core import _size_2_t
-from mon.nn.layer import activation, linear, normalization, pooling
-from mon.nn.layer.conv import base as conv
+from mon.nn.modules import activation, linear, normalization, pooling
+from mon.nn.modules.conv import base as conv
 
 
 # region Fourier Transform
