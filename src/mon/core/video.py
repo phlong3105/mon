@@ -13,7 +13,7 @@ __all__ = [
 import numpy as np
 import torch
 
-from mon.core import image as I
+from mon.core import image as ci
 
 
 # region I/O
@@ -56,7 +56,7 @@ def read_video_ffmpeg(
 			.reshape([height, width, 3])
 		)  # Numpy
 		if to_tensor:
-			image = I.to_image_tensor(
+			image = ci.to_image_tensor(
 				input	  = image,
 				keepdim   = False,
 				normalize = normalize
@@ -78,12 +78,12 @@ def write_video_ffmpeg(
 			Default: ``False``.
 	"""
 	if isinstance(image, np.ndarray):
-		if I.is_normalized_image(input=image):
-			image = I.denormalize_image(image=image)
-		if I.is_channel_first_image(input=image):
-			image = I.to_channel_last_image(input=image)
+		if ci.is_normalized_image(input=image):
+			image = ci.denormalize_image(image=image)
+		if ci.is_channel_first_image(input=image):
+			image = ci.to_channel_last_image(input=image)
 	elif isinstance(image, torch.Tensor):
-		image = I.to_image_nparray(
+		image = ci.to_image_nparray(
 			input	    = image,
 			keepdim     = False,
 			denormalize = denormalize

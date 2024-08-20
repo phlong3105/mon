@@ -10,10 +10,6 @@ from __future__ import annotations
 __all__ = [
     "D2CE",
     "D2CE_01_Baseline",
-    "D2CE_02_Depth",
-    "D2CE_03_Edge",
-    "D2CE_04_DepthBrightnessAttention",
-    "D2CE_05_DepthAttention",
 ]
 
 from typing import Any, Literal, Sequence
@@ -24,7 +20,6 @@ from mon import core, nn
 from mon.core import _size_2_t
 from mon.globals import MODELS, Scheme
 from mon.vision import filtering, geometry
-from mon.vision.depth import depth_anything_v2
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -111,7 +106,7 @@ class Loss(nn.Loss):
         loss_col = self.loss_col(input=enhance)               if self.weight_col  > 0 else 0
         loss_exp = self.loss_exp(input=enhance)               if self.weight_exp  > 0 else 0
         loss_spa = self.loss_spa(input=enhance, target=input) if self.weight_spa  > 0 else 0
-        if adjust:
+        if adjust is not None:
             loss_tva = self.loss_tva(input=adjust)  if self.weight_tva > 0 else 0
         else:
             loss_tva = self.loss_tva(input=enhance) if self.weight_tva > 0 else 0
@@ -213,8 +208,8 @@ class EnhanceNet(nn.Module):
         super().__init__()
         self.use_depth     = use_depth
         self.use_edge      = use_edge
-        in_channels       += 1 if self.use_depth else 0
-        in_channels       += 1 if self.use_edge  else 0
+        in_channels       += 3 if self.use_depth else 0
+        in_channels       += 3 if self.use_edge  else 0
         self.in_channels   = in_channels
         self.num_channels  = num_channels
         self.out_channels  = 3
@@ -286,7 +281,6 @@ class D2CE(base.LowLightImageEnhancementModel):
         in_channels : int   = 3,
         num_channels: int   = 32,
         num_iters   : int   = 15,
-        de_encoder  : Literal["vits", "vitb", "vitl"] = "vits",
         dba_eps     : float = 0.05,
         gf_radius   : int   = 3,
         gf_eps      : float = 1e-4,
@@ -309,7 +303,6 @@ class D2CE(base.LowLightImageEnhancementModel):
             in_channels  = self.weights.get("in_channels" , in_channels)
             num_channels = self.weights.get("num_channels", num_channels)
             num_iters    = self.weights.get("num_iters"   , num_iters)
-            de_encoder   = self.weights.get("de_encoder"  , de_encoder)
             dba_eps      = self.weights.get("dba_eps"     , dba_eps)
             gf_radius    = self.weights.get("gf_radius"   , gf_radius)
             gf_eps       = self.weights.get("gf_eps"      , gf_eps)
@@ -320,7 +313,6 @@ class D2CE(base.LowLightImageEnhancementModel):
         self.in_channels  = in_channels or self.in_channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
-        self.de_encoder   = de_encoder
         self.dba_eps      = dba_eps
         self.gf_radius    = gf_radius
         self.gf_eps       = gf_eps
@@ -330,11 +322,6 @@ class D2CE(base.LowLightImageEnhancementModel):
         self.use_edge     = use_edge
         
         # Construct model
-        self.de  = depth_anything_v2.build_depth_anything_v2(
-            encoder     = self.de_encoder,
-            in_channels = self.in_channels,
-            weights     = "da_2k",
-        )
         self.en  = EnhanceNet(
             in_channels  = self.in_channels,
             num_channels = self.num_channels,
@@ -348,7 +335,7 @@ class D2CE(base.LowLightImageEnhancementModel):
         self.bam = nn.BrightnessAttentionMap(gamma=self.bam_gamma, denoise_ksize=self.bam_ksize)
         
         # Loss
-        self._loss = Loss(reduction="mean")
+        self.loss = Loss(reduction="mean")
         
         # Load weights
         if self.weights:
@@ -356,52 +343,45 @@ class D2CE(base.LowLightImageEnhancementModel):
         else:
             self.apply(self.init_weights)
         
-        # Freeze DepthAnythingV2 model
-        self.de.eval()
-        
     def init_weights(self, m: nn.Module):
         pass
     
-    def on_fit_start(self):
-        super().on_fit_start()
-        self.de.eval()  # Freeze DepthAnythingV2 model
+    def assert_datapoint(self, datapoint: dict) -> bool:
+        super().assert_datapoint(datapoint)
+        assert "depth" in datapoint, "The key ``'depth'`` must be defined in the :param:`datapoint`."
     
-    def on_train_start(self) -> None:
-        super().on_train_start()
-        self.de.eval()  # Freeze DepthAnythingV2 model
-    
-    def on_validation_start(self) -> None:
-        super().on_validation_start()
-        self.de.eval()  # Freeze DepthAnythingV2 model
-        
-    def on_test_start(self) -> None:
-        super().on_test_start()
-        self.de.eval()  # Freeze DepthAnythingV2 model
-    
-    def on_predict_start(self) -> None:
-        super().on_predict_start()
-        self.de.eval()  # Freeze DepthAnythingV2 model
+    def assert_outputs(self, outputs: dict) -> bool:
+        super().assert_outputs(outputs)
+        assert "adjust"   in outputs, "The key ``'adjust'`` must be defined in the :param:`outputs`."
+        assert "bam"      in outputs, "The key ``'bam'`` must be defined in the :param:`outputs`."
+        assert "depth"    in outputs, "The key ``'depth'`` must be defined in the :param:`outputs`."
+        assert "edge"     in outputs, "The key ``'edge'`` must be defined in the :param:`outputs`."
+        assert "guidance" in outputs, "The key ``'guidance'`` must be defined in the :param:`outputs`."
+        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the :param:`outputs`."
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
         # Forward
-        i          = datapoint.get("image")
-        i1, i2     = geometry.pair_downsample(i)
-        datapoint1 = datapoint | {"image": i1}
-        datapoint2 = datapoint | {"image": i2}
-        outputs1   = self.forward(datapoint=datapoint1, *args, **kwargs)
-        outputs2   = self.forward(datapoint=datapoint2, *args, **kwargs)
-        outputs    = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_datapoint(datapoint)
+        image          = datapoint.get("image")
+        depth          = datapoint.get("depth")
+        image1, image2 = geometry.pair_downsample(image)
+        depth1, depth2 = geometry.pair_downsample(depth)
+        datapoint1     = datapoint | {"image": image1, "depth": depth1}
+        datapoint2     = datapoint | {"image": image2, "depth": depth2}
+        outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
         self.assert_datapoint(datapoint)
         self.assert_outputs(outputs)
         # Symmetric Loss
-        c1_1, c1_2, d1, e1, gf1, j1 = outputs1.values()
-        c2_1, c2_2, d2, e2, gf2, j2 = outputs2.values()
-        c_1 , c_2 , d,  e,  gf , o  = outputs.values()
-        o1, o2   = geometry.pair_downsample(o)
+        adjust1, bam1, depth1, edge1, guide1, enhanced1 = outputs1.values()
+        adjust2, bam2, depth2, edge2, guide2, enhanced2 = outputs2.values()
+        adjust , bam , depth,  edge,  guide , enhanced  = outputs.values()
+        enhanced_1, enhanced_2 = geometry.pair_downsample(enhanced)
         mse_loss = nn.MSELoss()
-        loss_res = 0.5 * (mse_loss(i1, j2) + mse_loss(i2, j1))
-        loss_con = 0.5 * (mse_loss(j1, o1) + mse_loss(j2, o2))
-        loss_enh = self.loss(i, c_1, o)
+        loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,    enhanced1))
+        loss_con = 0.5 * (mse_loss(enhanced_1, enhanced1) + mse_loss(enhanced_2, enhanced2))
+        loss_enh = self.loss(image, adjust, enhanced)
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
         outputs["loss"] = loss
         # Return
@@ -409,35 +389,33 @@ class D2CE(base.LowLightImageEnhancementModel):
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        x     = datapoint.get("image")
+        image = datapoint.get("image")
+        depth = datapoint.get("depth")
         # Enhancement
-        de    = self.de(datapoint)
-        de    = de.get("depth")
-        de    = de.detach()  # Must call detach() else error
-        c1, e = self.en(x, de)
-        e     = e.detach()   # Must call detach() else error
+        adjust, edge = self.en(image, depth)
+        edge         = edge.detach()   # Must call detach() else error
         # Enhancement loop
         if self.bam_gamma in [None, 0.0]:
-            y  = x
-            c2 = None
+            guide = image
+            bam   = None
             for i in range(self.num_iters):
-                y = y + c1 * (torch.pow(y, 2) - y)
+                guide = guide + adjust * (torch.pow(guide, 2) - guide)
         else:
-            y  = x
-            c2 = self.bam(x)
+            guide = image
+            bam   = self.bam(image)
             for i in range(0, self.num_iters):
-                b = y * (1 - c2)
-                d = y * c2
-                y = b + d + c1 * (torch.pow(d, 2) - d)
+                bright = guide * (1 - bam)
+                dark   = guide * bam
+                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         # Guided Filter
-        y_gf = self.gf(x, y)
+        enhanced = self.gf(image, guide)
         return {
-            "adjust"   : c1,
-            "attention": c2,
-            "depth"    : de,
-            "edge"     : e,
-            "guidance" : y,
-            "enhanced" : y_gf,
+            "adjust"   : adjust,
+            "bam"      : bam,
+            "depth"    : depth,
+            "edge"     : edge,
+            "guidance" : guide,
+            "enhanced" : enhanced,
         }
 
 
@@ -452,119 +430,4 @@ class D2CE_01_Baseline(D2CE):
             *args, **kwargs
         )
 
-
-@MODELS.register(name="d2ce_02_depth", arch="d2ce")
-class D2CE_02_Depth(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name      = "d2ce_02_depth",
-            use_depth = True,
-            use_edge  = False,
-            *args, **kwargs
-        )
-
-
-@MODELS.register(name="d2ce_03_edge", arch="d2ce")
-class D2CE_03_Edge(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name      = "d2ce_03_edge",
-            use_depth = False,
-            use_edge  = True,
-            *args, **kwargs
-        )
-
-
-@MODELS.register(name="d2ce_04_depth_brightness_attention", arch="d2ce")
-class D2CE_04_DepthBrightnessAttention(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name      = "d2ce_04_depth_brightness_attention",
-            use_depth = False,
-            use_edge  = False,
-            *args, **kwargs
-        )
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        x     = datapoint.get("image")
-        # Enhancement
-        de    = self.de(datapoint)
-        de    = de.get("depth")
-        de    = de.detach()  # Must call detach() else error
-        c1, e = self.en(x, de)
-        e     = e.detach()   # Must call detach() else error
-        # Enhancement loop
-        if self.bam_gamma in [None, 0.0]:
-            y  = x
-            c2 = None
-            for i in range(self.num_iters):
-                y = y + c1 * (torch.pow(y, 2) - y)
-        else:
-            y  = x
-            c2 = self.bam(x)
-            c2 = c2 * de
-            for i in range(0, self.num_iters):
-                b = y * (1 - c2)
-                d = y * c2
-                y = b + d + c1 * (torch.pow(d, 2) - d)
-        # Guided Filter
-        y_gf = self.gf(x, y)
-        return {
-            "adjust"   : c1,
-            "attention": c2,
-            "depth"    : de,
-            "edge"     : e,
-            "guidance" : y,
-            "enhanced" : y_gf,
-        }
-
-
-@MODELS.register(name="d2ce_05_depth_attention", arch="d2ce")
-class D2CE_05_DepthAttention(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name      = "d2ce_05_depth_attention",
-            use_depth = False,
-            use_edge  = False,
-            *args, **kwargs
-        )
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        x     = datapoint.get("image")
-        # Enhancement
-        de    = self.de(datapoint)
-        de    = de.get("depth")
-        de    = de.detach()  # Must call detach() else error
-        c1, e = self.en(x, de)
-        e     = e.detach()   # Must call detach() else error
-        # Enhancement loop
-        if self.bam_gamma in [None, 0.0]:
-            y  = x
-            c2 = None
-            for i in range(self.num_iters):
-                y = y + c1 * (torch.pow(y, 2) - y)
-        else:
-            y  = x
-            c2 = de
-            for i in range(0, self.num_iters):
-                b = y * (1 - c2)
-                d = y * c2
-                y = b + d + c1 * (torch.pow(d, 2) - d)
-        # Guided Filter
-        y_gf = self.gf(x, y)
-        return {
-            "adjust"   : c1,
-            "attention": c2,
-            "depth"    : de,
-            "edge"     : e,
-            "guidance" : y,
-            "enhanced" : y_gf,
-        }
-    
 # endregion

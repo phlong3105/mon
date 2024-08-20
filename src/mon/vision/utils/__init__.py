@@ -6,7 +6,5 @@
 
 from __future__ import annotations
 
-import mon.vision.utils.draw
 import mon.vision.utils.view
-from mon.vision.utils.draw import *
 from mon.vision.utils.view import *

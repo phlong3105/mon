@@ -31,7 +31,6 @@ from mon.core import _size_2_t
 
 # region Intensity & Gradient Prior
 
-@dispatch
 def atmospheric_prior(input: np.ndarray, kernel_size: _size_2_t = 15, p: float = 0.0001) -> np.ndarray:
     """Get the atmosphere light in the (RGB) image data.
 
@@ -55,7 +54,6 @@ def atmospheric_prior(input: np.ndarray, kernel_size: _size_2_t = 15, p: float =
     return np.max(flat_i.take(search_idx, axis=0), axis=0)
 
 
-@dispatch
 def blur_spot_prior(input: np.ndarray, threshold: int = 250) -> bool:
     # Convert image to grayscale
     gray = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
@@ -70,7 +68,6 @@ def blur_spot_prior(input: np.ndarray, threshold: int = 250) -> bool:
     return is_blur
 
 
-@dispatch
 def bright_spot_prior(input: np.ndarray) -> bool:
     # Convert image to grayscale
     gray = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
@@ -83,77 +80,66 @@ def bright_spot_prior(input: np.ndarray) -> bool:
     return is_bright
 
 
-@dispatch
-def bright_channel_prior(input: np.ndarray, kernel_size: _size_2_t) -> np.ndarray:
+def bright_channel_prior(
+    input      : torch.Tensor | np.ndarray,
+    kernel_size: _size_2_t
+) -> torch.Tensor | np.ndarray:
     """Get the bright channel prior from an RGB image.
     
     Args:
-        input: A :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
+        input: A :class:`torch.Tensor` or :class:`numpy.ndarray`RGB image in
+            :math:`[N, C, H, W]` format.
         kernel_size: Window size.
 
     Returns:
         A bright channel prior.
     """
-    bright_channel = np.max(input, axis=2)
-    kernel_size    = core.to_2tuple(kernel_size)
-    kernel         = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
-    bcp            = cv2.erode(bright_channel, kernel)
+    if isinstance(input, torch.Tensor):
+        bright_channel = torch.max(input, dim=1)[0]
+        kernel         = torch.ones(kernel_size, kernel_size)
+        bcp            = kornia.morphology.erosion(bright_channel, kernel)
+    elif isinstance(input, np.ndarray):
+        bright_channel = np.max(input, axis=2)
+        kernel_size    = core.to_2tuple(kernel_size)
+        kernel         = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
+        bcp            = cv2.erode(bright_channel, kernel)
+    else:
+        raise ValueError(f"Unsupported input type: {type(input)}.")
     return bcp
 
 
-@dispatch
-def bright_channel_prior(input: torch.Tensor, kernel_size: _size_2_t) -> torch.Tensor:
-    """Get the bright channel prior from an RGB image.
-    
-    Args:
-        input: A :class:`torch.Tensor` RGB image in :math:`[N, C, H, W]` format.
-        kernel_size: Window size.
-
-    Returns:
-        A bright channel prior.
-    """
-    bright_channel = torch.max(input, dim=1)[0]
-    kernel         = torch.ones(kernel_size, kernel_size)
-    bcp            = kornia.morphology.erosion(bright_channel, kernel)
-    return bcp
-
-
-@dispatch
-def dark_channel_prior(input: np.ndarray, kernel_size: _size_2_t) -> np.ndarray:
+def dark_channel_prior(
+    input      : torch.Tensor | np.ndarray,
+    kernel_size: _size_2_t
+) -> torch.Tensor | np.ndarray:
     """Get the dark channel prior from an RGB image.
     
     Args:
-        input: A  :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
+        input: A :class:`torch.Tensor` or :class:`numpy.ndarray` RGB image in
+            :math:`[N, C, H, W]` format.
         kernel_size: Window size.
         
     Returns:
         A dark channel prior.
     """
-    dark_channel = np.min(input, axis=2)
-    kernel_size  = core.to_2tuple(kernel_size)
-    kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
-    dcp          = cv2.erode(dark_channel, kernel)
+    if isinstance(input, torch.Tensor):
+        dark_channel = torch.min(input, dim=1)[0]
+        kernel       = torch.ones(kernel_size, kernel_size)
+        dcp          = kornia.morphology.erosion(dark_channel, kernel)
+    elif isinstance(input, np.ndarray):
+        dark_channel = np.min(input, axis=2)
+        kernel_size  = core.to_2tuple(kernel_size)
+        kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
+        dcp          = cv2.erode(dark_channel, kernel)
+    else:
+        raise ValueError(f"Unsupported input type: {type(input)}.")
     return dcp
 
 
-@dispatch
-def dark_channel_prior(input: torch.Tensor, kernel_size: _size_2_t) -> torch.Tensor:
-    """Get the dark channel prior from an RGB image.
-    
-    Args:
-        input: A :class:`torch.Tensor` RGB image in :math:`[N, C, H, W]` format.
-        kernel_size: Window size.
-        
-    Returns:
-        A dark channel prior.
-    """
-    dark_channel = torch.min(input, dim=1)[0]
-    kernel       = torch.ones(kernel_size, kernel_size)
-    dcp          = kornia.morphology.erosion(dark_channel, kernel)
-    return dcp
-
-
-def dark_channel_prior_02(input: np.ndarray, kernel_size: _size_2_t) -> np.ndarray:
+def dark_channel_prior_02(
+    input      : torch.Tensor | np.ndarray,
+    kernel_size: _size_2_t
+) -> torch.Tensor | np.ndarray:
     """Get the dark channel prior from an RGB image.
 
     Args:
@@ -172,48 +158,39 @@ def dark_channel_prior_02(input: np.ndarray, kernel_size: _size_2_t) -> np.ndarr
     return dcp
 
 
-@dispatch
-def boundary_aware_prior(input: np.ndarray, eps: float = 0.05, normalized: bool = False) -> np.ndarray:
+def boundary_aware_prior(
+    input     : torch.Tensor | np.ndarray,
+    eps       : float = 0.05,
+    normalized: bool  = False
+) -> torch.Tensor | np.ndarray:
     """Get the boundary prior from an RGB or grayscale image.
     
     Args:
-        input: A :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
-        eps: Threshold to remove weak edges. Default: ``1e-6``.
-        normalized: If ``True``, L1 norm of the kernel is set to ``1``.
-            Default: ``True``.
-        
-    Returns:
-        A boundary aware prior as a binary image.
-    """
-    h, w, c = input.shape
-    if c == 3:
-        input = cv2.cvtColor(input, cv2.COLOR_RGB2GRAY)
-    
-    from mon.vision.filtering import sobel_filter
-    gradient = sobel_filter(input, kernel_size=3)
-    g_max    = np.max(gradient)
-    gradient = gradient / g_max
-    boundary = (gradient > eps).float()
-    return boundary
-
-
-@dispatch
-def boundary_aware_prior(input: torch.Tensor, eps: float = 0.05, normalized: bool = False) -> torch.Tensor:
-    """Get the boundary prior from an RGB or grayscale image.
-    
-    Args:
-        input: A :class:`torch.Tensor` RGB image in :math:`[N, C, H, W]` format.
+        input: A :class:`torch.Tensor` or :class:`numpy.ndarray` RGB image in
+            :math:`[N, C, H, W]` format.
         eps: Threshold to remove weak edges. Default: ``0.05``.
         normalized: If ``True``, L1 norm of the kernel is set to ``1``.
-            Default: ``True``.
+            Default: ``False``.
         
     Returns:
         A boundary aware prior as a binary image.
     """
-    gradient = kornia.filters.sobel(input, normalized=normalized, eps=1e-6)
-    g_max    = torch.max(gradient)
-    gradient = gradient / g_max
-    boundary = (gradient > eps).float()
+    if isinstance(input, torch.Tensor):
+        gradient = kornia.filters.sobel(input, normalized=normalized, eps=1e-6)
+        g_max    = torch.max(gradient)
+        gradient = gradient / g_max
+        boundary = (gradient > eps).float()
+    elif isinstance(input, np.ndarray):
+        if core.is_color_image(input):
+            input = cv2.cvtColor(input, cv2.COLOR_RGB2GRAY)
+        from mon.vision.filtering import sobel_filter
+        gradient = sobel_filter(input, kernel_size=3)
+        g_max    = np.max(gradient)
+        gradient = gradient / g_max
+        boundary = (gradient > eps).float()
+        return boundary
+    else:
+        raise ValueError(f"Unsupported input type: {type(input)}.")
     return boundary
 
 
@@ -232,51 +209,15 @@ class BoundaryAwarePrior(nn.Module):
         self.normalized = normalized
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return boundary_aware_prior(input=input, eps=self.eps, normalized=self.normalized)
+        return boundary_aware_prior(input, self.eps, self.normalized)
 
 # endregion
 
 
 # region Self-Attention Map
 
-@dispatch
 def brightness_attention_map(
-    input        : np.ndarray,
-    gamma        : float            = 2.5,
-    denoise_ksize: _size_2_t | None = None,
-) -> np.ndarray:
-    """Get the Brightness Attention Map (BAM) prior from an RGB image.
-    
-    This is a self-attention map extracted from the V-channel of a low-light
-    image. This map is multiplied to convolutional activations of all layers in
-    the enhancement network. Brighter regions are given lower weights to avoid
-    over-saturation, while preserving image details and enhancing the contrast
-    in the dark regions effectively.
-    
-    Equation: :math:`I_{attn} = (1 - I_{V})^{\gamma}`, where :math:`\gamma \geq 1`.
-    
-    Args:
-        input: A :class:`numpy.ndarray` RBG image :math:`[H, W, C]` format.
-        gamma: A parameter controls the curvature of the map.
-        denoise_ksize: Window size for de-noising operation. Default: ``None``.
-        
-    Returns:
-        A brightness attention map as prior.
-    """
-    if denoise_ksize:
-        input = cv2.medianBlur(input, denoise_ksize)
-    hsv = cv2.cvtColor(input, cv2.COLOR_RGB2HSV)
-    if hsv.dtype != np.float64:
-        hsv  = hsv.astype("float64")
-        hsv /= 255.0
-    v   = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, :, 2:3]
-    bam = np.power((1 - v), gamma)
-    return bam
-
-
-@dispatch
-def brightness_attention_map(
-    input        : torch.Tensor,
+    input        : torch.Tensor | np.ndarray,
     gamma        : float            = 2.5,
     denoise_ksize: _size_2_t | None = None,
 ) -> torch.Tensor:
@@ -291,19 +232,32 @@ def brightness_attention_map(
     Equation: :math:`I_{attn} = (1 - I_{V})^{\gamma}`, where :math:`\gamma \geq 1`.
     
     Args:
-        input: A :class:`torch.Tensor` RGB image in :math:`[N, C, H, W]` format.
+        input: A :class:`torch.Tensor` or :class:`numpy.ndarray` RGB image in
+            :math:`[N, C, H, W]` format.
         gamma: A parameter controls the curvature of the map.
         denoise_ksize: Window size for de-noising operation. Default: ``None``.
         
     Returns:
         An :class:`numpy.ndarray` brightness enhancement map as prior.
     """
-    if denoise_ksize:
-        # input = filtering.guided_filter(input, input, denoise_ksize)
-        input = kornia.filters.median_blur(input, denoise_ksize)
-    hsv = kornia.color.rgb_to_hsv(input)
-    v   = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
-    bam = torch.pow((1 - v), gamma)
+    if isinstance(input, torch.Tensor):
+        if denoise_ksize:
+            # input = filtering.guided_filter(input, input, denoise_ksize)
+            input = kornia.filters.median_blur(input, denoise_ksize)
+        hsv = kornia.color.rgb_to_hsv(input)
+        v   = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
+        bam = torch.pow((1 - v), gamma)
+    elif isinstance(input, np.ndarray):
+        if denoise_ksize:
+            input = cv2.medianBlur(input, denoise_ksize)
+        hsv = cv2.cvtColor(input, cv2.COLOR_RGB2HSV)
+        if hsv.dtype != np.float64:
+            hsv  = hsv.astype("float64")
+            hsv /= 255.0
+        v   = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, :, 2:3]
+        bam = np.power((1 - v), gamma)
+    else:
+        raise ValueError(f"Unsupported input type: {type(input)}.")
     return bam
 
 

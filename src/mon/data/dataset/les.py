@@ -138,7 +138,7 @@ class Flare7KPP(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         image = ImageAnnotation(path=path)
@@ -230,7 +230,7 @@ class Flare7KPPReal(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -240,7 +240,7 @@ class Flare7KPPReal(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -278,7 +278,7 @@ class Flare7KPPSyn(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -288,7 +288,7 @@ class Flare7KPPSyn(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -326,7 +326,7 @@ class FlareReal800(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -336,7 +336,7 @@ class FlareReal800(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -374,7 +374,7 @@ class LEDLight(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -384,7 +384,7 @@ class LEDLight(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -422,7 +422,7 @@ class LightEffect(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))

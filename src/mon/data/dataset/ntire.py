@@ -72,7 +72,7 @@ class NTIRE24LLIE(ImageDataset):
 			for pattern in patterns:
 				for path in pbar.track(
 					sorted(list(pattern.rglob("*"))),
-					description=f"Listing {self.__class__.__name__} {self.split_str} images"
+					description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
 				):
 					if path.is_image_file():
 						lq_images.append(ImageAnnotation(path=path))
@@ -82,7 +82,7 @@ class NTIRE24LLIE(ImageDataset):
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				lq_images,
-				description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+				description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
 			):
 				path = img.path.replace("/lq/", "/hq/")
 				hq_images.append(ImageAnnotation(path=path.image_file()))

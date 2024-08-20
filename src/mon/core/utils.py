@@ -63,16 +63,14 @@ except ImportError:
     pynvml_available = False
 
 from mon.globals import MemoryUnit
-from mon.core import rich, pathlib, dtype, file, humps
-
-console       = rich.console
-error_console = rich.error_console
+from mon.core import pathlib, dtype, file, humps
 
 
 # region Config
 
 def get_project_default_config(project_root: str | pathlib.Path) -> dict:
     if project_root in [None, "None", ""]:
+        from mon.core.rich import error_console
         error_console.log(f"{project_root} is not a valid project directory.")
         return {}
     
@@ -171,6 +169,7 @@ def parse_config_file(
             if config_.is_config_file():
                 return config_
     # That's it.
+    from mon.core.rich import error_console
     error_console.log(f"No configuration is found at {config}.")
     return None  # config
 
@@ -193,6 +192,7 @@ def load_config(config: Any) -> dict:
         data = None
     
     if data is None:
+        from mon.core.rich import error_console
         error_console.log(f"No configuration is found at {config}. Setting an empty dictionary.")
         data = {}
     return data

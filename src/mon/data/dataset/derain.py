@@ -72,7 +72,7 @@ class GTRain(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -82,7 +82,7 @@ class GTRain(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = str(img.path)
                 if "Gurutto_1-2" in path:
@@ -126,7 +126,7 @@ class Rain100(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -136,7 +136,7 @@ class Rain100(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -175,7 +175,7 @@ class Rain100H(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -185,7 +185,7 @@ class Rain100H(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -224,7 +224,7 @@ class Rain100L(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -234,7 +234,7 @@ class Rain100L(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -272,7 +272,7 @@ class Rain12(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -282,7 +282,7 @@ class Rain12(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -328,7 +328,7 @@ class Rain1200(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -338,7 +338,7 @@ class Rain1200(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -392,7 +392,7 @@ class Rain13K(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -402,7 +402,7 @@ class Rain13K(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -441,7 +441,7 @@ class Rain1400(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -451,7 +451,7 @@ class Rain1400(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -489,7 +489,7 @@ class Rain2800(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         
@@ -500,7 +500,7 @@ class Rain2800(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -538,7 +538,7 @@ class Rain800(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -548,7 +548,7 @@ class Rain800(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))

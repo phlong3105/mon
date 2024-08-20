@@ -87,7 +87,7 @@ class DenseHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -97,7 +97,7 @@ class DenseHaze(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -136,7 +136,7 @@ class IHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -146,7 +146,7 @@ class IHaze(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -185,7 +185,7 @@ class NHHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -234,7 +234,7 @@ class OHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -244,7 +244,7 @@ class OHaze(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -281,7 +281,7 @@ class RESIDEHSTSReal(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -319,7 +319,7 @@ class RESIDEHSTSSyn(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -329,7 +329,7 @@ class RESIDEHSTSSyn(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -368,7 +368,7 @@ class RESIDEITS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -378,7 +378,7 @@ class RESIDEITS(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -419,7 +419,7 @@ class RESIDEITSV2(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -429,7 +429,7 @@ class RESIDEITSV2(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -470,7 +470,7 @@ class RESIDEOTS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -480,7 +480,7 @@ class RESIDEOTS(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -519,7 +519,7 @@ class RESIDERTTS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -557,7 +557,7 @@ class RESIDESOTSIndoor(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -567,7 +567,7 @@ class RESIDESOTSIndoor(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -608,7 +608,7 @@ class RESIDESOTSOutdoor(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -618,7 +618,7 @@ class RESIDESOTSOutdoor(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -657,7 +657,7 @@ class RESIDEUHI(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -697,7 +697,7 @@ class SateHaze1K(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -707,7 +707,7 @@ class SateHaze1K(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -745,7 +745,7 @@ class SateHaze1KThin(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -791,7 +791,7 @@ class SateHaze1KModerate(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -800,7 +800,7 @@ class SateHaze1KModerate(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -838,7 +838,7 @@ class SateHaze1KThick(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} images"
+                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -848,7 +848,7 @@ class SateHaze1KThick(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} ground-truths"
+                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))

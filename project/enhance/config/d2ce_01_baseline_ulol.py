@@ -38,7 +38,6 @@ model = {
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 32,		        # The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
-	"de_encoder"  : "vits",         # The encoder for DepthAnythingV2.
 	"dba_eps"     : 0.05,		    # The epsilon for DepthBoundaryAware.
 	"gf_radius"   : 3,              # The radius for GuidedFilter.
 	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
