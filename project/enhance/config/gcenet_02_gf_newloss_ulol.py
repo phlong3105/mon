@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/edenoised1nv python
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "gcenet_b1"
+model_name = "gcenet_02_gf_newloss"
 data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -76,7 +76,7 @@ data = {
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 32,            # The number of samples in one forward pass.
+    "batch_size": 16,            # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.

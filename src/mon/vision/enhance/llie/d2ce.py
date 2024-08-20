@@ -371,15 +371,14 @@ class D2CE(base.LowLightImageEnhancementModel):
         outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
         outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
         outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
-        self.assert_datapoint(datapoint)
         self.assert_outputs(outputs)
         # Symmetric Loss
-        adjust1, bam1, depth1, edge1, guide1, enhanced1 = outputs1.values()
-        adjust2, bam2, depth2, edge2, guide2, enhanced2 = outputs2.values()
-        adjust , bam , depth,  edge,  guide , enhanced  = outputs.values()
+        adjust1, bam1, depth1, edge1, bright1, dark1, guide1, enhanced1 = outputs1.values()
+        adjust2, bam2, depth2, edge2, bright2, dark2, guide2, enhanced2 = outputs2.values()
+        adjust , bam , depth,  edge,  bright,  dark,  guide , enhanced  = outputs.values()
         enhanced_1, enhanced_2 = geometry.pair_downsample(enhanced)
         mse_loss = nn.MSELoss()
-        loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,    enhanced1))
+        loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,     enhanced1))
         loss_con = 0.5 * (mse_loss(enhanced_1, enhanced1) + mse_loss(enhanced_2, enhanced2))
         loss_enh = self.loss(image, adjust, enhanced)
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
@@ -396,13 +395,17 @@ class D2CE(base.LowLightImageEnhancementModel):
         edge         = edge.detach()   # Must call detach() else error
         # Enhancement loop
         if self.bam_gamma in [None, 0.0]:
-            guide = image
-            bam   = None
+            guide  = image
+            bam    = None
+            bright = None
+            dark   = None
             for i in range(self.num_iters):
                 guide = guide + adjust * (torch.pow(guide, 2) - guide)
         else:
-            guide = image
-            bam   = self.bam(image)
+            guide  = image
+            bam    = self.bam(image)
+            bright = None
+            dark   = None
             for i in range(0, self.num_iters):
                 bright = guide * (1 - bam)
                 dark   = guide * bam
@@ -414,6 +417,8 @@ class D2CE(base.LowLightImageEnhancementModel):
             "bam"      : bam,
             "depth"    : depth,
             "edge"     : edge,
+            "bright"   : bright,
+            "dark"     : dark,
             "guidance" : guide,
             "enhanced" : enhanced,
         }

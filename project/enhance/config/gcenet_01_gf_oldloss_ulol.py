@@ -12,7 +12,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "gcenet_a1"
+model_name = "gcenet_01_gf_oldloss"
 data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
