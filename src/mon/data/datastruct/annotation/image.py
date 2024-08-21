@@ -11,6 +11,7 @@ __all__ = [
     "SegmentationAnnotation",
 ]
 
+import cv2
 import numpy as np
 import torch
 
@@ -27,6 +28,21 @@ class ImageAnnotation(base.Annotation):
     
     Args:
         path: A path to the image file.
+        flags: A flag to read the image. One of:
+            - cv2.IMREAD_UNCHANGED           = -1,
+            - cv2.IMREAD_GRAYSCALE           = 0,
+            - cv2.IMREAD_COLOR               = 1,
+            - cv2.IMREAD_ANYDEPTH            = 2,
+            - cv2.IMREAD_ANYCOLOR            = 4,
+            - cv2.IMREAD_LOAD_GDAL           = 8,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_2 = 16,
+            - cv2.IMREAD_REDUCED_COLOR_2     = 17,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_4 = 32,
+            - cv2.IMREAD_REDUCED_COLOR_4     = 33,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_8 = 64,
+            - cv2.IMREAD_REDUCED_COLOR_8     = 65,
+            - cv2.IMREAD_IGNORE_ORIENTATION  = 128
+            Default: ``cv2.IMREAD_COLOR``.
         
     References:
         `<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
@@ -34,9 +50,15 @@ class ImageAnnotation(base.Annotation):
     See Also: :class:`mon.data.datastruct.annotation.base.Annotation`.
     """
     
-    def __init__(self, path: core.Path | str, *args, **kwargs):
+    def __init__(
+        self,
+        path : core.Path | str,
+        flags: int = cv2.IMREAD_COLOR,
+        *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.path   = path
+        self.flags  = flags
         self.image  = None
         self._shape = None
     
@@ -86,23 +108,32 @@ class ImageAnnotation(base.Annotation):
     def load(
         self,
         path : core.Path | str | None = None,
-        cache: bool = False,
-    ) -> np.ndarray | None:
+        flags: int | None = None,
+        cache: bool       = False,
+    ) -> np.ndarray:
         """Loads image into memory.
         
         Args:
             path: The path to the image file. Default: ``None``.
+            flags: A flag to read the image. Default: ``None``.
             cache: If ``True``, the image will be loaded into memory and kept
                 there. Default: ``False``.
             
         Return:
             An image of shape :math:`[H, W, C]`.
         """
-        if path:
-            self.path = path
-        image = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
-        if cache:
-            self.image = image
+        if self.image is not None:
+            return self.image
+        
+        self.path  = path  if path  else self.path
+        self.flags = flags if flags else self.flags
+        image = core.read_image(
+            path      = self.path,
+            flags     = self.flags,
+            to_tensor = False,
+            normalize = False
+        )
+        self.image = image if cache else None
         return image
     
     @staticmethod
@@ -118,7 +149,7 @@ class ImageAnnotation(base.Annotation):
             keepdim: If ``True``, keep the dimensions of the input data. Default: ``False``.
             normalize: If ``True``, normalize the input data. Default: ``True``.
         """
-        return core.to_image_tensor(input=data, keepdim=False, normalize=True)
+        return core.to_image_tensor(image=data, keepdim=keepdim, normalize=normalize)
     
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
@@ -156,7 +187,7 @@ class FrameAnnotation(base.Annotation):
         self.index = index
         self.frame = frame
         self.path  = path
-        self.shape = core.get_image_shape(input=frame)
+        self.shape = core.get_image_shape(image=frame)
     
     @property
     def path(self) -> core.Path:
@@ -207,7 +238,7 @@ class FrameAnnotation(base.Annotation):
             keepdim: If ``True``, keep the dimensions of the input data. Default: ``False``.
             normalize: If ``True``, normalize the input data. Default: ``True``.
         """
-        return core.to_image_tensor(input=data, keepdim=keepdim, normalize=normalize)
+        return core.to_image_tensor(image=data, keepdim=keepdim, normalize=normalize)
     
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:
@@ -229,13 +260,34 @@ class SegmentationAnnotation(base.Annotation):
     
     Args:
         path: The path to the image file.
-    
+        flags: A flag to read the image. One of:
+            - cv2.IMREAD_UNCHANGED           = -1,
+            - cv2.IMREAD_GRAYSCALE           = 0,
+            - cv2.IMREAD_COLOR               = 1,
+            - cv2.IMREAD_ANYDEPTH            = 2,
+            - cv2.IMREAD_ANYCOLOR            = 4,
+            - cv2.IMREAD_LOAD_GDAL           = 8,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_2 = 16,
+            - cv2.IMREAD_REDUCED_COLOR_2     = 17,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_4 = 32,
+            - cv2.IMREAD_REDUCED_COLOR_4     = 33,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_8 = 64,
+            - cv2.IMREAD_REDUCED_COLOR_8     = 65,
+            - cv2.IMREAD_IGNORE_ORIENTATION  = 128
+            Default: ``cv2.IMREAD_COLOR``.
+            
     See Also: :class:`mon.data.datastruct.annotation.base.Annotation`.
     """
     
-    def __init__(self, path: core.Path | str, *args, **kwargs):
+    def __init__(
+        self,
+        path : core.Path | str,
+        flags: int = cv2.IMREAD_COLOR,
+        *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.path   = path
+        self.flags  = flags
         self.mask   = None
         self._shape = None
     
@@ -282,23 +334,32 @@ class SegmentationAnnotation(base.Annotation):
     def load(
         self,
         path : core.Path | str | None = None,
-        cache: bool = False,
+        flags: int | None = None,
+        cache: bool       = False,
     ) -> np.ndarray | None:
         """Loads image into memory.
         
         Args:
             path: The path to the image file. Default: ``None``.
-            cache: If ``True``, the image will be loaded into memory
-                and kept there. Default: ``False``.
+            flags: A flag to read the image. Default: ``None``.
+            cache: If ``True``, the image will be loaded into memory and kept
+                there. Default: ``False``.
             
         Return:
             An image of shape :math:`[H, W, C]`.
         """
-        if path:
-            self.path = path
-        mask = core.read_image(path=self.path, to_rgb=True, to_tensor=False, normalize=False)
-        if cache:
-            self.mask = mask
+        if self.mask is not None:
+            return self.mask
+        
+        self.path  = path  if path  else self.path
+        self.flags = flags if flags else self.flags
+        mask = core.read_image(
+            path      = self.path,
+            flags     = self.flags,
+            to_tensor = False,
+            normalize = False
+        )
+        self.mask = mask if cache else None
         return mask
     
     @staticmethod
@@ -314,7 +375,7 @@ class SegmentationAnnotation(base.Annotation):
             keepdim: If ``True``, keep the dimensions of the input data. Default: ``False``.
             normalize: If ``True``, normalize the input data. Default: ``True``.
         """
-        return core.to_image_tensor(input=data, keepdim=False, normalize=True)
+        return core.to_image_tensor(image=data, keepdim=keepdim, normalize=normalize)
     
     @staticmethod
     def collate_fn(batch: list[torch.Tensor | np.ndarray]) -> torch.Tensor | np.ndarray | None:

@@ -30,10 +30,8 @@ __all__ = [
     "list_tasks",
     "list_weights_files",
     "load_config",
-    "make_divisible",
     "parse_config_file",
     "parse_device",
-    "parse_hw",
     "parse_menu_string",
     "parse_model_name",
     "parse_save_dir",
@@ -46,7 +44,6 @@ __all__ = [
 
 import importlib
 import importlib.util
-import math
 import os
 import random
 import time
@@ -351,6 +348,26 @@ def get_gpu_device_memory(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> 
     used  = info.used  / ratio
     return [total, used, free]
 
+
+def parse_device(device: Any) -> list[int] | int | str:
+    if isinstance(device, torch.device):
+        return device
+    
+    device = device or None
+    if device in [None, "", "cpu"]:
+        device = "cpu"
+    elif device in ["mps", "mps:0"]:
+        device = device
+    elif isinstance(device, int):
+        device = [device]
+    elif isinstance(device, str):  # Not ["", "cpu"]
+        device = device.lower()
+        for remove in "cuda:", "none", "(", ")", "[", "]", "'", " ":
+            device = device.replace(remove, "")  # to string, 'cuda:0' -> '0' and '(0, 1)' -> '0,1'
+        if "," in device:
+            device = [int(x) for x in device.split(",")]
+        device = [0] if len(device) == 0 else device
+    return device
 # endregion
 
 
@@ -551,22 +568,6 @@ def check_installed_package(package_name: str, verbose: bool = False) -> bool:
 
 # region Parsing
 
-def make_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]:
-    """Make an image sizes divisible by a given stride.
-    
-    Args:
-        input: An image size, size, or shape.
-        divisor: The divisor. Default: ``32``.
-    
-    Returns:
-        A new image size.
-    """
-    h, w = parse_hw(input)
-    h    = int(math.ceil(h / divisor) * divisor)
-    w    = int(math.ceil(w / divisor) * divisor)
-    return h, w
-
-
 def upcast(input: torch.Tensor | np.ndarray, keep_type: bool = False) -> torch.Tensor | np.ndarray:
     """Protect from numerical overflows in multiplications by upcasting to the
     equivalent higher type.
@@ -598,49 +599,6 @@ def upcast(input: torch.Tensor | np.ndarray, keep_type: bool = False) -> torch.T
     elif type(input) is np.int32:
         return input  # x.astype(np.int64) if keep_type else x.astype(np.int64)
     return input
-
-
-def parse_hw(size: int | Sequence[int]) -> list[int]:
-    """Casts a size object to the standard :math:`[H, W]`.
-
-    Args:
-        size: A size of an image, windows, or kernels, etc.
-
-    Returns:
-        A size in :math:`[H, W]` format.
-    """
-    if isinstance(size, list | tuple):
-        if len(size) == 3:
-            if size[0] >= size[3]:
-                size = size[0:2]
-            else:
-                size = size[1:3]
-        elif len(size) == 1:
-            size = [size[0], size[0]]
-    elif isinstance(size, int | float):
-        size = [size, size]
-    return size
-
-
-def parse_device(device: Any) -> list[int] | int | str:
-    if isinstance(device, torch.device):
-        return device
-    
-    device = device or None
-    if device in [None, "", "cpu"]:
-        device = "cpu"
-    elif device in ["mps", "mps:0"]:
-        device = device
-    elif isinstance(device, int):
-        device = [device]
-    elif isinstance(device, str):  # Not ["", "cpu"]
-        device = device.lower()
-        for remove in "cuda:", "none", "(", ")", "[", "]", "'", " ":
-            device = device.replace(remove, "")  # to string, 'cuda:0' -> '0' and '(0, 1)' -> '0,1'
-        if "," in device:
-            device = [int(x) for x in device.split(",")]
-        device = [0] if len(device) == 0 else device
-    return device
 
 # endregion
 

@@ -82,10 +82,10 @@ class ImageDetectionDataset(I.ImageDataset, ABC):
 		
 		if self.to_tensor:
 			if self.has_annotations:
-				image  = core.to_image_tensor(input=image, keepdim=False, normalize=True)
+				image  = core.to_image_tensor(image=image, keepdim=False, normalize=True)
 				bboxes = torch.Tensor(bboxes)
 			else:
-				image  = core.to_image_tensor(input=image, keepdim=False, normalize=True)
+				image  = core.to_image_tensor(image=image, keepdim=False, normalize=True)
 		
 		return {
 			"input" : image,

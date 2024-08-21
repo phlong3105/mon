@@ -47,6 +47,8 @@ __all__ = [
 
 from typing import Literal
 
+import cv2
+
 from mon import core
 from mon.data.datastruct import annotation, datamodule, dataset
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
@@ -94,15 +96,15 @@ class DarkFace(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -141,16 +143,16 @@ class DICM(ImageDataset):
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
-                
-        # Depth images
+        
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -236,8 +238,8 @@ class FiveKC(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
@@ -257,7 +259,7 @@ class FiveKC(ImageDataset):
                 description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -309,8 +311,8 @@ class FiveKE(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
@@ -330,7 +332,7 @@ class FiveKE(ImageDataset):
                 description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -372,15 +374,15 @@ class Fusion(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -420,15 +422,15 @@ class LIME(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -529,8 +531,8 @@ class LOLV1(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
@@ -550,7 +552,7 @@ class LOLV1(ImageDataset):
                 description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -605,8 +607,8 @@ class LOLV2Real(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
@@ -626,7 +628,7 @@ class LOLV2Real(ImageDataset):
                 description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -681,8 +683,8 @@ class LOLV2Synthetic(ImageDataset):
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
@@ -702,7 +704,7 @@ class LOLV2Synthetic(ImageDataset):
                 description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file()))
+                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -744,18 +746,18 @@ class MEF(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
                 
-                # Depth images
-                depth_maps: list[ImageAnnotation] = []
-                with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-                    for img in pbar.track(
-                        lq_images,
-                        description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
-                    ):
-                        path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                        depth_maps.append(ImageAnnotation(path=path.image_file()))
-                
-                self.datapoints["image"] = lq_images
-                self.datapoints["depth"] = depth_maps
+        # LQ depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+        
+        self.datapoints["image"] = lq_images
+        self.datapoints["depth"] = depth_maps
         
                         
 @DATASETS.register(name="npe")
@@ -792,15 +794,15 @@ class NPE(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -877,15 +879,15 @@ class SICEMix(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -925,15 +927,15 @@ class SICEMixV2(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -986,15 +988,15 @@ class ULOL(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -1034,15 +1036,15 @@ class VV(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # Depth images
+        # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
             ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_c/")
-                depth_maps.append(ImageAnnotation(path=path.image_file()))
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps

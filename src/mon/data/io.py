@@ -271,7 +271,7 @@ class VideoWriterCV(VideoWriter):
 			)
 		
 		image = core.to_image_nparray(
-			input       = data,
+			image= data,
 			keepdim     = True,
 			denormalize = denormalize or self._denormalize,
 		)

@@ -245,7 +245,7 @@ def brightness_attention_map(
             # input = filtering.guided_filter(input, input, denoise_ksize)
             input = kornia.filters.median_blur(input, denoise_ksize)
         hsv = kornia.color.rgb_to_hsv(input)
-        v   = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
+        v   = core.get_channel(image=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
         bam = torch.pow((1 - v), gamma)
     elif isinstance(input, np.ndarray):
         if denoise_ksize:
@@ -254,7 +254,7 @@ def brightness_attention_map(
         if hsv.dtype != np.float64:
             hsv  = hsv.astype("float64")
             hsv /= 255.0
-        v   = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, :, 2:3]
+        v   = core.get_channel(image=hsv, index=(2, 3), keep_dim=True)  # hsv[:, :, 2:3]
         bam = np.power((1 - v), gamma)
     else:
         raise ValueError(f"Unsupported input type: {type(input)}.")

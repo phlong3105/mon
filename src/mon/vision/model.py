@@ -56,8 +56,6 @@ class VisionModel(nn.Model, ABC):
         params        = self.params                if hasattr(self, "params") and params == 0 else params
         params        = parameter_count(self)      if hasattr(self, "params")  else params
         params        = sum(list(params.values())) if isinstance(params, dict) else params
-        g_flops       = flops * 1e-9
-        m_params      = int(params) * 1e-6
         
         # Get time
         timer = core.Timer()

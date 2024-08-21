@@ -13,7 +13,7 @@ data_dir="${mon_dir}/data"
 # Input
 task="llie"
 arch="d2ce"
-model="d2ce"
+model="d2ce_01_baseline"
 data=(
     "dicm"
     "lime"
@@ -35,7 +35,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
 
     python -W ignore metric.py \
         --input-dir "${input_dir}" \
-        --target-dir "${data_dir}/${task}/${data[i]}/test/hq" \
+        --target-dir "${data_dir}/enhance/${task}/${data[i]}/test/hq" \
         --result-file "${current_dir}" \
         --arch "${arch}" \
         --model "${model}" \

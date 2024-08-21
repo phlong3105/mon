@@ -57,7 +57,7 @@ def read_video_ffmpeg(
 		)  # Numpy
 		if to_tensor:
 			image = ci.to_image_tensor(
-				input	  = image,
+				image= image,
 				keepdim   = False,
 				normalize = normalize
 			)
@@ -78,13 +78,13 @@ def write_video_ffmpeg(
 			Default: ``False``.
 	"""
 	if isinstance(image, np.ndarray):
-		if ci.is_normalized_image(input=image):
+		if ci.is_normalized_image(image=image):
 			image = ci.denormalize_image(image=image)
-		if ci.is_channel_first_image(input=image):
-			image = ci.to_channel_last_image(input=image)
+		if ci.is_channel_first_image(image=image):
+			image = ci.to_channel_last_image(image=image)
 	elif isinstance(image, torch.Tensor):
 		image = ci.to_image_nparray(
-			input	    = image,
+			image= image,
 			keepdim     = False,
 			denormalize = denormalize
 		)

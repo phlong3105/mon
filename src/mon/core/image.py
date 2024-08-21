@@ -30,9 +30,11 @@ __all__ = [
     "is_integer_image",
     "is_normalized_image",
     "is_one_hot_image",
+    "make_imgsz_divisible",
     "normalize_image",
     "normalize_image_by_range",
     "normalize_image_mean_std",
+    "parse_hw",
     "read_image",
     "read_image_shape",
     "to_3d_image",
@@ -52,6 +54,7 @@ __all__ = [
 
 import copy
 import functools
+import math
 import multiprocessing
 from typing import Any, Sequence
 
@@ -62,33 +65,34 @@ import torch
 import torchvision
 
 from mon.core import error_console, pathlib, utils
+from mon.core.typing import _size_any_t
 
 
 # region Assert
 
-def is_channel_first_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_channel_first_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is in the channel-first format. We assume
     that if the first dimension is the smallest.
     """
-    if not 3 <= input.ndim <= 5:
+    if not 3 <= image.ndim <= 5:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``3`` and ``5``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be between ``3`` and ``5``, "
+            f"but got {image.ndim}."
         )
-    if input.ndim == 5:
-        _, _, s2, s3, s4 = list(input.shape)
+    if image.ndim == 5:
+        _, _, s2, s3, s4 = list(image.shape)
         if (s2 < s3) and (s2 < s4):
             return True
         elif (s4 < s2) and (s4 < s3):
             return False
-    elif input.ndim == 4:
-        _, s1, s2, s3 = list(input.shape)
+    elif image.ndim == 4:
+        _, s1, s2, s3 = list(image.shape)
         if (s1 < s2) and (s1 < s3):
             return True
         elif (s3 < s1) and (s3 < s2):
             return False
-    elif input.ndim == 3:
-        s0, s1, s2 = list(input.shape)
+    elif image.ndim == 3:
+        s0, s1, s2 = list(image.shape)
         if (s0 < s1) and (s0 < s2):
             return True
         elif (s2 < s0) and (s2 < s1):
@@ -96,41 +100,41 @@ def is_channel_first_image(input: torch.Tensor | np.ndarray) -> bool:
     return False
 
 
-def is_channel_last_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_channel_last_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is in the channel-first format."""
-    return not is_channel_first_image(input=input)
+    return not is_channel_first_image(image=image)
 
 
-def is_color_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_color_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ```True``` if an image is a color image. It is assumed that the
     image has ``3`` or ``4`` channels.
     """
-    if get_image_num_channels(input=input) in [3, 4]:
+    if get_image_num_channels(image=image) in [3, 4]:
         return True
     return False
 
 
-def is_gray_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_gray_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is a gray image. It is assumed that the
     image has one channel.
     """
-    if get_image_num_channels(input=input) in [1] or len(input.shape) == 2:
+    if get_image_num_channels(image=image) in [1] or len(image.shape) == 2:
         return True
     return False
 
 
-def is_color_or_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_color_or_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ```True``` if an image is a color or gray image.
     """
-    return is_color_image(input) or is_gray_image(input)
+    return is_color_image(image) or is_gray_image(image)
 
 
-def is_image(input: torch.Tensor, bits: int = 8) -> bool:
+def is_image(image: torch.Tensor, bits: int = 8) -> bool:
     """Check whether an image tensor is ranged properly :math:`[0, 1]` for
     :class:`float` or :math:`[0, 2 ** bits]` for :class:`int`.
 
     Args:
-        input: Image tensor to evaluate.
+        image: Image tensor to evaluate.
         bits: The image bits. The default checks if given :class:`int` input
             image is an 8-bit image :math:`[0-255]` or not.
 
@@ -145,9 +149,9 @@ def is_image(input: torch.Tensor, bits: int = 8) -> bool:
         >>> is_image(img)
         True
     """
-    if not isinstance(input, torch.Tensor | np.ndarray):
+    if not isinstance(image, torch.Tensor | np.ndarray):
         return False
-    res = is_color_or_image(input)
+    res = is_color_or_image(image)
     if not res:
         return False
     '''
@@ -162,30 +166,30 @@ def is_image(input: torch.Tensor, bits: int = 8) -> bool:
     return True
 
 
-def is_integer_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_integer_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is integer-encoded."""
-    c = get_image_num_channels(input=input)
+    c = get_image_num_channels(image=image)
     if c == 1:
         return True
     return False
 
 
-def is_normalized_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_normalized_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is normalized."""
-    if isinstance(input, torch.Tensor):
-        return abs(torch.max(input)) <= 1.0
-    elif isinstance(input, np.ndarray):
-        return abs(np.amax(input)) <= 1.0
+    if isinstance(image, torch.Tensor):
+        return abs(torch.max(image)) <= 1.0
+    elif isinstance(image, np.ndarray):
+        return abs(np.amax(image)) <= 1.0
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
 
 
-def is_one_hot_image(input: torch.Tensor | np.ndarray) -> bool:
+def is_one_hot_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is one-hot encoded."""
-    c = get_image_num_channels(input=input)
+    c = get_image_num_channels(image=image)
     if c > 1:
         return True
     return False
@@ -204,7 +208,7 @@ def check_image_size(size: list[int], stride: int = 32) -> int:
     """
     size     = utils.parse_hw(size=size)
     size     = size[0]
-    new_size = utils.make_divisible(size, divisor=int(stride))
+    new_size = make_imgsz_divisible(size, divisor=int(stride))
     if new_size != size:
         error_console.log(
             "WARNING: image_size %g must be multiple of max stride %g, "
@@ -218,14 +222,14 @@ def check_image_size(size: list[int], stride: int = 32) -> int:
 # region Access
 
 def get_channel(
-    input   : torch.Tensor | np.ndarray,
+    image   : torch.Tensor | np.ndarray,
     index   : int | tuple[int, int] | list[int],
     keep_dim: bool = True,
 ) -> torch.Tensor | np.ndarray:
     """Return the first channel of an image.
 
     Args:
-        input   : An image.
+        image   : An image.
         index   : The channel's index.
         keep_dim: If ``True``, keep the dimensions of the return output.
             Default: ``True``.
@@ -239,140 +243,140 @@ def get_channel(
     else:
         raise TypeError
     
-    if is_channel_first_image(input=input):
-        if input.ndim == 5:
+    if is_channel_first_image(image=image):
+        if image.ndim == 5:
             if keep_dim:
-                return input[:, :, i1:i2, :, :] if i2 else input[:, :, i1:, :, :]
+                return image[:, :, i1:i2, :, :] if i2 else image[:, :, i1:, :, :]
             else:
-                return input[:, :, i1, :, :] if i2 else input[:, :, i1, :, :]
-        elif input.ndim == 4:
+                return image[:, :, i1, :, :] if i2 else image[:, :, i1, :, :]
+        elif image.ndim == 4:
             if keep_dim:
-                return input[:, i1:i2, :, :] if i2 else input[:, i1:, :, :]
+                return image[:, i1:i2, :, :] if i2 else image[:, i1:, :, :]
             else:
-                return input[:, i1, :, :] if i2  else input[:, i1, :, :]
-        elif input.ndim == 3:
+                return image[:, i1, :, :] if i2  else image[:, i1, :, :]
+        elif image.ndim == 3:
             if keep_dim:
-                return input[i1:i2, :, :] if i2 else input[i1:, :, :]
+                return image[i1:i2, :, :] if i2 else image[i1:, :, :]
             else:
-                return input[i1, :, :] if i2 else input[i1, :, :]
+                return image[i1, :, :] if i2 else image[i1, :, :]
         else:
             raise ValueError
     else:
-        if input.ndim == 5:
+        if image.ndim == 5:
             if keep_dim:
-                return input[:, :, :, :, i1:i2] if i2 else input[:, :, :, :, i1:]
+                return image[:, :, :, :, i1:i2] if i2 else image[:, :, :, :, i1:]
             else:
-                return input[:, :, :, :, i1] if i2 else input[:, :, :, :, i1]
-        elif input.ndim == 4:
+                return image[:, :, :, :, i1] if i2 else image[:, :, :, :, i1]
+        elif image.ndim == 4:
             if keep_dim:
-                return input[:, :, :, i1:i2] if i2 else input[:, :, :, i1:]
+                return image[:, :, :, i1:i2] if i2 else image[:, :, :, i1:]
             else:
-                return input[:, :, :, i1] if i2 else input[:, :, :, i1]
-        elif input.ndim == 3:
+                return image[:, :, :, i1] if i2 else image[:, :, :, i1]
+        elif image.ndim == 3:
             if keep_dim:
-                return input[:, :, i1:i2] if i2 else input[:, :, i1:]
+                return image[:, :, i1:i2] if i2 else image[:, :, i1:]
             else:
-                return input[:, :, i1] if i2 else input[:, :, i1]
+                return image[:, :, i1] if i2 else image[:, :, i1]
         else:
             raise ValueError
     
 
-def get_first_channel(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def get_first_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Return the first channel of an image."""
-    return get_channel(input=input, index=0, keep_dim=True)
+    return get_channel(image=image, index=0, keep_dim=True)
 
 
-def get_last_channel(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def get_last_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Return the first channel of an image."""
-    return get_channel(input=input, index=-1, keep_dim=True)
+    return get_channel(image=image, index=-1, keep_dim=True)
 
 
-def get_image_num_channels(input: torch.Tensor | np.ndarray) -> int:
+def get_image_num_channels(image: torch.Tensor | np.ndarray) -> int:
     """Return the number of channels of an image.
 
     Args:
-        input: An image in channel-last or channel-first format.
+        image: An image in channel-last or channel-first format.
     """
-    if input.ndim == 4:
-        if is_channel_first_image(input=input):
-            _, c, h, w = list(input.shape)
+    if image.ndim == 4:
+        if is_channel_first_image(image=image):
+            _, c, h, w = list(image.shape)
         else:
-            _, h, w, c = list(input.shape)
-    elif input.ndim == 3:
-        if is_channel_first_image(input=input):
-            c, h, w = list(input.shape)
+            _, h, w, c = list(image.shape)
+    elif image.ndim == 3:
+        if is_channel_first_image(image=image):
+            c, h, w = list(image.shape)
         else:
-            h, w, c = list(input.shape)
-    elif input.ndim == 2:
+            h, w, c = list(image.shape)
+    elif image.ndim == 2:
         c = 1
     else:
         # error_console.log(
-        #     f":param:`input`'s number of dimensions must be between ``2`` and ``4``, "
+        #     f":param:`image`'s number of dimensions must be between ``2`` and ``4``, "
         #     f"but got {input.ndim}."
         # )
         c = 0
     return c
 
 
-def get_image_center(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def get_image_center(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Return the center of a given image specified as :math:`(x=h/2, y=w/2)`.
     
     Args:
-        input: An image in channel-last or channel-first format.
+        image: An image in channel-last or channel-first format.
     """
-    h, w = get_image_size(input=input)
-    if isinstance(input, torch.Tensor):
+    h, w = get_image_size(image=image)
+    if isinstance(image, torch.Tensor):
         return torch.Tensor([h / 2, w / 2])
-    elif isinstance(input, np.ndarray):
+    elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2])
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
 
 
-def get_image_center4(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def get_image_center4(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Return the center of a given image specified as
     :math:`(x=h/2, y=w/2, x=h/2, y=w/2)`.
     
     Args:
-        input: An image in channel-last or channel-first format.
+        image: An image in channel-last or channel-first format.
     """
-    h, w = get_image_size(input=input)
-    if isinstance(input, torch.Tensor):
+    h, w = get_image_size(image=image)
+    if isinstance(image, torch.Tensor):
         return torch.Tensor([h / 2, w / 2, h / 2, w / 2])
-    elif isinstance(input, np.ndarray):
+    elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2, h / 2, w / 2])
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
 
 
-def get_image_size(input: torch.Tensor | np.ndarray) -> list[int]:
+def get_image_size(image: torch.Tensor | np.ndarray) -> list[int]:
     """Return height and width value of an image.
     
     Args:
-        input: An image.
+        image: An image.
     """
-    if is_channel_first_image(input=input):
-        return [input.shape[-2], input.shape[-1]]
+    if is_channel_first_image(image=image):
+        return [image.shape[-2], image.shape[-1]]
     else:
-        return [input.shape[-3], input.shape[-2]]
+        return [image.shape[-3], image.shape[-2]]
 
 
-def get_image_shape(input: torch.Tensor | np.ndarray) -> list[int]:
+def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
     """Return height, width, and channel value of an image.
     
     Args:
-        input: An image.
+        image: An image.
     """
-    if is_channel_first_image(input=input):
-        return [input.shape[-2], input.shape[-1], input.shape[-3]]
+    if is_channel_first_image(image=image):
+        return [image.shape[-2], image.shape[-1], image.shape[-3]]
     else:
-        return [input.shape[-3], input.shape[-2], input.shape[-1]]
+        return [image.shape[-3], image.shape[-2], image.shape[-1]]
 
 # endregion
 
@@ -380,7 +384,7 @@ def get_image_shape(input: torch.Tensor | np.ndarray) -> list[int]:
 # region Convert
 
 def denormalize_image_mean_std(
-    input: torch.Tensor | np.ndarray,
+    image: torch.Tensor | np.ndarray,
     mean : float | list[float] = [0.485, 0.456, 0.406],
     std  : float | list[float] = [0.229, 0.224, 0.225],
     eps  : float               = 1e-6,
@@ -391,7 +395,7 @@ def denormalize_image_mean_std(
     where `mean` is [M_1, ..., M_n] and `std` [S_1, ..., S_n] for `n` channels.
 
     Args:
-        input: An image in channel-first format.
+        image: An image in channel-first format.
         mean: A sequence of means for each channel.
             Default: ``[0.485, 0.456, 0.406]``.
         std: A sequence of standard deviations for each channel.
@@ -401,49 +405,49 @@ def denormalize_image_mean_std(
     Returns:
         A denormalized image.
     """
-    if not input.ndim >= 3:
+    if not image.ndim >= 3:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be >= ``3``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be >= ``3``, "
+            f"but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        input = input.clone()
-        input = input.to(dtype=torch.get_default_dtype()) \
-            if not input.is_floating_point() else input
-        shape  = input.shape
-        device = input.device
-        dtype  = input.dtype
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
+        image = image.to(dtype=torch.get_default_dtype()) \
+            if not image.is_floating_point() else image
+        shape  = image.shape
+        device = image.device
+        dtype  = image.dtype
         if isinstance(mean, float):
             mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
         elif isinstance(mean, (list, tuple)):
-            mean = torch.as_tensor(mean, dtype=dtype, device=input.device)
+            mean = torch.as_tensor(mean, dtype=dtype, device=image.device)
         elif isinstance(mean, torch.Tensor):
-            mean = mean.to(dtype=dtype, device=input.device)
+            mean = mean.to(dtype=dtype, device=image.device)
         
         if isinstance(std, float):
             std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
         elif isinstance(std, (list, tuple)):
-            std = torch.as_tensor(std, dtype=dtype, device=input.device)
+            std = torch.as_tensor(std, dtype=dtype, device=image.device)
         elif isinstance(std, torch.Tensor):
-            std = std.to(dtype=dtype, device=input.device)
+            std = std.to(dtype=dtype, device=image.device)
         
         std_inv  = 1.0 / (std + eps)
         mean_inv = -mean * std_inv
         std_inv  = std_inv.view(-1, 1, 1) if std_inv.ndim == 1 else std_inv
         mean_inv = mean_inv.view(-1, 1, 1) if mean_inv.ndim == 1 else mean_inv
-        input.sub_(mean_inv).div_(std_inv)
-    elif isinstance(input, np.ndarray):
+        image.sub_(mean_inv).div_(std_inv)
+    elif isinstance(image, np.ndarray):
         raise NotImplementedError(f"This function has not been implemented.")
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    return input
+    return image
 
 
 def normalize_image_mean_std(
-    input: torch.Tensor | np.ndarray,
+    image: torch.Tensor | np.ndarray,
     mean : float | list[float] = [0.485, 0.456, 0.406],
     std  : float | list[float] = [0.229, 0.224, 0.225],
     eps  : float               = 1e-6,
@@ -455,7 +459,7 @@ def normalize_image_mean_std(
     channels.
 
     Args:
-        input: An image in channel-first format.
+        image: An image in channel-first format.
         mean: A sequence of means for each channel.
             Default: ``[0.485, 0.456, 0.406]``.
         std: A sequence of standard deviations for each channel.
@@ -465,48 +469,48 @@ def normalize_image_mean_std(
     Returns:
         A normalized image.
     """
-    if not input.ndim >= 3:
+    if not image.ndim >= 3:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be >= ``3``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be >= ``3``, "
+            f"but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        input = input.clone()
-        input = input.to(dtype=torch.get_default_dtype()) \
-            if not input.is_floating_point() else input
-        shape  = input.shape
-        device = input.device
-        dtype  = input.dtype
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
+        image = image.to(dtype=torch.get_default_dtype()) \
+            if not image.is_floating_point() else image
+        shape  = image.shape
+        device = image.device
+        dtype  = image.dtype
         if isinstance(mean, float):
             mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
         elif isinstance(mean, (list, tuple)):
-            mean = torch.as_tensor(mean, dtype=dtype, device=input.device)
+            mean = torch.as_tensor(mean, dtype=dtype, device=image.device)
         elif isinstance(mean, torch.Tensor):
-            mean = mean.to(dtype=dtype, device=input.device)
+            mean = mean.to(dtype=dtype, device=image.device)
         
         if isinstance(std, float):
             std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
         elif isinstance(std, (list, tuple)):
-            std = torch.as_tensor(std, dtype=dtype, device=input.device)
+            std = torch.as_tensor(std, dtype=dtype, device=image.device)
         elif isinstance(std, torch.Tensor):
-            std = std.to(dtype=dtype, device=input.device)
+            std = std.to(dtype=dtype, device=image.device)
         std += eps
         
         mean = mean.view(-1, 1, 1) if mean.ndim == 1 else mean
         std  = std.view(-1, 1, 1)  if std.ndim == 1 else std
-        input.sub_(mean).div_(std)
-    elif isinstance(input, np.ndarray):
+        image.sub_(mean).div_(std)
+    elif isinstance(image, np.ndarray):
         raise NotImplementedError(f"This function has not been implemented.")
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    return input
+    return image
 
 
 def normalize_image_by_range(
-    input  : torch.Tensor | np.ndarray,
+    image  : torch.Tensor | np.ndarray,
     min    : float = 0.0,
     max    : float = 255.0,
     new_min: float = 0.0,
@@ -516,7 +520,7 @@ def normalize_image_by_range(
     [:param:`new_min`, :param:`new_max`].
     
     Args:
-        input: An image.
+        image: An image.
         min: The current minimum pixel value of the image. Default: ``0.0``.
         max: The current maximum pixel value of the image. Default: ``255.0``.
         new_min: A new minimum pixel value of the image. Default: ``0.0``.
@@ -525,32 +529,32 @@ def normalize_image_by_range(
     Returns:
         A normalized image.
     """
-    if not input.ndim >= 3:
+    if not image.ndim >= 3:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be >= ``3``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be >= ``3``, "
+            f"but got {image.ndim}."
         )
     # if is_normalized_image(image=image):
     #     return image
-    if isinstance(input, torch.Tensor):
-        input = input.clone()
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
         # input = input.to(dtype=torch.get_default_dtype()) if not input.is_floating_point() else input
-        input = input.to(dtype=torch.get_default_dtype())
+        image = image.to(dtype=torch.get_default_dtype())
         ratio = (new_max - new_min) / (max - min)
-        input = (input - min) * ratio + new_min
+        image = (image - min) * ratio + new_min
         # image = torch.clamp(image, new_min, new_max)
-    elif isinstance(input, np.ndarray):
-        input = copy.deepcopy(input)
-        input = input.astype(np.float32)
+    elif isinstance(image, np.ndarray):
+        image = copy.deepcopy(image)
+        image = image.astype(np.float32)
         ratio = (new_max - new_min) / (max - min)
-        input = (input - min) * ratio + new_min
+        image = (image - min) * ratio + new_min
         # image = np.clip(image, new_min, new_max)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    return input
+    return image
 
 
 denormalize_image = functools.partial(
@@ -569,273 +573,269 @@ normalize_image = functools.partial(
 )
 
 
-def to_3d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
     """Convert a 2D or 4D image to a 3D.
 
     Args:
-        input: An image in channel-first format.
+        image: An image in channel-first format.
 
     Return:
         A 3D image in channel-first format.
     """
-    if not 2 <= input.ndim <= 4:
+    if not 2 <= image.ndim <= 4:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``2`` and ``4``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be between ``2`` and ``4``, "
+            f"but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        if input.ndim == 2:  # HW -> 1HW
-            input = input.unsqueeze(dim=0)
-        elif input.ndim == 4 and input.shape[0] == 1:  # 1CHW -> CHW
-            input = input.squeeze(dim=0)
-    elif isinstance(input, np.ndarray):
-        if input.ndim == 2:  # HW -> 1HW
-            input = np.expand_dims(input, axis=0)
-        elif input.ndim == 4 and input.shape[0] == 1:  # 1CHW -> CHW
-            input = np.squeeze(input, axis=0)
+    if isinstance(image, torch.Tensor):
+        if image.ndim == 2:  # HW -> 1HW
+            image = image.unsqueeze(dim=0)
+        elif image.ndim == 4 and image.shape[0] == 1:  # 1CHW -> CHW
+            image = image.squeeze(dim=0)
+    elif isinstance(image, np.ndarray):
+        if image.ndim == 2:  # HW -> 1HW
+            image = np.expand_dims(image, axis=0)
+        elif image.ndim == 4 and image.shape[0] == 1:  # 1CHW -> CHW
+            image = np.squeeze(image, axis=0)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    return input
+    return image
 
 
-def to_list_of_3d_image(input: Any) -> list[torch.Tensor | np.ndarray]:
+def to_list_of_3d_image(image: Any) -> list[torch.Tensor | np.ndarray]:
     """Convert arbitrary input to a :class:`list` of 3D images.
    
     Args:
-        input: An image of arbitrary type.
+        image: An image of arbitrary type.
         
     Return:
         A :class:`list` of 3D images.
     """
-    if isinstance(input, (torch.Tensor, np.ndarray)):
-        if input.ndim == 3:
-            input = [input]
-        elif input.ndim == 4:
-            input = list(input)
+    if isinstance(image, torch.Tensor | np.ndarray):
+        if image.ndim == 3:
+            image = [image]
+        elif image.ndim == 4:
+            image = list(image)
         else:
             raise ValueError
-    elif isinstance(input, list | tuple):
-        if not all(isinstance(i, (torch.Tensor, np.ndarray)) for i in input):
+    elif isinstance(image, list | tuple):
+        if not all(isinstance(i, (torch.Tensor, np.ndarray)) for i in image):
             raise ValueError
-    return input
+    return image
 
 
-def to_4d_image(
-    input: torch.Tensor | np.ndarray | None
-) -> torch.Tensor | np.ndarray | None:
+def to_4d_image(image: Any) -> torch.Tensor | np.ndarray:
     """Convert a 2D, 3D, 5D, list of 3D, and list of 4D images to 4D.
 
     Args:
-        input: A 2D, 3D, 5D, list of 3D, and list of 4D images in channel-first
-            format.
+        image: A 2D, 3D, 5D, list of 3D, and list of 4D images in channel-first format.
 
     Return:
         A 4D image in channel-first format.
     """
-    if isinstance(input, torch.Tensor | np.ndarray) and not 2 <= input.ndim <= 5:
+    if isinstance(image, torch.Tensor | np.ndarray) and not 2 <= image.ndim <= 5:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``2`` and ``5``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be between "
+            f"``2`` and ``5``, but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        if input.ndim == 2:  # HW -> 11HW
-            input = input.unsqueeze(dim=0)
-            input = input.unsqueeze(dim=0)
-        elif input.ndim == 3:  # CHW -> 1CHW
-            input = input.unsqueeze(dim=0)
-        elif input.ndim == 5 and input.shape[0] == 1:  # 1NCHW -> NCHW
-            input = input.squeeze(dim=0)
-    elif isinstance(input, np.ndarray):
-        if input.ndim == 2:  # HW -> 11HW
-            input = np.expand_dims(input, axis=0)
-            input = np.expand_dims(input, axis=0)
-        elif input.ndim == 3:  # CHW -> 1CHW
-            input = np.expand_dims(input, axis=0)
-        elif input.ndim == 5 and input.shape[0] == 1:  # 1NCHW -> NHWC
-            input = np.squeeze(input, axis=0)
-    elif isinstance(input, list | tuple):
-        if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in input):
-            input = torch.stack(input, dim=0)
-        elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in input):
-            input = torch.cat(input, dim=0)
-        elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in input):
-            input = np.array(input)
-        elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in input):
-            input = np.concatenate(input, axis=0)
-        else:
-            error_console.log(f"input's number of dimensions must be between ``3`` and ``4``.")
-            input = None
+    if isinstance(image, torch.Tensor):
+        if image.ndim == 2:  # HW -> 11HW
+            image = image.unsqueeze(dim=0)
+            image = image.unsqueeze(dim=0)
+        elif image.ndim == 3:  # CHW -> 1CHW
+            image = image.unsqueeze(dim=0)
+        elif image.ndim == 5 and image.shape[0] == 1:  # 1NCHW -> NCHW
+            image = image.squeeze(dim=0)
+    elif isinstance(image, np.ndarray):
+        if image.ndim == 2:  # HW -> 11HW
+            image = np.expand_dims(image, axis=0)
+            image = np.expand_dims(image, axis=0)
+        elif image.ndim == 3:  # CHW -> 1CHW
+            image = np.expand_dims(image, axis=0)
+        elif image.ndim == 5 and image.shape[0] == 1:  # 1NCHW -> NHWC
+            image = np.squeeze(image, axis=0)
+    elif isinstance(image, list | tuple):
+        if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in image):
+            image = torch.stack(image, dim=0)
+        elif all(isinstance(i, torch.Tensor) and i.ndim == 4 for i in image):
+            image = torch.cat(image, dim=0)
+        elif all(isinstance(i, np.ndarray)   and i.ndim == 3 for i in image):
+            image = np.array(image)
+        elif all(isinstance(i, np.ndarray)   and i.ndim == 4 for i in image):
+            image = np.concatenate(image, axis=0)
+        # else:
+        #     error_console.log(f"input's number of dimensions must be between ``3`` and ``4``.")
+        #     image = None
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray`, :class:`torch.Tensor`, "
-            f"or a :class:`list` of either of them, but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray`, :class:`torch.Tensor`, "
+            f"or a :class:`list` of either of them, but got {type(image)}."
         )
-    return input
+    return image
 
 
-def to_5d_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def to_5d_image(image: Any) -> torch.Tensor | np.ndarray:
     """Convert a 2D, 3D, 4D, or 6D image to a 5D.
     
     Args:
-        input: An tensor in channel-first format.
+        image: An tensor in channel-first format.
 
     Return:
         A 5D image in channel-first format.
     """
-    if not 2 <= input.ndim <= 6:
+    if not 2 <= image.ndim <= 6:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``2`` and ``6``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be between ``2`` and ``6``, "
+            f"but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        if input.ndim == 2:  # HW -> 111HW
-            input = input.unsqueeze(dim=0)
-            input = input.unsqueeze(dim=0)
-            input = input.unsqueeze(dim=0)
-        elif input.ndim == 3:  # CHW -> 11CHW
-            input = input.unsqueeze(dim=0)
-            input = input.unsqueeze(dim=0)
-        elif input.ndim == 4:  # NCHW -> 1NCHW
-            input = input.unsqueeze(dim=0)
-        elif input.ndim == 6 and input.shape[0] == 1:  # 1*NCHW -> *NCHW
-            input = input.squeeze(dim=0)
-    elif isinstance(input, np.ndarray):
-        if input.ndim == 2:  # HW -> 111HW
-            input = np.expand_dims(input, axis=0)
-            input = np.expand_dims(input, axis=0)
-            input = np.expand_dims(input, axis=0)
-        elif input.ndim == 3:  # HWC -> 11HWC
-            input = np.expand_dims(input, axis=0)
-            input = np.expand_dims(input, axis=0)
-        elif input.ndim == 4:  # BHWC -> 1BHWC
-            input = np.expand_dims(input, axis=0)
-        elif input.ndim == 6 and input.shape[0] == 1:  # 1*BHWC -> *BHWC
-            input = np.squeeze(input, axis=0)
+    if isinstance(image, torch.Tensor):
+        if image.ndim == 2:  # HW -> 111HW
+            image = image.unsqueeze(dim=0)
+            image = image.unsqueeze(dim=0)
+            image = image.unsqueeze(dim=0)
+        elif image.ndim == 3:  # CHW -> 11CHW
+            image = image.unsqueeze(dim=0)
+            image = image.unsqueeze(dim=0)
+        elif image.ndim == 4:  # NCHW -> 1NCHW
+            image = image.unsqueeze(dim=0)
+        elif image.ndim == 6 and image.shape[0] == 1:  # 1*NCHW -> *NCHW
+            image = image.squeeze(dim=0)
+    elif isinstance(image, np.ndarray):
+        if image.ndim == 2:  # HW -> 111HW
+            image = np.expand_dims(image, axis=0)
+            image = np.expand_dims(image, axis=0)
+            image = np.expand_dims(image, axis=0)
+        elif image.ndim == 3:  # HWC -> 11HWC
+            image = np.expand_dims(image, axis=0)
+            image = np.expand_dims(image, axis=0)
+        elif image.ndim == 4:  # BHWC -> 1BHWC
+            image = np.expand_dims(image, axis=0)
+        elif image.ndim == 6 and image.shape[0] == 1:  # 1*BHWC -> *BHWC
+            image = np.squeeze(image, axis=0)
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    return input
+    return image
 
 
-def to_channel_first_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def to_channel_first_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert an image to the channel-first format.
     
     Args:
-        input: An image in channel-last or channel-first format.
+        image: An image in channel-last or channel-first format.
     
     Returns:
         An image in channel-first format.
     """
-    if is_channel_first_image(input=input):
-        return input
-    if not 3 <= input.ndim <= 5:
+    if is_channel_first_image(image=image):
+        return image
+    if not 3 <= image.ndim <= 5:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``3`` and ``5``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be between ``3`` and ``5``, "
+            f"but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        input = input.clone()
-        if input.ndim == 3:
-            input = input.permute(2, 0, 1)
-        elif input.ndim == 4:
-            input = input.permute(0, 3, 1, 2)
-        elif input.ndim == 5:
-            input = input.permute(0, 1, 4, 2, 3)
-    elif isinstance(input, np.ndarray):
-        input = copy.deepcopy(input)
-        if input.ndim == 3:
-            input = np.transpose(input, (2, 0, 1))
-        elif input.ndim == 4:
-            input = np.transpose(input, (0, 3, 1, 2))
-        elif input.ndim == 5:
-            input = np.transpose(input, (0, 1, 4, 2, 3))
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
+        if image.ndim == 3:
+            image = image.permute(2, 0, 1)
+        elif image.ndim == 4:
+            image = image.permute(0, 3, 1, 2)
+        elif image.ndim == 5:
+            image = image.permute(0, 1, 4, 2, 3)
+    elif isinstance(image, np.ndarray):
+        image = copy.deepcopy(image)
+        if image.ndim == 3:
+            image = np.transpose(image, (2, 0, 1))
+        elif image.ndim == 4:
+            image = np.transpose(image, (0, 3, 1, 2))
+        elif image.ndim == 5:
+            image = np.transpose(image, (0, 1, 4, 2, 3))
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    return input
+    return image
 
 
-def to_channel_last_image(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def to_channel_last_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert an image to the channel-last format.
 
     Args:
-        input: An image in channel-last or channel-first format.
+        image: An image in channel-last or channel-first format.
 
     Returns:
         A image in channel-last format.
     """
-    if is_channel_last_image(input=input):
-        return input
-    if not 3 <= input.ndim <= 5:
+    if is_channel_last_image(image=image):
+        return image
+    if not 3 <= image.ndim <= 5:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``3`` and ``5``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be between ``3`` and ``5``, "
+            f"but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        input = input.clone()
-        if input.ndim == 3:
-            input = input.permute(1, 2, 0)
-        elif input.ndim == 4:
-            input = input.permute(0, 2, 3, 1)
-        elif input.ndim == 5:
-            input = input.permute(0, 1, 3, 4, 2)
-    elif isinstance(input, np.ndarray):
-        input = copy.deepcopy(input)
-        if input.ndim == 3:
-            input = np.transpose(input, (1, 2, 0))
-        elif input.ndim == 4:
-            input = np.transpose(input, (0, 2, 3, 1))
-        elif input.ndim == 5:
-            input = np.transpose(input, (0, 1, 3, 4, 2))
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
+        if image.ndim == 3:
+            image = image.permute(1, 2, 0)
+        elif image.ndim == 4:
+            image = image.permute(0, 2, 3, 1)
+        elif image.ndim == 5:
+            image = image.permute(0, 1, 3, 4, 2)
+    elif isinstance(image, np.ndarray):
+        image = copy.deepcopy(image)
+        if image.ndim == 3:
+            image = np.transpose(image, (1, 2, 0))
+        elif image.ndim == 4:
+            image = np.transpose(image, (0, 2, 3, 1))
+        elif image.ndim == 5:
+            image = np.transpose(image, (0, 1, 3, 4, 2))
     else:
         raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    return input
+    return image
 
 
 def to_image_nparray(
-    input      : torch.Tensor | np.ndarray,
+    image      : torch.Tensor | np.ndarray,
     keepdim    : bool = False,
     denormalize: bool = False,
 ) -> np.ndarray:
     """Convert an image to :class:`numpy.ndarray`.
     
     Args:
-        input: An image.
+        image: An image.
         keepdim: If `True`, keep the original shape. If ``False``, convert it to
             a 3D shape. Default: ``True``.
-        denormalize: If ``True``, convert image to :math:`[0, 255]`.
-            Default: ``True``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`. Default: ``True``.
 
     Returns:
         An :class:`numpy.ndarray` image.
     """
-    if not 3 <= input.ndim <= 5:
+    if not 3 <= image.ndim <= 5:
         raise ValueError(
-            f":param:`input`'s number of dimensions must be between ``3`` and ``5``, "
-            f"but got {input.ndim}."
+            f":param:`image`'s number of dimensions must be between "
+            f"``3`` and ``5``, but got {image.ndim}."
         )
-    if isinstance(input, torch.Tensor):
-        input = input.detach()
-        input = input.cpu().numpy()
-    input = denormalize_image(input=input).astype(np.uint8) if denormalize else input
-    input = to_channel_last_image(input=input)
+    if isinstance(image, torch.Tensor):
+        image = image.detach()
+        image = image.cpu().numpy()
+    image = denormalize_image(image=image).astype(np.uint8) if denormalize else image
+    image = to_channel_last_image(image=image)
     if not keepdim:
-        input = to_3d_image(input=input)
-    return input
+        image = to_3d_image(image=image)
+    return image
 
 
 def to_image_tensor(
-    input    : torch.Tensor | np.ndarray,
+    image    : torch.Tensor | np.ndarray,
     keepdim  : bool = False,
     normalize: bool = False,
     device   : Any  = None,
@@ -845,7 +845,7 @@ def to_image_tensor(
     format and normalize it.
     
     Args:
-        input: An image in channel-last or channel-first format.
+        image: An image in channel-last or channel-first format.
         keepdim: If ``True``, keep the original shape. If ``False``, convert it
             to a 4D shape. Default: ``True``.
         normalize: If ``True``, normalize the image to :math:``[0, 1]``.
@@ -856,339 +856,24 @@ def to_image_tensor(
     Returns:
         A :class:`torch.Tensor` image.
     """
-    if isinstance(input, np.ndarray):
-        input = torch.from_numpy(input).contiguous()
-    elif isinstance(input, torch.Tensor):
-        input = input.clone()
-    else:
-        raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
-        )
-    input = to_channel_first_image(input=input)
-    if not keepdim:
-        input = to_4d_image(input=input)
-    input = normalize_image(input=input) if normalize else input
-    # Place in memory
-    input = input.contiguous()
-    if device:
-        input = input.to(device)
-    return input
-
-# endregion
-
-
-# region Simple Ops
-
-def add_weighted(
-    input1: torch.Tensor | np.ndarray,
-    alpha : float,
-    input2: torch.Tensor | np.ndarray,
-    beta  : float,
-    gamma : float = 0.0,
-) -> torch.Tensor | np.ndarray:
-    """Calculate the weighted sum of two image tensors as follows:
-        output = image1 * alpha + image2 * beta + gamma
-
-    Args:
-        input1: The first image.
-        alpha: The weight of the :param:`image1` elements.
-        input2: The second image.
-        beta: The weight of the :param:`image2` elements.
-        gamma: A scalar added to each sum. Default: ``0.0``.
-
-    Returns:
-        A weighted image.
-    """
-    if input1.shape != input2.shape:
-        raise ValueError(
-            f"The shape of x and y must be the same, but got "
-            f"{input1.shape} and {input2.shape}."
-        )
-    bound  = 1.0 if input1.is_floating_point() else 255.0
-    output = input1 * alpha + input2 * beta + gamma
-    if isinstance(output, torch.Tensor):
-        output = output.clamp(0, bound).to(input1.dtype)
-    elif isinstance(output, np.ndarray):
-        output = np.clip(output, 0, bound)
-    else:
-        raise TypeError(
-            f":param:`input` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
-            f"but got {type(input)}."
-        )
-    return output
-
-
-def blend(
-    input1: torch.Tensor | np.ndarray,
-    input2: torch.Tensor | np.ndarray,
-    alpha : float,
-    gamma : float = 0.0
-) -> torch.Tensor | np.ndarray:
-    """Blend 2 images together using the formula:
-        output = :param:`image1` * alpha + :param:`image2` * beta + gamma
-
-    Args:
-        input1: A source image.
-        input2: A n overlay image that we want to blend on top of
-            :param:`image1`.
-        alpha: An alpha transparency of the overlay.
-        gamma: A scalar added to each sum. Default: ``0.0``.
-
-    Returns:
-        A blended image.
-    """
-    return add_weighted(
-        input1 = input2,
-        alpha  = alpha,
-        input2 = input1,
-        beta   = 1.0 - alpha,
-        gamma  = gamma,
-    )
-
-# endregion
-
-
-# region I/O
-
-def read_image(
-    path     : pathlib.Path,
-    to_rgb   : bool = True,
-    to_tensor: bool = False,
-    normalize: bool = False,
-) -> torch.Tensor | np.ndarray:
-    """Read an image from a file path using :mod:`cv2`. Optionally, convert it
-    to RGB format, and :class:`torch.Tensor` type of shape :math:`[1, C, H, W]`.
-
-    Args:
-        path: An image file path.
-        to_rgb: If ``True``, convert the image from BGR to RGB.
-            Default: ``True``.
-        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: ``False``.
-        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
-            Default: ``False``.
-        
-    Return:
-        A :class:`numpy.ndarray` image of shape0 :math:`[H, W, C]` with value in
-        range :math:`[0, 255]` or a :class:`torch.Tensor` image of shape
-        :math:`[1, C, H, W]` with value in range :math:`[0.0, 1.0]`.
-    """
-    image = cv2.imread(str(path))  # BGR
-    # cv2.imshow("Image", image)
-    # cv2.waitKey(0)
-    if to_rgb:
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    # cv2.imshow("Image", image)
-    # cv2.waitKey(0)
-    if to_tensor:
-        image = to_image_tensor(input=image, keepdim=False, normalize=normalize)
-    return image
-
-
-def read_image_shape(path: pathlib.Path) -> tuple[int, ...]:
-    """Read an image from a file path using :mod:`cv2` and get its shape  as
-    :math:`[H, W, C]`.
-    
-    Args:
-        path: An image file path.
-    """
-    image = cv2.imread(str(path))  # BGR
-    return image.shape
-    
-
-def write_image(
-    path       : pathlib.Path,
-    image      : torch.Tensor | np.ndarray,
-    denormalize: bool = False
-):
-    """Write an image to a file path.
-    
-    Args:
-        image: An image to write.
-        path: A directory to write the image to.
-        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
-            Default: ``False``.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if isinstance(image, torch.Tensor):
-        torchvision.utils.save_image(image, str(path))
-    else:
-        cv2.imwrite(str(path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-    
-
-def write_image_cv(
-    image      : torch.Tensor | np.ndarray,
-    dir_path   : pathlib.Path,
-    name       : str,
-    prefix     : str  = "",
-    extension  : str  = ".png",
-    denormalize: bool = False
-):
-    """Write an image to a directory using :mod:`cv2`.
-    
-    Args:
-        image: An image to write.
-        dir_path: A directory to write the image to.
-        name: An image's name.
-        prefix: A prefix to add to the :param:`name`.
-        extension: An extension of the image file. Default: ``'.png'``.
-        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
-            Default: ``False``.
-    """
-    # Convert image
-    if isinstance(image, torch.Tensor):
-        image = to_image_nparray(input=image, keepdim=True, denormalize=denormalize)
-    image = to_channel_last_image(input=image)
-    if 2 <= image.ndim <= 3:
-        raise ValueError(
-            f"image's number of dimensions must be between ``2`` and ``3``, "
-            f"but got {image.ndim}."
-        )
-    # Write image
-    dir_path  = pathlib.Path(dir_path)
-    dir_path.mkdir(parents=True, exist_ok=True)
-    name      = pathlib.Path(name)
-    stem      = name.stem
-    extension = extension  # name.suffix
-    extension = f"{name.suffix}" if extension == "" else extension
-    extension = f".{extension}"  if "." not in extension else extension
-    stem      = f"{prefix}_{stem}" if prefix != "" else stem
-    name      = f"{stem}{extension}"
-    file_path = dir_path / name
-    cv2.imwrite(str(file_path), image)
-
-
-def write_image_torch(
-    image      : torch.Tensor | np.ndarray,
-    dir_path   : pathlib.Path,
-    name       : str,
-    prefix     : str  = "",
-    extension  : str  = ".png",
-    denormalize: bool = False
-):
-    """Write an image to a directory.
-    
-    Args:
-        image: An image to write.
-        dir_path: A directory to write the image to.
-        name: An image's name.
-        prefix: A prefix to add to the :param:`name`.
-        extension: An extension of the image file. Default: ``'.png'``.
-        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
-            Default: ``False``.
-    """
-    # Convert image
     if isinstance(image, np.ndarray):
-        image = torch.from_numpy(image)
-        image = to_channel_first_image(input=image)
-    image = denormalize_image(image=image) if denormalize else image
-    image = image.to(torch.uint8)
-    image = image.cpu()
-    if 2 <= image.ndim <= 3:
-        raise ValueError(
-            f"img's number of dimensions must be between ``2`` and ``3``, "
-            f"but got {image.ndim}."
+        image = torch.from_numpy(image).contiguous()
+    elif isinstance(image, torch.Tensor):
+        image = image.clone()
+    else:
+        raise TypeError(
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(image)}."
         )
-    # Write image
-    dir_path  = pathlib.Path(dir_path)
-    dir_path.mkdir(parents=True, exist_ok=True)
-    name      = pathlib.Path(name)
-    stem      = name.stem
-    extension = extension  # name.suffix
-    extension = f"{name.suffix}" if extension == "" else extension
-    extension = f".{extension}" if "." not in extension else extension
-    stem      = f"{prefix}_{stem}" if prefix != "" else stem
-    name      = f"{stem}{extension}"
-    file_path = dir_path / name
-    if extension in [".jpg", ".jpeg"]:
-        torchvision.io.image.write_jpeg(input=image, filename=str(file_path))
-    elif extension in [".png"]:
-        torchvision.io.image.write_png(input=image, filename=str(file_path))
-
-
-def write_images_cv(
-    images     : list[torch.Tensor | np.ndarray],
-    dir_path   : pathlib.Path,
-    names      : list[str],
-    prefixes   : list[str] = "",
-    extension  : str       = ".png",
-    denormalize: bool      = False
-):
-    """Write a :class:`list` of images to a directory using :mod:`cv2`.
-   
-    Args:
-        images: A :class:`list` of 3D images.
-        dir_path: A directory to write the images to.
-        names: A :class:`list` of images' names.
-        prefixes: A prefix to add to the :param:`names`.
-        extension: An extension of image files. Default: ``'.png'``.
-        denormalize: If ``True``, convert image to :math:`[0, 255]`.
-            Default: ``False``.
-    """
-    if isinstance(names, str):
-        names = [names for _ in range(len(images))]
-    if isinstance(prefixes, str):
-        prefixes = [prefixes for _ in range(len(prefixes))]
-    if not len(images) == len(names):
-        raise ValueError(
-            f"The length of :param:`images` and :param:`names` must be the same, "
-            f"but got {len(images)} and {len(names)}."
-        )
-    if not len(images) == len(prefixes):
-        raise ValueError(
-            f"The length of :param:`images` and :param:`prefixes` must be the "
-            f"same, but got {len(images)} and {len(prefixes)}."
-        )
-    num_jobs = multiprocessing.cpu_count()
-    joblib.Parallel(n_jobs=num_jobs)(
-        joblib.delayed(write_image_cv)(
-            image, dir_path, names[i], prefixes[i], extension, denormalize
-        )
-        for i, image in enumerate(images)
-    )
-
-
-def write_images_torch(
-    images     : Sequence[torch.Tensor | np.ndarray],
-    dir_path   : pathlib.Path,
-    names      : list[str],
-    prefixes   : list[str] = "",
-    extension  : str       = ".png",
-    denormalize: bool      = False
-):
-    """Write a :class:`list` of images to a directory using :mod:`torchvision`.
-   
-    Args:
-        images: A :class:`list` of 3D images.
-        dir_path: A directory to write the images to.
-        names: A :class:`list` of images' names.
-        prefixes: A prefix to add to the :param:`names`.
-        extension: An extension of image files. Default: ``'.png'``.
-        denormalize: If ``True``, convert image to :math:`[0, 255]`.
-            Default: ``False``.
-    """
-    if isinstance(names, str):
-        names = [names for _ in range(len(images))]
-    if isinstance(prefixes, str):
-        prefixes = [prefixes for _ in range(len(prefixes))]
-    if not len(images) == len(names):
-        raise ValueError(
-            f"The length of :param:`images` and :param:`names` must be the same, "
-            f"but got {len(images)} and {len(names)}."
-        )
-    if not len(images) == len(prefixes):
-        raise ValueError(
-            f"The length of :param:`images` and :param:`prefixes` must be the "
-            f"same, but got {len(images)} and {len(prefixes)}."
-        )
-    num_jobs = multiprocessing.cpu_count()
-    joblib.Parallel(n_jobs=num_jobs)(
-        joblib.delayed(write_image_torch)(
-            image, dir_path, names[i], prefixes[i], extension, denormalize
-        )
-        for i, image in enumerate(images)
-    )
+    image = to_channel_first_image(image=image)
+    if not keepdim:
+        image = to_4d_image(image=image)
+    image = normalize_image(image=image) if normalize else image
+    # Place in memory
+    image = image.contiguous()
+    if device:
+        image = image.to(device)
+    return image
 
 # endregion
 
@@ -1380,5 +1065,371 @@ def draw_trajectory(
                 color     = color
             )
     return drawing
+
+# endregion
+
+
+# region I/O
+
+def read_image(
+    path     : pathlib.Path,
+    flags    : int  = cv2.IMREAD_COLOR,
+    to_tensor: bool = False,
+    normalize: bool = False,
+) -> torch.Tensor | np.ndarray:
+    """Read an image from a file path using :mod:`cv2`. Optionally, convert it
+    to RGB format, and :class:`torch.Tensor` type of shape :math:`[1, C, H, W]`.
+
+    Args:
+        path: An image's file path.
+        flags: A flag to read the image. One of:
+            - cv2.IMREAD_UNCHANGED           = -1,
+            - cv2.IMREAD_GRAYSCALE           = 0,
+            - cv2.IMREAD_COLOR               = 1,
+            - cv2.IMREAD_ANYDEPTH            = 2,
+            - cv2.IMREAD_ANYCOLOR            = 4,
+            - cv2.IMREAD_LOAD_GDAL           = 8,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_2 = 16,
+            - cv2.IMREAD_REDUCED_COLOR_2     = 17,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_4 = 32,
+            - cv2.IMREAD_REDUCED_COLOR_4     = 33,
+            - cv2.IMREAD_REDUCED_GRAYSCALE_8 = 64,
+            - cv2.IMREAD_REDUCED_COLOR_8     = 65,
+            - cv2.IMREAD_IGNORE_ORIENTATION  = 128
+            Default: ``cv2.IMREAD_COLOR``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray`
+            to :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`. Default: ``False``.
+        
+    Return:
+        A :class:`numpy.ndarray` image of shape0 :math:`[H, W, C]` with value in
+        range :math:`[0, 255]` or a :class:`torch.Tensor` image of shape
+        :math:`[1, C, H, W]` with value in range :math:`[0.0, 1.0]`.
+    """
+    image = cv2.imread(str(path), flags)  # BGR
+    if image.ndim == 2:  # HW -> HW1 (OpenCV read grayscale image)
+        image = np.expand_dims(image, axis=-1)
+    if is_color_image(image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if to_tensor:
+        image = to_image_tensor(image=image, keepdim=False, normalize=normalize)
+    return image
+
+
+def read_image_shape(path: pathlib.Path) -> tuple[int, ...]:
+    """Read an image from a file path using :mod:`cv2` and get its shape as
+    :math:`[H, W, C]`.
+    
+    Args:
+        path: An image file path.
+    """
+    image = cv2.imread(str(path))  # BGR
+    return image.shape
+    
+
+def write_image(
+    path       : pathlib.Path,
+    image      : torch.Tensor | np.ndarray,
+    denormalize: bool = False
+):
+    """Write an image to a file path.
+    
+    Args:
+        image: An image to write.
+        path: A directory to write the image to.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(image, torch.Tensor):
+        torchvision.utils.save_image(image, str(path))
+    else:
+        cv2.imwrite(str(path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    
+
+def write_image_cv(
+    image      : torch.Tensor | np.ndarray,
+    dir_path   : pathlib.Path,
+    name       : str,
+    prefix     : str  = "",
+    extension  : str  = ".png",
+    denormalize: bool = False
+):
+    """Write an image to a directory using :mod:`cv2`.
+    
+    Args:
+        image: An image to write.
+        dir_path: A directory to write the image to.
+        name: An image's name.
+        prefix: A prefix to add to the :param:`name`.
+        extension: An extension of the image file. Default: ``'.png'``.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    # Convert image
+    if isinstance(image, torch.Tensor):
+        image = to_image_nparray(image=image, keepdim=True, denormalize=denormalize)
+    image = to_channel_last_image(image=image)
+    if 2 <= image.ndim <= 3:
+        raise ValueError(
+            f"image's number of dimensions must be between ``2`` and ``3``, "
+            f"but got {image.ndim}."
+        )
+    # Write image
+    dir_path  = pathlib.Path(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
+    name      = pathlib.Path(name)
+    stem      = name.stem
+    extension = extension  # name.suffix
+    extension = f"{name.suffix}" if extension == "" else extension
+    extension = f".{extension}"  if "." not in extension else extension
+    stem      = f"{prefix}_{stem}" if prefix != "" else stem
+    name      = f"{stem}{extension}"
+    file_path = dir_path / name
+    cv2.imwrite(str(file_path), image)
+
+
+def write_image_torch(
+    image      : torch.Tensor | np.ndarray,
+    dir_path   : pathlib.Path,
+    name       : str,
+    prefix     : str  = "",
+    extension  : str  = ".png",
+    denormalize: bool = False
+):
+    """Write an image to a directory.
+    
+    Args:
+        image: An image to write.
+        dir_path: A directory to write the image to.
+        name: An image's name.
+        prefix: A prefix to add to the :param:`name`.
+        extension: An extension of the image file. Default: ``'.png'``.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    # Convert image
+    if isinstance(image, np.ndarray):
+        image = torch.from_numpy(image)
+        image = to_channel_first_image(image=image)
+    image = denormalize_image(image=image) if denormalize else image
+    image = image.to(torch.uint8)
+    image = image.cpu()
+    if 2 <= image.ndim <= 3:
+        raise ValueError(
+            f"img's number of dimensions must be between ``2`` and ``3``, "
+            f"but got {image.ndim}."
+        )
+    # Write image
+    dir_path  = pathlib.Path(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
+    name      = pathlib.Path(name)
+    stem      = name.stem
+    extension = extension  # name.suffix
+    extension = f"{name.suffix}" if extension == "" else extension
+    extension = f".{extension}" if "." not in extension else extension
+    stem      = f"{prefix}_{stem}" if prefix != "" else stem
+    name      = f"{stem}{extension}"
+    file_path = dir_path / name
+    if extension in [".jpg", ".jpeg"]:
+        torchvision.io.image.write_jpeg(input=image, filename=str(file_path))
+    elif extension in [".png"]:
+        torchvision.io.image.write_png(input=image, filename=str(file_path))
+
+
+def write_images_cv(
+    images     : list[torch.Tensor | np.ndarray],
+    dir_path   : pathlib.Path,
+    names      : list[str],
+    prefixes   : list[str] = "",
+    extension  : str       = ".png",
+    denormalize: bool      = False
+):
+    """Write a :class:`list` of images to a directory using :mod:`cv2`.
+   
+    Args:
+        images: A :class:`list` of 3D images.
+        dir_path: A directory to write the images to.
+        names: A :class:`list` of images' names.
+        prefixes: A prefix to add to the :param:`names`.
+        extension: An extension of image files. Default: ``'.png'``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    if isinstance(names, str):
+        names = [names for _ in range(len(images))]
+    if isinstance(prefixes, str):
+        prefixes = [prefixes for _ in range(len(prefixes))]
+    if not len(images) == len(names):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`names` must be the same, "
+            f"but got {len(images)} and {len(names)}."
+        )
+    if not len(images) == len(prefixes):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`prefixes` must be the "
+            f"same, but got {len(images)} and {len(prefixes)}."
+        )
+    num_jobs = multiprocessing.cpu_count()
+    joblib.Parallel(n_jobs=num_jobs)(
+        joblib.delayed(write_image_cv)(
+            image, dir_path, names[i], prefixes[i], extension, denormalize
+        )
+        for i, image in enumerate(images)
+    )
+
+
+def write_images_torch(
+    images     : Sequence[torch.Tensor | np.ndarray],
+    dir_path   : pathlib.Path,
+    names      : list[str],
+    prefixes   : list[str] = "",
+    extension  : str       = ".png",
+    denormalize: bool      = False
+):
+    """Write a :class:`list` of images to a directory using :mod:`torchvision`.
+   
+    Args:
+        images: A :class:`list` of 3D images.
+        dir_path: A directory to write the images to.
+        names: A :class:`list` of images' names.
+        prefixes: A prefix to add to the :param:`names`.
+        extension: An extension of image files. Default: ``'.png'``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+    """
+    if isinstance(names, str):
+        names = [names for _ in range(len(images))]
+    if isinstance(prefixes, str):
+        prefixes = [prefixes for _ in range(len(prefixes))]
+    if not len(images) == len(names):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`names` must be the same, "
+            f"but got {len(images)} and {len(names)}."
+        )
+    if not len(images) == len(prefixes):
+        raise ValueError(
+            f"The length of :param:`images` and :param:`prefixes` must be the "
+            f"same, but got {len(images)} and {len(prefixes)}."
+        )
+    num_jobs = multiprocessing.cpu_count()
+    joblib.Parallel(n_jobs=num_jobs)(
+        joblib.delayed(write_image_torch)(
+            image, dir_path, names[i], prefixes[i], extension, denormalize
+        )
+        for i, image in enumerate(images)
+    )
+
+# endregion
+
+
+# region Ops
+
+def add_weighted(
+    image1: torch.Tensor | np.ndarray,
+    alpha : float,
+    image2: torch.Tensor | np.ndarray,
+    beta  : float,
+    gamma : float = 0.0,
+) -> torch.Tensor | np.ndarray:
+    """Calculate the weighted sum of two image tensors as follows:
+        output = image1 * alpha + image2 * beta + gamma
+
+    Args:
+        image1: The first image.
+        alpha: The weight of the :param:`image1` elements.
+        image2: The second image.
+        beta: The weight of the :param:`image2` elements.
+        gamma: A scalar added to each sum. Default: ``0.0``.
+
+    Returns:
+        A weighted image.
+    """
+    if image1.shape != image2.shape:
+        raise ValueError(
+            f"The shape of :param:`image1` and :param:`image2` must be the same, "
+            f"but got {image1.shape} and {image2.shape}."
+        )
+    bound  = 1.0 if image1.is_floating_point() else 255.0
+    output = image1 * alpha + image2 * beta + gamma
+    if isinstance(output, torch.Tensor):
+        output = output.clamp(0, bound).to(image1.dtype)
+    elif isinstance(output, np.ndarray):
+        output = np.clip(output, 0, bound)
+    else:
+        raise TypeError(
+            f":param:`image` must be a :class:`numpy.ndarray` or :class:`torch.Tensor`, "
+            f"but got {type(input)}."
+        )
+    return output
+
+
+def blend(
+    image1: torch.Tensor | np.ndarray,
+    image2: torch.Tensor | np.ndarray,
+    alpha : float,
+    gamma : float = 0.0
+) -> torch.Tensor | np.ndarray:
+    """Blend 2 images together using the formula:
+        output = :param:`image1` * alpha + :param:`image2` * beta + gamma
+
+    Args:
+        image1: A source image.
+        image2: A n overlay image that we want to blend on top of :param:`image1`.
+        alpha: An alpha transparency of the overlay.
+        gamma: A scalar added to each sum. Default: ``0.0``.
+
+    Returns:
+        A blended image.
+    """
+    return add_weighted(
+        image1 = image2,
+        alpha  = alpha,
+        image2 = image1,
+        beta   = 1.0 - alpha,
+        gamma  = gamma,
+    )
+
+# endregion
+
+
+# region Parsing
+
+def make_imgsz_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]:
+    """Make an image sizes divisible by a given stride.
+    
+    Args:
+        input: An image size, size, or shape.
+        divisor: The divisor. Default: ``32``.
+    
+    Returns:
+        A new image size.
+    """
+    h, w = parse_hw(input)
+    h    = int(math.ceil(h / divisor) * divisor)
+    w    = int(math.ceil(w / divisor) * divisor)
+    return h, w
+
+
+def parse_hw(size: _size_any_t) -> list[int]:
+    """Casts a size object to the standard :math:`[H, W]`.
+
+    Args:
+        size: A size of an image, windows, or kernels, etc.
+
+    Returns:
+        A size in :math:`[H, W]` format.
+    """
+    if isinstance(size, list | tuple):
+        if len(size) == 3:
+            if size[0] >= size[3]:
+                size = size[0:2]
+            else:
+                size = size[1:3]
+        elif len(size) == 1:
+            size = [size[0], size[0]]
+    elif isinstance(size, int | float):
+        size = [size, size]
+    return size
 
 # endregion

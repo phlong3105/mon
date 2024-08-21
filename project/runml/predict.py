@@ -66,12 +66,7 @@ def predict(args: dict) -> str:
         denormalize = True,
         verbose     = False,
     )
-    save_root = save_dir if save_dir not in [None, "None", ""] else model.root
-    save_dir  = mon.Path(save_root) / data_name
-    save_dir.mkdir(parents=True, exist_ok=True)
-    if save_debug:
-        debug_save_dir = mon.Path(save_root) / f"{data_name}_debug"
-        debug_save_dir.mkdir(parents=True, exist_ok=True)
+    save_dir = save_dir if save_dir not in [None, "None", "", "."] else model.root
     
     # Predicting
     run_time = []

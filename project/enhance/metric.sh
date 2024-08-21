@@ -35,7 +35,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
 
     python -W ignore metric.py \
         --input-dir "${input_dir}" \
-        --target-dir "${data_dir}/${task}/${data[i]}/test/high" \
+        --target-dir "${data_dir}/enhance/${task}/${data[i]}/test/high" \
         --result-file "${current_dir}" \
         --arch "${arch}" \
         --model "${model}" \

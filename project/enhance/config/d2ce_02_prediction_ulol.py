@@ -14,7 +14,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "d2ce"
+model_name = "d2ce_02_prediction"
 data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -41,10 +41,8 @@ model = {
 	"dba_eps"     : 0.05,		    # The epsilon for DepthBoundaryAware.
 	"gf_radius"   : 3,              # The radius for GuidedFilter.
 	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
-	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap. [2.6]
+	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap.
 	"bam_ksize"   : 9,			    # The kernel size for BrightnessAttentionMap.
-	"use_depth"   : True,           # If ``True``, use depth map.
-	"use_edge"    : True,           # If ``True``, use edge map.
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -73,7 +71,7 @@ model = {
 
 data = {
     "name"      : data_name,
-    "root"      : data_root,     # A root directory where the data is stored.
+    "root"      : data_root,  # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
 		A.ResizeMultipleOf(
 			height            = image_size[0],
@@ -134,7 +132,7 @@ trainer = default.trainer | {
 # region Predicting
 
 predictor = default.predictor | {
-	"default_root_dir": root,  # Default path for saving results.
+	"default_root_dir": root,   # Default path for saving results.
 }
 
 # endregion

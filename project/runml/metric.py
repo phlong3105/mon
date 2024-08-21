@@ -156,7 +156,7 @@ def measure_metric_pyiqa(
     input_dir  = mon.Path(input_dir)
     target_dir = mon.Path(target_dir) \
         if target_dir \
-        else input_dir.replace("low", "high")
+        else input_dir.replace("lq", "hq")
     
     result_file = mon.Path(result_file) if result_file else None
     if save_txt and result_file and result_file.is_dir():
@@ -196,7 +196,7 @@ def measure_metric_pyiqa(
             total       = len(image_files),
             description = f"[bright_yellow] Measuring"
         ):
-            image = mon.read_image(path=image_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+            image = mon.read_image(path=image_file, to_tensor=True, normalize=True).to(device=device)
             if torch.any(image.isnan()):
                 continue
             if resize:
@@ -209,7 +209,7 @@ def measure_metric_pyiqa(
                 if temp.exists():
                     target_file = temp
             if target_file and target_file.exists():
-                target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+                target = mon.read_image(path=target_file, to_tensor=True, normalize=True).to(device=device)
                 if resize:
                     target = mon.resize(target, (h, w))
             else:

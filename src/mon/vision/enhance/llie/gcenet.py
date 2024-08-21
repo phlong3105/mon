@@ -525,7 +525,7 @@ class GCENet_01_GF_OldLoss(GCENet):
 
 @MODELS.register(name="gcenet_02_gf_newloss", arch="gcenet")
 class GCENet_02_GF_NewLoss(GCENet):
-    """GCENet-A2 (Guided Curve Estimation Network) model with simple guided filter.
+    """GCENet (Guided Curve Estimation Network) model with simple guided filter.
     
     See Also: :class:`GCENet`
     """
@@ -612,9 +612,9 @@ class GCENet_03_FilterInput_OldLoss(GCENet):
             bright   = None
             dark     = None
             for i in range(0, self.num_iters):
-                b = enhanced * (1 - bam)
-                d = enhanced * bam
-                enhanced = b + d + adjust * (torch.pow(d, 2) - d)
+                bright   = enhanced * (1 - bam)
+                dark     = enhanced * bam
+                enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         return {
             "denoised": denoised,
             "adjust"  : adjust,
@@ -656,9 +656,9 @@ class GCENet_04_FilterInput_NewLoss(GCENet):
             bright   = None
             dark     = None
             for i in range(0, self.num_iters):
-                b = enhanced * (1 - bam)
-                d = enhanced * bam
-                enhanced = b + d + adjust * (torch.pow(d, 2) - d)
+                bright   = enhanced * (1 - bam)
+                dark     = enhanced * bam
+                enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         return {
             "denoised": denoised,
             "adjust"  : adjust,
@@ -757,12 +757,12 @@ class GCENetOld(base.LowLightImageEnhancementModel):
                 m.weight.data.normal_(0.0, 0.02)  # 0.02
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        input  = datapoint.get("input",  None)
+        image  = datapoint.get("image",  None)
         target = datapoint.get("target", None)
         meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=input, *args, **kwargs)
+        pred   = self.forward(input=image, *args, **kwargs)
         adjust, enhance = pred
-        loss   = self.loss(input, adjust, enhance)
+        loss   = self.loss(image, adjust, enhance)
         return {
             "pred": enhance,
             "loss": loss,
