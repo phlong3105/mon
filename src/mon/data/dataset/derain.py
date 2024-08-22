@@ -45,9 +45,8 @@ ImageDataset        = dataset.ImageDataset
 
 @DATASETS.register(name="gtrain")
 class GTRain(ImageDataset):
-    """GT-Rain dataset consists 26124 train and 1793 val pairs of rain/no-rain images.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
+    """GT-Rain dataset consists 26124 train and 1793 val pairs of rain/no-rain
+    images.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -101,7 +100,6 @@ class GTRain(ImageDataset):
 class Rain100(ImageDataset):
     """Rain100 dataset consists 100 pairs of rain/no-rain test images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -149,8 +147,6 @@ class Rain100(ImageDataset):
 class Rain100H(ImageDataset):
     """Rain100H dataset consists 100 pairs of rain/no-rain test images and 100
     pairs of rain/no-rain train-val images.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -199,7 +195,6 @@ class Rain100L(ImageDataset):
     """Rain100L dataset consists 100 pairs of rain/no-rain test images and 200
     pairs of rain/no-rain train-val images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -245,10 +240,7 @@ class Rain100L(ImageDataset):
 
 @DATASETS.register(name="rain12")
 class Rain12(ImageDataset):
-    """Rain12 dataset consists 12 pairs of rain/no-rain images.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """Rain12 dataset consists 12 pairs of rain/no-rain images."""
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN]
@@ -296,7 +288,6 @@ class Rain1200(ImageDataset):
     """Rain1200 dataset consists 1200 pairs of rain/no-rain test images and
     12,000 pairs of rain/no-rain train images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -349,10 +340,7 @@ class Rain1200(ImageDataset):
 
 @DATASETS.register(name="rain13k")
 class Rain13K(ImageDataset):
-    """Rain13K dataset consists 13k pairs of rain/no-rain train images.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """Rain13K dataset consists 13k pairs of rain/no-rain train images."""
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -416,7 +404,6 @@ class Rain1400(ImageDataset):
     """Rain1400 dataset consists 1400 pairs of rain/no-rain test images and
     12,600 pairs of rain/no-rain train images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -462,10 +449,7 @@ class Rain1400(ImageDataset):
 
 @DATASETS.register(name="rain2800")
 class Rain2800(ImageDataset):
-    """Rain2800 dataset consists 2800 pairs of rain/no-rain test images.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """Rain2800 dataset consists 2800 pairs of rain/no-rain test images."""
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TEST]
@@ -513,7 +497,6 @@ class Rain2800(ImageDataset):
 class Rain800(ImageDataset):
     """Rain800 dataset consists 800 pairs of rain/no-rain train-val images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -563,10 +546,7 @@ class Rain800(ImageDataset):
 
 @DATAMODULES.register(name="gtrain")
 class GTRainDataModule(datamodule.DataModule):
-    """GT-Rain datamodule.
-
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """GT-Rain datamodule."""
     
     tasks: list[Task] = [Task.DERAIN]
     
@@ -598,7 +578,6 @@ class GTRainDataModule(datamodule.DataModule):
 class Rain100DataModule(datamodule.DataModule):
     """Rain100 datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DERAIN]
@@ -629,10 +608,7 @@ class Rain100DataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="rain100h")
 class Rain100HDataModule(datamodule.DataModule):
-    """Rain100H datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """Rain100H datamodule."""
     
     tasks: list[Task] = [Task.DERAIN]
     
@@ -664,7 +640,6 @@ class Rain100HDataModule(datamodule.DataModule):
 class Rain100LDataModule(datamodule.DataModule):
     """Rain100L datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DERAIN]
@@ -695,10 +670,7 @@ class Rain100LDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="rain12")
 class Rain12DataModule(datamodule.DataModule):
-    """Rain12 datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """Rain12 datamodule."""
     
     tasks: list[Task] = [Task.DERAIN]
     
@@ -730,7 +702,6 @@ class Rain12DataModule(datamodule.DataModule):
 class Rain1200DataModule(datamodule.DataModule):
     """Rain1200 datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DERAIN]
@@ -761,10 +732,7 @@ class Rain1200DataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="rain13k")
 class Rain13KDataModule(datamodule.DataModule):
-    """Rain13K datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """Rain13K datamodule."""
     
     tasks: list[Task] = [Task.DERAIN]
     
@@ -797,7 +765,6 @@ class Rain13KDataModule(datamodule.DataModule):
 class Rain1400DataModule(datamodule.DataModule):
     """Rain1400 datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DERAIN]
@@ -828,10 +795,7 @@ class Rain1400DataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="rain2800")
 class Rain2800DataModule(datamodule.DataModule):
-    """Rain2800 datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """Rain2800 datamodule."""
     
     tasks: list[Task] = [Task.DERAIN]
     
@@ -863,7 +827,6 @@ class Rain2800DataModule(datamodule.DataModule):
 class Rain800DataModule(datamodule.DataModule):
     """Rain800 datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DERAIN]

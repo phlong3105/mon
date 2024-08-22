@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all file handlers, and related
-helper functions.
+"""Base File Handler.
+
+This module implements the base class and functions for all file handlers, and
+related helper functions.
 """
 
 from __future__ import annotations
@@ -24,12 +26,15 @@ from mon.globals import FILE_HANDLERS
 # region File Handler
 
 class FileHandler(ABC):
-    """The base class for reading and writing data from/to different file
-    formats.
+    """The base class for reading and writing data from/to different file formats.
     """
     
     @abstractmethod
-    def read_from_fileobj(self, path: pathlib.Path | str | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(
+        self,
+        path: pathlib.Path | str | TextIO,
+        **kwargs
+    ) -> Any:
         """Load content from a file.
         
         Args:
@@ -41,12 +46,17 @@ class FileHandler(ABC):
         pass
     
     @abstractmethod
-    def write_to_fileobj(self, obj: Any, path: pathlib.Path | str | TextIO, **kwargs):
+    def write_to_fileobj(
+        self,
+        obj : Any,
+        path: pathlib.Path | str | TextIO,
+        **kwargs
+    ):
         """Write content from a serializable object to a file.
         
         Args:
             obj: A serializable object.
-            path: The file path to Write :param:`obj` content.
+            path: The file path to Write :obj:`obj` content.
         """
         pass
     
@@ -59,7 +69,12 @@ class FileHandler(ABC):
         """
         pass
     
-    def read_from_file(self, path: pathlib.Path | str, mode: str = "r", **kwargs) -> Any:
+    def read_from_file(
+        self,
+        path: pathlib.Path | str,
+        mode: str = "r",
+        **kwargs
+    ) -> Any:
         """Load content from a file.
         
         Args:
@@ -72,7 +87,13 @@ class FileHandler(ABC):
         with open(path, mode) as f:
             return self.read_from_fileobj(path=f, **kwargs)
     
-    def write_to_file(self, obj: Any, path: pathlib.Path | str, mode: str = "w", **kwargs):
+    def write_to_file(
+        self,
+        obj : Any,
+        path: pathlib.Path | str,
+        mode: str = "w",
+        **kwargs
+    ):
         """Write content from a serializable object to a file.
         
         Args:
@@ -87,7 +108,7 @@ class FileHandler(ABC):
 def write_to_file(
     obj        : Any,
     path       : pathlib.Path | str | TextIO,
-    file_format: str | None = None,
+    file_format: str = None,
     **kwargs
 ):
     """Write content from a serializable object to a file.
@@ -96,15 +117,15 @@ def write_to_file(
         obj: A serializable object.
         path: A file path.
         file_format: The file format. If not specified, it is inferred from the
-            :param:`path`'s extension. Default: ``None``.
+            :obj:`path`'s extension. Default: ``None``.
     """
     path = pathlib.Path(path)
     if file_format is None:
         file_format = path.suffix
     if file_format not in FILE_HANDLERS:
         raise ValueError(
-            f"file_format must be a valid key in {FILE_HANDLERS.keys}, but got "
-            f"{file_format}."
+            f"`file_format` must be a valid key in {FILE_HANDLERS.keys}, "
+            f"but got {file_format}."
         )
     
     handler: FileHandler = FILE_HANDLERS.build(name=file_format)
@@ -122,7 +143,7 @@ def write_to_file(
 
 def read_from_file(
     path       : pathlib.Path | str | TextIO,
-    file_format: str | None = None,
+    file_format: str = None,
     **kwargs
 ) -> Any:
     """Load content from a file.
@@ -130,7 +151,7 @@ def read_from_file(
     Args:
         path: A file path.
         file_format: The file format. If not specified, it is inferred from the
-            :param:`path`'s extension. Default: ``None``.
+            :obj:`path`'s extension. Default: ``None``.
     
     Returns:
         File's content.
@@ -146,8 +167,8 @@ def read_from_file(
         data = handler.read_from_fileobj(path=path, **kwargs)
     else:
         raise TypeError(
-            f"'path' must be a 'pathlib.Path', a 'str' or a file-object. "
-            f"But got: {type(path)}."
+            f"`path` must be a `pathlib.Path`, a `str` or a file-object, "
+            f"but got: {type(path)}."
         )
     return data
 
@@ -155,7 +176,7 @@ def read_from_file(
 def merge_files(
     in_paths   : list[pathlib.Path | str | TextIO],
     out_path   : pathlib.Path | str | TextIO,
-    file_format: str | None = None,
+    file_format: str = None,
 ):
     """Merge content from multiple files to a single file.
     
@@ -163,7 +184,7 @@ def merge_files(
         in_paths: Merging file paths.
         out_path: The output file.
         file_format: The file format. If not specified, it is inferred from the
-            :param:`path`'s extension. Default: ``None``.
+            :obj:`path`'s extension. Default: ``None``.
     """
     in_paths = dtype.to_list(x=in_paths)
     in_paths = [pathlib.Path(p) for p in in_paths]
@@ -179,7 +200,9 @@ def merge_files(
             data = {} if data is None else data
             data |= d
         else:
-            raise TypeError(f"Input value must be a :class:`list` or :class:`dict`, but got {type(d)}.")
+            raise TypeError(
+                f"`in_paths` must be a `list` or `dict`, but got {type(d)}."
+            )
     
     # Write data
     write_to_file(obj=data, path=out_path, file_format=file_format)

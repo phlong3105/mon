@@ -31,7 +31,7 @@ console = core.console
 class DeepSORT(base.Tracker):
     """DeepSORT.
     
-    See more: :class:`mon.vision.model.track.base.Tracker`.
+    See more: :obj:`mon.vision.model.track.base.Tracker`.
     """
     pass
     

@@ -211,8 +211,6 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
         
     References:
         `<https://github.com/megvii-model/HINet>`__
-
-    See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
     arch   : str  = "hinet"

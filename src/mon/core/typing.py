@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module defines type alias used by PyTorch's layers. Here, we keep the
-same naming convention as in :mod:`torch`.
+"""Typing Module.
+
+This module defines type alias used by PyTorch's layers. Here, we keep the
+same naming convention as in :obj:`torch`.
 """
 
 from __future__ import annotations

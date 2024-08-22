@@ -40,7 +40,7 @@ class Instance:
         feature: A feature vector that describes the object contained in this
             image.
         confidence: A confidence score. Default: ``None``.
-        classlabel: A :class:`mon.Classlabel` object. Default: ``None``.
+        classlabel: A :obj:`mon.Classlabel` object. Default: ``None``.
         frame_index: The current frame index. Default: ``None``.
         timestamp: The creating time of the current instance.
     """
@@ -100,7 +100,7 @@ class Instance:
         label  : bool             = True,
         color  : list[int] | None = None
     ) -> np.ndarray:
-        """Draw the current object on the :param:`image`."""
+        """Draw the current object on the :obj:`image`."""
         color = color or (self.classlabel["color"]
                           if self.classlabel else (255, 255, 255))
         
@@ -157,7 +157,7 @@ class MovingObject(list[Instance], Object):
     instances of the object in consecutive frames. The list is sorted in a
     timely manner.
     
-    See more: :class:`Object`.
+    See more: :obj:`Object`.
     
     Args:
         instances: The first instance of this object, or a list of instances.
@@ -224,7 +224,7 @@ class MovingObject(list[Instance], Object):
     
     @property
     def current(self) -> Instance:
-        """An alias to :meth:`last`."""
+        """An alias to :obj:`last`."""
         return self.last
     
     @property
@@ -328,8 +328,8 @@ class MovingObject(list[Instance], Object):
         return geometry.distance.euclidean(u=self.trajectory[0], v=self.trajectory[-1])
     
     def traveled_distance_between(self, start: int = -1, end: int = -2) -> float:
-        """The traveled distance of the object between :param:`start` and
-        :param:`end` frames.
+        """The traveled distance of the object between :obj:`start` and
+        :obj:`end` frames.
         """
         step = abs(end - start)
         if len(self.trajectory) < step:
@@ -369,7 +369,7 @@ class MovingObject(list[Instance], Object):
         label  : bool             = True,
         color  : list[int] | None = None
     ) -> np.ndarray:
-        """Draw the current object and its trajectory on the :param:`image`."""
+        """Draw the current object and its trajectory on the :obj:`image`."""
         if self.moi_id:
             color = AppleRGB.values()[self.moi_id]
         else:
@@ -455,7 +455,7 @@ class MovingObject(list[Instance], Object):
         label  : bool             = True,
         color  : list[int] | None = None
     ) -> np.ndarray:
-        """Draw the current object on the :param:`image`."""
+        """Draw the current object on the :obj:`image`."""
         color = color or self.majority_label["color"]
         if bbox:
             b = self.current.bbox

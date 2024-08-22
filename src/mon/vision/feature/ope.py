@@ -50,9 +50,6 @@ class OPEmbedder(base.Embedder, nn.Module):
             orientation bins can provide more detailed information about the
             orientations, but may also increase the dimensionality of the
             feature vector and require more computation. Default: ``9``.
-        
-    See Also:
-        - :class:`mon.vision.feature.base.Embedder`.
     """
     
     def __init__(
@@ -102,12 +99,12 @@ class OPEmbedder(base.Embedder, nn.Module):
         """Extract features in the images.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, C, H, W]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, C, H, W]`.
             norm: Whether to normalize the features.
 
         Returns:
-           A 2D :class:`list` of feature vectors.
+           A 2D :obj:`list` of feature vectors.
         """
         images     = self.proj(images)
         n, c, h, w = images.shape

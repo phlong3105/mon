@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """This module implements optimizers and learning rate schedulers using the
-:mod:`torch` package.
+:obj:`torch` package.
 """
 
 from __future__ import annotations
@@ -124,7 +124,7 @@ class CosineAnnealingRestartLR(_LRScheduler):
         self.restart_weights = restart_weights
         self.eta_min         = eta_min
         assert (len(self.periods) == len(self.restart_weights)), \
-            ":attr:`periods` and :attr:`restart_weights` should have the same length."
+            "`periods` and `restart_weights` should have the same length."
         self.cumulative_period = [sum(self.periods[0:i + 1]) for i in range(0, len(self.periods))]
         super().__init__(optimizer, last_epoch)
 
@@ -235,7 +235,7 @@ class CosineAnnealingRestartCyclicLR(_LRScheduler):
         self.restart_weights = restart_weights
         self.eta_mins        = eta_mins
         assert (len(self.periods) == len(self.restart_weights)), \
-            (f":param:`periods` and :param:`restart_weights` should have the "
+            (f"`periods` and `restart_weights` should have the "
              f"same length.")
         self.cumulative_period = [
             sum(self.periods[0:i + 1]) for i in range(0, len(self.periods))
@@ -298,7 +298,7 @@ class GradualWarmupScheduler(_LRScheduler):
     ):
         self.multiplier = multiplier
         if self.multiplier < 1.0:
-            raise ValueError(":param:`multiplier` should be greater thant or equal to 1.0")
+            raise ValueError("`multiplier` should be greater thant or equal to 1.0")
         self.total_epoch     = total_epoch
         self.after_scheduler = after_scheduler
         self.finished        = False

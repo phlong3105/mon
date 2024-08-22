@@ -139,7 +139,6 @@ class ZeroReferenceLoss(nn.Loss):
 class IPT(base.DerainingModel):
     """IPT (Image Processing Transformer) model.
     
-    See Also: :class:`mon.vision.enhance.derain.base.DerainingModel`
     """
 
     zoo: dict = {}
@@ -412,17 +411,17 @@ class IPT(base.DerainingModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Forward pass. This is the primary :meth:`forward` function of the
+        """Forward pass. This is the primary :obj:`forward` function of the
         model. It supports augmented inference. In this function, we perform
         test-time augmentation and pass the transformed input to
-        :meth:`forward_once()`.
+        :obj:`forward_once()`.
 
         Args:
             input: An input of shape :math`[B, C, H, W]`.
             augment: If ``True``, perform test-time augmentation. Default:
                 ``False``.
             profile: If ``True``, Measure processing time. Default: ``False``.
-            out_index: Return specific layer's output from :param:`out_index`.
+            out_index: Return specific layer's output from :obj:`out_index`.
                 Default: -1 means the last layer.
 
         Return:
@@ -451,9 +450,9 @@ class IPT(base.DerainingModel):
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
-            input: An input of shape :math:`[B, C, H, W]`.
+            input: An input of shape `[B, C, H, W]`.
             profile: Measure processing time. Default: ``False``.
-            out_index: Return specific layer's output from :param:`out_index`.
+            out_index: Return specific layer's output from :obj:`out_index`.
                 Default: ``-1`` means the last layer.
                 
         Return:
@@ -523,9 +522,9 @@ class IPT(base.DerainingModel):
         """Forward pass once. Implement the logic for a single forward pass. Mainly used for ablation study.
 
         Args:
-            input: An input of shape :math:`[B, C, H, W]`.
+            input: An input of shape `[B, C, H, W]`.
             profile: Measure processing time. Default: ``False``.
-            out_index: Return specific layer's output from :param:`out_index`.
+            out_index: Return specific layer's output from :obj:`out_index`.
                 Default: ``-1`` means the last layer.
 
         Return:

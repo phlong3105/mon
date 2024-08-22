@@ -109,9 +109,8 @@ class OPEmbedder(nn.ConvLayerParsingMixin, nn.Module):
             orientations, but may also increase the dimensionality of the
             feature vector and require more computation. Default: ``9``.
         
-    See Also:
-        - :class:`mon.vision.model.embedding.base.Embedder`.
-        - :class:`cv2.HOGDescriptor`.
+        - :obj:`mon.vision.model.embedding.base.Embedder`.
+        - :obj:`cv2.HOGDescriptor`.
     """
     
     def __init__(
@@ -159,12 +158,12 @@ class OPEmbedder(nn.ConvLayerParsingMixin, nn.Module):
         """Extract features in the images.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, C, H, W]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, C, H, W]`.
             normalization: Whether to normalize the features.
 
         Returns:
-           A 2D :class:`list` of feature vectors.
+           A 2D :obj:`list` of feature vectors.
         """
         # print(images.get_device())
         # self.proj.to(images.get_device())
@@ -298,8 +297,6 @@ class CBAM(nn.Module):
 @MODELS.register(name="transweather")
 class Transweather(base.DerainingModel):
     """Transweather model.
-    
-    See Also: :class:`mon.vision.enhance.derain.base.DerainingModel`
     """
     class Encoder(nn.Module):
         def __init__(
@@ -1043,17 +1040,17 @@ class Transweather(base.DerainingModel):
         out_index: int       = -1,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Forward pass. This is the primary :meth:`forward` function of the
+        """Forward pass. This is the primary :obj:`forward` function of the
         model. It supports augmented inference. In this function, we perform
         test-time augmentation and pass the transformed input to
-        :meth:`forward_once()`.
+        :obj:`forward_once()`.
 
         Args:
             input: An input of shape :math`[B, C, H, W]`.
             augment: If ``True``, perform test-time augmentation. Default:
                 ``False``.
             profile: If ``True``, Measure processing time. Default: ``False``.
-            out_index: Return specific layer's output from :param:`out_index`.
+            out_index: Return specific layer's output from :obj:`out_index`.
                 Default: -1 means the last layer.
 
         Return:
@@ -1082,9 +1079,9 @@ class Transweather(base.DerainingModel):
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
-            input: An input of shape :math:`[B, C, H, W]`.
+            input: An input of shape `[B, C, H, W]`.
             profile: Measure processing time. Default: ``False``.
-            out_index: Return specific layer's output from :param:`out_index`.
+            out_index: Return specific layer's output from :obj:`out_index`.
                 Default: ``-1`` means the last layer.
                 
         Return:
@@ -1124,9 +1121,9 @@ class Transweather(base.DerainingModel):
     #     """Forward pass once. Implement the logic for a single forward pass. Mainly used for ablation study.
 
     #     Args:
-    #         input: An input of shape :math:`[B, C, H, W]`.
+    #         input: An input of shape `[B, C, H, W]`.
     #         profile: Measure processing time. Default: ``False``.
-    #         out_index: Return specific layer's output from :param:`out_index`.
+    #         out_index: Return specific layer's output from :obj:`out_index`.
     #             Default: ``-1`` means the last layer.
 
     #     Return:

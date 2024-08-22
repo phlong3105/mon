@@ -22,10 +22,7 @@ console = core.console
 # region Model
 
 class MultiTaskImageEnhancementModel(base.ImageEnhancementModel, ABC):
-    """The base class for all multi-task image enhancement models.
-    
-    See Also: :class:`base.ImageEnhancementModel`.
-    """
+    """The base class for all multi-task image enhancement models."""
     
     zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "multitask"
     

@@ -41,8 +41,8 @@ def guided_filter(
     """Perform guided filter using :module:`torch`.
     
     Args:
-        image: An image in :math:`[B, C, H, W]` format.
-        guide: A guidance image with the same shape with :attr:`image`.
+        image: An image in `[B, C, H, W]` format.
+        guide: A guidance image with the same shape with :obj:`image`.
         radius: Radius of filter a.k.a. kernel_size = radius * 2 + 1.
             Commonly be ``1``, ``2``, ``4``, or ``8``.
         eps: Value controlling sharpness. Default: ``1e-8``.
@@ -95,8 +95,8 @@ def guided_filter(
     """Perform guided filter using :module:`cv2`.
 
     Args:
-        image: An image in :math:`[H, W, C]` format.
-        guide: A guidance image with the same shape with :attr:`input`.
+        image: An image in `[H, W, C]` format.
+        guide: A guidance image with the same shape with :obj:`input`.
         radius: Radius of filter a.k.a. kernel_size = radius * 2 + 1.
             Commonly be ``1``, ``2``, ``4``, or ``8``.
         eps: Value controlling sharpness. Default: ``1e-8``.
@@ -135,8 +135,8 @@ def guided_filter(
     """Perform guided filter using :module:`cv2.ximgproc`.
     
     Args:
-        image: An image in :math:`[H, W, C]` format.
-        guide: A guidance image with the same shape with :attr:`input`.
+        image: An image in `[H, W, C]` format.
+        guide: A guidance image with the same shape with :obj:`input`.
         radius: Radius of filter a.k.a. kernel_size = radius * 2 + 1.
             Commonly be ``1``, ``2``, ``4``, or ``8``.
         eps: Value controlling sharpness. Default: ``1e-8``.
@@ -272,7 +272,7 @@ class ConvGuidedFilter(nn.Module):
     Args:
         radius: Radius of filter a.k.a. kernel_size = radius * 2 + 1.
             Commonly be ``1``, ``2``, ``4``, or ``8``.
-        norm: Normalization layer. Default: :class:`nn.BatchNorm2d`.
+        norm: Normalization layer. Default: :obj:`nn.BatchNorm2d`.
         downscale: Downscale factor. Default: ``8``.
         
     References:
@@ -360,7 +360,7 @@ def build_lr_net(
         mid_channels: Number of middle channels. Default: ``24``.
         layers: Number of layers. Default: ``5``.
         relu_slope: Slope of the LeakyReLU. Default: ``0.2``.
-        norm: Normalization layer. Default: :class:`nn.AdaptiveNorm2d`.
+        norm: Normalization layer. Default: :obj:`nn.AdaptiveNorm2d`.
     """
     net = [
         nn.Conv2d(in_channels, mid_channels, kernel_size=3, stride=1, padding=1, dilation=1, bias=False),
@@ -397,7 +397,7 @@ class DeepGuidedFilter(nn.Module):
         lr_relu_slope: Slope of the LeakyReLU for the low-resolution network.
             Default: ``0.2``.
         lr_norm: Normalization layer for the low-resolution network.
-            Default: :class:`nn.AdaptiveNorm2d`.
+            Default: :obj:`nn.AdaptiveNorm2d`.
         
     References:
         `<https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py>`__
@@ -442,7 +442,7 @@ class DeepGuidedFilterAdvanced(DeepGuidedFilter):
         lr_relu_slope: Slope of the LeakyReLU for the low-resolution network.
             Default: ``0.2``.
         lr_norm: Normalization layer for the low-resolution network.
-            Default: :class:`nn.AdaptiveNorm2d`.
+            Default: :obj:`nn.AdaptiveNorm2d`.
         
     References:
         `<https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py>`__
@@ -490,7 +490,7 @@ class DeepGuidedFilterConvGF(nn.Module):
         lr_relu_slope: Slope of the LeakyReLU for the low-resolution network.
             Default: ``0.2``.
         lr_norm: Normalization layer for the low-resolution network.
-            Default: :class:`nn.AdaptiveNorm2d`.
+            Default: :obj:`nn.AdaptiveNorm2d`.
         
     References:
         `<https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py>`__

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """This module implements test-time data augmentation (TTA). These functions
-are mainly applied to :class:`torch.Tensor` images.
+are mainly applied to :obj:`torch.Tensor` images.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ class TestTimeAugment(ABC):
 	
 	@abstractmethod
 	def apply(self, input: torch.Tensor, *args, **kwargs) -> torch.Tensor:
-		"""Apply augmentation to the given :param:`input`."""
+		"""Apply augmentation to the given :obj:`input`."""
 		pass
 	
 	@abstractmethod
@@ -59,7 +59,7 @@ class TestTimeAugment(ABC):
 		output: torch.Tensor,
 		*args, **kwargs
 	) -> torch.Tensor:
-		"""Apply post-processing on the :param:`output`."""
+		"""Apply post-processing on the :obj:`output`."""
 		pass
 
 # endregion
@@ -72,7 +72,7 @@ class SelfEnsembleX8(TestTimeAugment):
 	example-based single image super resolution
 	<https://arxiv.org/abs/1511.02228>`__
 	
-	Given an input image, we first rotate it :math:`0, 90, 180, 270`
+	Given an input image, we first rotate it `0, 90, 180, 270`
 	respectively. Then each intermediate image is vertically flipped.
 	Finally, we obtain 8 images (hence, the name X8). After processing all
 	8 images, we reverse the transformations and then average the outputs to
@@ -83,14 +83,14 @@ class SelfEnsembleX8(TestTimeAugment):
 	_requires_post: bool = True
 	
 	def apply(self, input: torch.Tensor, *args, **kwargs) -> torch.Tensor | Sequence[torch.Tensor]:
-		"""Generate 8 instances from :attr:`input` and then stack them together.
-		to create a single :class:`torch.Tensor` or :class:`numpy.ndarray`.
+		"""Generate 8 instances from :obj:`input` and then stack them together.
+		to create a single :obj:`torch.Tensor` or :obj:`numpy.ndarray`.
 		
 		Args:
-			input: An input image in :math:`[B, C, H, W]` format.
+			input: An input image in `[B, C, H, W]` format.
 		
 		Returns:
-			An augmented image of shape :math:`[8 \times B, C, H, W]` format.
+			An augmented image of shape `[8 \times B, C, H, W]` format.
 		"""
 		r0    = input
 		r90   = torch.rot90(input, k=1, dims=[-1, -2])
@@ -111,14 +111,14 @@ class SelfEnsembleX8(TestTimeAugment):
 		output: torch.Tensor | Sequence[torch.Tensor],
 		*args, **kwargs
 	) -> torch.Tensor:
-		"""Reverse transforms 8 instances of from :attr:`output`.
+		"""Reverse transforms 8 instances of from :obj:`output`.
 		
 		Args:
-			input: An input image in :math:`[B, C, H, W]` format.
-			output: Processed image in :math:`[8 \times B, C, H, W]` format.
+			input: An input image in `[B, C, H, W]` format.
+			output: Processed image in `[8 \times B, C, H, W]` format.
 		
 		Returns:
-			An augmented image of shape :math:`[B, C, H, W]` format.
+			An augmented image of shape `[B, C, H, W]` format.
 		"""
 		if isinstance(output, torch.Tensor):
 			c0, c1, c2, c3, c4, c5, c6, c7 = torch.chunk(output, 8, 0)
@@ -153,11 +153,11 @@ class BlendInput(TestTimeAugment):
 		"""
 		
 		Args:
-			input: An input image in :math:`[B, C, H, W]` format.
-			output: Processed image in :math:`[B, C, H, W]` format.
+			input: An input image in `[B, C, H, W]` format.
+			output: Processed image in `[B, C, H, W]` format.
 		
 		Returns:
-			An augmented image of shape :math:`[B, C, H, W]` format.
+			An augmented image of shape `[B, C, H, W]` format.
 		"""
 		input  = input.detach().cpu()
 		output = output.detach().cpu()

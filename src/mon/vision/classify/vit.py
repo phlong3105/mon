@@ -169,10 +169,7 @@ class Encoder(nn.Module):
 # region Model
 
 class VisionTransformer(base.ImageClassificationModel, ABC):
-    """Vision Transformer as per https://arxiv.org/abs/2010.11929.
-    
-    See Also: :class:`base.ImageClassificationModel`
-    """
+    """Vision Transformer as per https://arxiv.org/abs/2010.11929."""
     
     arch   : str  = "vit"
     schemes: list[Scheme] = [Scheme.SUPERVISED]
@@ -341,8 +338,6 @@ ViT = VisionTransformer
 class ViT_B_16(VisionTransformer):
     """vit_b_16 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
-    
-    See Also: :class:`VisionTransformer`
     """
     
     zoo: dict = {
@@ -384,8 +379,6 @@ class ViT_B_16(VisionTransformer):
 class ViT_B_32(VisionTransformer):
     """vit_b_32 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
-    
-    See Also: :class:`VisionTransformer`
     """
     
     zoo: dict = {
@@ -415,8 +408,6 @@ class ViT_B_32(VisionTransformer):
 class ViT_L_16(VisionTransformer):
     """vit_l_16 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
-    
-    See Also: :class:`VisionTransformer`
     """
     
     zoo: dict = {
@@ -458,8 +449,6 @@ class ViT_L_16(VisionTransformer):
 class ViT_L_32(VisionTransformer):
     """vit_l_32 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
-    
-    See Also: :class:`VisionTransformer`
     """
     
     zoo: dict = {
@@ -489,8 +478,6 @@ class ViT_L_32(VisionTransformer):
 class ViT_H_14(VisionTransformer):
     """vit_h_14 architecture from `An Image is Worth 16x16 Words: Transformers
     for Image Recognition at Scale <https://arxiv.org/abs/2010.11929>`__.
-    
-    See Also: :class:`VisionTransformer`
     """
     
     zoo: dict = {

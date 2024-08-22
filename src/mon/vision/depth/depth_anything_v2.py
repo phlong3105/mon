@@ -6,7 +6,7 @@ simple interface for loading pre-trained models and performing inference.
 
 Notice:
 This is the first example of using a third-party package in the `mon` package.
-Why? Because reimplementing all of :mod:`depth_anything_v2` is a lot of work and
+Why? Because reimplementing all of :obj:`depth_anything_v2` is a lot of work and
 is not a smart idea.
 """
 
@@ -45,10 +45,8 @@ except ImportError:
 # region Model
 
 class DepthAnythingV2(nn.ExtraModel, base.DepthEstimationModel, ABC):
-    """This class implements a wrapper for :class:`DepthAnythingV2` models
-    defined in :mod:`mon_extra.vision.depth.depth_anything_v2`.
-    
-    See Also: :class:`mon.nn.model.ExtraModel`
+    """This class implements a wrapper for :obj:`DepthAnythingV2` models
+    defined in :obj:`mon_extra.vision.depth.depth_anything_v2`.
     """
     
     arch   : str          = "depth_anything_v2"
@@ -100,10 +98,6 @@ class DepthAnythingV2(nn.ExtraModel, base.DepthEstimationModel, ABC):
 
 @MODELS.register(name="depth_anything_v2_vits", arch="depth_anything_v2")
 class DepthAnythingV2_ViTS(DepthAnythingV2):
-    """
-    
-    See Also: :class:`DepthAnythingV2`
-    """
     
     zoo: dict = {
         "da_2k": {
@@ -125,10 +119,6 @@ class DepthAnythingV2_ViTS(DepthAnythingV2):
 
 @MODELS.register(name="depth_anything_v2_vitb", arch="depth_anything_v2")
 class DepthAnythingV2_ViTB(DepthAnythingV2):
-    """
-    
-    See Also: :class:`DepthAnythingV2`
-    """
     
     zoo: dict = {
         "da_2k": {
@@ -150,10 +140,6 @@ class DepthAnythingV2_ViTB(DepthAnythingV2):
 
 @MODELS.register(name="depth_anything_v2_vitl", arch="depth_anything_v2")
 class DepthAnythingV2_ViTL(DepthAnythingV2):
-    """
-    
-    See Also: :class:`DepthAnythingV2`
-    """
     
     zoo: dict = {
         "da_2k": {
@@ -180,7 +166,7 @@ def build_depth_anything_v2(
     *args, **kwargs
 ) -> DepthAnythingV2:
     if encoder not in ["vits", "vitb", "vitl", "vitg"]:
-        raise ValueError(f":param:`encoder` must be one of ['vits', 'vitb', 'vitl', 'vitg'], but got {encoder}.")
+        raise ValueError(f"`encoder` must be one of ['vits', 'vitb', 'vitl', 'vitg'], but got {encoder}.")
     if encoder == "vits":
         return DepthAnythingV2_ViTS(in_channels=in_channels, weights=weights, *args, **kwargs)
     elif encoder == "vitb":

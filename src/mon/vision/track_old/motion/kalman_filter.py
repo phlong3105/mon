@@ -24,8 +24,8 @@ console = core.console
 # region Helper Function
 
 def box_xyxy_to_z(box: np.ndarray) -> np.ndarray:
-    """Convert a bounding bbox from :math:`[X, Y, X, Y]` to the format used by
-    Kalman Filter :math:`[CX, CY, S, R]`, where:
+    """Convert a bounding bbox from `[X, Y, X, Y]` to the format used by
+    Kalman Filter `[CX, CY, S, R]`, where:
         X1, Y1 is the top left.
         X2, Y2 is the bottom right.
         CX, CY is the centre of the bbox.
@@ -43,7 +43,7 @@ def box_xyxy_to_z(box: np.ndarray) -> np.ndarray:
 
 def box_x_to_xyxy(x: np.ndarray, score: float | None = None) -> np.ndarray:
     """Covert a bounding bbox from the format used in Kalman Filter
-    :math:`[CX, CY, S, R]` to :math:`[X, Y, X, Y]`, where:
+    `[CX, CY, S, R]` to `[X, Y, X, Y]`, where:
         X1, Y1 is the top left.
         X2, Y2 is the bottom right.
         CX, CY is the centre of the bbox.
@@ -87,7 +87,7 @@ class KFBBoxMotion(base.Motion):
         time_since_update: A number of consecutive frames having that track
             disappear. Default: ``0``.
     
-    See more: :class:`mon.vision.tracking.motion.base.Motion`.
+    See more: :obj:`mon.vision.tracking.motion.base.Motion`.
     """
 
     def __init__(

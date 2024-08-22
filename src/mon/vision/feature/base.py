@@ -30,11 +30,11 @@ class Embedder(ABC):
         """Extract features in the images.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, H, W, C]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, H, W, C]`.
 
         Returns:
-           A 2D :class:`list` of feature vectors.
+           A 2D :obj:`list` of feature vectors.
         """
         pass
 
@@ -47,14 +47,12 @@ class DeepEmbedder(Embedder, ABC):
     Args:
         config: A detector model's config.
         weight: A path to a pretrained weight file.
-        image_size: The desired model's input size in :math:`[H, W]` format.
+        image_size: The desired model's input size in `[H, W]` format.
             Default: ``640``.
         device: Cuda device, i.e. ``0`` or ``0,1,2,3`` or ``'cpu'``. Default:
             ``'cpu'``.
         to_numpy: If ``True``, convert the embedded feature vectors to
-            :class:`numpy.ndarray`. Default: ``False``.
-    
-    See Also: :class:`Embedder`.
+            :obj:`numpy.ndarray`. Default: ``False``.
     """
     
     def __init__(
@@ -107,11 +105,11 @@ class DeepEmbedder(Embedder, ABC):
         """Extract features in the images.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, H, W, C]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, H, W, C]`.
 
         Returns:
-           A 2D :class:`list` of feature vectors.
+           A 2D :obj:`list` of feature vectors.
         """
         if self.model is None:
             raise ValueError(f"model has not been defined yet!")
@@ -130,10 +128,10 @@ class DeepEmbedder(Embedder, ABC):
         """Preprocessing step.
 
         Args:
-            images: Images of shape :math:`[B, H, W, C]`.
+            images: Images of shape `[B, H, W, C]`.
 
         Returns:
-            Input tensor of shape :math:`[B, C, H, W]`.
+            Input tensor of shape `[B, C, H, W]`.
         """
         pass
     
@@ -142,7 +140,7 @@ class DeepEmbedder(Embedder, ABC):
         """Forward pass.
 
         Args:
-            input: Input tensor of shape :math:`[B, C, H, W]`.
+            input: Input tensor of shape `[B, C, H, W]`.
 
         Returns:
             Predictions.
@@ -161,13 +159,13 @@ class DeepEmbedder(Embedder, ABC):
         """Postprocessing step.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, H, W, C]`.
-            input: Input tensor of shape :math:`[B, C, H, W]`.
-            pred: Prediction tensor of shape :math:`[B, C, H, W]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, H, W, C]`.
+            input: Input tensor of shape `[B, C, H, W]`.
+            pred: Prediction tensor of shape `[B, C, H, W]`.
 
         Returns:
-            A 2D :class:`list` of feature vectors.
+            A 2D :obj:`list` of feature vectors.
         """
         pass
 

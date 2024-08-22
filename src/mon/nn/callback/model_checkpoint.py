@@ -33,9 +33,8 @@ error_console = core.error_console
 class ModelCheckpoint(callbacks.ModelCheckpoint):
     """Save the model periodically by monitoring a quantity. We modified the
     original code to save only the best and last checkpoints by always setting
-    :math:`save_top_k = 1`.
+    `save_top_k = 1`.
     
-    See Also: :class:`lightning.pytorch.callbacks.model_checkpoint.ModelCheckpoint`.
     """
     
     CHECKPOINT_JOIN_CHAR = "_"

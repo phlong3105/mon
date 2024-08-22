@@ -4,10 +4,9 @@
 """This module implements distance functions.
 
 In this module the array-like type can be np.ndarray, torch.Tensor, or
-Sequence[Number]. We try to support both :class:`numpy.ndarray` and
-:class:`torch.Tensor`.
+Sequence[Number]. We try to support both :obj:`numpy.ndarray` and
+:obj:`torch.Tensor`.
 
-See Also:
     https://github.com/scipy/scipy/blob/v1.10.0/scipy/spatial/distance.py
 """
 
@@ -51,214 +50,214 @@ console = core.console
 
 def dice(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Dice dissimilarity between two boolean 1D arrays. The Dice
-    dissimilarity between :param:`u` and :param:`v`, is:
+    dissimilarity between :obj:`u` and :obj:`v`, is:
     
     .. math::
              \\frac{c_{TF} + c_{FT}}
                   {2c_{TT} + c_{FT} + c_{TF}}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n`.
     
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Dice dissimilarity between 1D arrays :param:`u` and :param:`v`.
+        The Dice dissimilarity between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.dice(u=u, v=v, w=w)
 
 
 def hamming(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Hamming distance between two boolean 1D arrays. The Hamming
-    distance between 1D arrays :param:`u` and :param:`v`, is simply the
-    proportion of disagreeing components in :param:`u` and :param:`v`. If
-    :param:`u` and :param:`v` are boolean vectors, the Hamming distance is:
+    distance between 1D arrays :obj:`u` and :obj:`v`, is simply the
+    proportion of disagreeing components in :obj:`u` and :obj:`v`. If
+    :obj:`u` and :obj:`v` are boolean vectors, the Hamming distance is:
     
     .. math::
            \\frac{c_{01} + c_{10}}{n}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n`.
         
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Hamming distance between vectors :param:`u` and :param:`v`.
+        The Hamming distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.hamming(u=u, v=v, w=w)
 
 
 def jaccard(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Jaccard-Needham dissimilarity between two boolean 1D arrays.
-    The Jaccard-Needham dissimilarity between 1D arrays :param:`u` and
-    :param:`v` is:
+    The Jaccard-Needham dissimilarity between 1D arrays :obj:`u` and
+    :obj:`v` is:
 
     .. math::
            \\frac{c_{TF} + c_{FT}}
                 {c_{TT} + c_{FT} + c_{TF}}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n`.
 
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Jaccard distance between vectors :param:`u` and :param:`v`.
+        The Jaccard distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.jaccard(u=u, v=v, w=w)
     
 
 def kulczynski1(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
     """Compute the Kulczynski 1 dissimilarity between two boolean 1D arrays.
-    The Kulczynski 1 dissimilarity between 1D arrays :param:`u` and
-    :param:`v` of length `n`, is defined as:
+    The Kulczynski 1 dissimilarity between 1D arrays :obj:`u` and
+    :obj:`v` of length `n`, is defined as:
 
     .. math::
              \\frac{c_{11}}{c_{01} + c_{10}}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k \\in {0, 1, ..., n-1}`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k \\in {0, 1, ..., n-1}`.
 
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Kulczynski 1 distance between vectors :param:`u` and :param:`v`.
+        The Kulczynski 1 distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.kulczynski1(u=u, v=v, w=w)
     
 
 def rogerstanimoto(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
     """Compute the Rogers-Tanimoto dissimilarity between two boolean 1D arrays.
-    The Rogers-Tanimoto dissimilarity between 1D arrays :param:`u` and
-    :param:`v` is defined as:
+    The Rogers-Tanimoto dissimilarity between 1D arrays :obj:`u` and
+    :obj:`v` is defined as:
 
     .. math::
            \\frac{R}
                 {c_{TT} + c_{FF} + R}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n` and :math:`R = 2(c_{TF} + c_{FT})`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n` and `R = 2(c_{TF} + c_{FT})`.
 
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Rogers-Tanimoto distance between vectors :param:`u` and :param:`v`.
+        The Rogers-Tanimoto distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.rogerstanimoto(u=u, v=v, w=w)
     
     
 def russellrao(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
     """Compute the Russell-Rao dissimilarity between two boolean 1D arrays.
-    The Russell-Rao dissimilarity between 1D arrays :param:`u` and
-    :param:`v` is defined as:
+    The Russell-Rao dissimilarity between 1D arrays :obj:`u` and
+    :obj:`v` is defined as:
 
     .. math::
           \\frac{n - c_{TT}}
                {n}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n`.
 
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Russell-Rao distance between vectors :param:`u` and :param:`v`.
+        The Russell-Rao distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.russellrao(u=u, v=v, w=w)
     
 
 def sokalmichener(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
     """Compute the Sokal-Michener dissimilarity between two boolean 1D arrays.
-    The Sokal-Michener dissimilarity between 1D arrays :param:`u` and
-    :param:`v` is defined as:
+    The Sokal-Michener dissimilarity between 1D arrays :obj:`u` and
+    :obj:`v` is defined as:
 
     .. math::
            \\frac{R}
                 {S + R}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n`, :math:`R = 2 * (c_{TF} + c_{FT})` and
-        :math:`S = c_{FF} + c_{TT}`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n`, `R = 2 * (c_{TF} + c_{FT})` and
+        `S = c_{FF} + c_{TT}`.
 
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Sokal-Michener distance between vectors :param:`u` and :param:`v`.
+        The Sokal-Michener distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.sokalmichener(u=u, v=v, w=w)
   
 
 def sokalsneath(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
     """Compute the Sokal-Sneath dissimilarity between two boolean 1D arrays.
-    The Sokal-Sneath dissimilarity between 1D arrays :param:`u` and :param:`v`
+    The Sokal-Sneath dissimilarity between 1D arrays :obj:`u` and :obj:`v`
     is defined as:
 
     .. math::
            \\frac{R}
                 {c_{TT} + R}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n` and :math:`R = 2(c_{TF} + c_{FT})`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n` and `R = 2(c_{TF} + c_{FT})`.
 
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Sokal-Sneath distance between vectors :param:`u` and :param:`v`.
+        The Sokal-Sneath distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.sokalsneath(u=u, v=v, w=w)
     
 
 def yule(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
     """Compute the Yule dissimilarity between two boolean 1D arrays.
-    The Yule dissimilarity between 1D arrays :param:`u` and :param:`v`
+    The Yule dissimilarity between 1D arrays :obj:`u` and :obj:`v`
     is defined as:
 
     .. math::
              \\frac{R}{c_{TT} * c_{FF} + \\frac{R}{2}}
-    where :math:`c_{ij}` is the number of occurrences of
-        :math:`\\mathtt{u[k]} = i` and :math:`\\mathtt{v[k]} = j` for
-        :math:`k < n` and :math:`R = 2.0 * c_{TF} * c_{FT}`.
+    where `c_{ij}` is the number of occurrences of
+        `\\mathtt{u[k]} = i` and `\\mathtt{v[k]} = j` for
+        `k < n` and `R = 2.0 * c_{TF} * c_{FT}`.
 
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Yule distance between vectors :param:`u` and :param:`v`.
+        The Yule distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.yule(u=u, v=v, w=w)
    
@@ -270,7 +269,7 @@ def yule(u: np.ndarray, v: np.ndarray, *, w: np.ndarray | None = None) -> float:
 
 def braycurtis(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Bray-Curtis distance between two 1D arrays. The Bray-Curtis
-    distance between :param:`u` and :param:`v` is defined as:
+    distance between :obj:`u` and :obj:`v` is defined as:
     
     .. math::
              \\sum{|u_i-v_i|} / \\sum{|u_i+v_i|}
@@ -280,18 +279,18 @@ def braycurtis(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> flo
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Bray-Curtis distance between 1D arrays :param:`u` and :param:`v`.
+        The Bray-Curtis distance between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.braycurtis(u=u, v=v, w=w)
 
 
 def canberra(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Canberra distance between two 1D arrays. The Canberra
-    distance between :param:`u` and :param:`v` is defined as:
+    distance between :obj:`u` and :obj:`v` is defined as:
     
     .. math::
              d(u,v) = \\sum_i \\frac{|u_i-v_i|}{|u_i|+|v_i|}.
@@ -299,18 +298,18 @@ def canberra(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Canberra distance between 1D arrays :param:`u` and :param:`v`.
+        The Canberra distance between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.canberra(u=u, v=v, w=w)
     
     
 def chebyshev(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Chebyshev distance between two 1D arrays. The Chebyshev
-    distance between :param:`u` and :param:`v` is defined as:
+    distance between :obj:`u` and :obj:`v` is defined as:
     
     .. math::
              \\max_i {|u_i-v_i|}.
@@ -318,18 +317,18 @@ def chebyshev(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> floa
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Chebyshev distance between 1D arrays :param:`u` and :param:`v`.
+        The Chebyshev distance between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.chebyshev(u=u, v=v, w=w)
     
 
 def cityblock(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the City Block (Manhattan) distance between two 1D arrays. The
-    Manhattan distance between :param:`u` and :param:`v` is defined as:
+    Manhattan distance between :obj:`u` and :obj:`v` is defined as:
     
     .. math::
              \\sum_i {\\left| u_i - v_i \\right|}.
@@ -337,19 +336,19 @@ def cityblock(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> floa
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The City Block (Manhattan) distance between 1D arrays :param:`u` and
-        :param:`v`.
+        The City Block (Manhattan) distance between 1D arrays :obj:`u` and
+        :obj:`v`.
     """
     return scipy.spatial.distance.cityblock(u=u, v=v, w=w)
     
 
 def correlation(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the correlation distance between two 1D arrays. The correlation
-    distance between :param:`u` and :param:`v` is defined as:
+    distance between :obj:`u` and :obj:`v` is defined as:
     
     .. math::
              1 - \\frac{(u - \\bar{u}) \\cdot (v - \\bar{v})}
@@ -358,18 +357,18 @@ def correlation(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> fl
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The correlation distance between 1D arrays :param:`u` and :param:`v`.
+        The correlation distance between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.correlation(u=u, v=v, w=w)
     
 
 def cosine(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Cosine distance between two 1D arrays. The Cosine distance
-    between :param:`u` and :param:`v` is defined as:
+    between :obj:`u` and :obj:`v` is defined as:
     
     .. math::
              1 - \\frac{u \\cdot v}{\\|u\\|_2 \\|v\\|_2}.
@@ -377,18 +376,18 @@ def cosine(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Cosine distance between 1D arrays :param:`u` and :param:`v`.
+        The Cosine distance between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.cosine(u=u, v=v, w=w)
     
 
 def euclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the Euclidean distance between two 1D arrays. The Euclidean
-    distance between :param:`u` and :param:`v` is defined as:
+    distance between :obj:`u` and :obj:`v` is defined as:
 
     .. math::
              {\\|u-v\\|}_2 \\left(\\sum{(w_i |(u_i - v_i)|^2)}\\right)^{1/2}
@@ -396,18 +395,18 @@ def euclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> floa
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Euclidean distance between 1D arrays :param:`u` and :param:`v`.
+        The Euclidean distance between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.euclidean(u=u, v=v, w=w)
     
 
 def mahalanobis(u: np.ndarray, v: np.ndarray, vi: np.ndarray) -> float:
     """Compute the Mahalanobis distance between two 1D arrays. The Mahalanobis
-    distance between :param:`u` and :param:`v` is defined as:
+    distance between :obj:`u` and :obj:`v` is defined as:
 
     .. math::
               \\sqrt{ (u-v) V^{-1} (u-v)^T }
@@ -420,7 +419,7 @@ def mahalanobis(u: np.ndarray, v: np.ndarray, vi: np.ndarray) -> float:
         vi: The inverse of the covariance matrix.
 
     Returns:
-        The Mahalanobis distance between 1D arrays :param:`u` and :param:`v`.
+        The Mahalanobis distance between 1D arrays :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.mahalanobis(u=u, v=v, VI=vi)
 
@@ -439,19 +438,19 @@ def minkowski(
     Args:
         u: An array-like input.
         v: An array-like input.
-        o: The order of the norm of the difference :math:`{\\|u-v\\|}_p`.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        o: The order of the norm of the difference `{\\|u-v\\|}_p`.
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The Minkowski distance between vectors :param:`u` and :param:`v`.
+        The Minkowski distance between vectors :obj:`u` and :obj:`v`.
     """
     return scipy.spatial.distance.minkowski(u=u, v=v, p=o, w=w)
 
 
 def seuclidean(u: np.ndarray, v: np.ndarray, V: np.ndarray) -> float:
     """Compute the standardized Euclidean distance between two 1D arrays. The
-    standardized Euclidean distance between :param:`u` and :param:`v` is defined
+    standardized Euclidean distance between :obj:`u` and :obj:`v` is defined
     as:
 
     .. math::
@@ -464,15 +463,15 @@ def seuclidean(u: np.ndarray, v: np.ndarray, V: np.ndarray) -> float:
             larger collection of vectors.
 
     Returns:
-        The standardized Euclidean distance between 1D arrays :param:`u` and
-        :param:`v`.
+        The standardized Euclidean distance between 1D arrays :obj:`u` and
+        :obj:`v`.
     """
     return scipy.spatial.distance.seuclidean(u=u, v=v, V=V)
     
 
 def sqeuclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> float:
     """Compute the squared Euclidean distance between two 1D arrays. The
-    squared Euclidean distance between :param:`u` and :param:`v` is defined as:
+    squared Euclidean distance between :obj:`u` and :obj:`v` is defined as:
 
     .. math::
              {\\|u-v\\|}_2 \\left(\\sum{(w_i |(u_i - v_i)|^2)}\\right)^{1/2}
@@ -480,12 +479,12 @@ def sqeuclidean(u: np.ndarray, v: np.ndarray, w: np.ndarray | None = None) -> fl
     Args:
         u: An array-like input.
         v: An array-like input.
-        w: The weights for each value in :param:`u` and :param:`v`. Default to
+        w: The weights for each value in :obj:`u` and :obj:`v`. Default to
             None, which gives each value a weight of 1.0.
 
     Returns:
-        The squared Euclidean distance between 1D arrays :param:`u` and
-        :param:`v`.
+        The squared Euclidean distance between 1D arrays :obj:`u` and
+        :obj:`v`.
     """
     return scipy.spatial.distance.sqeuclidean(u=u, v=v, w=w)
     
@@ -503,7 +502,7 @@ def angle(u: np.ndarray, v: np.ndarray) -> float:
         v: An array-like input.
         
     Returns:
-        The angle distance between directed vectors :param:`u` and :param:`v`.
+        The angle distance between directed vectors :obj:`u` and :obj:`v`.
     """
     vec1 = np.array([u[-1][0] - u[0][0], u[-1][1] - u[0][1]])
     vec2 = np.array([v[-1][0] - v[0][0], v[-1][1] - v[0][1]])
@@ -530,16 +529,16 @@ def directed_hausdorff(
     between pairs are calculated using a Euclidean metric.
     
     Args:
-        u: An :math:`[M, N]` array-like input.
-        v: An :math:`[M, N]` array-like input.
-        seed: Default: ``0``, a random shuffling of :param:`u` and :param:`v`
+        u: An `[M, N]` array-like input.
+        v: An `[M, N]` array-like input.
+        seed: Default: ``0``, a random shuffling of :obj:`u` and :obj:`v`
             that guarantees reproducibility.
 
     Returns:
-        The directed Hausdorff distance between arrays :param:`u` and
-        :param:`v`.
-        The index of the point contributing to the Hausdorff pair in :param:`u`.
-        The index of the point contributing to the Hausdorff pair in :param:`v`.
+        The directed Hausdorff distance between arrays :obj:`u` and
+        :obj:`v`.
+        The index of the point contributing to the Hausdorff pair in :obj:`u`.
+        The index of the point contributing to the Hausdorff pair in :obj:`v`.
         
     Examples:
         Find the directed Hausdorff distance between two 2D arrays of

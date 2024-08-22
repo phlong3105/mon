@@ -7,9 +7,9 @@ datamodules.
 The base classes are designed to be implemented by the user to create their
 own custom labels, datasets, datamodules, and result writers.
 
-We try to support all possible data types: :class:`torch.Tensor`,
-:class:`numpy.ndarray`, or :class:`Sequence`, but we prioritize
-:class:`torch.Tensor`.
+We try to support all possible data types: :obj:`torch.Tensor`,
+:obj:`numpy.ndarray`, or :obj:`Sequence`, but we prioritize
+:obj:`torch.Tensor`.
 """
 
 from __future__ import annotations

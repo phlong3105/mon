@@ -171,7 +171,7 @@ class Finetunemodel(nn.Module):
         self.enhance   = Enhancer(layers=3, channels=64)
         self.denoise_1 = Denoise_1(chan_embed=48)
         self.denoise_2 = Denoise_2(chan_embed=48)
-
+        
         base_weights    = torch.load(weights, map_location='cuda:0')
         pretrained_dict = base_weights
         model_dict      = self.state_dict()

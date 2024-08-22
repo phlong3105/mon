@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements basic color functions."""
+"""Colorspace Module.
+
+This module implements basic color space conversion functions.
+"""
 
 from __future__ import annotations
 
@@ -52,58 +55,69 @@ __all__ = [
 import math
 
 import torch
-
-from mon import nn
+from torch import nn
 
 
 # region Grayscale
 
 def grayscale_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert a grayscale image to RGB version of image.
-
-    The image data is assumed to be in the range of (0, 1).
-
+    """Convert a grayscale image to RGB version of image. The image data is
+    assumed to be in the range of `(0, 1)`.
+    
     Args:
-        image: grayscale image tensor to be converted to RGB with shape :math:`[*,1,H,W]`.
-
+        image: Grayscale image tensor to be converted to RGB with shape
+            `[*, 1, H, W]`.
+    
     Returns:
-        RGB version of the image with shape :math:`[*,3,H,W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 1:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 1, H, W]`, but got {image.shape}.")
+        raise ValueError(
+            f"`image` must have a shape of `[*, 1, H, W]`, but got {image.shape}."
+        )
     
     return torch.cat([image, image, image], -3)
 
 
-def rgb_to_grayscale(image: torch.Tensor, rgb_weights: torch.Tensor | None = None) -> torch.Tensor:
-    r"""Convert a RGB image to grayscale version of image.
-
-    The image data is assumed to be in the range of (0, 1).
+def rgb_to_grayscale(
+    image      : torch.Tensor,
+    rgb_weights: torch.Tensor = None
+) -> torch.Tensor:
+    """Convert an RGB image to grayscale version of image. The image data is
+    assumed to be in the range of `(0, 1)`.
 
     Args:
-        image: RGB image to be converted to grayscale with shape :math:`[*, 3, H, W]`.
+        image: RGB image to be converted to grayscale with shape `[*, 3, H, W]`.
         rgb_weights: Weights that will be applied on each channel (RGB).
             The sum of the weights should add up to one.
             
     Returns:
-        grayscale version of the image with shape :math:`[*, 1, H, W]`.
+        Grayscale version of the image with shape `[*, 1, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(
+            f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}."
+        )
     
     if rgb_weights is None:
         # 8 bit images
         if image.dtype == torch.uint8:
-            rgb_weights = torch.tensor([76, 150, 29], device=image.device, dtype=torch.uint8)
+            rgb_weights = torch.tensor(
+                [76, 150, 29],
+                dtype=torch.uint8, device=image.device
+            )
         # floating point images
         elif image.dtype in (torch.float16, torch.float32, torch.float64):
-            rgb_weights = torch.tensor([0.299, 0.587, 0.114], device=image.device, dtype=image.dtype)
+            rgb_weights = torch.tensor(
+                [0.299, 0.587, 0.114],
+                dtype=image.dtype, device=image.device
+            )
         else:
             raise TypeError(f"Unknown data type: {image.dtype}")
     else:
@@ -120,21 +134,20 @@ def rgb_to_grayscale(image: torch.Tensor, rgb_weights: torch.Tensor | None = Non
 
 
 def bgr_to_grayscale(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert a BGR image to grayscale.
-
-    The image data is assumed to be in the range of (0, 1). First flips to RGB, then converts.
+    """Convert a BGR image to grayscale. The image data is assumed to be in the
+    range of `(0, 1)`. First flips to RGB, then converts.
 
     Args:
-        image: BGR image to be converted to grayscale with shape :math:`[*, 3, H, W]`.
+        image: BGR image to be converted to grayscale with shape `[*, 3, H, W]`.
 
     Returns:
-        grayscale version of the image with shape :math:`[*, 1, H, W]`.
+        Grayscale version of the image with shape `[*, 1, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 1:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 1, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 1, H, W]`, but got {image.shape}.")
     
     image_rgb = bgr_to_rgb(image)
     return rgb_to_grayscale(image_rgb)
@@ -145,24 +158,23 @@ def bgr_to_grayscale(image: torch.Tensor) -> torch.Tensor:
 # region HSL
 
 def rgb_to_hls(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
-    r"""Convert an RGB image to HLS.
-
-    The image data is assumed to be in the range of (0, 1).
+    """Convert an RGB image to HLS. The image data is assumed to be in the range
+    of `(0, 1)`.
 
     NOTE: this method cannot be compiled with JIT in pytohrch < 1.7.0
 
     Args:
-        image: RGB image to be converted to HLS with shape :math:`[*, 3, H, W]`.
-        eps: epsilon value to avoid div by zero.
+        image: RGB image to be converted to HLS with shape `[*, 3, H, W]`.
+        eps: epsilon value to avoid div by zero. Defaults: ``1e-8``.
 
     Returns:
-        HLS version of the image with shape :math:`[*, 3, H, W]`.
+        HLS version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     _RGB2HSL_IDX = torch.tensor([[[0.0]], [[1.0]], [[2.0]]], device=image.device, dtype=image.dtype)  # 3x1x1
     
@@ -216,21 +228,20 @@ def rgb_to_hls(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
 
 
 def hls_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert a HLS image to RGB.
-
-    The image data is assumed to be in the range of (0, 1).
+    """Convert a HLS image to RGB. The image data is assumed to be in the range
+    of `(0, 1)`.
 
     Args:
-        image: HLS image to be converted to RGB with shape :math:`[*, 3, H, W]`.
+        image: HLS image to be converted to RGB with shape `[*, 3, H, W]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     _HLS2RGB = torch.tensor([[[0.0]], [[8.0]], [[4.0]]], device=image.device, dtype=image.dtype)  # 3x1x1
     
@@ -256,23 +267,23 @@ def hls_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region HSV
 
 def rgb_to_hsv(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
-    r"""Convert an image from RGB to HSV.
-
-    The image data is assumed to be in the range of (0, 1).
+    """Convert an image from RGB to HSV. The image data is assumed to be in the
+    range of `(0, 1)`.
 
     Args:
-        image: RGB Image to be converted to HSV with shape of :math:`[*, 3, H, W]`.
-        eps: scalar to enforce numerical stability.
+        image: RGB Image to be converted to HSV with shape of `[*, 3, H, W]`.
+        eps: scalar to enforce numerical stability. Defaults: ``1e-8``.
 
     Returns:
-        HSV version of the image with shape of :math:`[*, 3, H, W]`.
-        The H channel values are in the range 0..2pi. S and V are in the range 0..1.
+        HSV version of the image with shape of `[*, 3, H, W]`.
+        The H channel values are in the range ``0..2pi``. S and V are in the
+            range ``0..1``.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     max_rgb, argmax_rgb = image.max(-3)
     min_rgb, argmin_rgb = image.min(-3)
@@ -297,21 +308,20 @@ def rgb_to_hsv(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
 
 
 def hsv_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an image from HSV to RGB.
-
-    The H channel values are assumed to be in the range 0..2pi. S and V are in the range 0..1.
+    """Convert an image from HSV to RGB. The H channel values are assumed to be
+    in the range ``0..2pi``. S and V are in the range ``0..1``.
 
     Args:
-        image: HSV Image to be converted to HSV with shape of :math:`[*, 3, H, W]`.
+        image: HSV Image to be converted to HSV with shape of `[*, 3, H, W]`.
 
     Returns:
-        RGB version of the image with shape of :math:`[*, 3, H, W]`.
+        RGB version of the image with shape of `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     h = image[..., 0, :, :] / (2 * math.pi)
     s = image[..., 1, :, :]
@@ -463,23 +473,23 @@ class RGBToHVI(nn.Module):
 # region Lab
 
 def rgb_to_lab(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert a RGB image to Lab.
-
-    The input RGB image is assumed to be in the range of :math:`[0, 1]`. Lab
-    color is computed using the D65 illuminant and Observer 2.
+    """Convert an RGB image to Lab. The input RGB image is assumed to be in the
+    range of ``[0.0, 1.0]``. Lab color is computed using the D65 illuminant and
+    Observer 2.
 
     Args:
-        image: RGB Image to be converted to Lab with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to Lab with shape `[*, 3, H, W]`.
 
     Returns:
-        Lab version of the image with shape :math:`[*, 3, H, W]`.
-        The L channel values are in the range 0..100. a and b are in the range -128..127.
+        Lab version of the image with shape `[*, 3, H, W]`. The `L` channel
+            values are in the range ``0..100``. `a` and `b` are in the range
+            ``-128..127``.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     # Convert from sRGB to Linear RGB
     lin_rgb = rgb_to_linear_rgb(image)
@@ -508,24 +518,24 @@ def rgb_to_lab(image: torch.Tensor) -> torch.Tensor:
 
 
 def lab_to_rgb(image: torch.Tensor, clip: bool = True) -> torch.Tensor:
-    r"""Convert a Lab image to RGB.
+    """Convert a Lab image to RGB.
 
-    The L channel is assumed to be in the range of :math:`[0, 100]`.
-    a and b channels are in the range of :math:`[-128, 127]`.
+    The L channel is assumed to be in the range of `[0, 100]`.
+    a and b channels are in the range of `[-128, 127]`.
 
     Args:
-        image: Lab image to be converted to RGB with shape :math:`[*, 3, H, W]`.
-        clip: Whether to apply clipping to insure output RGB values in range :math:`[0, 1]`.
+        image: Lab image to be converted to RGB with shape `[*, 3, H, W]`.
+        clip: Whether to apply clipping to insure output RGB values in range ``[0.0, 1.0]``.
 
     Returns:
-        Lab version of the image with shape :math:`[*, 3, H, W]`.
-        The output RGB image are in the range of :math:`[0, 1]`.
+        Lab version of the image with shape `[*, 3, H, W]`.
+        The output RGB image are in the range of ``[0.0, 1.0]``.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     L  = image[..., 0, :, :]
     a  = image[..., 1, :, :]
@@ -569,23 +579,23 @@ def lab_to_rgb(image: torch.Tensor, clip: bool = True) -> torch.Tensor:
 # region Luv
 
 def rgb_to_luv(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    r"""Convert an RGB image to Luv.
+    """Convert an RGB image to Luv.
 
-    The image data is assumed to be in the range of :math:`[0, 1]`. Luv
+    The image data is assumed to be in the range of ``[0.0, 1.0]``. Luv
     color is computed using the D65 illuminant and Observer 2.
 
     Args:
-        image: RGB Image to be converted to Luv with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to Luv with shape `[*, 3, H, W]`.
         eps: for numerically stability when dividing.
 
     Returns:
-        Luv version of the image with shape :math:`[*, 3, H, W]`.
+        Luv version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     # Convert from sRGB to Linear RGB
     lin_rgb = rgb_to_linear_rgb(image)
@@ -616,20 +626,20 @@ def rgb_to_luv(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
 
 
 def luv_to_rgb(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    r"""Convert a Luv image to RGB.
+    """Convert a Luv image to RGB.
 
     Args:
-        image: Luv image to be converted to RGB with shape :math:`[*, 3, H, W]`.
+        image: Luv image to be converted to RGB with shape `[*, 3, H, W]`.
         eps: for numerically stability when dividing.
 
     Returns:
-        Luv version of the image with shape :math:`[*, 3, H, W]`.
+        Luv version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     L = image[..., 0, :, :]
     u = image[..., 1, :, :]
@@ -665,37 +675,37 @@ def luv_to_rgb(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
 # region RGB
 
 def rgb_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an RGB image to BGR.
+    """Convert an RGB image to BGR.
     
     Args:
-        image: RGB Image to be converted to BGRof of shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to BGRof of shape `[*, 3, H, W]`.
 
     Returns:
-        BGR version of the image with shape of shape :math:`[*, 3, H, W]`.
+        BGR version of the image with shape of shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     return bgr_to_rgb(image)
 
 
 def bgr_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert a BGR image to RGB.
+    """Convert a BGR image to RGB.
 
     Args:
-        image: BGR Image to be converted to BGR of shape :math:`[*, 3, H, W]`.
+        image: BGR Image to be converted to BGR of shape `[*, 3, H, W]`.
 
     Returns:
-        RGB version of the image with shape of shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape of shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     # flip image channels
     out: torch.Tensor = image.flip(-3)
@@ -703,22 +713,22 @@ def bgr_to_rgb(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_rgba(image: torch.Tensor, alpha_val: float | torch.Tensor) -> torch.Tensor:
-    r"""Convert an image from RGB to RGBA.
+    """Convert an image from RGB to RGBA.
 
     Args:
-        image: RGB Image to be converted to RGBA of shape :math:`[*, 3, H, W]`.
-        alpha_val: A float number for the alpha value, or a tensor of shape :math:`[*, 1, H, W]`.
+        image: RGB Image to be converted to RGBA of shape `[*, 3, H, W]`.
+        alpha_val: A float number for the alpha value, or a tensor of shape `[*, 1, H, W]`.
 
     Returns:
-        RGBA version of the image with shape :math:`[*, 4, H, W]`.
+        RGBA version of the image with shape `[*, 4, H, W]`.
 
     .. note:: The current functionality is NOT supported by Torchscript.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     if not isinstance(alpha_val, (float, torch.Tensor)):
         raise TypeError(f"``alpha_val`` type is not a float or ``torch.Tensor``, but got {type(alpha_val)}.")
@@ -735,22 +745,22 @@ def rgb_to_rgba(image: torch.Tensor, alpha_val: float | torch.Tensor) -> torch.T
 
 
 def bgr_to_rgba(image: torch.Tensor, alpha_val: float | torch.Tensor) -> torch.Tensor:
-    r"""Convert an image from BGR to RGBA.
+    """Convert an image from BGR to RGBA.
 
     Args:
-        image: BGR Image to be converted to RGBA of shape :math:`[*, 3, H, W]`.
-        alpha_val: A float number for the alpha value or a tensor of shape :math:`[*, 1, H, W]`.
+        image: BGR Image to be converted to RGBA of shape `[*, 3, H, W]`.
+        alpha_val: A float number for the alpha value or a tensor of shape `[*, 1, H, W]`.
 
     Returns:
-        RGBA version of the image with shape :math:`[*, 4, H, W]`.
+        RGBA version of the image with shape `[*, 4, H, W]`.
 
     .. note:: The current functionality is NOT supported by Torchscript.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     if not isinstance(alpha_val, (float, torch.Tensor)):
         raise TypeError(f"``alpha_val`` type is not a float or ``torch.Tensor``, but got {type(alpha_val)}.")
@@ -761,19 +771,19 @@ def bgr_to_rgba(image: torch.Tensor, alpha_val: float | torch.Tensor) -> torch.T
 
 
 def rgba_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an image from RGBA to RGB.
+    """Convert an image from RGBA to RGB.
 
     Args:
-        image: RGBA Image to be converted to RGB of shape :math:`[*, 4, H, W]`.
+        image: RGBA Image to be converted to RGB of shape `[*, 4, H, W]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 4, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 4, H, W]`, but got {image.shape}.")
     
     # unpack channels
     r, g, b, a = torch.chunk(image, image.shape[-3], dim=-3)
@@ -788,19 +798,19 @@ def rgba_to_rgb(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgba_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an image from RGBA to BGR.
+    """Convert an image from RGBA to BGR.
 
     Args:
-        image: RGBA Image to be converted to BGR of shape :math:`[*, 4, H, W]`.
+        image: RGBA Image to be converted to BGR of shape `[*, 4, H, W]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 4, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 4, H, W]`, but got {image.shape}.")
     
     # convert to RGB first, then to BGR
     x_rgb = rgba_to_rgb(image)
@@ -808,19 +818,19 @@ def rgba_to_bgr(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_linear_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an sRGB image to linear RGB. Used in colorspace conversions.
+    """Convert an sRGB image to linear RGB. Used in colorspace conversions.
 
     Args:
-        image: sRGB Image to be converted to linear RGB of shape :math:`[*, 3, H, W]`.
+        image: sRGB Image to be converted to linear RGB of shape `[*, 3, H, W]`.
 
     Returns:
-        linear RGB version of the image with shape of :math:`[*, 3, H, W]`.
+        linear RGB version of the image with shape of `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     lin_rgb = torch.where(image > 0.04045, torch.pow(((image + 0.055) / 1.055), 2.4), image / 12.92)
    
@@ -828,19 +838,19 @@ def rgb_to_linear_rgb(image: torch.Tensor) -> torch.Tensor:
 
 
 def linear_rgb_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert a linear RGB image to sRGB. Used in colorspace conversions.
+    """Convert a linear RGB image to sRGB. Used in colorspace conversions.
 
     Args:
-        image: linear RGB Image to be converted to sRGB of shape :math:`[*, 3, H, W]`.
+        image: linear RGB Image to be converted to sRGB of shape `[*, 3, H, W]`.
 
     Returns:
-        sRGB version of the image with shape of shape :math:`[*, 3, H, W]`.
+        sRGB version of the image with shape of shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     threshold = 0.0031308
     rgb = torch.where(
@@ -855,22 +865,22 @@ def linear_rgb_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region Sepia
 
 def rgb_to_sepia(image: torch.Tensor, rescale: bool = True, eps: float = 1e-6) -> torch.Tensor:
-    r"""Apply to a tensor the sepia filter.
+    """Apply to a tensor the sepia filter.
 
     Args:
-        image: the input tensor with shape of :math:`[*, C, H, W]`.
+        image: the input tensor with shape of `[*, C, H, W]`.
         rescale: If True, the output tensor will be rescaled (max values be 1. or 255).
         eps: scalar to enforce numerical stability.
 
     Returns:
         Tensor: The sepia tensor of same size and numbers of channels
-        as the input with shape :math:`[*, C, H, W]`.
+        as the input with shape `[*, C, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     r = image[..., 0, :, :]
     g = image[..., 1, :, :]
@@ -894,19 +904,19 @@ def rgb_to_sepia(image: torch.Tensor, rescale: bool = True, eps: float = 1e-6) -
 # region XYZ
 
 def rgb_to_xyz(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an RGB image to XYZ.
+    """Convert an RGB image to XYZ.
 
     Args:
-        image: RGB Image to be converted to XYZ with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to XYZ with shape `[*, 3, H, W]`.
 
     Returns:
-         XYZ version of the image with shape :math:`[*, 3, H, W]`.
+         XYZ version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     r = image[..., 0, :, :]
     g = image[..., 1, :, :]
@@ -922,19 +932,19 @@ def rgb_to_xyz(image: torch.Tensor) -> torch.Tensor:
 
 
 def xyz_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert a XYZ image to RGB.
+    """Convert a XYZ image to RGB.
 
     Args:
-        image: XYZ Image to be converted to RGB with shape :math:`[*, 3, H, W]`.
+        image: XYZ Image to be converted to RGB with shape `[*, 3, H, W]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     x = image[..., 0, :, :]
     y = image[..., 1, :, :]
@@ -962,16 +972,16 @@ def rgb_to_ycbcr(image: torch.Tensor) -> torch.Tensor:
     """Convert an RGB image to YCbCr.
     
     Args:
-        image: RGB Image to be converted to YCbCr with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to YCbCr with shape `[*, 3, H, W]`.
 
     Returns:
-        YCbCr version of the image with shape :math:`[*, 3, H, W]`.
+        YCbCr version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
 
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     r = image[..., 0, :, :]
     g = image[..., 1, :, :]
@@ -985,19 +995,19 @@ def rgb_to_ycbcr(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_y(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an RGB image to Y.
+    """Convert an RGB image to Y.
     
     Args:
-        image: RGB Image to be converted to Y with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to Y with shape `[*, 3, H, W]`.
 
     Returns:
-        Y version of the image with shape :math:`[*, 1, H, W]`.
+        Y version of the image with shape `[*, 1, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     r = image[..., 0:1, :, :]
     g = image[..., 1:2, :, :]
@@ -1007,21 +1017,21 @@ def rgb_to_y(image: torch.Tensor) -> torch.Tensor:
 
 
 def ycbcr_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an YCbCr image to RGB.
+    """Convert an YCbCr image to RGB.
 
     The image data is assumed to be in the range of (0, 1).
 
     Args:
-        image: YCbCr Image to be converted to RGB with shape :math:`[*, 3, H, W]`.
+        image: YCbCr Image to be converted to RGB with shape `[*, 3, H, W]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     y  = image[..., 0, :, :]
     cb = image[..., 1, :, :]
@@ -1042,21 +1052,21 @@ def ycbcr_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region YUV
 
 def rgb_to_yuv(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an RGB image to YUV.
+    """Convert an RGB image to YUV.
 
     The image data is assumed to be in the range of (0, 1).
 
     Args:
-        image: RGB Image to be converted to YUV with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to YUV with shape `[*, 3, H, W]`.
 
     Returns:
-        YUV version of the image with shape :math:`[*, 3, H, W]`.
+        YUV version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     r = image[..., 0, :, :]
     g = image[..., 1, :, :]
@@ -1072,24 +1082,24 @@ def rgb_to_yuv(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_yuv420(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-    r"""Convert an RGB image to YUV 420 (subsampled).
+    """Convert an RGB image to YUV 420 (subsampled).
 
     The image data is assumed to be in the range of (0, 1). Input need to be
     padded to be evenly divisible by 2 horizontal and vertical. This function
     will output chroma siting (0.5, 0.5).
 
     Args:
-        image: RGB Image to be converted to YUV with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to YUV with shape `[*, 3, H, W]`.
 
     Returns:
-        A Tensor containing the Y plane with shape :math:`[*, 1, H, W]`.
-        A Tensor containing the UV planes with shape :math:`[*, 2, H/2, W/2]`.
+        A Tensor containing the Y plane with shape `[*, 1, H, W]`.
+        A Tensor containing the UV planes with shape `[*, 2, H/2, W/2]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     if len(image.shape) < 2 or image.shape[-2] % 2 == 1 or image.shape[-1] % 2 == 1:
         raise ValueError(f"Input H&W must be evenly divisible by 2, but got {image.shape}.")
@@ -1100,24 +1110,24 @@ def rgb_to_yuv420(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
 
 def rgb_to_yuv422(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-    r"""Convert an RGB image to YUV 422 (subsampled).
+    """Convert an RGB image to YUV 422 (subsampled).
 
     The image data is assumed to be in the range of (0, 1). Input needs to be
     padded to be evenly divisible by vertical 2. This function will output
     chroma sitting (0.5).
 
     Args:
-        image: RGB Image to be converted to YUV with shape :math:`[*, 3, H, W]`.
+        image: RGB Image to be converted to YUV with shape `[*, 3, H, W]`.
 
     Returns:
-       A Tensor containing the Y plane with shape :math:`[*, 1, H, W]`
-       A Tensor containing the UV planes with shape :math:`[*, 2, H, W/2]`.
+       A Tensor containing the Y plane with shape `[*, 1, H, W]`
+       A Tensor containing the UV planes with shape `[*, 2, H, W/2]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
     
     if len(image.shape) < 2 or image.shape[-2] % 2 == 1 or image.shape[-1] % 2 == 1:
         raise ValueError(f"Input H&W must be evenly divisible by 2, but got {image.shape}.")
@@ -1128,21 +1138,21 @@ def rgb_to_yuv422(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
 
 def yuv_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    r"""Convert an YUV image to RGB.
+    """Convert an YUV image to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
 
     Args:
-        image: YUV Image to be converted to RGB with shape :math:`[*, 3, H, W]`.
+        image: YUV Image to be converted to RGB with shape `[*, 3, H, W]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(image, torch.Tensor):
-        raise TypeError(f"``image`` is not a ``torch.Tensor``, but got {type(image)}.")
+        raise TypeError(f"`image` must be a `torch.Tensor`, but got {type(image)}.")
     
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"``image`` must have a shape of :math:`[*, 3, H, W]`, but got {image.shape}.")
+        raise ValueError(f"`image` must have a shape of `[*, 3, H, W]`, but got {image.shape}.")
         
     y = image[..., 0, :, :]
     u = image[..., 1, :, :]
@@ -1158,18 +1168,18 @@ def yuv_to_rgb(image: torch.Tensor) -> torch.Tensor:
 
 
 def yuv420_to_rgb(imagey: torch.Tensor, imageuv: torch.Tensor) -> torch.Tensor:
-    r"""Convert an YUV420 image to RGB.
+    """Convert an YUV420 image to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
     Input need to be padded to be evenly divisible by 2 horizontal and vertical.
     This function assumed chroma siting is (0.5, 0.5)
 
     Args:
-        imagey: Y (luma) Image plane to be converted to RGB with shape :math:`[*, 1, H, W]`.
-        imageuv: UV (chroma) Image planes to be converted to RGB with shape :math:`[*, 2, H/2, W/2]`.
+        imagey: Y (luma) Image plane to be converted to RGB with shape `[*, 1, H, W]`.
+        imageuv: UV (chroma) Image planes to be converted to RGB with shape `[*, 2, H/2, W/2]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(imagey, torch.Tensor):
         raise TypeError(f"Input type is not a torch.Tensor. Got {type(imagey)}")
@@ -1204,17 +1214,17 @@ def yuv420_to_rgb(imagey: torch.Tensor, imageuv: torch.Tensor) -> torch.Tensor:
 
 
 def yuv422_to_rgb(imagey: torch.Tensor, imageuv: torch.Tensor) -> torch.Tensor:
-    r"""Convert an YUV422 image to RGB.
+    """Convert an YUV422 image to RGB.
 
     The image data is assumed to be in the range of (0, 1) for luma and (-0.5, 0.5) for chroma.
     Input need to be padded to be evenly divisible by 2 vertical. This function assumed chroma siting is (0.5)
 
     Args:
-        imagey: Y (luma) Image plane to be converted to RGB with shape :math:`[*, 1, H, W]`.
-        imageuv: UV (luma) Image planes to be converted to RGB with shape :math:`[*, 2, H, W/2]`.
+        imagey: Y (luma) Image plane to be converted to RGB with shape `[*, 1, H, W]`.
+        imageuv: UV (luma) Image planes to be converted to RGB with shape `[*, 2, H, W/2]`.
 
     Returns:
-        RGB version of the image with shape :math:`[*, 3, H, W]`.
+        RGB version of the image with shape `[*, 3, H, W]`.
     """
     if not isinstance(imagey, torch.Tensor):
         raise TypeError(f"Input type is not a torch.Tensor. Got {type(imagey)}")

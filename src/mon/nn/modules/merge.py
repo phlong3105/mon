@@ -108,7 +108,7 @@ class Chuncat(nn.Module):
 
 
 class InterpolateConcat(nn.Module):
-	"""Concatenate a :class:`list` of tensors along dimension.
+	"""Concatenate a :obj:`list` of tensors along dimension.
 	
 	Args:
 		dim: Dimension to concat to. Default: ``1``.
@@ -164,7 +164,7 @@ class Foldcut(nn.Module):
 
 
 class Join(nn.Module):
-	"""Join multiple features and return a :class:`list` tensors."""
+	"""Join multiple features and return a :obj:`list` tensors."""
 	
 	def forward(self, input: Sequence[torch.Tensor]) -> list[torch.Tensor]:
 		x = input
@@ -239,7 +239,7 @@ class PatchMerging(nn.Module):
 	
 	Args:
 		dim: Number of input channels.
-		norm: Normalization layer. Default: :class:`nn.LayerNorm`.
+		norm: Normalization layer. Default: :obj:`nn.LayerNorm`.
 	"""
 	
 	def __init__(
@@ -267,10 +267,10 @@ class PatchMerging(nn.Module):
 		"""Forward pass.
 		
 		Args:
-			input: An input of shape :math:`[B, C, H, W]`.
+			input: An input of shape `[B, C, H, W]`.
 			
 		Returns:
-			Tensor with a layout of :math:`[N, H / 2, W / 2, 2 * C]`.
+			Tensor with a layout of `[N, H / 2, W / 2, 2 * C]`.
 		"""
 		x = input
 		x = self._patch_merging_pad(x)
@@ -284,7 +284,7 @@ class PatchMergingV2(nn.Module):
 	
 	Args:
 		dim: Number of input channels.
-		norm: Normalization layer. Default: :class:`nn.LayerNorm`.
+		norm: Normalization layer. Default: :obj:`nn.LayerNorm`.
 	"""
 	
 	def __init__(
@@ -312,10 +312,10 @@ class PatchMergingV2(nn.Module):
 		"""Forward pass.
 		
 		Args:
-			input: An input of shape :math:`[B, C, H, W]`.
+			input: An input of shape `[B, C, H, W]`.
 			
 		Returns:
-			Tensor with a layout of :math:`[N, H / 2, W / 2, 2 * C]`.
+			Tensor with a layout of `[N, H / 2, W / 2, 2 * C]`.
 		"""
 		x = input
 		x = self._patch_merging_pad(x)

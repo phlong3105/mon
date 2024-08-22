@@ -23,24 +23,21 @@ console = core.console
 # region Model
 
 class ImageEnhancementModel(VisionModel, ABC):
-    """The base class for all image enhancement models.
-    
-    See Also: :class:`mon.vision.model.VisionModel`.
-    """
+    """The base class for all image enhancement models."""
     
     zoo_dir: core.Path = ZOO_DIR / "vision" / "enhance"
     
     # region Forward Pass
     
     def assert_datapoint(self, datapoint: dict) -> bool:
-        assert "image" in datapoint, "The key ``'image'`` must be defined in the :param:`datapoint`."
+        assert "image" in datapoint, "The key ``'image'`` must be defined in the `datapoint`."
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
-            assert "hq_image" in datapoint, "The key ``'hq_image'`` must be defined in the :param:`datapoint`."
+            assert "hq_image" in datapoint, "The key ``'hq_image'`` must be defined in the `datapoint`."
             
     def assert_outputs(self, outputs: dict) -> bool:
-        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the :param:`outputs`."
+        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the `outputs`."
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward

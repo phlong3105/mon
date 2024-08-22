@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements an XML file handler by extending the :mod:`xmltodict`
+"""XML File Handler.
+
+This module implements the XML file handler by extending the :obj:`xmltodict`
 module.
 """
 
@@ -22,11 +24,20 @@ from mon.globals import FILE_HANDLERS
 class XMLHandler(base.FileHandler):
     """XML file handler."""
     
-    def read_from_fileobj(self, path: pathlib.Path | str | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(
+        self,
+        path: pathlib.Path | str | TextIO,
+        **kwargs
+    ) -> Any:
         doc = parse(path.read())
         return doc
     
-    def write_to_fileobj(self, obj: Any, path: pathlib.Path | str | TextIO, **kwargs):
+    def write_to_fileobj(
+        self,
+        obj : Any,
+        path: pathlib.Path | str | TextIO,
+        **kwargs
+    ):
         assert isinstance(obj, dict)
         path = pathlib.Path(path)
         with open(path, "w") as f:

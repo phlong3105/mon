@@ -5,7 +5,7 @@
 The layers are split into two categories: base (atomic layers) and custom
 (layers that are specially designed for a model).
 
-In this package, we keep the same naming convention as in :mod:`torch.nn.modules`
+In this package, we keep the same naming convention as in :obj:`torch.nn.modules`
 for consistency.
 """
 

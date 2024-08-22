@@ -22,10 +22,7 @@ console = core.console
 # region Model
 
 class LowLightImageEnhancementModel(base.ImageEnhancementModel, ABC):
-    """The base class for all low light image enhancement models.
-    
-    See Also: :class:`base.ImageEnhancementModel`.
-    """
+    """The base class for all low light image enhancement models."""
     
     tasks  : list[Task] = [Task.LLIE]
     zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "llie"

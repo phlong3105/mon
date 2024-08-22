@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements YAML file handler by extending the :mod:`yaml` module.
+"""YAML File Handler.
+
+This module implements the YAML file handler by extending the :obj:`yaml` module.
 """
 
 from __future__ import annotations
@@ -22,11 +24,20 @@ from mon.globals import FILE_HANDLERS
 class YAMLHandler(base.FileHandler):
     """YAML file handler."""
     
-    def read_from_fileobj(self, path: pathlib.Path | str | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(
+        self,
+        path: pathlib.Path | str | TextIO,
+        **kwargs
+    ) -> Any:
         kwargs.setdefault("Loader", FullLoader)
         return load(stream=path, **kwargs)
     
-    def write_to_fileobj(self, obj: Any, path: pathlib.Path | str | TextIO, **kwargs):
+    def write_to_fileobj(
+        self,
+        obj : Any,
+        path: pathlib.Path | str | TextIO,
+        **kwargs
+    ):
         path = pathlib.Path(path)
         kwargs.setdefault("Dumper", Dumper)
         dump(data=obj, stream=path, **kwargs)

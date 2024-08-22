@@ -28,7 +28,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     """The base class for all datamodules.
     
     Attributes:
-        dataset_kwargs: A :class:`dict` containing datasets' default arguments.
+        dataset_kwargs: A :obj:`dict` containing datasets' default arguments.
             Example usage: train = Dataset(split='train', **self.dataset_kwargs)
         
     Args:
@@ -37,11 +37,10 @@ class DataModule(lightning.LightningDataModule, ABC):
         shuffle: If ``True``, reshuffle the datapoints at the beginning of every
             epoch. Default: ``True``.
         collate_fn: The function used to fused datapoint together when using
-            :param:`batch_size` > 1.
+            :obj:`batch_size` > 1.
         verbose: Verbosity. Default: ``True``.
     
     
-    See Also: :class:`lightning.LightningDataModule`.
     """
     
     tasks: list[Task] = []
@@ -95,15 +94,15 @@ class DataModule(lightning.LightningDataModule, ABC):
     @property
     def num_workers(self) -> int:
         """The number of workers used in the data loading pipeline.
-        Set to: 4 * the number of :attr:`devices` to avoid a bottleneck.
+        Set to: 4 * the number of :obj:`devices` to avoid a bottleneck.
         """
         return 4 * len(self.devices)
         # return 4  # os.cpu_count()
     
     @property
     def train_dataloader(self) -> data.DataLoader | None:
-        """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`train` exists. Otherwise, returns ``None``.
+        """Returns a :obj:`torch.utils.data.DataLoader` object if
+        :obj:`train` exists. Otherwise, returns ``None``.
         """
         if self.train:
             self.classlabels = self.classlabels or getattr(self.train, "classlabels", None)
@@ -122,8 +121,8 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     @property
     def val_dataloader(self) -> data.DataLoader | None:
-        """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`val` exists. Otherwise, returns ``None``.
+        """Returns a :obj:`torch.utils.data.DataLoader` object if
+        :obj:`val` exists. Otherwise, returns ``None``.
         """
         if self.val:
             self.classlabels = self.classlabels or getattr(self.val, "classlabels", None)
@@ -142,8 +141,8 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     @property
     def test_dataloader(self) -> data.DataLoader | None:
-        """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`test` exists. Otherwise, returns ``None``.
+        """Returns a :obj:`torch.utils.data.DataLoader` object if
+        :obj:`test` exists. Otherwise, returns ``None``.
         """
         if self.test:
             self.classlabels = self.classlabels or getattr(self.test, "classlabels", None)
@@ -162,8 +161,8 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     @property
     def predict_dataloader(self):
-        """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`predict` exists. Otherwise, returns ``None``.
+        """Returns a :obj:`torch.utils.data.DataLoader` object if
+        :obj:`predict` exists. Otherwise, returns ``None``.
         """
         if self.predict:
             return data.DataLoader(
@@ -204,13 +203,13 @@ class DataModule(lightning.LightningDataModule, ABC):
             - Build classlabels vocabulary.
             - Prepare train/val/test/predict splits.
             - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
+            - Define :obj:`collate_fn` for your custom dataset.
 
         Args:
             stage: The running stage. One of:
-                - ``'train'``  : prepares :attr:`train` and :attr:`val`.
-                - ``'test'``   : prepares :attr:`test`.
-                - ``'predict'``: prepares :attr:`predict`.
+                - ``'train'``  : prepares :obj:`train` and :obj:`val`.
+                - ``'test'``   : prepares :obj:`test`.
+                - ``'predict'``: prepares :obj:`predict`.
                 - ``None``     : prepares all.
                 - Default: ``None``.
         """

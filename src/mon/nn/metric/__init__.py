@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """This package implements evaluation metrics by extending the
-:mod:`torchmetrics` package.
+:obj:`torchmetrics` package.
 """
 
 from __future__ import annotations

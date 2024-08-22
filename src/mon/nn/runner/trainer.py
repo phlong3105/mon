@@ -22,13 +22,12 @@ console = core.console
 # region Trainer
 
 class Trainer(lightning.Trainer):
-    """The trainer class extends the :class:`lightning.Trainer` with several
+    """The trainer class extends the :obj:`lightning.Trainer` with several
     methods and properties.
     
     Args:
         log_image_every_n_epochs: Log debugging images every n epochs.
         
-    See Also: :class:`lightning.Trainer`.
     """
     
     def __init__(

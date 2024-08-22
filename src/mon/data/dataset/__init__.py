@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""":mod:`mon.data.dataset` package implements datasets and dataloaders."""
+""":obj:`mon.data.dataset` package implements datasets and dataloaders."""
 
 from __future__ import annotations
 

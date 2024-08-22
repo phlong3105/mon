@@ -31,10 +31,10 @@ def adjust_gamma(image: torch.Tensor, gamma: float = 1.0, gain: float = 1.0) -> 
         I_{\text{out}} = 255 \times \text{gain} \times \left(\frac{I_{\text{in}}}{255}\right)^{\gamma}
     
     Args:
-        image: An image in :math:`[B, C, H, W]` format.
-        gamma: Non-negative real number, same as :math:`\gamma` in the equation.
-            :param:`gamma` larger than ``1`` makes the shadows darker, while
-            :param:`gamma` smaller than ``1`` makes dark regions lighter.
+        image: An image in `[B, C, H, W]` format.
+        gamma: Non-negative real number, same as `\gamma` in the equation.
+            :obj:`gamma` larger than ``1`` makes the shadows darker, while
+            :obj:`gamma` smaller than ``1`` makes dark regions lighter.
         gain: The constant multiplier.
         
     Returns:
@@ -48,15 +48,15 @@ def adjust_gamma(image: np.ndarray, gamma: float = 1.0, gain: float = 1.0) -> np
     """Adjust gamma value in the image. Also known as Power Law Transform.
     
     First, our image pixel intensities must be scaled from the range
-    :math:`[0, 255]` to :math:`[0, 1.0]`. From there, we obtain our output gamma
+    ``[0, 255]`` to `[0, 1.0]`. From there, we obtain our output gamma
     corrected image by applying the following equation:
     .. math::
         O = I ^ {(1 / G)}
     Where I is our input image and G is our gamma value. The output image ``O``
-    is then scaled back to the range :math:`[0, 255]`.
+    is then scaled back to the range ``[0, 255]``.
     
     Args:
-        image: An image in :math:`[H, W, C]` format.
+        image: An image in `[H, W, C]` format.
         gamma: A gamma correction value
             - < 1 will make the image darker.
             - > 1 will make the image lighter.

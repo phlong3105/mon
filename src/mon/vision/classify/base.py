@@ -23,7 +23,6 @@ console = core.console
 class ImageClassificationModel(VisionModel, ABC):
     """The base class for all image classification models.
     
-    See Also: :class:`mon.vision.model.Model`.
     """
     
     tasks  : list[Task] = [Task.CLASSIFY]
@@ -32,14 +31,14 @@ class ImageClassificationModel(VisionModel, ABC):
     # region Forward Pass
     
     def assert_datapoint(self, datapoint: dict) -> bool:
-        assert "image" in datapoint, "The key ``'image'`` must be defined in the :param:`datapoint`."
+        assert "image" in datapoint, "The key ``'image'`` must be defined in the `datapoint`."
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
-            assert "class_id" in datapoint, "The key ``'class_id'`` must be defined in the :param:`datapoint`."
+            assert "class_id" in datapoint, "The key ``'class_id'`` must be defined in the `datapoint`."
             
     def assert_outputs(self, outputs: dict) -> bool:
-        assert "logits" in outputs, "The key ``'logits'`` must be defined in the :param:`outputs`."
+        assert "logits" in outputs, "The key ``'logits'`` must be defined in the `outputs`."
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward

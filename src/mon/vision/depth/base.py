@@ -21,10 +21,7 @@ console = core.console
 # region Model
 
 class DepthEstimationModel(VisionModel, ABC):
-    """The base class for all depth estimation models.
-    
-    See Also: :class:`mon.vision.model.VisionModel`.
-    """
+    """The base class for all depth estimation models."""
     
     tasks  : list[Task] = [Task.DEPTH]
     zoo_dir: core.Path  = ZOO_DIR / "vision" / "depth"
@@ -32,14 +29,14 @@ class DepthEstimationModel(VisionModel, ABC):
     # region Forward Pass
     
     def assert_datapoint(self, datapoint: dict) -> bool:
-        assert "image" in datapoint, "The key ``'image'`` must be defined in the :param:`datapoint`."
+        assert "image" in datapoint, "The key ``'image'`` must be defined in the `datapoint`."
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
-            assert "depth" in datapoint, "The key ``'depth'`` must be defined in the :param:`datapoint`."
+            assert "depth" in datapoint, "The key ``'depth'`` must be defined in the `datapoint`."
             
     def assert_outputs(self, outputs: dict) -> bool:
-        assert "depth" in outputs, "The key ``'depth'`` must be defined in the :param:`outputs`."
+        assert "depth" in outputs, "The key ``'depth'`` must be defined in the `outputs`."
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward

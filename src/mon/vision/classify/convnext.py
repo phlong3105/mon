@@ -104,7 +104,6 @@ class CNBlockConfig:
 class ConvNeXt(base.ImageClassificationModel, ABC):
     """ConNeXt.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "convnext"
@@ -131,9 +130,9 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         )
         
         if not block_setting:
-            raise ValueError("The :param:`block_setting` should not be empty.")
+            raise ValueError("The `block_setting` should not be empty.")
         elif not (isinstance(block_setting, Sequence) and all([isinstance(s, CNBlockConfig) for s in block_setting])):
-            raise TypeError("The :param:`block_setting` should be :class:`list[CNBlockConfig]`.")
+            raise TypeError("The `block_setting` should be `list[CNBlockConfig]`.")
         if block is None:
             block = CNBlock
         if norm_layer is None:
@@ -216,7 +215,6 @@ class ConvNeXtBase(ConvNeXt):
     """ConvNeXt Base model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
-    See Also: :class:`ConvNeXt`
     """
     
     zoo: dict = {
@@ -249,7 +247,6 @@ class ConvNeXtTiny(ConvNeXt):
     """ConvNeXt Tiny model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
-    See Also: :class:`ConvNeXt`
     """
     
     zoo: dict = {
@@ -282,7 +279,6 @@ class ConvNeXtSmall(ConvNeXt):
     """ConvNeXt Small model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
-    See Also: :class:`ConvNeXt`
     """
     
     zoo: dict = {
@@ -314,7 +310,6 @@ class ConvNeXtSmall(ConvNeXt):
 class ConvNeXtLarge(ConvNeXt):
     """ConNeXt-Large.
     
-    See Also: :class:`ConvNeXt`
     """
     
     zoo: dict = {

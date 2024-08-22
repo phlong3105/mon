@@ -207,8 +207,6 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
     
     References:
         `<https://github.com/VinAIResearch/PSENet-Image-Enhancement>`__
-     
-    See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     arch   : str  = "psenet"
@@ -324,14 +322,14 @@ class PSENet_RE(base.LowLightImageEnhancementModel):
         metrics for e.g., the progress bar or logger.
 
         Args:
-            batch: The output of :class:`~torch.utils.data.DataLoader`. It can
-                be a :class:`torch.Tensor`, :class:`tuple` or :class:`list`.
+            batch: The output of :obj:`~torch.utils.data.DataLoader`. It can
+                be a :obj:`torch.Tensor`, :obj:`tuple` or :obj:`list`.
             batch_idx: An integer displaying index of this batch.
             
         Return:
             Any of:
                 - The loss tensor.
-                - A :class:`dict`. Can include any keys, but must include the
+                - A :obj:`dict`. Can include any keys, but must include the
                   key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """

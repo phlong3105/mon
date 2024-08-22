@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """This module implements data augmentation functions by extending
-:mod:`torchvision.transforms` package. These functions are mainly applied to
-:class:`torch.Tensor` images.
+:obj:`torchvision.transforms` package. These functions are mainly applied to
+:obj:`torch.Tensor` images.
 """
 
 from __future__ import annotations

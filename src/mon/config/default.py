@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements some default configurations."""
+"""Default Configurations.
+
+This module lists default configurations values for several components of the
+training and inference pipeline.
+"""
 
 from __future__ import annotations
 
@@ -211,11 +215,11 @@ tuner = {
     "resume"               : False,  # True, False, "LOCAL", "REMOTE", "PROMPT", "AUTO"
     "reuse_actors"         : None,   # Whether to reuse actors between different trials when possible.
     "run_or_experiment"    : None,
-    "scheduler"            : None,   # Scheduler for executing the experiment. Refer to :mod:`ray.tune.schedulers` for more options.
+    "scheduler"            : None,   # Scheduler for executing the experiment. Refer to :obj:`ray.tune.schedulers` for more options.
     "search_alg"           : None,   # Search algorithm for optimization.
     "server_port"          : None,   # Port number for launching TuneServer.
     "stop"                 : None,   # Stopping criteria.
-    "sync_config"          : None,   # Configuration object for syncing. See :class:`tune.SyncConfig`.
+    "sync_config"          : None,   # Configuration object for syncing. See :obj:`tune.SyncConfig`.
     "time_budget_s"        : None,   # Global time budget in seconds after which all trials are stopped.
     "trial_dirname_creator": None,
     "trial_executor"       : None,   # Manage the execution of trials.

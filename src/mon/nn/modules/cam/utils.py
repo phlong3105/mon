@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module provides utility functions for working with :mod:`mon.nn.modules.cam`
+"""This module provides utility functions for working with :obj:`mon.nn.modules.cam`
 module.
 """
 
@@ -104,9 +104,9 @@ def show_cam_on_image(
 		image: The base image in RGB or BGR format.
 		mask: The cam mask.
 		use_rgb: Whether to use an RGB or BGR heatmap, this should be set to
-			``True`` if :param:`image` is in RGB format.
+			``True`` if :obj:`image` is in RGB format.
 		colormap: The OpenCV colormap to be used.
-		image_weight: The final result is: :math:`image_weight * img + (1-image_weight) * mask`.
+		image_weight: The final result is: `image_weight * img + (1-image_weight) * mask`.
 	
 	Returns:
 		The default image with the cam overlay.
@@ -117,10 +117,10 @@ def show_cam_on_image(
 	heatmap = np.float32(heatmap) / 255
 	
 	if np.max(image) > 1:
-		raise Exception("The input image should :class:`np.float32` in the range :math:`[0, 1]`")
+		raise Exception("The input image should `np.float32` in the range ``[0.0, 1.0]``")
 	
 	if image_weight < 0 or image_weight > 1:
-		raise Exception(f":param:`image_weight` should be in the range :math:`[0, 1]`, but got: {image_weight}")
+		raise Exception(f"`image_weight` should be in the range ``[0.0, 1.0]``, but got: {image_weight}")
 	
 	cam = (1 - image_weight) * heatmap + image_weight * image
 	cam = cam / np.max(cam)
@@ -163,11 +163,11 @@ def show_factorization_on_image(
 	
 	Args:
 		image: The base image RGB format.
-		explanations: A tensor of shape :math:`[num_componetns, height, width]`,
+		explanations: A tensor of shape `[num_componetns, height, width]`,
 			with the component visualizations.
 		colors: List of R, G, B colors to be used for the components. If ``None``,
 			will use the ``gist_rainbow`` cmap as a default.
-		image_weight: The final result is :math:`image_weight * img + (1-image_weight) * visualization`.
+		image_weight: The final result is `image_weight * img + (1-image_weight) * visualization`.
 		concept_labels: A list of strings for every component. If this is passed,
 			a legend that shows the labels and their colors will be added to the
 			image.

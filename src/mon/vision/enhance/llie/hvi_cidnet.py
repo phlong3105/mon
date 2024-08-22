@@ -25,7 +25,6 @@ from torchvision.models import vgg as vgg, VGG19_Weights
 from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
-from mon.vision import color
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -91,9 +90,9 @@ class VGGFeatureExtractor(nn.Module):
             Example: {'relu1_1', 'relu2_1', 'relu3_1'}.
         vgg_type: Set the type of vgg network. Default: ``'vgg19'``.
         use_input_norm: If ``True``, normalize the input image. Importantly,
-            the input feature must in the range :math:`[0, 1]`. Default: ``True``.
-        range_norm: If ``True``, norm images with range :math:`[-1, 1]` to
-            :math:`[0, 1]`. Default: ``False``.
+            the input feature must in the range ``[0.0, 1.0]``. Default: ``True``.
+        range_norm: If ``True``, norm images with range `[-1, 1]` to
+            ``[0.0, 1.0]``. Default: ``False``.
         requires_grad: If ``true``, the parameters of VGG network will be
             optimized. Default: ``False``.
         remove_pooling: If ``true``, the max pooling operations in VGG net will
@@ -476,8 +475,6 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
         
     References:
         `<https://github.com/Fediory/HVI-CIDNet>`__
-        
-    See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     arch   : str  = "hvi_cidnet"
@@ -569,7 +566,7 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
         self.i_lca5  = I_LCA(ch3, head3)
         self.i_lca6  = I_LCA(ch2, head2)
         
-        self.trans   = color.RGBToHVI()
+        self.trans   = core.RGBToHVI()
         
         # Loss
         self._loss = Loss(*self.loss_weights, reduction="mean")

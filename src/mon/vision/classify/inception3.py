@@ -267,10 +267,9 @@ class Inception3(base.ImageClassificationModel):
 
     Notes:
         **Important**: In contrast to the other models, the ``inception_v3``
-        expects tensors with a size of :math:`N x 3 x 299 x 299`, so ensure
+        expects tensors with a size of `N x 3 x 299 x 299`, so ensure
         your images are sized accordingly.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "inception"
@@ -315,7 +314,7 @@ class Inception3(base.ImageClassificationModel):
             init_weights = True
         if len(inception_blocks) != 7:
             raise ValueError(
-                f":param:`inception_blocks`'s length of should be ``7`` "
+                f"`inception_blocks`'s length of should be ``7`` "
                 f"instead of {len(inception_blocks)}"
             )
         conv_block    = inception_blocks[0]
@@ -417,7 +416,7 @@ class Inception3(base.ImageClassificationModel):
         aux_defined = self.training and self.aux_logits
         if torch.jit.is_scripting():
             if not aux_defined:
-                console.warn(f"Scripted Inception3 always returns ``Inception3`` :class:`tuple`")
+                console.warn(f"Scripted Inception3 always returns ``Inception3`` `tuple`")
             y = InceptionOutputs(x, aux)
         else:
             y = self.eager_outputs(x, aux)

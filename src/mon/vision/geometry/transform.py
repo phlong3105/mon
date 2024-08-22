@@ -78,7 +78,7 @@ console = core.console
 # region Crop
 
 def crop_divisible(image: PIL.Image, divisor: int = 32):
-    """Make dimensions divisible by :param:`divisor`."""
+    """Make dimensions divisible by :obj:`divisor`."""
     new_size = (image.size[0] - image.size[0] % divisor, image.size[1] - image.size[1] % divisor)
     box      = [
         int((image.size[0] - new_size[0]) / 2),
@@ -94,7 +94,7 @@ def crop_divisible(image: PIL.Image, divisor: int = 32):
 
 # region Downsample
 
-def pair_downsample(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """The image pair downsampler, which outputs two downsampled images of half
     the spatial resolution by averaging diagonal pixels in non-overlapping
     patches, as shown in the below figure:
@@ -112,13 +112,13 @@ def pair_downsample(input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     References:
         `<https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing>`__
     """
-    c       = input.shape[1]
-    filter1 = torch.Tensor([[[[0, 0.5], [0.5, 0]]]]).to(input.dtype).to(input.device)
+    c       = image.shape[1]
+    filter1 = torch.Tensor([[[[0, 0.5], [0.5, 0]]]]).to(image.dtype).to(image.device)
     filter1 = filter1.repeat(c, 1, 1, 1)
-    filter2 = torch.Tensor([[[[0.5, 0], [0, 0.5]]]]).to(input.dtype).to(input.device)
+    filter2 = torch.Tensor([[[[0.5, 0], [0, 0.5]]]]).to(image.dtype).to(image.device)
     filter2 = filter2.repeat(c, 1, 1, 1)
-    output1 = F.conv2d(input, filter1, stride=2, groups=c)
-    output2 = F.conv2d(input, filter2, stride=2, groups=c)
+    output1 = F.conv2d(image, filter1, stride=2, groups=c)
+    output2 = F.conv2d(image, filter2, stride=2, groups=c)
     return output1, output2
 
 # endregion
@@ -133,7 +133,7 @@ def resize(
     interpolation: str = "bilinear",
     **kwargs,
 ) -> torch.Tensor:
-    """Resize an image using :mod:`kornia`.
+    """Resize an image using :obj:`kornia`.
     
     Args:
         image: An image tensor.
@@ -174,7 +174,7 @@ def resize(
     interpolation: int = cv2.INTER_LINEAR,
     **kwargs,
 ) -> np.ndarray:
-    """Resize an image using :mod:`kornia`.
+    """Resize an image using :obj:`kornia`.
     
     Args:
         image: An image tensor.
@@ -206,7 +206,7 @@ def resize(
 
 @dispatch
 def resize_divisible(image: torch.Tensor, divisor: int = 32) -> torch.Tensor:
-    """Resize an image to a size that is divisible by :param:`divisor`."""
+    """Resize an image to a size that is divisible by :obj:`divisor`."""
     h, w  = core.get_image_size(image)
     h, w  = core.make_imgsz_divisible((h, w), divisor)
     image = resize(image, (h, w))
@@ -215,7 +215,7 @@ def resize_divisible(image: torch.Tensor, divisor: int = 32) -> torch.Tensor:
 
 @dispatch
 def resize_divisible(image: np.ndarray, divisor: int = 32) -> np.ndarray:
-    """Resize an image to a size that is divisible by :param:`divisor`."""
+    """Resize an image to a size that is divisible by :obj:`divisor`."""
     h, w  = core.get_image_size(image)
     h, w  = core.make_imgsz_divisible((h, w), divisor)
     image = resize(image, (w, h))

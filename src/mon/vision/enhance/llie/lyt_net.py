@@ -193,8 +193,6 @@ class LYTNet(base.LowLightImageEnhancementModel):
     
     References:
         `<https://github.com/albrateanu/LYT-Net>`__
-
-    See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     arch   : str  = "lyt_net"

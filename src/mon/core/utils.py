@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various useful utilities functions and data structures.
+"""Core Utilities Package.
+
+This module implements various useful utilities functions and data structures.
 """
 
 from __future__ import annotations
@@ -39,7 +41,6 @@ __all__ = [
     "pynvml_available",
     "set_device",
     "set_random_seed",
-    "upcast",
 ]
 
 import importlib
@@ -73,19 +74,25 @@ def get_project_default_config(project_root: str | pathlib.Path) -> dict:
     
     config_file = pathlib.Path(project_root) / "config" / "default.py"
     if config_file.exists():
-        spec   = importlib.util.spec_from_file_location("default", str(config_file))
+        spec   = importlib.util.spec_from_file_location(
+            "default", str(config_file)
+        )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        return {key: value for key, value in module.__dict__.items() if not key.startswith('__')}
+        return {
+            key: value
+            for key, value in module.__dict__.items()
+            if not key.startswith('__')
+        }
     return {}
 
 
 def list_config_files(
     project_root: str | pathlib.Path,
-    model_root  : str | pathlib.Path | None = None,
-    model       : str | None                = None
+    model_root  : str | pathlib.Path = None,
+    model       : str                = None
 ) -> list[pathlib.Path]:
-    """List configuration files in the given :param:`project`."""
+    """List configuration files in the given :obj:`project`."""
     config_files = []
     if project_root not in [None, "None", ""]:
         project_root        = pathlib.Path(project_root)
@@ -113,13 +120,15 @@ def list_config_files(
 
 def list_configs(
     project_root: str | pathlib.Path,
-    model_root  : str | pathlib.Path | None = None,
-    model       : str | None                = None
+    model_root  : str | pathlib.Path = None,
+    model       : str                = None
 ) -> list[str]:
-    config_files = list_config_files(project_root=project_root, model_root=model_root, model=model)
+    config_files = list_config_files(
+        project_root = project_root,
+        model_root   = model_root,
+        model        = model
+    )
     config_files = [str(f.name) for f in config_files]
-    # if is_extra_model(model):
-    #     config_files = [EXTRA_MODEL_STR in f for f in config_files]
     config_files = dtype.unique(config_files)
     config_files = sorted(config_files, key=lambda x: (os.path.splitext(x)[1], x))
     return config_files
@@ -128,8 +137,8 @@ def list_configs(
 def parse_config_file(
     config      : str | pathlib.Path,
     project_root: str | pathlib.Path,
-    model_root  : str | pathlib.Path | None = None,
-    weights_path: str | pathlib.Path | None = None,
+    model_root  : str | pathlib.Path = None,
+    weights_path: str | pathlib.Path = None,
 ) -> pathlib.Path | None:
     # assert config not in [None, "None", ""]
     if config not in [None, "None", ""]:
@@ -182,7 +191,11 @@ def load_config(config: Any) -> dict:
             spec   = importlib.util.spec_from_file_location(str(config.stem), str(config))
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            data  = {key: value for key, value in module.__dict__.items() if not key.startswith("__")}
+            data  = {
+                key: value
+                for key, value in module.__dict__.items()
+                if not key.startswith("__")
+            }
         else:
             data = file.read_from_file(path=config)
     else:
@@ -190,7 +203,9 @@ def load_config(config: Any) -> dict:
     
     if data is None:
         from mon.core.rich import error_console
-        error_console.log(f"No configuration is found at {config}. Setting an empty dictionary.")
+        error_console.log(
+            f"No configuration is found at {config}. Setting an empty dictionary."
+        )
         data = {}
     return data
 
@@ -230,11 +245,17 @@ def list_extra_datasets(task: str, mode: str) -> list[str]:
 def list_datasets(
     task        : str,
     mode        : str,
-    project_root: str | pathlib.Path | None = None
+    project_root: str | pathlib.Path = None
 ) -> list[str]:
-    datasets        = sorted(list_mon_datasets(task, mode) + list_extra_datasets(task, mode))
+    datasets = sorted(
+          list_mon_datasets(task, mode)
+        + list_extra_datasets(task, mode)
+    )
     default_configs = get_project_default_config(project_root=project_root)
-    if default_configs.get("DATASETS", False) and len(default_configs["DATASETS"]) > 0:
+    if (
+        default_configs.get("DATASETS", False)
+        and len(default_configs["DATASETS"]) > 0
+    ):
         datasets = [d for d in datasets if d in default_configs["DATASETS"]]
     return datasets
 
@@ -317,7 +338,7 @@ def set_device(device: Any, use_single_device: bool = True) -> torch.device:
 
 
 def get_machine_memory(unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
-    """Return the RAM status as a :class:`list` of :math:`[total, used, free]`.
+    """Return the RAM status as a :obj:`list` of `[total, used, free]`.
     
     Args:
         unit: The memory unit. Default: ``'GB'``.
@@ -332,7 +353,7 @@ def get_machine_memory(unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
 
 
 def get_gpu_device_memory(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
-    """Return the GPU memory status as a :class:`list` of :math:`[total, used, free]`.
+    """Return the GPU memory status as a :obj:`list` of `[total, used, free]`.
     
     Args:
         device: The index of the GPU device. Default: ``0``.
@@ -418,9 +439,9 @@ def is_extra_model(model: str) -> bool:
 
 
 def list_mon_models(
-    task: str | None = None,
-    mode: str | None = None,
-    arch: str | None = None,
+    task: str = None,
+    mode: str = None,
+    arch: str = None,
 ) -> list[str]:
     from mon.globals import Task, MODELS, Scheme
     flatten_models = dtype.flatten_models_dict(MODELS)
@@ -438,9 +459,9 @@ def list_mon_models(
 
 
 def list_extra_models(
-    task: str | None = None,
-    mode: str | None = None,
-    arch: str | None = None,
+    task: str = None,
+    mode: str = None,
+    arch: str = None,
 ) -> list[str]:
     from mon.globals import Task, EXTRA_MODELS, Scheme
     flatten_models = dtype.flatten_models_dict(EXTRA_MODELS)
@@ -458,20 +479,29 @@ def list_extra_models(
 
 
 def list_models(
-    task        : str | None = None,
-    mode        : str | None = None,
-    arch        : str | None = None,
-    project_root: str | pathlib.Path | None = None
+    task        : str = None,
+    mode        : str = None,
+    arch        : str = None,
+    project_root: str | pathlib.Path = None
 ) -> list[str]:
     from mon.globals import EXTRA_MODEL_STR
     models          = list_mon_models(task, mode, arch)
     extra_models    = list_extra_models(task, mode, arch)
     default_configs = get_project_default_config(project_root=project_root)
-    if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
+    if (
+        default_configs.get("MODELS", False)
+        and len(default_configs["MODELS"]) > 0
+    ):
         project_models = [humps.snakecase(m) for m in default_configs["MODELS"]]
         if len(project_models) > 0:
-            models       = [m for m in models       if humps.snakecase(m) in project_models]
-            extra_models = [m for m in extra_models if humps.snakecase(m) in project_models]
+            models = [
+                m for m in models
+                if humps.snakecase(m) in project_models
+            ]
+            extra_models = [
+                m for m in extra_models
+                if humps.snakecase(m) in project_models
+            ]
     # Rename extra models for clarity
     for i, m in enumerate(extra_models):
         if m in models:
@@ -480,10 +510,7 @@ def list_models(
     return sorted(models)
 
 
-def list_mon_archs(
-    task: str | None = None,
-    mode: str | None = None,
-) -> list[str]:
+def list_mon_archs(task: str = None, mode: str = None) -> list[str]:
     from mon.globals import Task, MODELS, Scheme
     flatten_models = dtype.flatten_models_dict(MODELS)
     task   = Task(task)   if task not in [None, "None", ""] else None
@@ -493,16 +520,13 @@ def list_mon_archs(
         models = [m for m in models if task in flatten_models[m].tasks]
     if mode:
         models = [m for m in models if mode in flatten_models[m]._schemes]
-    archs  = [flatten_models[m].arch for m in models]
-    archs  = [a.strip() for a in archs]
-    archs  = [a for a in archs if a not in [None, "None", ""]]
+    archs = [flatten_models[m].arch for m in models]
+    archs = [a.strip() for a in archs]
+    archs = [a for a in archs if a not in [None, "None", ""]]
     return sorted(dtype.unique(archs))
 
 
-def list_extra_archs(
-    task: str | None = None,
-    mode: str | None = None,
-) -> list[str]:
+def list_extra_archs(task: str = None, mode: str = None) -> list[str]:
     from mon.globals import Task, EXTRA_MODELS, Scheme
     flatten_models = dtype.flatten_models_dict(EXTRA_MODELS)
     task   = Task(task)   if task not in [None, "None", ""] else None
@@ -512,16 +536,16 @@ def list_extra_archs(
         models = [m for m in models if task in flatten_models[m]["tasks"]]
     if mode:
         models = [m for m in models if mode in flatten_models[m]["schemes"]]
-    archs  = [flatten_models[m]["arch"] for m in models]
-    archs  = [a.strip() for a in archs]
-    archs  = [a for a in archs if a not in [None, "None", ""]]
+    archs = [flatten_models[m]["arch"] for m in models]
+    archs = [a.strip() for a in archs]
+    archs = [a for a in archs if a not in [None, "None", ""]]
     return sorted(dtype.unique(archs))
 
 
 def list_archs(
-    task        : str | None = None,
-    mode        : str | None = None,
-    project_root: str | pathlib.Path | None = None
+    task        : str = None,
+    mode        : str = None,
+    project_root: str | pathlib.Path = None
 ) -> list[str]:
     from mon.globals import MODELS, EXTRA_MODELS
     models          = list_mon_models(task, mode)
@@ -530,8 +554,14 @@ def list_archs(
     if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
         project_models = [humps.snakecase(m) for m in default_configs["MODELS"]]
         if len(project_models) > 0:
-            models       = [m for m in models       if humps.snakecase(m) in project_models]
-            extra_models = [m for m in extra_models if humps.snakecase(m) in project_models]
+            models       = [
+                m for m in models
+                if humps.snakecase(m) in project_models
+            ]
+            extra_models = [
+                m for m in extra_models
+                if humps.snakecase(m) in project_models
+            ]
     #
     flatten_mon_models   = dtype.flatten_models_dict(MODELS)
     flatten_extra_models = dtype.flatten_models_dict(EXTRA_MODELS)
@@ -566,43 +596,6 @@ def check_installed_package(package_name: str, verbose: bool = False) -> bool:
 # endregion
 
 
-# region Parsing
-
-def upcast(input: torch.Tensor | np.ndarray, keep_type: bool = False) -> torch.Tensor | np.ndarray:
-    """Protect from numerical overflows in multiplications by upcasting to the
-    equivalent higher type.
-    
-    Args:
-        input: An input of type :class:`numpy.ndarray` or :class:`torch.Tensor`.
-        keep_type: If True, keep the same type (int32  -> int64). Else upcast to
-            a higher type (int32 -> float32).
-            
-    Return:
-        An image of higher type.
-    """
-    if input.dtype is torch.float16:
-        return input.to(torch.float32)
-    elif input.dtype is torch.float32:
-        return input  # x.to(torch.float64)
-    elif input.dtype is torch.int8:
-        return input.to(torch.int16) if keep_type else input.to(torch.float16)
-    elif input.dtype is torch.int16:
-        return input.to(torch.int32) if keep_type else input.to(torch.float32)
-    elif input.dtype is torch.int32:
-        return input  # x.to(torch.int64) if keep_type else x.to(torch.float64)
-    elif type(input) is np.float16:
-        return input.astype(np.float32)
-    elif type(input) is np.float32:
-        return input  # x.astype(np.float64)
-    elif type(input) is np.int16:
-        return input.astype(np.int32) if keep_type else input.astype(np.float32)
-    elif type(input) is np.int32:
-        return input  # x.astype(np.int64) if keep_type else x.astype(np.int64)
-    return input
-
-# endregion
-
-
 # region Save Dir
 
 def list_train_save_dirs(root: str | pathlib.Path) -> list[pathlib.Path]:
@@ -614,11 +607,11 @@ def list_train_save_dirs(root: str | pathlib.Path) -> list[pathlib.Path]:
 
 def parse_save_dir(
     root   : str | pathlib.Path,
-    arch   : str | None = None,
-    model  : str | None = None,
-    data   : str | None = None,
-    project: str | None = None,
-    variant: str | None = None,
+    arch   : str = None,
+    model  : str = None,
+    data   : str = None,
+    project: str = None,
+    variant: str = None,
 ) -> str | pathlib.Path:
     """Parse save_dir in the following format:
     ```
@@ -680,7 +673,10 @@ def list_tasks(project_root: str | pathlib.Path) -> list[str]:
     from mon.globals import Task
     tasks           = Task.keys()
     default_configs = get_project_default_config(project_root=project_root)
-    if default_configs.get("TASKS", False) and len(default_configs["TASKS"]) > 0:
+    if (
+        default_configs.get("TASKS", False)
+        and len(default_configs["TASKS"]) > 0
+    ):
         tasks = [t for t in tasks if t in default_configs["TASKS"]]
     tasks = [t.value for t in tasks]
     return tasks
@@ -776,7 +772,7 @@ class Timer:
 
 def list_weights_files(
     model       : str,
-    project_root: str | pathlib.Path | None = None,
+    project_root: str | pathlib.Path = None,
 ) -> list[pathlib.Path]:
     from mon.globals import ZOO_DIR
     
@@ -789,7 +785,6 @@ def list_weights_files(
         weights_files = [f for f in weights_files if f.is_weights_file()]
     # Search for weights in ZOO_DIR
     zoo_dir = ZOO_DIR
-    # zoo_dir = ZOO_DIR / "mon_extra" if is_extra_model(model) else ZOO_DIR / "mon"
     for path in sorted(list(zoo_dir.rglob(f"*"))):
         if path.is_weights_file():
             weights_files.append(path)
@@ -821,8 +816,10 @@ def parse_weights_file(
                 weights[i] = ZOO_DIR.parent / w
             else:
                 weights[i] = ZOO_DIR / w
-    weights  = None       if isinstance(weights, list | tuple) and len(weights) == 0 else weights
-    weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
+    
+    if isinstance(weights, list | tuple):
+        weights = None       if len(weights) == 0 else weights
+        weights = weights[0] if len(weights) == 1 else weights
     return weights
 
 # endregion

@@ -99,7 +99,7 @@ class Loss(_Loss, ABC):
         super().__init__(reduction=reduction)
         if self.reduction not in self.reductions:
             raise ValueError(
-                f":param:`reduction` must be one of: {self.reductions}, "
+                f"`reduction` must be one of: {self.reductions}, "
                 f"but got {reduction}."
             )
         self.loss_weight = loss_weight

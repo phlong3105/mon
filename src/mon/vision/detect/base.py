@@ -60,7 +60,7 @@ class Detector(ABC):
         elif isinstance(config, core.Path | str):
             config = core.Path(config)
             if not config.is_yaml():
-                raise ValueError(f":param:`config` must be a valid path to a YAML file, but got {config}.")
+                raise ValueError(f"`config` must be a valid path to a YAML file, but got {config}.")
             self._config = core.read_from_file(config)
         else:
             self._config = {}
@@ -75,14 +75,14 @@ class Detector(ABC):
             weights = core.Path(weights)
             if not weights.is_torch_file():
                 raise ValueError(
-                    f":param:`weights` must be a valid path to a torch saved "
+                    f"`weights` must be a valid path to a torch saved "
                     f"file, but got {weights}."
                 )
         elif isinstance(weights, dict):
             weights = [core.Path(w) for w in weights]
             if not all(w.is_torch_file for w in weights):
                 raise ValueError(
-                    f":param:`weights` must be a valid path to a torch saved file, but "
+                    f"`weights` must be a valid path to a torch saved file, but "
                     f"got {weights}."
                 )
         else:
@@ -101,7 +101,7 @@ class Detector(ABC):
         """Detect objects in the images.
 
         Args:
-            indexes: Image indexes of shape :math:`[B]`.
+            indexes: Image indexes of shape `[B]`.
             images: The source of the image(s) to make predictions on. Accepts
                 various types including file paths, URLs, PIL images, numpy
                 arrays, and torch tensors.
@@ -109,11 +109,11 @@ class Detector(ABC):
                 process.
                 
         Returns:
-            A 2D :class:`numpy.ndarray` or :class:`torch.Tensor` of detections.
-            The most common format is :math:`[B, N, 6]` where :math:`B` is the
-            batch size, :math:`N` is the number of detections, and :math:`[6]`
-            usually contains :math:`[x1, y1, x2, y2, conf, class_id]`. Notice
-            that :math:`[x1, y1, x2, y2]` should be scaled back to the original
+            A 2D :obj:`numpy.ndarray` or :obj:`torch.Tensor` of detections.
+            The most common format is `[B, N, 6]` where `B` is the
+            batch size, `N` is the number of detections, and `[6]`
+            usually contains `[x1, y1, x2, y2, conf, class_id]`. Notice
+            that `[x1, y1, x2, y2]` should be scaled back to the original
             image size.
         """
         pass
@@ -126,17 +126,17 @@ class Detector1(ABC):
     Args:
         config: A detector model's config.
         weights: A path to a pretrained weights file.
-        classlabels: A :class:`list` of all the class-labels defined in a
+        classlabels: A :obj:`list` of all the class-labels defined in a
             dataset.
-        image_size: The desired model's input size in :math:`[H, W]` format.
+        image_size: The desired model's input size in `[H, W]` format.
             Default: ``640``.
         conf_threshold: An object confidence threshold. Default: ``0.5``.
         iou_threshold: An IOU threshold for NMS. Default: ``0.4``.
         max_detections: Maximum number of detections/image. Default: ``300``.
         device: Cuda device, i.e. ``'0'`` or ``'0,1,2,3'`` or ``'cpu'``.
             Default: ``'cpu'``.
-        to_instance: If ``True``, wrap the predictions to a :class:`list` of
-            :class:`supr.data.instance.Instance` object. Else, return raw
+        to_instance: If ``True``, wrap the predictions to a :obj:`list` of
+            :obj:`supr.data.instance.Instance` object. Else, return raw
             predictions. Default: ``True``.
     """
     
@@ -202,12 +202,12 @@ class Detector1(ABC):
         """Detect objects in the images.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, H, W, C]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, H, W, C]`.
 
         Returns:
-            A 2D :class:`list` of :class:`supr.data.Instance` objects. The
-            outer :class:`list` has ``B`` items.
+            A 2D :obj:`list` of :obj:`supr.data.Instance` objects. The
+            outer :obj:`list` has ``B`` items.
         """
         if self.model is None:
             raise ValueError(f"Model has not been defined yet!")
@@ -226,10 +226,10 @@ class Detector1(ABC):
         """Preprocessing step.
 
         Args:
-            images: Images of shape :math:`[B, H, W, C]`.
+            images: Images of shape `[B, H, W, C]`.
 
         Returns:
-            Input tensor of shape :math:`[B, C, H, W]`.
+            Input tensor of shape `[B, C, H, W]`.
         """
         pass
     
@@ -238,7 +238,7 @@ class Detector1(ABC):
         """Forward pass.
 
         Args:
-            input: Input tensor of shape :math:`[B, C, H, W]`.
+            input: Input tensor of shape `[B, C, H, W]`.
 
         Returns:
             Predictions.
@@ -257,14 +257,14 @@ class Detector1(ABC):
         """Postprocessing step.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, H, W, C]`.
-            input: Input tensor of shape :math:`[B, H, W, C]`.
-            pred: Prediction tensor of shape :math:`[B, H, W, C]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, H, W, C]`.
+            input: Input tensor of shape `[B, H, W, C]`.
+            pred: Prediction tensor of shape `[B, H, W, C]`.
 
         Returns:
-            A 2D :class:`list` of :class:`data.Instance` objects. The outer
-            :class:`list` has ``B`` items.
+            A 2D :obj:`list` of :obj:`data.Instance` objects. The outer
+            :obj:`list` has ``B`` items.
         """
         pass
     

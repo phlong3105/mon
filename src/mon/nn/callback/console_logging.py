@@ -46,7 +46,6 @@ class LogTrainingProgress(callbacks.Callback):
         log_on_train_epoch_end: Log on train epoch end.
         verbose: Verbosity. Default: ``True``.
         
-    See Also: :class:`lightning.pytorch.callbacks.model_checkpoint.ModelCheckpoint`.
     """
     
     def __init__(

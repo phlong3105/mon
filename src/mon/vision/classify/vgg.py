@@ -34,7 +34,6 @@ console = core.console
 class VGG(base.ImageClassificationModel, ABC):
     """VGG.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "vgg"
@@ -126,7 +125,6 @@ class VGG11(VGG):
     """VGG-11 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {
@@ -151,7 +149,6 @@ class VGG11_BN(VGG):
     """VGG-11-B from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {
@@ -176,7 +173,6 @@ class VGG13(VGG):
     """VGG-13 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {
@@ -201,7 +197,6 @@ class VGG13_BN(VGG):
     """VGG-13-BN from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {
@@ -226,7 +221,6 @@ class VGG16(VGG):
     """VGG-16 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {
@@ -251,7 +245,6 @@ class VGG16_BN(VGG):
     """VGG-16-BN from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {
@@ -276,7 +269,6 @@ class VGG19(VGG):
     """VGG-19 from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {
@@ -300,8 +292,6 @@ class VGG19(VGG):
 class VGG19_BN(VGG):
     """VGG-19-BN from `Very Deep Convolutional Networks for Large-Scale Image
     Recognition <https://arxiv.org/abs/1409.1556>`__.
-
-    See Also: :class:`VGG`
     """
     
     zoo: dict = {

@@ -35,12 +35,12 @@ def atmospheric_prior(input: np.ndarray, kernel_size: _size_2_t = 15, p: float =
     """Get the atmosphere light in the (RGB) image data.
 
     Args:
-        input: An RBG image in :math:`[H, W, C]` format.
+        input: An RBG image in `[H, W, C]` format.
         kernel_size: Window for the dark channel. Default: ``15``.
         p: Percentage of pixels for estimating the atmosphere light. Default: ``0.0001``.
 
     Returns:
-        A 3-element array containing atmosphere light :math:`([0, L-1])` for
+        A 3-element array containing atmosphere light `([0, L-1])` for
         each channel.
     """
     input      = input.transpose(1, 2, 0)
@@ -87,8 +87,8 @@ def bright_channel_prior(
     """Get the bright channel prior from an RGB image.
     
     Args:
-        input: A :class:`torch.Tensor` or :class:`numpy.ndarray`RGB image in
-            :math:`[N, C, H, W]` format.
+        input: A :obj:`torch.Tensor` or :obj:`numpy.ndarray`RGB image in
+            `[N, C, H, W]` format.
         kernel_size: Window size.
 
     Returns:
@@ -115,8 +115,8 @@ def dark_channel_prior(
     """Get the dark channel prior from an RGB image.
     
     Args:
-        input: A :class:`torch.Tensor` or :class:`numpy.ndarray` RGB image in
-            :math:`[N, C, H, W]` format.
+        input: A :obj:`torch.Tensor` or :obj:`numpy.ndarray` RGB image in
+            `[N, C, H, W]` format.
         kernel_size: Window size.
         
     Returns:
@@ -143,7 +143,7 @@ def dark_channel_prior_02(
     """Get the dark channel prior from an RGB image.
 
     Args:
-        input: A :class:`numpy.ndarray` RGB image in :math:`[H, W, C]` format.
+        input: A :obj:`numpy.ndarray` RGB image in `[H, W, C]` format.
         kernel_size: Window size.
 
     Returns:
@@ -166,8 +166,8 @@ def boundary_aware_prior(
     """Get the boundary prior from an RGB or grayscale image.
     
     Args:
-        input: A :class:`torch.Tensor` or :class:`numpy.ndarray` RGB image in
-            :math:`[N, C, H, W]` format.
+        input: A :obj:`torch.Tensor` or :obj:`numpy.ndarray` RGB image in
+            `[N, C, H, W]` format.
         eps: Threshold to remove weak edges. Default: ``0.05``.
         normalized: If ``True``, L1 norm of the kernel is set to ``1``.
             Default: ``False``.
@@ -229,16 +229,16 @@ def brightness_attention_map(
     over-saturation, while preserving image details and enhancing the contrast
     in the dark regions effectively.
     
-    Equation: :math:`I_{attn} = (1 - I_{V})^{\gamma}`, where :math:`\gamma \geq 1`.
+    Equation: `I_{attn} = (1 - I_{V})^{\gamma}`, where `\gamma \geq 1`.
     
     Args:
-        input: A :class:`torch.Tensor` or :class:`numpy.ndarray` RGB image in
-            :math:`[N, C, H, W]` format.
+        input: A :obj:`torch.Tensor` or :obj:`numpy.ndarray` RGB image in
+            `[N, C, H, W]` format.
         gamma: A parameter controls the curvature of the map.
         denoise_ksize: Window size for de-noising operation. Default: ``None``.
         
     Returns:
-        An :class:`numpy.ndarray` brightness enhancement map as prior.
+        An :obj:`numpy.ndarray` brightness enhancement map as prior.
     """
     if isinstance(input, torch.Tensor):
         if denoise_ksize:
@@ -270,7 +270,7 @@ class BrightnessAttentionMap(nn.Module):
     over-saturation, while preserving image details and enhancing the contrast
     in the dark regions effectively.
     
-    Equation: :math:`I_{attn} = (1 - I_{V})^{\gamma}`, where :math:`\gamma \geq 1`.
+    Equation: `I_{attn} = (1 - I_{V})^{\gamma}`, where `\gamma \geq 1`.
     
     Args:
         gamma: A parameter controls the curvature of the map.

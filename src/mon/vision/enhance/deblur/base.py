@@ -21,10 +21,7 @@ console = core.console
 # region Model
 
 class DeblurringModel(base.ImageEnhancementModel, ABC):
-    """The base class for all de-blurring models.
-    
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`.
-    """
+    """The base class for all de-blurring models."""
     
     tasks  : list[Task] = [Task.DEBLUR]
     zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "deblur"

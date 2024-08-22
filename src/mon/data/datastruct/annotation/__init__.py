@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """This package implements multiple annotation types. We try to support all
-possible data types: :class:`torch.Tensor`, :class:`numpy.ndarray`, or
-:class:`Sequence`, but we prioritize :class:`torch.Tensor`.
+possible data types: :obj:`torch.Tensor`, :obj:`numpy.ndarray`, or
+:obj:`Sequence`, but we prioritize :obj:`torch.Tensor`.
 
 The term "annotation" is commonly used in machine learning and deep learning to
 describe both ground truth label and model prediction. Basically, both of them

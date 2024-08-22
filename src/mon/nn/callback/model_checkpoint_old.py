@@ -37,7 +37,6 @@ error_console = core.error_console
 class ModelCheckpoint(callbacks.ModelCheckpoint):
     """Save the model periodically by monitoring a quantity.
     
-    See Also: :class:`lightning.pytorch.callbacks.model_checkpoint.ModelCheckpoint`.
     """
     
     CHECKPOINT_JOIN_CHAR = "-"
@@ -381,7 +380,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         self.best_model_path  = _op(self.best_k_models, key=self.best_k_models.get)  # type: ignore[arg-type]
         self.best_model_score = self.best_k_models[self.best_model_path]
         
-        # Update value in :attr:`keys` first
+        # Update value in :obj:`keys` first
         metric_name = self._parse_metric_name()
         is_new_best = str(filepath) == str(self.best_model_path)
         for c, v in monitor_candidates.items():

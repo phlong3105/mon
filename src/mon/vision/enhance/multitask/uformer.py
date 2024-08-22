@@ -53,7 +53,7 @@ def window_partition(x: torch.Tensor, win_size: _size_2_t, dilation_rate: int = 
     b, h, w, c = x.shape
     if dilation_rate != 1:
         x = x.permute(0, 3, 1, 2)  # b, c, h, w
-        assert type(dilation_rate) is int, ':param:`dilation_rate` should be a :class:s`int`'
+        assert type(dilation_rate) is int, '`dilation_rate` should be a s`int`'
         x = F.unfold(
             x,
             kernel_size = win_size,
@@ -419,7 +419,7 @@ class LeWinTransformerBlock(nn.Module):
         if min(self.input_resolution) <= self.window_size:
             self.shift_size = 0
             self.window_size = min(self.input_resolution)
-        assert 0 <= self.shift_size < self.window_size, ":paramL`shift_size` must in :math:`[0 - :param`window_size`]`"
+        assert 0 <= self.shift_size < self.window_size, ":paramL`shift_size` must in `[0 - :param`window_size`]`"
 
         if modulator:
             self.modulator = nn.Embedding(window_size * window_size, in_channels)  # modulator
@@ -704,8 +704,6 @@ class Uformer_RE(base.MultiTaskImageEnhancementModel):
     
     References:
         `<https://github.com/ZhendongWang6/Uformer>`__
-
-    See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
     arch   : str  = "uformer"

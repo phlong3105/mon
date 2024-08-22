@@ -116,8 +116,6 @@ class UNet(base.SegmentationModel):
     
     References:
         `<https://github.com/milesial/Pytorch-UNet>`__
-    
-    See Also: :class:`base.SegmentationModel`
     """
     
     schemes: list[Scheme] = [Scheme.SUPERVISED]

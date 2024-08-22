@@ -311,10 +311,7 @@ class VariationalAutoEncoder(nn.Module):
 
 @MODELS.register(name="zid", arch="zid")
 class ZID(base.DehazingModel):
-    """ZID (Zero-Shot Image Dehazing) model.
-    
-    See Also: :class:`base.Dehazing`
-    """
+    """ZID (Zero-Shot Image Dehazing) model."""
     
     arch   : str  = "zid"
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
@@ -389,13 +386,13 @@ class ZID(base.DehazingModel):
     @classmethod
     def assert_outputs(cls, outputs: dict) -> bool:
         assert outputs.get("enhanced", None), \
-            "The key ``'enhanced'`` must be defined in the :param:`outputs`."
+            "The key ``'enhanced'`` must be defined in the `outputs`."
         assert outputs.get("image", None), \
-            "The key ``'image'`` must be defined in the :param:`outputs`."
+            "The key ``'image'`` must be defined in the `outputs`."
         assert outputs.get("ambient", None), \
-            "The key ``'ambient'`` must be defined in the :param:`outputs`."
+            "The key ``'ambient'`` must be defined in the `outputs`."
         assert outputs.get("mask", None), \
-            "The key ``'mask'`` must be defined in the :param:`outputs`."
+            "The key ``'mask'`` must be defined in the `outputs`."
         
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward

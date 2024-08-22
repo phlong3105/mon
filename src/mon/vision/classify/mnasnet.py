@@ -80,7 +80,7 @@ def _stack(
 ) -> nn.Sequential:
     """Creates a stack of inverted residuals."""
     if repeats < 1:
-        raise ValueError(f":param:`repeats` should be >= ``1``, but got {repeats}.")
+        raise ValueError(f"`repeats` should be >= ``1``, but got {repeats}.")
     # First one has no skip, because feature map size changes.
     first     = _InvertedResidual(
         in_channels      = in_channels,
@@ -114,7 +114,7 @@ def _round_to_multiple_of(val: float, divisor: int, round_up_bias: float = 0.9) 
     """
     if not 0.0 < round_up_bias < 1.0:
         raise ValueError(
-            f":param:`round_up_bias` should be greater than ``0.0`` and smaller "
+            f"`round_up_bias` should be greater than ``0.0`` and smaller "
             f"than ``1.0``, but got {round_up_bias}"
         )
     new_val = max(divisor, int(val + divisor / 2) // divisor * divisor)
@@ -136,7 +136,6 @@ def _get_depths(alpha: float) -> list[int]:
 class MNASNet(base.ImageClassificationModel, ABC):
     """MNASNet.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     # Version 2 adds depth scaling in the initial stages of the network.
@@ -162,7 +161,7 @@ class MNASNet(base.ImageClassificationModel, ABC):
             *args, **kwargs
         )
         if alpha <= 0.0:
-            raise ValueError(f":param:`alpha` should be greater than ``0.0``, but got {alpha}.")
+            raise ValueError(f"`alpha` should be greater than ``0.0``, but got {alpha}.")
        
         self.alpha   = alpha
         self.dropout = dropout
@@ -230,7 +229,6 @@ class MNASNet0_5(MNASNet):
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_
     paper.
     
-    See Also: :class:`MNASNet`
     """
     
     zoo: dict = {
@@ -256,7 +254,6 @@ class MNASNet0_75(MNASNet):
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_
     paper.
     
-    See Also: :class:`MNASNet`
     """
     
     zoo: dict = {
@@ -282,7 +279,6 @@ class MNASNet1_0(MNASNet):
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_
     paper.
     
-    See Also: :class:`MNASNet`
     """
     
     zoo: dict = {
@@ -308,7 +304,6 @@ class MNASNet1_3(MNASNet):
     Neural Architecture Search for Mobile <https://arxiv.org/abs/1807.11626>`_
     paper.
     
-    See Also: :class:`MNASNet`
     """
     
     zoo: dict = {

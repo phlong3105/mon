@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module extends :mod:`humps`."""
+"""Humps Module.
+
+This module extends :obj:`humps`.
+"""
 
 from __future__ import annotations
 

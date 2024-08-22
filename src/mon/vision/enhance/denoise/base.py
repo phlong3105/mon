@@ -22,10 +22,7 @@ console = core.console
 # region Model
 
 class DenoisingModel(base.ImageEnhancementModel, ABC):
-    """The base class for all de-noising models.
-    
-    See Also: :class:`base.ImageEnhancementModel`.
-    """
+    """The base class for all de-noising models."""
     
     tasks  : list[Task] = [Task.DENOISE]
     zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "denoise"

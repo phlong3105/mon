@@ -223,8 +223,6 @@ class LINet(base.MultiTaskImageEnhancementModel):
         r: The initial probability of applying the Instance Normalization.
             Default: ``0.5``.
         eps: The epsilon value for the Instance Normalization. Default: ``1e-5``.
-        
-    See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
     arch   : str  = "linet"
@@ -317,7 +315,7 @@ class LINet(base.MultiTaskImageEnhancementModel):
                     nn.init.constant_(m.bias, 0)
     
     def get_all_lin_layers(self) -> dict[str, nn.Module]:
-        """Get all :class:`LearnableInstanceNorm2d` layers in the model."""
+        """Get all :obj:`LearnableInstanceNorm2d` layers in the model."""
         return {n: m for n, m in self.named_modules() if isinstance(m, nn.LearnableInstanceNorm2d)}
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:

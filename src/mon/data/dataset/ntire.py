@@ -33,7 +33,6 @@ class NTIRE24LLIE(ImageDataset):
 	pairs. They are divided into 230 training pairs and 35 validation pairs,
 	and 35 testing pairs.
 	
-	See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
 	"""
 	
 	tasks : list[Task]  = [Task.LLIE]
@@ -100,7 +99,6 @@ class NTIRE24LLIEDataModule(datamodule.DataModule):
 	"""NTIRE24-LLIE datamodule used in NTIRE 2024 Challenge
 	`<https://cvlai.net/ntire/2024/>`__
 	
-	See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
 	"""
 	
 	tasks: list[Task] = [Task.LLIE]

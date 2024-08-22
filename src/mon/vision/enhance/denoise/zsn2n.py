@@ -32,8 +32,6 @@ class ZSN2N(base.DenoisingModel):
     
     References:
         `<https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing#scrollTo=Srf0GQTYrkxA>`_
-    
-    See Also: :class:`base.DenoisingModel`.
     """
     
     arch   : str  = "zsn2n"
@@ -131,7 +129,7 @@ class ZSN2N(base.DenoisingModel):
         reset_weights: bool      = True,
     ) -> dict:
         """Infer the model on a single datapoint. This method is different from
-        :meth:`forward()` in term that you may want to perform additional
+        :obj:`forward()` in term that you may want to perform additional
         pre-processing or post-processing steps.
         
         Notes:
@@ -139,7 +137,7 @@ class ZSN2N(base.DenoisingModel):
             steps, you should override this method.
         
         Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
+            datapoint: A :obj:`dict` containing the attributes of a datapoint.
             imgsz: The input size. Default: ``512``.
             resize: Resize the input image to the model's input size. Default: ``False``.
             max_epochs: Maximum number of epochs. Default: ``3000``.

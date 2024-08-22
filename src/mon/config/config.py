@@ -1,7 +1,11 @@
 #!/usr/bin/edenoised1nv python
 # -*- coding: utf-8 -*-
 
-"""This is a config template."""
+"""Config Template.
+
+This module is a template for configuration for training, predicting, and
+evaluating a :obj:`mon`'s model.
+"""
 
 from __future__ import annotations
 
@@ -76,7 +80,7 @@ datamodule = {
 		A.Flip(),
 		A.Rotate(),
 	]),  # Transformations performing on both the input and target.
-    "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "to_tensor" : True,          # If ``True``, convert input and target to :obj:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
     "batch_size": 16,            # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.

@@ -47,10 +47,7 @@ except ImportError:
 @DETECTORS.register(name="yolov8s")
 @DETECTORS.register(name="yolov8x")
 class YOLOv8Detector(base.Detector):
-    """YOLOv8 detector.
-    
-    See Also: :class:`mon.vision.detect.base.Detector`.
-    """
+    """YOLOv8 detector."""
     
     def __init__(
         self,
@@ -69,7 +66,7 @@ class YOLOv8Detector(base.Detector):
         """Detect objects in the images.
 
         Args:
-            indexes: Image indexes of shape :math:`[B]`.
+            indexes: Image indexes of shape `[B]`.
             images: The source of the image(s) to make predictions on. Accepts
                 various types including file paths, URLs, PIL images, numpy
                 arrays, and torch tensors.
@@ -77,11 +74,11 @@ class YOLOv8Detector(base.Detector):
                 process.
         
         Returns:
-            A 2D :class:`numpy.ndarray` or :class:`torch.Tensor` of detections.
-            The most common format is :math:`[B, N, 6]` where :math:`B` is the
-            batch size, :math:`N` is the number of detections, and :math:`[6]`
-            usually contains :math:`[x1, y1, x2, y2, conf, class_id]`. Notice
-            that :math:`[x1, y1, x2, y2]` should be scaled back to the original
+            A 2D :obj:`numpy.ndarray` or :obj:`torch.Tensor` of detections.
+            The most common format is `[B, N, 6]` where `B` is the
+            batch size, `N` is the number of detections, and `[6]`
+            usually contains `[x1, y1, x2, y2, conf, class_id]`. Notice
+            that `[x1, y1, x2, y2]` should be scaled back to the original
             image size.
             
         Examples:
@@ -111,10 +108,7 @@ class YOLOv8Detector(base.Detector):
         
         
 class YOLOv8(base.Detector1):
-    """YOLOv8 detector.
-    
-    See Also: :class:`mon.vision.detect.base.Detector`.
-    """
+    """YOLOv8 detector."""
     
     def init_model(self):
         """Create model."""
@@ -132,10 +126,10 @@ class YOLOv8(base.Detector1):
         """Preprocessing step.
 
         Args:
-            images: Images of shape :math:`[B, C, H, W]`.
+            images: Images of shape `[B, C, H, W]`.
 
         Returns:
-            Input tensor of shape :math:`[B, C, H, W]`.
+            Input tensor of shape `[B, C, H, W]`.
         """
         input  = images.copy()
         ratio  = max(self.image_size) / max(core.get_image_size(image=input))
@@ -168,7 +162,7 @@ class YOLOv8(base.Detector1):
         """Forward pass.
         
         Args:
-            input: Input tensor of shape :math:`[B, C, H, W]`.
+            input: Input tensor of shape `[B, C, H, W]`.
         
         Returns:
             Predictions.
@@ -186,14 +180,14 @@ class YOLOv8(base.Detector1):
         """Postprocessing step.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[B, C, H, W]`.
-            input: Input tensor of shape :math:`[B, C, H, W]`.
-            pred: Prediction tensor of shape :math:`[B, C, H, W]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[B, C, H, W]`.
+            input: Input tensor of shape `[B, C, H, W]`.
+            pred: Prediction tensor of shape `[B, C, H, W]`.
 
         Returns:
-            A 2D :class:`list` of :class:`data.Instance` objects. The outer
-            :class:`list` has ``B`` items.
+            A 2D :obj:`list` of :obj:`data.Instance` objects. The outer
+            :obj:`list` has ``B`` items.
         """
         pred = ops.non_max_suppression(
             prediction = pred,

@@ -366,8 +366,6 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
         
     References:
         `<https://github.com/swz30/MPRNet/tree/main>`__
-
-    See Also: :class:`base.MultiTaskImageEnhancementModel`
     """
     
     arch   : str  = "mprnet"

@@ -5,13 +5,13 @@
 deep learning research. It provides support for high-level machine learning
 packages, such as vision, natural language, or speech.
 
-:mod:`mon.nn` package itself is built on top `PyTorch` and `Lightning`
+:obj:`mon.nn` package itself is built on top `PyTorch` and `Lightning`
 libraries.
 """
 
 from __future__ import annotations
 
-# Interface to :mod:`torch.nn`. We import commonly used components so that
+# Interface to :obj:`torch.nn`. We import commonly used components so that
 # everything can be accessed under one single import of ``from mon import nn``.
 # noinspection PyUnresolvedReferences
 from torch.nn import (

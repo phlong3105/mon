@@ -98,7 +98,7 @@ def load_state_dict(
     weights_only: bool = False,
     overwrite   : bool = False,
 ) -> dict:
-    """Load state dict from the given :param:`weights`. If :param:`weights`
+    """Load state dict from the given :obj:`weights`. If :obj:`weights`
     contains a URL, download it.
     """
     path = None
@@ -197,27 +197,27 @@ class Model(lightning.LightningModule, ABC):
     
     Attributes:
         arch: The model's architecture. Default: ``None`` mean it will be
-            :attr:`self.__class__.__name__`.
+            :obj:`self.__class__.__name__`.
         tasks: A list of tasks that the model can perform.
         schemes: A list of learning schemes that the model can perform.
-        zoo: A :class:`dict` containing all pretrained weights of the model.
+        zoo: A :obj:`dict` containing all pretrained weights of the model.
         zoo_dir: The directory containing all pretrained weights of the model.
         
     Args:
         name: The model's name. Default: ``None`` mean it will be
-            :attr:`self.__class__.__name__`.
+            :obj:`self.__class__.__name__`.
         fullname: The model's fullname to save the checkpoint or weights. It
             should have the following format: {name}-{dataset}-{suffix}.
-            Default: ``None`` mean it will be the same as :param:`name`.
+            Default: ``None`` mean it will be the same as :obj:`name`.
         root: The root directory of the model. It is used to save the model
             checkpoint during training: {root}/{fullname}.
         in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         out_channels: The last layer's output channels (number of classes).
             Default: ``None`` mean it will be determined during model parsing.
-        num_classes: Alias to :param:`out_channels`, but for classification tasks.
+        num_classes: Alias to :obj:`out_channels`, but for classification tasks.
         weights: The model's weights. Any of:
-            - A state :class:`dict`.
-            - A key in the :attr:`zoo`. Ex: 'yolov8x-det-coco'.
+            - A state :obj:`dict`.
+            - A key in the :obj:`zoo`. Ex: 'yolov8x-det-coco'.
             - A path to an ``.pt``, ``.pth``, or ``.ckpt`` file.
         loss: Loss function for training the model. Default: ``None``.
         metrics: A list metrics for training, validating and testing model.
@@ -229,8 +229,8 @@ class Model(lightning.LightningModule, ABC):
         LOADING WEIGHTS
 
         Case 01: Pre-define the weights file in ``zoo`` directory. Pre-define
-        the metadata in :attr:`zoo`. Then define :param:`weights` as a key in
-        :attr:`zoo`.
+        the metadata in :obj:`zoo`. Then define :obj:`weights` as a key in
+        :obj:`zoo`.
 
             >>> zoo = {
             >>>     "imagenet": {
@@ -348,12 +348,12 @@ class Model(lightning.LightningModule, ABC):
     
     @property
     def num_classes(self) -> int:
-        """Just an alias to :attr:`out_channels`."""
+        """Just an alias to :obj:`out_channels`."""
         return self.out_channels
     
     @num_classes.setter
     def num_classes(self, num_classes: int):
-        """Just an alias to :attr:`out_channels`."""
+        """Just an alias to :obj:`out_channels`."""
         self.out_channels = num_classes
     
     @property
@@ -361,11 +361,11 @@ class Model(lightning.LightningModule, ABC):
         """Return ``True`` if the model is in predicting mode (not eval).
         
         This property is needed because, while in ``'validation'`` mode,
-        :attr:`training` is also set to ``False``, so using
+        :obj:`training` is also set to ``False``, so using
         ``self.training == False`` does not work.
         
-        True ``'predicting'`` mode happens when :attr:`_trainer` is ``None``,
-        i.e., not being handled by :class:`lightning.Trainer`.
+        True ``'predicting'`` mode happens when :obj:`_trainer` is ``None``,
+        i.e., not being handled by :obj:`lightning.Trainer`.
         """
         return True if not self.training and getattr(self, "_trainer", None) is None else None
     
@@ -393,12 +393,12 @@ class Model(lightning.LightningModule, ABC):
                 num_classes     = getattr(weights, "num_classes", None)
                 if num_classes and num_classes != self.num_classes:
                     self.num_classes = num_classes
-                    console.log(f"Overriding :attr:`num_classes` with {num_classes}.")
+                    console.log(f"Overriding `num_classes` with {num_classes}.")
             else:
-                error_console.log(f"The key ``'{weights}'`` has not been defined in :attr:`zoo`.")
+                error_console.log(f"The key ``'{weights}'`` has not been defined in `zoo`.")
                 weights = None
         elif isinstance(weights, core.Path):
-            assert weights.is_weights_file(), f":param:`weights` must be a valid path to a weight file, but got {weights}."
+            assert weights.is_weights_file(), f"`weights` must be a valid path to a weight file, but got {weights}."
         elif isinstance(weights, dict):
             pass  # No need to do anything here
         else:
@@ -511,14 +511,14 @@ class Model(lightning.LightningModule, ABC):
         Return:
             Any of these 6 options:
                 - Single optimizer.
-                - :class:`list` or :class:`tuple` of optimizers.
-                - Two :class:`list` - First :class:`list` has multiple
+                - :obj:`list` or :obj:`tuple` of optimizers.
+                - Two :obj:`list` - First :obj:`list` has multiple
                   optimizers, and the second has multiple LR schedulers (or
                   multiple lr_scheduler_config).
-                - :class:`dict`, with an ``'optimizer'`` key, and (optionally) a
+                - :obj:`dict`, with an ``'optimizer'`` key, and (optionally) a
                   ``'lr_scheduler'`` key whose value is a single LR scheduler or
                   lr_scheduler_config.
-                - :class:`tuple` of :class:`dict` as described above, with an
+                - :obj:`tuple` of :obj:`dict` as described above, with an
                   optional ``'frequency'`` key.
                 - ``None`` - Fit will run without any optimizer.
             
@@ -571,7 +571,7 @@ class Model(lightning.LightningModule, ABC):
            
             # Define optimizer
             if optimizer is None:
-                raise ValueError(f":param:`optimizer` must be defined.")
+                raise ValueError(f"`optimizer` must be defined.")
             if isinstance(optimizer, dict):
                 optimizer = OPTIMIZERS.build(network=self, config=optimizer, network_params_only=network_params_only)
             optim["optimizer"] = optimizer
@@ -582,7 +582,7 @@ class Model(lightning.LightningModule, ABC):
             elif lr_scheduler and isinstance(lr_scheduler, dict):
                 scheduler = lr_scheduler.get("scheduler", None)
                 if scheduler is None:
-                    raise ValueError(f":param:`scheduler` must be defined.")
+                    raise ValueError(f"`scheduler` must be defined.")
                 if isinstance(scheduler, dict):
                     # after scheduler
                     if "after_scheduler" in scheduler:
@@ -621,23 +621,23 @@ class Model(lightning.LightningModule, ABC):
     
     @abstractmethod
     def assert_datapoint(self, datapoint: dict) -> bool:
-        """Check the datapoint before passing it to the :meth:`forward()`.
+        """Check the datapoint before passing it to the :obj:`forward()`.
         Because each type of model requires different attributes in the datapoint,
         this method is used to ensure that the datapoint is valid.
         
         Args:
-            datapoint: A :class:`dict` containing all attributes of a datapoint.
+            datapoint: A :obj:`dict` containing all attributes of a datapoint.
         """
         pass
     
     @abstractmethod
     def assert_outputs(self, outputs: dict) -> bool:
-        """Check the outputs after passing it to the :meth:`forward()`. Because
+        """Check the outputs after passing it to the :obj:`forward()`. Because
         each type of model returns different attributes in the outputs, this
         method is used to ensure that the outputs are valid.
 
 		Args:
-			outputs: A :class:`dict` containing all predictions.
+			outputs: A :obj:`dict` containing all predictions.
 		"""
         pass
     
@@ -646,10 +646,10 @@ class Model(lightning.LightningModule, ABC):
         """Forward pass, then compute the loss value.
         
         Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
+            datapoint: A :obj:`dict` containing the attributes of a datapoint.
             
         Return:
-            A :class:`dict` of all predictions with corresponding names. Note
+            A :obj:`dict` of all predictions with corresponding names. Note
             that the dictionary must contain the key ``'loss'`` and ``'pred'``.
         """
         '''
@@ -676,8 +676,8 @@ class Model(lightning.LightningModule, ABC):
         """Compute metrics.
 
         Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
-            outputs: A :class:`dict` containing all predictions.
+            datapoint: A :obj:`dict` containing the attributes of a datapoint.
+            outputs: A :obj:`dict` containing all predictions.
             metrics: A list of metric functions to compute. Default: ``None``.
         """
         '''
@@ -702,23 +702,23 @@ class Model(lightning.LightningModule, ABC):
         forward pass by returning the intermediate outputs.
 
         Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
+            datapoint: A :obj:`dict` containing the attributes of a datapoint.
             
         Return:
-            A :class:`dict` of all intermediate outputs with corresponding names.
+            A :obj:`dict` of all intermediate outputs with corresponding names.
             Default: ``{}``.
         """
         return {}
     
     @abstractmethod
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        """Forward pass. This is the primary :meth:`forward` function of the model.
+        """Forward pass. This is the primary :obj:`forward` function of the model.
         
         Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
+            datapoint: A :obj:`dict` containing the attributes of a datapoint.
             
         Return:
-            A :class:`dict` of all predictions with corresponding names.
+            A :obj:`dict` of all predictions with corresponding names.
             Default: ``{}``.
         """
         '''
@@ -741,14 +741,14 @@ class Model(lightning.LightningModule, ABC):
         metrics for e.g., the progress bar or logger.
         
         Args:
-            batch: The output of :class:`~torch.utils.data.DataLoader`. It is a
-                :class:`dict` containing the attributes of a datapoint.
+            batch: The output of :obj:`~torch.utils.data.DataLoader`. It is a
+                :obj:`dict` containing the attributes of a datapoint.
             batch_idx: An integer displaying index of this batch.
             
         Return:
             Any of:
                 - The loss tensor.
-                - A :class:`dict`. Can include any keys, but must include the key ``'loss'``.
+                - A :obj:`dict`. Can include any keys, but must include the key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """
         # Forward
@@ -786,14 +786,14 @@ class Model(lightning.LightningModule, ABC):
         accuracy.
         
         Args:
-            batch: The output of :class:`~torch.utils.data.DataLoader`. It is a
-                :class:`dict` containing the attributes of a datapoint.
+            batch: The output of :obj:`~torch.utils.data.DataLoader`. It is a
+                :obj:`dict` containing the attributes of a datapoint.
             batch_idx: An integer displaying index of this batch.
             
         Return:
             Any of:
                 - The loss tensor.
-                - A :class:`dict`. Can include any keys, but must include the key ``'loss'``.
+                - A :obj:`dict`. Can include any keys, but must include the key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """
         # Forward
@@ -843,14 +843,14 @@ class Model(lightning.LightningModule, ABC):
         as accuracy.
 
         Args:
-            batch: The output of :class:`~torch.utils.data.DataLoader`. It is a
-                :class:`dict` containing the attributes of a datapoint.
+            batch: The output of :obj:`~torch.utils.data.DataLoader`. It is a
+                :obj:`dict` containing the attributes of a datapoint.
             batch_idx: An integer displaying index of this batch.
             
         Return:
             Any of:
                 - The loss tensor.
-                - A :class:`dict`. Can include any keys, but must include the key ``'loss'``.
+                - A :obj:`dict`. Can include any keys, but must include the key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """
         # Forward
@@ -898,7 +898,7 @@ class Model(lightning.LightningModule, ABC):
     @torch.no_grad()
     def infer(self, datapoint: dict, *args, **kwargs) -> dict:
         """Infer the model on a single datapoint. This method is different from
-        :meth:`forward()` in term that you may want to perform additional
+        :obj:`forward()` in term that you may want to perform additional
         pre-processing or post-processing steps.
         
         Notes:
@@ -906,7 +906,7 @@ class Model(lightning.LightningModule, ABC):
             steps, you should override this method.
         
         Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
+            datapoint: A :obj:`dict` containing the attributes of a datapoint.
         """
         pass
     
@@ -923,10 +923,10 @@ class Model(lightning.LightningModule, ABC):
         """Export the model to ``onnx`` format.
 
         Args:
-            input_dims: Input dimensions in :math:`[C, H, W]` format.
+            input_dims: Input dimensions in `[C, H, W]` format.
                 Default: ``None``.
             file_path: Path to save the model. If ``None`` or empty, then save
-                to :attr:`root`. Default: ``None``.
+                to :obj:`root`. Default: ``None``.
             export_params: Should export parameters? Default: ``True``.
         """
         # Check file_path
@@ -938,7 +938,7 @@ class Model(lightning.LightningModule, ABC):
         if input_dims:
             input_sample = torch.randn(input_dims)
         else:
-            raise ValueError(f":param:`input_dims` must be defined.")
+            raise ValueError(f"`input_dims` must be defined.")
         
         self.to_onnx(
             file_path     = file_path,
@@ -957,7 +957,7 @@ class Model(lightning.LightningModule, ABC):
         Args:
             input_dims: Input dimensions. Default: ``None``.
             file_path: Path to save the model. If ``None`` or empty, then save
-                to :attr:`root`. Default: ``None``.
+                to :obj:`root`. Default: ``None``.
             method: Whether to use TorchScript's `''script''` or ``'trace'``
                 method. Default: ``'script'``.
         """
@@ -970,7 +970,7 @@ class Model(lightning.LightningModule, ABC):
         if input_dims:
             input_sample = torch.randn(input_dims)
         else:
-            raise ValueError(f":param:`input_dims` must be defined.")
+            raise ValueError(f"`input_dims` must be defined.")
         
         script = self.to_torchscript(method=method, example_inputs=input_sample)
         torch.jit.save(script, file_path)
@@ -995,7 +995,7 @@ class Model(lightning.LightningModule, ABC):
         data     : dict,
         extension: str = ".jpg"
     ):
-        """Log debug images to :attr:`debug_dir`."""
+        """Log debug images to :obj:`debug_dir`."""
         pass
     
     # endregion
@@ -1006,8 +1006,8 @@ class Model(lightning.LightningModule, ABC):
 # region Extra Model
 
 class ExtraModel(Model, ABC):
-    """A wrapper model that wraps around another model defined in :mod:`mon_extra`.
-    This is useful when we want to add the third-party models to :mod:`mon`'s models.
+    """A wrapper model that wraps around another model defined in :obj:`mon_extra`.
+    This is useful when we want to add the third-party models to :obj:`mon`'s models.
     without reimplementing the entire model.
     
     Args:

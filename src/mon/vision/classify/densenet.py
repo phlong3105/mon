@@ -154,20 +154,19 @@ class DenseNet(base.ImageClassificationModel, ABC):
     `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_.
     
     Args:
-        growth_rate: How many filters to add each layer (:param:`k` in paper).
+        growth_rate: How many filters to add each layer (:obj:`k` in paper).
         block_config: A list of 4 ints determining how many layers in each
             pooling block.
         num_init_features: The number of filters to learn in the first
             convolution layer.
         bn_size: A multiplicative factor for the number of bottleneck layers.
-            (i.e., :math:`bn_size * k features` in the bottleneck layer).
+            (i.e., `bn_size * k features` in the bottleneck layer).
         drop_rate: Dropout rate after each dense layer
         num_classes: Number of classification classes.
         memory_efficient: If ``True``, uses checkpointing. Much more memory
             efficient, but slower. Default: ``False``.
             See `"paper" <https://arxiv.org/pdf/1707.06990.pdf>`_.
           
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "densenet"
@@ -279,7 +278,6 @@ class DenseNet121(DenseNet):
     """Densenet-121 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`DenseNet`
     """
     
     zoo: dict = {
@@ -306,7 +304,6 @@ class DenseNet161(DenseNet):
     """Densenet-161 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`DenseNet`
     """
     
     zoo: dict = {
@@ -333,7 +330,6 @@ class DenseNet169(DenseNet):
     """Densenet-169 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`DenseNet`
     """
     
     zoo: dict = {
@@ -360,7 +356,6 @@ class DenseNet201(DenseNet):
     """Densenet-201 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`DenseNet`
     """
     
     zoo: dict = {

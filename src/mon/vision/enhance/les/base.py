@@ -22,10 +22,7 @@ console = core.console
 # region Model
 
 class LightEffectSuppressionModel(base.ImageEnhancementModel, ABC):
-    """The base class for all light effect suppression models.
-    
-    See Also: :class:`base.ImageEnhancementModel`.
-    """
+    """The base class for all light effect suppression models."""
     
     tasks  : list[Task] = [Task.LES]
     zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "les"

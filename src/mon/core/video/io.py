@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the basic functionalities of video data."""
+"""Video IO Module.
+
+This module implements the basic I/O functionalities of video data.
+"""
 
 from __future__ import annotations
 
@@ -16,7 +19,7 @@ import torch
 from mon.core import image as ci
 
 
-# region I/O
+# region Read
 
 def read_video_ffmpeg(
 	process,
@@ -26,21 +29,21 @@ def read_video_ffmpeg(
 	normalize: bool = False,
 ) -> torch.Tensor | np.ndarray:
 	"""Read raw bytes from a video stream using :mod`ffmpeg`. Optionally,
-	convert it to :class:`torch.Tensor` type of shape :math:`[1, C, H, W]`.
+	convert it to :obj:`torch.Tensor` type of shape `[1, C, H, W]`.
 	
 	Args:
-		process: The subprocess that manages :mod:`ffmpeg` instance.
+		process: The subprocess that manages :obj:`ffmpeg` instance.
 		height: The height of the video frame.
 		width: The width of the video.
-		to_tensor: If ``True`` convert the image from :class:`numpy.ndarray` to
-			:class:`torch.Tensor`. Default: ``False``.
-		normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+		to_tensor: If ``True`` convert the image from :obj:`numpy.ndarray` to
+			:obj:`torch.Tensor`. Default: ``False``.
+		normalize: If ``True``, normalize the image to ``[0.0, 1.0]``.
 			Default: ``False``.
 	
 	Return:
-		A :class:`numpy.ndarray` image of shape :math:`[H, W, C]` with value in
-		range :math:`[0, 255]` or a :class:`torch.Tensor` image of shape
-		:math:`[1, C, H, W]` with value in range :math:`[0, 1]`.
+		A :obj:`numpy.ndarray` image of shape `[H, W, C]` with value in
+		range ``[0, 255]`` or a :obj:`torch.Tensor` image of shape
+		`[1, C, H, W]` with value in range ``[0.0, 1.0]``.
 	"""
 	# RGB24 == 3 bytes per pixel.
 	img_size = height * width * 3
@@ -63,19 +66,22 @@ def read_video_ffmpeg(
 			)
 	return image
 
+# endregion
+
+
+# region Write
 
 def write_video_ffmpeg(
 	process,
 	image      : torch.Tensor | np.ndarray,
 	denormalize: bool = False
 ):
-	"""Write an image to a video file using :mod:`ffmpeg`.
+	"""Write an image to a video file using :obj:`ffmpeg`.
 
 	Args:
-		process: A subprocess that manages :mod:``ffmpeg``.
-		image: A frame/image of shape :math:`[1, C, H, W]`.
-		denormalize: If ``True``, convert image to :math:`[0, 255]`.
-			Default: ``False``.
+		process: A subprocess that manages :obj:``ffmpeg``.
+		image: A frame/image of shape `[1, C, H, W]`.
+		denormalize: If ``True``, convert image to ``[0, 255]``. Default: ``False``.
 	"""
 	if isinstance(image, np.ndarray):
 		if ci.is_normalized_image(image=image):
@@ -90,8 +96,8 @@ def write_video_ffmpeg(
 		)
 	else:
 		raise ValueError(
-			f":param:`image` must be a :class:`torch.Tensor` or "
-			f":class:`numpy.ndarray`, but got {type(image)}."
+			f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
+			f"but got {type(image)}."
 		)
 	process.stdin.write(
 		image

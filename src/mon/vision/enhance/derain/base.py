@@ -24,7 +24,6 @@ console = core.console
 class DerainingModel(base.ImageEnhancementModel, ABC):
     """The base class for all single-image deraining models.
     
-    See Also: :class:`base.ImageEnhancementModel`.
     """
     
     tasks  : list[Task] = [Task.DERAIN]

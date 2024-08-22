@@ -43,10 +43,7 @@ ImageDataset        = dataset.ImageDataset
 
 @DATASETS.register(name="gtsnow")
 class GTSnow(ImageDataset):
-    """GT-Snow dataset.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """GT-Snow dataset."""
     
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
@@ -96,7 +93,6 @@ class GTSnow(ImageDataset):
 class KITTISnow(ImageDataset):
     """KITTI-Snow dataset.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DESNOW]
@@ -142,10 +138,7 @@ class KITTISnow(ImageDataset):
 
 @DATASETS.register(name="kitti_snow_s")
 class KITTISnowS(ImageDataset):
-    """KITTI-Snow-S dataset.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """KITTI-Snow-S dataset."""
     
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
@@ -192,7 +185,6 @@ class KITTISnowS(ImageDataset):
 class KITTISnowM(ImageDataset):
     """KITTI-Snow-M dataset.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DESNOW]
@@ -238,10 +230,7 @@ class KITTISnowM(ImageDataset):
 
 @DATASETS.register(name="kitti_snow_l")
 class KITTISnowL(ImageDataset):
-    """KITTI-Snow-L dataset.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """KITTI-Snow-L dataset."""
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
@@ -288,7 +277,6 @@ class KITTISnowL(ImageDataset):
 class Snow100K(ImageDataset):
     """Snow100K dataset.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
 
     tasks : list[Task]  = [Task.DESNOW]
@@ -334,10 +322,7 @@ class Snow100K(ImageDataset):
 
 @DATASETS.register(name="snow100k_s")
 class Snow100KS(ImageDataset):
-    """Snow100K-S dataset.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """Snow100K-S dataset."""
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
@@ -384,7 +369,6 @@ class Snow100KS(ImageDataset):
 class Snow100KM(ImageDataset):
     """Snow100K-M dataset.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DESNOW]
@@ -430,10 +414,7 @@ class Snow100KM(ImageDataset):
 
 @DATASETS.register(name="snow100k_l")
 class Snow100KL(ImageDataset):
-    """Snow100K-L dataset.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """Snow100K-L dataset."""
     
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
@@ -484,7 +465,6 @@ class Snow100KL(ImageDataset):
 class GTSnowDataModule(datamodule.DataModule):
     """GT-Snow datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DESNOW]
@@ -514,10 +494,7 @@ class GTSnowDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="kitti_snow")
 class KITTISnowDataModule(datamodule.DataModule):
-    """KITTI-Snow datamodule.
-
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """KITTI-Snow datamodule."""
     
     tasks: list[Task] = [Task.DESNOW]
     
@@ -549,7 +526,6 @@ class KITTISnowDataModule(datamodule.DataModule):
 class KITTISnowSDataModule(datamodule.DataModule):
     """KITTI-Snow-S datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DESNOW]
@@ -580,10 +556,7 @@ class KITTISnowSDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="kitti_snow_m")
 class KITTISnowMDataModule(datamodule.DataModule):
-    """KITTI-Snow-M datamodule.
-
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """KITTI-Snow-M datamodule."""
     
     tasks: list[Task] = [Task.DESNOW]
     
@@ -615,7 +588,6 @@ class KITTISnowMDataModule(datamodule.DataModule):
 class KITTISnowLDataModule(datamodule.DataModule):
     """KITTI-Snow-L datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DESNOW]
@@ -646,10 +618,7 @@ class KITTISnowLDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="snow100k")
 class Snow100KDataModule(datamodule.DataModule):
-    """Snow100K datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """Snow100K datamodule."""
     
     tasks: list[Task] = [Task.DESNOW]
     
@@ -681,7 +650,6 @@ class Snow100KDataModule(datamodule.DataModule):
 class Snow100KSDataModule(datamodule.DataModule):
     """Snow100K-S datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DESNOW]
@@ -714,7 +682,6 @@ class Snow100KSDataModule(datamodule.DataModule):
 class Snow100KMDataModule(datamodule.DataModule):
     """Snow100K-M datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DESNOW]
@@ -747,7 +714,6 @@ class Snow100KMDataModule(datamodule.DataModule):
 class Snow100KLDataModule(datamodule.DataModule):
     """Snow100K-L datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DESNOW]

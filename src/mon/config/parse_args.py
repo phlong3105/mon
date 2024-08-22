@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains functions to parse arguments for training, predicting,
-and online inference.
+"""Parse Arguments.
+
+This module defines functions to parse both user-input and config arguments.
 """
 
 from __future__ import annotations
@@ -48,6 +49,7 @@ def _float_or_none(value) -> float | None:
 # region Train
 
 def parse_train_input_args() -> argparse.Namespace:
+    """Parse input arguments for training."""
     parser = argparse.ArgumentParser(description="train")
     parser.add_argument("--config",     type=_str_or_none, default=None, help="Model config.")
     parser.add_argument("--arch",       type=_str_or_none, default=None, help="Model architecture.")
@@ -71,6 +73,7 @@ def parse_train_input_args() -> argparse.Namespace:
 
 
 def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Namespace:
+    """Parse arguments for training."""
     hostname = socket.gethostname().lower()
     
     # Get input args
@@ -149,6 +152,7 @@ def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Name
 # region Predict
 
 def parse_predict_input_args() -> argparse.Namespace:
+    """Parse input arguments for prediction."""
     parser = argparse.ArgumentParser(description="predict")
     parser.add_argument("--config",       type=_str_or_none, default=None, help="Model config.")
     parser.add_argument("--arch",         type=_str_or_none, default=None, help="Model architecture.")
@@ -175,6 +179,7 @@ def parse_predict_input_args() -> argparse.Namespace:
 
 
 def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Namespace:
+    """Parse arguments for prediction."""
     hostname = socket.gethostname().lower()
     
     # Get input args
@@ -255,6 +260,7 @@ def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Na
 # region Online
 
 def parse_online_input_args() -> argparse.Namespace:
+    """Parse input arguments for online learning."""
     parser = argparse.ArgumentParser(description="online")
     parser.add_argument("--config",       type=_str_or_none, default=None, help="Model config.")
     parser.add_argument("--arch",         type=_str_or_none, default=None, help="Model architecture.")

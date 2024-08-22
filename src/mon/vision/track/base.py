@@ -59,7 +59,7 @@ class Detection:
     
     @classmethod
     def from_value(cls, value: Detection | dict) -> Detection:
-        """Create a :class:`BBoxAnnotation` object from an arbitrary :param:`value`.
+        """Create a :obj:`BBoxAnnotation` object from an arbitrary :obj:`value`.
         """
         if isinstance(value, dict):
             return Detection(**value)
@@ -67,13 +67,13 @@ class Detection:
             return value
         else:
             raise ValueError(
-                f":param:`value` must be a :class:`Detection` class or "
-                f"a :class:`dict`, but got {type(value)}."
+                f"`value` must be a `Detection` class or "
+                f"a `dict`, but got {type(value)}."
             )
     
     @property
     def bbox(self) -> np.ndarray:
-        """Return the bounding box of shape :math:`[4]`."""
+        """Return the bounding box of shape `[4]`."""
         return self._bbox
     
     @bbox.setter
@@ -82,7 +82,7 @@ class Detection:
         if bbox.ndim == 1 and bbox.size == 4:
             self._bbox = bbox
         else:
-            raise ValueError(f":param:`bbox` must be a 1D array of size 4, but got {bbox.ndim} and {bbox.size}.")
+            raise ValueError(f"`bbox` must be a 1D array of size 4, but got {bbox.ndim} and {bbox.size}.")
     
     @property
     def bbox_center(self) -> np.ndarray:
@@ -105,7 +105,7 @@ class Detection:
     @confidence.setter
     def confidence(self, confidence: float):
             if not 0.0 <= confidence <= 1.0:
-                raise ValueError(f":param:`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
+                raise ValueError(f"`confidence` must be between ``0.0`` and ``1.0``, but got {confidence}.")
             self._confidence = confidence
     
 
@@ -122,7 +122,7 @@ class Track(ABC):
     
     Args:
         id_: The unique ID of the track. Default: ``None``.
-        state: The state of the track. Default: :class:`TrackState.NEW`.
+        state: The state of the track. Default: :obj:`TrackState.NEW`.
         detections: The list of detections associated with the track.
             Default: ``[]``.
     """
@@ -149,7 +149,7 @@ class Track(ABC):
     def history(self, detections: Detection | list[Detection]):
         detections = [detections] if not isinstance(detections, list) else detections
         if not all(isinstance(d, Detection) for d in detections):
-            raise ValueError(f":param:`detections` must be a :class:`list` of :class:`Detection`, but got {type(detections)}.")
+            raise ValueError(f"`detections` must be a `list` of `Detection`, but got {type(detections)}.")
         self._history = detections
     
     @staticmethod

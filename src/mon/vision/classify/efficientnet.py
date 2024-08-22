@@ -318,7 +318,6 @@ def _efficientnet_conf(
 class EfficientNet(base.ImageClassificationModel, ABC):
     """EfficientNet.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "efficientnet"
@@ -344,12 +343,12 @@ class EfficientNet(base.ImageClassificationModel, ABC):
             *args, **kwargs
         )
         if not inverted_residual_setting:
-            raise ValueError(f"The :param:`inverted_residual_setting` should not be empty.")
+            raise ValueError(f"The `inverted_residual_setting` should not be empty.")
         elif not (
             isinstance(inverted_residual_setting, Sequence)
             and all([isinstance(s, _MBConvConfig) for s in inverted_residual_setting])
         ):
-            raise TypeError("The :param:`inverted_residual_setting` should be :class:`list[MBConvConfig]`")
+            raise TypeError("The `inverted_residual_setting` should be `list[MBConvConfig]`")
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -445,7 +444,6 @@ class EfficientNet_B0(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -478,7 +476,6 @@ class EfficientNet_B1(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -517,7 +514,6 @@ class EfficientNet_B2(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -550,7 +546,6 @@ class EfficientNet_B3(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -583,7 +578,6 @@ class EfficientNet_B4(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -616,7 +610,6 @@ class EfficientNet_B5(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -650,7 +643,6 @@ class EfficientNet_B6(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -684,7 +676,6 @@ class EfficientNet_B7(EfficientNet):
     Model Scaling for Convolutional Neural Networks
     <https://arxiv.org/abs/1905.11946>`_ paper.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -717,7 +708,6 @@ class EfficientNet_V2_S(EfficientNet):
     """EfficientNetV2-S architecture from `EfficientNetV2: Smaller Models and
     Faster Training <https://arxiv.org/abs/2104.00298>`__.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -748,7 +738,6 @@ class EfficientNet_V2_M(EfficientNet):
     """EfficientNetV2-M architecture from `EfficientNetV2: Smaller Models and
     Faster Training <https://arxiv.org/abs/2104.00298>`__.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {
@@ -779,7 +768,6 @@ class EfficientNet_V2_L(EfficientNet):
     """EfficientNetV2-L architecture from `EfficientNetV2: Smaller Models and
     Faster Training <https://arxiv.org/abs/2104.00298>`__.
     
-    See Also: :class:`EfficientNet`
     """
     
     zoo: dict = {

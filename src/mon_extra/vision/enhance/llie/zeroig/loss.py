@@ -151,6 +151,7 @@ class L_TV(nn.Module):
         w_tv       = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x-1]), 2).sum()
         return self.TVLoss_weight * 2 * (h_tv / count_h + w_tv / count_w) / batch_size
 
+
 class Blur(nn.Module):
     
     def __init__(self, nc):

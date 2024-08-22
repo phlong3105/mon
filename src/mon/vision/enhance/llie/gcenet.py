@@ -32,7 +32,7 @@ console = core.console
 
 class TotalVariationLoss(nn.Loss):
     """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
-    :math:`\mathcal{L}_{tvA}` preserve the monotonicity relations between
+    `\mathcal{L}_{tvA}` preserve the monotonicity relations between
     neighboring pixels. It is used to avoid aggressive and sharp changes between
     neighboring pixels.
     
@@ -338,10 +338,7 @@ class DenoiseNet(nn.Module):
 
 @MODELS.register(name="gcenet", arch="gcenet")
 class GCENet(base.LowLightImageEnhancementModel):
-    """GCENet (Guided Curve Estimation Network) model.
-    
-    See Also: :class:`base.LowLightImageEnhancementModel`
-    """
+    """GCENet (Guided Curve Estimation Network) model."""
     
     arch   : str  = "gcenet"
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.ZERO_REFERENCE]
@@ -468,8 +465,6 @@ class GCENet(base.LowLightImageEnhancementModel):
 @MODELS.register(name="gcenet_01_gf_oldloss", arch="gcenet")
 class GCENet_01_GF_OldLoss(GCENet):
     """GCENet (Guided Curve Estimation Network) model with simple guided filter.
-    
-    See Also: :class:`GCENet`
     """
     
     def __init__(self, *args, **kwargs):
@@ -526,8 +521,6 @@ class GCENet_01_GF_OldLoss(GCENet):
 @MODELS.register(name="gcenet_02_gf_newloss", arch="gcenet")
 class GCENet_02_GF_NewLoss(GCENet):
     """GCENet (Guided Curve Estimation Network) model with simple guided filter.
-    
-    See Also: :class:`GCENet`
     """
     
     def __init__(self, *args, **kwargs):
@@ -570,8 +563,6 @@ class GCENet_02_GF_NewLoss(GCENet):
 @MODELS.register(name="gcenet_03_filterinput_oldloss", arch="gcenet")
 class GCENet_03_FilterInput_OldLoss(GCENet):
     """GCENet (Guided Curve Estimation Network) model with simple guided filter.
-    
-    See Also: :class:`GCENet`
     """
     
     def __init__(self, *args, **kwargs):
@@ -628,8 +619,6 @@ class GCENet_03_FilterInput_OldLoss(GCENet):
 @MODELS.register(name="gcenet_04_filterinput_newloss", arch="gcenet")
 class GCENet_04_FilterInput_NewLoss(GCENet):
     """GCENet (Guided Curve Estimation Network) model with simple guided filter.
-    
-    See Also: :class:`GCENet`
     """
     
     def __init__(self, *args, **kwargs):
@@ -684,8 +673,6 @@ class GCENetOld(base.LowLightImageEnhancementModel):
         num_iters: The number of convolutional layers in the model. Default: ``8``.
         scale_factor: Downsampling/upsampling ratio. Defaults: ``1``.
         gamma: Gamma value for dark channel prior. Default: ``2.8``.
-        
-    See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]

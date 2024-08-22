@@ -93,7 +93,7 @@ def _fspecial_gauss_1d(size: int, sigma: float) -> torch.Tensor:
         sigma: Sigma of normal distribution.
     
     Returns:
-       1D kernel :math:`[1 x 1 x size]`.
+       1D kernel `[1 x 1 x size]`.
     """
     coords  = torch.arange(size, dtype=torch.float)
     coords -= size // 2
@@ -198,7 +198,7 @@ def custom_ssim(
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     """
     if not img1.shape == img2.shape:
-        raise ValueError(f":param:`img1` and :param:`img2` must have the same "
+        raise ValueError(f"`img1` and `img2` must have the same "
                          f"dimensions, but got {img1.shape} and {img2.shape}.")
 
     for d in range(len(img1.shape) - 1, 1, -1):
@@ -206,7 +206,7 @@ def custom_ssim(
         img2 = img2.squeeze(dim=d)
 
     if len(img1.shape) not in (4, 5):
-        raise ValueError(f":param:`img1` and :param:`img2` must be 4D or 5D "
+        raise ValueError(f"`img1` and `img2` must be 4D or 5D "
                          f"tensors, but got {img1.shape}.")
 
     # if not X.type() == Y.type():
@@ -216,7 +216,7 @@ def custom_ssim(
         window_size = window.shape[-1]
 
     if not (window_size % 2 == 1):
-        raise ValueError(":param:`window_size` must be odd.")
+        raise ValueError("`window_size` must be odd.")
 
     if window is None:
         window = _fspecial_gauss_1d(window_size, window_sigma)
@@ -249,7 +249,7 @@ def custom_ms_ssim(
         `<https://github.com/VainF/pytorch-msssim/blob/master/pytorch_msssim/ssim.py>`__
     """
     if not img1.shape == img2.shape:
-        raise ValueError(f":param:`img1` and :param:`img2` must have the same "
+        raise ValueError(f"`img1` and `img2` must have the same "
                          f"dimensions, but got {img1.shape} and {img2.shape}.")
 
     for d in range(len(img1.shape) - 1, 1, -1):
@@ -264,18 +264,18 @@ def custom_ms_ssim(
     elif len(img1.shape) == 5:
         avg_pool = F.avg_pool3d
     else:
-        raise ValueError(f":param:`img1` and :param:`img2` must be 4D or 5D "
+        raise ValueError(f"`img1` and `img2` must be 4D or 5D "
                          f"tensors, but got {img1.shape}")
 
     if window:  # set win_size
         window_size = window.shape[-1]
 
     if not (window_size % 2 == 1):
-        raise ValueError(":param:`window_size` should be odd.")
+        raise ValueError("`window_size` should be odd.")
 
     smaller_side = min(img1.shape[-2:])
     assert smaller_side > (window_size - 1) * (2 ** 4), (
-        ":param:`img1` and :param:`img2` must be larger than %d due to the 4 "
+        "`img1` and `img2` must be larger than %d due to the 4 "
         "downsamplings in ms-ssim." % ((window_size - 1) * (2 ** 4))
     )
 

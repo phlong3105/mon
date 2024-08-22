@@ -322,7 +322,6 @@ class BlockParams:
 class RegNet(base.ImageClassificationModel, ABC):
     """RegNet.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "regnet"
@@ -425,7 +424,6 @@ class RegNet_Y_400MF(RegNet):
     """RegNetY_400MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -459,7 +457,6 @@ class RegNet_Y_800MF(RegNet):
     """RegNetY_800MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -493,7 +490,6 @@ class RegNet_Y_1_6GF(RegNet):
     """RegNetY_1.6GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -527,7 +523,6 @@ class RegNet_Y_3_2GF(RegNet):
     """RegNetY_3.2GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -561,7 +556,6 @@ class RegNet_Y_8GF(RegNet):
     """RegNetY_8GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -595,7 +589,6 @@ class RegNet_Y_16GF(RegNet):
     """RegNetY_16GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -641,7 +634,6 @@ class RegNet_Y_32GF(RegNet):
     """RegNetY_32GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -687,7 +679,6 @@ class RegNet_Y_128GF(RegNet):
     """RegNetY_128GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -721,7 +712,6 @@ class RegNet_X_400MF(RegNet):
     """RegNetY_400MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -755,7 +745,6 @@ class RegNet_X_800MF(RegNet):
     """RegNetY_800MF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -789,7 +778,6 @@ class RegNet_X_1_6GF(RegNet):
     """RegNetX_1.6GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -823,7 +811,6 @@ class RegNet_X_3_2GF(RegNet):
     """RegNetX_3.2GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -857,7 +844,6 @@ class RegNet_X_8GF(RegNet):
     """RegNetX_8GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -891,7 +877,6 @@ class RegNet_X_16GF(RegNet):
     """RegNetX_16GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {
@@ -925,7 +910,6 @@ class RegNetX_32GF(RegNet):
     """RegNetX_32GF architecture from `Designing Network Design Spaces
     <https://arxiv.org/abs/2003.13678>`__.
     
-    See Also: :class:`RegNet`
     """
     
     zoo: dict = {

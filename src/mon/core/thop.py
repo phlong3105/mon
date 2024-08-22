@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module extend :mod:`thop.profile` to work with :mod:`mon.nn`."""
+"""THOP: PyTorch-OpCounter.
+
+This module extend :obj:`thop.profile`.
+"""
 
 from __future__ import annotations
 
@@ -14,15 +17,35 @@ from thop.vision.basic_hooks import *
 default_dtype  = torch.float64
 
 
-def profile_mon_model(
-	model: nn.Module,
-	inputs,
-	custom_ops     = None,
-	verbose        = True,
-	ret_layer_info = False,
-	report_missing = False,
+def custom_profile(
+	model         : nn.Module,
+	inputs        : dict,
+	custom_ops    : dict = None,
+	verbose       : bool = True,
+	ret_layer_info: bool = False,
+	report_missing: bool = False,
 ):
-	"""Extend :func:`thop.profile` to work with :mod:`mon.nn.model.Model`."""
+	"""Extend :obj:`thop.profile` to work with :obj:`mon.nn.model.Model` custom
+	forward pass.
+	
+	Args:
+		model: The PyTorch model to profile.
+		inputs: The input data to profile.
+		custom_ops: A dictionary that maps a PyTorch module type to a function
+			that computes the number of operations for that module.
+			Defaults: ``None``.
+		verbose: Whether to print information about the registered hooks.
+			Defaults: ``True``.
+		ret_layer_info: Whether to return the layer information.
+			Defaults: ``False``.
+		report_missing: Whether to report missing rules for the PyTorch module.
+			Defaults: ``False``.
+
+	Returns:
+		The total number of operations and parameters of the given PyTorch model.
+		If ``ret_layer_info`` is ``True``, it also returns a dictionary that
+		contains the total number of operations and parameters of each layer.
+	"""
 	handler_collection = {}
 	types_collection   = set()
 	if custom_ops is None:
@@ -71,15 +94,13 @@ def profile_mon_model(
 		model(datapoint=inputs)
 	
 	def dfs_count(module: nn.Module, prefix="\t") -> (int, int):
-		"""Recursively counts the total operations and parameters of the given PyTorch module and its submodules."""
+		"""Recursively counts the total operations and parameters of the given
+		PyTorch module and its submodules.
+		"""
 		total_ops    = 0
 		total_params = 0
 		ret_dict     = {}
 		for n, m in module.named_children():
-			# if not hasattr(m, "total_ops") and not hasattr(m, "total_params"):  # and len(list(m.children())) > 0:
-			#     m_ops, m_params = dfs_count(m, prefix=prefix + "\t")
-			# else:
-			#     m_ops, m_params = m.total_ops, m.total_params
 			next_dict = {}
 			if m in handler_collection and not isinstance(m, (nn.Sequential, nn.ModuleList)):
 				m_ops, m_params = m.total_ops.item(), m.total_params.item()

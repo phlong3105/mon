@@ -37,7 +37,7 @@ class InvertedResidual(nn.Module):
         super().__init__()
         self.stride = stride
         if stride not in [1, 2]:
-            raise ValueError(f":param:`stride` should be ``1`` or ``2``, but got {stride}.")
+            raise ValueError(f"`stride` should be ``1`` or ``2``, but got {stride}.")
         
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -94,7 +94,6 @@ class MobileNetV2(base.ImageClassificationModel):
     """MobileNetV2 architecture from the `MobileNetV2: Inverted Residuals and
     Linear Bottlenecks <https://arxiv.org/abs/1801.04381>`_ paper.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "mobilenet"
@@ -160,8 +159,8 @@ class MobileNetV2(base.ImageClassificationModel):
         # Only check the first element, assuming user knows t,c,n,s are required
         if len(inverted_residual_setting) == 0 or len(inverted_residual_setting[0]) != 4:
             raise ValueError(
-                f":param:`inverted_residual_setting` should be non-empty or a "
-                f"4-element :class:`list`, but got {inverted_residual_setting}."
+                f"`inverted_residual_setting` should be non-empty or a "
+                f"4-element `list`, but got {inverted_residual_setting}."
             )
 
         # building first layer

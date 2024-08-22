@@ -251,7 +251,7 @@ class Conv2dSame(nn.Conv2d):
 
 
 class Conv2dTF(nn.Conv2d):
-    """Implementation of 2D convolution in TensorFlow with :param:`padding` as
+    """Implementation of 2D convolution in TensorFlow with :obj:`padding` as
     ``'same'``, which applies padding to input (if needed) so that input image
     gets fully covered by filter and stride you specified. For stride of ``1``,
     this will ensure that the output image size is the same as input. For stride

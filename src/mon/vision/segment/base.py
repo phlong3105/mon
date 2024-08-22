@@ -20,10 +20,7 @@ console = core.console
 # region Model
 
 class SegmentationModel(nn.Model, ABC):
-    """The base class for all segmentation models.
-    
-    See Also: :class:`nn.Model`.
-    """
+    """The base class for all segmentation models."""
     
     @property
     def zoo_dir(self) -> core.Path:

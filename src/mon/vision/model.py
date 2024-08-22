@@ -29,7 +29,6 @@ class VisionModel(nn.Model, ABC):
     """The base class for all vision models, i.e., image or video as the primary
     input.
     
-    See Also: :class:`mon.nn.model.Model`.
     """
     
     zoo_dir: core.Path  = ZOO_DIR / "vision"
@@ -51,7 +50,7 @@ class VisionModel(nn.Model, ABC):
         datapoint = {"image": torch.rand(1, channels, h, w).to(self.device)}
         
         # Get FLOPs and Params
-        flops, params = core.profile_mon_model(deepcopy(self), inputs=datapoint, verbose=verbose)
+        flops, params = core.custom_profile(deepcopy(self), inputs=datapoint, verbose=verbose)
         # flops         = FlopCountAnalysis(self, datapoint).total() if flops == 0 else flops
         params        = self.params                if hasattr(self, "params") and params == 0 else params
         params        = parameter_count(self)      if hasattr(self, "params")  else params
@@ -86,7 +85,7 @@ class VisionModel(nn.Model, ABC):
         *args, **kwargs
     ) -> dict:
         """Infer the model on a single datapoint. This method is different from
-        :meth:`forward()` in term that you may want to perform additional
+        :obj:`forward()` in term that you may want to perform additional
         pre-processing or post-processing steps.
         
         Notes:
@@ -94,7 +93,7 @@ class VisionModel(nn.Model, ABC):
             steps, you should override this method.
         
         Args:
-            datapoint: A :class:`dict` containing the attributes of a datapoint.
+            datapoint: A :obj:`dict` containing the attributes of a datapoint.
             imgsz: The input size. Default: ``512``.
             resize: Resize the input image to the model's input size. Default: ``False``.
         """

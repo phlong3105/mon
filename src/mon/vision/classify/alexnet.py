@@ -26,7 +26,6 @@ console = core.console
 class AlexNet(base.ImageClassificationModel):
     """AlexNet.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "alexnet"

@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module offer data handling capabilities, including lists, dictionaries,
-tuples, sets, and more advanced data structures from the :mod:`collections`
+"""Data Types.
+
+This module offer data handling capabilities, including lists, dictionaries,
+tuples, sets, and more advanced data structures from the :obj:`collections`
 module.
 
 This name combines "data" and "types" to convey that the module provides various
@@ -51,6 +53,7 @@ __all__ = [
     "to_triple",
     "to_tuple",
     "unique",
+    "upcast",
 ]
 
 import copy
@@ -62,13 +65,15 @@ from collections import OrderedDict
 from types import ModuleType
 from typing import Any, Callable, Iterable
 
+import numpy as np
+import torch
 from plum import dispatch
 
 
 # region Enum
 
 class Enum(enum.Enum):
-    """An extension of Python :class:`enum.Enum`."""
+    """An extension of Python :obj:`enum.Enum`."""
     
     @classmethod
     def random(cls):
@@ -96,16 +101,16 @@ class Enum(enum.Enum):
 # region Collection
 
 def intersect_dicts(x: dict, y: dict, exclude: list = []) -> dict:
-    """Find the intersection between two :class:`dict`.
+    """Find the intersection between two :obj:`dict`.
     
     Args:
-        x: The first :class:`dict`.
-        y: The second :class:`dict`.
-        exclude: A :class:`list` of excluding keys.
+        x: The first :obj:`dict`.
+        y: The second :obj:`dict`.
+        exclude: A :obj:`list` of excluding keys. Default: ``[]``.
     
     Returns:
-        A :class:`dict` that contains only the keys that are in both :param:`x`
-        and :param:`y`, and whose values are equal.
+        A :obj:`dict` that contains only the keys that are in both :obj:`x`
+        and :obj:`y`, and whose values are equal.
     """
     return {
         k: v for k, v in x.items()
@@ -118,16 +123,16 @@ def intersect_ordered_dicts(
     y      : OrderedDict,
     exclude: list = [],
 ) -> OrderedDict:
-    """Find the intersection between two :class:`OrderedDict`.
+    """Find the intersection between two :obj:`OrderedDict`.
     
     Args:
-        x: The first ordered :class:`dict`.
-        y: The second ordered :class:`dict`.
-        exclude: A :class:`list` of excluding keys.
+        x: The first ordered :obj:`dict`.
+        y: The second ordered :obj:`dict`.
+        exclude: A :obj:`list` of excluding keys. Default: ``[]``.
     
     Returns:
-        An :class:`OrderedDict` that contains only the keys that are in both
-        :param:`x` and :param:`y`, and whose values are equal.
+        An :obj:`OrderedDict` that contains only the keys that are in both
+        :obj:`x` and :obj:`y`, and whose values are equal.
     """
     return OrderedDict(
         (k, v) for k, v in x.items()
@@ -136,7 +141,7 @@ def intersect_ordered_dicts(
 
 
 def shuffle_dict(x: dict) -> dict:
-    """Shuffle a :class:`dict` randomly."""
+    """Shuffle a :obj:`dict` randomly."""
     keys = list(x.keys())
     random.shuffle(keys)
     shuffled = {}
@@ -161,7 +166,7 @@ def flatten_models_dict(x: dict) -> dict:
 # region Module
 
 def get_module_vars(module: ModuleType) -> dict:
-    """Return all public variables of a module in a :class:`dict`."""
+    """Return all public variables of a module in a :obj:`dict`."""
     return {
         k: v for k, v in vars(module).items()
         if not (
@@ -177,7 +182,7 @@ def get_module_vars(module: ModuleType) -> dict:
 
 # region Numeric
 
-def is_int(x) -> bool:
+def is_int(x: Any) -> bool:
     try:
         int(x)
         return True
@@ -185,7 +190,7 @@ def is_int(x) -> bool:
         return False
     
     
-def is_float(x) -> bool:
+def is_float(x: Any) -> bool:
     try:
         float(x)
         return True
@@ -193,22 +198,62 @@ def is_float(x) -> bool:
         return False
 
 
-def to_int(x: str | int | float | None) -> int | None:
-    """Convert a value to :class:`int`."""
+def to_int(x: Any) -> int | None:
+    """Convert a value to :obj:`int`."""
     if x is None:
         return None
     elif isinstance(x, str) and not is_int(x):
-        raise ValueError(f":param:`x` must be a digit string, but got {x} ({type(x)}).")
+        raise ValueError(f"`x` must be a digit string, but got {x} ({type(x)}).")
     return int(x)
 
 
-def to_float(x: str | int | float | None) -> float | None:
-    """Convert a value to :class:`float`."""
+def to_float(x: Any) -> float | None:
+    """Convert a value to :obj:`float`."""
     if x is None:
         return None
     elif isinstance(x, str) and not is_float(x):
-        raise ValueError(f":param:`x` must be a digit string, but got {x} ({type(x)}).")
+        raise ValueError(f"`x` must be a digit string, but got {x} ({type(x)}).")
     return float(x)
+
+# endregion
+
+
+# region Parsing
+
+def upcast(
+    x        : torch.Tensor | np.ndarray,
+    keep_type: bool = False
+) -> torch.Tensor | np.ndarray:
+    """Protect from numerical overflows in multiplications by upcasting to the
+    equivalent higher type.
+    
+    Args:
+        x: An input of type :obj:`numpy.ndarray` or :obj:`torch.Tensor`.
+        keep_type: If ``True``, keep the same type (int32  -> int64). Else
+            upcast to a higher type (int32 -> float32).
+            
+    Return:
+        A variable of higher type.
+    """
+    if x.dtype is torch.float16:
+        return x.to(torch.float32)
+    elif x.dtype is torch.float32:
+        return x  # x.to(torch.float64)
+    elif x.dtype is torch.int8:
+        return x.to(torch.int16) if keep_type else x.to(torch.float16)
+    elif x.dtype is torch.int16:
+        return x.to(torch.int32) if keep_type else x.to(torch.float32)
+    elif x.dtype is torch.int32:
+        return x  # x.to(torch.int64) if keep_type else x.to(torch.float64)
+    elif type(x) is np.float16:
+        return x.astype(np.float32)
+    elif type(x) is np.float32:
+        return x  # x.astype(np.float64)
+    elif type(x) is np.int16:
+        return x.astype(np.int32) if keep_type else x.astype(np.float32)
+    elif type(x) is np.int32:
+        return x  # x.astype(np.int64) if keep_type else x.astype(np.int64)
+    return x
 
 # endregion
 
@@ -216,26 +261,28 @@ def to_float(x: str | int | float | None) -> float | None:
 # region Sequence
 
 def concat_lists(x: list[list]) -> list:
-    """Concatenate a :class:`list` of lists into a flattened :class:`list`."""
+    """Concatenate a :obj:`list` of lists into a flattened :obj:`list`."""
     x = list(itertools.chain(*x))
     return x
 
 
-def iter_to_iter(x: Iterable, item_type: type, return_type: type | None = None):
-    """Convert an :class:`Iterable` object to a desired sequence type specified
-    by the :param:`return_type`. Also, cast each item into the desired
-    :param:`item_type`.
+def iter_to_iter(x: Iterable, item_type: type, return_type: type = None):
+    """Convert an :obj:`Iterable` object to a desired sequence type specified
+    by the :obj:`return_type`. Also, cast each item into the desired
+    :obj:`item_type`.
     
     Args:
-        x: An :class:`Iterable` object.
+        x: An :obj:`Iterable` object.
         item_type: The item type.
         return_type: The desired iterable type. Default: ``None``.
     
     Returns:
-        An :class:`Iterable` object cast to the desired type.
+        An :obj:`Iterable` object cast to the desired type.
     """
     if not isinstance(x, list | tuple | dict):
-        raise TypeError(f"x must be a list, tuple, or dict, but got {type(x)}.")
+        raise TypeError(
+            f"`x` must be a `list`, `tuple`, or `dict`, but got {type(x)}."
+        )
     x = copy.deepcopy(x)
     x = map(item_type, x)
     if return_type is None:
@@ -245,25 +292,25 @@ def iter_to_iter(x: Iterable, item_type: type, return_type: type | None = None):
 
 
 def iter_to_list(x: Iterable, item_type: type) -> list:
-    """Convert an arbitrary :class:`Iterable` object to a :class:`list`."""
+    """Convert an arbitrary :obj:`Iterable` object to a :obj:`list`."""
     return iter_to_iter(x=x, item_type=item_type, return_type=list)
 
 
 def iter_to_tuple(x: Iterable, item_type: type) -> tuple:
-    """Convert an arbitrary :class:`Iterable` object to a :class:`tuple`."""
+    """Convert an arbitrary :obj:`Iterable` object to a :obj:`tuple`."""
     return iter_to_iter(x=x, item_type=item_type, return_type=tuple)
 
 
 def split_list(x: list, n: int | list[int]) -> list[list]:
-    """Slice a single :class:`list` into a list of lists.
+    """Slice a single :obj:`list` into a list of lists.
     
     Args:
-        x: A :class:`list` object.
-        n: A number of sub-lists, or a :class:`list` of integers to specify the
+        x: A :obj:`list` object.
+        n: A number of sub-lists, or a :obj:`list` of integers to specify the
             length of each sub-list.
         
     Returns:
-        A :class:`list` of lists.
+        A :obj:`list` of lists.
     
     Examples:
         >>> x = [1, 2, 3, 4, 5, 6]
@@ -293,11 +340,11 @@ def split_list(x: list, n: int | list[int]) -> list[list]:
 
 
 def to_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list:
-    """Convert an arbitrary value into a :class:`list`.
+    """Convert an arbitrary value into a :obj:`list`.
     
     Args:
         x: An arbitrary value.
-        sep: A :class:`list` of delimiters to split a string.
+        sep: A :obj:`list` of delimiters to split a string.
     """
     if isinstance(x, list):
         x = x
@@ -322,29 +369,29 @@ def to_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list:
 
 
 def to_int_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list[int]:
-    """Convert a string into a :class:`list` of :class:`int`."""
+    """Convert a string into a :obj:`list` of :obj:`int`."""
     x = to_list(x, sep=sep)
     x = [int(i) for i in x]
     return x
 
 
 def to_float_list(x: Any, sep: list[str] = [",", ";", ":"]) -> list[float]:
-    """Convert a string into a :class:`list` of :class:`float`."""
+    """Convert a string into a :obj:`list` of :obj:`float`."""
     x = to_list(x, sep=sep)
     x = [float(i) for i in x]
     return x
 
 
 def to_nlist(n: int) -> Callable[[Any], list]:
-    """Take an integer :param:`n` and return a function that takes an
-    :class:`Iterable` object and returns a :class:`list` of length :param:`n`.
+    """Take an integer :obj:`n` and return a function that takes an
+    :obj:`Iterable` object and returns a :obj:`list` of length :obj:`n`.
     
     Args:
-        n: The number of elements in the :class:`list`.
+        n: The number of elements in the :obj:`list`.
     
     Returns:
-        A function that takes an integer and returns :class:`list` of that
-        integer :param:`n` repeated n times.
+        A function that takes an integer and returns :obj:`list` of that
+        integer :obj:`n` repeated n times.
     """
     def parse(x) -> list:
         if isinstance(x, Iterable):
@@ -367,7 +414,7 @@ to_6list = to_nlist(6)
 
 
 def to_tuple(x: Any) -> tuple:
-    """Convert an arbitrary value into a :class:`tuple`."""
+    """Convert an arbitrary value into a :obj:`tuple`."""
     if isinstance(x, list):
         x = tuple(x)
     elif isinstance(x, tuple):
@@ -380,15 +427,15 @@ def to_tuple(x: Any) -> tuple:
 
 
 def to_ntuple(n: int) -> Callable[[Any], tuple]:
-    """Take an integer :param:`n` and return a function that takes an
-    :class:`Iterable` object and returns a :class:`tuple` of length :param:`n`.
+    """Take an integer :obj:`n` and return a function that takes an
+    :obj:`Iterable` object and returns a :obj:`tuple` of length :obj:`n`.
     
     Args:
-        n: The number of elements in the :class:`tuple`.
+        n: The number of elements in the :obj:`tuple`.
     
     Returns:
-        A function that takes an integer :param:`n`n and returns a
-        :class:`tuple` of that integer repeated n times.
+        A function that takes an integer :obj:`n`n and returns a :obj:`tuple`
+        of that integer repeated `n` times.
     """
     def parse(x) -> tuple:
         if isinstance(x, Iterable):
@@ -416,13 +463,13 @@ to_quadruple = to_ntuple(4)
 
 @dispatch
 def unique(x: list) -> list:
-    """Get unique items from a :class:`list`."""
+    """Get unique items from a :obj:`list`."""
     return list(set(x))
 
 
 @dispatch
 def unique(x: tuple) -> tuple:
-    """Get unique items from a :class:`tuple`."""
+    """Get unique items from a :obj:`tuple`."""
     return tuple(set(x))
 
 # endregion

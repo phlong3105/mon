@@ -84,9 +84,9 @@ class SimpleGate(nn.Module):
     
     @classmethod
     def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
-        """Parse layer's arguments :param:`args`, calculate the
-        :param:`out_channels`, and update :param:`args`. Also, append the
-        :param:`out_channels` to :param:`ch` if needed.
+        """Parse layer's arguments :obj:`args`, calculate the
+        :obj:`out_channels`, and update :obj:`args`. Also, append the
+        :obj:`out_channels` to :obj:`ch` if needed.
 
         Args:
             f: From, i.e., the current layer receives output from the f-th layer.
@@ -94,11 +94,11 @@ class SimpleGate(nn.Module):
                 previous layers; [99, 101] means from the 99th and 101st layers.
                 This attribute is used in forward pass.
             args: Layer's parameters.
-            ch: A :class:`list` containing output channels of previous layers
+            ch: A :obj:`list` containing output channels of previous layers
                 (of the model)
         
         Returns:
-            The adjusted :param:`args` and :param:`ch`.
+            The adjusted :obj:`args` and :obj:`ch`.
         """
         c2 = ch[f] // 2
         ch.append(c2)
@@ -248,7 +248,7 @@ class ArgMax(nn.Module):
 
 
 class Clamp(nn.Module):
-    """Clamps a tensor' values within a range of :math:`[min, max]`.
+    """Clamps a tensor' values within a range of `[min, max]`.
 
     Args:
         min: The lower-bound of the range to be clamped to. Default: ``-1.0``.

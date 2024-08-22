@@ -132,7 +132,6 @@ class GoogleNet(base.ImageClassificationModel):
     """GoogLeNet (Inception v1) model architecture from
     `Going Deeper with Convolutions <http://arxiv.org/abs/1409.4842>`_.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "googlenet"
@@ -180,7 +179,7 @@ class GoogleNet(base.ImageClassificationModel):
             )
             init_weights = True
         if len(blocks) != 3:
-            raise ValueError(f":param:`blocks`'s length should be ``3``, but got {len(blocks)}.")
+            raise ValueError(f"`blocks`'s length should be ``3``, but got {len(blocks)}.")
        
         conv_block          = blocks[0]
         inception_block     = blocks[1]

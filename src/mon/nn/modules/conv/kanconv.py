@@ -82,7 +82,7 @@ class FourierBasisFunction(nn.Module):
     
     def __init__(self, num_frequencies: int = 4, period: float = 1.0):
         super().__init__()
-        assert num_frequencies % 2 == 0, ":param:`num_frequencies` must be even"
+        assert num_frequencies % 2 == 0, "`num_frequencies` must be even"
         self.num_frequencies = num_frequencies
         self.period          = nn.Parameter(torch.Tensor([period]), requires_grad=False)
     

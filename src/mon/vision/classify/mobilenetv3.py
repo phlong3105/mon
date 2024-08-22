@@ -188,7 +188,6 @@ def _mobilenetv3_conf(
 class MobileNetV3(base.ImageClassificationModel, ABC):
     """MobileNetV3.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
     arch   : str  = "mobilenet"
@@ -214,12 +213,12 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
             *args, **kwargs
         )
         if not inverted_residual_setting:
-            raise ValueError("The :param:`inverted_residual_setting` should not be empty")
+            raise ValueError("The `inverted_residual_setting` should not be empty")
         elif not (
             isinstance(inverted_residual_setting, Sequence)
             and all([isinstance(s, InvertedResidualConfig) for s in inverted_residual_setting])
         ):
-            raise TypeError("The :param:`inverted_residual_setting` should be :class:`list[InvertedResidualConfig]`")
+            raise TypeError("The `inverted_residual_setting` should be `list[InvertedResidualConfig]`")
 
         if block is None:
             block = InvertedResidual
@@ -301,7 +300,6 @@ class MobileNetV3_Large(MobileNetV3):
     """MobileNetV3 architecture from `Searching for MobileNetV3
     <https://arxiv.org/abs/1905.02244>`__.
     
-    See Also: :class:`MobileNetV3`
     """
     
     zoo: dict = {
@@ -334,7 +332,6 @@ class MobileNetV3_Small(MobileNetV3):
     """MobileNetV3 architecture from `Searching for MobileNetV3
     <https://arxiv.org/abs/1905.02244>`__.
     
-    See Also: :class:`MobileNetV3`
     """
     
     zoo: dict = {

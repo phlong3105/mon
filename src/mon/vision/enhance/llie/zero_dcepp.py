@@ -26,7 +26,7 @@ console = core.console
 
 class TotalVariationLoss(nn.Loss):
     """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
-    :math:`\mathcal{L}_{tvA}` preserve the monotonicity relations between
+    `\mathcal{L}_{tvA}` preserve the monotonicity relations between
     neighboring pixels. It is used to avoid aggressive and sharp changes between
     neighboring pixels.
     
@@ -125,8 +125,6 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
         
     References:
         `<https://github.com/Li-Chongyi/Zero-DCE_extension>`__
-
-    See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     arch   : str  = "zero_dce++"

@@ -32,7 +32,6 @@ class MIPI24Flare(ImageDataset):
 	"""Nighttime Flare Removal dataset used in MIPI 2024 Challenge
 	`<https://mipi-challenge.org/MIPI2024/index.html>`__
 	
-	See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
 	"""
 	
 	tasks : list[Task]  = [Task.LES]
@@ -94,7 +93,6 @@ class MIPI24FlareDataModule(datamodule.DataModule):
 	"""Nighttime Flare Removal datamodule used in MIPI 2024 Challenge
 	`<https://mipi-challenge.org/MIPI2024/index.html>`__
 	
-	See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
 	"""
 	
 	tasks: list[Task] = [Task.LES]

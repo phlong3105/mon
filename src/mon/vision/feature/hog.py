@@ -49,10 +49,6 @@ class HOGEmbedder(base.Embedder):
             orientation bins can provide more detailed information about the
             orientations, but may also increase the dimensionality of the
             feature vector and require more computation. Default: ``9``.
-        
-    See Also:
-        - :class:`mon.vision.feature.base.Embedder`.
-        - :class:`cv2.HOGDescriptor`.
     """
     
     def __init__(
@@ -77,11 +73,11 @@ class HOGEmbedder(base.Embedder):
         """Extract features in the images.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[N, H, W, C]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[N, H, W, C]`.
 
         Returns:
-           A 2D :class:`list` of feature vectors.
+           A 2D :obj:`list` of feature vectors.
         """
         features = []
         for image in images:

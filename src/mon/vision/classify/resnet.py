@@ -95,9 +95,9 @@ class BasicBlock(nn.Module):
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if groups != 1 or base_width != 64:
-            raise ValueError(":class:`BasicBlock` only supports :math:`groups=1` and :math:`base_width=64`")
+            raise ValueError("`BasicBlock` only supports `groups=1` and `base_width=64`")
         if dilation > 1:
-            raise NotImplementedError(":math:`dilation > 1` not supported in :class:`BasicBlock`")
+            raise NotImplementedError("`dilation > 1` not supported in `BasicBlock`")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         self.conv1      = Conv3x3(in_channels, out_channels, stride)
         self.bn1        = norm_layer(out_channels)
@@ -183,7 +183,6 @@ class Bottleneck(nn.Module):
 class ResNet(base.ImageClassificationModel, ABC):
     """ResNet.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "resnet"
@@ -222,8 +221,8 @@ class ResNet(base.ImageClassificationModel, ABC):
             replace_stride_with_dilation = [False, False, False]
         if len(replace_stride_with_dilation) != 3:
             raise ValueError(
-                f":param:`replace_stride_with_dilation` should be ``None`` "
-                f"or a 3-element :class:`tuple`, but got {replace_stride_with_dilation}"
+                f"`replace_stride_with_dilation` should be ``None`` "
+                f"or a 3-element `tuple`, but got {replace_stride_with_dilation}"
             )
         self.groups     = groups
         self.base_width = width_per_group
@@ -334,7 +333,6 @@ class ResNet18(ResNet):
     """ResNet-18 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
     
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -359,7 +357,6 @@ class ResNet18(ResNet):
 class ResNet34(ResNet):
     """ResNet-34 from `Deep Residual Learning for Image Recognition <https://arxiv.org/abs/1512.03385>`__.
     
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -385,7 +382,6 @@ class ResNet50(ResNet):
     """ResNet-50 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -417,7 +413,6 @@ class ResNet101(ResNet):
     """ResNet-101 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -449,7 +444,6 @@ class ResNet152(ResNet):
     """ResNet-152 from `Deep Residual Learning for Image Recognition
     <https://arxiv.org/abs/1512.03385>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -485,7 +479,6 @@ class ResNeXt50_32X4D(ResNet):
     """ResNeXt-50 32x4d model from `Aggregated Residual Transformation for Deep
     Neural Networks <https://arxiv.org/abs/1611.05431>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -519,7 +512,6 @@ class ResNeXt101_32X8D(ResNet):
     """ResNeXt-101 32x8d model from `Aggregated Residual Transformation for
     Deep Neural Networks <https://arxiv.org/abs/1611.05431>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -553,7 +545,6 @@ class ResNeXt101_64X4D(ResNet):
     """ResNeXt-101 32x8d model from `Aggregated Residual Transformation for
     Deep Neural Networks <https://arxiv.org/abs/1611.05431>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -585,7 +576,6 @@ class WideResNet50(ResNet):
     """Wide ResNet-50-2 model from `Wide Residual Networks
     <https://arxiv.org/abs/1605.07146>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {
@@ -618,7 +608,6 @@ class WideResNet101(ResNet):
     """Wide ResNet-101-2 model from `Wide Residual Networks
     <https://arxiv.org/abs/1605.07146>`__.
 
-    See Also: :class:`ResNet`
     """
     
     zoo: dict = {

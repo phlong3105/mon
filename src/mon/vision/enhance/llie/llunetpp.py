@@ -141,8 +141,6 @@ class LLUnetpp_RE(base.LowLightImageEnhancementModel):
     
     References:
         `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
-        
-    See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     arch   : str  = "llunet++"

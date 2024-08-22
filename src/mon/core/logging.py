@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module extends Python's :mod`logging` module."""
+"""Logging Module.
+
+This module extends Python's :obj:`logging` module.
+"""
 
 from __future__ import annotations
 
@@ -34,9 +37,9 @@ logger = logging.getLogger("rich")
 logger.setLevel(logging.INFO)
 
 
-def get_logger(path: pathlib.Path | None = None) -> logging.Logger:
-    """Get access the global :param:`logging.Logger` object that uses
-    :mod:`rich`. Create a new one if it doesn't exist.
+def get_logger(path: pathlib.Path = None) -> logging.Logger:
+    """Get access the global :obj:`logging.Logger` object that uses
+    :obj:`rich`. Create a new one if it doesn't exist.
     
     Args:
         path: The path to store the log info. Default: ``None``.

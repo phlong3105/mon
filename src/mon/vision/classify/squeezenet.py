@@ -63,7 +63,6 @@ class Fire(nn.Module):
 class SqueezeNet(base.ImageClassificationModel, ABC):
     """SqueezeNet.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "squeezenet"
@@ -164,7 +163,6 @@ class SqueezeNet1_0(SqueezeNet):
     accuracy with 50x fewer parameters and <0.5MB model size
     <https://arxiv.org/abs/1602.07360>`_ paper.
     
-    See Also: :class:`SqueezeNet`
     """
     
     zoo: dict = {
@@ -192,7 +190,6 @@ class SqueezeNet1_1(SqueezeNet):
     SqueezeNet 1.1 has 2.4x less computation and slightly fewer parameters
     than SqueezeNet 1.0, without sacrificing accuracy.
     
-    See Also: :class:`SqueezeNet`
     """
     
     zoo: dict = {

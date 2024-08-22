@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements file handlers and file IO functions."""
+"""File.
+
+This package implements file I/O functionality for the :obj:`mon` package.
+"""
 
 from __future__ import annotations
 

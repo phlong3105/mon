@@ -33,7 +33,7 @@ class DataWriter(ABC):
 
 	Args:
 		dst: A destination.
-		denormalize: If ``True``, convert image to :math:`[0, 255]`. Default: ``False``.
+		denormalize: If ``True``, convert image to ``[0, 255]``. Default: ``False``.
 		verbose: Verbosity. Default: ``False``.
 	"""
 	
@@ -70,22 +70,22 @@ class DataWriter(ABC):
 	
 	@abstractmethod
 	def write(self, data: torch.Tensor | np.ndarray, denormalize: bool = False):
-		"""Write data to :attr:`dst`.
+		"""Write data to :obj:`dst`.
 
 		Args:
 			data: A data sample.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		pass
 	
 	@abstractmethod
 	def write_batch(self, data: list[torch.Tensor | np.ndarray], denormalize: bool = False):
-		"""Write a batch of images to :attr:`dst`.
+		"""Write a batch of images to :obj:`dst`.
 
 		Args:
-			data: A :class:`list` of images.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			data: A :obj:`list` of images.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		pass
@@ -100,11 +100,11 @@ class VideoWriter(DataWriter):
 
 	Args:
 		dst: A directory to save images.
-		image_size: A desired output size of shape :math:`[H, W]`. This is used
-			to reshape the input. Default: :math:`[480, 640]`.
+		image_size: A desired output size of shape `[H, W]`. This is used
+			to reshape the input. Default: `[480, 640]`.
 		frame_rate: A frame rate of the output video. Default: ``10``.
 		save_image: If ``True`` save each image separately. Default: ``False``.
-		denormalize: If ``True``, convert image to :math:`[0, 255]`.
+		denormalize: If ``True``, convert image to ``[0, 255]``.
 			Default: ``False``.
 		verbose: Verbosity. Default: ``False``.
 	"""
@@ -153,12 +153,12 @@ class VideoWriter(DataWriter):
 		path       : core.Path 	  | None = None,
 		denormalize: bool 				 = False
 	):
-		"""Write an image to :attr:`dst`.
+		"""Write an image to :obj:`dst`.
 
 		Args:
 			data: An image.
 			path: An image file path with an extension. Default: ``None``.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		pass
@@ -170,30 +170,30 @@ class VideoWriter(DataWriter):
 		paths      : list[core.Path]   | None = None,
 		denormalize: bool			 		  = False
 	):
-		"""Write a batch of images to :attr:`dst`.
+		"""Write a batch of images to :obj:`dst`.
 
 		Args:
-			data: A :class:`list` of images.
-			paths: A :class:`list` of image file paths with extensions.
+			data: A :obj:`list` of images.
+			paths: A :obj:`list` of image file paths with extensions.
 				Default: ``None``.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		pass
 
 
 class VideoWriterCV(VideoWriter):
-	"""A video writer that writes images to a video file using :mod:`cv2`.
+	"""A video writer that writes images to a video file using :obj:`cv2`.
 
 	Args:
 		dst: A destination directory to save images.
-		image_size: A desired output size of shape :math:`[H, W]`. This is used
-			to reshape the input. Default: :math:`[480, 640]`.
+		image_size: A desired output size of shape `[H, W]`. This is used
+			to reshape the input. Default: `[480, 640]`.
 		frame_rate: A frame rate of the output video. Default: ``10``.
 		fourcc: Video codec. One of ``'mp4v'``, ``'xvid'``, ``'mjpg'``, or
 		``'wmv'``. Default: ``'.mp4v'``.
 		save_image: If ``True``, save each image separately. Default: ``False``.
-		denormalize: If ``True``, convert image to :math:`[0, 255]`.
+		denormalize: If ``True``, convert image to ``[0, 255]``.
 			Default: ``False``.
 		verbose: Verbosity. Default: ``False``.
 	"""
@@ -242,7 +242,7 @@ class VideoWriterCV(VideoWriter):
 			raise FileNotFoundError(f"Cannot create video file at {video_file}.")
 	
 	def close(self):
-		"""Close the :attr:`video_writer`."""
+		"""Close the :obj:`video_writer`."""
 		if self._video_writer:
 			self._video_writer.release()
 	
@@ -252,12 +252,12 @@ class VideoWriterCV(VideoWriter):
 		path       : core.Path    | None = None,
 		denormalize: bool 				 = False
 	):
-		"""Write an image to :attr:`dst`.
+		"""Write an image to :obj:`dst`.
 
 		Args:
 			data: An image.
 			path: An image file path with an extension. Default: ``None``.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		if self._save_image:
@@ -287,13 +287,13 @@ class VideoWriterCV(VideoWriter):
 		paths      : list[core.Path]   | None = None,
 		denormalize: bool 					  = False
 	):
-		"""Write a batch of images to :attr:`dst`.
+		"""Write a batch of images to :obj:`dst`.
 
 		Args:
-			data: A :class:`list` of images.
-			paths: A :class:`list` of image file paths with extensions.
+			data: A :obj:`list` of images.
+			paths: A :obj:`list` of image file paths with extensions.
 				Default: ``None``.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		if paths is None:
@@ -303,19 +303,19 @@ class VideoWriterCV(VideoWriter):
 
 
 class VideoWriterFFmpeg(VideoWriter):
-	"""A video writer that writes images to a video file using :mod:`ffmpeg`.
+	"""A video writer that writes images to a video file using :obj:`ffmpeg`.
 
 	Args:
 		dst: A destination directory to save images.
-		image_size: A desired output size of shape :math:`[H, W]`. This is used
-			to reshape the input. Default: :math:`[480, 640]`.
+		image_size: A desired output size of shape `[H, W]`. This is used
+			to reshape the input. Default: `[480, 640]`.
 		frame_rate: A frame rate of the output video. Default: ``10``.
 		pix_fmt: A video codec. Default: ``'yuv420p'``.
 		save_image: If ``True`` save each image separately. Default: ``False``.
-		denormalize: If ``True``, convert image to :math:`[0, 255]`.
+		denormalize: If ``True``, convert image to ``[0, 255]``.
 			Default: ``False``.
 		verbose: Verbosity. Default: ``False``.
-		kwargs: Any supplied kwargs are passed to :mod:`ffmpeg` verbatim.
+		kwargs: Any supplied kwargs are passed to :obj:`ffmpeg` verbatim.
 	"""
 	
 	def __init__(
@@ -387,7 +387,7 @@ class VideoWriterFFmpeg(VideoWriter):
 			)
 	
 	def close(self):
-		"""Stop and release the current :attr:`ffmpeg_process`."""
+		"""Stop and release the current :obj:`ffmpeg_process`."""
 		if self._ffmpeg_process:
 			self._ffmpeg_process.stdin.close()
 			self._ffmpeg_process.terminate()
@@ -400,12 +400,12 @@ class VideoWriterFFmpeg(VideoWriter):
 		path       : core.Path    | None = None,
 		denormalize: bool 				 = False
 	):
-		"""Write an image to :attr:`dst`.
+		"""Write an image to :obj:`dst`.
 
 		Args:
 			data: An image.
 			path: An image file path with an extension. Default: ``None``.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		if self._save_image:
@@ -432,13 +432,13 @@ class VideoWriterFFmpeg(VideoWriter):
 		paths      : list[core.Path]   | None = None,
 		denormalize: bool 					  = False,
 	):
-		"""Write a batch of images to :attr:`dst`.
+		"""Write a batch of images to :obj:`dst`.
 
 		Args:
-			data: A :class:`list` of images.
-			paths: A :class:`list` of image file paths with extensions.
+			data: A :obj:`list` of images.
+			paths: A :obj:`list` of image file paths with extensions.
 				Default: ``None``.
-			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
 		if paths is None:
@@ -459,13 +459,13 @@ def parse_io_worker(
 	data_root  : core.Path | str = None,
 	verbose    : bool            = False,
 ) -> tuple[str, datastruct.Dataset, DataWriter]:
-	"""Parse the :param:`src` and :param:`dst` to get the correct I/O worker.
+	"""Parse the :obj:`src` and :obj:`dst` to get the correct I/O worker.
 	
 	Args:
 		src: The source of the input data.
 		dst: The destination path.
 		to_tensor: If ``True``, convert the image to a tensor. Default: ``False``.
-		denormalize: If ``True``, denormalize the image to :math:`[0, 255]`.
+		denormalize: If ``True``, denormalize the image to ``[0, 255]``.
 			Default: ``False``.
 		data_root: The root directory of all datasets, i.e., :file:`data/`.
 		verbose: Verbosity. Default: ``False``.

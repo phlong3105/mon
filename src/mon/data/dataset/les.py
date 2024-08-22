@@ -39,10 +39,7 @@ DatapointAttributes = annotation.DatapointAttributes
 '''
 @DATASETS.register(name="flare7k++")
 class Flare7KPP(ImageDataset):
-    """Flare7K++-Real dataset consists of 100 flare/clear image pairs.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """Flare7K++-Real dataset consists of 100 flare/clear image pairs."""
     
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TRAIN]
@@ -205,7 +202,6 @@ class Flare7KPP(ImageDataset):
 class Flare7KPPReal(ImageDataset):
     """Flare7K++-Real dataset consists of 100 flare/clear image pairs.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LES]
@@ -253,7 +249,6 @@ class Flare7KPPReal(ImageDataset):
 class Flare7KPPSyn(ImageDataset):
     """Flare7K++-Syn dataset consists of 100 flare/clear image pairs.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LES]
@@ -301,7 +296,6 @@ class Flare7KPPSyn(ImageDataset):
 class FlareReal800(ImageDataset):
     """FlareReal800 dataset consists of 800 flare/clear image pairs.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LES]
@@ -349,7 +343,6 @@ class FlareReal800(ImageDataset):
 class LEDLight(ImageDataset):
     """LEDLight dataset consists of 100 flare/clear image pairs.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LES]
@@ -397,7 +390,6 @@ class LEDLight(ImageDataset):
 class LightEffect(ImageDataset):
     """LightEffect dataset consists 961 flare images.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LES]
@@ -438,7 +430,6 @@ class LightEffect(ImageDataset):
 class Flare7KPPRealDataModule(datamodule.DataModule):
     """Flare7K++-Real datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LES]
@@ -471,7 +462,6 @@ class Flare7KPPRealDataModule(datamodule.DataModule):
 class Flare7KPPSynDataModule(datamodule.DataModule):
     """Flare7K++-Syn datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LES]
@@ -504,7 +494,6 @@ class Flare7KPPSynDataModule(datamodule.DataModule):
 class FlareReal800DataModule(datamodule.DataModule):
     """FlareReal800 datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LES]
@@ -537,7 +526,6 @@ class FlareReal800DataModule(datamodule.DataModule):
 class LEDLightDataModule(datamodule.DataModule):
     """LEDLight datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
 
     tasks: list[Task] = [Task.LES]
@@ -570,7 +558,6 @@ class LEDLightDataModule(datamodule.DataModule):
 class LightEffectDataModule(datamodule.DataModule):
     """LightEffect datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LES]

@@ -11,6 +11,8 @@ __all__ = [
     "D2CE",
     "D2CE_01_Baseline",
     "D2CE_02_Prediction",
+    "D2CE_03_OldLoss",
+    "D2CE_04_Prediction_OldLoss",
 ]
 
 from copy import deepcopy
@@ -22,7 +24,7 @@ from fvcore.nn import parameter_count
 from mon import core, nn
 from mon.core import _size_2_t
 from mon.globals import MODELS, Scheme
-from mon.vision import color, filtering, geometry
+from mon.vision import filtering, geometry
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -32,7 +34,7 @@ console = core.console
 
 class TotalVariationLoss(nn.Loss):
     """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
-    :math:`\mathcal{L}_{tvA}` preserve the monotonicity relations between
+    `\mathcal{L}_{tvA}` preserve the monotonicity relations between
     neighboring pixels. It is used to avoid aggressive and sharp changes between
     neighboring pixels.
     
@@ -250,10 +252,10 @@ class EnhanceNet(nn.Module):
         depth: torch.Tensor | None
     ) -> tuple[torch.Tensor, torch.Tensor]:
         x    = image
-        gray = color.rgb_to_grayscale(image)
+        gray = core.rgb_to_grayscale(image)
         edge = None
         if depth is not None and core.is_color_image(depth):
-            depth = color.rgb_to_grayscale(depth)
+            depth = core.rgb_to_grayscale(depth)
         if self.use_depth:
             x = torch.cat([x, depth], 1)
         if self.use_edge:
@@ -281,8 +283,6 @@ class EnhanceNet(nn.Module):
 class D2CE(base.LowLightImageEnhancementModel):
     """D2CE (Depth to Curve Estimation Network / Deep Depth Curve Estimation
     Network) models.
-    
-    See Also: :class:`base.LowLightImageEnhancementModel`
     """
     
     arch   : str  = "d2ce"
@@ -378,7 +378,7 @@ class D2CE(base.LowLightImageEnhancementModel):
         }
         
         # Get FLOPs and Params
-        flops, params = core.profile_mon_model(deepcopy(self), inputs=datapoint, verbose=verbose)
+        flops, params = core.custom_profile(deepcopy(self), inputs=datapoint, verbose=verbose)
         # flops         = FlopCountAnalysis(self, datapoint).total() if flops == 0 else flops
         params        = self.params                if hasattr(self, "params") and params == 0 else params
         params        = parameter_count(self)      if hasattr(self, "params")  else params
@@ -402,16 +402,16 @@ class D2CE(base.LowLightImageEnhancementModel):
     
     def assert_datapoint(self, datapoint: dict) -> bool:
         super().assert_datapoint(datapoint)
-        assert "depth" in datapoint, "The key ``'depth'`` must be defined in the :param:`datapoint`."
+        assert "depth" in datapoint, "The key ``'depth'`` must be defined in the `datapoint`."
     
     def assert_outputs(self, outputs: dict) -> bool:
         super().assert_outputs(outputs)
-        assert "adjust"   in outputs, "The key ``'adjust'`` must be defined in the :param:`outputs`."
-        assert "bam"      in outputs, "The key ``'bam'`` must be defined in the :param:`outputs`."
-        assert "depth"    in outputs, "The key ``'depth'`` must be defined in the :param:`outputs`."
-        assert "edge"     in outputs, "The key ``'edge'`` must be defined in the :param:`outputs`."
-        assert "guidance" in outputs, "The key ``'guidance'`` must be defined in the :param:`outputs`."
-        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the :param:`outputs`."
+        assert "adjust"   in outputs, "The key ``'adjust'`` must be defined in the `outputs`."
+        assert "bam"      in outputs, "The key ``'bam'`` must be defined in the `outputs`."
+        assert "depth"    in outputs, "The key ``'depth'`` must be defined in the `outputs`."
+        assert "edge"     in outputs, "The key ``'edge'`` must be defined in the `outputs`."
+        assert "guidance" in outputs, "The key ``'guidance'`` must be defined in the `outputs`."
+        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the `outputs`."
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
         # Forward
@@ -429,7 +429,7 @@ class D2CE(base.LowLightImageEnhancementModel):
         # Symmetric Loss
         adjust1, bam1, depth1, edge1, bright1, dark1, guide1, enhanced1 = outputs1.values()
         adjust2, bam2, depth2, edge2, bright2, dark2, guide2, enhanced2 = outputs2.values()
-        adjust , bam , depth,  edge,  bright,  dark,  guide , enhanced  = outputs.values()
+        adjust,  bam,  depth,  edge,  bright,  dark,  guide,  enhanced  = outputs.values()
         enhanced_1, enhanced_2 = geometry.pair_downsample(enhanced)
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,     enhanced1))
@@ -535,7 +535,7 @@ class D2CE_01_Baseline(D2CE):
 class D2CE_02_Prediction(D2CE):
     
     def __init__(self, *args, **kwargs):
-        super().__init__(name="d2ce_02_prediction",*args, **kwargs)
+        super().__init__(name="d2ce_02_prediction", *args, **kwargs)
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
@@ -575,38 +575,63 @@ class D2CE_02_Prediction(D2CE):
         }
 
 
-@MODELS.register(name="d2ce_03_prediction", arch="d2ce")
-class D2CE_03_Prediction(D2CE):
+@MODELS.register(name="d2ce_03_oldloss", arch="d2ce")
+class D2CE_03_OldLoss(D2CE):
     
     def __init__(self, *args, **kwargs):
-        super().__init__(name="d2ce_02_prediction",*args, **kwargs)
+        super().__init__(name="d2ce_03_oldloss", *args, **kwargs)
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        # Forward
+        self.assert_datapoint(datapoint)
+        image   = datapoint.get("image")
+        depth   = datapoint.get("depth")
+        outputs = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        adjust, bam, depth, edge, bright, dark, guide, enhanced = outputs.values()
+        loss = self.loss(image, adjust, enhanced)
+        outputs["loss"] = loss
+        # Return
+        return outputs
+
+
+@MODELS.register(name="d2ce_04_prediction_oldloss", arch="d2ce")
+class D2CE_04_Prediction_OldLoss(D2CE):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(name="d2ce_04_prediction_oldloss", *args, **kwargs)
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
+        # Forward
+        self.assert_datapoint(datapoint)
+        image   = datapoint.get("image")
+        depth   = datapoint.get("depth")
+        outputs = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        adjust, bam, depth, edge, bright, dark, guide, enhanced = outputs.values()
+        loss = self.loss(image, adjust, enhanced)
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image = datapoint.get("image")
-        depth = datapoint.get("depth")
+        image  = datapoint.get("image")
+        depth  = datapoint.get("depth")
         # Enhancement
         adjust, edge = self.en(image, depth)
-        edge  = edge.detach() if edge is not None else None  # Must call detach() else error
+        edge   = edge.detach() if edge is not None else None  # Must call detach() else error
         # Enhancement loop
-        if not self.predicting:
-            guide  = image
-            bam    = None
-            bright = None
-            dark   = None
-            for i in range(self.num_iters):
-                guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        else:
-            guide  = image
-            bam    = self.bam(image)
-            bright = None
-            dark   = None
-            for i in range(0, self.num_iters):
-                bright = guide * (1 - bam)
-                dark   = guide * bam
-                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
+        guide  = image
+        bam    = None
+        bright = None
+        dark   = None
+        for i in range(self.num_iters):
+            guide = guide + adjust * (torch.pow(guide, 2) - guide)
         # Guided Filter
-        enhanced = self.gf(image, guide)
+        enhanced = guide
         return {
             "adjust"  : adjust,
             "bam"     : bam,
@@ -617,5 +642,5 @@ class D2CE_03_Prediction(D2CE):
             "guidance": guide,
             "enhanced": enhanced,
         }
-
+    
 # endregion

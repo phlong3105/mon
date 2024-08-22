@@ -66,7 +66,6 @@ ImageDataset        = dataset.ImageDataset
 class DarkFace(ImageDataset):
     """DarkFace dataset consists of 6490 low-light images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -114,7 +113,6 @@ class DarkFace(ImageDataset):
 class DICM(ImageDataset):
     """DICM dataset consists of 64 low-light images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -162,7 +160,6 @@ class DICM(ImageDataset):
 class ExDark(ImageDataset):
     """ExDark dataset consists of 7363 low-light images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -199,7 +196,6 @@ class FiveKC(ImageDataset):
     """MIT Adobe FiveK dataset with Expert C ground-truth. It consists of 5,000
     low/high image pairs.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -272,7 +268,6 @@ class FiveKE(ImageDataset):
     """MIT Adobe FiveK dataset with Expert E ground-truth. It consists of 5,000
     low/high image pairs.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -344,7 +339,6 @@ class FiveKE(ImageDataset):
 class Fusion(ImageDataset):
     """Fusion dataset consists of 64 low-light images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -392,7 +386,6 @@ class Fusion(ImageDataset):
 class LIME(ImageDataset):
     """LIME dataset consists of 10 low-light images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
 
     tasks : list[Task]  = [Task.LLIE]
@@ -441,7 +434,6 @@ class LOLBlur(ImageDataset):
     """LOL-Blur dataset consists of low-light + blurred and normal-light + sharp
     image pairs.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -492,7 +484,6 @@ class LOLV1(ImageDataset):
     images contain noise produced during the photo capture process. Most of the
     images are indoor scenes. All the images have a resolution of 400×600.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -568,7 +559,6 @@ class LOLV2Real(ImageDataset):
     process. Most of the images are indoor scenes. All the images have a
     resolution of 400×600.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -644,7 +634,6 @@ class LOLV2Synthetic(ImageDataset):
     capture process. Most of the images are indoor scenes. All the images have a
     resolution of 400×600.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -716,7 +705,6 @@ class LOLV2Synthetic(ImageDataset):
 class MEF(ImageDataset):
     """MEF dataset consists 17 low-light images.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -764,7 +752,6 @@ class MEF(ImageDataset):
 class NPE(ImageDataset):
     """NPE dataset consists 85 low-light images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -812,7 +799,6 @@ class NPE(ImageDataset):
 class SICEGrad(ImageDataset):
     """SICE-Grad dataset.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -846,10 +832,9 @@ class SICEGrad(ImageDataset):
                         
 @DATASETS.register(name="sice_mix")
 class SICEMix(ImageDataset):
-    """Custom SICE dataset for training :class:`mon.vision.enhance.llie.zerodce.ZeroDCE`
+    """Custom SICE dataset for training :obj:`mon.vision.enhance.llie.zerodce.ZeroDCE`
     model.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -897,7 +882,6 @@ class SICEMix(ImageDataset):
 class SICEMixV2(ImageDataset):
     """SICE-MixV2 dataset.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -945,7 +929,6 @@ class SICEMixV2(ImageDataset):
 class ULOL(ImageDataset):
     """Custom ULOL (Unsupervised LOw-Light) dataset for training.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -1006,7 +989,6 @@ class ULOL(ImageDataset):
 class VV(ImageDataset):
     """VV dataset consists of 24 low-light images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -1058,7 +1040,6 @@ class VV(ImageDataset):
 class DarkFaceDataModule(datamodule.DataModule):
     """DarkFace datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1091,7 +1072,6 @@ class DarkFaceDataModule(datamodule.DataModule):
 class DICMDataModule(datamodule.DataModule):
     """DICM datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1124,7 +1104,6 @@ class DICMDataModule(datamodule.DataModule):
 class ExDarkDataModule(datamodule.DataModule):
     """ExDark datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1157,7 +1136,6 @@ class ExDarkDataModule(datamodule.DataModule):
 class FiveKCDataModule(datamodule.DataModule):
     """MIT Adobe FiveK datamodule with Expert C ground-truth.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1190,7 +1168,6 @@ class FiveKCDataModule(datamodule.DataModule):
 class FiveKEDataModule(datamodule.DataModule):
     """MIT Adobe FiveK datamodule with Expert E ground-truth.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1223,7 +1200,6 @@ class FiveKEDataModule(datamodule.DataModule):
 class FusionDataModule(datamodule.DataModule):
     """Fusion datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1256,7 +1232,6 @@ class FusionDataModule(datamodule.DataModule):
 class LIMEDataModule(datamodule.DataModule):
     """LIME datamodule.
      
-     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
      """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1289,7 +1264,6 @@ class LIMEDataModule(datamodule.DataModule):
 class LOLBlurDataModule(datamodule.DataModule):
     """LOL-Blur datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1322,7 +1296,6 @@ class LOLBlurDataModule(datamodule.DataModule):
 class LOLV1DataModule(datamodule.DataModule):
     """LOLV1 datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1355,7 +1328,6 @@ class LOLV1DataModule(datamodule.DataModule):
 class LOLV2RealDataModule(datamodule.DataModule):
     """LOLV2Real datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1388,7 +1360,6 @@ class LOLV2RealDataModule(datamodule.DataModule):
 class LOLV2SyntheticDataModule(datamodule.DataModule):
     """LOL-v2 Synthetic datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1421,7 +1392,6 @@ class LOLV2SyntheticDataModule(datamodule.DataModule):
 class MEFDataModule(datamodule.DataModule):
     """MEF datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1454,7 +1424,6 @@ class MEFDataModule(datamodule.DataModule):
 class NPEDataModule(datamodule.DataModule):
     """NPE datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1487,7 +1456,6 @@ class NPEDataModule(datamodule.DataModule):
 class SICEGradDataModule(datamodule.DataModule):
     """SICE-Grad datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1520,7 +1488,6 @@ class SICEGradDataModule(datamodule.DataModule):
 class SICEMixDataModule(datamodule.DataModule):
     """SICE-Mix datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1553,7 +1520,6 @@ class SICEMixDataModule(datamodule.DataModule):
 class SICEMixV2DataModule(datamodule.DataModule):
     """SICE-MixV2 datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1586,7 +1552,6 @@ class SICEMixV2DataModule(datamodule.DataModule):
 class ULOLMixDataModule(datamodule.DataModule):
     """Custom ULOL (Unsupervised LOw-Light) datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]
@@ -1619,7 +1584,6 @@ class ULOLMixDataModule(datamodule.DataModule):
 class VVDataModule(datamodule.DataModule):
     """VV datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.LLIE]

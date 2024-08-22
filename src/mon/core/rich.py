@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module extends the :mod:`rich` package.It provides rich text and
-beautiful formatting in the terminal, console, and logging throughout the
-:mod:`mon` framework.
+"""Rich Module.
+
+This module extends the :obj:`rich` package.It provides rich text and beautiful
+formatting in the terminal, console, and logging throughout the :obj:`mon`
+framework.
 """
 
 from __future__ import annotations
@@ -106,7 +108,7 @@ error_console = rich.console.Console(
 
 
 def get_console() -> rich.console.Console:
-    """Get access to the global :class:`rich.console.Console` object. Create a
+    """Get access to the global :obj:`rich.console.Console` object. Create a
     new one if it doesn't exist.
     """
     global console
@@ -122,7 +124,7 @@ def get_console() -> rich.console.Console:
 
 
 def get_error_console() -> rich.console.Console:
-    """Get access to the global :class:`rich.console.Console` object that logs
+    """Get access to the global :obj:`rich.console.Console` object that logs
     errors. Create a new one if it doesn't exist.
     """
     global error_console
@@ -147,7 +149,7 @@ def get_download_bar(
     transient: bool = False,
     disable  : bool = False,
 ) -> progress.Progress:
-    """Return a :class:`rich.progress.Progress` object displaying the current
+    """Return a :obj:`rich.progress.Progress` object displaying the current
     time, the task description, a progress bar, the percentage complete, the
     transfer speed, the amount downloaded, the time remaining, the time elapsed,
     and a right-pointing arrow.
@@ -179,7 +181,7 @@ def get_progress_bar(
     transient: bool = False,
     disable  : bool = False,
 ) -> progress.Progress:
-    """Return a :class:`rich.progress.Progress` object displaying the current
+    """Return a :obj:`rich.progress.Progress` object displaying the current
     time, the task description, a progress bar, the percentage complete, the
     total number of processed items, the processing speed, the time remaining,
     the time elapsed, and a spinner.
@@ -209,38 +211,42 @@ def get_progress_bar(
 
 
 class GPUMemoryUsageColumn(progress.ProgressColumn):
-    """A progress column showing current CPU/GPU memory usage, e.g. ``33.1/48.0GB``.
+    """A progress column showing current CPU/GPU memory usage,
+    e.g. ``33.1/48.0GB``.
     
     Args:
         unit: The unit of memory. Default: ``'GB'``.
-        table_column: The column in the table to associate this field with. Default: ``None``.
+        table_column: The column in the table to associate this field with.
+            Default: ``None``.
     """
     
     def __init__(
         self,
-        devices     : int | list[int]     = 0,
-        unit        : MemoryUnit          = MemoryUnit.GB,
-        table_column: table.Column | None = None
+        devices     : int | list[int] = 0,
+        unit        : MemoryUnit      = MemoryUnit.GB,
+        table_column: table.Column    = None
     ):
         super().__init__(table_column=table_column)
         self.devices = dtype.to_int_list(devices)
         self.unit    = MemoryUnit.from_value(value=unit)
     
     def render(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing current GPU memory status."""
+        """Return a :obj:`rich.text.Text` object showing current GPU memory status.
+        """
         return self.get_gpu_memory_text(task) \
             if torch.cuda.is_available() \
             else self.get_machine_memory_text(task)
     
     def get_machine_memory_text(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing current RAM status."""
+        """Return a :obj:`rich.text.Text` object showing current RAM status."""
         total, used, free = utils.get_machine_memory(unit=self.unit)
         memory_status     = f"{used:.1f}/{total:.1f}{self.unit.value} (CPU)"
         memory_text       = text.Text(memory_status, style="bright_yellow")
         return memory_text
     
     def get_gpu_memory_text(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing current GPU memory status."""
+        """Return a :obj:`rich.text.Text` object showing current GPU memory status.
+        """
         num_devices          = len(self.devices)
         totals, useds, frees = [], [], []
         for i in self.devices:
@@ -260,19 +266,21 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
     
 
 class ProcessedItemsColumn(progress.ProgressColumn):
-    """A progress column showing the number of processed items, e.g.
-    ``1728/2025``.
+    """A progress column showing the number of processed items,
+    e.g., ``1728/2025``.
     
     Args:
         table_column: The column in the table to associate this field with.
             Default: ``None``.
     """
     
-    def __init__(self, table_column: table.Column | None = None):
+    def __init__(self, table_column: table.Column = None):
         super().__init__(table_column=table_column)
     
     def render(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing the number of processed items."""
+        """Return a :obj:`rich.text.Text` object showing the number of processed
+        items.
+        """
         completed     = int(task.completed)
         total         = int(task.total)
         download_text = f"{completed}/{total}"
@@ -285,7 +293,8 @@ class ProcessingSpeedColumn(progress.ProgressColumn):
     """A progress column showing human-readable progressing speed."""
     
     def render(self, task: progress.Task) -> text.Text:
-        """Return a :class:`rich.text.Text` object showing the progressing speed."""
+        """Return a :obj:`rich.text.Text` object showing the progressing speed.
+        """
         speed = task.speed
         if speed is None:
             return text.Text("?", style="progress.data.speed")
@@ -300,7 +309,7 @@ class ProcessingSpeedColumn(progress.ProgressColumn):
 # region Print
 
 def print_dict(x: dict, title: str = ""):
-    """Print a :class:`dict` with a title using the :class:`rich.pretty.Pretty`
+    """Print a :obj:`dict` with a title using the :obj:`rich.pretty.Pretty`
     format. For example:
     
     Title
@@ -323,8 +332,8 @@ def print_dict(x: dict, title: str = ""):
 
 @dispatch
 def print_table(x: list[dict]):
-    """Print a :class:`list` of :class:`dict` in a :class:`rich.table.Table`.
-    All :class:`dict` in the given list must contain the same keys.
+    """Print a :obj:`list` of :obj:`dict` in a :obj:`rich.table.Table`.
+    All :obj:`dict` in the given list must contain the same keys.
     """
     assert isinstance(x, list) and all(isinstance(d, dict) for d in x)
     tab = table.Table(show_header=True, header_style="bold magenta")
@@ -338,7 +347,7 @@ def print_table(x: list[dict]):
 
 @dispatch
 def print_table(x: dict):
-    """Print a :class:`dict` in a :class:`rich.table.Table`."""
+    """Print a :obj:`dict` in a :obj:`rich.table.Table`."""
     assert isinstance(x, dict)
     tab = table.Table(show_header=True, header_style="bold magenta")
     tab.add_column("Key")

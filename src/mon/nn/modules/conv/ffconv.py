@@ -39,9 +39,9 @@ class FourierUnit(nn.Module):
     <https://github.com/pkumivision/FFC>`__".
     
     Args:
-        ffc3d: called by :class:`FourierUnit3d`.
+        ffc3d: called by :obj:`FourierUnit3d`.
         fft_norm: Normalization mode. For the backward transform
-            (:func:`~torch.fft.irfft`), these correspond to:
+            (:obj:`~torch.fft.irfft`), these correspond to:
             - ``'forward'``  - no normalization
             - ``'backward'`` - normalize by ``1/n``
             - ``'ortho'``    - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
@@ -135,7 +135,7 @@ class SpectralTransform2d(nn.Module):
     
     Args:
         fft_norm: Normalization mode. For the backward transform
-            (:func:`~torch.fft.irfft`), these correspond to:
+            (:obj:`~torch.fft.irfft`), these correspond to:
             - ``'forward'``  - no normalization
             - ``'backward'`` - normalize by ``1/n``
             - ``'ortho'``    - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
@@ -222,7 +222,7 @@ class FastFourierConv2d(nn.Module):
     
     Args:
         fft_norm: Normalization mode. For the backward transform
-            (:func:`~torch.fft.irfft`), these correspond to:
+            (:obj:`~torch.fft.irfft`), these correspond to:
             
             - ``'forward'``  - no normalization
             - ``'backward'`` - normalize by ``1/n``
@@ -247,7 +247,7 @@ class FastFourierConv2d(nn.Module):
     ):
         super().__init__()
         if stride not in [1, 2]:
-            raise ValueError(":param:`stride` should be 1 or 2.")
+            raise ValueError("`stride` should be 1 or 2.")
         self.stride      = stride
         self.ratio_g_in  = ratio_g_in
         self.ratio_g_out = ratio_g_out
@@ -320,7 +320,7 @@ class FastFourierConv2dNormAct(nn.Module):
     
     Args:
         fft_norm: Normalization mode. For the backward transform
-            (:func:`~torch.fft.irfft`), these correspond to:
+            (:obj:`~torch.fft.irfft`), these correspond to:
             
             - ``'forward'``  - no normalization
             - ``'backward'`` - normalize by ``1/n``

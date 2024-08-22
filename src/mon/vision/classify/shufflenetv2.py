@@ -56,11 +56,11 @@ class InvertedResidual(nn.Module):
         branch_features = out_channels // 2
         if (self.stride == 1) and (in_channels != branch_features << 1):
             raise ValueError(
-                f"Invalid combination of :param:`stride` {stride}, "
-                f":param:`in_channels` {in_channels} and "
-                f":param:`out_channels` {out_channels} values. "
-                f"If :math:`stride == 1` then :param:`in_channels` should be "
-                f"equal to :math:`out_channels // 2 << 1`."
+                f"Invalid combination of `stride` {stride}, "
+                f"`in_channels` {in_channels} and "
+                f"`out_channels` {out_channels} values. "
+                f"If `stride == 1` then `in_channels` should be "
+                f"equal to `out_channels // 2 << 1`."
             )
 
         if self.stride > 1:
@@ -121,7 +121,6 @@ class InvertedResidual(nn.Module):
 class ShuffleNetV2(base.ImageClassificationModel, ABC):
     """ShuffleNetV2.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "shufflenet"
@@ -145,9 +144,9 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
             *args, **kwargs
         )
         if len(stages_repeats) != 3:
-            raise ValueError("Expected :param:`stages_repeats` as :class:`list` of 3 positive ints")
+            raise ValueError("Expected `stages_repeats` as `list` of 3 positive ints")
         if len(stages_out_channels) != 5:
-            raise ValueError("Expected :param:`stages_out_channels` as :class:`list` of 5 positive ints")
+            raise ValueError("Expected `stages_out_channels` as `list` of 5 positive ints")
         self._stage_out_channels = stages_out_channels
 
         input_channels  = self.in_channels
@@ -208,7 +207,6 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design
     <https://arxiv.org/abs/1807.11164>`__.
     
-    See Also: :class:`ShuffleNetV2`
     """
     
     zoo: dict = {
@@ -235,7 +233,6 @@ class ShuffleNetV2_X1_0(ShuffleNetV2):
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design
     <https://arxiv.org/abs/1807.11164>`__.
     
-    See Also: :class:`ShuffleNetV2`
     """
     
     zoo: dict = {
@@ -262,7 +259,6 @@ class ShuffleNetV2_X1_5(ShuffleNetV2):
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design
     <https://arxiv.org/abs/1807.11164>`__.
     
-    See Also: :class:`ShuffleNetV2`
     """
     
     zoo: dict = {
@@ -289,7 +285,6 @@ class ShuffleNetV2_X2_0(ShuffleNetV2):
     `ShuffleNet V2: Practical Guidelines for Efficient CNN Architecture Design
     <https://arxiv.org/abs/1807.11164>`__.
     
-    See Also: :class:`ShuffleNetV2`
     """
     
     zoo: dict = {

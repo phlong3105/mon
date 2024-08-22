@@ -153,7 +153,7 @@ class BatchNorm2dReLU(BatchNorm2dAct):
 # region Instance Normalization
 
 class AdaptiveInstanceNorm2d(nn.Module):
-    """Adaptive Instance Normalization adopted from :class:`AdaptiveBatchNorm2d`.
+    """Adaptive Instance Normalization adopted from :obj:`AdaptiveBatchNorm2d`.
     """
     
     def __init__(
@@ -181,7 +181,6 @@ class FractionalInstanceNorm2d(nn.InstanceNorm2d):
         r: Ratio of input features that will be normalized. Default: ``0.5``.
         stride: Stride to select features. Default: ``0`` means no stride (split 2 parts).
         
-    See Also: :class:`HalfInstanceNorm2d`
     """
     
     def __init__(
@@ -205,7 +204,7 @@ class FractionalInstanceNorm2d(nn.InstanceNorm2d):
             device              = device,
             dtype               = dtype,
         )
-        assert 0 < stride < num_features, f":param:`stride` must be in the range :math:`[0, num_features]`."
+        assert 0 < stride < num_features, f"`stride` must be in the range `[0, num_features]`."
         self.r      = r
         self.stride = stride
         
@@ -296,7 +295,7 @@ class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
             dtype               = dtype,
         )
         if scheme not in self.schemes:
-            raise ValueError(f":param:`scheme` must be one of: {self.schemes}, but got ``'{scheme}'``.")
+            raise ValueError(f"`scheme` must be one of: {self.schemes}, but got ``'{scheme}'``.")
         if scheme == "half":
             self.alpha = torch.zeros(num_features)
             self.alpha[0:math.ceil(num_features * 0.5)] = 1
@@ -319,7 +318,7 @@ class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
             self.alpha = torch.nn.Parameter(torch.full([num_features], p))
         elif scheme == "attentive":
             if pool not in ["avg", "max"]:
-                raise ValueError(f":param:`pool` must be one of: [``'avg'``, ``'max'``], but got ``'{pool}'``.")
+                raise ValueError(f"`pool` must be one of: [``'avg'``, ``'max'``], but got ``'{pool}'``.")
             self.channel_attention = nn.Sequential(
                 self.Flatten(),
                 linear.Linear(
@@ -403,7 +402,6 @@ class LearnableInstanceNorm2d(nn.InstanceNorm2d):
         num_features: Number of features of the input tensor.
         r: Fraction of the input tensor to be normalized. Default: ``0.5``.
     
-    See Also: :class:`torch.nn.InstanceNorm2d`
     """
    
     def __init__(
@@ -455,7 +453,6 @@ class HalfInstanceNorm2d(nn.InstanceNorm2d):
         eps: Small constant for numerical stability. Default: ``1e-5``.
         momentum: Momentum for moving average. Default: ``0.1``.
     
-    See Also: :class:`torch.nn.InstanceNorm2d`
     """
     
     def __init__(

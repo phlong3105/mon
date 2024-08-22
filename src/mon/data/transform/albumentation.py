@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """This module implements data augmentation functions by extending
-:mod:`albumentations` package. These functions are mainly applied to
-:class:`numpy.ndarray` images.
+:obj:`albumentations` package. These functions are mainly applied to
+:obj:`numpy.ndarray` images.
 """
 
 from __future__ import annotations
@@ -68,7 +68,7 @@ class CropPatch(DualTransform):
 # region Normalize
 
 class NormalizeImageMeanStd(DualTransform):
-	"""Normalize image by given :attr:`mean` and :attr:`std`."""
+	"""Normalize image by given :obj:`mean` and :obj:`std`."""
 	
 	def __init__(
 		self,
@@ -104,7 +104,7 @@ class ResizeMultipleOf(DualTransform):
         width: Desired width of the output.
         keep_aspect_ratio: If ``True``, keep the aspect ratio of the input sample.
             Output sample might not have the given width and height, and
-            resize behaviour depends on the parameter :param:`resize_method`.
+            resize behaviour depends on the parameter :obj:`resize_method`.
             Default: ``False``.
         multiple_of: Output height and width are constrained to be
             multiple of this parameter. Default: ``1``.
@@ -194,7 +194,7 @@ class ResizeMultipleOf(DualTransform):
 					# Fit height
 					scale_width = scale_height
 			else:
-				raise ValueError(f":param:`resize_method` {self.resize_method} not implemented")
+				raise ValueError(f"`resize_method` {self.resize_method} not implemented")
 		
 		if self.resize_method == "lower_bound":
 			new_height = self.constrain_to_multiple_of(scale_height * height, min_val=self.height)

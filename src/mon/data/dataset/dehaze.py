@@ -61,8 +61,6 @@ ImageDataset        = dataset.ImageDataset
 class DenseHaze(ImageDataset):
     """Dense-Haze dataset consists of 33 pairs of real hazy and corresponding
     haze-free images.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -111,7 +109,6 @@ class IHaze(ImageDataset):
     """I-Haze dataset consists of 35 pairs of real hazy and corresponding
     haze-free images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -159,8 +156,6 @@ class IHaze(ImageDataset):
 class NHHaze(ImageDataset):
     """NH-Haze dataset consists 55 pairs of real hazy and corresponding
     haze-free images.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -209,7 +204,6 @@ class OHaze(ImageDataset):
     """O-Haze dataset consists of 45 pairs of real hazy and corresponding
     haze-free images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -255,10 +249,7 @@ class OHaze(ImageDataset):
 
 @DATASETS.register(name="reside_hsts_real")
 class RESIDEHSTSReal(ImageDataset):
-    """RESIDE-HSTS-Real dataset consists of 10 real hazy images.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """RESIDE-HSTS-Real dataset consists of 10 real hazy images."""
     
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
@@ -294,7 +285,6 @@ class RESIDEHSTSSyn(ImageDataset):
     """RESIDE-HSTS-Syn dataset consists of 10 pairs of hazy and corresponding
     haze-free images.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -342,8 +332,6 @@ class RESIDEHSTSSyn(ImageDataset):
 class RESIDEITS(ImageDataset):
     """RESIDE-ITS dataset consists of 13,990 pairs of hazy and corresponding
     haze-free images.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`..
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -394,7 +382,6 @@ class RESIDEITSV2(ImageDataset):
     """RESIDE-ITS-V2 dataset consists of 13,990 pairs of hazy and corresponding
     haze-free images.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -444,8 +431,6 @@ class RESIDEITSV2(ImageDataset):
 class RESIDEOTS(ImageDataset):
     """RESIDE-OTS dataset consists of 73,135 pairs of hazy and corresponding
     haze-free images.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -495,7 +480,6 @@ class RESIDEOTS(ImageDataset):
 class RESIDERTTS(ImageDataset):
     """RESIDE-RTTS dataset consists of 4,322 real hazy images.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -531,8 +515,6 @@ class RESIDERTTS(ImageDataset):
 class RESIDESOTSIndoor(ImageDataset):
     """RESIDE-SOTS-Indoor dataset consists of 500 pairs of hazy and
     corresponding haze-free images.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -583,7 +565,6 @@ class RESIDESOTSOutdoor(ImageDataset):
     """RESIDE-SOTS-Outdoor dataset consists of 500 pairs of hazy and
     corresponding haze-free images.
 
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -632,8 +613,6 @@ class RESIDESOTSOutdoor(ImageDataset):
 @DATASETS.register(name="reside_uhi")
 class RESIDEUHI(ImageDataset):
     """RESIDE-UHI dataset consists of 4,809 real hazy images.
-
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -670,7 +649,6 @@ class SateHaze1K(ImageDataset):
     """SateHaze1K dataset consists 1200 pairs of hazy and corresponding
     haze-free images.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -718,10 +696,7 @@ class SateHaze1K(ImageDataset):
 
 @DATASETS.register(name="satehaze1k_thin")
 class SateHaze1KThin(ImageDataset):
-    """SateHaze1K-Thin dataset.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """SateHaze1K-Thin dataset."""
     
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -767,7 +742,6 @@ class SateHaze1KThin(ImageDataset):
 class SateHaze1KModerate(ImageDataset):
     """SateHaze1K-Moderate.
     
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -811,10 +785,7 @@ class SateHaze1KModerate(ImageDataset):
 
 @DATASETS.register(name="satehaze1k_thick")
 class SateHaze1KThick(ImageDataset):
-    """SateHaze1K-Thick dataset.
-    
-    See Also: :class:`mon.data.datastruct.dataset.image.ImageDataset`.
-    """
+    """SateHaze1K-Thick dataset."""
     
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -865,7 +836,6 @@ class SateHaze1KThick(ImageDataset):
 class DenseHazeDataModule(datamodule.DataModule):
     """Dense-Haze datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -896,10 +866,7 @@ class DenseHazeDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="ihaze")
 class IHazeDataModule(datamodule.DataModule):
-    """I-Haze datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """I-Haze datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -931,7 +898,6 @@ class IHazeDataModule(datamodule.DataModule):
 class NHHazeDataModule(datamodule.DataModule):
     """NH-Haze datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -962,10 +928,7 @@ class NHHazeDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="ohaze")
 class OHazeDataModule(datamodule.DataModule):
-    """O-Haze datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """O-Haze datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -997,7 +960,6 @@ class OHazeDataModule(datamodule.DataModule):
 class RESIDEHSTSRealDataModule(datamodule.DataModule):
     """RESIDE-HSTS-Real datamodule.
 
-     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
      """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -1028,10 +990,7 @@ class RESIDEHSTSRealDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="reside_hsts_syn")
 class RESIDEHSTSSynDataModule(datamodule.DataModule):
-    """RESIDE-HSTS-Syn datamodule.
-
-     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-     """
+    """RESIDE-HSTS-Syn datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -1063,7 +1022,6 @@ class RESIDEHSTSSynDataModule(datamodule.DataModule):
 class RESIDEITSDataModule(datamodule.DataModule):
     """RESIDE-ITS datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -1094,10 +1052,7 @@ class RESIDEITSDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="reside_its_v2")
 class RESIDEITSV2DataModule(datamodule.DataModule):
-    """RESIDE-ITS-V2 datamodule.
-
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """RESIDE-ITS-V2 datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -1129,7 +1084,6 @@ class RESIDEITSV2DataModule(datamodule.DataModule):
 class RESIDEOTSDataModule(datamodule.DataModule):
     """RESIDE-OTS datamodule.
 
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -1160,10 +1114,7 @@ class RESIDEOTSDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="reside_rtts")
 class RESIDERTTSDataModule(datamodule.DataModule):
-    """RESIDE-RTTS datamodule.
-
-     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-     """
+    """RESIDE-RTTS datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -1195,7 +1146,6 @@ class RESIDERTTSDataModule(datamodule.DataModule):
 class RESIDESOTSIndoorDataModule(datamodule.DataModule):
     """RESIDE-SOTS-Indoor datamodule.
 
-     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
      """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -1226,10 +1176,7 @@ class RESIDESOTSIndoorDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="reside_sots_outdoor")
 class RESIDESOTSOutdoorDataModule(datamodule.DataModule):
-    """RESIDE-SOTS-Outdoor datamodule.
-
-     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-     """
+    """RESIDE-SOTS-Outdoor datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -1261,7 +1208,6 @@ class RESIDESOTSOutdoorDataModule(datamodule.DataModule):
 class RESIDEUHIDataModule(datamodule.DataModule):
     """RESIDE-UHI datamodule.
 
-     See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
      """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -1292,10 +1238,7 @@ class RESIDEUHIDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="satehaze1k")
 class SateHaze1KDataModule(datamodule.DataModule):
-    """SateHaze1K datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """SateHaze1K datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -1327,7 +1270,6 @@ class SateHaze1KDataModule(datamodule.DataModule):
 class SateHaze1KThinDataModule(datamodule.DataModule):
     """SateHaze1K-Thin datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DEHAZE]
@@ -1358,10 +1300,7 @@ class SateHaze1KThinDataModule(datamodule.DataModule):
 
 @DATAMODULES.register(name="satehaze1k_moderate")
 class SateHaze1KModerateDataModule(datamodule.DataModule):
-    """SateHaze1K-Moderate datamodule.
-    
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
-    """
+    """SateHaze1K-Moderate datamodule."""
     
     tasks: list[Task] = [Task.DEHAZE]
     
@@ -1393,7 +1332,6 @@ class SateHaze1KModerateDataModule(datamodule.DataModule):
 class SateHaze1KThickDataModule(datamodule.DataModule):
     """SateHaze1K-Thick datamodule.
     
-    See Also: :class:`mon.data.datastruct.datamodule.DataModule`.
     """
     
     tasks: list[Task] = [Task.DEHAZE]

@@ -44,16 +44,13 @@ class ORBEmbedder(base.Embedder):
             BRIEF descriptor.
         score_type: The default HARRIS_SCORE means that the Harris algorithm is
             used to rank features (the score is written to KeyPoint::score and
-            is used to retain best :param:`num_features` features); FAST_SCORE
+            is used to retain best :obj:`num_features` features); FAST_SCORE
             is an alternative value of the parameter that produces slightly less
             stable keypoints, but it is a little faster to compute.
         patch_size: The size of the patch used by the oriented BRIEF descriptor.
             Of course, on smaller pyramid layers, the perceived image area
             covered by a feature will be larger.
         fast_threshold: The fast threshold.
-    
-    See Also:
-        - :class:`mon.vision.feature.base.Embedder`.
     """
     
     def __init__(
@@ -86,11 +83,11 @@ class ORBEmbedder(base.Embedder):
         """Extract features in the images.
 
         Args:
-            indexes: A :class:`list` of image indexes.
-            images: Images of shape :math:`[N, H, W, C]`.
+            indexes: A :obj:`list` of image indexes.
+            images: Images of shape `[N, H, W, C]`.
 
         Returns:
-           A 2D :class:`list` of feature vectors.
+           A 2D :obj:`list` of feature vectors.
         """
         features = []
         for image in images:

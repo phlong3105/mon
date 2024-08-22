@@ -44,7 +44,7 @@ class SwinTransformerBlock(nn.Module):
         dropout: Dropout rate. Default: ``0.0``.
         attention_dropout: Attention dropout rate. Default: ``0.0``.
         stochastic_depth_prob: Stochastic depth rate. Default: ``0.0``.
-        norm_layer: Normalization layer. Default: :class:`nn.LayerNorm`.
+        norm_layer: Normalization layer. Default: :obj:`nn.LayerNorm`.
         attn_layer: Attention layer. Default: :class`ShiftedWindowAttention`
     """
 
@@ -107,8 +107,8 @@ class SwinTransformerBlockV2(SwinTransformerBlock):
         dropout: Dropout rate. Default: ``0.0``.
         attention_dropout: Attention dropout rate. Default: ``0.0``.
         stochastic_depth_prob: Stochastic depth rate. Default: ``0.0``.
-        norm_layer: Normalization layer.  Default: :class:`nn.LayerNorm`.
-        attn_layer: Attention layer. Default: :class:`ShiftedWindowAttentionV2`.
+        norm_layer: Normalization layer.  Default: :obj:`nn.LayerNorm`.
+        attn_layer: Attention layer. Default: :obj:`ShiftedWindowAttentionV2`.
     """
     
     zoo = {}
@@ -172,9 +172,8 @@ class SwinTransformer(base.ImageClassificationModel, ABC):
         num_classes: Number of classes for classification head. Default: ``1000``.
         block: SwinTransformer Block. Default: ``None``.
         norm_layer: Normalization layer. Default: ``None``.
-        downsample_layer: Downsample layer (patch merging). Default: :class:`PatchMerging`.
+        downsample_layer: Downsample layer (patch merging). Default: :obj:`PatchMerging`.
     
-    See Also: :class:`base.ImageClassificationModel`
     """
     
     arch   : str  = "swin"
@@ -291,7 +290,6 @@ class Swin_T(SwinTransformer):
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
     <https://arxiv.org/pdf/2103.14030>`__.
     
-    See Also: :class:`SwinTransformer`
     """
     
     zoo: dict = {
@@ -322,7 +320,6 @@ class Swin_S(SwinTransformer):
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
     <https://arxiv.org/pdf/2103.14030>`__.
     
-    See Also: :class:`SwinTransformer`
     """
     
     zoo: dict = {
@@ -353,7 +350,6 @@ class Swin_B(SwinTransformer):
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
     <https://arxiv.org/pdf/2103.14030>`__.
     
-    See Also: :class:`SwinTransformer`
     """
     
     zoo: dict = {
@@ -384,7 +380,6 @@ class Swin_V2_T(SwinTransformer):
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
     <https://arxiv.org/pdf/2103.14030>`__.
     
-    See Also: :class:`SwinTransformer`
     """
     
     zoo: dict = {
@@ -417,7 +412,6 @@ class Swin_V2_S(SwinTransformer):
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
     <https://arxiv.org/pdf/2103.14030>`__.
     
-    See Also: :class:`SwinTransformer`
     """
     
     zoo: dict = {
@@ -450,7 +444,6 @@ class Swin_V2_B(SwinTransformer):
     `Swin Transformer: Hierarchical Vision Transformer using Shifted Windows
     <https://arxiv.org/pdf/2103.14030>`__.
     
-    See Also: :class:`SwinTransformer`
     """
     
     zoo: dict = {

@@ -596,11 +596,11 @@ def shifted_window_attention(
     position bias. It supports both shifted and non-shifted windows.
     
     Args:
-        input: An input of shape :math:`[B, C, H, W]`.
+        input: An input of shape `[B, C, H, W]`.
         qkv_weight: The weight tensor of query, key, value of shape
-            :math:`[in_dim, out_dim]`.
+            `[in_dim, out_dim]`.
         proj_weight: The weight tensor of projection of shape
-            :math:`[in_dim, out_dim]`.
+            `[in_dim, out_dim]`.
         relative_position_bias: The learned relative position bias added to
             attention.
         window_size: Window size.
@@ -615,7 +615,7 @@ def shifted_window_attention(
         training: Training flag used by the dropout parameters. Default: ``True``.
     
     Returns:
-        The output tensor after shifted window attention of shape :math:`[B, C, H, W]`.
+        The output tensor after shifted window attention of shape `[B, C, H, W]`.
     """
     b, h, w, c = input.shape
     # Pad feature maps to multiples of window size
@@ -698,7 +698,6 @@ def shifted_window_attention(
 
 
 class ShiftedWindowAttention(nn.Module):
-    """See Also :func:`shifted_window_attention`."""
     
     def __init__(
         self,
@@ -714,7 +713,7 @@ class ShiftedWindowAttention(nn.Module):
     ):
         super().__init__()
         if len(window_size) != 2 or len(shift_size) != 2:
-            raise ValueError(f":param:`window_size` and :param:`shift_size` must be of length ``2``.")
+            raise ValueError(f"`window_size` and `shift_size` must be of length ``2``.")
         self.channels          = channels
         self.window_size       = window_size
         self.shift_size        = shift_size
@@ -772,10 +771,10 @@ class ShiftedWindowAttention(nn.Module):
         """
         
         Args:
-            input: Tensor of shape :math:`[B, H, W, C]`.
+            input: Tensor of shape `[B, H, W, C]`.
       
         Returns:
-            Tensor of shape :math:`[B, H, W, C]`.
+            Tensor of shape `[B, H, W, C]`.
         """
         x = input
         relative_position_bias = self.get_relative_position_bias()
@@ -796,7 +795,6 @@ class ShiftedWindowAttention(nn.Module):
 
 
 class ShiftedWindowAttentionV2(ShiftedWindowAttention):
-    """See Also: :class:`ShiftedWindowAttention`."""
     
     def __init__(
         self,
@@ -858,10 +856,10 @@ class ShiftedWindowAttentionV2(ShiftedWindowAttention):
         """
         
         Args:
-            input: Tensor of shape :math:`[B, H, W, C]`.
+            input: Tensor of shape `[B, H, W, C]`.
       
         Returns:
-            Tensor of shape :math:`[B, H, W, C]`.
+            Tensor of shape `[B, H, W, C]`.
         """
         x = input
         relative_position_bias = self.get_relative_position_bias()
@@ -1001,7 +999,7 @@ class SqueezeExciteC(nn.Module):
     """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
     Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
     
-    This implementation uses :class:`torch.nn.Conv2d` layer.
+    This implementation uses :obj:`torch.nn.Conv2d` layer.
     
     References:
         - `<https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch>`__
@@ -1059,7 +1057,7 @@ class SqueezeExciteL(nn.Module):
     """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
     Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
     
-    This implementation uses :class:`torch.nn.Linear` layer.
+    This implementation uses :obj:`torch.nn.Linear` layer.
     
     References:
         - `<https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch>`__

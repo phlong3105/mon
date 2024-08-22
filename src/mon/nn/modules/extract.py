@@ -20,7 +20,7 @@ from torch import nn
 
 
 class ExtractFeature(nn.Module):
-	"""Extract a feature at :param:`index` in a tensor.
+	"""Extract a feature at :obj:`index` in a tensor.
 	
 	Args:
 		index: The index of the feature to extract.
@@ -47,7 +47,7 @@ class ExtractFeature(nn.Module):
 
 
 class ExtractFeatures(nn.Module):
-	"""Extract features between :param:`start` index and :param:`end` index in a
+	"""Extract features between :obj:`start` index and :obj:`end` index in a
 	tensor.
 	
 	Args:
@@ -77,7 +77,7 @@ class ExtractFeatures(nn.Module):
 
 
 class ExtractItem(nn.Module):
-	"""Extract an item (feature) at :param:`index` in a sequence of tensors.
+	"""Extract an item (feature) at :obj:`index` in a sequence of tensors.
 	
 	Args:
 		index: The index of the item to extract.
@@ -100,7 +100,7 @@ class ExtractItem(nn.Module):
 
 
 class ExtractItems(nn.Module):
-	"""Extract a :class:`list` of items (features) at `indexes` in a sequence of
+	"""Extract a :obj:`list` of items (features) at `indexes` in a sequence of
 	tensors.
 	
 	Args:

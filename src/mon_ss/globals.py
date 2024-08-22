@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module defines all global constants used across :mod:`openss` package.
+"""This module defines all global constants used across :obj:`openss` package.
 
 Notes:
     - To avoid circular dependency, only define constants of basic/atomic types.

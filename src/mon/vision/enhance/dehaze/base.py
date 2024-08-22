@@ -21,10 +21,7 @@ console = core.console
 # region Model
 
 class DehazingModel(base.ImageEnhancementModel, ABC):
-    """The base class for all de-hazing models.
-    
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`.
-    """
+    """The base class for all de-hazing models."""
     
     tasks  : list[Task] = [Task.DEHAZE]
     zoo_dir: core.Path  = ZOO_DIR / "vision" / "enhance" / "dehaze"

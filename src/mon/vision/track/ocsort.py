@@ -49,8 +49,8 @@ def speed_direction_batch(detections: np.ndarray, tracks: np.ndarray):
 
 
 def convert_bbox_to_z(bbox: np.ndarray) -> np.ndarray:
-    """Convert a bounding box in the form of :math:`[x1, y1, x2, y2]` and
-    returns ``z`` in the form :math:`[x, y, s, r]` where ``x``, ``y`` is the
+    """Convert a bounding box in the form of `[x1, y1, x2, y2]` and
+    returns ``z`` in the form `[x, y, s, r]` where ``x``, ``y`` is the
     centre of the box and ``s`` is the scale/area and ``r`` is the aspect ratio.
     """
     w = bbox[2] - bbox[0]
@@ -63,8 +63,8 @@ def convert_bbox_to_z(bbox: np.ndarray) -> np.ndarray:
 
 
 def convert_x_to_bbox(x: np.ndarray, score: float | None = None) -> np.ndarray:
-    """Convert a bounding box in the centre form of :math:`[x, y, s, r]` and
-    returns it in the form of :math:`[x1, y1, x2, y2]` where ``x1``, ``y1`` is
+    """Convert a bounding box in the centre form of `[x, y, s, r]` and
+    returns it in the form of `[x1, y1, x2, y2]` where ``x1``, ``y1`` is
     the top left and ``x2``, ``y2`` is the bottom right.
     """
     w = np.sqrt(x[2] * x[3])
@@ -220,10 +220,10 @@ class SORT(base.Tracker):
         empty detections (use np.empty((0, 5)) for frames without detections).
         
         Args:
-            detections: A :class:`torch.Tensor` or :class:`numpy.ndarray` of
-                detections in the format of :math:`[[x1, y1, x2, y2, score, class], ...]`.
-            input_size: The size of the input image in the format :math:`[h, w]`.
-            image_size: The size of the original image in the format :math:`[h, w]`.
+            detections: A :obj:`torch.Tensor` or :obj:`numpy.ndarray` of
+                detections in the format of `[[x1, y1, x2, y2, score, class], ...]`.
+            input_size: The size of the input image in the format `[h, w]`.
+            image_size: The size of the original image in the format `[h, w]`.
             frame_id  : The frame number.
         """
         self.frame_count += 1

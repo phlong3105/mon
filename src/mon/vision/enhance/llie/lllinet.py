@@ -20,7 +20,6 @@ from torchvision.models import vgg
 from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
-from mon.vision import color
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -153,10 +152,7 @@ class UNetConvBlock(nn.Module):
 
 @MODELS.register(name="lllinet", arch="lllinet")
 class LLLINet(base.LowLightImageEnhancementModel):
-    """LLHINet (Low-Light Learnable Instance Normalization Network) models.
-    
-    See Also: :class:`base.LowLightImageEnhancementModel`
-    """
+    """LLHINet (Low-Light Learnable Instance Normalization Network) models."""
     
     arch   : str  = "lllinet"
     schemes: list[Scheme] = [Scheme.SUPERVISED]
@@ -257,10 +253,7 @@ class LLLINet(base.LowLightImageEnhancementModel):
 
 @MODELS.register(name="lllinet_hvi", arch="lllinet")
 class LLLINetHVI(LLLINet):
-    """LLHINet (Low-Light Learnable Instance Normalization Network) models.
-    
-    See Also: :class:`base.LowLightImageEnhancementModel`
-    """
+    """LLHINet (Low-Light Learnable Instance Normalization Network) models."""
     
     zoo: dict = {}
     
@@ -321,7 +314,7 @@ class LLLINetHVI(LLLINet):
         #
         self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
         #
-        self.trans   = color.RGBToHVI()
+        self.trans   = core.RGBToHVI()
         
         # Loss
         # from mon.vision.enhance.llie.hvi_cidnet import Loss as CIDNetLoss

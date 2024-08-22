@@ -26,7 +26,7 @@ def diff_x(input: torch.Tensor, radius: int) -> torch.Tensor:
     """Compute the difference of the input along the x-axis.
     
     Args:
-        input: A tensor with shape :math:`[B, C, H, W]`.
+        input: A tensor with shape `[B, C, H, W]`.
         radius: Radius of the kernel.
         
     References:
@@ -44,7 +44,7 @@ def diff_y(input: torch.Tensor, radius: int) -> torch.Tensor:
     """Compute the difference of the input along the y-axis.
     
     Args:
-        input: A tensor with shape :math:`[B, C, H, W]`.
+        input: A tensor with shape `[B, C, H, W]`.
         radius: Radius of the kernel.
     
     References:
@@ -71,7 +71,7 @@ def box_filter(
     """Perform box filer on the image.
     
     Args:
-        image: An image in :math:`[B, C, H, W]` format.
+        image: An image in `[B, C, H, W]` format.
         kernel_size: Size of the kernel. Commonly be ``3``, ``5``, ``7``, or ``9``.
         radius: Radius of the kernel (kernel_size = radius * 2 + 1).
             Commonly be ``1``, ``2``, ``3``, or ``4``.
@@ -83,7 +83,7 @@ def box_filter(
         `<https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py>`__
     """
     if kernel_size is None and radius is None:
-        raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
+        raise ValueError("Either `kernel_size` or `radius` must be provided.")
     radius = radius or int((kernel_size - 1) / 2)
     assert image.dim() == 4
     return diff_y(diff_x(image.cumsum(dim=2), radius).cumsum(dim=3), radius)
@@ -99,14 +99,14 @@ def box_filter(
     """Perform box filter on the image.
     
     Args:
-        image: An image in :math:`[H, W, C]` format.
+        image: An image in `[H, W, C]` format.
         kernel_size: Size of the kernel. Commonly be ``3``, ``5``, ``7``, or ``9``.
         radius: Radius of the kernel (kernel_size = radius * 2 + 1).
             Commonly be ``1``, ``2``, ``3``, or ``4``.
     
-    kwargs (:func:`cv2.boxFilter`) includes:
+    kwargs (:obj:`cv2.boxFilter`) includes:
         ddepth: The output image depth. Default: ``-1`` means the same as the
-            depth as :attr:`image`.
+            depth as :obj:`image`.
         anchor: The anchor of the kernel. Default: ``(-1, -1)`` means at the center.
         normalize: Whether to normalize the kernel. Default: ``False``.
         borderType: Border mode used to extrapolate pixels outside of the image.
@@ -116,7 +116,7 @@ def box_filter(
         A filtered image.
     """
     if kernel_size is None and radius is None:
-        raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
+        raise ValueError("Either `kernel_size` or `radius` must be provided.")
     ddepth      = kwargs.get("ddepth",     -1)
     anchor      = kwargs.get("anchor",     (-1, -1))
     normalize   = kwargs.get("normalize",  False)
@@ -142,7 +142,7 @@ def box_filter_conv(
     """Perform box filer on the image.
     
     Args:
-        image: An image in :math:`[B, C, H, W]` format.
+        image: An image in `[B, C, H, W]` format.
         kernel_size: Size of the kernel. Commonly be ``3``, ``5``, ``7``, or ``9``.
         radius: Radius of the kernel (kernel_size = radius * 2 + 1).
             Commonly be ``1``, ``2``, ``3``, or ``4``.
@@ -151,7 +151,7 @@ def box_filter_conv(
         A filtered image.
     """
     if kernel_size is None and radius is None:
-        raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
+        raise ValueError("Either `kernel_size` or `radius` must be provided.")
     kernel_size = kernel_size or 2 * radius + 1
     b, c, h, w  = image.shape
     # Create a 2D box kernel with all values as 1
@@ -175,7 +175,7 @@ class BoxFilter(nn.Module):
     ):
         super().__init__()
         if kernel_size is None and radius is None:
-            raise ValueError("Either :param:`kernel_size` or :param:`radius` must be provided.")
+            raise ValueError("Either `kernel_size` or `radius` must be provided.")
         self.kernel_size = kernel_size or 2 * radius + 1
         self.radius      = int((self.kernel_size - 1) / 2)
         
