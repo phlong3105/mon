@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements callbacks for logging training/testing progress to the
+"""Console Logging Callback.
+
+This module implements callbacks for logging training/testing progress to the
 console.
 """
 
@@ -38,25 +40,24 @@ class LogTrainingProgress(callbacks.Callback):
     
     Args:
         dirpath: Directory to save the log file.
-        filename: Log filename. Default: ``"train_log.csv"``.
+        filename: Log filename. Default: ``'train_log.csv'``.
         every_n_epochs: Log every n epochs. This value must be ``None`` or
             non-negative. Default: ``1``.
-        every_n_train_steps: Log every n training steps.
-        train_time_interval: Log every n seconds.
+        every_n_train_steps: Log every `n` training steps.
+        train_time_interval: Log every `n` seconds.
         log_on_train_epoch_end: Log on train epoch end.
         verbose: Verbosity. Default: ``True``.
-        
     """
     
     def __init__(
         self,
         dirpath               : core.Path,
-        filename              : str              = "log.csv",
-        every_n_epochs        : int       | None = 1,
-        every_n_train_steps   : int       | None = None,
-        train_time_interval   : timedelta | None = None,
-        log_on_train_epoch_end: bool      | None = None,
-        verbose               : bool             = True
+        filename              : str       = "log.csv",
+        every_n_epochs        : int       = 1,
+        every_n_train_steps   : int       = None,
+        train_time_interval   : timedelta = None,
+        log_on_train_epoch_end: bool      = None,
+        verbose               : bool      = True
     ):
         super().__init__()
         self._dirpath     = core.Path(dirpath) if dirpath else None
@@ -75,7 +76,12 @@ class LogTrainingProgress(callbacks.Callback):
         self._last_time_checked      = None
         self._init_triggers(every_n_epochs, every_n_train_steps, train_time_interval)
     
-    def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str):
+    def setup(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        stage    : str
+    ):
         """Called when fit, validate, test, predict, or tune begins."""
         dirpath = self._dirpath or core.Path(trainer.default_root_dir)
         # if str(dirpath.stem) != "log":
@@ -83,7 +89,11 @@ class LogTrainingProgress(callbacks.Callback):
         dirpath = trainer.strategy.broadcast(dirpath)
         self._dirpath = core.Path(dirpath)
     
-    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
+    def on_train_start(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule"
+    ):
         """Called when the train begins."""
         self._candidates  = self._init_candidates(trainer, pl_module)
         self._start_epoch = int(trainer.current_epoch)
@@ -104,7 +114,11 @@ class LogTrainingProgress(callbacks.Callback):
             self._logger.write(f"\n{headers}\n")
             self._logger.flush()
     
-    def on_train_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
+    def on_train_end(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule"
+    ):
         """Called when the train ends."""
         end_time      = timer()
         elapsed_epoch = int(trainer.current_epoch) - self._start_epoch
@@ -149,9 +163,13 @@ class LogTrainingProgress(callbacks.Callback):
         now       = time.monotonic()
         if train_time_interval:
             prev_time_check = self._last_time_checked
-            skip_time = prev_time_check is None or (now - prev_time_check) < train_time_interval.total_seconds()
-            # In case we have time differences across ranks broadcast the decision
-            # on whether to checkpoint from rank 0 to avoid possible hangs
+            skip_time = (
+                prev_time_check is None
+                or (now - prev_time_check) < train_time_interval.total_seconds()
+            )
+            # In case we have time differences across ranks broadcast the
+            # decision on whether to checkpoint from rank 0 to avoid possible
+            # hangs
             skip_time = trainer.strategy.broadcast(skip_time)
         
         if skip_batch and skip_time:
@@ -164,19 +182,39 @@ class LogTrainingProgress(callbacks.Callback):
             candidates         = self._update_candidates(monitor_candidates)
             self._log(candidates)
     
-    def on_train_epoch_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
+    def on_train_epoch_end(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule"
+    ):
         """Called when the train epoch ends."""
-        if not self._should_skip_logging(trainer) and self._should_log_on_train_epoch_end(trainer):
-            if self._every_n_epochs >= 1 and (trainer.current_epoch + 1) % self._every_n_epochs == 0:
+        if (
+            not self._should_skip_logging(trainer)
+            and self._should_log_on_train_epoch_end(trainer)
+        ):
+            if (
+                self._every_n_epochs >= 1
+                and (trainer.current_epoch + 1) % self._every_n_epochs == 0
+            ):
                 if trainer.is_global_zero:
                     monitor_candidates = self._get_monitor_candidates(trainer)
                     candidates         = self._update_candidates(monitor_candidates)
                     self._log(candidates)
     
-    def on_validation_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
+    def on_validation_end(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule"
+    ):
         """Called when the validation loop ends."""
-        if not self._should_skip_logging(trainer) and not self._should_log_on_train_epoch_end(trainer):
-            if self._every_n_epochs >= 1 and (trainer.current_epoch + 1) % self._every_n_epochs == 0:
+        if (
+            not self._should_skip_logging(trainer)
+            and not self._should_log_on_train_epoch_end(trainer)
+        ):
+            if (
+                self._every_n_epochs >= 1
+                and (trainer.current_epoch + 1) % self._every_n_epochs == 0
+            ):
                 if trainer.is_global_zero:
                     monitor_candidates = self._get_monitor_candidates(trainer)
                     candidates         = self._update_candidates(monitor_candidates)
@@ -184,16 +222,21 @@ class LogTrainingProgress(callbacks.Callback):
     
     def _init_triggers(
         self,
-        every_n_epochs     : int       | None = None,
-        every_n_train_steps: int       | None = None,
-        train_time_interval: timedelta | None = None,
+        every_n_epochs     : int       = None,
+        every_n_train_steps: int       = None,
+        train_time_interval: timedelta = None,
     ):
         # Default to running once after each validation epoch if neither
         # every_n_train_steps nor every_n_epochs is set
-        if every_n_train_steps is None and every_n_epochs is None and train_time_interval is None:
+        if (
+            every_n_train_steps is None
+            and every_n_epochs is None
+            and train_time_interval is None
+        ):
             every_n_epochs      = 1
             every_n_train_steps = 0
-            console.log("Both every_n_train_steps and every_n_epochs are not set. Setting every_n_epochs=1")
+            console.log("Both every_n_train_steps and every_n_epochs are not "
+                        "set. Setting every_n_epochs=1")
         else:
             every_n_epochs      = every_n_epochs      or 0
             every_n_train_steps = every_n_train_steps or 0
@@ -202,7 +245,11 @@ class LogTrainingProgress(callbacks.Callback):
         self._every_n_epochs      = every_n_epochs
         self._every_n_train_steps = every_n_train_steps
         
-    def _init_candidates(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule"):
+    def _init_candidates(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule"
+    ):
         # Header
         self._candidates  = collections.OrderedDict()
         self._candidates |= {"epoch": None}
@@ -220,7 +267,10 @@ class LogTrainingProgress(callbacks.Callback):
         
         return self._candidates
     
-    def _update_candidates(self, monitor_candidates: dict[str, torch.Tensor]) -> dict[str, Any]:
+    def _update_candidates(
+        self,
+        monitor_candidates: dict[str, torch.Tensor]
+    ) -> dict[str, Any]:
         candidates = deepcopy(self._candidates)
         for c, v in monitor_candidates.items():
             if c in candidates:
@@ -258,18 +308,23 @@ class LogTrainingProgress(callbacks.Callback):
         if self._log_on_train_epoch_end:
             return self._log_on_train_epoch_end
         
-        # If `check_val_every_n_epoch != 1`, we can't say when the validation dataloader will be loaded
-        # so let's not enforce saving at every training epoch end
+        # If `check_val_every_n_epoch != 1`, we can't say when the validation
+        # dataloader will be loaded so let's not enforce saving at every
+        # training epoch end
         if trainer.check_val_every_n_epoch != 1:
             return False
         
         # No validation means log on train epoch end
-        num_val_batches = (sum(trainer.num_val_batches) if isinstance(trainer.num_val_batches, list) else trainer.num_val_batches)
+        num_val_batches = (
+            sum(trainer.num_val_batches)
+            if isinstance(trainer.num_val_batches, list)
+            else trainer.num_val_batches
+        )
         if num_val_batches == 0:
             return True
         
-        # If the user runs validation multiple times per training epoch, then we run after validation
-        # instead of on train epoch end
+        # If the user runs validation multiple times per training epoch, then
+        # we run after validation instead of on train epoch end
         return trainer.val_check_interval == 1.0
     
     def _log(self, candidates: dict[str, torch.Tensor]):

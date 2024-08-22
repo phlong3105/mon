@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements logging mechanisms to record intermediate results
+"""Logging Package.
+
+This package implements logging mechanisms to record intermediate results
 during training, validating, testing, and inferring.
 """
 

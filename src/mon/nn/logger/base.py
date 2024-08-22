@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all loggers, and the corresponding
+"""BAse Logger.
+
+This module implements the base class for all loggers, and the corresponding
 helper functions.
 """
 

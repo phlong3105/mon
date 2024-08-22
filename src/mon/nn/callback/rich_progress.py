@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements rich progress bar callback."""
+"""Rich Progress Bar Callback.
+
+This module implements rich progress bar callback.
+"""
 
 from __future__ import annotations
 

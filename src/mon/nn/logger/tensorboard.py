@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module extends the Tensorboard logger."""
+"""Tensorboard Logger.
+
+This module extends the Tensorboard logger.
+"""
 
 from __future__ import annotations
 
@@ -78,8 +81,8 @@ class FileWriter(tensorboard.FileWriter):
                 summaries to disk. Default is every two minutes.
             filename_suffix: Suffix added to all event filenames in the
                 :obj:`log_dir` directory. More details on file_name
-                construction
-                in :obj:`tensorboard.summary.writer.event_file_writer.EventFileWriter`.
+                construction in
+                :obj:`tensorboard.summary.writer.event_file_writer.EventFileWriter`.
         """
         # Sometimes PosixPath is passed in and we need to coerce it to
         # a string in all cases
@@ -167,7 +170,8 @@ class TensorBoardLogger(loggers.TensorBoardLogger):
         if self._experiment:
             return self._experiment
         if not rank_zero_only.rank == 0:
-            raise ValueError(f"Tried to initialize log dirs in non 'global_rank=0'.")
+            raise ValueError(f"Tried to initialize log dirs in non "
+                             f"`global_rank=0`.")
         if self.root_dir:
             self._fs.makedirs(self.root_dir, exist_ok=True)
         self._experiment = SummaryWriter(log_dir=self.log_dir, **self._kwargs)

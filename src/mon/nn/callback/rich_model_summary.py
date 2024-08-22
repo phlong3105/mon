@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements rich model summary callback."""
+"""Rich Model Summary Callback.
+
+This module implements rich model summary callback.
+"""
 
 from __future__ import annotations
 

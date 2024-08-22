@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the checkpoint callback to save model automatically
+"""Model Checkpoint Callback.
+
+This module implements the checkpoint callback to save model automatically
 during training.
 """
 
@@ -33,8 +35,7 @@ error_console = core.error_console
 class ModelCheckpoint(callbacks.ModelCheckpoint):
     """Save the model periodically by monitoring a quantity. We modified the
     original code to save only the best and last checkpoints by always setting
-    `save_top_k = 1`.
-    
+    `save_top_k` = ``1``.
     """
     
     CHECKPOINT_JOIN_CHAR = "_"
@@ -45,20 +46,20 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
     
     def __init__(
         self,
-        dirpath                : str       | None = None,
-        filename               : str       | None = None,
-        monitor                : str       | None = None,
-        mode                   : str              = "min",
-        save_last              : bool             = False,
-        save_top_k             : int              = 1,
-        save_weights_only      : bool             = False,
-        every_n_epochs         : int       | None = 1,
-        every_n_train_steps    : int       | None = None,
-        train_time_interval    : timedelta | None = None,
-        save_on_train_epoch_end: bool             = False,
-        enable_version_counter : bool             = False,
-        auto_insert_metric_name: bool             = True,
-        verbose                : bool             = False,
+        dirpath                : str       = None,
+        filename               : str       = None,
+        monitor                : str       = None,
+        mode                   : str       = "min",
+        save_last              : bool      = False,
+        save_top_k             : int       = 1,
+        save_weights_only      : bool      = False,
+        every_n_epochs         : int       = 1,
+        every_n_train_steps    : int       = None,
+        train_time_interval    : timedelta = None,
+        save_on_train_epoch_end: bool      = False,
+        enable_version_counter : bool      = False,
+        auto_insert_metric_name: bool      = True,
+        verbose                : bool      = False,
     ):
         if dirpath:
             dirpath = core.Path(dirpath)
@@ -83,7 +84,12 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         )
         self._last_epoch_saved = 0
     
-    def setup(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule", stage: str) -> None:
+    def setup(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule",
+        stage    : str
+    ):
         super().setup(trainer, pl_module, stage)
         # Make sure that we have the correct filename (1)
         if (
@@ -93,7 +99,11 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         ):
             self.filename = pl_module.fullname
     
-    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+    def on_train_start(
+        self,
+        trainer  : "pl.Trainer",
+        pl_module: "pl.LightningModule"
+    ):
         self._last_time_checked = time.monotonic()
         # Make sure that we have the correct filename (2)
         if (
@@ -170,19 +180,21 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
     
     def __init_triggers(
         self,
-        every_n_train_steps: int       | None,
-        every_n_epochs     : int       | None,
-        train_time_interval: timedelta | None,
+        every_n_train_steps: int,
+        every_n_epochs     : int,
+        train_time_interval: timedelta,
     ):
         # Default to running once after each validation epoch if neither
         # every_n_train_steps nor every_n_epochs is set
-        if every_n_train_steps is None and every_n_epochs is None and train_time_interval is None:
+        if (
+            every_n_train_steps is None
+            and every_n_epochs is None
+            and train_time_interval is None
+        ):
             every_n_epochs      = 1
             every_n_train_steps = 0
-            console.log(
-                "Both every_n_train_steps and every_n_epochs are not set. "
-                "Setting every_n_epochs=1"
-            )
+            console.log("Both `every_n_train_steps` and `every_n_epochs` are "
+                        "not set. Setting `every_n_epochs=1`")
         else:
             every_n_epochs      = every_n_epochs      or 0
             every_n_train_steps = every_n_train_steps or 0
@@ -193,7 +205,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
     
     def _format_checkpoint_name(
         self,
-        filename               : str | None,
+        filename               : str,
         metrics                : dict[str, torch.Tensor],
         prefix                 : str  = "",
         auto_insert_metric_name: bool = True,
@@ -213,15 +225,15 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         return filename
     
     def __resolve_ckpt_dir(self, trainer: "pl.Trainer") -> str:
-        """Determines model checkpoint save directory at runtime. Reference attributes from the trainer's logger to
-        determine where to save checkpoints. The path for saving weights is set in this priority:
+        """Determines model checkpoint save directory at runtime. Reference
+        attributes from the trainer's logger to determine where to save
+        checkpoints. The path for saving weights is set in this priority:
 
         1.  The ``ModelCheckpoint``'s ``dirpath`` if passed in
         2.  The ``Logger``'s ``log_dir`` if the trainer has loggers
         3.  The ``Trainer``'s ``default_root_dir`` if the trainer has no loggers
 
         The path gets extended with subdirectory "checkpoints".
-
         """
         if self.dirpath:
             # short circuit if dirpath was passed to ModelCheckpoint
@@ -233,23 +245,38 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
             core.Path(dirpath).mkdir(parents=True, exist_ok=True)
             return dirpath
     
-    def __warn_if_dir_not_empty(self, dirpath: core.Path | str) -> None:
-        if (self.save_top_k != 0
+    def __warn_if_dir_not_empty(self, dirpath: core.Path | str):
+        if (
+            self.save_top_k != 0
             and self._fs.isdir(dirpath)
             and len(self._fs.ls(dirpath)) > 0
         ):
             console.log(f"Checkpoint directory {dirpath} exists and is not empty.")
     
-    def _save_last_checkpoint(self, trainer: "pl.Trainer", monitor_candidates: str[str, torch.Tensor]):
+    def _save_last_checkpoint(
+        self,
+        trainer           : "pl.Trainer",
+        monitor_candidates: dict[str, torch.Tensor]
+    ):
         if not self.save_last:
             return
         
-        filepath = self.format_checkpoint_name(monitor_candidates, self.CHECKPOINT_NAME_LAST)
+        filepath = self.format_checkpoint_name(
+            metrics  = monitor_candidates,
+            filename = self.CHECKPOINT_NAME_LAST
+        )
         
         if self._enable_version_counter:
             version_cnt = self.STARTING_VERSION
-            while self.file_exists(filepath, trainer) and filepath != self.last_model_path:
-                filepath     = self.format_checkpoint_name(monitor_candidates, self.CHECKPOINT_NAME_LAST, ver=version_cnt)
+            while (
+                self.file_exists(filepath, trainer)
+                and filepath != self.last_model_path
+            ):
+                filepath = self.format_checkpoint_name(
+                    metrics  = monitor_candidates,
+                    filename = self.CHECKPOINT_NAME_LAST,
+                    ver      = version_cnt
+                )
                 version_cnt += 1
         
         # set the last model path before saving because it will be part of the state.
@@ -262,9 +289,12 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         if previous and self._should_remove_checkpoint(trainer, previous, filepath):
             self._remove_checkpoint(trainer, previous)
             
-    def _save_monitor_checkpoint(self, trainer: "pl.Trainer", monitor_candidates: dict[str, torch.Tensor]):
+    def _save_monitor_checkpoint(
+        self,
+        trainer          : "pl.Trainer",
+        monitor_candidates: dict[str, torch.Tensor]
+    ):
         assert self.monitor
-        
         current = monitor_candidates.get(self.monitor)
         if self.check_monitor_top_k(trainer, current):
             assert current
@@ -273,7 +303,8 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
             if trainer.is_global_zero:
                 epoch = monitor_candidates["epoch"]
                 step  = monitor_candidates["step"]
-                console.log(f"{f'{self.monitor}':>25} was not in top {self.save_top_k}")
+                console.log(f"{f'{self.monitor}':>25} was not in top "
+                            f"{self.save_top_k}")
     
     def _update_best_and_save(
         self,
@@ -312,7 +343,8 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
             if trainer.is_global_zero:
                 epoch = monitor_candidates["epoch"]
                 step  = monitor_candidates["step"]
-                console.log(f"{f'{self.monitor}':>25} reached {current:>12.6f}, [red]saving as top {k}")
+                console.log(f"{f'{self.monitor}':>25} reached {current:>12.6f}, "
+                            f"[red]saving as top {k}")
         self._save_checkpoint(trainer, filepath)
         
         if del_filepath and self._should_remove_checkpoint(trainer, del_filepath, filepath):
