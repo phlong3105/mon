@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements datasets and datamodules for
-`NTIRE challenge <https://cvlai.net/ntire/2024/>`__.
+"""NTIRE Challenges.
+
+This module implements datasets and datamodules for NTIRE challenges.
+
+References:
+	https://cvlai.net/ntire/2024/
 """
 
 from __future__ import annotations
@@ -29,10 +33,9 @@ ImageDataset        = core.ImageDataset
 
 @DATASETS.register(name="ntire24_llie")
 class NTIRE24LLIE(ImageDataset):
-	"""NTIRE24-LLIE dataset consists of 300 low-light and normal-light image
-	pairs. They are divided into 230 training pairs and 35 validation pairs,
-	and 35 testing pairs.
-	
+	"""NTIRE24-LLIE dataset consists of ``300`` low-light and normal-light image
+	pairs. They are divided into ``230`` training pairs and ``35`` validation
+	pairs, and ``35`` testing pairs.
 	"""
 	
 	tasks : list[Task]  = [Task.LLIE]
@@ -71,7 +74,8 @@ class NTIRE24LLIE(ImageDataset):
 			for pattern in patterns:
 				for path in pbar.track(
 					sorted(list(pattern.rglob("*"))),
-					description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+					description=f"Listing {self.__class__.__name__} "
+					            f"{self.split_str} lq images"
 				):
 					if path.is_image_file():
 						lq_images.append(ImageAnnotation(path=path))
@@ -81,7 +85,8 @@ class NTIRE24LLIE(ImageDataset):
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				lq_images,
-				description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+				description=f"Listing {self.__class__.__name__} "
+				            f"{self.split_str} hq images"
 			):
 				path = img.path.replace("/lq/", "/hq/")
 				hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -96,9 +101,10 @@ class NTIRE24LLIE(ImageDataset):
 
 @DATAMODULES.register(name="ntire24_llie")
 class NTIRE24LLIEDataModule(DataModule):
-	"""NTIRE24-LLIE datamodule used in NTIRE 2024 Challenge
-	`<https://cvlai.net/ntire/2024/>`__
+	"""NTIRE24-LLIE datamodule used in NTIRE 2024 Challenge.
 	
+	References:
+		https://cvlai.net/ntire/2024/
 	"""
 	
 	tasks: list[Task] = [Task.LLIE]

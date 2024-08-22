@@ -128,7 +128,7 @@ class Detector1(ABC):
         weights: A path to a pretrained weights file.
         classlabels: A :obj:`list` of all the class-labels defined in a
             dataset.
-        image_size: The desired model's input size in `[H, W]` format.
+        image_size: The desired model's input size in ``[H, W]`` format.
             Default: ``640``.
         conf_threshold: An object confidence threshold. Default: ``0.5``.
         iou_threshold: An IOU threshold for NMS. Default: ``0.4``.

@@ -251,8 +251,8 @@ class SORT(base.Tracker):
             detections: A :obj:`torch.Tensor` or :obj:`numpy.ndarray` of
                 detections in the format of `[[x1, y1, x2, y2, score, class], ...]`.
             frame_id  : The frame number. Default is ``None``.
-            input_size: The size of the input image in the format `[h, w]`.
-            image_size: The size of the original image in the format `[h, w]`.
+            input_size: The size of the input image in the format ``[H, W]``.
+            image_size: The size of the original image in the format ``[H, W]``.
         """
         self.frame_count += 1
         # Post-process detections

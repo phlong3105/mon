@@ -31,10 +31,10 @@ class OptimizerFactory(factory.Factory):
     def build(
         self,
         network            : nn.Module,
-        name               : str  | None = None,
-        config             : dict | None = None,
-        network_params_only: bool        = False,
-        to_dict            : bool        = False,
+        name               : str  = None,
+        config             : dict = None,
+        network_params_only: bool = False,
+        to_dict            : bool = False,
         **kwargs
     ):
         """Build an instance of the registered optimizer corresponding to the
@@ -91,9 +91,9 @@ class OptimizerFactory(factory.Factory):
     def build_instances(
         self,
         network            : nn.Module,
-        configs            : list | None,
-        network_params_only: bool        = True,
-        to_dict            : bool        = False,
+        configs            : list,
+        network_params_only: bool = True,
+        to_dict            : bool = False,
         *kwargs
     ):
         """Build multiple instances of different optimizers with the given
@@ -115,7 +115,7 @@ class OptimizerFactory(factory.Factory):
             return None
         assert isinstance(configs, list)
         
-        configs_ = copy.deepcopy(configs)
+        configs_   = copy.deepcopy(configs)
         optimizers = {} if to_dict else []
         for config in configs_:
             if isinstance(config, str):
@@ -145,8 +145,8 @@ class LRSchedulerFactory(factory.Factory):
     def build(
         self,
         optimizer: optim.Optimizer,
-        name     : str  | None = None,
-        config   : dict | None = None,
+        name     : str  = None,
+        config   : dict = None,
         **kwargs
     ):
         """Build an instance of the registered scheduler corresponding to the
@@ -193,7 +193,7 @@ class LRSchedulerFactory(factory.Factory):
     def build_instances(
         self,
         optimizer: optim.Optimizer,
-        configs  : list | None,
+        configs  : list,
         **kwargs
     ):
         """Build multiple instances of different schedulers with the given

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements light effect suppression (les) datasets and
-datamodules.
+"""Light Effect Suppression Datasets.
+
+This module implements light effect suppression (les) datasets and datamodules.
 """
 
 from __future__ import annotations
@@ -36,173 +37,9 @@ ImageDataset        = core.ImageDataset
 
 # region Dataset
 
-'''
-@DATASETS.register(name="flare7k++")
-class Flare7KPP(ImageDataset):
-    """Flare7K++-Real dataset consists of 100 flare/clear image pairs."""
-    
-    tasks : list[Task]  = [Task.LES]
-    splits: list[Split] = [Split.TRAIN]
-    has_test_annotations: bool = False
-    
-    def __init__(
-        self,
-        root           : core.Path = default_root_dir,
-        split          : Split              = Split.TRAIN,
-        image_size     : int                = 256,
-        classlabels    : ClassLabels | None = None,
-        use_reflective : bool               = False,
-        transform      : A.Compose   | None = None,
-        transform_flare: A.Compose   | None = None,
-        to_tensor      : bool               = False,
-        cache_data     : bool               = False,
-        verbose        : bool               = True,
-        *args, **kwargs
-    ):
-        self.scattering_flare: list[ImageAnnotation] = []
-        self.reflective_flare: list[ImageAnnotation] = []
-        super().__init__(
-            root        = root,
-            split       = split,
-            image_size  = image_size,
-            classlabels = classlabels,
-            transform   = transform,
-            to_tensor   = to_tensor,
-            cache_data  = cache_data,
-            verbose     = verbose,
-            *args, **kwargs
-        )
-        self._transform_flare = transform_flare
-        self.use_reflective   = use_reflective
-    
-    def __getitem__(self, index: int) -> tuple[
-        torch.Tensor | np.ndarray,
-        torch.Tensor | np.ndarray | None,
-        dict | None
-    ]:
-        image = images[index].data
-        meta  = images[index].meta
-        
-        gamma                = np.random.uniform(1.8, 2.2)
-        adjust_gamma         = transform.RandomGammaCorrection(gamma)
-        adjust_gamma_reverse = transform.RandomGammaCorrection(1 / gamma)
-        
-        if self.transform:
-            transformed = self.transform(image=image)
-            image       = transformed["image"]
-        image     = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-        image     = adjust_gamma(image)
-        sigma_chi = 0.01 * np.random.chisquare(df=1)
-        image     = torch.distributions.Normal(image, sigma_chi).sample()
-        gain      = np.random.uniform(0.5, 1.2)
-        image     = gain * image
-        image     = torch.clamp(image, min=0, max=1)
-        
-        flare = random.choice(self.scattering_flare)
-        flare = core.to_image_tensor(input=flare, keepdim=False, normalize=True)
-        flare = adjust_gamma(flare)
-        if self.use_reflective:
-            reflective_flare = random.choice(self.reflective_flare)
-            reflective_flare = core.to_image_tensor(input=reflective_flare, keepdim=False, normalize=True)
-            reflective_flare = adjust_gamma(reflective_flare)
-            flare 	         = torch.clamp(flare + reflective_flare, min=0, max=1)
-        flare = self._remove_background(flare)
-        
-        if self._transform_flare:
-            flare = core.to_image_nparray(flare, keepdim=False, denormalize=True)
-            flare = self._transform_flare(flare)
-            flare = core.to_image_tensor(input=flare, keepdim=False, normalize=True)
-        
-        # Change color
-        color_jitter = TT.ColorJitter(brightness=(0.8, 3), hue=0.0)
-        flare        = color_jitter(flare)
-        
-        # Flare blur
-        blur_transform  = TT.GaussianBlur(21, sigma=(0.1, 3.0))
-        flare_dc_offset = np.random.uniform(-0.02, 0.02)
-        flare = blur_transform(flare)
-        flare = flare + flare_dc_offset
-        flare = torch.clamp(flare, min=0, max=1)
-        
-        return adjust_gamma_reverse(flare), adjust_gamma_reverse(image), meta
-    
-    def get_data(self):
-        patterns = [
-            self.root / "flare7k++" / self.split_str / "lq"
-        ]
-        images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
-                ):
-                    if path.is_image_file():
-                        image = ImageAnnotation(path=path)
-                        images.append(image)
-        
-        self._get_reflective_flare()
-        self._get_scattering_flare()
-        
-    def _get_reflective_flare(self):
-        patterns = [
-            self.root / "flare7k++" / self.split_str / "pattern" / "reflective_flare"
-        ]
-        self.reflective_flare: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} reflective flare"
-                ):
-                    if path.is_image_file():
-                        image = ImageAnnotation(path=path)
-                        self.reflective_flare.append(image)
-    
-    def _get_scattering_flare(self):
-        patterns = [
-            self.root / "flare7k++" / self.split_str / "pattern" / "scattering_flare" / "compound_flare"
-        ]
-        self.scattering_flare: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} reflective flare"
-                ):
-                    if path.is_image_file():
-                        image = ImageAnnotation(path=path)
-                        self.reflective_flare.append(image)
-    
-    def cache_data(self, path: core.Path):
-        cache = {
-            "images"    : images,
-            "reflective": self.reflective_flare,
-            "scattering": self.scattering_flare,
-        }
-        torch.save(cache, str(path))
-    
-    def load_cache(self, path: core.Path):
-        cache                 = torch.load(path)
-        images           = cache["images"]
-        self.reflective_flare = cache["reflective"]
-        self.scattering_flare = cache["scattering"]
-    
-    def _remove_background(self, image: np.ndarray) -> np.ndarray:
-        # The input of the image is PIL.Image form with [H, W, C]
-        image   = np.float32(np.array(image))
-        rgb_max = np.max(image, (0, 1))
-        rgb_min = np.min(image, (0, 1))
-        image   = (image - rgb_min) * rgb_max / (rgb_max - rgb_min + 1e-7)
-        return image
-'''
-
-
 @DATASETS.register(name="flare7k++_real")
 class Flare7KPPReal(ImageDataset):
-    """Flare7K++-Real dataset consists of 100 flare/clear image pairs.
-    
-    """
+    """Flare7K++-Real dataset consists of ``100`` flare/clear image pairs."""
     
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TEST]
@@ -226,7 +63,8 @@ class Flare7KPPReal(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -236,7 +74,8 @@ class Flare7KPPReal(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -247,9 +86,7 @@ class Flare7KPPReal(ImageDataset):
 
 @DATASETS.register(name="flare7k++_syn")
 class Flare7KPPSyn(ImageDataset):
-    """Flare7K++-Syn dataset consists of 100 flare/clear image pairs.
-
-    """
+    """Flare7K++-Syn dataset consists of ``100`` flare/clear image pairs."""
     
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TEST]
@@ -273,7 +110,8 @@ class Flare7KPPSyn(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -283,7 +121,8 @@ class Flare7KPPSyn(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -294,9 +133,7 @@ class Flare7KPPSyn(ImageDataset):
 
 @DATASETS.register(name="flarereal800")
 class FlareReal800(ImageDataset):
-    """FlareReal800 dataset consists of 800 flare/clear image pairs.
-    
-    """
+    """FlareReal800 dataset consists of ``800`` flare/clear image pairs."""
     
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TRAIN, Split.VAL]
@@ -320,7 +157,8 @@ class FlareReal800(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -330,7 +168,8 @@ class FlareReal800(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -341,9 +180,7 @@ class FlareReal800(ImageDataset):
 
 @DATASETS.register(name="ledlight")
 class LEDLight(ImageDataset):
-    """LEDLight dataset consists of 100 flare/clear image pairs.
-
-    """
+    """LEDLight dataset consists of ``100`` flare/clear image pairs."""
     
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TEST]
@@ -367,7 +204,8 @@ class LEDLight(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -377,7 +215,8 @@ class LEDLight(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -388,9 +227,7 @@ class LEDLight(ImageDataset):
 
 @DATASETS.register(name="lighteffect")
 class LightEffect(ImageDataset):
-    """LightEffect dataset consists 961 flare images.
-
-    """
+    """LightEffect dataset consists ``961`` flare images."""
     
     tasks : list[Task]  = [Task.LES]
     splits: list[Split] = [Split.TRAIN]
@@ -414,7 +251,8 @@ class LightEffect(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -428,9 +266,6 @@ class LightEffect(ImageDataset):
 
 @DATAMODULES.register(name="flare7k++_real")
 class Flare7KPPRealDataModule(DataModule):
-    """Flare7K++-Real datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LES]
     
@@ -460,9 +295,6 @@ class Flare7KPPRealDataModule(DataModule):
 
 @DATAMODULES.register(name="flare7k++_syn")
 class Flare7KPPSynDataModule(DataModule):
-    """Flare7K++-Syn datamodule.
-
-    """
     
     tasks: list[Task] = [Task.LES]
     
@@ -492,9 +324,6 @@ class Flare7KPPSynDataModule(DataModule):
 
 @DATAMODULES.register(name="flarereal800")
 class FlareReal800DataModule(DataModule):
-    """FlareReal800 datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LES]
     
@@ -524,9 +353,6 @@ class FlareReal800DataModule(DataModule):
 
 @DATAMODULES.register(name="ledlight")
 class LEDLightDataModule(DataModule):
-    """LEDLight datamodule.
-
-    """
 
     tasks: list[Task] = [Task.LES]
     
@@ -556,9 +382,6 @@ class LEDLightDataModule(DataModule):
 
 @DATAMODULES.register(name="lighteffect")
 class LightEffectDataModule(DataModule):
-    """LightEffect datamodule.
-
-    """
     
     tasks: list[Task] = [Task.LES]
     

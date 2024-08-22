@@ -53,15 +53,16 @@ def bbox_area(bbox: np.ndarray) -> np.ndarray:
     """Compute the area(s) of bounding box(es).
     
     Args:
-        bbox: Bounding box(es) of shape `[4]` or `[N, 4]` and in
-            XYXY format.
+        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
+            format.
     
     Returns:
-        A `[11]`, or an `[N]` array containing the area value(s).
+        A ``[11]``, or an ``[N]`` array containing the area value(s).
     """
     if bbox.ndim == 1:
         bbox = np.expand_dims(bbox, 0)
-    assert bbox.ndim == 2, f"`bbox` must be 1D, but got {bbox.ndim}D."
+    if bbox.ndim != 2:
+        raise ValueError(f"`bbox` must be 1D, but got {bbox.ndim}D.")
     x1   = bbox[..., 0]
     y1   = bbox[..., 1]
     x2   = bbox[..., 2]
@@ -74,16 +75,17 @@ def bbox_center(bbox: np.ndarray) -> np.ndarray:
     """Compute the center(s) of bounding box(es).
     
     Args:
-        bbox: Bounding box(es) of shape `[4]` or `[N, 4]` and in
-            XYXY format.
+        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
+            format.
     
     Returns:
-        An `[1, 2]`, or an `[N, 2]` array containing the center(s) of
-        bounding box(es) in `[cx, cy]` format.
+        An ``[1, 2]``, or an ``[N, 2]`` array containing the center(s) of
+        bounding box(es) in ``[cx, cy]`` format.
     """
     if bbox.ndim == 1:
         bbox = np.expand_dims(bbox, 0)
-    assert bbox.ndim == 2, f"`bbox` must be 1D, but got {bbox.ndim}D."
+    if bbox.ndim != 2:
+        raise ValueError(f"`bbox` must be 1D, but got {bbox.ndim}D.")
     x1     = bbox[..., 0]
     y1     = bbox[..., 1]
     x2     = bbox[..., 2]
@@ -98,16 +100,17 @@ def bbox_corners(bbox: np.ndarray) -> np.ndarray:
     """Get corner(s) of bounding box(es) in an array.
     
     Args:
-        bbox: Bounding box(es) of shape `[4]` or `[N, 4]` and in
-            XYXY format.
+        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
+            format.
     
     Returns:
-        An `[1, 8]`, or an `[N, 8]` array containing corners of
-        bounding box(es) in `[x1, y1, x2, y2, x3, y3, x4, y4]` format.
+        An ``[1, 8]``, or an ``[N, 8]`` array containing corners of
+        bounding box(es) in ``[x1, y1, x2, y2, x3, y3, x4, y4]`` format.
     """
     if bbox.ndim == 1:
         bbox = np.expand_dims(bbox, 0)
-    assert bbox.ndim == 2, f"`bbox` must be 1D, but got {bbox.ndim}D."
+    if bbox.ndim != 2:
+        raise ValueError(f"`bbox` must be 1D, but got {bbox.ndim}D.")
     x1      = bbox[..., 0]
     y1      = bbox[..., 1]
     x2      = bbox[..., 2]
@@ -130,16 +133,17 @@ def bbox_corners_points(bbox: np.ndarray) -> np.ndarray:
     """Get corner(s) of bounding box(es) as points.
     
     Args:
-        bbox: Bounding box(es) of shape `[4]` or `[N, 4]` and in
-            XYXY format.
+        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
+            format.
     
     Returns:
-        An `[1, 4, 2]`, or an `[N, 4, 2]` array containing corners of
-        bounding box(es) in `[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]` format.
+        An ``[1, 4, 2]``, or an ``[N, 4, 2]`` array containing corners of
+        bounding box(es) in ``[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]`` format.
     """
     if bbox.ndim == 1:
         bbox = np.expand_dims(bbox, 0)
-    assert bbox.ndim == 2, f"`bbox` must be 1D, but got {bbox.ndim}D."
+    if bbox.ndim != 2:
+        raise ValueError(f"`bbox` must be 1D, but got {bbox.ndim}D.")
     x1     = bbox[..., 0]
     y1     = bbox[..., 1]
     x2     = bbox[..., 2]
@@ -154,7 +158,10 @@ def bbox_corners_points(bbox: np.ndarray) -> np.ndarray:
     c_y3   = y2
     c_x4   = x1
     c_y4   = y1 + h
-    points = np.array([[c_x1, c_y1], [c_x2, c_y2], [c_x3, c_y3], [c_x4, c_y4]], np.int32)
+    points = np.array(
+        [[c_x1, c_y1], [c_x2, c_y2], [c_x3, c_y3], [c_x4, c_y4]],
+        np.int32
+    )
     return points
 
 
@@ -162,11 +169,12 @@ def get_enclosing_bbox(bbox: np.ndarray) -> np.ndarray:
     """Get the enclosing bounding box(es) for rotated corners.
     
     Args:
-        bbox: Bounding of shape [..., 8], containing N bounding boxes each
-            described by their corner co-ordinates (x1 y1 x2 y2 x3 y3 x4 y4).
+        bbox: Bounding of shape ``[..., 8]``, containing N bounding boxes each
+            described by their corner co-ordinates
+            ``[x1, y1, x2, y2, x3, y3, x4, y4]``.
 
     Returns:
-        Bounding boxes of shape [..., 4] and in XYXY format.
+        Bounding boxes of shape ``[..., 4]`` and in XYXY format.
     """
     x_ = bbox[:, [0, 2, 4, 6]]
     y_ = bbox[:, [1, 3, 5, 7]]
@@ -186,21 +194,23 @@ def bbox_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape `[4]` or `[N, 4]`
-            and in XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape `[4]` or `[M, 4]`
-            and in XYXY format.
+        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
+            XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
+            in XYXY format.
     
     Returns:
-        An `NxM` matrix containing the pairwise IoU values.
+        An ``NxM`` matrix containing the pairwise IoU values.
     """
     # Make sure the bboxes are in 2D arrays.
     if bbox1.ndim == 1:
         bbox1 = np.expand_dims(bbox1, 0)
     if bbox2.ndim == 1:
         bbox2 = np.expand_dims(bbox2, 0)
-    assert bbox1.ndim == 2, f"`bbox1` must be 1D, but got {bbox1.ndim}D."
-    assert bbox2.ndim == 2, f"`bbox2` must be 1D, but got {bbox2.ndim}D."
+    if bbox1.ndim != 2:
+        raise ValueError(f"`bbox1` must be 1D, but got {bbox1.ndim}D.")
+    if bbox2.ndim != 2:
+        raise ValueError(f"`bbox2` must be 1D, but got {bbox2.ndim}D.")
     # Expand the dimensions of the bboxes to calculate pairwise IoU values.
     bbox1 = np.expand_dims(bbox1, 1)
     bbox2 = np.expand_dims(bbox2, 0)
@@ -223,24 +233,26 @@ def bbox_giou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     two (sets) of bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape `[4]` or `[N, 4]`
-            and in XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape `[4]` or `[M, 4]`
-            and in XYXY format.
+        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
+            XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
+            in XYXY format.
     
     Returns:
-        An `NxM` matrix containing the pairwise IoU values.
+        An ``NxM`` matrix containing the pairwise IoU values.
     
     References:
-        `<https://arxiv.org/pdf/1902.09630.pdf>`__
+        https://arxiv.org/pdf/1902.09630.pdf
     """
     # Make sure the bboxes are in 2D arrays.
     if bbox1.ndim == 1:
         bbox1 = np.expand_dims(bbox1, 0)
     if bbox2.ndim == 1:
         bbox2 = np.expand_dims(bbox2, 0)
-    assert bbox1.ndim == 2, f"`bbox1` must be 1D, but got {bbox1.ndim}D."
-    assert bbox2.ndim == 2, f"`bbox2` must be 1D, but got {bbox2.ndim}D."
+    if bbox1.ndim != 2:
+        raise ValueError(f"`bbox1` must be 1D, but got {bbox1.ndim}D.")
+    if bbox2.ndim != 2:
+        raise ValueError(f"`bbox2` must be 1D, but got {bbox2.ndim}D.")
     # Expand the dimensions of the bboxes to calculate pairwise IoU values.
     bbox1 = np.expand_dims(bbox1, 1)
     bbox2 = np.expand_dims(bbox2, 0)
@@ -274,24 +286,26 @@ def bbox_diou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     two (sets) of bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape `[4]` or `[N, 4]`
-            and in XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape `[4]` or `[M, 4]`
-            and in XYXY format.
+        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
+            XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
+            in XYXY format.
     
     Returns:
-        An `NxM` matrix containing the pairwise IoU values.
+        An ``NxM`` matrix containing the pairwise IoU values.
     
     References:
-        `<https://arxiv.org/pdf/1902.09630.pdf>`__
+        https://arxiv.org/pdf/1902.09630.pdf
     """
     # Make sure the bboxes are in 2D arrays.
     if bbox1.ndim == 1:
         bbox1 = np.expand_dims(bbox1, 0)
     if bbox2.ndim == 1:
         bbox2 = np.expand_dims(bbox2, 0)
-    assert bbox1.ndim == 2, f"`bbox1` must be 1D, but got {bbox1.ndim}D."
-    assert bbox2.ndim == 2, f"`bbox2` must be 1D, but got {bbox2.ndim}D."
+    if bbox1.ndim != 2:
+        raise ValueError(f"`bbox1` must be 1D, but got {bbox1.ndim}D.")
+    if bbox2.ndim != 2:
+        raise ValueError(f"`bbox2` must be 1D, but got {bbox2.ndim}D.")
     # Expand the dimensions of the bboxes to calculate pairwise IoU values.
     bbox1 = np.expand_dims(bbox1, 1)
     bbox2 = np.expand_dims(bbox2, 0)
@@ -328,24 +342,26 @@ def bbox_ciou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     two (sets) of bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape `[4]` or `[N, 4]`
-            and in XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape `[4]` or `[M, 4]`
-            and in XYXY format.
+        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
+            XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
+            in XYXY format.
     
     Returns:
-        An `NxM` matrix containing the pairwise IoU values.
+        An ``NxM`` matrix containing the pairwise IoU values.
     
     References:
-        `<https://arxiv.org/pdf/1902.09630.pdf>`__
+        https://arxiv.org/pdf/1902.09630.pdf
     """
     # Make sure the bboxes are in 2D arrays.
     if bbox1.ndim == 1:
         bbox1 = np.expand_dims(bbox1, 0)
     if bbox2.ndim == 1:
         bbox2 = np.expand_dims(bbox2, 0)
-    assert bbox1.ndim == 2, f"`bbox1` must be 1D, but got {bbox1.ndim}D."
-    assert bbox2.ndim == 2, f"`bbox2` must be 1D, but got {bbox2.ndim}D."
+    if bbox1.ndim != 2:
+        raise ValueError(f"`bbox1` must be 1D, but got {bbox1.ndim}D.")
+    if bbox2.ndim != 2:
+        raise ValueError(f"`bbox2` must be 1D, but got {bbox2.ndim}D.")
     # Expand the dimensions of the bboxes to calculate pairwise IoU values.
     bbox1 = np.expand_dims(bbox1, 1)
     bbox2 = np.expand_dims(bbox2, 0)
@@ -392,24 +408,27 @@ def bbox_ciou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
 def bbox_center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     """Measure the center distance(s) between two (sets) of bounding box(es).
     This is a coarse implementation, we don't recommend using it only for
-    association, which can be unstable and sensitive to frame rate and object speed.
+    association, which can be unstable and sensitive to frame rate and object
+    speed.
     
     Args:
-        bbox1: Predicted bounding box(es) of shape `[4]` or `[N, 4]`
-            and in XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape `[4]` or `[M, 4]`
-            and in XYXY format.
+        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
+            XYXY format.
+        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
+            in XYXY format.
     
     Returns:
-        An `NxM` matrix containing the pairwise center distance value(s).
+        An ``NxM`` matrix containing the pairwise center distance value(s).
     """
     # Make sure the bboxes are in 2D arrays.
     if bbox1.ndim == 1:
         bbox1 = np.expand_dims(bbox1, 0)
     if bbox2.ndim == 1:
         bbox2 = np.expand_dims(bbox2, 0)
-    assert bbox1.ndim == 2, f"`bbox1` must be 1D, but got {bbox1.ndim}D."
-    assert bbox2.ndim == 2, f"`bbox2` must be 1D, but got {bbox2.ndim}D."
+    if bbox1.ndim != 2:
+        raise ValueError(f"`bbox1` must be 1D, but got {bbox1.ndim}D.")
+    if bbox2.ndim != 2:
+        raise ValueError(f"`bbox2` must be 1D, but got {bbox2.ndim}D.")
     # Expand the dimensions of the bboxes to calculate pairwise IoU values.
     bbox1    = np.expand_dims(bbox1, 1)
     bbox2    = np.expand_dims(bbox2, 0)
@@ -586,17 +605,17 @@ def convert_bbox(
         case ShapeCode.SAME:
             return bbox
         case ShapeCode.VOC2COCO | ShapeCode.XYXY2XYWH:
-            return bbox_voc_to_coco(bbox=bbox)
+            return bbox_voc_to_coco(bbox)
         case ShapeCode.VOC2YOLO | ShapeCode.XYXY2CXCYN:
-            return bbox_voc_to_yolo(bbox=bbox, height=height, width=width)
+            return bbox_voc_to_yolo(bbox, height, width)
         case ShapeCode.COCO2VOC | ShapeCode.XYWH2XYXY:
-            return bbox_coco_to_voc(bbox=bbox)
+            return bbox_coco_to_voc(bbox)
         case ShapeCode.COCO2YOLO | ShapeCode.XYWH2CXCYN:
-            return bbox_coco_to_yolo(bbox=bbox, height=height, width=width)
+            return bbox_coco_to_yolo(bbox, height, width)
         case ShapeCode.YOLO2VOC | ShapeCode.CXCYN2XYXY:
-            return bbox_yolo_to_voc(bbox=bbox, height=height, width=width)
+            return bbox_yolo_to_voc(bbox, height, width)
         case ShapeCode.YOLO2COCO | ShapeCode.CXCYN2XYXY:
-            return bbox_yolo_to_coco(bbox=bbox, height=height, width=width)
+            return bbox_yolo_to_coco(bbox, height, width)
         case _:
             raise ValueError(f"{code}.")
 

@@ -48,8 +48,8 @@ ImageDataset        = core.ImageDataset
 
 @DATASETS.register(name="gtrain")
 class GTRain(ImageDataset):
-    """GT-Rain dataset consists 26124 train and 1793 val pairs of rain/no-rain
-    images.
+    """GT-Rain dataset consists ``26,124`` train and ``1,793`` val pairs of
+    rain/no-rain images.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -74,7 +74,8 @@ class GTRain(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -84,7 +85,8 @@ class GTRain(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = str(img.path)
                 if "Gurutto_1-2" in path:
@@ -101,7 +103,7 @@ class GTRain(ImageDataset):
 
 @DATASETS.register(name="rain100")
 class Rain100(ImageDataset):
-    """Rain100 dataset consists 100 pairs of rain/no-rain test images."""
+    """Rain100 dataset consists ``100`` pairs of rain/no-rain test images."""
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TEST]
@@ -125,7 +127,8 @@ class Rain100(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -135,7 +138,8 @@ class Rain100(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -146,8 +150,8 @@ class Rain100(ImageDataset):
 
 @DATASETS.register(name="rain100h")
 class Rain100H(ImageDataset):
-    """Rain100H dataset consists 100 pairs of rain/no-rain test images and 100
-    pairs of rain/no-rain train-val images.
+    """Rain100H dataset consists ``100`` pairs of rain/no-rain test images and
+    ``100`` pairs of rain/no-rain train-val images.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -172,7 +176,8 @@ class Rain100H(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -182,7 +187,8 @@ class Rain100H(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -193,8 +199,8 @@ class Rain100H(ImageDataset):
 
 @DATASETS.register(name="rain100l")
 class Rain100L(ImageDataset):
-    """Rain100L dataset consists 100 pairs of rain/no-rain test images and 200
-    pairs of rain/no-rain train-val images.
+    """Rain100L dataset consists ``100`` pairs of rain/no-rain test images and
+    ``200`` pairs of rain/no-rain train-val images.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -219,7 +225,8 @@ class Rain100L(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -229,7 +236,8 @@ class Rain100L(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -240,7 +248,7 @@ class Rain100L(ImageDataset):
 
 @DATASETS.register(name="rain12")
 class Rain12(ImageDataset):
-    """Rain12 dataset consists 12 pairs of rain/no-rain images."""
+    """Rain12 dataset consists ``12`` pairs of rain/no-rain images."""
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN]
@@ -264,7 +272,8 @@ class Rain12(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -274,7 +283,8 @@ class Rain12(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -285,8 +295,8 @@ class Rain12(ImageDataset):
 
 @DATASETS.register(name="rain1200")
 class Rain1200(ImageDataset):
-    """Rain1200 dataset consists 1200 pairs of rain/no-rain test images and
-    12,000 pairs of rain/no-rain train images.
+    """Rain1200 dataset consists ``1,200`` pairs of rain/no-rain test images and
+    ``12,000`` pairs of rain/no-rain train images.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -318,7 +328,8 @@ class Rain1200(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -328,7 +339,8 @@ class Rain1200(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -339,7 +351,7 @@ class Rain1200(ImageDataset):
 
 @DATASETS.register(name="rain13k")
 class Rain13K(ImageDataset):
-    """Rain13K dataset consists 13k pairs of rain/no-rain train images."""
+    """Rain13K dataset consists ``13k`` pairs of rain/no-rain train images."""
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -379,7 +391,8 @@ class Rain13K(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -389,7 +402,8 @@ class Rain13K(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -400,9 +414,8 @@ class Rain13K(ImageDataset):
 
 @DATASETS.register(name="rain1400")
 class Rain1400(ImageDataset):
-    """Rain1400 dataset consists 1400 pairs of rain/no-rain test images and
-    12,600 pairs of rain/no-rain train images.
-    
+    """Rain1400 dataset consists ``1,400`` pairs of rain/no-rain test images and
+    ``12,600`` pairs of rain/no-rain train images.
     """
     
     tasks : list[Task]  = [Task.DERAIN]
@@ -427,7 +440,8 @@ class Rain1400(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -437,7 +451,8 @@ class Rain1400(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -448,7 +463,7 @@ class Rain1400(ImageDataset):
 
 @DATASETS.register(name="rain2800")
 class Rain2800(ImageDataset):
-    """Rain2800 dataset consists 2800 pairs of rain/no-rain test images."""
+    """Rain2800 dataset consists ``2,800`` pairs of rain/no-rain test images."""
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TEST]
@@ -472,7 +487,8 @@ class Rain2800(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         
@@ -483,7 +499,8 @@ class Rain2800(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -494,7 +511,8 @@ class Rain2800(ImageDataset):
 
 @DATASETS.register(name="rain800")
 class Rain800(ImageDataset):
-    """Rain800 dataset consists 800 pairs of rain/no-rain train-val images."""
+    """Rain800 dataset consists ``800`` pairs of rain/no-rain train-val images.
+    """
     
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -518,7 +536,8 @@ class Rain800(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -528,7 +547,8 @@ class Rain800(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -543,7 +563,6 @@ class Rain800(ImageDataset):
 
 @DATAMODULES.register(name="gtrain")
 class GTRainDataModule(DataModule):
-    """GT-Rain datamodule."""
     
     tasks: list[Task] = [Task.DERAIN]
     
@@ -573,8 +592,7 @@ class GTRainDataModule(DataModule):
 
 @DATAMODULES.register(name="rain100")
 class Rain100DataModule(DataModule):
-    """Rain100 datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -603,8 +621,7 @@ class Rain100DataModule(DataModule):
 
 @DATAMODULES.register(name="rain100h")
 class Rain100HDataModule(DataModule):
-    """Rain100H datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -633,8 +650,7 @@ class Rain100HDataModule(DataModule):
 
 @DATAMODULES.register(name="rain100l")
 class Rain100LDataModule(DataModule):
-    """Rain100L datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -663,8 +679,7 @@ class Rain100LDataModule(DataModule):
 
 @DATAMODULES.register(name="rain12")
 class Rain12DataModule(DataModule):
-    """Rain12 datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -693,8 +708,7 @@ class Rain12DataModule(DataModule):
 
 @DATAMODULES.register(name="rain1200")
 class Rain1200DataModule(DataModule):
-    """Rain1200 datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -723,8 +737,7 @@ class Rain1200DataModule(DataModule):
 
 @DATAMODULES.register(name="rain13k")
 class Rain13KDataModule(DataModule):
-    """Rain13K datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -754,8 +767,7 @@ class Rain13KDataModule(DataModule):
 
 @DATAMODULES.register(name="rain1400")
 class Rain1400DataModule(DataModule):
-    """Rain1400 datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -784,8 +796,7 @@ class Rain1400DataModule(DataModule):
 
 @DATAMODULES.register(name="rain2800")
 class Rain2800DataModule(DataModule):
-    """Rain2800 datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
@@ -814,8 +825,7 @@ class Rain2800DataModule(DataModule):
 
 @DATAMODULES.register(name="rain800")
 class Rain800DataModule(DataModule):
-    """Rain800 datamodule."""
-    
+
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):

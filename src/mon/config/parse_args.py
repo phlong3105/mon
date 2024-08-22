@@ -19,8 +19,6 @@ __all__ = [
 import argparse
 import socket
 
-from platformdirs import user_data_dir
-
 from mon import core
 
 

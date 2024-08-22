@@ -107,7 +107,8 @@ class CosineAnnealingRestartLR(_LRScheduler):
     Args:
         optimizer: Torch optimizer.
         periods: Period for each cosine annealing cycle.
-        restart_weights: Restart weights at each restart iteration. Default: ``[1]``.
+        restart_weights: Restart weights at each restart iteration.
+            Default: ``[1]``.
         eta_min: The minimum lr. Default: ``0``.
         last_epoch: Used in _LRScheduler. Default: ``-1``.
     """
@@ -120,12 +121,14 @@ class CosineAnnealingRestartLR(_LRScheduler):
         eta_min        : int = 0,
         last_epoch     : int = -1
     ):
-        self.periods         = periods
-        self.restart_weights = restart_weights
-        self.eta_min         = eta_min
-        assert (len(self.periods) == len(self.restart_weights)), \
-            "`periods` and `restart_weights` should have the same length."
-        self.cumulative_period = [sum(self.periods[0:i + 1]) for i in range(0, len(self.periods))]
+        self.periods           = periods
+        self.restart_weights   = restart_weights
+        self.eta_min           = eta_min
+        self.cumulative_period = [sum(self.periods[0:i + 1])
+                                  for i in range(0, len(self.periods))]
+        if len(self.periods) != len(self.restart_weights):
+            raise ValueError(f"`periods` and `restart_weights` should have the "
+                             f"same length.")
         super().__init__(optimizer, last_epoch)
 
     def get_lr(self):
@@ -134,12 +137,17 @@ class CosineAnnealingRestartLR(_LRScheduler):
         nearest_restart = 0 if idx == 0 else self.cumulative_period[idx - 1]
         current_period  = self.periods[idx]
         return [
-            self.eta_min + current_weight * 0.5 * (base_lr - self.eta_min) * (1 + math.cos(math.pi * ((self.last_epoch - nearest_restart) / current_period)))
+            self.eta_min
+            + current_weight * 0.5 * (base_lr - self.eta_min)
+            * (1 + math.cos(math.pi * ((self.last_epoch - nearest_restart) / current_period)))
             for base_lr in self.base_lrs
         ]
 
     @staticmethod
-    def _get_position_from_periods(iteration: int, cumulative_period: list[int]) -> int:
+    def _get_position_from_periods(
+        iteration        : int,
+        cumulative_period: list[int]
+    ) -> int:
         """Get the position from a period list.
 
         It will return the index of the right-closest number in the period list.
@@ -167,8 +175,8 @@ class CosineAnnealingRestartLR2(_LRScheduler):
         self,
         optimizer      : Optimizer,
         periods        : list | tuple[int, ...],
-        restarts       : list | tuple[int, ...] | None,
-        restart_weights: list | tuple[int, ...] | None = (1, ),
+        restarts       : list | tuple[int, ...],
+        restart_weights: list | tuple[int, ...] = (1, ),
         eta_min        : int = 0,
         last_epoch     : int = -1
     ):
@@ -179,7 +187,10 @@ class CosineAnnealingRestartLR2(_LRScheduler):
         self.restarts        = [v + 1 for v in self.restarts]
         self.restart_weights = restart_weights if restart_weights else [1]
         self.last_restart    = 0
-        assert len(self.restarts) == len(self.restart_weights), "Restarts, and their weights do not match."
+        
+        if len(self.restarts) != len(self.restart_weights):
+            raise ValueError(f"`restarts` and `restart_weights` must have the "
+                             f"same length.")
         super().__init__(optimizer, last_epoch)
     
     def get_lr(self):
@@ -187,17 +198,17 @@ class CosineAnnealingRestartLR2(_LRScheduler):
             return self.base_lrs
         elif self.last_epoch in self.restarts:
             self.last_restart = self.last_epoch
-            self.t_max        = self.period[self.restarts.index(self.last_epoch) + 1]
+            self.t_max        = self.periods[self.restarts.index(self.last_epoch) + 1]
             weight            = self.restart_weights[self.restarts.index(self.last_epoch)]
             return [group["initial_lr"] * weight for group in self.optimizer.param_groups]
-        elif (self.last_epoch - self.last_restart - 1 - self.T_max) % (2 * self.T_max) == 0:
+        elif (self.last_epoch - self.last_restart - 1 - self.t_max) % (2 * self.t_max) == 0:
             return [
-                group["lr"] + (base_lr - self.eta_min) * (1 - math.cos(math.pi / self.T_max)) / 2
+                group["lr"] + (base_lr - self.eta_min) * (1 - math.cos(math.pi / self.t_max)) / 2
                 for base_lr, group in zip(self.base_lrs, self.optimizer.param_groups)
             ]
         return [
-            (1 + math.cos(math.pi * (self.last_epoch - self.last_restart) / self.T_max)) /
-            (1 + math.cos(math.pi * ((self.last_epoch - self.last_restart) - 1) / self.T_max)) *
+            (1 + math.cos(math.pi * (self.last_epoch - self.last_restart) / self.t_max)) /
+            (1 + math.cos(math.pi * ((self.last_epoch - self.last_restart) - 1) / self.t_max)) *
             (group["lr"] - self.eta_min) + self.eta_min
             for group in self.optimizer.param_groups
         ]
@@ -215,12 +226,12 @@ class CosineAnnealingRestartCyclicLR(_LRScheduler):
     eta_min         = 1e-7
     
     Args:
-        optimizer (torch.nn.optimizer): Torch optimizer.
-        periods (list): Period for each cosine anneling cycle.
-        restart_weights (list): Restart weights at each restart iteration.
-            Default: [1].
-        eta_min (float): The mimimum lr. Default: 0.
-        last_epoch (int): Used in _LRScheduler. Default: -1.
+        optimizer: Torch optimizer.
+        periods: Period for each cosine anneling cycle.
+        restart_weights: Restart weights at each restart iteration.
+            Default: ``[1]``.
+        eta_min: The mimimum lr. Default: ``0``.
+        last_epoch: Used in _LRScheduler. Default: ``-1``.
     """
     
     def __init__(
@@ -231,15 +242,15 @@ class CosineAnnealingRestartCyclicLR(_LRScheduler):
         eta_mins       : list | tuple[int, ...] = (0, ),
         last_epoch     : int                    = -1,
     ):
-        self.periods         = periods
-        self.restart_weights = restart_weights
-        self.eta_mins        = eta_mins
-        assert (len(self.periods) == len(self.restart_weights)), \
-            (f"`periods` and `restart_weights` should have the "
-             f"same length.")
-        self.cumulative_period = [
-            sum(self.periods[0:i + 1]) for i in range(0, len(self.periods))
-        ]
+        self.periods           = periods
+        self.restart_weights   = restart_weights
+        self.eta_mins          = eta_mins
+        self.cumulative_period = [sum(self.periods[0:i + 1])
+                                  for i in range(0, len(self.periods))]
+        
+        if len(self.periods) != len(self.restart_weights):
+            raise ValueError(f"`periods` and `restart_weights` must have the "
+                             f"same length.")
         super().__init__(optimizer, last_epoch)
     
     def get_lr(self):

@@ -46,8 +46,7 @@ ImageDataset        = core.ImageDataset
 
 @DATASETS.register(name="gtsnow")
 class GTSnow(ImageDataset):
-    """GT-Snow dataset."""
-    
+ 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
@@ -70,7 +69,8 @@ class GTSnow(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -80,7 +80,8 @@ class GTSnow(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = str(img.path)
                 path = path[:-9] + "C-000.png"
@@ -94,8 +95,7 @@ class GTSnow(ImageDataset):
 
 @DATASETS.register(name="kitti_snow")
 class KITTISnow(ImageDataset):
-    """KITTI-Snow dataset."""
-    
+
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
@@ -118,7 +118,8 @@ class KITTISnow(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -128,7 +129,8 @@ class KITTISnow(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -139,8 +141,7 @@ class KITTISnow(ImageDataset):
 
 @DATASETS.register(name="kitti_snow_s")
 class KITTISnowS(ImageDataset):
-    """KITTI-Snow-S dataset."""
-    
+
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -163,7 +164,8 @@ class KITTISnowS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -173,7 +175,8 @@ class KITTISnowS(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -184,8 +187,7 @@ class KITTISnowS(ImageDataset):
 
 @DATASETS.register(name="kitti_snow_m")
 class KITTISnowM(ImageDataset):
-    """KITTI-Snow-M dataset."""
-    
+
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -208,7 +210,8 @@ class KITTISnowM(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -218,7 +221,8 @@ class KITTISnowM(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -229,7 +233,6 @@ class KITTISnowM(ImageDataset):
 
 @DATASETS.register(name="kitti_snow_l")
 class KITTISnowL(ImageDataset):
-    """KITTI-Snow-L dataset."""
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
@@ -253,7 +256,8 @@ class KITTISnowL(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -263,7 +267,8 @@ class KITTISnowL(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -274,7 +279,6 @@ class KITTISnowL(ImageDataset):
 
 @DATASETS.register(name="snow100k")
 class Snow100K(ImageDataset):
-    """Snow100K dataset."""
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
@@ -298,7 +302,8 @@ class Snow100K(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -308,7 +313,8 @@ class Snow100K(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -319,7 +325,6 @@ class Snow100K(ImageDataset):
 
 @DATASETS.register(name="snow100k_s")
 class Snow100KS(ImageDataset):
-    """Snow100K-S dataset."""
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
@@ -343,7 +348,8 @@ class Snow100KS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -353,7 +359,8 @@ class Snow100KS(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -364,8 +371,7 @@ class Snow100KS(ImageDataset):
 
 @DATASETS.register(name="snow100k_m")
 class Snow100KM(ImageDataset):
-    """Snow100K-M dataset."""
-    
+
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -388,7 +394,8 @@ class Snow100KM(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -398,7 +405,8 @@ class Snow100KM(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -409,8 +417,7 @@ class Snow100KM(ImageDataset):
 
 @DATASETS.register(name="snow100k_l")
 class Snow100KL(ImageDataset):
-    """Snow100K-L dataset."""
-    
+
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -433,7 +440,8 @@ class Snow100KL(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -443,7 +451,8 @@ class Snow100KL(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -458,8 +467,7 @@ class Snow100KL(ImageDataset):
 
 @DATAMODULES.register(name="gtsnow")
 class GTSnowDataModule(DataModule):
-    """GT-Snow datamodule."""
-    
+
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
@@ -487,8 +495,7 @@ class GTSnowDataModule(DataModule):
 
 @DATAMODULES.register(name="kitti_snow")
 class KITTISnowDataModule(DataModule):
-    """KITTI-Snow datamodule."""
-    
+
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
@@ -517,8 +524,7 @@ class KITTISnowDataModule(DataModule):
 
 @DATAMODULES.register(name="kitti_snow_s")
 class KITTISnowSDataModule(DataModule):
-    """KITTI-Snow-S datamodule."""
-    
+
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
@@ -547,8 +553,7 @@ class KITTISnowSDataModule(DataModule):
 
 @DATAMODULES.register(name="kitti_snow_m")
 class KITTISnowMDataModule(DataModule):
-    """KITTI-Snow-M datamodule."""
-    
+
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
@@ -577,8 +582,7 @@ class KITTISnowMDataModule(DataModule):
 
 @DATAMODULES.register(name="kitti_snow_l")
 class KITTISnowLDataModule(DataModule):
-    """KITTI-Snow-L datamodule."""
-    
+
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
@@ -607,8 +611,7 @@ class KITTISnowLDataModule(DataModule):
 
 @DATAMODULES.register(name="snow100k")
 class Snow100KDataModule(DataModule):
-    """Snow100K datamodule."""
-    
+
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
@@ -637,8 +640,7 @@ class Snow100KDataModule(DataModule):
 
 @DATAMODULES.register(name="snow100k_s")
 class Snow100KSDataModule(DataModule):
-    """Snow100K-S datamodule."""
-    
+
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):

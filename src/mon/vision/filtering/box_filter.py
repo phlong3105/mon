@@ -99,7 +99,7 @@ def box_filter(
     """Perform box filter on the image.
     
     Args:
-        image: An image in `[H, W, C]` format.
+        image: An image in ``[H, W, C]`` format.
         kernel_size: Size of the kernel. Commonly be ``3``, ``5``, ``7``, or ``9``.
         radius: Radius of the kernel (kernel_size = radius * 2 + 1).
             Commonly be ``1``, ``2``, ``3``, or ``4``.

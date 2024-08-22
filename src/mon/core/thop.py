@@ -55,7 +55,9 @@ def custom_profile(
 		verbose = True
 	
 	def add_hooks(m: nn.Module):
-		"""Registers hooks to a neural network module to track total operations and parameters."""
+		"""Registers hooks to a neural network module to track total operations
+		and parameters.
+		"""
 		m.register_buffer("total_ops",    torch.zeros(1, dtype=torch.float64))
 		m.register_buffer("total_params", torch.zeros(1, dtype=torch.float64))
 		
@@ -76,7 +78,8 @@ def custom_profile(
 				print(f"[INFO] Register {fn.__qualname__}() for {m_type}.")
 		else:
 			if m_type not in types_collection and report_missing:
-				prRed(f"[WARN] Cannot find rule for {m_type}. Treat it as zero Macs and zero Params.")
+				prRed(f"[WARN] Cannot find rule for {m_type}. Treat it as zero "
+				      f"Macs and zero Params.")
 		
 		if fn is not None:
 			handler_collection[m] = (
@@ -102,7 +105,10 @@ def custom_profile(
 		ret_dict     = {}
 		for n, m in module.named_children():
 			next_dict = {}
-			if m in handler_collection and not isinstance(m, (nn.Sequential, nn.ModuleList)):
+			if (
+				m in handler_collection
+				and not isinstance(m, (nn.Sequential, nn.ModuleList))
+			):
 				m_ops, m_params = m.total_ops.item(), m.total_params.item()
 			else:
 				m_ops, m_params, next_dict = dfs_count(m, prefix=prefix + "\t")

@@ -92,8 +92,8 @@ class Path(type(pathlib.Path())):
         """
         from mon.globals import CONFIG_FILE_FORMATS
         return (
-            (self.is_file() if exist else True) and
-            self.suffix.lower() in CONFIG_FILE_FORMATS
+            (self.is_file() if exist else True)
+            and self.suffix.lower() in CONFIG_FILE_FORMATS
         )
 
     def is_dir_like(self) -> bool:
@@ -110,8 +110,8 @@ class Path(type(pathlib.Path())):
         """
         from mon.globals import IMAGE_FILE_FORMATS
         return (
-            (self.is_file() if exist else True) and
-            self.suffix.lower() in IMAGE_FILE_FORMATS
+            (self.is_file() if exist else True)
+            and self.suffix.lower() in IMAGE_FILE_FORMATS
         )
     
     def is_json_file(self, exist: bool = True) -> bool:
@@ -146,8 +146,8 @@ class Path(type(pathlib.Path())):
         return str(self) == self.stem
     
     def is_torch_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is a file, and the file extension
-        is one of the following:
+        """Return ``True`` if the current path is a file, and the file
+        extension is one of the following:
             - ``.pt``
             - ``.pt.tar``
             - ``.pth``
@@ -159,13 +159,13 @@ class Path(type(pathlib.Path())):
         """
         from mon.globals import TORCH_FILE_FORMATS
         return (
-            (self.is_file() if exist else True) and
-            self.suffix.lower() in TORCH_FILE_FORMATS
+            (self.is_file() if exist else True)
+            and self.suffix.lower() in TORCH_FILE_FORMATS
         )
     
     def is_txt_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is a text file.
-        Otherwise, return ``False``.
+        """Return ``True`` if the current path is a text file. Otherwise,
+        return ``False``.
         """
         return (
             (self.is_file() if exist else True)
@@ -173,14 +173,14 @@ class Path(type(pathlib.Path())):
         )
     
     def is_url(self) -> bool:
-        """Return ``True`` if the current path is a valid URL.
-        Otherwise, return ``False``.
+        """Return ``True`` if the current path is a valid URL. Otherwise,
+        return ``False``.
         """
         return not isinstance(validators.url(str(self)), validators.ValidationError)
     
     def is_url_or_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the path is a file or a valid URL.
-        Otherwise, return ``False``.
+        """Return ``True`` if the path is a file or a valid URL. Otherwise,
+        return ``False``.
         """
         return (
             (self.is_file() if exist else True)
@@ -188,34 +188,34 @@ class Path(type(pathlib.Path())):
         )
     
     def is_video_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is a video file.
-        Otherwise, return ``False``.
+        """Return ``True`` if the current path is a video file. Otherwise,
+        return ``False``.
         """
         from mon.globals import VIDEO_FILE_FORMATS
         return (
-            (self.is_file() if exist else True) and
-            self.suffix.lower() in VIDEO_FILE_FORMATS.values()
+            (self.is_file() if exist else True)
+            and self.suffix.lower() in VIDEO_FILE_FORMATS.values()
         )
     
     def is_video_stream(self) -> bool:
-        """Return ``True`` if the current path is a video stream.
-        Otherwise, return ``False``.
+        """Return ``True`` if the current path is a video stream. Otherwise,
+        return ``False``.
         """
         return "rtsp" in str(self).lower()
     
     def is_weights_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is an ```.pt``` or ``.pth`` file.
+        """Return ``True`` if the current path is an ``.pt`` or ``.pth`` file.
         Otherwise, return ``False``.
         """
         from mon.globals import WEIGHTS_FILE_FORMATS
         return (
-            (self.is_file() if exist else True) and
-            self.suffix.lower() in WEIGHTS_FILE_FORMATS
+            (self.is_file() if exist else True)
+            and self.suffix.lower() in WEIGHTS_FILE_FORMATS
         )
     
     def is_xml_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is an ``.xml`` file.
-        Otherwise, return ``False``.
+        """Return ``True`` if the current path is an ``.xml`` file. Otherwise,
+        return ``False``.
         """
         return (
             (self.is_file() if exist else True)
@@ -232,7 +232,8 @@ class Path(type(pathlib.Path())):
         )
     
     def has_subdir(self, name: str) -> bool:
-        """Return ``True`` if a directory has a subdirectory with the given name.
+        """Return ``True`` if a directory has a subdirectory with the given
+        name.
         """
         subdirs = [d.name for d in self.subdirs()]
         return name in subdirs
@@ -317,8 +318,8 @@ class Path(type(pathlib.Path())):
 # region Check
 
 def is_url(url: str) -> bool:
-    """Return ``True`` if the current path is a valid URL.
-    Otherwise, return ``False``.
+    """Return ``True`` if the current path is a valid URL. Otherwise, return
+    ``False``.
 	"""
     return not isinstance(validators.url(str(url)), validators.ValidationError)
 
@@ -357,7 +358,8 @@ def get_files(regex: str, recursive: bool = False) -> list[Path]:
     
     Args:
         regex: A file path patterns.
-        recursive: If ``True``, look for file in subdirectories. Default: ``False``.
+        recursive: If ``True``, look for file in subdirectories.
+            Default: ``False``.
         
     Returns:
         A :obj:`list` of unique file paths.
@@ -429,8 +431,8 @@ def get_yaml_file(path: Path) -> Path:
 
 
 def hash_files(paths: list[Path | str]) -> int:
-    """Return the total hash value of all the files (if it has one). Hash values
-    are integers (in bytes) of all files.
+    """Return the total hash value of all the files (if it has one). Hash
+    values are integers (in bytes) of all files.
     """
     paths = dtype.to_list(paths)
     paths = [Path(f) for f in paths if f]
@@ -487,7 +489,8 @@ def delete_files(
     Args:
         regex: A file path patterns.
         path: A path to a directory to search for the files to delete.
-        recursive: If ``True``, look for file in subdirectories. Default: ``False``.
+        recursive: If ``True``, look for file in subdirectories.
+            Default: ``False``.
     """
     path  = Path(path)
     files = []

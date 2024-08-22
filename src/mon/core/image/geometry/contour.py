@@ -57,9 +57,9 @@ def convert_contour(
     code = ShapeCode.from_value(value=code)
     match code:
         case ShapeCode.VOC2YOLO:
-            return contour_voc_to_yolo(contour=contour, height=height, width=width)
+            return contour_voc_to_yolo(contour, height, width)
         case ShapeCode.YOLO2VOC:
-            return contour_yolo_to_voc(contour=contour, height=height, width=width)
+            return contour_yolo_to_voc(contour, height, width)
         case _:
             return contour
     

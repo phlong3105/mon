@@ -38,7 +38,7 @@ def read_video_ffmpeg(
 	normalize: bool = False,
 ) -> torch.Tensor | np.ndarray:
 	"""Read raw bytes from a video stream using :mod`ffmpeg`. Optionally,
-	convert it to :obj:`torch.Tensor` type of shape `[1, C, H, W]`.
+	convert it to :obj:`torch.Tensor` type of shape ``[1, C, H, W]``.
 	
 	Args:
 		process: The subprocess that manages :obj:`ffmpeg` instance.
@@ -50,9 +50,9 @@ def read_video_ffmpeg(
 			Default: ``False``.
 	
 	Return:
-		A :obj:`numpy.ndarray` image of shape `[H, W, C]` with value in
+		A :obj:`numpy.ndarray` image of shape ``[H, W, C]`` with value in
 		range ``[0, 255]`` or a :obj:`torch.Tensor` image of shape
-		`[1, C, H, W]` with value in range ``[0.0, 1.0]``.
+		``[1, C, H, W]`` with value in range ``[0.0, 1.0]``.
 	"""
 	# RGB24 == 3 bytes per pixel.
 	img_size = height * width * 3
@@ -68,11 +68,7 @@ def read_video_ffmpeg(
 			.reshape([height, width, 3])
 		)  # Numpy
 		if to_tensor:
-			image = ci.to_image_tensor(
-				image     = image,
-				keepdim   = False,
-				normalize = normalize
-			)
+			image = ci.to_image_tensor(image, False, normalize)
 	return image
 
 # endregion
@@ -82,34 +78,29 @@ def read_video_ffmpeg(
 
 def write_video_ffmpeg(
 	process,
-	image      : torch.Tensor | np.ndarray,
+	frame      : torch.Tensor | np.ndarray,
 	denormalize: bool = False
 ):
 	"""Write an image to a video file using :obj:`ffmpeg`.
 
 	Args:
 		process: A subprocess that manages :obj:``ffmpeg``.
-		image: A frame/image of shape `[1, C, H, W]`.
-		denormalize: If ``True``, convert image to ``[0, 255]``. Default: ``False``.
+		frame: A frame/image of shape ``[1, C, H, W]``.
+		denormalize: If ``True``, convert image to ``[0, 255]``.
+			Default: ``False``.
 	"""
-	if isinstance(image, np.ndarray):
-		if ci.is_normalized_image(image=image):
-			image = ci.denormalize_image(image=image)
-		if ci.is_channel_first_image(image=image):
-			image = ci.to_channel_last_image(image=image)
-	elif isinstance(image, torch.Tensor):
-		image = ci.to_image_nparray(
-			image= image,
-			keepdim     = False,
-			denormalize = denormalize
-		)
+	if isinstance(frame, np.ndarray):
+		if ci.is_normalized_image(frame):
+			frame = ci.denormalize_image(frame)
+		if ci.is_channel_first_image(frame):
+			frame = ci.to_channel_last_image(frame)
+	elif isinstance(frame, torch.Tensor):
+		frame = ci.to_image_nparray(frame, False, denormalize)
 	else:
-		raise ValueError(
-			f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
-			f"but got {type(image)}."
-		)
+		raise ValueError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
+		                 f"but got {type(frame)}.")
 	process.stdin.write(
-		image
+		frame
 		.astype(np.uint8)
 		.tobytes()
 	)
@@ -120,7 +111,7 @@ class VideoWriter(abc.ABC):
 
 	Args:
 		dst: A directory to save images.
-		image_size: A desired output size of shape `[H, W]`. This is used to
+		image_size: A desired output size of shape ``[H, W]``. This is used to
 			reshape the input. Default: ``[480, 640]``.
 		frame_rate: A frame rate of the output video. Default: ``10``.
 		save_image: If ``True`` save each image separately. Default: ``False``.
@@ -207,11 +198,15 @@ class VideoWriterCV(VideoWriter):
 
 	Args:
 		dst: A destination directory to save images.
-		image_size: A desired output size of shape `[H, W]`. This is used
-			to reshape the input. Default: `[480, 640]`.
+		image_size: A desired output size of shape ```[H, W]```. This is used
+			to reshape the input. Default: ``[480, 640]``.
 		frame_rate: A frame rate of the output video. Default: ``10``.
-		fourcc: Video codec. One of ``'mp4v'``, ``'xvid'``, ``'mjpg'``, or
-			``'wmv'``. Default: ``'.mp4v'``.
+		fourcc: Video codec. One of:
+			- ``'mp4v'``
+			- ``'xvid'``
+			- ``'mjpg'``
+			- ``'wmv'``
+			Default: ``'mp4v'``.
 		save_image: If ``True``, save each image separately. Default: ``False``.
 		denormalize: If ``True``, convert image to ``[0, 255]``.
 			Default: ``False``.
@@ -280,6 +275,7 @@ class VideoWriterCV(VideoWriter):
 			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
+		denormalize = denormalize or self.denormalize
 		if self.save_image:
 			ci.write_image_cv(
 				image       = frame,
@@ -287,14 +283,10 @@ class VideoWriterCV(VideoWriter):
 				name        = f"{pathlib.Path(path).stem}.png",
 				prefix      = "",
 				extension   = ".png",
-				denormalize = denormalize or self.denormalize
+				denormalize = denormalize
 			)
 		
-		image = ci.to_image_nparray(
-			image       = frame,
-			keepdim     = True,
-			denormalize = denormalize or self.denormalize,
-		)
+		image = ci.to_image_nparray(frame, True, denormalize)
 		# IMPORTANT: Image must be in a BGR format
 		image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 		
@@ -318,8 +310,8 @@ class VideoWriterCV(VideoWriter):
 		"""
 		if paths is None:
 			paths = [None for _ in range(len(frames))]
-		for image, file in zip(frames, paths):
-			self.write(frame=image, path=file, denormalize=denormalize)
+		for frame, path in zip(frames, paths):
+			self.write(frame, path, denormalize)
 
 
 class VideoWriterFFmpeg(VideoWriter):
@@ -327,7 +319,7 @@ class VideoWriterFFmpeg(VideoWriter):
 
 	Args:
 		dst: A destination directory to save images.
-		image_size: A desired output size of shape `[H, W]`. This is used
+		image_size: A desired output size of shape ``[H, W]``. This is used
 			to reshape the input. Default: `[480, 640]`.
 		frame_rate: A frame rate of the output video. Default: ``10``.
 		pix_fmt: A video codec. Default: ``'yuv420p'``.
@@ -371,13 +363,14 @@ class VideoWriterFFmpeg(VideoWriter):
 		video_file.parent.mkdir(parents=True, exist_ok=True)
 		
 		if self.verbose:
+			s = "{}x{}".format(self.image_size[1], self.image_size[0])
 			self.ffmpeg_process = (
 				ffmpeg
 				.input(
 					filename = "pipe:",
 					format   = "rawvideo",
 					pix_fmt  = "rgb24",
-					s        = "{}x{}".format(self.image_size[1], self.image_size[0])
+					s        = s
 				)
 				.output(
 					filename = str(video_file),
@@ -388,13 +381,14 @@ class VideoWriterFFmpeg(VideoWriter):
 				.run_async(pipe_stdin=True)
 			)
 		else:
+			s = "{}x{}".format(self.image_size[1], self.image_size[0])
 			self.ffmpeg_process = (
 				ffmpeg
 				.input(
 					filename ="pipe:",
 					format   = "rawvideo",
 					pix_fmt  = "rgb24",
-					s        = "{}x{}".format(self.image_size[1], self.image_size[0])
+					s        = s
 				)
 				.output(
 					filename = str(video_file),
@@ -428,6 +422,7 @@ class VideoWriterFFmpeg(VideoWriter):
 			denormalize: If ``True``, convert image to ``[0, 255]``.
 				Default: ``False``.
 		"""
+		denormalize = denormalize or self.denormalize
 		if self.save_image:
 			assert isinstance(path, pathlib.Path)
 			ci.write_image_cv(
@@ -436,14 +431,10 @@ class VideoWriterFFmpeg(VideoWriter):
 				name        = f"{pathlib.Path(path).stem}.png",
 				prefix      = "",
 				extension   = ".png",
-				denormalize = denormalize or self.denormalize
+				denormalize = denormalize
 			)
 		
-		write_video_ffmpeg(
-			process     = self.ffmpeg_process,
-			image       = frame,
-			denormalize = denormalize or self.denormalize
-		)
+		write_video_ffmpeg(self.ffmpeg_process, frame, denormalize)
 		self.index += 1
 	
 	def write_batch(
@@ -463,7 +454,7 @@ class VideoWriterFFmpeg(VideoWriter):
 		"""
 		if paths is None:
 			paths = [None for _ in range(len(frames))]
-		for image, file in zip(frames, paths):
-			self.write(frame=image, path=file, denormalize=denormalize)
+		for frame, path in zip(frames, paths):
+			self.write(frame, path, denormalize)
 			
 # endregion

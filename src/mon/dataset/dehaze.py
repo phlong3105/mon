@@ -62,8 +62,8 @@ ImageDataset        = core.ImageDataset
 
 @DATASETS.register(name="densehaze")
 class DenseHaze(ImageDataset):
-    """Dense-Haze dataset consists of 33 pairs of real hazy and corresponding
-    haze-free images.
+    """Dense-Haze dataset consists of ``33`` pairs of real hazy and
+    corresponding haze-free images.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -88,7 +88,8 @@ class DenseHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -98,7 +99,8 @@ class DenseHaze(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -109,9 +111,8 @@ class DenseHaze(ImageDataset):
 
 @DATASETS.register(name="ihaze")
 class IHaze(ImageDataset):
-    """I-Haze dataset consists of 35 pairs of real hazy and corresponding
+    """I-Haze dataset consists of ``35`` pairs of real hazy and corresponding
     haze-free images.
-    
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -136,7 +137,8 @@ class IHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -146,7 +148,8 @@ class IHaze(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -157,7 +160,7 @@ class IHaze(ImageDataset):
 
 @DATASETS.register(name="nhhaze")
 class NHHaze(ImageDataset):
-    """NH-Haze dataset consists 55 pairs of real hazy and corresponding
+    """NH-Haze dataset consists ``55`` pairs of real hazy and corresponding
     haze-free images.
     """
     
@@ -183,7 +186,8 @@ class NHHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -193,7 +197,8 @@ class NHHaze(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} labels"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -204,7 +209,7 @@ class NHHaze(ImageDataset):
 
 @DATASETS.register(name="ohaze")
 class OHaze(ImageDataset):
-    """O-Haze dataset consists of 45 pairs of real hazy and corresponding
+    """O-Haze dataset consists of ``45`` pairs of real hazy and corresponding
     haze-free images.
     """
     
@@ -230,7 +235,8 @@ class OHaze(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -240,7 +246,8 @@ class OHaze(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -274,7 +281,8 @@ class RESIDEHSTSReal(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -284,8 +292,8 @@ class RESIDEHSTSReal(ImageDataset):
         
 @DATASETS.register(name="reside_hsts_syn")
 class RESIDEHSTSSyn(ImageDataset):
-    """RESIDE-HSTS-Syn dataset consists of 10 pairs of hazy and corresponding
-    haze-free images.
+    """RESIDE-HSTS-Syn dataset consists of ``10`` pairs of hazy and
+    corresponding haze-free images.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -310,7 +318,8 @@ class RESIDEHSTSSyn(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -320,7 +329,8 @@ class RESIDEHSTSSyn(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -331,7 +341,7 @@ class RESIDEHSTSSyn(ImageDataset):
 
 @DATASETS.register(name="reside_its")
 class RESIDEITS(ImageDataset):
-    """RESIDE-ITS dataset consists of 13,990 pairs of hazy and corresponding
+    """RESIDE-ITS dataset consists of ``13,990`` pairs of hazy and corresponding
     haze-free images.
     """
     
@@ -357,7 +367,8 @@ class RESIDEITS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -367,7 +378,8 @@ class RESIDEITS(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -380,8 +392,8 @@ class RESIDEITS(ImageDataset):
 
 @DATASETS.register(name="reside_its_v2")
 class RESIDEITSV2(ImageDataset):
-    """RESIDE-ITS-V2 dataset consists of 13,990 pairs of hazy and corresponding
-    haze-free images.
+    """RESIDE-ITS-V2 dataset consists of ``13,990`` pairs of hazy and
+    corresponding haze-free images.
     """
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -406,7 +418,8 @@ class RESIDEITSV2(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -416,7 +429,8 @@ class RESIDEITSV2(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -429,7 +443,7 @@ class RESIDEITSV2(ImageDataset):
 
 @DATASETS.register(name="reside_ots")
 class RESIDEOTS(ImageDataset):
-    """RESIDE-OTS dataset consists of 73,135 pairs of hazy and corresponding
+    """RESIDE-OTS dataset consists of ``73,135`` pairs of hazy and corresponding
     haze-free images.
     """
     
@@ -455,7 +469,8 @@ class RESIDEOTS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -465,7 +480,8 @@ class RESIDEOTS(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -478,8 +494,7 @@ class RESIDEOTS(ImageDataset):
 
 @DATASETS.register(name="reside_rtts")
 class RESIDERTTS(ImageDataset):
-    """RESIDE-RTTS dataset consists of 4,322 real hazy images.
-    """
+    """RESIDE-RTTS dataset consists of ``4,322`` real hazy images."""
     
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
@@ -502,7 +517,8 @@ class RESIDERTTS(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -512,7 +528,7 @@ class RESIDERTTS(ImageDataset):
 
 @DATASETS.register(name="reside_sots_indoor")
 class RESIDESOTSIndoor(ImageDataset):
-    """RESIDE-SOTS-Indoor dataset consists of 500 pairs of hazy and
+    """RESIDE-SOTS-Indoor dataset consists of ``500`` pairs of hazy and
     corresponding haze-free images.
     """
     
@@ -538,7 +554,8 @@ class RESIDESOTSIndoor(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -548,7 +565,8 @@ class RESIDESOTSIndoor(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -561,7 +579,7 @@ class RESIDESOTSIndoor(ImageDataset):
 
 @DATASETS.register(name="reside_sots_outdoor")
 class RESIDESOTSOutdoor(ImageDataset):
-    """RESIDE-SOTS-Outdoor dataset consists of 500 pairs of hazy and
+    """RESIDE-SOTS-Outdoor dataset consists of ``500`` pairs of hazy and
     corresponding haze-free images.
     """
     
@@ -587,7 +605,8 @@ class RESIDESOTSOutdoor(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -597,7 +616,8 @@ class RESIDESOTSOutdoor(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
@@ -610,7 +630,7 @@ class RESIDESOTSOutdoor(ImageDataset):
 
 @DATASETS.register(name="reside_uhi")
 class RESIDEUHI(ImageDataset):
-    """RESIDE-UHI dataset consists of 4,809 real hazy images."""
+    """RESIDE-UHI dataset consists of ``4,809`` real hazy images."""
     
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
@@ -633,7 +653,8 @@ class RESIDEUHI(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -643,7 +664,7 @@ class RESIDEUHI(ImageDataset):
 
 @DATASETS.register(name="satehaze1k")
 class SateHaze1K(ImageDataset):
-    """SateHaze1K dataset consists 1200 pairs of hazy and corresponding
+    """SateHaze1K dataset consists ``1,200`` pairs of hazy and corresponding
     haze-free images.
     """
     
@@ -671,7 +692,8 @@ class SateHaze1K(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -681,7 +703,8 @@ class SateHaze1K(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -692,8 +715,7 @@ class SateHaze1K(ImageDataset):
 
 @DATASETS.register(name="satehaze1k_thin")
 class SateHaze1KThin(ImageDataset):
-    """SateHaze1K-Thin dataset."""
-    
+
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -716,7 +738,8 @@ class SateHaze1KThin(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -725,7 +748,8 @@ class SateHaze1KThin(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} labels"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} labels"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -736,8 +760,7 @@ class SateHaze1KThin(ImageDataset):
 
 @DATASETS.register(name="satehaze1k_moderate")
 class SateHaze1KModerate(ImageDataset):
-    """SateHaze1K-Moderate."""
-    
+
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -759,7 +782,8 @@ class SateHaze1KModerate(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -768,7 +792,8 @@ class SateHaze1KModerate(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -779,8 +804,7 @@ class SateHaze1KModerate(ImageDataset):
 
 @DATASETS.register(name="satehaze1k_thick")
 class SateHaze1KThick(ImageDataset):
-    """SateHaze1K-Thick dataset."""
-    
+
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -803,7 +827,8 @@ class SateHaze1KThick(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -813,7 +838,8 @@ class SateHaze1KThick(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -828,8 +854,7 @@ class SateHaze1KThick(ImageDataset):
 
 @DATAMODULES.register(name="densehaze")
 class DenseHazeDataModule(DataModule):
-    """Dense-Haze datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -858,8 +883,7 @@ class DenseHazeDataModule(DataModule):
 
 @DATAMODULES.register(name="ihaze")
 class IHazeDataModule(DataModule):
-    """I-Haze datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -888,8 +912,7 @@ class IHazeDataModule(DataModule):
 
 @DATAMODULES.register(name="nhhaze")
 class NHHazeDataModule(DataModule):
-    """NH-Haze datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -918,8 +941,7 @@ class NHHazeDataModule(DataModule):
 
 @DATAMODULES.register(name="ohaze")
 class OHazeDataModule(DataModule):
-    """O-Haze datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -948,8 +970,7 @@ class OHazeDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_hsts_real")
 class RESIDEHSTSRealDataModule(DataModule):
-    """RESIDE-HSTS-Real datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -978,8 +999,7 @@ class RESIDEHSTSRealDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_hsts_syn")
 class RESIDEHSTSSynDataModule(DataModule):
-    """RESIDE-HSTS-Syn datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1008,8 +1028,7 @@ class RESIDEHSTSSynDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_its")
 class RESIDEITSDataModule(DataModule):
-    """RESIDE-ITS datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1038,8 +1057,7 @@ class RESIDEITSDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_its_v2")
 class RESIDEITSV2DataModule(DataModule):
-    """RESIDE-ITS-V2 datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1068,8 +1086,7 @@ class RESIDEITSV2DataModule(DataModule):
 
 @DATAMODULES.register(name="reside_ots")
 class RESIDEOTSDataModule(DataModule):
-    """RESIDE-OTS datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1098,8 +1115,7 @@ class RESIDEOTSDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_rtts")
 class RESIDERTTSDataModule(DataModule):
-    """RESIDE-RTTS datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1128,8 +1144,7 @@ class RESIDERTTSDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_sots_indoor")
 class RESIDESOTSIndoorDataModule(DataModule):
-    """RESIDE-SOTS-Indoor datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1158,8 +1173,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_sots_outdoor")
 class RESIDESOTSOutdoorDataModule(DataModule):
-    """RESIDE-SOTS-Outdoor datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1188,8 +1202,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
 
 @DATAMODULES.register(name="reside_uhi")
 class RESIDEUHIDataModule(DataModule):
-    """RESIDE-UHI datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1218,8 +1231,7 @@ class RESIDEUHIDataModule(DataModule):
 
 @DATAMODULES.register(name="satehaze1k")
 class SateHaze1KDataModule(DataModule):
-    """SateHaze1K datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1248,8 +1260,7 @@ class SateHaze1KDataModule(DataModule):
 
 @DATAMODULES.register(name="satehaze1k_thin")
 class SateHaze1KThinDataModule(DataModule):
-    """SateHaze1K-Thin datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1278,8 +1289,7 @@ class SateHaze1KThinDataModule(DataModule):
 
 @DATAMODULES.register(name="satehaze1k_moderate")
 class SateHaze1KModerateDataModule(DataModule):
-    """SateHaze1K-Moderate datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1308,8 +1318,7 @@ class SateHaze1KModerateDataModule(DataModule):
 
 @DATAMODULES.register(name="satehaze1k_thick")
 class SateHaze1KThickDataModule(DataModule):
-    """SateHaze1K-Thick datamodule."""
-    
+
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):

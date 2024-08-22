@@ -28,7 +28,7 @@ import torch
 import torchvision
 
 from mon.core import pathlib
-from mon.core.image import utils
+from mon.core.image import utils, photometry
 
 
 # region Read
@@ -40,7 +40,7 @@ def read_image(
     normalize: bool = False,
 ) -> torch.Tensor | np.ndarray:
     """Read an image from a file path using :obj:`cv2`. Optionally, convert it
-    to RGB format, and :obj:`torch.Tensor` type of shape `[1, C, H, W]`.
+    to RGB format, and :obj:`torch.Tensor` type of shape ``[1, C, H, W]``.
 
     Args:
         path: An image's file path.
@@ -65,9 +65,9 @@ def read_image(
             Default: ``False``.
         
     Return:
-        A :obj:`numpy.ndarray` image of shape0 `[H, W, C]` with value in
-        range ```[0, 255]``` or a :obj:`torch.Tensor` image of shape
-        `[1, C, H, W]` with value in range ```[0.0, 1.0]```.
+        A :obj:`numpy.ndarray` image of shape0 ``[H, W, C]`` with value in
+        range ``[0, 255]`` or a :obj:`torch.Tensor` image of shape
+        ``[1, C, H, W]`` with value in range ``[0.0, 1.0]``.
     """
     image = cv2.imread(str(path), flags)  # BGR
     if image.ndim == 2:  # HW -> HW1 (OpenCV read grayscale image)
@@ -81,7 +81,7 @@ def read_image(
 
 def read_image_shape(path: pathlib.Path) -> tuple[int, int, int]:
     """Read an image from a file path using :obj:`cv2` and get its shape as
-    `[H, W, C]`.
+    ``[H, W, C]``.
     
     Args:
         path: An image file path.
@@ -129,13 +129,11 @@ def write_image_cv(
     """
     # Convert image
     if isinstance(image, torch.Tensor):
-        image = utils.to_image_nparray(image=image, keepdim=True, denormalize=denormalize)
-    image = utils.to_channel_last_image(image=image)
+        image = utils.to_image_nparray(image, True, denormalize)
+    image = utils.to_channel_last_image(image)
     if 2 <= image.ndim <= 3:
-        raise ValueError(
-            f"image's number of dimensions must be between ``2`` and ``3``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``2`` and ``3``, but got {image.ndim}.")
     # Write image
     dir_path  = pathlib.Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
@@ -172,15 +170,13 @@ def write_image_torch(
     # Convert image
     if isinstance(image, np.ndarray):
         image = torch.from_numpy(image)
-        image = utils.to_channel_first_image(image=image)
-    image = utils.denormalize_image(image=image) if denormalize else image
+        image = utils.to_channel_first_image(image)
+    image = photometry.denormalize_image(image) if denormalize else image
     image = image.to(torch.uint8)
     image = image.cpu()
     if 2 <= image.ndim <= 3:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between ``2`` and ``3``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``2`` and ``3``, but got {image.ndim}.")
     # Write image
     dir_path  = pathlib.Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
@@ -218,19 +214,15 @@ def write_images_cv(
             Default: ``False``.
     """
     if isinstance(names, str):
-        names    = [names    for _ in range(len(images))]
+        names = [names for _ in range(len(images))]
     if isinstance(prefixes, str):
         prefixes = [prefixes for _ in range(len(prefixes))]
     if not len(images) == len(names):
-        raise ValueError(
-            f"The length of `images` and `names` must be the same, "
-            f"but got {len(images)} and {len(names)}."
-        )
+        raise ValueError(f"`images` and `names` must have the same length, "
+                         f"but got {len(images)} and {len(names)}.")
     if not len(images) == len(prefixes):
-        raise ValueError(
-            f"The length of `images` and `prefixes` must be the "
-            f"same, but got {len(images)} and {len(prefixes)}."
-        )
+        raise ValueError(f"`images` and `prefixes` must have the same length, "
+                         f"but got {len(images)} and {len(prefixes)}.")
     num_jobs = multiprocessing.cpu_count()
     joblib.Parallel(n_jobs=num_jobs)(
         joblib.delayed(write_image_cv)(
@@ -260,19 +252,15 @@ def write_images_torch(
             Default: ``False``.
     """
     if isinstance(names, str):
-        names    = [names    for _ in range(len(images))]
+        names = [names for _ in range(len(images))]
     if isinstance(prefixes, str):
         prefixes = [prefixes for _ in range(len(prefixes))]
     if not len(images) == len(names):
-        raise ValueError(
-            f"The length of `images` and `names` must be the same, "
-            f"but got {len(images)} and {len(names)}."
-        )
+        raise ValueError(f"`images` and `names` must have the same length, "
+                         f"but got {len(images)} and {len(names)}.")
     if not len(images) == len(prefixes):
-        raise ValueError(
-            f"The length of `images` and `prefixes` must be the same, "
-            f"but got {len(images)} and {len(prefixes)}."
-        )
+        raise ValueError(f"`images` and `prefixes` must have the same length, "
+                         f"but got {len(images)} and {len(prefixes)}.")
     num_jobs = multiprocessing.cpu_count()
     joblib.Parallel(n_jobs=num_jobs)(
         joblib.delayed(write_image_torch)(

@@ -280,9 +280,8 @@ def iter_to_iter(x: Iterable, item_type: type, return_type: type = None):
         An :obj:`Iterable` object cast to the desired type.
     """
     if not isinstance(x, list | tuple | dict):
-        raise TypeError(
-            f"`x` must be a `list`, `tuple`, or `dict`, but got {type(x)}."
-        )
+        raise TypeError(f"`x` must be a `list`, `tuple`, or `dict`, "
+                        f"but got {type(x)}.")
     x = copy.deepcopy(x)
     x = map(item_type, x)
     if return_type is None:
@@ -319,19 +318,15 @@ def split_list(x: list, n: int | list[int]) -> list[list]:
     """
     if isinstance(n, int):
         if len(x) % n == 0:
-            raise ValueError(
-                f"x cannot be evenly split into {n} sub-list, got length of x "
-                f"is {len(x)}."
-            )
+            raise ValueError(f"`x` cannot be evenly split into {n} sub-list, "
+                             f"but got length of `x` is {len(x)}.")
         n = [n] * int(len(x) / n)
     
     if sum(n) != len(x):
-        raise ValueError(
-            f"The total length of new sub-lists must match the length of x, "
-            f"but got {sum(n) != len(x)}."
-        )
+        raise ValueError(f"The total length of new sub-lists must match the "
+                         f"length of `x`, but got {sum(n) != len(x)}.")
     
-    y = []
+    y   = []
     idx = 0
     for i in range(len(n)):
         y.append(x[idx: idx + n[i]])

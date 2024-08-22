@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base Dataset.
+"""Base Dataset Template.
 
 This module implements base classes for all datasets.
 """
@@ -59,7 +59,6 @@ class Dataset(dataset.Dataset, ABC):
         cache_data: If ``True``, cache data to disk for faster loading next
             time. Default: ``False``.
         verbose: Verbosity. Default: ``True``.
-    
     """
     
     tasks : list[Task]  = []
@@ -162,7 +161,10 @@ class Dataset(dataset.Dataset, ABC):
         ``False``.
         """
         return (
-            (self.has_test_annotations and self.split in [Split.TEST, Split.PREDICT])
+            (
+                self.has_test_annotations
+                and self.split in [Split.TEST, Split.PREDICT]
+            )
             or (self.split in [Split.TRAIN, Split.VAL])
         )
     
@@ -202,9 +204,8 @@ class Dataset(dataset.Dataset, ABC):
         if split in self.splits:
             self._split = split
         else:
-            raise ValueError(
-                f"`split` must be one of {self.splits}, but got {split}."
-            )
+            raise ValueError(f"`split` must be one of {self.splits}, "
+                             f"but got {split}.")
     
     @property
     def split_str(self) -> str:

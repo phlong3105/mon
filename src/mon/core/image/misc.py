@@ -39,10 +39,8 @@ def add_weighted(
         A weighted image.
     """
     if image1.shape != image2.shape:
-        raise ValueError(
-            f"The shape of `image1` and `image2` must be the same, "
-            f"but got {image1.shape} and {image2.shape}."
-        )
+        raise ValueError(f"`image1` and `image2` must have the same shape, "
+                         f"but got {image1.shape} and {image2.shape}.")
     bound  = 1.0 if image1.is_floating_point() else 255.0
     output = image1 * alpha + image2 * beta + gamma
     if isinstance(output, torch.Tensor):
@@ -50,10 +48,8 @@ def add_weighted(
     elif isinstance(output, np.ndarray):
         output = np.clip(output, 0, bound)
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(input)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(input)}.")
     return output
 
 

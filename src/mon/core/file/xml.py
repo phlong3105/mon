@@ -38,7 +38,8 @@ class XMLHandler(base.FileHandler):
         path: pathlib.Path | str | TextIO,
         **kwargs
     ):
-        assert isinstance(obj, dict)
+        if not isinstance(obj, dict):
+            raise TypeError(f"`obj` must be a `dict`, but got {type(obj)}.")
         path = pathlib.Path(path)
         with open(path, "w") as f:
             f.write(unparse(input_dict=obj, pretty=True))

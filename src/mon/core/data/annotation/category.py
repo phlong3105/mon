@@ -98,10 +98,8 @@ class ClassificationAnnotation(base.Annotation):
     @confidence.setter
     def confidence(self, confidence: float):
         if not 0.0 <= confidence <= 1.0:
-            raise ValueError(
-                f"`confidence` must be between ``0.0`` and ``1.0``, "
-                f"but got {confidence}."
-            )
+            raise ValueError(f"`confidence` must be between ``0.0`` and "
+                             f"``1.0``, but got {confidence}.")
         self._confidence = confidence
     
     @property

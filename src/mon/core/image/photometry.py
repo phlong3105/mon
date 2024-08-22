@@ -50,10 +50,8 @@ def denormalize_image_mean_std(
         A denormalized image.
     """
     if not image.ndim >= 3:
-        raise ValueError(
-            f"`image`'s number of dimensions must be >= ``3``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be >= ``3``, "
+                         f"but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         image = image.clone()
         image = image.to(dtype=torch.get_default_dtype()) \
@@ -62,14 +60,14 @@ def denormalize_image_mean_std(
         device = image.device
         dtype  = image.dtype
         if isinstance(mean, float):
-            mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
+            mean = torch.tensor([mean] * shape[1], dtype=dtype, device=device)
         elif isinstance(mean, (list, tuple)):
             mean = torch.as_tensor(mean, dtype=dtype, device=image.device)
         elif isinstance(mean, torch.Tensor):
             mean = mean.to(dtype=dtype, device=image.device)
         
         if isinstance(std, float):
-            std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
+            std = torch.tensor([std] * shape[1], dtype=dtype, device=device)
         elif isinstance(std, (list, tuple)):
             std = torch.as_tensor(std, dtype=dtype, device=image.device)
         elif isinstance(std, torch.Tensor):
@@ -77,16 +75,14 @@ def denormalize_image_mean_std(
         
         std_inv  = 1.0 / (std + eps)
         mean_inv = -mean * std_inv
-        std_inv  = std_inv.view(-1, 1, 1) if std_inv.ndim == 1 else std_inv
+        std_inv  = std_inv.view(-1, 1, 1)  if std_inv.ndim  == 1 else std_inv
         mean_inv = mean_inv.view(-1, 1, 1) if mean_inv.ndim == 1 else mean_inv
         image.sub_(mean_inv).div_(std_inv)
     elif isinstance(image, np.ndarray):
         raise NotImplementedError(f"This function has not been implemented.")
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
     return image
 
 
@@ -114,10 +110,8 @@ def normalize_image_mean_std(
         A normalized image.
     """
     if not image.ndim >= 3:
-        raise ValueError(
-            f"`image`'s number of dimensions must be >= ``3``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be >= ``3``, "
+                         f"but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         image = image.clone()
         image = image.to(dtype=torch.get_default_dtype()) \
@@ -141,15 +135,13 @@ def normalize_image_mean_std(
         std += eps
         
         mean = mean.view(-1, 1, 1) if mean.ndim == 1 else mean
-        std  = std.view(-1, 1, 1)  if std.ndim == 1 else std
+        std  = std.view(-1, 1, 1)  if std.ndim  == 1 else std
         image.sub_(mean).div_(std)
     elif isinstance(image, np.ndarray):
         raise NotImplementedError(f"This function has not been implemented.")
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
     return image
 
 
@@ -160,8 +152,8 @@ def normalize_image_by_range(
     new_min: float = 0.0,
     new_max: float = 1.0,
 ) -> torch.Tensor | np.ndarray:
-    """Normalize an image from the range [:obj:`min`, :obj:`max`] to the
-    [:obj:`new_min`, :obj:`new_max`].
+    """Normalize an image from the range ``[:obj:`min`, :obj:`max`]`` to the
+    ``[:obj:`new_min`, :obj:`new_max`]``.
     
     Args:
         image: An image.
@@ -174,10 +166,8 @@ def normalize_image_by_range(
         A normalized image.
     """
     if not image.ndim >= 3:
-        raise ValueError(
-            f"`image`'s number of dimensions must be >= ``3``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be >= ``3``, "
+                         f"but got {image.ndim}.")
     # if is_normalized_image(image=image):
     #     return image
     if isinstance(image, torch.Tensor):
@@ -194,10 +184,8 @@ def normalize_image_by_range(
         image = (image - min) * ratio + new_min
         # image = np.clip(image, new_min, new_max)
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
     return image
 
 

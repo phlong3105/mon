@@ -111,13 +111,17 @@ class ResizeMultipleOf(DualTransform):
         multiple_of: Output height and width are constrained to be
             multiple of this parameter. Default: ``1``.
         resize_method: Resize method.
-            ``"lower_bound"``: Output will be at least as large as the given size.
-            ``"upper_bound"``: Output will be at max as large as the given size. (Output size might be smaller than given size.)
-            ``"minimal"``    : Scale as least as possible. (Output size might be smaller than given size.)
+            ``"lower_bound"``: Output will be at least as large as the given
+                size.
+            ``"upper_bound"``: Output will be at max as large as the given size.
+                (Output size might be smaller than given size.)
+            ``"minimal"``    : Scale as least as possible. (Output size might
+                be smaller than given size.)
             Default: ``"lower_bound"``.
         interpolation: Flag that is used to specify the interpolation algorithm.
-            Should be one of: cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_CUBIC,
-            cv2.INTER_AREA, cv2.INTER_LANCZOS4. Default: cv2.INTER_LINEAR.
+            One of: ``'cv2.INTER_NEAREST'``, ``'cv2.INTER_LINEAR'``,
+            ``'cv2.INTER_CUBIC'``, ``'cv2.INTER_AREA'``, ``'cv2.INTER_LANCZOS4'``.
+            Default: ``'cv2.INTER_LINEAR'``.
         p: Probability of applying the transform. Default: 1.
 	
     Targets:
@@ -142,12 +146,12 @@ class ResizeMultipleOf(DualTransform):
 		self,
 		height           : int,
 		width            : int,
-		keep_aspect_ratio: bool        = False,
-		multiple_of      : int         = 1,
+		keep_aspect_ratio: bool  = False,
+		multiple_of      : int   = 1,
 		resize_method    : Literal["lower_bound", "upper_bound", "minimal"] = "lower_bound",
-		interpolation    : int         = cv2.INTER_AREA,
-		always_apply     : bool | None = None,
-		p                : float       = 1,
+		interpolation    : int   = cv2.INTER_AREA,
+		always_apply     : bool  = None,
+		p                : float = 1,
 	):
 		super().__init__(p, always_apply)
 		self.height            = height
@@ -157,7 +161,7 @@ class ResizeMultipleOf(DualTransform):
 		self.resize_method     = resize_method
 		self.interpolation     = interpolation
 	
-	def constrain_to_multiple_of(self, x, min_val: int = 0, max_val: int | None = None):
+	def constrain_to_multiple_of(self, x, min_val: int = 0, max_val: int = None):
 		y = (np.round(x / self.multiple_of) * self.multiple_of).astype(int)
 		if max_val and y > max_val:
 			y = (np.floor(x / self.multiple_of) * self.multiple_of).astype(int)

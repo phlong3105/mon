@@ -22,6 +22,7 @@ Design Principle:
 
 from __future__ import annotations
 
+import mon.core.audio
 import mon.core.data
 import mon.core.dtype
 import mon.core.factory
@@ -30,12 +31,14 @@ import mon.core.humps
 import mon.core.image
 import mon.core.logging
 import mon.core.pathlib
+import mon.core.pointcloud
 import mon.core.rich
 import mon.core.thop
 import mon.core.transform
 import mon.core.typing
 import mon.core.utils
 import mon.core.video
+from mon.core.audio import *
 from mon.core.data import *
 from mon.core.dtype import *
 from mon.core.factory import *
@@ -44,6 +47,7 @@ from mon.core.humps import *
 from mon.core.image import *
 from mon.core.logging import *
 from mon.core.pathlib import *
+from mon.core.pointcloud import *
 from mon.core.rich import (
 	console,
 	error_console,

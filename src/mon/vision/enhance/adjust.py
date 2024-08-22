@@ -56,7 +56,7 @@ def adjust_gamma(image: np.ndarray, gamma: float = 1.0, gain: float = 1.0) -> np
     is then scaled back to the range ``[0, 255]``.
     
     Args:
-        image: An image in `[H, W, C]` format.
+        image: An image in ``[H, W, C]`` format.
         gamma: A gamma correction value
             - < 1 will make the image darker.
             - > 1 will make the image lighter.

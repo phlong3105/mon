@@ -47,7 +47,7 @@ class DeepEmbedder(Embedder, ABC):
     Args:
         config: A detector model's config.
         weight: A path to a pretrained weight file.
-        image_size: The desired model's input size in `[H, W]` format.
+        image_size: The desired model's input size in ``[H, W]`` format.
             Default: ``640``.
         device: Cuda device, i.e. ``0`` or ``0,1,2,3`` or ``'cpu'``. Default:
             ``'cpu'``.

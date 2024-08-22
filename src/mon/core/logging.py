@@ -38,8 +38,8 @@ logger.setLevel(logging.INFO)
 
 
 def get_logger(path: pathlib.Path = None) -> logging.Logger:
-    """Get access the global :obj:`logging.Logger` object that uses
-    :obj:`rich`. Create a new one if it doesn't exist.
+    """Get access the global :obj:`logging.Logger` object that uses :obj:`rich`.
+    Create a new one if it doesn't exist.
     
     Args:
         path: The path to store the log info. Default: ``None``.

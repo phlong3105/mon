@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements image-only datasets."""
+"""Image Dataset Templates.
+
+This module implements the templates for image-only datasets.
+"""
 
 from __future__ import annotations
 
@@ -38,7 +41,6 @@ class ImageDataset(base.Dataset, ABC):
 			Must contain: {``'image'``: :obj:`ImageAnnotation`}. Note that to
 			comply with :obj:`albumentations.Compose`, we will treat the first
 			key as the main image attribute.
-		
 	"""
 	
 	datapoint_attrs = DatapointAttributes({
@@ -91,19 +93,15 @@ class ImageDataset(base.Dataset, ABC):
 			raise RuntimeError(f"No datapoints in the dataset.")
 		for k, v in self.datapoints.items():
 			if k not in self.datapoint_attrs:
-				raise RuntimeError(
-					f"Attribute ``{k}`` has not been defined in `datapoint_attrs`. "
-					f"If this is not an error, please define the attribute in "
-					f"the class."
-				)
+				raise RuntimeError(f"Attribute ``{k}`` has not been defined in "
+				                   f"`datapoint_attrs`. If this is not an error, "
+				                   f"please define the attribute in the class.")
 			if self.datapoint_attrs[k]:
 				if v is None:
 					raise RuntimeError(f"No ``{k}`` attributes has been defined.")
 				if v is not None and len(v) != self.__len__():
-					raise RuntimeError(
-						f"Number of {k} attributes does not match the number of "
-						f"datapoints."
-					)
+					raise RuntimeError(f"Number of {k} attributes does not "
+					                   f"match the number of datapoints.")
 		if self.verbose:
 			console.log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
 	

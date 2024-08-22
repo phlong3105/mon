@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements datasets and datamodules for
-`MIPI challenge <https://mipi-challenge.org/MIPI2024/index.html>`__.
+"""MIPI Challenges.
+
+This module implements datasets and datamodules for MIPI challenges.
+
+References:
+	https://mipi-challenge.org/MIPI2024/index.html
 """
 
 from __future__ import annotations
@@ -29,9 +33,10 @@ ImageDataset        = core.ImageDataset
 
 @DATASETS.register(name="mipi24_flare")
 class MIPI24Flare(ImageDataset):
-	"""Nighttime Flare Removal dataset used in MIPI 2024 Challenge
-	`<https://mipi-challenge.org/MIPI2024/index.html>`__
+	"""Nighttime Flare Removal dataset used in MIPI 2024 Challenge.
 	
+	References:
+		https://mipi-challenge.org/MIPI2024/index.html
 	"""
 	
 	tasks : list[Task]  = [Task.LES]
@@ -67,7 +72,8 @@ class MIPI24Flare(ImageDataset):
 			for pattern in patterns:
 				for path in pbar.track(
 					sorted(list(pattern.rglob("*"))),
-					description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+					description=f"Listing {self.__class__.__name__} "
+					            f"{self.split_str} lq images"
 				):
 					if path.is_image_file():
 						lq_images.append(ImageAnnotation(path=path))
@@ -77,7 +83,8 @@ class MIPI24Flare(ImageDataset):
 		with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 			for img in pbar.track(
 				lq_images,
-				description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+				description=f"Listing {self.__class__.__name__} "
+				            f"{self.split_str} hq images"
 			):
 				path = img.path.replace("/lq/", "/hq/")
 				hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -90,9 +97,10 @@ class MIPI24Flare(ImageDataset):
 
 @DATAMODULES.register(name="mipi24_flare")
 class MIPI24FlareDataModule(DataModule):
-	"""Nighttime Flare Removal datamodule used in MIPI 2024 Challenge
-	`<https://mipi-challenge.org/MIPI2024/index.html>`__
+	"""Nighttime Flare Removal datamodule used in MIPI 2024 Challenge.
 	
+	References:
+		https://mipi-challenge.org/MIPI2024/index.html
 	"""
 	
 	tasks: list[Task] = [Task.LES]

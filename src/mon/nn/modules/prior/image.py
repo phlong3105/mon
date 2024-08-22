@@ -35,7 +35,7 @@ def atmospheric_prior(input: np.ndarray, kernel_size: _size_2_t = 15, p: float =
     """Get the atmosphere light in the (RGB) image data.
 
     Args:
-        input: An RBG image in `[H, W, C]` format.
+        input: An RBG image in ``[H, W, C]`` format.
         kernel_size: Window for the dark channel. Default: ``15``.
         p: Percentage of pixels for estimating the atmosphere light. Default: ``0.0001``.
 
@@ -143,7 +143,7 @@ def dark_channel_prior_02(
     """Get the dark channel prior from an RGB image.
 
     Args:
-        input: A :obj:`numpy.ndarray` RGB image in `[H, W, C]` format.
+        input: A :obj:`numpy.ndarray` RGB image in ``[H, W, C]`` format.
         kernel_size: Window size.
 
     Returns:

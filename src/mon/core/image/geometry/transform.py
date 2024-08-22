@@ -91,7 +91,7 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
                                      ---------------------
     
     References:
-        `<https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing>`__
+        https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing
     """
     c       = image.shape[1]
     filter1 = torch.Tensor([[[[0, 0.5], [0.5, 0]]]]).to(image.dtype).to(image.device)
@@ -115,20 +115,29 @@ def resize(
     Args:
         image: An image tensor.
         size: The target size.
-        interpolation: Algorithm used for upsampling: ``'nearest'`` | ``'linear'``
-            | ``'bilinear'`` | ``'bicubic'`` | ``'trilinear'`` | ``'area'``.
+        interpolation: Algorithm used for upsampling. One of:
+            - ``'nearest'``
+            - ``'linear'``
+            - ``'bilinear'``
+            - ``'bicubic'``
+            - ``'trilinear'``
+            -  ``'area'``
+            Defaults: ``'bilinear'``.
     
     **kwargs (korina.geometry.transform.resize):
         - align_corners: interpolation flag.
-        - side: Corresponding side if ``size`` is an integer. Can be one of
-            ``'short'``, ``'long'``, ``'vert'``, or ``'horz'``.
+        - side: Corresponding side if ``size`` is an integer. One of:
+            + ``'short'``
+            + ``'long'``
+            + ``'vert'``
+            + ``'horz'``
         - antialias: if ``True``, then image will be filtered with Gaussian
             before downscaling. No effect for upscaling.
     
     **kwargs (cv2.resize):
         - fx: Scale factor along the horizontal axis.
         - fy: Scale factor along the vertical axis.
-        - antialias: if ``True``, then image will be filtered with Gaussian
+        - antialias: If ``True``, then image will be filtered with Gaussian
             before downscaling. No effect for upscaling.
     
     Returns:
@@ -162,12 +171,14 @@ def resize(
         interpolation: Algorithm used for upsampling:
             - cv2.INTER_AREA: This is used when we need to shrink an image.
             - cv2.INTER_CUBIC: This is slow but more efficient.
-            - cv2.INTER_LINEAR: This is primarily used when zooming is required. This is the default interpolation technique in OpenCV.
-
+            - cv2.INTER_LINEAR: This is primarily used when zooming is required.
+                This is the default interpolation technique in OpenCV.
+    
     **kwargs (cv2.resize):
         - fx: Scale factor along the horizontal axis.
         - fy: Scale factor along the vertical axis.
-        - antialias: if ``True``, then image will be filtered with Gaussian before downscaling. No effect for upscaling.
+        - antialias: If ``True``, then image will be filtered with Gaussian
+            before downscaling. No effect for upscaling.
     
     Returns:
         The resized image.

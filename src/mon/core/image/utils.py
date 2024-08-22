@@ -56,10 +56,8 @@ def is_channel_first_image(image: torch.Tensor | np.ndarray) -> bool:
     that if the first dimension is the smallest.
     """
     if not 3 <= image.ndim <= 5:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between ``3`` and ``5``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``3`` and ``5``, but got {image.ndim}.")
     if image.ndim == 5:
         _, _, s2, s3, s4 = list(image.shape)
         if (s2 < s3) and (s2 < s4):
@@ -83,14 +81,14 @@ def is_channel_first_image(image: torch.Tensor | np.ndarray) -> bool:
 
 def is_channel_last_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is in the channel-first format."""
-    return not is_channel_first_image(image=image)
+    return not is_channel_first_image(image)
 
 
 def is_color_image(image: torch.Tensor | np.ndarray) -> bool:
-    """Return ```True``` if an image is a color image. It is assumed that the
+    """Return ``True`` if an image is a color image. It is assumed that the
     image has ``3`` or ``4`` channels.
     """
-    if get_image_num_channels(image=image) in [3, 4]:
+    if get_image_num_channels(image) in [3, 4]:
         return True
     return False
 
@@ -99,13 +97,13 @@ def is_gray_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is a gray image. It is assumed that the
     image has one channel.
     """
-    if get_image_num_channels(image=image) in [1] or len(image.shape) == 2:
+    if get_image_num_channels(image) in [1] or len(image.shape) == 2:
         return True
     return False
 
 
 def is_color_or_image(image: torch.Tensor | np.ndarray) -> bool:
-    """Return ```True``` if an image is a color or gray image.
+    """Return ``True`` if an image is a color or gray image.
     """
     return is_color_image(image) or is_gray_image(image)
 
@@ -149,7 +147,7 @@ def is_image(image: torch.Tensor, bits: int = 8) -> bool:
 
 def is_integer_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is integer-encoded."""
-    c = get_image_num_channels(image=image)
+    c = get_image_num_channels(image)
     if c == 1:
         return True
     return False
@@ -162,15 +160,13 @@ def is_normalized_image(image: torch.Tensor | np.ndarray) -> bool:
     elif isinstance(image, np.ndarray):
         return abs(np.amax(image)) <= 1.0
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
 
 
 def is_one_hot_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is one-hot encoded."""
-    c = get_image_num_channels(image=image)
+    c = get_image_num_channels(image)
     if c > 1:
         return True
     return False
@@ -187,14 +183,12 @@ def check_image_size(size: list[int], stride: int = 32) -> int:
     Returns:
         A new size of the image.
     """
-    size     = parse_hw(size=size)
+    size     = parse_hw(size)
     size     = size[0]
-    new_size = make_imgsz_divisible(size, divisor=int(stride))
+    new_size = make_imgsz_divisible(size, int(stride))
     if new_size != size:
-        error_console.log(
-            "WARNING: image_size %g must be multiple of max stride %g, "
-            "updating to %g" % (size, stride, new_size)
-        )
+        error_console.log("WARNING: image_size %g must be multiple of max "
+                          "stride %g, updating to %g" % (size, stride, new_size))
     return new_size
 
 # endregion
@@ -224,7 +218,7 @@ def get_channel(
     else:
         raise TypeError
     
-    if is_channel_first_image(image=image):
+    if is_channel_first_image(image):
         if image.ndim == 5:
             if keep_dim:
                 return image[:, :, i1:i2, :, :] if i2 else image[:, :, i1:, :, :]
@@ -264,12 +258,12 @@ def get_channel(
 
 def get_first_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Return the first channel of an image."""
-    return get_channel(image=image, index=0, keep_dim=True)
+    return get_channel(image, index=0, keep_dim=True)
 
 
 def get_last_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Return the first channel of an image."""
-    return get_channel(image=image, index=-1, keep_dim=True)
+    return get_channel(image, index=-1, keep_dim=True)
 
 
 def get_image_num_channels(image: torch.Tensor | np.ndarray) -> int:
@@ -279,12 +273,12 @@ def get_image_num_channels(image: torch.Tensor | np.ndarray) -> int:
         image: An image in channel-last or channel-first format.
     """
     if image.ndim == 4:
-        if is_channel_first_image(image=image):
+        if is_channel_first_image(image):
             _, c, h, w = list(image.shape)
         else:
             _, h, w, c = list(image.shape)
     elif image.ndim == 3:
-        if is_channel_first_image(image=image):
+        if is_channel_first_image(image):
             c, h, w = list(image.shape)
         else:
             h, w, c = list(image.shape)
@@ -305,16 +299,14 @@ def get_image_center(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
     Args:
         image: An image in channel-last or channel-first format.
     """
-    h, w = get_image_size(image=image)
+    h, w = get_image_size(image)
     if isinstance(image, torch.Tensor):
         return torch.Tensor([h / 2, w / 2])
     elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2])
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
 
 
 def get_image_center4(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
@@ -324,16 +316,14 @@ def get_image_center4(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.nda
     Args:
         image: An image in channel-last or channel-first format.
     """
-    h, w = get_image_size(image=image)
+    h, w = get_image_size(image)
     if isinstance(image, torch.Tensor):
         return torch.Tensor([h / 2, w / 2, h / 2, w / 2])
     elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2, h / 2, w / 2])
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
 
 
 def get_image_size(image: torch.Tensor | np.ndarray) -> list[int]:
@@ -342,7 +332,7 @@ def get_image_size(image: torch.Tensor | np.ndarray) -> list[int]:
     Args:
         image: An image.
     """
-    if is_channel_first_image(image=image):
+    if is_channel_first_image(image):
         return [image.shape[-2], image.shape[-1]]
     else:
         return [image.shape[-3], image.shape[-2]]
@@ -354,7 +344,7 @@ def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
     Args:
         image: An image.
     """
-    if is_channel_first_image(image=image):
+    if is_channel_first_image(image):
         return [image.shape[-2], image.shape[-1], image.shape[-3]]
     else:
         return [image.shape[-3], image.shape[-2], image.shape[-1]]
@@ -374,10 +364,8 @@ def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
         A 3D image in channel-first format.
     """
     if not 2 <= image.ndim <= 4:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between ``2`` and ``4``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``2`` and ``4``, but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         if image.ndim == 2:  # HW -> 1HW
             image = image.unsqueeze(dim=0)
@@ -389,10 +377,8 @@ def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
         elif image.ndim == 4 and image.shape[0] == 1:  # 1CHW -> CHW
             image = np.squeeze(image, axis=0)
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
     return image
 
 
@@ -428,10 +414,8 @@ def to_4d_image(image: Any) -> torch.Tensor | np.ndarray:
         A 4D image in channel-first format.
     """
     if isinstance(image, (torch.Tensor, np.ndarray)) and not 2 <= image.ndim <= 5:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between "
-            f"``2`` and ``5``, but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``2`` and ``5``, but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         if image.ndim == 2:  # HW -> 11HW
             image = image.unsqueeze(dim=0)
@@ -461,10 +445,8 @@ def to_4d_image(image: Any) -> torch.Tensor | np.ndarray:
         #     error_console.log(f"input's number of dimensions must be between ``3`` and ``4``.")
         #     image = None
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray`, `torch.Tensor`, "
-            f"or a `list` of either of them, but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray`, `torch.Tensor`, "
+                        f"or a `list` of either of them, but got {type(image)}.")
     return image
 
 
@@ -478,10 +460,8 @@ def to_5d_image(image: Any) -> torch.Tensor | np.ndarray:
         A 5D image in channel-first format.
     """
     if not 2 <= image.ndim <= 6:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between ``2`` and ``6``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``2`` and ``6``, but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         if image.ndim == 2:  # HW -> 111HW
             image = image.unsqueeze(dim=0)
@@ -507,10 +487,8 @@ def to_5d_image(image: Any) -> torch.Tensor | np.ndarray:
         elif image.ndim == 6 and image.shape[0] == 1:  # 1*BHWC -> *BHWC
             image = np.squeeze(image, axis=0)
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
     return image
 
 
@@ -523,13 +501,11 @@ def to_channel_first_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | n
     Returns:
         An image in channel-first format.
     """
-    if is_channel_first_image(image=image):
+    if is_channel_first_image(image):
         return image
     if not 3 <= image.ndim <= 5:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between ``3`` and ``5``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``3`` and ``5``, but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         image = image.clone()
         if image.ndim == 3:
@@ -547,10 +523,8 @@ def to_channel_first_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | n
         elif image.ndim == 5:
             image = np.transpose(image, (0, 1, 4, 2, 3))
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
     return image
 
 
@@ -563,13 +537,11 @@ def to_channel_last_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | np
     Returns:
         A image in channel-last format.
     """
-    if is_channel_last_image(image=image):
+    if is_channel_last_image(image):
         return image
     if not 3 <= image.ndim <= 5:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between ``3`` and ``5``, "
-            f"but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``3`` and ``5``, but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         image = image.clone()
         if image.ndim == 3:
@@ -613,17 +585,15 @@ def to_image_nparray(
     from mon.core.image.photometry import denormalize_image
     
     if not 3 <= image.ndim <= 5:
-        raise ValueError(
-            f"`image`'s number of dimensions must be between "
-            f"``3`` and ``5``, but got {image.ndim}."
-        )
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``3`` and ``5``, but got {image.ndim}.")
     if isinstance(image, torch.Tensor):
         image = image.detach()
         image = image.cpu().numpy()
-    image = denormalize_image(image=image).astype(np.uint8) if denormalize else image
-    image = to_channel_last_image(image=image)
+    image = denormalize_image(image).astype(np.uint8) if denormalize else image
+    image = to_channel_last_image(image)
     if not keepdim:
-        image = to_3d_image(image=image)
+        image = to_3d_image(image)
     return image
 
 
@@ -641,7 +611,7 @@ def to_image_tensor(
         image: An image in channel-last or channel-first format.
         keepdim: If ``True``, keep the original shape. If ``False``, convert it
             to a 4D shape. Default: ``True``.
-        normalize: If ``True``, normalize the image to ```[0.0, 1.0]```.
+        normalize: If ``True``, normalize the image to ``[0.0, 1.0]``.
             Default: ``False``.
         device: The device to run the model on. If ``None``, the default
             ``'cpu'`` device is used.
@@ -656,14 +626,12 @@ def to_image_tensor(
     elif isinstance(image, torch.Tensor):
         image = image.clone()
     else:
-        raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-            f"but got {type(image)}."
-        )
-    image = to_channel_first_image(image=image)
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
+    image = to_channel_first_image(image)
     if not keepdim:
-        image = to_4d_image(image=image)
-    image = normalize_image(image=image) if normalize else image
+        image = to_4d_image(image)
+    image = normalize_image(image) if normalize else image
     # Place in memory
     image = image.contiguous()
     if device:
@@ -692,13 +660,13 @@ def make_imgsz_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]
 
 
 def parse_hw(size: _size_any_t) -> list[int]:
-    """Casts a size object to the standard `[H, W]`.
+    """Casts a size object to the standard ``[H, W]``.
 
     Args:
         size: A size of an image, windows, or kernels, etc.
 
     Returns:
-        A size in `[H, W]` format.
+        A size in ``[H, W]`` format.
     """
     if isinstance(size, list | tuple):
         if len(size) == 3:

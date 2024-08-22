@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements low-light image enhancement (llie) datasets and
+"""Low-light Image Enhancement Datasets.
+
+This module implements low-light image enhancement (llie) datasets and
 datamodules.
 """
 
@@ -64,9 +66,7 @@ ImageDataset        = core.ImageDataset
 
 @DATASETS.register(name="darkface")
 class DarkFace(ImageDataset):
-    """DarkFace dataset consists of 6490 low-light images.
-    
-    """
+    """DarkFace dataset consists of ``6,490`` low-light images."""
     
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
@@ -90,7 +90,8 @@ class DarkFace(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -100,7 +101,8 @@ class DarkFace(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
                 depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
@@ -111,9 +113,7 @@ class DarkFace(ImageDataset):
         
 @DATASETS.register(name="dicm")
 class DICM(ImageDataset):
-    """DICM dataset consists of 64 low-light images.
-    
-    """
+    """DICM dataset consists of ``64`` low-light images."""
     
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
@@ -137,7 +137,8 @@ class DICM(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -147,7 +148,8 @@ class DICM(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
                 depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
@@ -158,9 +160,7 @@ class DICM(ImageDataset):
 
 @DATASETS.register(name="exdark")
 class ExDark(ImageDataset):
-    """ExDark dataset consists of 7363 low-light images.
-    
-    """
+    """ExDark dataset consists of ``7363`` low-light images."""
     
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
@@ -183,7 +183,8 @@ class ExDark(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -193,9 +194,8 @@ class ExDark(ImageDataset):
 
 @DATASETS.register(name="fivek_c")
 class FiveKC(ImageDataset):
-    """MIT Adobe FiveK dataset with Expert C ground-truth. It consists of 5,000
-    low/high image pairs.
-    
+    """MIT Adobe FiveK dataset with Expert C ground-truth. It consists of
+    ``5,000`` low/high image pairs.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -222,7 +222,8 @@ class FiveKC(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -232,17 +233,22 @@ class FiveKC(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                lq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -252,10 +258,14 @@ class FiveKC(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                hq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -265,9 +275,8 @@ class FiveKC(ImageDataset):
 
 @DATASETS.register(name="fivek_e")
 class FiveKE(ImageDataset):
-    """MIT Adobe FiveK dataset with Expert E ground-truth. It consists of 5,000
-    low/high image pairs.
-    
+    """MIT Adobe FiveK dataset with Expert E ground-truth. It consists of
+    ``5,000`` low/high image pairs.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -294,7 +303,8 @@ class FiveKE(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -304,17 +314,22 @@ class FiveKE(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                lq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -324,10 +339,14 @@ class FiveKE(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                hq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -337,9 +356,7 @@ class FiveKE(ImageDataset):
 
 @DATASETS.register(name="fusion")
 class Fusion(ImageDataset):
-    """Fusion dataset consists of 64 low-light images.
-    
-    """
+    """Fusion dataset consists of ``64`` low-light images."""
     
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
@@ -363,7 +380,8 @@ class Fusion(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -373,10 +391,14 @@ class Fusion(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -384,9 +406,7 @@ class Fusion(ImageDataset):
 
 @DATASETS.register(name="lime")
 class LIME(ImageDataset):
-    """LIME dataset consists of 10 low-light images.
-    
-    """
+    """LIME dataset consists of ``10`` low-light images."""
 
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
@@ -410,7 +430,8 @@ class LIME(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -420,10 +441,14 @@ class LIME(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -433,7 +458,6 @@ class LIME(ImageDataset):
 class LOLBlur(ImageDataset):
     """LOL-Blur dataset consists of low-light + blurred and normal-light + sharp
     image pairs.
-    
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -458,7 +482,8 @@ class LOLBlur(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -468,7 +493,8 @@ class LOLBlur(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -479,11 +505,11 @@ class LOLBlur(ImageDataset):
 
 @DATASETS.register(name="lol_v1")
 class LOLV1(ImageDataset):
-    """LOL-v1 dataset consists of 500 low-light and normal-light image pairs.
-    They are divided into 485 training pairs and 15 testing pairs. The low-light
-    images contain noise produced during the photo capture process. Most of the
-    images are indoor scenes. All the images have a resolution of 400×600.
-    
+    """LOL-v1 dataset consists of ``500`` low-light and normal-light image pairs.
+    They are divided into ``485`` training pairs and 15 testing pairs. The
+    low-light images contain noise produced during the photo capture process.
+    Most of the images are indoor scenes. All the images have a resolution of
+    ``400×600``.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -510,7 +536,8 @@ class LOLV1(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -520,17 +547,22 @@ class LOLV1(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                lq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -540,10 +572,14 @@ class LOLV1(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                hq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -553,12 +589,11 @@ class LOLV1(ImageDataset):
 
 @DATASETS.register(name="lol_v2_real")
 class LOLV2Real(ImageDataset):
-    """LOL-v2 Real (VE-LOL) dataset consists of 500 low-light and normal-light
-    image pairs. They are divided into 400 training pairs and 100 testing pairs.
-    The low-light images contain noise produced during the photo capture
-    process. Most of the images are indoor scenes. All the images have a
-    resolution of 400×600.
-    
+    """LOL-v2 Real (VE-LOL) dataset consists of ``500`` low-light and
+    normal-light image pairs. They are divided into ``400`` training pairs and
+    ``100`` testing pairs. The low-light images contain noise produced during
+    the photo capture process. Most of the images are indoor scenes. All the
+    images have a resolution of ``400×600``.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -585,7 +620,8 @@ class LOLV2Real(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -595,17 +631,22 @@ class LOLV2Real(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                lq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -615,10 +656,14 @@ class LOLV2Real(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                hq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -628,12 +673,11 @@ class LOLV2Real(ImageDataset):
 
 @DATASETS.register(name="lol_v2_synthetic")
 class LOLV2Synthetic(ImageDataset):
-    """LOL-v2 Synthetic (VE-LOL-Syn) dataset consists of 1000 low-light and
-    normal-light image pairs. They are divided into 900 training pairs and 100
-    testing pairs. The low-light images contain noise produced during the photo
-    capture process. Most of the images are indoor scenes. All the images have a
-    resolution of 400×600.
-    
+    """LOL-v2 Synthetic (VE-LOL-Syn) dataset consists of ``1000`` low-light and
+    normal-light image pairs. They are divided into ``900`` training pairs and
+    ``100`` testing pairs. The low-light images contain noise produced during
+    the photo capture process. Most of the images are indoor scenes. All the
+    images have a resolution of ``400×600``.
     """
     
     tasks : list[Task]  = [Task.LLIE]
@@ -660,7 +704,8 @@ class LOLV2Synthetic(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -670,17 +715,22 @@ class LOLV2Synthetic(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                lq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                lq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq images"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
             ):
                 path = img.path.replace("/lq/", "/hq/")
                 hq_images.append(ImageAnnotation(path=path.image_file()))
@@ -690,10 +740,14 @@ class LOLV2Synthetic(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} hq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq depth maps"
             ):
                 path = img.path.replace("/lq/", "/hq_dav2_vitb_c/")
-                hq_depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                hq_depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["depth"]    = lq_depth_maps
@@ -703,10 +757,7 @@ class LOLV2Synthetic(ImageDataset):
 
 @DATASETS.register(name="mef")
 class MEF(ImageDataset):
-    """MEF dataset consists 17 low-light images.
 
-    """
-    
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -729,7 +780,8 @@ class MEF(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -739,10 +791,14 @@ class MEF(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -750,10 +806,7 @@ class MEF(ImageDataset):
                         
 @DATASETS.register(name="npe")
 class NPE(ImageDataset):
-    """NPE dataset consists 85 low-light images.
-    
-    """
-    
+
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -776,7 +829,8 @@ class NPE(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -786,10 +840,14 @@ class NPE(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -797,10 +855,7 @@ class NPE(ImageDataset):
     
 @DATASETS.register(name="sice_grad")
 class SICEGrad(ImageDataset):
-    """SICE-Grad dataset.
-    
-    """
-    
+
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
@@ -822,7 +877,8 @@ class SICEGrad(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -832,10 +888,6 @@ class SICEGrad(ImageDataset):
                         
 @DATASETS.register(name="sice_mix")
 class SICEMix(ImageDataset):
-    """Custom SICE dataset for training :obj:`mon.vision.enhance.llie.zerodce.ZeroDCE`
-    model.
-    
-    """
     
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
@@ -859,7 +911,8 @@ class SICEMix(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -869,10 +922,14 @@ class SICEMix(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -880,10 +937,7 @@ class SICEMix(ImageDataset):
 
 @DATASETS.register(name="sice_mix_v2")
 class SICEMixV2(ImageDataset):
-    """SICE-MixV2 dataset.
-    
-    """
-    
+
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
@@ -906,7 +960,8 @@ class SICEMixV2(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -916,10 +971,14 @@ class SICEMixV2(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -927,10 +986,7 @@ class SICEMixV2(ImageDataset):
 
 @DATASETS.register(name="ulol")
 class ULOL(ImageDataset):
-    """Custom ULOL (Unsupervised LOw-Light) dataset for training.
-    
-    """
-    
+
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
@@ -966,7 +1022,8 @@ class ULOL(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -976,10 +1033,14 @@ class ULOL(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -987,10 +1048,7 @@ class ULOL(ImageDataset):
 
 @DATASETS.register(name="vv")
 class VV(ImageDataset):
-    """VV dataset consists of 24 low-light images.
-    
-    """
-    
+
     tasks : list[Task]  = [Task.LLIE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
@@ -1013,7 +1071,8 @@ class VV(ImageDataset):
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} {self.split_str} lq images"
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
@@ -1023,10 +1082,14 @@ class VV(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 lq_images,
-                description=f"Listing {self.__class__.__name__} {self.split_str} lq depth maps"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                depth_maps.append(ImageAnnotation(
+                    path  = path.image_file(),
+                    flags = cv2.IMREAD_GRAYSCALE
+                ))
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
@@ -1038,9 +1101,6 @@ class VV(ImageDataset):
 
 @DATAMODULES.register(name="darkface")
 class DarkFaceDataModule(DataModule):
-    """DarkFace datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1070,10 +1130,7 @@ class DarkFaceDataModule(DataModule):
 
 @DATAMODULES.register(name="dicm")
 class DICMDataModule(DataModule):
-    """DICM datamodule.
-    
-    """
-    
+
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1102,10 +1159,7 @@ class DICMDataModule(DataModule):
 
 @DATAMODULES.register(name="exdark")
 class ExDarkDataModule(DataModule):
-    """ExDark datamodule.
-    
-    """
-    
+
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1134,10 +1188,7 @@ class ExDarkDataModule(DataModule):
 
 @DATAMODULES.register(name="fivek_c")
 class FiveKCDataModule(DataModule):
-    """MIT Adobe FiveK datamodule with Expert C ground-truth.
-    
-    """
-    
+
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1166,10 +1217,7 @@ class FiveKCDataModule(DataModule):
 
 @DATAMODULES.register(name="fivek_e")
 class FiveKEDataModule(DataModule):
-    """MIT Adobe FiveK datamodule with Expert E ground-truth.
-    
-    """
-    
+
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1198,9 +1246,6 @@ class FiveKEDataModule(DataModule):
 
 @DATAMODULES.register(name="fusion")
 class FusionDataModule(DataModule):
-    """Fusion datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1230,10 +1275,7 @@ class FusionDataModule(DataModule):
 
 @DATAMODULES.register(name="lime")
 class LIMEDataModule(DataModule):
-    """LIME datamodule.
-     
-     """
-    
+
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
@@ -1262,9 +1304,6 @@ class LIMEDataModule(DataModule):
 
 @DATAMODULES.register(name="lol_blur")
 class LOLBlurDataModule(DataModule):
-    """LOL-Blur datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1294,9 +1333,6 @@ class LOLBlurDataModule(DataModule):
 
 @DATAMODULES.register(name="lol_v1")
 class LOLV1DataModule(DataModule):
-    """LOLV1 datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1326,9 +1362,6 @@ class LOLV1DataModule(DataModule):
 
 @DATAMODULES.register(name="lol_v2_real")
 class LOLV2RealDataModule(DataModule):
-    """LOLV2Real datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1358,9 +1391,6 @@ class LOLV2RealDataModule(DataModule):
 
 @DATAMODULES.register(name="lol_v2_synthetic")
 class LOLV2SyntheticDataModule(DataModule):
-    """LOL-v2 Synthetic datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1390,9 +1420,6 @@ class LOLV2SyntheticDataModule(DataModule):
 
 @DATAMODULES.register(name="mef")
 class MEFDataModule(DataModule):
-    """MEF datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1422,9 +1449,6 @@ class MEFDataModule(DataModule):
 
 @DATAMODULES.register(name="npe")
 class NPEDataModule(DataModule):
-    """NPE datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1454,9 +1478,6 @@ class NPEDataModule(DataModule):
 
 @DATAMODULES.register(name="sice_grad")
 class SICEGradDataModule(DataModule):
-    """SICE-Grad datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1486,9 +1507,6 @@ class SICEGradDataModule(DataModule):
 
 @DATAMODULES.register(name="sice_mix")
 class SICEMixDataModule(DataModule):
-    """SICE-Mix datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1518,9 +1536,6 @@ class SICEMixDataModule(DataModule):
 
 @DATAMODULES.register(name="sice_mix_v2")
 class SICEMixV2DataModule(DataModule):
-    """SICE-MixV2 datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1550,9 +1565,6 @@ class SICEMixV2DataModule(DataModule):
 
 @DATAMODULES.register(name="ulol")
 class ULOLMixDataModule(DataModule):
-    """Custom ULOL (Unsupervised LOw-Light) datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     
@@ -1582,9 +1594,6 @@ class ULOLMixDataModule(DataModule):
 
 @DATAMODULES.register(name="vv")
 class VVDataModule(DataModule):
-    """VV datamodule.
-    
-    """
     
     tasks: list[Task] = [Task.LLIE]
     

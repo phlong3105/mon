@@ -231,7 +231,8 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
         self.unit    = MemoryUnit.from_value(value=unit)
     
     def render(self, task: progress.Task) -> text.Text:
-        """Return a :obj:`rich.text.Text` object showing current GPU memory status.
+        """Return a :obj:`rich.text.Text` object showing current GPU memory
+        status.
         """
         return self.get_gpu_memory_text(task) \
             if torch.cuda.is_available() \
@@ -245,9 +246,10 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
         return memory_text
     
     def get_gpu_memory_text(self, task: progress.Task) -> text.Text:
-        """Return a :obj:`rich.text.Text` object showing current GPU memory status.
+        """Return a :obj:`rich.text.Text` object showing current GPU memory
+        status.
         """
-        num_devices          = len(self.devices)
+        num_devices = len(self.devices)
         totals, useds, frees = [], [], []
         for i in self.devices:
             t, u, f  = utils.get_gpu_device_memory(device=i, unit=self.unit)
@@ -260,7 +262,8 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
         total = min(totals)
         used  = max(useds)
         free  = min(frees)
-        memory_status = f"{used:.1f}/{total:.1f}{self.unit.value} ({num_devices} GPUs)"
+        memory_status = (f"{used:.1f}/{total:.1f}{self.unit.value} "
+                         f"({num_devices} GPUs)")
         memory_text   = text.Text(memory_status, style="bright_yellow")
         return memory_text
     

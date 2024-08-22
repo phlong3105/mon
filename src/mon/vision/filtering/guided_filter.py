@@ -94,7 +94,7 @@ def guided_filter(
     """Perform guided filter using :module:`cv2`.
 
     Args:
-        image: An image in `[H, W, C]` format.
+        image: An image in ``[H, W, C]`` format.
         guide: A guidance image with the same shape with :obj:`input`.
         radius: Radius of filter a.k.a. kernel_size = radius * 2 + 1.
             Commonly be ``1``, ``2``, ``4``, or ``8``.
@@ -134,7 +134,7 @@ def guided_filter(
     """Perform guided filter using :module:`cv2.ximgproc`.
     
     Args:
-        image: An image in `[H, W, C]` format.
+        image: An image in ``[H, W, C]`` format.
         guide: A guidance image with the same shape with :obj:`input`.
         radius: Radius of filter a.k.a. kernel_size = radius * 2 + 1.
             Commonly be ``1``, ``2``, ``4``, or ``8``.

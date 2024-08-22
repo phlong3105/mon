@@ -48,9 +48,8 @@ class Factory(dict):
     
     def __init__(self, name: str, mapping: dict = None, *args, **kwargs):
         if name in [None, "None", ""]:
-            raise ValueError(
-                f"`name` must be given to create a valid factory object."
-            )
+            raise ValueError(f"`name` must be given to create a valid factory "
+                             f"object.")
         mapping   = mapping or {}
         self.name = name
         super().__init__(mapping)
@@ -70,7 +69,8 @@ class Factory(dict):
             name: A module/class name. If ``None``, automatically infer from the
                 given :obj:`module`.
             module: The registering module.
-            replace: If ``True``, overwrite the existing module. Default: ``False``.
+            replace: If ``True``, overwrite the existing module.
+                Default: ``False``.
         
         Example:
             # >>> backbones = Factory("backbone")
@@ -122,13 +122,12 @@ class Factory(dict):
             module_cls: The registering module/class.
             module_name: A module/class name. If ``None``, automatically infer
                 from the given :obj:`module`.
-            replace: If ``True``, overwrite the existing module. Default: ``False``.
+            replace: If ``True``, overwrite the existing module.
+                Default: ``False``.
         """
         if not inspect.isclass(module_cls):
-            raise ValueError(
-                f"`module_cls` must be a class interface, but got "
-                f"{type(module_name)}."
-            )
+            raise ValueError(f"`module_cls` must be a class interface, but got "
+                             f"{type(module_name)}.")
         
         module_name = module_name or humps.kebabize(module_cls.__name__)
         if replace or module_name not in self:
@@ -208,9 +207,8 @@ class Factory(dict):
         if configs is None:
             return None
         if not isinstance(configs, list):
-            raise ValueError(
-                f"`configs` must be a `list`, but got {type(configs)}."
-            )
+            raise ValueError(f"`configs` must be a `list`, "
+                             f"but got {type(configs)}.")
         
         configs_ = copy.deepcopy(configs)
         objs     = {} if to_dict else []
@@ -221,10 +219,8 @@ class Factory(dict):
                 name = config.pop("name")
                 # kwargs |= config
             else:
-                raise ValueError(
-                    f"Item inside `configs` must be a `str` or `dict`, "
-                    f"but got {type(config)}."
-                )
+                raise ValueError(f"Item inside `configs` must be a `str` or "
+                                 f"`dict`, but got {type(config)}.")
             
             obj = self.build(name=name, to_dict=to_dict, **config)
             if obj:
@@ -272,13 +268,14 @@ class ModelFactory(Factory):
         Args:
             name: Model's name. If ``None``, automatically infer from the given
                 :obj:`module`.
-            arch: Architecture's name. If ``None``, automatically infer from the
-                given :obj:`module`.
+            arch: Architecture's name. If ``None``, automatically infer from
+                the given :obj:`module`.
             module: The registering module.
-            replace: If ``True``, overwrite the existing module. Default: ``False``.
+            replace: If ``True``, overwrite the existing module.
+                Default: ``False``.
         """
         if not (name is None or isinstance(name, str)):
-            raise TypeError(f"`name` must be a ``str``, but got {type(name)}.")
+            raise TypeError(f"`name` must be a `str`, but got {type(name)}.")
         
         # Use it as a normal method: x.register(module=SomeClass)
         if module:
@@ -317,13 +314,12 @@ class ModelFactory(Factory):
                 from the given :obj:`module`.
             arch_name: Architecture's name. If ``None``, automatically infer
                 from the given :obj:`module`.
-            replace: If ``True``, overwrite the existing module. Default: ``False``.
+            replace: If ``True``, overwrite the existing module.
+                Default: ``False``.
         """
         if not inspect.isclass(module_cls):
-            raise ValueError(
-                f"`module_cls` must be a class interface, "
-                f"but got {type(module_name)}."
-            )
+            raise ValueError(f"`module_cls` must be a class interface, "
+                             f"but got {type(module_name)}.")
         
         module_name = module_name or humps.kebabize(module_cls.__name__)
         arch_name   = arch_name   or humps.kebabize(getattr(module_cls, "arch", None))
@@ -380,10 +376,8 @@ class ModelFactory(Factory):
             arch is None and arch not in self
             or name is None and name not in self[arch]
         ):
-            raise ValueError(
-                f"`arch` and `name` must be a valid keyword inside the "
-                f"registry, but got {arch} and {name}."
-            )
+            raise ValueError(f"`arch` and `name` must be a valid keyword inside "
+                             f"the registry, but got {arch} and {name}.")
         
         obj = self[arch][name](**kwargs)
         if getattr(obj, "name", None) is None:
@@ -400,7 +394,8 @@ class ModelFactory(Factory):
         to_dict: bool = False,
         **kwargs
     ):
-        """Build multiple instances of different classes with the given :obj:`args`.
+        """Build multiple instances of different classes with the given
+        :obj:`args`.
         
         Args:
             configs: A list of classes' arguments. Each item can be:
@@ -430,10 +425,8 @@ class ModelFactory(Factory):
                 arch = config.pop("arch", None)
                 # kwargs |= config
             else:
-                raise ValueError(
-                    f"Item inside `configs` must be a `str` or `dict`, "
-                    f"but got {type(config)}."
-                )
+                raise ValueError(f"Item inside `configs` must be a `str` or "
+                                 f"`dict`, but got {type(config)}.")
             
             obj = self.build(name=name, arch=arch, to_dict=to_dict, **config)
             if obj:

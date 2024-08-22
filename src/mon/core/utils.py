@@ -384,7 +384,8 @@ def parse_device(device: Any) -> list[int] | int | str:
     elif isinstance(device, str):  # Not ["", "cpu"]
         device = device.lower()
         for remove in "cuda:", "none", "(", ")", "[", "]", "'", " ":
-            device = device.replace(remove, "")  # to string, 'cuda:0' -> '0' and '(0, 1)' -> '0,1'
+            device = device.replace(remove, "")
+            # to string, 'cuda:0' -> '0' and '(0, 1)' -> '0,1'
         if "," in device:
             device = [int(x) for x in device.split(",")]
         device = [0] if len(device) == 0 else device
@@ -614,12 +615,12 @@ def parse_save_dir(
     variant: str = None,
 ) -> str | pathlib.Path:
     """Parse save_dir in the following format:
-    ```
+    ``
         root              | root
          |_ arch          |  |_ arch
              |_ model     |      |_ project
                  |_ data  |          |_ variant
-    ```
+    ``
     
     Args:
         root: The project root.

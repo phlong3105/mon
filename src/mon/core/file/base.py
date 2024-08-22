@@ -26,7 +26,8 @@ from mon.globals import FILE_HANDLERS
 # region File Handler
 
 class FileHandler(ABC):
-    """The base class for reading and writing data from/to different file formats.
+    """The base class for reading and writing data from/to different file
+    formats.
     """
     
     @abstractmethod
@@ -123,10 +124,8 @@ def write_to_file(
     if file_format is None:
         file_format = path.suffix
     if file_format not in FILE_HANDLERS:
-        raise ValueError(
-            f"`file_format` must be a valid key in {FILE_HANDLERS.keys}, "
-            f"but got {file_format}."
-        )
+        raise ValueError(f"`file_format` must be a valid key in "
+                         f"{FILE_HANDLERS.keys}, but got {file_format}.")
     
     handler: FileHandler = FILE_HANDLERS.build(name=file_format)
     if path is None:
@@ -136,9 +135,8 @@ def write_to_file(
     elif hasattr(path, "write"):
         handler.write_to_fileobj(obj=obj, path=path, **kwargs)
     else:
-        raise TypeError(
-            f"path must be a filename or a file-object, but got {type(path)}."
-        )
+        raise TypeError(f"path must be a filename or a file-object, "
+                        f"but got {type(path)}.")
 
 
 def read_from_file(
@@ -166,10 +164,8 @@ def read_from_file(
     elif hasattr(path, "read"):
         data = handler.read_from_fileobj(path=path, **kwargs)
     else:
-        raise TypeError(
-            f"`path` must be a `pathlib.Path`, a `str` or a file-object, "
-            f"but got: {type(path)}."
-        )
+        raise TypeError(f"`path` must be a `pathlib.Path`, a `str` or a "
+                        f"file-object, but got: {type(path)}.")
     return data
 
 
@@ -200,9 +196,8 @@ def merge_files(
             data = {} if data is None else data
             data |= d
         else:
-            raise TypeError(
-                f"`in_paths` must be a `list` or `dict`, but got {type(d)}."
-            )
+            raise TypeError(f"`in_paths` must be a `list` or `dict`, "
+                            f"but got {type(d)}.")
     
     # Write data
     write_to_file(obj=data, path=out_path, file_format=file_format)

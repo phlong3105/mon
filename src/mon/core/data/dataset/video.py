@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements video-only datasets."""
+"""Video Dataset Template.
+
+This module implements the templates for video-only datasets."""
 
 from __future__ import annotations
 

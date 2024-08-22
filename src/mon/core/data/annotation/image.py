@@ -48,7 +48,6 @@ class ImageAnnotation(base.Annotation):
         
     References:
         `<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
-        
     """
     
     def __init__(
@@ -70,9 +69,8 @@ class ImageAnnotation(base.Annotation):
     @path.setter
     def path(self, path: pathlib.Path | str):
         if path is None or not pathlib.Path(path).is_image_file():
-            raise ValueError(
-                f"`path` must be a valid path to an image file, but got {path}."
-            )
+            raise ValueError(f"`path` must be a valid path to an image file, "
+                             f"but got {path}.")
         self._path  = pathlib.Path(path)
         self._shape = io.read_image_shape(path=self._path)
     
@@ -123,7 +121,7 @@ class ImageAnnotation(base.Annotation):
                 there. Default: ``False``.
             
         Return:
-            An image of shape `[H, W, C]`.
+            An image of shape ``[H, W, C]``.
         """
         if self.image is not None:
             return self.image
@@ -202,9 +200,8 @@ class FrameAnnotation(base.Annotation):
     @path.setter
     def path(self, path: pathlib.Path | str):
         if path is None or not pathlib.Path(path).is_video_file():
-            raise ValueError(
-                f"`path` must be a valid path to a video file, but got {path}."
-            )
+            raise ValueError(f"`path` must be a valid path to a video file, "
+                             f"but got {path}.")
         self._path = pathlib.Path(path)
     
     @property
@@ -287,7 +284,6 @@ class SegmentationAnnotation(base.Annotation):
             - cv2.IMREAD_REDUCED_COLOR_8     = 65,
             - cv2.IMREAD_IGNORE_ORIENTATION  = 128
             Default: ``cv2.IMREAD_COLOR``.
-            
     """
     
     def __init__(
@@ -309,9 +305,8 @@ class SegmentationAnnotation(base.Annotation):
     @path.setter
     def path(self, path: pathlib.Path | str | None):
         if path is None or not pathlib.Path(path).is_image_file():
-            raise ValueError(
-                f"`path` must be a valid path to an image file, but got {path}."
-            )
+            raise ValueError(f"`path` must be a valid path to an image file, "
+                             f"but got {path}.")
         self._path  = pathlib.Path(path)
         self._shape = io.read_image_shape(path=self._path)
     
@@ -362,7 +357,7 @@ class SegmentationAnnotation(base.Annotation):
                 there. Default: ``False``.
             
         Return:
-            An image of shape `[H, W, C]`.
+            An image of shape ``[H, W, C]``.
         """
         if self.mask is not None:
             return self.mask
