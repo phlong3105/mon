@@ -18,7 +18,6 @@ from filterpy.kalman import KalmanFilter
 
 from mon import core
 from mon.globals import TrackState
-from mon.vision import geometry
 from mon.vision.track import base, sort
 
 console = core.console
@@ -50,9 +49,9 @@ def associate_detections_to_tracks(
     
     # iou_matrix = iou_batch(detections, tracks)
     if association == "giou":
-        iou_matrix = geometry.bbox_giou(detections, tracks)
+        iou_matrix = core.bbox_giou(detections, tracks)
     else:
-        iou_matrix = geometry.bbox_iou(detections, tracks)
+        iou_matrix = core.bbox_iou(detections, tracks)
     
     if min(iou_matrix.shape) > 0:
         a = (iou_matrix > iou_threshold).astype(np.int32)

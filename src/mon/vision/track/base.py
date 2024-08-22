@@ -18,7 +18,6 @@ import numpy as np
 
 from mon import core
 from mon.globals import TrackState
-from mon.vision import geometry
 
 console = core.console
 
@@ -86,7 +85,7 @@ class Detection:
     
     @property
     def bbox_center(self) -> np.ndarray:
-        return geometry.bbox_center(bbox=self.bbox)[0]
+        return core.bbox_center(bbox=self.bbox)[0]
     
     @property
     def bbox_tl(self) -> np.ndarray:
@@ -95,7 +94,7 @@ class Detection:
     
     @property
     def bbox_corners_points(self) -> np.ndarray:
-        return geometry.bbox_corners_points(bbox=self.bbox)[0]
+        return core.bbox_corners_points(bbox=self.bbox)[0]
     
     @property
     def confidence(self) -> float:

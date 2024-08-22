@@ -25,7 +25,6 @@ from torch.autograd import Variable
 
 from mon import core, nn
 from mon.nn import functional as F, init
-from mon.vision import geometry
 from mon.vision.filtering.box_filter import BoxFilter
 
 
@@ -257,8 +256,8 @@ class FastGuidedFilter(nn.Module):
         _, _, x_h, x_w = x_lr.size()
         h    = x_h // self.downscale
         w    = x_w // self.downscale
-        x_lr = geometry.resize(x_lr, (h, w), "bilinear")
-        y_lr = geometry.resize(x_hr, (h, w), "bilinear")
+        x_lr = core.resize(x_lr, (h, w), "bilinear")
+        y_lr = core.resize(x_hr, (h, w), "bilinear")
         return self.forward(x_lr, y_lr, x_hr)
 
 # endregion
@@ -323,8 +322,8 @@ class ConvGuidedFilter(nn.Module):
         _, _, x_h, x_w = x_lr.size()
         h    = x_h // self.downscale
         w    = x_w // self.downscale
-        x_lr = geometry.resize(x_lr, (h, w), "bilinear")
-        y_lr = geometry.resize(x_hr, (h, w), "bilinear")
+        x_lr = core.resize(x_lr, (h, w), "bilinear")
+        y_lr = core.resize(x_hr, (h, w), "bilinear")
         return self.forward(x_lr, y_lr, x_hr)
 
 

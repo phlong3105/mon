@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Drawing Module.
+"""Drawing.
 
-This module implements the basic functionalities of drawing on images.
+This module implements drawing functionalities for images.
 """
 
 from __future__ import annotations
@@ -19,8 +19,6 @@ import numpy as np
 
 from mon.core.image import utils
 
-
-# region Draw
 
 def draw_bbox(
     image     : np.ndarray,
@@ -218,5 +216,3 @@ def draw_trajectory(
                 color     = color
             )
     return drawing
-
-# endregion

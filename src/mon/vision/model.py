@@ -18,7 +18,6 @@ from fvcore.nn import parameter_count
 from mon import core, nn
 from mon.core import _size_2_t
 from mon.globals import ZOO_DIR
-from mon.vision import geometry
 
 console = core.console
 
@@ -104,9 +103,9 @@ class VisionModel(nn.Model, ABC):
         for k, v in datapoint.items():
             if core.is_image(v):
                 if resize:
-                    datapoint[k] = geometry.resize(v, imgsz)
+                    datapoint[k] = core.resize(v, imgsz)
                 else:
-                    datapoint[k] = geometry.resize_divisible(v, 32)
+                    datapoint[k] = core.resize_divisible(v, 32)
         for k, v in datapoint.items():
             if isinstance(v, torch.Tensor):
                 datapoint[k] = v.to(self.device)
@@ -123,7 +122,7 @@ class VisionModel(nn.Model, ABC):
             if core.is_image(v):
                 h1, w1 = core.get_image_size(v)
                 if h1 != h0 or w1 != w0:
-                    outputs[k] = geometry.resize(v, (h0, w0))
+                    outputs[k] = core.resize(v, (h0, w0))
         
         # Return
         outputs["time"] = timer.avg_time

@@ -22,7 +22,7 @@ from mon import core, nn
 from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.nn import functional as F, init
-from mon.vision import filtering, geometry
+from mon.vision import filtering
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -407,7 +407,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         # Forward
         self.assert_datapoint(datapoint)
         image          = datapoint.get("image")
-        image1, image2 = geometry.pair_downsample(image)
+        image1, image2 = core.pair_downsample(image)
         datapoint1     = datapoint | {"image": image1}
         datapoint2     = datapoint | {"image": image2}
         outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
@@ -418,7 +418,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         adjust1, bam1, bright1, dark1, guide1, enhanced1 = outputs1.values()
         adjust2, bam2, bright2, dark2, guide2, enhanced2 = outputs2.values()
         adjust , bam , bright,  dark,  guide , enhanced  = outputs.values()
-        enhanced_1, enhanced_2 = geometry.pair_downsample(enhanced)
+        enhanced_1, enhanced_2 = core.pair_downsample(enhanced)
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,     enhanced1))
         loss_con = 0.5 * (mse_loss(enhanced_1, enhanced1) + mse_loss(enhanced_2, enhanced2))

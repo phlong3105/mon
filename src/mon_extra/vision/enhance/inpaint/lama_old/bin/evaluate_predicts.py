@@ -52,7 +52,7 @@ def main(args):
         segm_metrics_results.drop(['mean', 'std'], axis=0, inplace=True)
 
         segm_stats_results = results['segm_stats'].dropna(axis=1, how='all').transpose()
-        segm_stats_results._index = pd.MultiIndex.from_tuples(n.split('/') for n in segm_stats_results._index)
+        segm_stats_results.index = pd.MultiIndex.from_tuples(n.split('/') for n in segm_stats_results.index)
         segm_stats_results = segm_stats_results.unstack(0).reorder_levels([1, 0], axis=1)
         segm_stats_results.sort_index(axis=1, inplace=True)
         segm_stats_results.dropna(axis=0, how='all', inplace=True)

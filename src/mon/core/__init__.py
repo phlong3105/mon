@@ -22,7 +22,7 @@ Design Principle:
 
 from __future__ import annotations
 
-import mon.core.datastruct
+import mon.core.data
 import mon.core.dtype
 import mon.core.factory
 import mon.core.file
@@ -36,7 +36,7 @@ import mon.core.transform
 import mon.core.typing
 import mon.core.utils
 import mon.core.video
-from mon.core.datastruct import *
+from mon.core.data import *
 from mon.core.dtype import *
 from mon.core.factory import *
 from mon.core.file import *
@@ -55,7 +55,7 @@ from mon.core.rich import (
 	set_terminal_size,
 )
 from mon.core.thop import *
-from mon.core.transform import *
+from mon.core.transform import albumentation
 from mon.core.typing import (
 	_callable, _ratio_2_t, _ratio_3_t, _ratio_any_t, _scalar_or_tuple_1_t,
 	_scalar_or_tuple_2_t, _scalar_or_tuple_3_t, _scalar_or_tuple_4_t,

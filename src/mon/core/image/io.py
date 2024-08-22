@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Image IO.
+"""Image I/O.
 
 This module implements the basic I/O functionalities of images.
 """

@@ -24,7 +24,7 @@ from fvcore.nn import parameter_count
 from mon import core, nn
 from mon.core import _size_2_t
 from mon.globals import MODELS, Scheme
-from mon.vision import filtering, geometry
+from mon.vision import filtering
 from mon.vision.enhance.llie import base
 
 console = core.console
@@ -418,8 +418,8 @@ class D2CE(base.LowLightImageEnhancementModel):
         self.assert_datapoint(datapoint)
         image          = datapoint.get("image")
         depth          = datapoint.get("depth")
-        image1, image2 = geometry.pair_downsample(image)
-        depth1, depth2 = geometry.pair_downsample(depth)
+        image1, image2 = core.pair_downsample(image)
+        depth1, depth2 = core.pair_downsample(depth)
         datapoint1     = datapoint | {"image": image1, "depth": depth1}
         datapoint2     = datapoint | {"image": image2, "depth": depth2}
         outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
@@ -430,7 +430,7 @@ class D2CE(base.LowLightImageEnhancementModel):
         adjust1, bam1, depth1, edge1, bright1, dark1, guide1, enhanced1 = outputs1.values()
         adjust2, bam2, depth2, edge2, bright2, dark2, guide2, enhanced2 = outputs2.values()
         adjust,  bam,  depth,  edge,  bright,  dark,  guide,  enhanced  = outputs.values()
-        enhanced_1, enhanced_2 = geometry.pair_downsample(enhanced)
+        enhanced_1, enhanced_2 = core.pair_downsample(enhanced)
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,     enhanced1))
         loss_con = 0.5 * (mse_loss(enhanced_1, enhanced1) + mse_loss(enhanced_2, enhanced2))
