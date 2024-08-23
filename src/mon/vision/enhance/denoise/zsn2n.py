@@ -15,7 +15,7 @@ from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
-from mon.vision.enhance.denoise import base
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -23,7 +23,7 @@ console = core.console
 # region Model
 
 @MODELS.register(name="zsn2n", arch="zsn2n")
-class ZSN2N(base.DenoisingModel):
+class ZSN2N(base.ImageEnhancementModel):
     """Zero-Shot Noise2Noise.
     
     Args:

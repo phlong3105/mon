@@ -183,17 +183,11 @@ class UNet(base.SegmentationModel):
             "loss": loss,
         }
     
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> torch.Tensor:
-        x = input
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        image = datapoint.get("image")
         # Encoder
-        x1 = self.inc(x)
+        x1 = self.inc(image)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
         x4 = self.down3(x3)

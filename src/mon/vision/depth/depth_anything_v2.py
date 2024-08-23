@@ -26,9 +26,8 @@ from abc import ABC
 from typing import Any, Literal
 
 from mon import core, nn
-from mon.globals import MODELS, Scheme
+from mon.globals import MODELS, Scheme, ZOO_DIR
 from mon.vision.depth import base
-from mon_ss.globals import ZOO_DIR
 
 console       = core.console
 error_console = core.error_console
