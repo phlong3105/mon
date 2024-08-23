@@ -70,8 +70,8 @@ class RegressionAnnotation(base.Annotation):
         batch: list[torch.Tensor | np.ndarray]
     ) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using
-        :obj:`batch_size` > 1. This is used in :obj:`torch.utils.data.DataLoader`
-        wrapper.
+        :obj:`batch_size` > ``1``. This is used in
+        :obj:`torch.utils.data.DataLoader` wrapper.
         
         Args:
             batch: A :obj:`list` of values.

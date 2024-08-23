@@ -11,10 +11,10 @@ __all__ = [
 
 import cv2
 import torch
+from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
-from mon.core import _size_2_t
-from mon.globals import MODELS, Scheme
+from mon.globals import MODELS, Scheme, Task
 from mon.vision.enhance.denoise import base
 
 console = core.console
@@ -24,17 +24,18 @@ console = core.console
 
 @MODELS.register(name="zsn2n", arch="zsn2n")
 class ZSN2N(base.DenoisingModel):
-    """ZS-N2N (Zero-Shot Noise2Noise).
+    """Zero-Shot Noise2Noise.
     
     Args:
         in_channels: The first layer's input channel. Default: ``3`` for RGB image.
         num_channels: Output channels for subsequent layers. Default: ``48``.
     
     References:
-        `<https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing#scrollTo=Srf0GQTYrkxA>`_
+        https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing#scrollTo=Srf0GQTYrkxA
     """
     
-    arch   : str  = "zsn2n"
+    arch   : str          = "zsn2n"
+    tasks  : list[Task]   = [Task.DENOISE]
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.INSTANCE]
     zoo    : dict = {}
     

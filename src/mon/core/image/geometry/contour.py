@@ -24,7 +24,7 @@ from mon.globals import ShapeCode
 # region Conversion
 
 def normalize_contour(contour: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Normalize contour's points to the range [0.0-1.0]."""
+    """Normalize contour's points to the range ``[0.0, 1.0]``."""
     contour  = contour.copy()
     x, y, *_ = contour.T
     x_norm   = x / width

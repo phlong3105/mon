@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for enhancement models."""
+"""Base Image Enhancement Model.
+
+This module implements the base class for enhancement models.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +17,7 @@ from abc import ABC
 import cv2
 
 from mon import core, nn
-from mon.globals import Scheme, ZOO_DIR
+from mon.globals import Scheme
 from mon.vision.model import VisionModel
 
 console = core.console
@@ -25,19 +28,23 @@ console = core.console
 class ImageEnhancementModel(VisionModel, ABC):
     """The base class for all image enhancement models."""
     
-    zoo_dir: core.Path = ZOO_DIR / "vision" / "enhance"
-    
     # region Forward Pass
     
     def assert_datapoint(self, datapoint: dict) -> bool:
-        assert "image" in datapoint, "The key ``'image'`` must be defined in the `datapoint`."
+        if "image" not in datapoint:
+            raise ValueError("The key ``'image'`` must be defined in the "
+                             "`datapoint`.")
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
-            assert "hq_image" in datapoint, "The key ``'hq_image'`` must be defined in the `datapoint`."
+            if "hq_image" not in datapoint:
+                raise ValueError("The key ``'hq_image'`` must be defined in "
+                                 "the `datapoint`.")
             
     def assert_outputs(self, outputs: dict) -> bool:
-        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the `outputs`."
+        if "enhanced" not in outputs:
+            raise ValueError("The key ``'enhanced'`` must be defined in the "
+                             "`outputs`.")
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
@@ -45,9 +52,9 @@ class ImageEnhancementModel(VisionModel, ABC):
         outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_outputs(outputs)
         # Loss
-        pred    = outputs.get("enhanced")
-        target  = datapoint.get("hq_image")
-        outputs["loss"] = self.loss(pred, target) if self.loss else None
+        pred   = outputs.get("enhanced")
+        target = datapoint.get("hq_image")
+        outputs["loss"] = self.loss(pred, target)
         # Return
         return outputs
     
@@ -55,7 +62,7 @@ class ImageEnhancementModel(VisionModel, ABC):
         self,
         datapoint: dict,
         outputs  : dict,
-        metrics  : list[nn.Metric] | None = None
+        metrics  : list[nn.Metric] = None
     ) -> dict:
         # Check
         self.assert_datapoint(datapoint)

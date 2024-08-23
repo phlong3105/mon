@@ -35,12 +35,13 @@ def draw_bbox(
     """Draw a bounding box on an image.
     
     Args:
-        image: An image.
-        bbox: A bounding box in XYXY format.
+        image: An image of type :obj:`numpy.ndarray` in ``[H, W, C]`` format
+            with data in the range ``[0, 255]``.
+        bbox: A bounding box in ``XYXY`` format.
         label: A label for the bounding box.
         color: A color of the bounding box.
         thickness: The thickness of the rectangle borderline in px. Thickness
-            of ``-1 px`` will fill the rectangle shape by the specified color.
+            of ``-1`` px will fill the rectangle shape by the specified color.
             Default: ``1``.
         line_type: The type of the line. One of:
             - ``cv2.LINE_4``  - 4-connected line.
@@ -94,7 +95,8 @@ def draw_heatmap(
     BGR format.
     
     Args:
-        image: An image in RGB or BGR format.
+        image: An RGB or BGR image of type :obj:`numpy.ndarray` in ``[H, W, C]``
+            format with data in the range ``[0.0, 1.0]``.
         mask: A heatmap mask.
         color_map: A color map for the heatmap. Default: ``cv2.COLORMAP_JET``.
         alpha: The transparency ratio of the image. The final result is:
@@ -108,7 +110,7 @@ def draw_heatmap(
     if np.max(image) > 1:
         raise ValueError(f"`image` should be an `np.float32` in the range "
                          f"``[0.0, 1.0]``, but got {np.max(image)}.")
-    if not 0 <= alpha <= 1:
+    if not 0.0 <= alpha <= 1.0:
         raise ValueError(f"`alpha` should be in the range ``[0.0, 1.0]``, "
                          f"but got: {alpha}.")
     
@@ -137,7 +139,8 @@ def draw_trajectory(
     """Draw a trajectory path on an image.
     
     Args:
-        image: An image.
+        image: An RGB image of type :obj:`numpy.ndarray` in ``[H, W, C]``
+            format with data in the range ``[0, 255]``.
         trajectory: A 2D array or list of points in ``[(x1, y1), ...]`` format.
         color: A color of the bounding box.
         thickness: The thickness of the path in px. Default: 1.

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements loss functions for images."""
+"""Image Loss Functions.
+
+This module implements loss functions for images.
+"""
 
 from __future__ import annotations
 
@@ -33,16 +36,16 @@ __all__ = [
     "VGGLoss",
 ]
 
-from typing import Literal
+from typing import Literal, Sequence
 
 import numpy as np
 import torch
 import torchvision
 from torch import nn
 from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
 from torchvision import models, transforms
 
-from mon.core import _size_2_t
 from mon.globals import LOSSES
 from mon.nn.loss import base
 from mon.nn.modules import prior
@@ -52,15 +55,14 @@ from mon.nn.modules import prior
 
 @LOSSES.register(name="brightness_constancy_loss")
 class BrightnessConstancyLoss(base.Loss):
-    """Brightness Constancy Loss."""
-    
+
     def __init__(
         self,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        gamma      : float      = 2.5,
-        ksize      : int | None = 9,
-        eps        : float      = 1e-3
+        gamma      : float = 2.5,
+        ksize      : int   = 9,
+        eps        : float = 1e-3
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.gamma = gamma
@@ -77,9 +79,9 @@ class BrightnessConstancyLoss(base.Loss):
 
 @LOSSES.register(name="channel_consistency_loss")
 class ChannelConsistencyLoss(base.Loss):
-    """Channel Consistency Loss `\mathcal{L}_{kl}` enhances the
-    consistency between the original image and the enhanced image in the channel
-    pixel difference through KL divergence. It also suppresses the generation of
+    """Channel Consistency Loss `\mathcal{L}_{kl}` enhances the consistency
+    between the original image and the enhanced image in the channel pixel
+    difference through KL divergence. It also suppresses the generation of
     noise information and invalid features to improve the image enhancement
     effect.
     
@@ -97,7 +99,9 @@ class ChannelConsistencyLoss(base.Loss):
         self.log_target = log_target
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        assert input.shape == target.shape
+        if input.shape != target.shape:
+            raise ValueError(f"`input` and `target` must have the same shape, "
+                             f"but got: {input.shape} and {target.shape}")
         # loss = F.kl_div(input, target, _log_target=self._log_target)
         r1, g1, b1 = torch.split(input,  1, dim=1)
         r2, g2, b2 = torch.split(target, 1, dim=1)
@@ -131,7 +135,7 @@ class ChannelRatioConsistencyLoss(base.Loss):
     in the enhanced image.
     
     References:
-        `<https://github.com/GuoLanqing/ReLLIE/blob/main/Myloss.py#L26>`__
+        https://github.com/GuoLanqing/ReLLIE/blob/main/Myloss.py#L26
     """
     
     def __init__(
@@ -142,7 +146,9 @@ class ChannelRatioConsistencyLoss(base.Loss):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        assert input.shape == target.shape
+        if input.shape != target.shape:
+            raise ValueError(f"`input` and `target` must have the same shape, "
+                             f"but got: {input.shape} and {target.shape}")
         r1, g1, b1 = torch.split(input  * 255, 1, dim=1)
         r2, g2, b2 = torch.split(target * 255, 1, dim=1)
         d_rg       = torch.pow(r1.int() // g1.int() - r2.int() // g2.int(), 2).sum() / 255.0 ** 2
@@ -161,7 +167,7 @@ class ColorConstancyLoss(base.Loss):
     three adjusted channels.
     
     References:
-        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L9>`__
+        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L9
     """
     
     def __init__(
@@ -174,7 +180,7 @@ class ColorConstancyLoss(base.Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor | None = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
         mean_rgb   = torch.mean(input, [2, 3], keepdim=True)
         mr, mg, mb = torch.split(mean_rgb, 1, dim=1)
@@ -199,7 +205,7 @@ class ContradictChannelLoss(base.Loss):
         reduction: Specifies the reduction to apply to the output.
     
     References:
-        `<https://openaccess.thecvf.com/content/ICCV2021/papers/Chen_ALL_Snow_Removed_Single_Image_Desnowing_Algorithm_Using_Hierarchical_Dual-Tree_ICCV_2021_paper.pdf>`__
+        https://openaccess.thecvf.com/content/ICCV2021/papers/Chen_ALL_Snow_Removed_Single_Image_Desnowing_Algorithm_Using_Hierarchical_Dual-Tree_ICCV_2021_paper.pdf
     """
     
     def __init__(
@@ -217,10 +223,9 @@ class ContradictChannelLoss(base.Loss):
         self.l1_loss = base.L1Loss()
         self.sigmoid = nn.Sigmoid()
     
-    def forward(
-        self,
+    def forward(self,
         input : torch.Tensor,
-        target: torch.Tensor | None  = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
         y_pred = torch.min(input, dim=1, keepdim=True)
         y_pred = torch.squeeze(y_pred[0])
@@ -255,7 +260,7 @@ class EdgeLoss(base.Loss):
     def conv_gauss(self, image: torch.Tensor) -> torch.Tensor:
         n_channels, _, kw, kh = self.kernel.shape
         self.kernel = self.kernel.to(image.device)
-        image       = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode='replicate')
+        image       = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode="replicate")
         return F.conv2d(image, self.kernel, groups=n_channels)
     
     def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
@@ -268,9 +273,7 @@ class EdgeLoss(base.Loss):
         return diff
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        x    = input
-        y    = target
-        loss = self.loss(self.laplacian_kernel(x), self.laplacian_kernel(y))
+        loss = self.loss(self.laplacian_kernel(input), self.laplacian_kernel(target))
         loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         loss = self.loss_weight * loss
         return loss
@@ -278,8 +281,7 @@ class EdgeLoss(base.Loss):
 
 @LOSSES.register(name="edge_constancy_loss")
 class EdgeConstancyLoss(base.Loss):
-    """Edge Constancy Loss `\mathcal{L}_{edge}`."""
-    
+   
     def __init__(
         self,
         loss_weight: float = 1.0,
@@ -311,9 +313,12 @@ class EdgeConstancyLoss(base.Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor | None = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
-        assert input.shape == target.shape
+        if input.shape != target.shape:
+            raise ValueError(f"`input` and `target` must have the same shape, "
+                             f"but got: {input.shape} and {target.shape}")
+        
         edge1 = self.laplacian_kernel(input)
         edge2 = self.laplacian_kernel(target)
         loss  = torch.sqrt((edge1 - edge2) ** 2 + (self.eps * self.eps))
@@ -575,7 +580,10 @@ class PerceptualL1Loss(base.Loss):
 
 @LOSSES.register(name="psnr_loss")
 class PSNRLoss(base.Loss):
-    """PSNR loss. Modified from BasicSR: `<https://github.com/xinntao/BasicSR>`__
+    """PSNR loss.
+    
+    References:
+        https://github.com/xinntao/BasicSR
     """
     
     def __init__(
@@ -610,7 +618,6 @@ class PSNRLoss(base.Loss):
 
 @LOSSES.register(name="ssim_loss")
 class SSIMLoss(base.Loss):
-    """SSIM Loss."""
     
     def __init__(
         self,
@@ -620,7 +627,7 @@ class SSIMLoss(base.Loss):
         window_sigma     : float = 1.5,
         channel          : int   = 3,
         spatial_dims     : int   = 2,
-        k                : tuple[float, float] | list[float] = (0.01, 0.03),
+        k                : tuple[float, float] = (0.01, 0.03),
         non_negative_ssim: bool  = False,
         loss_weight      : float = 1.0,
         reduction        : Literal["none", "mean", "sum"] = "mean",
@@ -646,8 +653,7 @@ class SSIMLoss(base.Loss):
 
 @LOSSES.register(name="ms_ssim_loss")
 class MSSSIMLoss(base.Loss):
-    """MS-SSIM Loss."""
-    
+
     def __init__(
         self,
         data_range  : float = 255,
@@ -656,8 +662,8 @@ class MSSSIMLoss(base.Loss):
         window_sigma: float = 1.5,
         channel     : int   = 3,
         spatial_dims: int   = 2,
-        weights     : list[float] | None = None,
-        k           : tuple[float, float] | list[float] = (0.01, 0.03),
+        weights     : list[float] = None,
+        k           : tuple[float, float] = (0.01, 0.03),
         loss_weight : float = 1.0,
         reduction   : Literal["none", "mean", "sum"] = "mean",
     ):
@@ -804,8 +810,8 @@ class SpatialConsistencyLoss(base.Loss):
     def __init__(
         self,
         num_regions: Literal[4, 8, 16, 24] = 4,
-        patch_size : int                   = 4,
-        loss_weight: float                 = 1.0,
+        patch_size : int   = 4,
+        loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
@@ -1272,7 +1278,7 @@ class TotalVariationLoss(base.Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor | None = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
         x       = input
         b       = x.size()[0]

@@ -29,9 +29,13 @@ def add_weighted(
         output = image1 * alpha + image2 * beta + gamma
 
     Args:
-        image1: The first image.
+        image1: The first image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
         alpha: The weight of the :obj:`image1` elements.
-        image2: The second image.
+        image2: The same as :obj:`image1`.
         beta: The weight of the :obj:`image2` elements.
         gamma: A scalar added to each sum. Default: ``0.0``.
 
@@ -63,8 +67,12 @@ def blend(
         output = :obj:`image1` * alpha + :obj:`image2` * beta + gamma
 
     Args:
-        image1: A source image.
-        image2: A n overlay image that we want to blend on top of :obj:`image1`.
+        image1: A source image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
+        image2: An overlay image that we want to blend on top of :obj:`image1`.
         alpha: An alpha transparency of the overlay.
         gamma: A scalar added to each sum. Default: ``0.0``.
 

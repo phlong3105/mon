@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements classification metrics."""
+"""Classification Metric Module.
+
+This module implements classification metrics.
+"""
 
 from __future__ import annotations
 
@@ -34,6 +37,7 @@ __all__ = [
 import torchmetrics
 
 from mon.globals import METRICS
+
 
 # region Classification Metric
 

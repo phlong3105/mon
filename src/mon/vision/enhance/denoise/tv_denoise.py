@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Total Variation de-noising model."""
+"""Total Variation De-noising.
+
+This module implements Total Variation de-noising model.
+"""
 
 from __future__ import annotations
 
@@ -38,6 +41,9 @@ class TVDenoise(nn.Module):
         self._clean_image = clean_image
       
     def forward(self):
-        return self.l2_term(self.clean_image, self.noisy_image) + 0.0001 * self.regularization(self.clean_image)
+        return (
+            self.l2_term(self.clean_image, self.noisy_image)
+            + 0.0001 * self.regularization(self.clean_image)
+        )
     
 # endregion

@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base classes for all loss functions, and the
-corresponding helper functions.
+"""Base Loss Function.
+
+This module implements the base class for all loss functions. Some basic loss
+functions are also implemented here along with their corresponding helper
+functions.
 """
 
 from __future__ import annotations
@@ -79,12 +82,10 @@ class Loss(_Loss, ABC):
     """The base class for all loss functions.
     
     Args:
-        reduction: Specifies the reduction to apply to the output.
-            One of: ``'none'``, ``'mean'``, ``'sum'``, or ``'weighted_sum'``.
-            
-            - ``None``: No reduction will be applied.
+        reduction: Specifies the reduction to apply to the output. One of:
+            - ``'none'``: No reduction will be applied.
             - ``'mean'``: The sum of the output will be divided by the number of
-              elements in the output.
+                elements in the output.
             - ``'sum'``: The output will be summed.
             - Default: ``'mean'``.
     """

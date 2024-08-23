@@ -20,12 +20,12 @@ from typing import Any, Literal, Sequence
 
 import torch
 from fvcore.nn import parameter_count
+from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
-from mon.core import _size_2_t
-from mon.globals import MODELS, Scheme
+from mon.globals import MODELS, Scheme, Task
 from mon.vision import filtering
-from mon.vision.enhance.llie import base
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -175,10 +175,10 @@ class ConvBlock(nn.Module):
         out_channels : int,
         relu_slope   : float = 0.2,
         is_last_layer: bool  = False,
-        norm         : nn.Module | None = nn.AdaptiveBatchNorm2d,
+        norm         : nn.Module = nn.AdaptiveBatchNorm2d,
     ):
         super().__init__()
-        self.conv = nn.DSConv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=True)
+        self.conv = nn.DSConv2d(in_channels, out_channels, 3, 1, 1, bias=True)
         #
         if norm:
             self.norm = norm(out_channels)
@@ -205,7 +205,7 @@ class EnhanceNet(nn.Module):
         in_channels : int,
         num_channels: int,
         num_iters   : int,
-        norm        : nn.Module | None = nn.AdaptiveBatchNorm2d,
+        norm        : nn.Module = nn.AdaptiveBatchNorm2d,
         eps         : float = 0.05,
         use_depth   : bool  = False,
         use_edge    : bool  = False,
@@ -249,7 +249,7 @@ class EnhanceNet(nn.Module):
     def forward(
         self,
         image: torch.Tensor,
-        depth: torch.Tensor | None
+        depth: torch.Tensor = None
     ) -> tuple[torch.Tensor, torch.Tensor]:
         x    = image
         gray = core.rgb_to_grayscale(image)
@@ -280,13 +280,15 @@ class EnhanceNet(nn.Module):
 # region Model
 
 @MODELS.register(name="d2ce", arch="d2ce")
-class D2CE(base.LowLightImageEnhancementModel):
+class D2CE(base.ImageEnhancementModel):
     """D2CE (Depth to Curve Estimation Network / Deep Depth Curve Estimation
     Network) models.
     """
     
     arch   : str  = "d2ce"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.ZERO_REFERENCE]
+    tasks  : list[Task]   = [Task.LLIE]
+    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT,
+                             Scheme.ZERO_REFERENCE]
     zoo    : dict = {}
     
     def __init__(
@@ -362,7 +364,7 @@ class D2CE(base.LowLightImageEnhancementModel):
     
     def compute_efficiency_score(
         self,
-        image_size: _size_2_t = 512,
+        imgsz: _size_2_t = 512,
         channels  : int       = 3,
         runs      : int       = 100,
         verbose   : bool      = False,
@@ -371,7 +373,7 @@ class D2CE(base.LowLightImageEnhancementModel):
         of parameters, and runtime.
         """
         # Define input tensor
-        h, w      = core.parse_hw(image_size)
+        h, w      = core.parse_hw(imgsz)
         datapoint = {
             "image": torch.rand(1, channels, h, w).to(self.device),
             "depth": torch.rand(1,        1, h, w).to(self.device)
@@ -402,16 +404,30 @@ class D2CE(base.LowLightImageEnhancementModel):
     
     def assert_datapoint(self, datapoint: dict) -> bool:
         super().assert_datapoint(datapoint)
-        assert "depth" in datapoint, "The key ``'depth'`` must be defined in the `datapoint`."
+        if "depth" not in datapoint:
+            raise ValueError("The key ``'depth'`` must be defined in the "
+                             "`datapoint`.")
     
     def assert_outputs(self, outputs: dict) -> bool:
         super().assert_outputs(outputs)
-        assert "adjust"   in outputs, "The key ``'adjust'`` must be defined in the `outputs`."
-        assert "bam"      in outputs, "The key ``'bam'`` must be defined in the `outputs`."
-        assert "depth"    in outputs, "The key ``'depth'`` must be defined in the `outputs`."
-        assert "edge"     in outputs, "The key ``'edge'`` must be defined in the `outputs`."
-        assert "guidance" in outputs, "The key ``'guidance'`` must be defined in the `outputs`."
-        assert "enhanced" in outputs, "The key ``'enhanced'`` must be defined in the `outputs`."
+        if "adjust" not in outputs:
+            raise ValueError("The key ``'adjust'`` must be defined in the "
+                             "`outputs`.")
+        if "bam" not in outputs:
+            raise ValueError("The key ``'bam'`` must be defined in the "
+                             "`outputs`.")
+        if "depth" not in outputs:
+            raise ValueError("The key ``'depth'`` must be defined in the "
+                             "`outputs`.")
+        if "edge" not in outputs:
+            raise ValueError("The key ``'edge'`` must be defined in the "
+                             "`outputs`.")
+        if "guidance" not in outputs:
+            raise ValueError("The key ``'guidance'`` must be defined in the "
+                             "`outputs`.")
+        if "enhanced" not in outputs:
+            raise ValueError("The key ``'enhanced'`` must be defined in the "
+                             "`outputs`.")
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
         # Forward

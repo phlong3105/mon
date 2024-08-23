@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Zero-DCE models."""
+"""Zero-DCE
+
+This module implements the paper: "Zero-Reference Deep Curve Estimation for
+Low-Light Image Enhancement".
+
+References:
+    https://github.com/Li-Chongyi/Zero-DCE
+"""
 
 from __future__ import annotations
 
@@ -14,49 +21,14 @@ from typing import Any, Literal
 import torch
 
 from mon import core, nn
-from mon.globals import MODELS, Scheme
-from mon.vision.enhance.llie import base
+from mon.globals import MODELS, Scheme, Task
+from mon.vision.enhance import base
 
 console = core.console
 
 
 # region Loss
 
-class TotalVariationLoss(nn.Loss):
-    """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
-    `\mathcal{L}_{tvA}` preserve the monotonicity relations between
-    neighboring pixels. It is used to avoid aggressive and sharp changes between
-    neighboring pixels.
-    
-    References:
-        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
-    """
-    
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-    
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None = None
-    ) -> torch.Tensor:
-        x       = input
-        b       = x.size()[0]
-        h_x     = x.size()[2]
-        w_x     = x.size()[3]
-        count_h =  (x.size()[2]-1) * x.size()[3]
-        count_w = x.size()[2] * (x.size()[3] - 1)
-        h_tv    = torch.pow((x[:, :, 1:, :] - x[:, :, :h_x - 1, :]), 2).sum()
-        w_tv    = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x - 1]), 2).sum()
-        loss    = self.loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
-        # loss    = base.reduce_loss(loss=loss, reduction=self.reduction)
-        return loss
-    
-    
 class Loss(nn.Loss):
 
     def __init__(
@@ -83,7 +55,7 @@ class Loss(nn.Loss):
             mean_val   = exp_mean_val,
         )
         self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tva = TotalVariationLoss(reduction=reduction)
+        self.loss_tva = nn.TotalVariationLoss(reduction=reduction)
     
     def forward(
         self,
@@ -110,20 +82,22 @@ class Loss(nn.Loss):
 # region Model
 
 @MODELS.register(name="zero_dce_re", arch="zero_dce")
-class ZeroDCE_RE(base.LowLightImageEnhancementModel):
-    """Zero-DCE (Zero-Reference Deep Curve Estimation) model.
+class ZeroDCE_RE(base.ImageEnhancementModel):
+    """Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement.
     
     Args:
-        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB
+            image.
         num_channels: The number of input and output channels for subsequent
             layers. Default: ``32``.
         num_iters: The number of progressive loop. Default: ``8``.
         
     References:
-        `<https://github.com/Li-Chongyi/Zero-DCE>`__
+        https://github.com/Li-Chongyi/Zero-DCE
     """
     
     arch   : str  = "zero_dce"
+    tasks  : list[Task]   = [Task.LLIE]
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
     zoo    : dict = {}
     
@@ -162,7 +136,7 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
         self.e_conv5  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
         self.e_conv6  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
         self.e_conv7  = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-        self.maxpool  = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
+        self.maxpool  = nn.MaxPool2d(2, 2, return_indices=False, ceil_mode=False)
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
         
         # Loss
@@ -191,7 +165,7 @@ class ZeroDCE_RE(base.LowLightImageEnhancementModel):
         image    = datapoint.get("image")
         enhanced = outputs.get("enhanced")
         adjust   = outputs.pop("adjust")
-        outputs["loss"] = self.loss(image, adjust, enhanced) if self.loss else None
+        outputs["loss"] = self.loss(image, adjust, enhanced)
         # Return
         return outputs
     

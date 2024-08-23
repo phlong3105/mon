@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements image enhancement models."""
+"""Image Enhancement.
+
+This package implements image enhancement algorithms and models.
+"""
 
 from __future__ import annotations
 

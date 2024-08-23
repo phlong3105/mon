@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all detectors."""
+"""Base Object Detector.
+
+This module implements the base class for all detectors.
+"""
 
 from __future__ import annotations
 
@@ -37,7 +40,7 @@ class Detector(ABC):
     
     def __init__(
         self,
-        config : dict | str | core.Path | None,
+        config : dict | str | core.Path,
         weights: Any,
         *args, **kwargs
     ):
@@ -54,13 +57,14 @@ class Detector(ABC):
         return self._config
     
     @config.setter
-    def config(self, config: dict | str | core.Path | None):
+    def config(self, config: dict | str | core.Path):
         if isinstance(config, dict):
             self._config = config
         elif isinstance(config, core.Path | str):
             config = core.Path(config)
             if not config.is_yaml():
-                raise ValueError(f"`config` must be a valid path to a YAML file, but got {config}.")
+                raise ValueError(f"`config` must be a valid path to a YAML "
+                                 f"file, but got {config}.")
             self._config = core.read_from_file(config)
         else:
             self._config = {}
@@ -82,8 +86,8 @@ class Detector(ABC):
             weights = [core.Path(w) for w in weights]
             if not all(w.is_torch_file for w in weights):
                 raise ValueError(
-                    f"`weights` must be a valid path to a torch saved file, but "
-                    f"got {weights}."
+                    f"`weights` must be a valid path to a torch saved file, "
+                    f"but got {weights}."
                 )
         else:
             raise ValueError()

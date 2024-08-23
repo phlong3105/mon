@@ -19,7 +19,6 @@ __all__ = [
 ]
 
 import multiprocessing
-from typing import Sequence
 
 import cv2
 import joblib
@@ -28,7 +27,7 @@ import torch
 import torchvision
 
 from mon.core import pathlib
-from mon.core.image import utils, photometry
+from mon.core.image import photometry, utils
 
 
 # region Read
@@ -65,9 +64,11 @@ def read_image(
             Default: ``False``.
         
     Return:
-        A :obj:`numpy.ndarray` image of shape0 ``[H, W, C]`` with value in
-        range ``[0, 255]`` or a :obj:`torch.Tensor` image of shape
-        ``[1, C, H, W]`` with value in range ``[0.0, 1.0]``.
+        An RGB or grayscale image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
     """
     image = cv2.imread(str(path), flags)  # BGR
     if image.ndim == 2:  # HW -> HW1 (OpenCV read grayscale image)
@@ -80,8 +81,8 @@ def read_image(
 
 
 def read_image_shape(path: pathlib.Path) -> tuple[int, int, int]:
-    """Read an image from a file path using :obj:`cv2` and get its shape as
-    ``[H, W, C]``.
+    """Read an image from a file path using :obj:`cv2` and get its shape in
+    ``[H, W, C]`` format.
     
     Args:
         path: An image file path.
@@ -98,14 +99,21 @@ def write_image(path: pathlib.Path, image: torch.Tensor | np.ndarray):
     """Write an image to a file path.
     
     Args:
-        image: An image to write.
-        path: A directory to write the image to.
+        path: A path to write the image to.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(image, torch.Tensor):
         torchvision.utils.save_image(image, str(path))
-    else:
+    elif isinstance(image, np.ndarray):
         cv2.imwrite(str(path), cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    else:
+        raise ValueError(f"`image` must be `torch.Tensor` or `numpy.ndarray`, "
+                         f"but got {type(image)}.")
     
 
 def write_image_cv(
@@ -119,10 +127,14 @@ def write_image_cv(
     """Write an image to a directory using :obj:`cv2`.
     
     Args:
-        image: An image to write.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
         dir_path: A directory to write the image to.
         name: An image's name.
-        prefix: A prefix to add to the :obj:`name`.
+        prefix: A prefix to add to the :obj:`name`. Default: ``''``.
         extension: An extension of the image file. Default: ``'.png'``.
         denormalize: If ``True``, convert the image to ``[0, 255]``.
             Default: ``False``.
@@ -159,10 +171,14 @@ def write_image_torch(
     """Write an image to a directory.
     
     Args:
-        image: An image to write.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
         dir_path: A directory to write the image to.
         name: An image's name.
-        prefix: A prefix to add to the :obj:`name`.
+        prefix: A prefix to add to the :obj:`name`. Default: ``''``.
         extension: An extension of the image file. Default: ``'.png'``.
         denormalize: If ``True``, convert the image to ``[0, 255]``.
             Default: ``False``.
@@ -205,10 +221,10 @@ def write_images_cv(
     """Write a :obj:`list` of images to a directory using :obj:`cv2`.
    
     Args:
-        images: A :obj:`list` of 3D images.
+        images: A :obj:`list` of images.
         dir_path: A directory to write the images to.
         names: A :obj:`list` of images' names.
-        prefixes: A prefix to add to the :obj:`names`.
+        prefixes: A prefix to add to the :obj:`names`. Default: ``''``.
         extension: An extension of image files. Default: ``'.png'``.
         denormalize: If ``True``, convert image to ``[0, 255]``.
             Default: ``False``.
@@ -233,7 +249,7 @@ def write_images_cv(
 
 
 def write_images_torch(
-    images     : Sequence[torch.Tensor | np.ndarray],
+    images     : list[torch.Tensor | np.ndarray],
     dir_path   : pathlib.Path,
     names      : list[str],
     prefixes   : list[str] = "",
@@ -243,10 +259,10 @@ def write_images_torch(
     """Write a :obj:`list` of images to a directory using :obj:`torchvision`.
    
     Args:
-        images: A :obj:`list` of 3D images.
+        images: A :obj:`list` of images.
         dir_path: A directory to write the images to.
         names: A :obj:`list` of images' names.
-        prefixes: A prefix to add to the :obj:`names`.
+        prefixes: A prefix to add to the :obj:`names`. Default: ``''``.
         extension: An extension of image files. Default: ``'.png'``.
         denormalize: If ``True``, convert image to ``[0, 255]``.
             Default: ``False``.

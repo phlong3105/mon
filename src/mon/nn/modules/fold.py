@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements fold/unfold layers."""
+"""Fold Layers.
+
+This module implements fold/unfold layers.
+"""
 
 from __future__ import annotations
 

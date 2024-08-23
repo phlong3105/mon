@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements optimizers and learning rate schedulers using the
+"""Optimizer and Learning Rate Scheduler.
+
+This module implements optimizers and learning rate schedulers using the
 :obj:`torch` package.
 """
 

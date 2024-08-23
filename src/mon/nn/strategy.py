@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements strategies used during training machine learning
-models. A strategy is a composition of one Accelerator, one Precision Plugin, a
+"""Strategy.
+
+This module implements strategies used during training machine learning models.
+A strategy is a composition of one Accelerator, one Precision Plugin, a
 CheckpointIO plugin, and other optional plugins such as the ClusterEnvironment.
 
 References:
-    `<https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html>`__
+    https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html
 """
 
 from __future__ import annotations
@@ -113,25 +115,19 @@ def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
     """
     if torch.backends.cudnn.is_available():
         torch.backends.cudnn.enabled = cudnn
-        console.log(
-            f"cuDNN available: [bright_green]True[/bright_green], "
-            f"used:" + "[bright_green]True" if cudnn else "[red]False"
-        )
+        console.log(f"cuDNN available: [bright_green]True[/bright_green], "
+                    f"used:" + "[bright_green]True" if cudnn else "[red]False")
     else:
         console.log(f"cuDNN available: [red]False")
     
     if strategy in ["ddp"] or isinstance(strategy, DDPStrategy):
         if platform.system() == "Windows":
             os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
-            console.log(
-                f"Running on a Windows machine, set torch distributed backend "
-                f"to gloo."
-            )
+            console.log(f"Running on a Windows machine, set torch distributed "
+                        f"backend to gloo.")
         elif platform.system() == "Linux":
             os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "nccl"
-            console.log(
-                f"Running on a Unix machine, set torch distributed backend to "
-                f"nccl."
-            )
+            console.log(f"Running on a Unix machine, set torch distributed "
+                        f"backend to nccl.")
             
 # endregion

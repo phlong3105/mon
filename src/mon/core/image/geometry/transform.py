@@ -113,7 +113,8 @@ def resize(
     """Resize an image using :obj:`kornia`.
     
     Args:
-        image: An image tensor.
+        image: An image of type :obj:`torch.Tensor` in ``[B, C, H, W]`` format
+            with data in the range ``[0.0, 1.0]``.
         size: The target size.
         interpolation: Algorithm used for upsampling. One of:
             - ``'nearest'``
@@ -139,9 +140,6 @@ def resize(
         - fy: Scale factor along the vertical axis.
         - antialias: If ``True``, then image will be filtered with Gaussian
             before downscaling. No effect for upscaling.
-    
-    Returns:
-        The resized image.
     """
     align_corners = kwargs.pop("align_corners", None)
     side          = kwargs.pop("side",          "short")
@@ -166,7 +164,8 @@ def resize(
     """Resize an :obj:`image` using :obj:`kornia`.
     
     Args:
-        image: An image tensor.
+        image: An image of type :obj:`numpy.ndarray` in ``[H, W, C]`` format
+            with data in the range ``[0, 255]``.
         size: The target size.
         interpolation: Algorithm used for upsampling:
             - cv2.INTER_AREA: This is used when we need to shrink an image.
@@ -179,9 +178,6 @@ def resize(
         - fy: Scale factor along the vertical axis.
         - antialias: If ``True``, then image will be filtered with Gaussian
             before downscaling. No effect for upscaling.
-    
-    Returns:
-        The resized image.
     """
     fx   = kwargs.pop("fx", None)
     fy   = kwargs.pop("fy", None)

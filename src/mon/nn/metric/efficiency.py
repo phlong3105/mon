@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements efficiency score metrics."""
+"""Efficiency Metric Module.
+
+This module implements efficiency score metrics.
+"""
 
 from __future__ import annotations
 
@@ -10,13 +13,13 @@ __all__ = [
 ]
 
 from copy import deepcopy
+from typing import Sequence
 
 import torch
 from fvcore.nn import FlopCountAnalysis, parameter_count
 from torch import nn
 
 from mon import core
-from mon.core import _size_2_t
 
 console = core.console
 
@@ -25,11 +28,11 @@ console = core.console
 
 def compute_efficiency_score(
 	model     : nn.Module,
-	image_size: _size_2_t = 512,
-	channels  : int       = 3,
-	runs      : int       = 100,
-	use_cuda  : bool      = True,
-	verbose   : bool      = False,
+	image_size: int | Sequence[int] = 512,
+	channels  : int  = 3,
+	runs      : int  = 100,
+	use_cuda  : bool = True,
+	verbose   : bool = False,
 ):
 	# Define input tensor
 	h, w  = core.parse_hw(image_size)

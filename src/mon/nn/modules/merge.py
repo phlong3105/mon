@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements merging layers."""
+"""Merging Layers.
+
+This module implements merging layers.
+"""
 
 from __future__ import annotations
 
@@ -39,7 +42,7 @@ class Concat(nn.Module):
 		dim: Dimension to concat to. Default: ``1``.
 	"""
 	
-	def __init__(self, dim: str | ellipsis | None = 1, ):
+	def __init__(self, dim: str | ellipsis = 1):
 		super().__init__()
 		self.dim = dim
 	
@@ -51,7 +54,7 @@ class Concat(nn.Module):
 
 class CustomConcat(nn.Module):
 	
-	def __init__(self, dim, *args, **kwargs):
+	def __init__(self, dim: int, *args, **kwargs):
 		super().__init__()
 		self.dim = dim
 		
@@ -91,7 +94,7 @@ class Chuncat(nn.Module):
 		dim: Dimension to concat to. Default: ``1``.
 	"""
 	
-	def __init__(self, dim: str | ellipsis | None = 1):
+	def __init__(self, dim: str | ellipsis = 1):
 		super().__init__()
 		self.dim = dim
 	
@@ -114,7 +117,7 @@ class InterpolateConcat(nn.Module):
 		dim: Dimension to concat to. Default: ``1``.
 	"""
 	
-	def __init__(self, dim: str | ellipsis | None = 1):
+	def __init__(self, dim: str | ellipsis = 1):
 		super().__init__()
 		self.dim = dim
 	
@@ -146,7 +149,7 @@ class Foldcut(nn.Module):
 		dim: Dimension to concat to. Default: ``0``.
 	"""
 	
-	def __init__(self, dim: str | ellipsis | None = 0):
+	def __init__(self, dim: str | ellipsis = 0):
 		super().__init__()
 		self.dim = dim
 	
@@ -156,13 +159,7 @@ class Foldcut(nn.Module):
 		y      = x1 + x2
 		return y
 	
-	@classmethod
-	def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
-		c2 = ch[f] // 2
-		ch.append(c2)
-		return args, ch
-
-
+	
 class Join(nn.Module):
 	"""Join multiple features and return a :obj:`list` tensors."""
 	
@@ -179,7 +176,7 @@ class Shortcut(nn.Module):
 		dim: Dimension to concat to. Default: ``0``.
 	"""
 	
-	def __init__(self, dim: str | ellipsis | None = 0):
+	def __init__(self, dim: str | ellipsis = 0):
 		super().__init__()
 		self.dim = dim
 	

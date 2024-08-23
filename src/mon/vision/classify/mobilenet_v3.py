@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""SqueezeNet.
+"""MobileNetV3.
 
-This module implements SqueezeNet models.
+This module implements MobileNetV3 models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "SqueezeNet1_0",
-    "SqueezeNet1_1",
+    "MobileNetV3Large",
+    "MobileNetV3Small",
 ]
 
 from abc import ABC
 from typing import Any
 
-from torchvision.models import squeezenet1_0, squeezenet1_1
+from torchvision.models import mobilenet_v3_large, mobilenet_v3_small
 
 from mon import core, nn
 from mon.globals import MODELS, Scheme, ZOO_DIR
@@ -27,18 +27,17 @@ console = core.console
 
 # region Model
 
-class SqueezeNet(nn.ExtraModel, base.ImageClassificationModel, ABC):
-    """SqueezeNet models from the paper: "SqueezeNet: AlexNet-level accuracy
-    with 50x fewer parameters and <0.5MB model size".
+class MobileNetV3(nn.ExtraModel, base.ImageClassificationModel, ABC):
+    """MobileNetV3 models from the paper: "Searching for MobileNetV3".
     
     References:
-        https://arxiv.org/abs/1602.07360
+        https://arxiv.org/abs/1905.02244
     """
     
-    arch   : str  = "squeezenet"
+    arch   : str  = "mobilenet"
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
-
+    
     def init_weights(self, m: nn.Module):
         pass
     
@@ -47,26 +46,31 @@ class SqueezeNet(nn.ExtraModel, base.ImageClassificationModel, ABC):
         x = datapoint.get("image")
         y = self.model(x)
         return {"logits": y}
+    
 
-
-@MODELS.register(name="squeezenet1_0", arch="squeezenet")
-class SqueezeNet1_0(SqueezeNet):
+@MODELS.register(name="mobilenet_v3_large", arch="mobilenet")
+class MobileNetV3Large(MobileNetV3):
 
     zoo: dict = {
         "imagenet1k_v1": {
-            "url"        : "https://download.pytorch.org/models/squeezenet1_0-b66bff10.pth",
-            "path"       : ZOO_DIR / "vision/classify/squeezenet/squeezenet1_0/imagenet1k_v1/squeezenet1_0_imagenet1k_v1.pth",
+            "url"        : "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
+            "path"       : ZOO_DIR / "vision/classify/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pth",
+            "num_classes": 1000,
+        },
+        "imagenet1k_v2": {
+            "url"        : "https://download.pytorch.org/models/mobilenet_v3_large-5c1a4163.pth",
+            "path"       : ZOO_DIR / "vision/classify/mobilenet/mobilenet_v3_large/imagenet1k_v2/mobilenet_v3_large_imagenet1k_v2.pth",
             "num_classes": 1000,
         },
     }
     
     def __init__(
         self,
-        name       : str = "squeezenet1_0",
-        in_channels: int = 3,
-        num_classes: int = 1000,
-        dropout    : float = 0.5,
-        weights    : Any = None,
+        name       : str   = "mobilenet_v3_large",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.2,
+        weights    : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -84,36 +88,36 @@ class SqueezeNet1_0(SqueezeNet):
         self.in_channels  = in_channels or self.in_channels
         self.num_channels = num_classes
         self.dropout      = dropout
-
-        self.model = squeezenet1_0(
+        
+        self.model = mobilenet_v3_large(
             num_classes = self.num_classes,
-            dropout     = self.dropout
+            dropout     = self.dropout,
         )
         
         if self.weights:
             self.load_weights()
         else:
             self.apply(self.init_weights)
-       
 
-@MODELS.register(name="squeezenet1_1", arch="squeezenet")
-class SqueezeNet1_1(SqueezeNet):
+
+@MODELS.register(name="mobilenet_v3_small", arch="mobilenet")
+class MobileNetV3Small(MobileNetV3):
     
     zoo: dict = {
         "imagenet1k_v1": {
-            "url"        : "https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth",
-            "path"       : ZOO_DIR / "vision/classify/squeezenet/squeezenet1_1/imagenet1k_v1/squeezenet1_1_imagenet1k_v1.pth",
+            "url"        : "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
+            "path"       : ZOO_DIR / "vision/classify/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pth",
             "num_classes": 1000,
         },
     }
     
     def __init__(
         self,
-        name       : str = "squeezenet1_1",
-        in_channels: int = 3,
-        num_classes: int = 1000,
-        dropout    : float = 0.5,
-        weights    : Any = None,
+        name       : str   = "mobilenet_v3_small",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.2,
+        weights    : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -131,15 +135,15 @@ class SqueezeNet1_1(SqueezeNet):
         self.in_channels  = in_channels or self.in_channels
         self.num_channels = num_classes
         self.dropout      = dropout
-
-        self.model = squeezenet1_1(
+        
+        self.model = mobilenet_v3_small(
             num_classes = self.num_classes,
-            dropout     = self.dropout
+            dropout     = self.dropout,
         )
         
         if self.weights:
             self.load_weights()
         else:
             self.apply(self.init_weights)
-        
+
 # endregion

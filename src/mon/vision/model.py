@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all vision models."""
+"""Base Vision Model.
+
+This module implements the base class for all vision models.
+"""
 
 from __future__ import annotations
 
@@ -11,13 +14,12 @@ __all__ = [
 
 from abc import ABC
 from copy import deepcopy
+from typing import Sequence
 
 import torch
 from fvcore.nn import parameter_count
 
 from mon import core, nn
-from mon.core import _size_2_t
-from mon.globals import ZOO_DIR
 
 console = core.console
 
@@ -25,35 +27,31 @@ console = core.console
 # region Model
 
 class VisionModel(nn.Model, ABC):
-    """The base class for all vision models, i.e., image or video as the primary
-    input.
-    
+    """The base class for all vision models, i.e., image or video as the
+    primary input.
     """
-    
-    zoo_dir: core.Path  = ZOO_DIR / "vision"
     
     # region Initialize Model
     
     def compute_efficiency_score(
         self,
-        image_size: _size_2_t = 512,
-        channels  : int       = 3,
-        runs      : int       = 100,
-        verbose   : bool      = False,
+        imgsz   : int | Sequence[int] = 512,
+        channels: int  = 3,
+        runs    : int  = 100,
+        verbose : bool = False,
     ) -> tuple[float, float, float]:
         """Compute the efficiency score of the model, including FLOPs, number
         of parameters, and runtime.
         """
         # Define input tensor
-        h, w      = core.parse_hw(image_size)
+        h, w      = core.parse_hw(imgsz)
         datapoint = {"image": torch.rand(1, channels, h, w).to(self.device)}
         
         # Get FLOPs and Params
         flops, params = core.custom_profile(deepcopy(self), inputs=datapoint, verbose=verbose)
-        # flops         = FlopCountAnalysis(self, datapoint).total() if flops == 0 else flops
-        params        = self.params                if hasattr(self, "params") and params == 0 else params
-        params        = parameter_count(self)      if hasattr(self, "params")  else params
-        params        = sum(list(params.values())) if isinstance(params, dict) else params
+        params = self.params                if hasattr(self, "params") and params == 0 else params
+        params = parameter_count(self)      if hasattr(self, "params")  else params
+        params = sum(list(params.values())) if isinstance(params, dict) else params
         
         # Get time
         timer = core.Timer()
@@ -79,8 +77,8 @@ class VisionModel(nn.Model, ABC):
     def infer(
         self,
         datapoint: dict,
-        imgsz    : _size_2_t = 512,
-        resize   : bool      = False,
+        imgsz    : int | Sequence[int] = 512,
+        resize   : bool = False,
         *args, **kwargs
     ) -> dict:
         """Infer the model on a single datapoint. This method is different from
@@ -94,7 +92,8 @@ class VisionModel(nn.Model, ABC):
         Args:
             datapoint: A :obj:`dict` containing the attributes of a datapoint.
             imgsz: The input size. Default: ``512``.
-            resize: Resize the input image to the model's input size. Default: ``False``.
+            resize: Resize the input image to the model's input size.
+                Default: ``False``.
         """
         # Pre-processing
         self.assert_datapoint(datapoint)

@@ -24,15 +24,14 @@ from mon.core.data.annotation import base
 # region BBox
 
 class BBoxAnnotation(base.Annotation):
-    """A bounding box annotation in an image. Usually, it has a bounding box and
-    an instance segmentation mask.
+    """A bounding box annotation in an image. Usually, it has a bounding box
+    and an instance segmentation mask.
     
     Args:
         class_id: A class ID of the bounding box. ``-1`` means unknown.
         bbox: A bounding box's coordinates of shape ``[4]``.
         confidence: A confidence in ``[0.0, 1.0]`` for the detection.
             Default: ``1.0``.
-        
     """
     
     def __init__(
@@ -49,7 +48,7 @@ class BBoxAnnotation(base.Annotation):
     
     @property
     def bbox(self) -> np.ndarray:
-        """Return the bounding box of shape `[4]`."""
+        """Return the bounding box of shape ``[4]``."""
         return self._bbox
     
     @bbox.setter

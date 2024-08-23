@@ -38,7 +38,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         shuffle: If ``True``, reshuffle the datapoints at the beginning of every
             epoch. Default: ``True``.
         collate_fn: The function used to fused datapoint together when using
-            :obj:`batch_size` > 1.
+            :obj:`batch_size`> `1``.
         verbose: Verbosity. Default: ``True``.
     """
     

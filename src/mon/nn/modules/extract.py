@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements feature extraction layers."""
+"""Extract Feature Layers.
+
+This module implements feature extraction layers.
+"""
 
 from __future__ import annotations
 
@@ -32,9 +35,8 @@ class ExtractFeature(nn.Module):
 	
 	def forward(self, input: torch.Tensor) -> torch.Tensor:
 		if not input.ndim == 4:
-			raise ValueError(
-				f"input's number of dimensions must be == 4, but got {input.ndim}."
-			)
+			raise ValueError(f"`input`'s number of dimensions must be ``4``, "
+			                 f"but got {input.ndim}.")
 		x = input
 		y = x[:, self.index, :, :]
 		return y
@@ -62,9 +64,8 @@ class ExtractFeatures(nn.Module):
 	
 	def forward(self, input: torch.Tensor) -> torch.Tensor:
 		if not input.ndim == 4:
-			raise ValueError(
-				f"input's number of dimensions must be == 4, but got {input.ndim}."
-			)
+			raise ValueError(f"`input`'s number of dimensions must be ``4``, "
+			                 f"but got {input.ndim}.")
 		x = input
 		y = x[:, self.start:self.end, :, :]
 		return y
@@ -94,9 +95,8 @@ class ExtractItem(nn.Module):
 		elif isinstance(x, list | tuple):
 			return x[self.index]
 		else:
-			raise TypeError(
-				f"input must be a list or tuple of tensors, but got {type(input)}."
-			)
+			raise TypeError(f"`input` must be a `list` or `tuple` of "
+			                f"`torch.Tensor`, but got {type(input)}.")
 
 
 class ExtractItems(nn.Module):
@@ -119,9 +119,8 @@ class ExtractItems(nn.Module):
 		elif isinstance(x, list | tuple):
 			y = [x[i] for i in self.indexes]
 			return y
-		raise TypeError(
-			f"input must be a list or tuple of tensors, but got {type(input)}."
-		)
+		raise TypeError(f"`input` must be a `list` or `tuple` of `torch.Tensor`, "
+		                f"but got {type(input)}.")
 
 
 class Max(nn.Module):

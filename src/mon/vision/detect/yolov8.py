@@ -162,7 +162,7 @@ class YOLOv8(base.Detector1):
         """Forward pass.
         
         Args:
-            input: Input tensor of shape `[B, C, H, W]`.
+            input: Input tensor of shape ``[B, C, H, W]``.
         
         Returns:
             Predictions.

@@ -22,7 +22,6 @@ import mon.nn.modules.fold
 import mon.nn.modules.linear
 import mon.nn.modules.merge
 import mon.nn.modules.misc
-import mon.nn.modules.mlp
 import mon.nn.modules.normalization
 import mon.nn.modules.padding
 import mon.nn.modules.pooling
@@ -41,7 +40,6 @@ from mon.nn.modules.fold import *
 from mon.nn.modules.linear import *
 from mon.nn.modules.merge import *
 from mon.nn.modules.misc import *
-from mon.nn.modules.mlp import *
 from mon.nn.modules.normalization import *
 from mon.nn.modules.padding import *
 from mon.nn.modules.pooling import *

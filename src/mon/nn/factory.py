@@ -104,7 +104,8 @@ class OptimizerFactory(factory.Factory):
             configs: A :obj:`list` of optimizers' arguments. Each item can be:
                 - A name (:obj:`str`).
                 - A :obj:`dict` of arguments containing the ``'name'`` key.
-            network_params_only: If ``True``, only the network's parameters are used.
+            network_params_only: If ``True``, only the network's parameters are
+                used.
             to_dict: If ``True``, return a :obj:`dict` of
                 ``{:obj:`name`: attr:`instance`}``. Default: ``False``.
                 

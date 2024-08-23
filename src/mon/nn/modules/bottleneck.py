@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements bottleneck layers."""
+"""Bottleneck Layers.
+
+This module implements bottleneck layers.
+"""
 
 from __future__ import annotations
 

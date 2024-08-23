@@ -129,7 +129,8 @@ class Dataset(dataset.Dataset, ABC):
         pass
     
     def __next__(self) -> dict:
-        """Returns the next datapoint and metadata when using :obj:`__iter__`."""
+        """Returns the next datapoint and metadata when using :obj:`__iter__`.
+        """
         if self.index >= self.__len__():
             raise StopIteration
         else:
@@ -157,8 +158,8 @@ class Dataset(dataset.Dataset, ABC):
     
     @property
     def has_annotations(self) -> bool:
-        """Returns ``True`` if the images has accompanied annotations, otherwise
-        ``False``.
+        """Returns ``True`` if the images has accompanied annotations,
+        otherwise ``False``.
         """
         return (
             (
@@ -173,7 +174,6 @@ class Dataset(dataset.Dataset, ABC):
         """Return the total hash value of all the files (if it has one).
         Hash values are integers (in bytes) of all files.
         """
-        # return sum(i.meta.get("hash", 0) for i in self.images) if self.images else 0
         sum = 0
         for k, v in self.datapoints.items():
             if isinstance(v, list):
@@ -285,8 +285,8 @@ class Dataset(dataset.Dataset, ABC):
     @classmethod
     def collate_fn(cls, batch: list[dict]) -> dict:
         """Collate function used to fused input items together when using
-		:obj:`batch_size` > 1. This is used in :obj:`torch.utils.data.DataLoader`
-		wrapper.
+		:obj:`batch_size` > ``1``. This is used in
+		:obj:`torch.utils.data.DataLoader` wrapper.
 
 		Args:
 			batch: A :obj:`list` of :obj:`dict`.

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements flatten/unflatten layers."""
+"""Flatten/Unflatten Layers.
+
+This module implements flatten/unflatten layers.
+"""
 
 from __future__ import annotations
 

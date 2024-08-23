@@ -49,8 +49,8 @@ def class_id_to_logits(
     Args:
         class_id: The ID of the class for which to generate the logit.
         num_classes: The total number of classes in the classification task.
-        high_value: The logit value for the target class.
-        low_value: The logit value for non-target classes.
+        high_value: The logit value for the target class. Default: ``1.0``.
+        low_value: The logit value for non-target classes. Default: ``0.0``.
 
     Returns:
         A :obj:`numpy.ndarray` represents the logits for the given class ID.
@@ -74,7 +74,6 @@ class ClassificationAnnotation(base.Annotation):
         num_classes: The total number of classes in the classification task.
         confidence: A confidence in ``[0.0, 1.0]`` for the classification.
             Default: ``1.0``.
-        
     """
     
     def __init__(
@@ -107,7 +106,10 @@ class ClassificationAnnotation(base.Annotation):
         return [self.class_id]
     
     @staticmethod
-    def to_tensor(data: torch.Tensor | np.ndarray, *args, **kwargs) -> torch.Tensor:
+    def to_tensor(
+        data: torch.Tensor | np.ndarray,
+        *args, **kwargs
+    ) -> torch.Tensor:
         """Converts the input data to a :obj:`torch.Tensor`.
         
         Args:
@@ -120,8 +122,8 @@ class ClassificationAnnotation(base.Annotation):
         batch: list[torch.Tensor | np.ndarray]
     ) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using
-        :obj:`batch_size` > 1. This is used in :obj:`torch.utils.data.DataLoader`
-        wrapper.
+        :obj:`batch_size` > ``1``. This is used in
+        :obj:`torch.utils.data.DataLoader` wrapper.
         
         Args:
             batch: A :obj:`list` of class ids.

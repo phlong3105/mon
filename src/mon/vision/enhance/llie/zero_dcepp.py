@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Zero-DCE++ models."""
+"""Zero-DCE++.
+
+This module implements the paper: "Learning to Enhance Low-Light Image via
+Zero-Reference Deep Curve Estimation".
+
+References:
+    https://github.com/Li-Chongyi/Zero-DCE_extension
+"""
 
 from __future__ import annotations
 
@@ -14,50 +21,14 @@ from typing import Any, Literal
 import torch
 
 from mon import core, nn
-from mon.core import _callable
-from mon.globals import MODELS, Scheme
+from mon.globals import MODELS, Scheme, Task
 from mon.nn import functional as F
-from mon.vision.enhance.llie import base
+from mon.vision.enhance import base
 
 console = core.console
 
 
 # region Loss
-
-class TotalVariationLoss(nn.Loss):
-    """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
-    `\mathcal{L}_{tvA}` preserve the monotonicity relations between
-    neighboring pixels. It is used to avoid aggressive and sharp changes between
-    neighboring pixels.
-    
-    References:
-        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
-    """
-    
-    def __init__(
-        self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-    
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor | None = None
-    ) -> torch.Tensor:
-        x       = input
-        b       = x.size()[0]
-        h_x     = x.size()[2]
-        w_x     = x.size()[3]
-        count_h =  (x.size()[2]-1) * x.size()[3]
-        count_w = x.size()[2] * (x.size()[3] - 1)
-        h_tv    = torch.pow((x[:, :, 1:, :] - x[:, :, :h_x - 1, :]), 2).sum()
-        w_tv    = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x - 1]), 2).sum()
-        loss    = self.loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
-        # loss    = base.reduce_loss(loss=loss, reduction=self.reduction)
-        return loss
-    
 
 class Loss(nn.Loss):
     
@@ -85,7 +56,7 @@ class Loss(nn.Loss):
             mean_val   = exp_mean_val,
         )
         self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tva = TotalVariationLoss(reduction=reduction)
+        self.loss_tva = nn.TotalVariationLoss(reduction=reduction)
     
     def forward(
         self,
@@ -112,11 +83,13 @@ class Loss(nn.Loss):
 # region Model
 
 @MODELS.register(name="zero_dce++_re", arch="zero_dce++")
-class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
-    """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
+class ZeroDCEpp_RE(base.ImageEnhancementModel):
+    """Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
+    Estimation.
     
     Args:
-        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB
+            image.
         num_channels: The number of input and output channels for subsequent
             layers. Default: ``32``.
         num_iters: The number of convolutional layers in the model.
@@ -124,22 +97,13 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
         scale_factor: Downsampling/upsampling ratio. Defaults: ``1``.
         
     References:
-        `<https://github.com/Li-Chongyi/Zero-DCE_extension>`__
+        https://github.com/Li-Chongyi/Zero-DCE_extension
     """
     
     arch   : str  = "zero_dce++"
+    tasks  : list[Task]   = [Task.LLIE]
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
-    zoo    : dict = {
-        "sice_mix" : {
-            "url"         : None,
-            "path"        : "zero_dce++/zero_dce++_sice_mix.pt",
-            "channels"    : 3,
-            "num_channels": 32,
-            "num_iters"   : 8,
-            "scale_factor": 1.0,
-            "map": {},
-        },
-    }
+    zoo    : dict = {}
 
     def __init__(
         self,
@@ -171,14 +135,14 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
         
         # Construct model
         self.relu     = nn.ReLU(inplace=True)
-        self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-        self.e_conv1  = nn.DSConv2d(self.in_channels,      self.num_channels, kernel_size=3, stride=1, padding=1)
-        self.e_conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
-        self.e_conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
-        self.e_conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, kernel_size=3, stride=1, padding=1)
-        self.e_conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, kernel_size=3, stride=1, padding=1)
-        self.e_conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, kernel_size=3, stride=1, padding=1)
-        self.e_conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, kernel_size=3, stride=1, padding=1)
+        self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+        self.e_conv1  = nn.DSConv2d(self.in_channels,      self.num_channels, 3, 1, 1)
+        self.e_conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1)
+        self.e_conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1)
+        self.e_conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1)
+        self.e_conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1)
+        self.e_conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1)
+        self.e_conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1)
         
         # Loss
         self.loss = Loss()
@@ -210,7 +174,7 @@ class ZeroDCEpp_RE(base.LowLightImageEnhancementModel):
         image    = datapoint.get("image")
         enhanced = outputs.get("enhanced")
         adjust   = outputs.get("adjust")
-        outputs["loss"] = self.loss(image, adjust, enhanced) if self.loss else None
+        outputs["loss"] = self.loss(image, adjust, enhanced)
         # Return
         return outputs
     

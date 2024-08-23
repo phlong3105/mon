@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements loss functions for classification tasks."""
+"""Classification Loss Functions.
+
+This module implements loss functions for classification tasks.
+"""
 
 from __future__ import annotations
 
@@ -27,8 +30,12 @@ def dice_coefficient(
     epsilon     : float = 1e-6
 ) -> torch.Tensor:
     # Average of Dice coefficient for all batches, or for a single mask
-    assert input.size() == target.size()
-    assert input.dim() == 3 or not reduce_batch
+    if input.size() != target.size():
+        raise ValueError(f"`input` and `target` must have the same size, "
+                         f"but got {input.size()} and {target.size()}.")
+    if input.dim() != 3 and reduce_batch:
+        raise ValueError(f"`input` must have 3 dimensions, but got {input.dim()}.")
+    
     sum_dim  = (-1, -2) if input.dim() == 2 or not reduce_batch else (-1, -2, -3)
     inter    = 2 * (input * target).sum(dim=sum_dim)
     sets_sum = input.sum(dim=sum_dim) + target.sum(dim=sum_dim)

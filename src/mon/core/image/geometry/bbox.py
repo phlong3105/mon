@@ -53,11 +53,11 @@ def bbox_area(bbox: np.ndarray) -> np.ndarray:
     """Compute the area(s) of bounding box(es).
     
     Args:
-        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
-            format.
+        bbox: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
     
     Returns:
-        A ``[11]``, or an ``[N]`` array containing the area value(s).
+        A ``[1]``/``[N]`` :obj:`numpy.ndarray` containing the area value(s).
     """
     if bbox.ndim == 1:
         bbox = np.expand_dims(bbox, 0)
@@ -75,12 +75,12 @@ def bbox_center(bbox: np.ndarray) -> np.ndarray:
     """Compute the center(s) of bounding box(es).
     
     Args:
-        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
-            format.
+        bbox: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``[1, 2]``, or an ``[N, 2]`` array containing the center(s) of
-        bounding box(es) in ``[cx, cy]`` format.
+        An ``[1, 2]``/``[N, 2]`` :obj:`numpy.ndarray` containing the center(s)
+        of bounding box(es) in ``[cx, cy]`` format.
     """
     if bbox.ndim == 1:
         bbox = np.expand_dims(bbox, 0)
@@ -100,11 +100,11 @@ def bbox_corners(bbox: np.ndarray) -> np.ndarray:
     """Get corner(s) of bounding box(es) in an array.
     
     Args:
-        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
-            format.
+        bbox: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``[1, 8]``, or an ``[N, 8]`` array containing corners of
+        An ``[1, 8]``/``[N, 8]``  :obj:`numpy.ndarray` containing corners of
         bounding box(es) in ``[x1, y1, x2, y2, x3, y3, x4, y4]`` format.
     """
     if bbox.ndim == 1:
@@ -133,12 +133,13 @@ def bbox_corners_points(bbox: np.ndarray) -> np.ndarray:
     """Get corner(s) of bounding box(es) as points.
     
     Args:
-        bbox: Bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in XYXY
-            format.
+        bbox: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``[1, 4, 2]``, or an ``[N, 4, 2]`` array containing corners of
-        bounding box(es) in ``[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]`` format.
+        An ``[1, 4, 2]``/``[N, 4, 2]`` :obj:`numpy.ndarray` containing corners
+        of bounding box(es) in ``[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]``
+        format.
     """
     if bbox.ndim == 1:
         bbox = np.expand_dims(bbox, 0)
@@ -169,12 +170,13 @@ def get_enclosing_bbox(bbox: np.ndarray) -> np.ndarray:
     """Get the enclosing bounding box(es) for rotated corners.
     
     Args:
-        bbox: Bounding of shape ``[..., 8]``, containing N bounding boxes each
-            described by their corner co-ordinates
-            ``[x1, y1, x2, y2, x3, y3, x4, y4]``.
+        bbox: Bounding box(es) of type of :obj:`numpy.ndarray` in ``[..., 8]``,
+            containing `N` bounding boxes each described by their corner
+            coordinates ``[x1, y1, x2, y2, x3, y3, x4, y4]``.
 
     Returns:
-        Bounding boxes of shape ``[..., 4]`` and in XYXY format.
+        Bounding box(es) of type of :obj:`numpy.ndarray` in ``[..., 4]`` and
+        ``XYXY`` format.
     """
     x_ = bbox[:, [0, 2, 4, 6]]
     y_ = bbox[:, [1, 3, 5, 7]]
@@ -194,13 +196,13 @@ def bbox_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
-            XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
-            in XYXY format.
+        bbox1: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
+        bbox2: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[M, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``NxM`` matrix containing the pairwise IoU values.
+        An :obj:`numpy.ndarray` in ``[N, M]`` containing the pairwise IoU values.
     """
     # Make sure the bboxes are in 2D arrays.
     if bbox1.ndim == 1:
@@ -233,13 +235,13 @@ def bbox_giou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     two (sets) of bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
-            XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
-            in XYXY format.
+        bbox1: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
+        bbox2: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[M, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``NxM`` matrix containing the pairwise IoU values.
+        An :obj:`numpy.ndarray` in ``[N, M]`` containing the pairwise IoU values.
     
     References:
         https://arxiv.org/pdf/1902.09630.pdf
@@ -286,13 +288,13 @@ def bbox_diou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     two (sets) of bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
-            XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
-            in XYXY format.
+        bbox1: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
+        bbox2: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[M, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``NxM`` matrix containing the pairwise IoU values.
+        An :obj:`numpy.ndarray` in ``[N, M]`` containing the pairwise IoU values.
     
     References:
         https://arxiv.org/pdf/1902.09630.pdf
@@ -342,13 +344,13 @@ def bbox_ciou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     two (sets) of bounding box(es).
     
     Args:
-        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
-            XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
-            in XYXY format.
+        bbox1: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
+        bbox2: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[M, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``NxM`` matrix containing the pairwise IoU values.
+        An :obj:`numpy.ndarray` in ``[N, M]`` containing the pairwise IoU values.
     
     References:
         https://arxiv.org/pdf/1902.09630.pdf
@@ -412,13 +414,14 @@ def bbox_center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     speed.
     
     Args:
-        bbox1: Predicted bounding box(es) of shape ``[4]`` or ``[N, 4]`` and in
-            XYXY format.
-        bbox2: Ground-truth bounding box(es) of shape ``[4]`` or ``[M, 4]`` and
-            in XYXY format.
+        bbox1: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[N, 4]`` and ``XYXY`` format.
+        bbox2: Bounding box(es) of type of :obj:`numpy.ndarray` in
+            ``[4]``/``[M, 4]`` and ``XYXY`` format.
     
     Returns:
-        An ``NxM`` matrix containing the pairwise center distance value(s).
+        An :obj:`numpy.ndarray` in ``[N, M]`` containing the pairwise center
+        distance value(s).
     """
     # Make sure the bboxes are in 2D arrays.
     if bbox1.ndim == 1:
@@ -448,7 +451,7 @@ def bbox_center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
 # region Conversion
 
 def bbox_cxcywhn_to_xywh(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from CXCYWHN format to XYWH format."""
+    """Convert bounding boxes from ``CXCYWHN`` format to ``XYWH`` format."""
     cx_norm, cy_norm, w_norm, h_norm, *_ = bbox.T
     w    = w_norm * width
     h    = h_norm * height
@@ -459,7 +462,7 @@ def bbox_cxcywhn_to_xywh(bbox: np.ndarray, height: int, width: int) -> np.ndarra
 
 
 def bbox_cxcywhn_to_xyxy(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from CXCYWHN format to XYXY format."""
+    """Convert bounding boxes from ``CXCYWHN`` format to ``XYXY`` format."""
     cx_norm, cy_norm, w_norm, h_norm, *_ = bbox.T
     x1   = width  * (cx_norm - w_norm / 2)
     y1   = height * (cy_norm - h_norm / 2)
@@ -470,7 +473,7 @@ def bbox_cxcywhn_to_xyxy(bbox: np.ndarray, height: int, width: int) -> np.ndarra
 
 
 def bbox_cxcywhn_to_xyxyn(bbox: np.ndarray) -> np.ndarray:
-    """Convert bounding boxes from CXCYWHN format to XYXYN format."""
+    """Convert bounding boxes from ``CXCYWHN`` format to ``XYXYN`` format."""
     cx_norm, cy_norm, w_norm, h_norm, *_ = bbox.T
     x1   = (cx_norm - w_norm / 2)
     y1   = (cy_norm - h_norm / 2)
@@ -481,7 +484,7 @@ def bbox_cxcywhn_to_xyxyn(bbox: np.ndarray) -> np.ndarray:
 
 
 def bbox_xywh_to_cxcywhn(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from XYWH format to CXCYWHN format."""
+    """Convert bounding boxes from ``XYWH`` format to ``CXCYWHN`` format."""
     x, y, w, h, *_ = bbox.T
     cx      = x + (w / 2.0)
     cy      = y + (h / 2.0)
@@ -494,7 +497,7 @@ def bbox_xywh_to_cxcywhn(bbox: np.ndarray, height: int, width: int) -> np.ndarra
 
 
 def bbox_xywh_to_xyxy(bbox: np.ndarray) -> np.ndarray:
-    """Convert bounding boxes from XYWH format to XYXY format."""
+    """Convert bounding boxes from ``XYWH`` format to ``XYXY`` format."""
     x, y, w, h, *_ = bbox.T
     x2   = x + w
     y2   = y + h
@@ -503,7 +506,7 @@ def bbox_xywh_to_xyxy(bbox: np.ndarray) -> np.ndarray:
 
 
 def bbox_xywh_to_xyxyn(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from XYWH format to XYXYN format."""
+    """Convert bounding boxes from ``XYWH`` format to ``XYXYN`` format."""
     x, y, w, h, *_ = bbox.T
     x2      = x + w
     y2      = y + h
@@ -516,7 +519,7 @@ def bbox_xywh_to_xyxyn(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
 
 
 def bbox_xyxy_to_cxcywhn(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from XYXY format to CXCYWHN format."""
+    """Convert bounding boxes from ``XYXY`` format to ``CXCYWHN`` format."""
     x1, y1, x2, y2, *_ = bbox.T
     w       = x2 - x1
     h       = y2 - y1
@@ -531,7 +534,7 @@ def bbox_xyxy_to_cxcywhn(bbox: np.ndarray, height: int, width: int) -> np.ndarra
 
 
 def bbox_xyxy_to_xywh(bbox: np.ndarray) -> np.ndarray:
-    """Convert bounding boxes from XYXY format to XYWH format."""
+    """Convert bounding boxes from ``XYXY`` format to ``XYWH`` format."""
     x1, y1, x2, y2, *_ = bbox.T
     w    = x2 - x1
     h    = y2 - y1
@@ -540,7 +543,7 @@ def bbox_xyxy_to_xywh(bbox: np.ndarray) -> np.ndarray:
 
 
 def bbox_xyxy_to_xyxyn(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from XYXY format to XYXYN format."""
+    """Convert bounding boxes from ``XYXY`` format to ``XYXYN`` format."""
     x1, y1, x2, y2, *_ = bbox.T
     x1_norm = x1 / width
     y1_norm = y1 / height
@@ -551,7 +554,7 @@ def bbox_xyxy_to_xyxyn(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
 
 
 def bbox_xyxyn_to_cxcywhn(bbox: np.ndarray) -> np.ndarray:
-    """Convert bounding boxes from XYXYN format to CXCYWHN format."""
+    """Convert bounding boxes from ``XYXYN`` format to ``CXCYWHN`` format."""
     x1, y1, x2, y2, *_ = bbox.T
     w_norm  = x2 - x1
     h_norm  = y2 - y1
@@ -562,7 +565,7 @@ def bbox_xyxyn_to_cxcywhn(bbox: np.ndarray) -> np.ndarray:
 
 
 def bbox_xyxyn_to_xywh(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from XYXYN format to XYWH format."""
+    """Convert bounding boxes from XYXYN ``format`` to ``XYWH`` format."""
     x1, y1, x2, y2, *_ = bbox.T
     x1   = x1 * width
     x2   = x2 * width
@@ -575,7 +578,7 @@ def bbox_xyxyn_to_xywh(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
 
 
 def bbox_xyxyn_to_xyxy(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
-    """Convert bounding boxes from XYXYN format to XYXY format."""
+    """Convert bounding boxes from ``XYXYN`` format to ``XYXY`` format."""
     x1, y1, x2, y2, *_ = bbox.T
     x1   = x1 * width
     x2   = x2 * width

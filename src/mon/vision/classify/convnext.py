@@ -1,339 +1,218 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements ConNeXt models."""
+"""ConvNeXt.
+
+This module implements ConNeXt models.
+"""
 
 from __future__ import annotations
 
 __all__ = [
-    "ConvNeXt",
     "ConvNeXtBase",
     "ConvNeXtLarge",
     "ConvNeXtSmall",
     "ConvNeXtTiny",
 ]
 
-import functools
 from abc import ABC
-from typing import Any, Sequence
+from typing import Any
 
-import torch
-from torchvision import ops
+from torchvision.models import (
+    convnext_base, convnext_large, convnext_small, convnext_tiny,
+)
 
 from mon import core, nn
-from mon.core import _callable
-from mon.globals import MODELS, Scheme
-from mon.nn import functional as F
+from mon.globals import MODELS, Scheme, ZOO_DIR
 from mon.vision.classify import base
 
 console = core.console
 
 
-# region Module
-
-class LayerNorm2d(nn.LayerNorm):
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        x = x.permute(0, 2, 3, 1)
-        x = F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
-        y = x.permute(0, 3, 1, 2)
-        return y
-
-
-class CNBlock(nn.Module):
-    
-    def __init__(
-        self,
-        channels             : int,
-        layer_scale          : float,
-        stochastic_depth_prob: float,
-        norm_layer           : _callable = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        if norm_layer is None:
-            norm_layer = functools.partial(nn.LayerNorm, eps=1e-6)
-
-        self.block = nn.Sequential(
-            nn.Conv2d(channels, channels, kernel_size=7, padding=3, groups=channels, bias=True),
-            nn.Permute([0, 2, 3, 1]),
-            norm_layer(channels),
-            nn.Linear(in_features=channels, out_features=4 * channels, bias=True),
-            nn.GELU(),
-            nn.Linear(in_features=4 * channels, out_features=channels, bias=True),
-            nn.Permute([0, 3, 1, 2]),
-        )
-        self.layer_scale      = nn.Parameter(torch.ones(channels, 1, 1) * layer_scale)
-        self.stochastic_depth = ops.StochasticDepth(stochastic_depth_prob, "row")
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = self.layer_scale * self.block(x)
-        y = self.stochastic_depth(y)
-        y += x
-        return y
-
-# endregion
-
-
 # region Model
 
-class CNBlockConfig:
+class ConvNeXt(nn.ExtraModel, base.ImageClassificationModel, ABC):
+    """ConvNeXt models from the paper: "A ConvNet for the 2020s".
     
-    # Stores information listed at Section 3 of the ConvNeXt paper
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int | None,
-        num_layers  : int,
-    ):
-        self.in_channels  = in_channels
-        self.out_channels = out_channels
-        self.num_layers   = num_layers
-
-    def __repr__(self) -> str:
-        s = self.__class__.__name__ + "("
-        s += "in_channels={in_channels}"
-        s += ", out_channels={out_channels}"
-        s += ", num_layers={num_layers}"
-        s += ")"
-        return s.format(**self.__dict__)
-    
-
-class ConvNeXt(base.ImageClassificationModel, ABC):
-    """ConNeXt.
-    
+    References:
+        https://arxiv.org/abs/2201.03545
     """
     
     arch   : str  = "convnext"
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
     
+    def init_weights(self, m: nn.Module):
+        pass
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
+        y = self.model(x)
+        return {"logits": y}
+    
+
+@MODELS.register(name="convnext_base", arch="convnext")
+class ConvNeXtBase(ConvNeXt):
+    
+    zoo: dict = {
+        "imagenet1k_v1": {
+            "url"        : "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
+            "path"       : ZOO_DIR / "vision/classify/convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
+            "num_classes": 1000,
+        },
+    }
+    
     def __init__(
         self,
-        block_setting        : list[CNBlockConfig],
-        stochastic_depth_prob: float     = 0.0,
-        layer_scale          : float     = 1e-6,
-        in_channels          : int       = 3,
-        num_classes          : int       = 1000,
-        block                : Any       = None,
-        norm_layer           : _callable = None,
-        weights              : Any       = None,
-        *args, **kwargs,
+        name       : str = "convnext_base",
+        in_channels: int = 3,
+        num_classes: int = 1000,
+        weights    : Any = None,
+        *args, **kwargs
     ):
         super().__init__(
+            name        = name,
             in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
         )
         
-        if not block_setting:
-            raise ValueError("The `block_setting` should not be empty.")
-        elif not (isinstance(block_setting, Sequence) and all([isinstance(s, CNBlockConfig) for s in block_setting])):
-            raise TypeError("The `block_setting` should be `list[CNBlockConfig]`.")
-        if block is None:
-            block = CNBlock
-        if norm_layer is None:
-            norm_layer = functools.partial(LayerNorm2d, eps=1e-6)
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
         
-        self.block_setting         = block_setting
-        self.stochastic_depth_prob = stochastic_depth_prob
-        self.layer_scale           = layer_scale
-        
-        layers: list[nn.Module] = []
-        
-        # Stem
-        firstconv_output_channels = self.block_setting[0].in_channels
-        layers.append(
-            nn.Conv2dNormAct(
-                in_channels      = self.in_channels,
-                out_channels     = firstconv_output_channels,
-                kernel_size      = 4,
-                stride           = 4,
-                padding          = 0,
-                norm_layer       = norm_layer,
-                activation_layer = None,
-                bias             = True,
-            )
-        )
-
-        total_stage_blocks = sum(cnf.num_layers for cnf in self.block_setting)
-        stage_block_id     = 0
-        for cnf in self.block_setting:
-            # Bottlenecks
-            stage: list[nn.Module] = []
-            for _ in range(cnf.num_layers):
-                # Adjust stochastic depth probability based on the depth of the stage block
-                sd_prob = self.stochastic_depth_prob * stage_block_id / (total_stage_blocks - 1.0)
-                stage.append(block(cnf.in_channels, self.layer_scale, sd_prob))
-                stage_block_id += 1
-            layers.append(nn.Sequential(*stage))
-            if cnf.out_channels:
-                # Downsampling
-                layers.append(
-                    nn.Sequential(
-                        norm_layer(cnf.in_channels),
-                        nn.Conv2d(cnf.in_channels, cnf.out_channels, kernel_size=2, stride=2),
-                    )
-                )
-
-        self.features = nn.Sequential(*layers)
-        self.avgpool  = nn.AdaptiveAvgPool2d(1)
-
-        lastblock = block_setting[-1]
-        lastconv_output_channels = (lastblock.out_channels if lastblock.out_channels else lastblock.in_channels)
-        self.classifier = nn.Sequential(
-            norm_layer(lastconv_output_channels),
-            nn.Flatten(1),
-            nn.Linear(lastconv_output_channels, self.num_classes)
-        )
+        self.model = convnext_base(num_classes=self.num_classes)
         
         if self.weights:
             self.load_weights()
         else:
             self.apply(self.init_weights)
 
-    def init_weights(self, m: nn.Module):
-        if isinstance(m, (nn.Conv2d, nn.Linear)):
-            torch.nn.init.trunc_normal_(m.weight, std=0.02)
-            if m.bias:
-                torch.nn.init.zeros_(m.bias)
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        x = datapoint.get("image")
-        x = self.features(x)
-        x = self.avgpool(x)
-        y = self.classifier(x)
-        return {"logits": y}
-    
-
-@MODELS.register(name="convnext_base", arch="convnext")
-class ConvNeXtBase(ConvNeXt):
-    """ConvNeXt Base model architecture from the
-    `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
-    
-    """
-    
-    zoo: dict = {
-        "imagenet1k_v1": {
-            "url"        : "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
-            "path"       : "convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
-            "num_classes": 1000,
-            "map": {},
-        },
-    }
-    
-    def __init__(self, args, **kwargs):
-        block_setting = [
-            CNBlockConfig(128,  256,  3),
-            CNBlockConfig(256,  512,  3),
-            CNBlockConfig(512,  1024, 27),
-            CNBlockConfig(1024, None, 3),
-        ]
-        stochastic_depth_prob = kwargs.pop("stochastic_depth_prob", 0.5)
-        super().__init__(
-            name                  = "convnext_base",
-            block_setting         = block_setting,
-            stochastic_depth_prob = stochastic_depth_prob,
-            *args, **kwargs
-        )
-
 
 @MODELS.register(name="convnext_tiny", arch="convnext")
 class ConvNeXtTiny(ConvNeXt):
-    """ConvNeXt Tiny model architecture from the
-    `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
-    
-    """
     
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
-            "path"       : "convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
-        block_setting = [
-            CNBlockConfig(96,  192,  3),
-            CNBlockConfig(192, 384,  3),
-            CNBlockConfig(384, 768,  9),
-            CNBlockConfig(768, None, 3),
-        ]
-        stochastic_depth_prob = kwargs.pop("stochastic_depth_prob", 0.1)
+    def __init__(
+        self,
+        name       : str = "convnext_tiny",
+        in_channels: int = 3,
+        num_classes: int = 1000,
+        weights    : Any = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name                  = "convnext_tiny",
-            block_setting         = block_setting,
-            stochastic_depth_prob = stochastic_depth_prob,
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        
+        self.model = convnext_tiny(num_classes=self.num_classes)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
 
 @MODELS.register(name="convnext_small", arch="convnext")
 class ConvNeXtSmall(ConvNeXt):
-    """ConvNeXt Small model architecture from the
-    `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
-    
-    """
     
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_small-0c510722.pth",
-            "path"       : "convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
-        block_setting = [
-            CNBlockConfig(96,  192,  3),
-            CNBlockConfig(192, 384,  3),
-            CNBlockConfig(384, 768,  27),
-            CNBlockConfig(768, None, 3),
-        ]
-        stochastic_depth_prob = kwargs.pop("stochastic_depth_prob", 0.4)
+    def __init__(
+        self,
+        name       : str = "convnext_small",
+        in_channels: int = 3,
+        num_classes: int = 1000,
+        weights    : Any = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name                  = "convnext_small",
-            block_setting         = block_setting,
-            stochastic_depth_prob = stochastic_depth_prob,
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        
+        self.model = convnext_small(num_classes=self.num_classes)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
         
         
 @MODELS.register(name="convnext_large", arch="convnext")
 class ConvNeXtLarge(ConvNeXt):
-    """ConNeXt-Large.
-    
-    """
     
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
-            "path"       : "convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
-        block_setting = [
-            CNBlockConfig(192,  384,  3),
-            CNBlockConfig(384,  768,  3),
-            CNBlockConfig(768,  1536, 27),
-            CNBlockConfig(1536, None, 3),
-        ]
-        stochastic_depth_prob = kwargs.pop("stochastic_depth_prob", 0.5)
+    def __init__(
+        self,
+        name       : str = "convnext_large",
+        in_channels: int = 3,
+        num_classes: int = 1000,
+        weights    : Any = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name                  = "convnext_large",
-            block_setting         = block_setting,
-            stochastic_depth_prob = stochastic_depth_prob,
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        
+        self.model = convnext_large(num_classes=self.num_classes)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
         
 # endregion

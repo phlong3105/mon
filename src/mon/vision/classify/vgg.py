@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements VGG models."""
+"""VGG.
+
+This module implements VGG models.
+"""
 
 from __future__ import annotations
 
 __all__ = [
-    "VGG",
     "VGG11",
     "VGG11_BN",
     "VGG13",
@@ -18,12 +20,14 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Any, cast
+from typing import Any
 
-import torch
+from torchvision.models import (
+    vgg11, vgg11_bn, vgg13, vgg13_bn, vgg16, vgg16_bn, vgg19, vgg19_bn,
+)
 
 from mon import core, nn
-from mon.globals import MODELS, Scheme
+from mon.globals import MODELS, Scheme, ZOO_DIR
 from mon.vision.classify import base
 
 console = core.console
@@ -31,283 +35,401 @@ console = core.console
 
 # region Model
 
-class VGG(base.ImageClassificationModel, ABC):
-    """VGG.
+class VGG(nn.ExtraModel, base.ImageClassificationModel, ABC):
+    """VGG models from the paper: "Very Deep Convolutional Networks for
+    Large-Scale Image Recognition"
     
+    References:
+        https://arxiv.org/abs/1409.1556
     """
     
     arch   : str  = "vgg"
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
     
+    def init_weights(self, m: nn.Module):
+        pass
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        x = datapoint.get("image")
+        y = self.model(x)
+        return {"logits": y}
+
+
+@MODELS.register(name="vgg11", arch="vgg")
+class VGG11(VGG):
+    
+    zoo: dict = {
+        "imagenet1k_v1": {
+            "url"        : "https://download.pytorch.org/models/vgg11-8a719046.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
+            "num_classes": 1000,
+        },
+    }
+    
     def __init__(
         self,
-        features    : nn.Module,
-        num_classes : int   = 1000,
-        init_weights: bool  = True,
-        dropout     : float = 0.5,
-        weights     : Any   = None,
+        name       : str   = "vgg11",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
         *args, **kwargs
     ):
         super().__init__(
+            name        = name,
+            in_channels = in_channels,
             num_classes = num_classes,
             weights     = weights,
             *args, **kwargs
         )
         
-        self.dropout    = dropout
-        self.features   = features
-        self.avgpool    = nn.AdaptiveAvgPool2d((7, 7))
-        self.classifier = nn.Sequential(
-            nn.Linear(512 * 7 * 7, 4096),
-            nn.ReLU(True),
-            nn.Dropout(p=self.dropout),
-            nn.Linear(4096, 4096),
-            nn.ReLU(True),
-            nn.Dropout(p=self.dropout),
-            nn.Linear(4096, self.num_classes),
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
+
+        self.model = vgg11(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
         )
         
         if self.weights:
             self.load_weights()
-        elif init_weights:
-            self.apply(self.init_weights)
-    
-    def init_weights(self, m: nn.Module):
-        if isinstance(m, nn.Conv2d):
-            torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-            if m.bias:
-                torch.nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.BatchNorm2d):
-            torch.nn.init.constant_(m.weight, 1)
-            torch.nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.Linear):
-            torch.nn.init.normal_(m.weight, 0, 0.01)
-            torch.nn.init.constant_(m.bias, 0)
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        x = datapoint.get("image")
-        x = self.features(x)
-        x = self.avgpool(x)
-        x = torch.flatten(x, 1)
-        y = self.classifier(x)
-        return {"logits": y}
-
-
-def make_layers(cfg: list[str | int], batch_norm: bool = False) -> nn.Sequential:
-    layers: list[nn.Module] = []
-    in_channels = 3
-    for v in cfg:
-        if v == "M":
-            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
         else:
-            v = cast(int, v)
-            conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
-            if batch_norm:
-                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
-            else:
-                layers += [conv2d, nn.ReLU(inplace=True)]
-            in_channels = v
-    return nn.Sequential(*layers)
-
-
-cfgs: dict[str, list[str | int]] = {
-    "A": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
-    "B": [64, 64, "M", 128, 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
-    "D": [64, 64, "M", 128, 128, "M", 256, 256, 256, "M", 512, 512, 512, "M", 512, 512, 512, "M"],
-    "E": [64, 64, "M", 128, 128, "M", 256, 256, 256, 256, "M", 512, 512, 512, 512, "M", 512, 512, 512, 512, "M"],
-}
-
-
-@MODELS.register(name="vgg11", arch="vgg")
-class VGG11(VGG):
-    """VGG-11 from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
-
-    """
-    
-    zoo: dict = {
-        "imagenet1k_v1": {
-            "url"        : "https://download.pytorch.org/models/vgg11-8a719046.pth",
-            "path"       : "vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
-            "num_classes": 1000,
-            "map": {},
-        },
-    }
-    
-    def __init__(self, args, **kwargs):
-        super().__init__(
-            name     = "vgg11",
-            features = make_layers(cfgs["A"], batch_norm=False),
-            *args, **kwargs
-        )
+            self.apply(self.init_weights)
 
 
 @MODELS.register(name="vgg11_bn", arch="vgg")
 class VGG11_BN(VGG):
-    """VGG-11-B from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    """
-    
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
-            "path"       : "vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
+    def __init__(
+        self,
+        name       : str   = "vgg11_bn",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name     = "vgg11_bn",
-            features = make_layers(cfgs["A"], batch_norm=True),
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
+
+        self.model = vgg11_bn(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
+        )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
 
 @MODELS.register(name="vgg13", arch="vgg")
 class VGG13(VGG):
-    """VGG-13 from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    """
-    
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13-19584684.pth",
-            "path"       : "vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
+    def __init__(
+        self,
+        name       : str   = "vgg13",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name     = "vgg13",
-            features = make_layers(cfgs["B"], batch_norm=False),
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
+
+        self.model = vgg13(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
+        )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
 
 @MODELS.register(name="vgg13_bn", arch="vgg")
 class VGG13_BN(VGG):
-    """VGG-13-BN from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    """
-    
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
-            "path"       : "vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
+    def __init__(
+        self,
+        name       : str   = "vgg13_bn",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name     = "vgg13_bn",
-            features = make_layers(cfgs["B"], batch_norm=True),
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
 
+        self.model = vgg13_bn(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
+        )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
+            
 
 @MODELS.register(name="vgg16", arch="vgg")
 class VGG16(VGG):
-    """VGG-16 from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
-
-    """
     
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16-397923af.pth",
-            "path"       : "vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
+    def __init__(
+        self,
+        name       : str   = "vgg16",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name     = "vgg16",
-            features = make_layers(cfgs["D"], batch_norm=False),
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
+
+        self.model = vgg16(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
+        )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
 
 @MODELS.register(name="vgg16_bn", arch="vgg")
 class VGG16_BN(VGG):
-    """VGG-16-BN from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    """
-    
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
-            "path"       : "vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
+    def __init__(
+        self,
+        name       : str   = "vgg16_bn",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name     = "vgg16_bn",
-            features = make_layers(cfgs["D"], batch_norm=True),
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
+
+        self.model = vgg16_bn(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
+        )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
 
 @MODELS.register(name="vgg19", arch="vgg")
 class VGG19(VGG):
-    """VGG-19 from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
 
-    """
-    
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
-            "path"       : "vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
+    def __init__(
+        self,
+        name       : str   = "vgg19",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name     = "vgg19",
-            features = make_layers(cfgs["E"], batch_norm=False),
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
+
+        self.model = vgg19(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
+        )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
 
 @MODELS.register(name="vgg19_bn", arch="vgg")
 class VGG19_BN(VGG):
-    """VGG-19-BN from `Very Deep Convolutional Networks for Large-Scale Image
-    Recognition <https://arxiv.org/abs/1409.1556>`__.
-    """
-    
+
     zoo: dict = {
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
-            "path"       : "vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
+            "path"       : ZOO_DIR / "vision/classify/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
             "num_classes": 1000,
-            "map": {},
         },
     }
     
-    def __init__(self, args, **kwargs):
+    def __init__(
+        self,
+        name       : str   = "vgg19_bn",
+        in_channels: int   = 3,
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        weights    : Any   = None,
+        *args, **kwargs
+    ):
         super().__init__(
-            name     = "vgg19_bn",
-            features = make_layers(cfgs["E"], batch_norm=True),
+            name        = name,
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
+        
+        if isinstance(self.weights, dict):
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+            dropout     = self.weights.get("dropout"    , dropout)
+        self.in_channels  = in_channels or self.in_channels
+        self.num_channels = num_classes
+        self.dropout      = dropout
+
+        self.model = vgg19_bn(
+            num_classes = self.num_classes,
+            dropout     = self.dropout
+        )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
         
 # endregion

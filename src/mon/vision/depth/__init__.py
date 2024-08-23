@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements depth estimation models."""
+"""Depth Estimation.
+
+This package implements depth estimation algorithms.
+"""
 
 from __future__ import annotations
 

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for depth estimation models."""
+"""Base Depth Estimation Model.
+
+This module implements the base class for depth estimation models.
+"""
 
 from __future__ import annotations
 
@@ -23,20 +26,25 @@ console = core.console
 class DepthEstimationModel(VisionModel, ABC):
     """The base class for all depth estimation models."""
     
-    tasks  : list[Task] = [Task.DEPTH]
-    zoo_dir: core.Path  = ZOO_DIR / "vision" / "depth"
+    tasks: list[Task] = [Task.DEPTH]
     
     # region Forward Pass
     
     def assert_datapoint(self, datapoint: dict) -> bool:
-        assert "image" in datapoint, "The key ``'image'`` must be defined in the `datapoint`."
+        if "image" not in datapoint:
+            raise ValueError("The key ``'image'`` must be defined in the "
+                             "`datapoint`.")
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
-            assert "depth" in datapoint, "The key ``'depth'`` must be defined in the `datapoint`."
+            if "depth" not in datapoint:
+                raise ValueError("The key ``'depth'`` must be defined in the "
+                                 "`datapoint`.")
             
     def assert_outputs(self, outputs: dict) -> bool:
-        assert "depth" in outputs, "The key ``'depth'`` must be defined in the `outputs`."
+        if "depth" not in outputs:
+            raise ValueError("The key ``'depth'`` must be defined in the "
+                             "`outputs`.")
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
@@ -54,7 +62,7 @@ class DepthEstimationModel(VisionModel, ABC):
         self,
         datapoint: dict,
         outputs  : dict,
-        metrics  : list[nn.Metric] | None = None
+        metrics  : list[nn.Metric] = None
     ) -> dict:
         # Check
         self.assert_datapoint(datapoint)

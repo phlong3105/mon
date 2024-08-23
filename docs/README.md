@@ -3,7 +3,7 @@
 </div>
 
 <div align = center>
-	<a align="center" href="http://phlong.net/mon/">Documentation</a>
+	<a align="center" href="https://github.com/phlong3105/mon/docs">Documentation</a>
 	<br>
 	<p></p>
 </div>

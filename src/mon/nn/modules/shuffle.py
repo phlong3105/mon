@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements shuffling layers."""
+"""Shuffling Layers.
+
+This module implements shuffling layers.
+"""
 
 from __future__ import annotations
 

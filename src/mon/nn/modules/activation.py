@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements activation layers."""
+"""Activation Layers.
+
+This module implements activation layers.
+"""
 
 from __future__ import annotations
 
@@ -55,21 +58,21 @@ from typing import Any, Callable
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
 from torch.nn.modules.activation import *
 
 from mon import core
-from mon.core import _size_2_t
 
 
 # region Linear Unit
 
 class FReLU(nn.Module):
     
-    def __init__(self, c1: int, k: int | list[int] = 3, *args, **kwargs):
+    def __init__(self, channels: int, kernel_size: _size_2_t = 3):
         super().__init__()
-        k         = core.to_2tuple(k)
-        self.conv = nn.Conv2d(c1, c1, k, 1, 1, groups=c1)
-        self.act  = nn.BatchNorm2d(c1)
+        kernel_size = core.to_2tuple(kernel_size)
+        self.conv   = nn.Conv2d(channels, channels, kernel_size, 1, 1, groups=channels)
+        self.act    = nn.BatchNorm2d(channels)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
@@ -78,31 +81,12 @@ class FReLU(nn.Module):
 
 
 class SimpleGate(nn.Module):
-    """Simple gate activation unit proposed in the paper: "`Simple Baselines for
-    Image Restoration <https://arxiv.org/pdf/2204.04676.pdf>`__".
-    """
+    """Simple gate activation unit described in the paper:
+        "Simple Baselines for Image Restoration".
     
-    @classmethod
-    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
-        """Parse layer's arguments :obj:`args`, calculate the
-        :obj:`out_channels`, and update :obj:`args`. Also, append the
-        :obj:`out_channels` to :obj:`ch` if needed.
-
-        Args:
-            f: From, i.e., the current layer receives output from the f-th layer.
-                For example, -1 means from a previous layer; -2 means from 2
-                previous layers; [99, 101] means from the 99th and 101st layers.
-                This attribute is used in forward pass.
-            args: Layer's parameters.
-            ch: A :obj:`list` containing output channels of previous layers
-                (of the model)
-        
-        Returns:
-            The adjusted :obj:`args` and :obj:`ch`.
-        """
-        c2 = ch[f] // 2
-        ch.append(c2)
-        return args, ch
+    References:
+        https://arxiv.org/pdf/2204.04676.pdf
+    """
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x      = input
@@ -127,8 +111,8 @@ class NegHardsigmoid(nn.Module):
         super().__init__()
         self.inplace = inplace
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return F.relu6(3 * x + 3.0, inplace=self.inplace) / 6.0 - 0.5
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return F.relu6(3 * input + 3.0, inplace=self.inplace) / 6.0 - 0.5
 
 # endregion
 
@@ -139,8 +123,8 @@ class xUnit(nn.Module):
     """xUnit activation layer.
     
     References:
-        - `<https://blog.paperspace.com/xunit-spatial-activation>`__
-        - `<https://github.com/kligvasser/xUnit?ref=blog.paperspace.com>`__
+        - https://blog.paperspace.com/xunit-spatial-activation
+        - https://github.com/kligvasser/xUnit?ref=blog.paperspace.com
     """
     def __init__(
         self,
@@ -150,11 +134,12 @@ class xUnit(nn.Module):
     ):
         super().__init__()
         # xUnit
+        padding = (kernel_size // 2)
         self.features = nn.Sequential(
-            nn.BatchNorm2d(num_features=num_features) if batch_norm else nn.Identity(),
+            nn.BatchNorm2d(num_features) if batch_norm else nn.Identity(),
             nn.ReLU(),
-            nn.Conv2d(in_channels=num_features, out_channels=num_features, kernel_size=kernel_size, padding=(kernel_size // 2), groups=num_features),
-            nn.BatchNorm2d(num_features=num_features) if batch_norm else nn.Identity(),
+            nn.Conv2d(num_features, num_features, kernel_size, padding=padding, groups=num_features),
+            nn.BatchNorm2d(num_features) if batch_norm else nn.Identity(),
             nn.Sigmoid(),
         )
 
@@ -169,8 +154,8 @@ class xUnitS(nn.Module):
     """Slim xUnit activation layer.
     
     References:
-        - `<https://blog.paperspace.com/xunit-spatial-activation>`__
-        - `<https://github.com/kligvasser/xUnit?ref=blog.paperspace.com>`__
+        - https://blog.paperspace.com/xunit-spatial-activation
+        - https://github.com/kligvasser/xUnit?ref=blog.paperspace.com
     """
     
     def __init__(
@@ -181,9 +166,10 @@ class xUnitS(nn.Module):
     ):
         super().__init__()
         # slim xUnit
+        padding = (kernel_size // 2)
         self.features = nn.Sequential(
-            nn.Conv2d(in_channels=num_features, out_channels=num_features, kernel_size=kernel_size, padding=(kernel_size // 2), groups=num_features),
-            nn.BatchNorm2d(num_features=num_features) if batch_norm else nn.Identity(),
+            nn.Conv2d(num_features, num_features, kernel_size, padding=padding, groups=num_features),
+            nn.BatchNorm2d(num_features) if batch_norm else nn.Identity(),
             nn.Sigmoid(),
         )
 
@@ -198,9 +184,10 @@ class xUnitD(nn.Module):
     """Dense xUnit activation layer.
     
     References:
-        - `<https://blog.paperspace.com/xunit-spatial-activation>`__
-        - `<https://github.com/kligvasser/xUnit?ref=blog.paperspace.com>`__
+        - https://blog.paperspace.com/xunit-spatial-activation
+        - https://github.com/kligvasser/xUnit?ref=blog.paperspace.com
     """
+    
     def __init__(
         self,
         num_features: int       = 64,
@@ -209,12 +196,13 @@ class xUnitD(nn.Module):
     ):
         super().__init__()
         # Dense xUnit
+        padding = (kernel_size // 2)
         self.features = nn.Sequential(
-            nn.Conv2d(in_channels=num_features, out_channels=num_features, kernel_size=1, padding=0),
-            nn.BatchNorm2d(num_features=num_features) if batch_norm else nn.Identity(),
+            nn.Conv2d(num_features, num_features, 1, padding=0),
+            nn.BatchNorm2d(num_features) if batch_norm else nn.Identity(),
             nn.ReLU(),
-            nn.Conv2d(in_channels=num_features, out_channels=num_features, kernel_size=kernel_size, padding=(kernel_size // 2), groups=num_features),
-            nn.BatchNorm2d(num_features=num_features) if batch_norm else nn.Identity(),
+            nn.Conv2d(num_features, num_features, kernel_size, padding=padding, groups=num_features),
+            nn.BatchNorm2d(num_features) if batch_norm else nn.Identity(),
             nn.Sigmoid(),
         )
 
@@ -237,7 +225,7 @@ class ArgMax(nn.Module):
         dim: A dimension to find indices of maximum values. Default: ``None``.
     """
     
-    def __init__(self, dim: int | None = None, *args, **kwargs):
+    def __init__(self, dim: int = None):
         super().__init__()
         self.dim = dim
     
@@ -248,27 +236,20 @@ class ArgMax(nn.Module):
 
 
 class Clamp(nn.Module):
-    """Clamps a tensor' values within a range of `[min, max]`.
+    """Clamps a tensor's values within a range of `[min, max]`.
 
     Args:
         min: The lower-bound of the range to be clamped to. Default: ``-1.0``.
         max: The upper-bound of the range to be clamped to. Default: ``-1.0``.
     """
     
-    def __init__(
-        self,
-        min: float = -1.0,
-        max: float =  1.0,
-        *args, **kwargs
-    ):
+    def __init__(self, min: float = -1.0,  max: float = 1.0):
         super().__init__()
         self.min = min
         self.max = max
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = torch.clamp(x, min=self.min, max=self.max)
-        return y
+        return torch.clamp(input, min=self.min, max=self.max)
 
 
 Clip = Clamp
@@ -283,7 +264,7 @@ def to_act_layer(act_layer: Any = ReLU(), *args, **kwargs) -> nn.Module:
     # if isinstance(norm, str):
     #     norm = LAYER.build(name=norm)
     act_layer = act_layer
-    if act_layer is None or act_layer == False:
+    if act_layer is None or not act_layer:
         act_layer = nn.Identity()
     elif isinstance(act_layer, Callable | types.FunctionType | functools.partial):
         act_layer = act_layer(*args, **kwargs)

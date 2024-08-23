@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements projection layers.
+"""Projection Layers.
 
-A projection layer in neural networks typically refers to the process of
-transforming the input data into a different space using a projection matrix.
-This transformation can help in reducing the dimensionality of the input data
-or extracting important features for further processing.
+This module implements projection layers. A projection layer in neural networks
+typically refers to the process of transforming the input data into a different
+space using a projection matrix. This transformation can help in reducing the
+dimensionality of the input data or extracting important features for further
+processing.
 """
 
 from __future__ import annotations
@@ -21,8 +22,8 @@ import math
 import torch
 from einops import rearrange
 from torch import nn
+from torch.nn.common_types import _size_2_t
 
-from mon.core import _size_2_t
 from mon.nn.modules import conv, linear
 
 
@@ -55,7 +56,7 @@ class ConvProjection(nn.Module):
     def forward(
         self,
         input  : torch.Tensor,
-        attn_kv: torch.Tensor | None = None
+        attn_kv: torch.Tensor = None
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         x = input
         b, n, c, h = *x.shape, self.heads
@@ -75,7 +76,7 @@ class ConvProjection(nn.Module):
         v = rearrange(v, 'b (h d) l w -> b h (l w) d', h=h)
         return q, k, v
 
-    def flops(self, q_L, kv_L=None):
+    def flops(self, q_L, kv_L = None):
         kv_L = kv_L or q_L
         flops = 0
         flops += self.to_q.flops(q_L)
@@ -106,7 +107,7 @@ class LinearProjection(nn.Module):
     def forward(
         self,
         input  : torch.Tensor,
-        attn_kv: torch.Tensor | None = None
+        attn_kv: torch.Tensor = None
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         x = input
         b_, n, c = x.shape

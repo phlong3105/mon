@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements LLLINet (Low-Light Learnable Instance Normalization
-Network) models.
+"""LLLInet.
+
+Low-Light Learnable Instance Normalization Network.
 """
 
 from __future__ import annotations
@@ -18,9 +19,8 @@ import torch
 from torchvision.models import vgg
 
 from mon import core, nn
-from mon.core import _callable
-from mon.globals import MODELS, Scheme
-from mon.vision.enhance.llie import base
+from mon.globals import MODELS, Scheme, Task
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -76,7 +76,11 @@ class Loss(nn.Loss):
     
     @staticmethod
     def region_loss(input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        gray     = 0.30 * target[:, 0, :, :] + 0.59 * target[:, 1, :, :] + 0.11 * target[:, 2, :, :]
+        gray     = (
+              0.30 * target[:, 0, :, :]
+            + 0.59 * target[:, 1, :, :]
+            + 0.11 * target[:, 2, :, :]
+        )
         gray     = gray.view(-1)
         value    = -torch.topk(-gray, int(gray.shape[0] * 0.4))[0][0]
         weight   = 1 * (target > value) + 4 * (target <= value)
@@ -99,7 +103,7 @@ class UNetConvBlock(nn.Module):
     ):
         super().__init__()
         self.use_in  = use_in
-        self.conv1   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
+        self.conv1   = nn.Conv2d(in_channels, in_channels, 3, padding=1, bias=True)
         if use_in:
             self.norm1 = nn.LearnableInstanceNorm2d(in_channels, r=0.5, affine=True)
         else:
@@ -108,12 +112,12 @@ class UNetConvBlock(nn.Module):
         self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
         self.simam   = nn.SimAM()
         
-        self.conv2   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
+        self.conv2   = nn.Conv2d(in_channels, in_channels, 3, padding=1, bias=True)
         
-        self.conv3   = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
+        self.conv3   = nn.Conv2d(in_channels * 2, out_channels, 3, padding=1, bias=True)
         self.relu3   = nn.LeakyReLU(relu_slope, inplace=False)
         
-        self.conv4   = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        self.conv4   = nn.Conv2d(out_channels, out_channels, 3, padding=1, bias=True)
         self.relu4   = nn.LeakyReLU(relu_slope, inplace=False)
         
         self.conv1_3 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
@@ -151,10 +155,11 @@ class UNetConvBlock(nn.Module):
 # region Model
 
 @MODELS.register(name="lllinet", arch="lllinet")
-class LLLINet(base.LowLightImageEnhancementModel):
-    """LLHINet (Low-Light Learnable Instance Normalization Network) models."""
+class LLLINet(base.ImageEnhancementModel):
+    """Low-Light Learnable Instance Normalization Network."""
     
     arch   : str  = "lllinet"
+    tasks  : list[Task]   = [Task.LLIE]
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
     
@@ -253,7 +258,7 @@ class LLLINet(base.LowLightImageEnhancementModel):
 
 @MODELS.register(name="lllinet_hvi", arch="lllinet")
 class LLLINetHVI(LLLINet):
-    """LLHINet (Low-Light Learnable Instance Normalization Network) models."""
+    """Low-Light Learnable Instance Normalization Network."""
     
     zoo: dict = {}
     
@@ -318,7 +323,7 @@ class LLLINetHVI(LLLINet):
         
         # Loss
         # from mon.vision.enhance.llie.hvi_cidnet import Loss as CIDNetLoss
-        self._loss = Loss(*self.loss_weights, reduction="mean")
+        self.loss = Loss(*self.loss_weights, reduction="mean")
         
         # Load weights
         if self.weights:
@@ -331,8 +336,8 @@ class LLLINetHVI(LLLINet):
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
         # Forward
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_outputs(outputs)
         # Loss
         pred_rgb   = outputs.get("enhanced")

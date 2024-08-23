@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements attention layers that are used to build deep learning
-models.
+"""Attention Layers.
+
+This module implements attention layers.
 """
 
 from __future__ import annotations
@@ -44,12 +45,12 @@ import torch
 from einops import repeat
 from torch import nn
 from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
 from torchvision.ops.misc import SqueezeExcitation
 
-from mon.core import _size_2_t
 from mon.nn.modules import (
-    activation as act, conv, dropout as drop, flatten, linear, normalization as norm, pooling,
-    projection,
+    activation as act, conv, dropout as drop, flatten, linear,
+    normalization as norm, pooling, projection,
 )
 
 
@@ -65,8 +66,9 @@ class EfficientChannelAttention(nn.Module):
     
     def __init__(self, channels: int, kernel_size: _size_2_t = 3):
         super().__init__()
+        padding       = (kernel_size - 1) // 2
         self.avg_pool = pooling.AdaptiveAvgPool2d(1)
-        self.conv     = conv.Conv1d(1, 1, kernel_size=kernel_size, padding=(kernel_size - 1) // 2, bias=False)
+        self.conv     = conv.Conv1d(1, 1, kernel_size, padding=padding, bias=False)
         self.sigmoid  = act.Sigmoid()
         self.channel  = channels
         self.k_size   = kernel_size
@@ -97,8 +99,9 @@ class EfficientChannelAttention1d(nn.Module):
     
     def __init__(self, channels: int, kernel_size: _size_2_t = 3):
         super().__init__()
+        padding       = (kernel_size - 1) // 2
         self.avg_pool = pooling.AdaptiveAvgPool1d(1)
-        self.conv     = conv.Conv1d(1, 1, kernel_size=kernel_size, padding=(kernel_size - 1) // 2, bias=False)
+        self.conv     = conv.Conv1d(1, 1, kernel_size=kernel_size, padding=padding, bias=False)
         self.sigmoid  = act.Sigmoid()
         self.channel  = channels
         self.k_size   = kernel_size
@@ -121,8 +124,11 @@ class EfficientChannelAttention1d(nn.Module):
 
 
 class SimplifiedChannelAttention(nn.Module):
-    """Simplified channel attention layer proposed in the paper: "`Simple
-    Baselines for Image Restoration <https://arxiv.org/pdf/2204.04676.pdf>`__".
+    """Simplified channel attention layer proposed in the paper: "Simple
+    Baselines for Image Restoration".
+    
+    References:
+        https://arxiv.org/pdf/2204.04676.pdf
     """
     
     def __init__(
@@ -171,7 +177,7 @@ class BAM(nn.Module):
     Module".
     
     References:
-        - `<https://github.com/Jongchan/attention-module/blob/master/MODELS/bam.py>`__
+        https://github.com/Jongchan/attention-module/blob/master/MODELS/bam.py
     """
     
     class Flatten(nn.Module):
@@ -261,8 +267,8 @@ class BAM(nn.Module):
                 self.s_gate.add_module(
                     "gate_s_conv_di_%d" % i,
                     conv.Conv2d(
-                        in_channels  = channels      // reduction_ratio,
-                        out_channels = channels      // reduction_ratio,
+                        in_channels  = channels // reduction_ratio,
+                        out_channels = channels // reduction_ratio,
                         kernel_size  = 3,
                         padding      = dilation_val,
                         dilation     = dilation_val,
@@ -322,13 +328,17 @@ class CBAM(nn.Module):
     Block Attention Module".
     
     References:
-        - `<https://github.com/Jongchan/attention-module/blob/master/MODELS/cbam.py>`__
+        - https://github.com/Jongchan/attention-module/blob/master/MODELS/cbam.py>
     
     Args:
         channels:
         reduction_ratio: Default: ``16``.
-        pool_types: Pooling layer. One of ``'avg'``, `''lp''`, `''lse''`, or
-            `''max''`. Defaults to ``["avg", "max"]``.
+        pool_types: Pooling layer. One of:
+            ``'avg'``
+            `''lp''`
+            `''lse''`
+            `''max''`.
+            Defaults: ``["avg", "max"]``.
     """
     
     class Flatten(nn.Module):
@@ -460,14 +470,14 @@ class ChannelAttentionModule(nn.Module):
         self,
         channels       : int,
         reduction_ratio: int,
-        stride         : _size_2_t       = 1,
+        stride         : _size_2_t = 1,
         padding        : _size_2_t | str = 0,
-        dilation       : _size_2_t       = 1,
-        groups         : int             = 1,
-        bias           : bool            = True,
-        padding_mode   : str             = "zeros",
-        device         : Any             = None,
-        dtype          : Any             = None,
+        dilation       : _size_2_t = 1,
+        groups         : int  = 1,
+        bias           : bool = True,
+        padding_mode   : str  = "zeros",
+        device         : Any  = None,
+        dtype          : Any  = None,
     ):
         super().__init__()
         self.avg_pool   = pooling.AdaptiveAvgPool2d(1)
@@ -521,14 +531,14 @@ class PixelAttentionModule(nn.Module):
         channels       : int,
         reduction_ratio: int,
         kernel_size    : _size_2_t,
-        stride         : _size_2_t       = 1,
+        stride         : _size_2_t = 1,
         padding        : _size_2_t | str = 0,
-        dilation       : _size_2_t       = 1,
-        groups         : int             = 1,
-        bias           : bool            = True,
-        padding_mode   : str             = "zeros",
-        device         : Any             = None,
-        dtype          : Any             = None,
+        dilation       : _size_2_t = 1,
+        groups         : int  = 1,
+        bias           : bool = True,
+        padding_mode   : str  = "zeros",
+        device         : Any  = None,
+        dtype          : Any  = None,
     ):
         super().__init__()
         self.fc = nn.Sequential(
@@ -585,22 +595,22 @@ def shifted_window_attention(
     window_size           : list[int],
     num_heads             : int,
     shift_size            : list[int],
-    attention_dropout     : float               = 0.0,
-    dropout               : float               = 0.0,
-    qkv_bias              : torch.Tensor | None = None,
-    proj_bias             : torch.Tensor | None = None,
-    logit_scale           : torch.Tensor | None = None,
-    training              : bool                = True,
+    attention_dropout     : float = 0.0,
+    dropout               : float = 0.0,
+    qkv_bias              : torch.Tensor = None,
+    proj_bias             : torch.Tensor = None,
+    logit_scale           : torch.Tensor = None,
+    training              : bool  = True,
 ) -> torch.Tensor:
     """Window-based multi-head self-attention (W-MSA) module with relative
     position bias. It supports both shifted and non-shifted windows.
     
     Args:
-        input: An input of shape `[B, C, H, W]`.
+        input: An input of shape ``[B, C, H, W]``.
         qkv_weight: The weight tensor of query, key, value of shape
-            `[in_dim, out_dim]`.
+            ``[in_dim, out_dim]``.
         proj_weight: The weight tensor of projection of shape
-            `[in_dim, out_dim]`.
+            ``[in_dim, out_dim]``.
         relative_position_bias: The learned relative position bias added to
             attention.
         window_size: Window size.
@@ -615,7 +625,7 @@ def shifted_window_attention(
         training: Training flag used by the dropout parameters. Default: ``True``.
     
     Returns:
-        The output tensor after shifted window attention of shape `[B, C, H, W]`.
+        The output tensor after shifted window attention of shape ``[B, C, H, W]``.
     """
     b, h, w, c = input.shape
     # Pad feature maps to multiples of window size
@@ -768,14 +778,6 @@ class ShiftedWindowAttention(nn.Module):
         )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        """
-        
-        Args:
-            input: Tensor of shape `[B, H, W, C]`.
-      
-        Returns:
-            Tensor of shape `[B, H, W, C]`.
-        """
         x = input
         relative_position_bias = self.get_relative_position_bias()
         return shifted_window_attention(
@@ -853,14 +855,6 @@ class ShiftedWindowAttentionV2(ShiftedWindowAttention):
         return relative_position_bias
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        """
-        
-        Args:
-            input: Tensor of shape `[B, H, W, C]`.
-      
-        Returns:
-            Tensor of shape `[B, H, W, C]`.
-        """
         x = input
         relative_position_bias = self.get_relative_position_bias()
         return shifted_window_attention(
@@ -996,14 +990,12 @@ class WindowAttention(nn.Module):
 # region Squeeze Excitation
 
 class SqueezeExciteC(nn.Module):
-    """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
-    Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
-    
+    """Squeeze and Excite layer from the paper: "Squeeze and Excitation".
     This implementation uses :obj:`torch.nn.Conv2d` layer.
     
     References:
-        - `<https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch>`__
-        - `<https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py>`__
+        - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
+        - https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
     """
     
     def __init__(
@@ -1054,14 +1046,13 @@ class SqueezeExciteC(nn.Module):
 
 
 class SqueezeExciteL(nn.Module):
-    """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
-    Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
+    """Squeeze and Excite layer from the paper: "Squeeze and Excitation"
     
     This implementation uses :obj:`torch.nn.Linear` layer.
     
     References:
-        - `<https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch>`__
-        - `<https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py>`__
+        - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
+        - https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
     """
     
     def __init__(
@@ -1119,7 +1110,7 @@ class SimAM(nn.Module):
     Module for Convolutional Neural Networks".
     
     References:
-        `<https://github.com/ZjjConan/SimAM>`__
+        https://github.com/ZjjConan/SimAM
     """
     
     def __init__(self, e_lambda: float = 1e-4):
@@ -1438,7 +1429,7 @@ class MultiHeadAttention(nn.Module):
         q   : torch.Tensor,
         k   : torch.Tensor,
         v   : torch.Tensor,
-        mask: torch.Tensor | None = None,
+        mask: torch.Tensor = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         batch_size = v.size(0)
 
@@ -1515,7 +1506,7 @@ class RelativeMultiHeadAttention(nn.Module):
         k            : torch.Tensor,
         v            : torch.Tensor,
         pos_embedding: torch.Tensor,
-        mask         : torch.Tensor | None = None,
+        mask         : torch.Tensor = None,
     ) -> torch.Tensor:
         batch_size = v.size(0)
 

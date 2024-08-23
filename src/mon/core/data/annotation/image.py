@@ -47,7 +47,7 @@ class ImageAnnotation(base.Annotation):
             Default: ``cv2.IMREAD_COLOR``.
         
     References:
-        `<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
+        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image
     """
     
     def __init__(
@@ -121,7 +121,8 @@ class ImageAnnotation(base.Annotation):
                 there. Default: ``False``.
             
         Return:
-            An image of shape ``[H, W, C]``.
+            An RGB or grayscale image of type :obj:`numpy.ndarray` in
+            ``[H, W, C]`` format with data in the range ``[0, 255]``.
         """
         if self.image is not None:
             return self.image
@@ -158,8 +159,8 @@ class ImageAnnotation(base.Annotation):
         batch: list[torch.Tensor | np.ndarray]
     ) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using
-		:obj:`batch_size` > 1. This is used in :obj:`torch.utils.data.DataLoader`
-		wrapper.
+		:obj:`batch_size` > ``1``. This is used in
+		:obj:`torch.utils.data.DataLoader` wrapper.
 		
 		Args:
 			batch: A :obj:`list` of images.
@@ -176,8 +177,7 @@ class FrameAnnotation(base.Annotation):
         frame: A ground-truth image to be loaded. Default: ``None``.
         
     References:
-        `<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
-        
+        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image
     """
     
     def __init__(
@@ -251,8 +251,8 @@ class FrameAnnotation(base.Annotation):
         batch: list[torch.Tensor | np.ndarray]
     ) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using
-		:obj:`batch_size` > 1. This is used in :obj:`torch.utils.data.DataLoader`
-		wrapper.
+		:obj:`batch_size` > ``1. This is used in
+		:obj:`torch.utils.data.DataLoader` wrapper.
 		
 		Args:
 			batch: A :obj:`list` of images.
@@ -357,7 +357,8 @@ class SegmentationAnnotation(base.Annotation):
                 there. Default: ``False``.
             
         Return:
-            An image of shape ``[H, W, C]``.
+            An RGB or grayscale image of type :obj:`numpy.ndarray` in
+            ``[H, W, C]`` format with data in the range ``[0, 255]``.
         """
         if self.mask is not None:
             return self.mask
@@ -394,8 +395,8 @@ class SegmentationAnnotation(base.Annotation):
         batch: list[torch.Tensor | np.ndarray]
     ) -> torch.Tensor | np.ndarray | None:
         """Collate function used to fused input items together when using
-		:obj:`batch_size` > 1. This is used in :obj:`torch.utils.data.DataLoader`
-		wrapper.
+		:obj:`batch_size` > ``1``. This is used in
+		:obj:`torch.utils.data.DataLoader` wrapper.
 		
 		Args:
 			batch: A :obj:`list` of images.

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for deep learning model.
+"""Model.
+
+This module implements the base class for all deep learning models.
 """
 
 from __future__ import annotations
@@ -27,7 +29,9 @@ import torch.hub
 from torch import nn
 
 from mon import core
-from mon.globals import LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task, ZOO_DIR
+from mon.globals import (
+    LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task, ZOO_DIR,
+)
 from mon.nn import loss as L, metric as M
 
 console       = core.console
@@ -38,7 +42,7 @@ EpochOutput   = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
 
 # region Checkpoint
 
-def get_epoch_from_checkpoint(ckpt: core.Path | None) -> int:
+def get_epoch_from_checkpoint(ckpt: core.Path) -> int:
     """Get an epoch value stored in a checkpoint file.
 
 	Args:
@@ -55,7 +59,7 @@ def get_epoch_from_checkpoint(ckpt: core.Path | None) -> int:
         return epoch
 
 
-def get_global_step_from_checkpoint(ckpt: core.Path | None) -> int:
+def get_global_step_from_checkpoint(ckpt: core.Path) -> int:
     """Get a global step stored in a checkpoint file.
 	
 	Args:
@@ -114,9 +118,13 @@ def load_state_dict(
             if core.is_url(url):
                 if path.exists() and overwrite:
                     core.delete_files(regex=path.name, path=path.parent)
-                    torch.hub.download_url_to_file(str(url), str(path), None, progress=True)
+                    torch.hub.download_url_to_file(
+                        str(url), str(path), None, progress=True
+                    )
                 elif not path.exists():
-                    torch.hub.download_url_to_file(str(url), str(path), None, progress=True)
+                    torch.hub.download_url_to_file(
+                        str(url), str(path), None, progress=True
+                    )
     elif isinstance(weights, str | core.Path):
         path = weights
     else:
@@ -124,10 +132,14 @@ def load_state_dict(
     
     path = core.Path(path)
     if not path.is_weights_file():
-        error_console.log(f"{path} is not a weights file.")
+        error_console.log(f"`{path}` is not a weights file.")
     
     # Load state dict
-    weights_state_dict = torch.load(str(path), weights_only=weights_only, map_location=model.device)
+    weights_state_dict = torch.load(
+        str(path),
+        weights_only = weights_only,
+        map_location = model.device
+    )
     '''
     weights_state_dict = weights_state_dict.get("state_dict", weights_state_dict)
     model_state_dict   = copy.deepcopy(model.state_dict())
@@ -159,7 +171,7 @@ def load_weights(
     overwrite   : bool = False,
 ) -> nn.Module:
     """Load weights to model."""
-    model_state_dict = load_state_dict(model=model, weights=weights, weights_only=True)
+    model_state_dict = load_state_dict(model, weights, weights_only, overwrite)
     model.load_state_dict(model_state_dict)
     return model
 
@@ -168,11 +180,7 @@ def load_weights(
 
 # region Model
 
-def parse_model_fullname(
-    name  : str,
-    data  : str | None,
-    suffix: str | None = None,
-) -> str:
+def parse_model_fullname(name: str, data: str, suffix: str = None) -> str:
     """Parse model's fullname from given components as ``name-data-suffix``.
     
     Args:
@@ -180,7 +188,9 @@ def parse_model_fullname(
         data: The dataset's name.
         suffix: The suffix of the model's name.
     """
-    assert name not in [None, ""], f"Model's name must be given."
+    if name in [None, ""]:
+        error_console.log(f"Model's `name` must be given.")
+    
     fullname = name
     if data not in [None, ""]:
         fullname = f"{fullname}_{data}"
@@ -201,7 +211,6 @@ class Model(lightning.LightningModule, ABC):
         tasks: A list of tasks that the model can perform.
         schemes: A list of learning schemes that the model can perform.
         zoo: A :obj:`dict` containing all pretrained weights of the model.
-        zoo_dir: The directory containing all pretrained weights of the model.
         
     Args:
         name: The model's name. Default: ``None`` mean it will be
@@ -210,14 +219,15 @@ class Model(lightning.LightningModule, ABC):
             should have the following format: {name}-{dataset}-{suffix}.
             Default: ``None`` mean it will be the same as :obj:`name`.
         root: The root directory of the model. It is used to save the model
-            checkpoint during training: {root}/{fullname}.
-        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
+            checkpoint during training: ``{root}/{fullname}``.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB
+            image.
         out_channels: The last layer's output channels (number of classes).
             Default: ``None`` mean it will be determined during model parsing.
         num_classes: Alias to :obj:`out_channels`, but for classification tasks.
         weights: The model's weights. Any of:
             - A state :obj:`dict`.
-            - A key in the :obj:`zoo`. Ex: 'yolov8x-det-coco'.
+            - A key in the :obj:`zoo`. Ex: ``'yolov8x_det_coco'``.
             - A path to an ``.pt``, ``.pth``, or ``.ckpt`` file.
         loss: Loss function for training the model. Default: ``None``.
         metrics: A list metrics for training, validating and testing model.
@@ -228,10 +238,9 @@ class Model(lightning.LightningModule, ABC):
     Example:
         LOADING WEIGHTS
 
-        Case 01: Pre-define the weights file in ``zoo`` directory. Pre-define
+        Case 01: Pre-define the weights file in `zoo` directory. Pre-define
         the metadata in :obj:`zoo`. Then define :obj:`weights` as a key in
         :obj:`zoo`.
-
             >>> zoo = {
             >>>     "imagenet": {
             >>>         "url"        : "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
@@ -245,8 +254,8 @@ class Model(lightning.LightningModule, ABC):
             >>>     weights="imagenet",
             >>> )
 
-        Case 02: Define the full path to an ``.pt``, ``.pth``, or ``.ckpt`` file.
-
+        Case 02: Define the full path to an ``.pt``, ``.pth``, or ``.ckpt``
+        file.
             >>> model = Model(
             >>>     weights="home/workspace/.../vgg19-imagenet.pth",
             >>> )
@@ -256,25 +265,24 @@ class Model(lightning.LightningModule, ABC):
     tasks  : list[Task]   = []       # A list of tasks that the model can perform.
     schemes: list[Scheme] = []       # A list of learning schemes that the model can perform.
     zoo    : dict         = {}       # A dictionary containing all pretrained weights of the model.
-    zoo_dir: core.Path    = ZOO_DIR  # The directory containing all pretrained weights of the model.
     
     def __init__(
         self,
         # For saving/loading
-        name        : str | None = None,
-        fullname    : str | None = None,
-        root        : core.Path  = core.Path(),
+        name        : str  = None,
+        fullname    : str  = None,
+        root        : core.Path = core.Path(),
         # For model architecture
-        in_channels : int        = 3,
-        out_channels: int | None = None,
-        num_classes : int | None = None,
-        weights     : Any        = None,
+        in_channels : int  = 3,
+        out_channels: int  = None,
+        num_classes : int  = None,
+        weights     : Any  = None,
         # For training          
-        loss        : Any        = None,
-        metrics     : Any        = None,
-        optimizers  : Any        = None,
+        loss        : Any  = None,
+        metrics     : Any  = None,
+        optimizers  : Any  = None,
         # Misc
-        verbose     : bool       = True,
+        verbose     : bool = True,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -305,7 +313,7 @@ class Model(lightning.LightningModule, ABC):
         return self._name
     
     @name.setter
-    def name(self, name: str | None):
+    def name(self, name: str):
         """Specify the model's name. This value should only be defined once."""
         if name is None or name == "":
             name = humps.kebabize(self.__class__.__name__).lower()
@@ -317,8 +325,9 @@ class Model(lightning.LightningModule, ABC):
         return self._fullname
     
     @fullname.setter
-    def fullname(self, fullname: str | None):
-        """Specify the model's fullname. This value should only be defined once."""
+    def fullname(self, fullname: str):
+        """Specify the model's fullname. This value should only be defined once.
+        """
         self._fullname = fullname if fullname not in [None, ""] else self.name
     
     @property
@@ -367,7 +376,8 @@ class Model(lightning.LightningModule, ABC):
         True ``'predicting'`` mode happens when :obj:`_trainer` is ``None``,
         i.e., not being handled by :obj:`lightning.Trainer`.
         """
-        return True if not self.training and getattr(self, "_trainer", None) is None else None
+        return True if (not self.training
+                        and getattr(self, "_trainer", None) is None) else False
     
     # endregion
     
@@ -389,16 +399,19 @@ class Model(lightning.LightningModule, ABC):
                 weights = core.Path(weights)
             elif weights in self.zoo:
                 weights         = self.zoo[weights]
-                weights["path"] = self.zoo_dir / weights.get("path", "")
+                weights["path"] = weights.get("path", "")
                 num_classes     = getattr(weights, "num_classes", None)
                 if num_classes and num_classes != self.num_classes:
                     self.num_classes = num_classes
                     console.log(f"Overriding `num_classes` with {num_classes}.")
             else:
-                error_console.log(f"The key ``'{weights}'`` has not been defined in `zoo`.")
+                error_console.log(f"The key ``'{weights}'`` has not been "
+                                  f"defined in `zoo`.")
                 weights = None
         elif isinstance(weights, core.Path):
-            assert weights.is_weights_file(), f"`weights` must be a valid path to a weight file, but got {weights}."
+            if not weights.is_weights_file():
+                raise ValueError(f"`weights` must be a valid path to a weight "
+                                 f"file, but got {weights}.")
         elif isinstance(weights, dict):
             pass  # No need to do anything here
         else:
@@ -413,23 +426,26 @@ class Model(lightning.LightningModule, ABC):
         
         # Get the state_dict
         state_dict = None
-        if isinstance(self.weights, core.Path | str) and core.Path(self.weights).is_weights_file():
-            self.zoo_dir.mkdir(parents=True, exist_ok=True)
-            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=False)
+        if (
+            isinstance(self.weights, core.Path | str)
+            and core.Path(self.weights).is_weights_file()
+        ):
+            state_dict = load_state_dict(self, self.weights, False)
             state_dict = state_dict.get("state_dict", state_dict)
         elif isinstance(self.weights, dict):
             if "path" in self.weights:
                 path = core.Path(self.weights["path"])
                 if path.is_weights_file():
-                    state_dict = load_state_dict(model=self, weights=path, weights_only=False)
+                    state_dict = load_state_dict(self, path, False)
                     state_dict = state_dict.get("state_dict", state_dict)
             else:
                 state_dict = self.weights.get("state_dict", self.weights)
         else:
-            error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
+            error_console.log(f"[yellow]Cannot load from weights from: "
+                              f"{self.weights}!")
         
         if state_dict:
-            self.load_state_dict(state_dict=state_dict)
+            self.load_state_dict(state_dict)
             if self.verbose:
                 console.log(f"Load model's weights from: {self.weights}!")
     
@@ -531,8 +547,9 @@ class Model(lightning.LightningModule, ABC):
                         "scheduler": ReduceLROnPlateau(optimizer, ...),
                         "monitor": "metric_to_track",
                         "frequency": "indicates how often the metric is updated",
-                        #  If "monitor" references validation metrics, then "frequency" should be set to a
-                        #  multiple of "trainer.check_val_every_n_epoch".
+                        # If "monitor" references validation metrics, then
+                        # "frequency" should be set to a multiple of
+                        # "trainer.check_val_every_n_epoch".
                     },
                 }
             
@@ -555,25 +572,32 @@ class Model(lightning.LightningModule, ABC):
         optimizers = self.optims
         
         if optimizers is None:
-            console.log(
-                f"[yellow]No optimizers have been defined! Consider subclassing "
-                f"this function to manually define the optimizers."
-            )
+            console.log(f"[yellow]No optimizers have been defined! Consider "
+                        f"subclassing this function to manually define the "
+                        f"optimizers.")
             return None
         if isinstance(optimizers, dict):
             optimizers = [optimizers]
-        assert isinstance(optimizers, list) and all(isinstance(o, dict) for o in optimizers)
+        if (
+            not isinstance(optimizers, list)
+            or not all(isinstance(o, dict) for o in optimizers)
+        ):
+            raise ValueError(f"`optimizers` must be a `list` of `dict`.")
         
         for optim in optimizers:
-            optimizer           = optim.get("optimizer"          , None)
+            optimizer           = optim.get("optimizer", None)
             network_params_only = optim.get("network_params_only", True)
-            lr_scheduler        = optim.get("lr_scheduler"       , None)
+            lr_scheduler        = optim.get("lr_scheduler", None)
            
             # Define optimizer
             if optimizer is None:
                 raise ValueError(f"`optimizer` must be defined.")
             if isinstance(optimizer, dict):
-                optimizer = OPTIMIZERS.build(network=self, config=optimizer, network_params_only=network_params_only)
+                optimizer = OPTIMIZERS.build(
+                    network = self,
+                    config  = optimizer,
+                    network_params_only = network_params_only
+                )
             optim["optimizer"] = optimizer
             
             # Define learning rate scheduler
@@ -591,10 +615,16 @@ class Model(lightning.LightningModule, ABC):
                     else:
                         after_scheduler = None
                     if isinstance(after_scheduler, dict):
-                        after_scheduler = LR_SCHEDULERS.build(optimizer=optim["optimizer"], config=after_scheduler)
+                        after_scheduler = LR_SCHEDULERS.build(
+                            optimizer = optim["optimizer"],
+                            config    = after_scheduler
+                        )
                         scheduler["after_scheduler"] = after_scheduler
                     #
-                    scheduler = LR_SCHEDULERS.build(optimizer=optim["optimizer"], config=scheduler)
+                    scheduler = LR_SCHEDULERS.build(
+                        optimizer = optim["optimizer"],
+                        config    = scheduler
+                    )
                 lr_scheduler["scheduler"] = scheduler
                 optim["lr_scheduler"]     = lr_scheduler
             
@@ -608,7 +638,9 @@ class Model(lightning.LightningModule, ABC):
         self.optims = optimizers
         return self.optims
     
-    def compute_efficiency_score(self, *args, **kwargs) -> tuple[float, float, float]:
+    def compute_efficiency_score(
+        self, *args, **kwargs
+    ) -> tuple[float, float, float]:
         """Compute the efficiency score of the model, including FLOPs, number
         of parameters, and runtime.
         """
@@ -622,8 +654,8 @@ class Model(lightning.LightningModule, ABC):
     @abstractmethod
     def assert_datapoint(self, datapoint: dict) -> bool:
         """Check the datapoint before passing it to the :obj:`forward()`.
-        Because each type of model requires different attributes in the datapoint,
-        this method is used to ensure that the datapoint is valid.
+        Because each type of model requires different attributes in the
+        datapoint, this method is used to ensure that the datapoint is valid.
         
         Args:
             datapoint: A :obj:`dict` containing all attributes of a datapoint.
@@ -652,18 +684,6 @@ class Model(lightning.LightningModule, ABC):
             A :obj:`dict` of all predictions with corresponding names. Note
             that the dictionary must contain the key ``'loss'`` and ``'pred'``.
         """
-        '''
-        # Forward
-        outputs = forward(datapoint=datapoint, *args, **kwargs)
-        assert_datapoint(datapoint)
-        assert_outputs(outputs)
-        # Loss
-        pred   = outputs.get("pred")
-        target = datapoint.get("target")
-        outputs["loss"] = self.loss(pred, target) if self.loss else None
-        # Return
-        return outputs
-        '''
         pass
     
     @abstractmethod
@@ -671,7 +691,7 @@ class Model(lightning.LightningModule, ABC):
         self,
         datapoint: dict,
         outputs  : dict,
-        metrics  : list[M.Metric] | None = None
+        metrics  : list[M.Metric] = None
     ) -> dict:
         """Compute metrics.
 
@@ -680,39 +700,12 @@ class Model(lightning.LightningModule, ABC):
             outputs: A :obj:`dict` containing all predictions.
             metrics: A list of metric functions to compute. Default: ``None``.
         """
-        '''
-        # Check
-        self.assert_datapoint(datapoint)
-        self.assert_outputs(outputs)
-        # Metrics
-        pred    = outputs.get(<prediction>)
-        target  = datapoint.get(<class_id>)
-        results = {}
-        if metrics:
-            for i, metric in enumerate(metrics):
-                metric_name = getattr(metric, "name", f"metric_{i}")
-                results[metric_name] = metric(pred, target)
-        # Return
-        return results
-        '''
         pass
-    
-    def forward_debug(self, datapoint: dict, *args, **kwargs) -> dict:
-        """Forward pass for debugging. This method is used to debug the model's
-        forward pass by returning the intermediate outputs.
-
-        Args:
-            datapoint: A :obj:`dict` containing the attributes of a datapoint.
-            
-        Return:
-            A :obj:`dict` of all intermediate outputs with corresponding names.
-            Default: ``{}``.
-        """
-        return {}
     
     @abstractmethod
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        """Forward pass. This is the primary :obj:`forward` function of the model.
+        """Forward pass. This is the primary :obj:`forward` function of the
+        model.
         
         Args:
             datapoint: A :obj:`dict` containing the attributes of a datapoint.
@@ -721,11 +714,6 @@ class Model(lightning.LightningModule, ABC):
             A :obj:`dict` of all predictions with corresponding names.
             Default: ``{}``.
         """
-        '''
-        assert_datapoint(datapoint)
-        ...
-        return {}
-        '''
         pass
     
     # endregion
@@ -736,7 +724,12 @@ class Model(lightning.LightningModule, ABC):
         """Called at the beginning of fit."""
         self.create_dir()
 
-    def training_step(self, batch: dict, batch_idx: int, *args, **kwargs) -> StepOutput | None:
+    def training_step(
+        self,
+        batch    : dict,
+        batch_idx: int,
+        *args, **kwargs
+    ) -> StepOutput | None:
         """Here you compute and return the training loss, and some additional
         metrics for e.g., the progress bar or logger.
         
@@ -748,7 +741,7 @@ class Model(lightning.LightningModule, ABC):
         Return:
             Any of:
                 - The loss tensor.
-                - A :obj:`dict`. Can include any keys, but must include the key ``'loss'``.
+                - A :obj:`dict`. Must include the key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """
         # Forward
@@ -760,7 +753,11 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log values
         log_values  = {"step": self.current_epoch}
-        log_values |= {f"train/{k}": v for k, v in outputs.items() if v is not None and not core.is_image(v)}
+        log_values |= {
+            f"train/{k}": v
+            for k, v in outputs.items()
+            if v is not None and not core.is_image(v)
+        }
         self.log_dict(
             dictionary     = log_values,
             prog_bar       = False,
@@ -780,7 +777,12 @@ class Model(lightning.LightningModule, ABC):
             for i, metric in enumerate(self.train_metrics):
                 metric.reset()
 
-    def validation_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
+    def validation_step(
+        self,
+        batch    : Any,
+        batch_idx: int,
+        *args, **kwargs
+    ) -> StepOutput | None:
         """Operates on a single batch of data from the validation set. In this
         step, you might generate examples or calculate anything of interest like
         accuracy.
@@ -793,7 +795,7 @@ class Model(lightning.LightningModule, ABC):
         Return:
             Any of:
                 - The loss tensor.
-                - A :obj:`dict`. Can include any keys, but must include the key ``'loss'``.
+                - A :obj:`dict`. Must include the key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """
         # Forward
@@ -805,7 +807,11 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log values
         log_values  = {"step": self.current_epoch}
-        log_values |= {f"val/{k}": v for k, v in outputs.items() if v is not None and not core.is_image(v)}
+        log_values |= {
+            f"val/{k}": v
+            for k, v in outputs.items()
+            if v is not None and not core.is_image(v)
+        }
         self.log_dict(
             dictionary     = log_values,
             prog_bar       = False,
@@ -837,7 +843,12 @@ class Model(lightning.LightningModule, ABC):
         """Called at the very beginning of testing."""
         self.create_dir()
 
-    def test_step(self, batch: Any, batch_idx: int, *args, **kwargs) -> StepOutput | None:
+    def test_step(
+        self,
+        batch    : Any,
+        batch_idx: int,
+        *args, **kwargs
+    ) -> StepOutput | None:
         """Operates on a single batch of data from the test set. In this step
         you'd normally generate examples or calculate anything of interest such
         as accuracy.
@@ -850,7 +861,7 @@ class Model(lightning.LightningModule, ABC):
         Return:
             Any of:
                 - The loss tensor.
-                - A :obj:`dict`. Can include any keys, but must include the key ``'loss'``.
+                - A :obj:`dict`. Must include the key ``'loss'``.
                 - ``None``, training will skip to the next batch.
         """
         # Forward
@@ -862,7 +873,11 @@ class Model(lightning.LightningModule, ABC):
         )
         # Log values
         log_values  = {"step": self.current_epoch}
-        log_values |= {f"test/{k}": v for k, v in outputs.items() if v is not None and not core.is_image(v)}
+        log_values |= {
+            f"test/{k}": v
+            for k, v in outputs.items()
+            if v is not None and not core.is_image(v)
+        }
         self.log_dict(
             dictionary     = log_values,
             prog_bar       = False,
@@ -916,14 +931,14 @@ class Model(lightning.LightningModule, ABC):
     
     def export_to_onnx(
         self,
-        input_dims   : list[int] | None = None,
-        file_path    : core.Path | None = None,
-        export_params: bool             = True
+        input_dims   : list[int] = None,
+        file_path    : core.Path = None,
+        export_params: bool      = True
     ):
         """Export the model to ``onnx`` format.
 
         Args:
-            input_dims: Input dimensions in `[C, H, W]` format.
+            input_dims: Input dimensions in ``[C, H, W]`` format.
                 Default: ``None``.
             file_path: Path to save the model. If ``None`` or empty, then save
                 to :obj:`root`. Default: ``None``.
@@ -948,9 +963,9 @@ class Model(lightning.LightningModule, ABC):
     
     def export_to_torchscript(
         self,
-        input_dims: list[int] | None = None,
-        file_path : core.Path | None = None,
-        method    : str              = "script"
+        input_dims: list[int] = None,
+        file_path : core.Path = None,
+        method    : str       = "script"
     ):
         """Export the model to TorchScript format.
 
@@ -995,7 +1010,14 @@ class Model(lightning.LightningModule, ABC):
         data     : dict,
         extension: str = ".jpg"
     ):
-        """Log debug images to :obj:`debug_dir`."""
+        """Log debug images to :obj:`debug_dir`.
+        
+        Args:
+            epoch: The current epoch.
+            step: The current step.
+            data: A :obj:`dict` containing images to log.
+            extension: The extension of the images. Default: ``'.jpg'``.
+        """
         pass
     
     # endregion
@@ -1006,9 +1028,9 @@ class Model(lightning.LightningModule, ABC):
 # region Extra Model
 
 class ExtraModel(Model, ABC):
-    """A wrapper model that wraps around another model defined in :obj:`mon_extra`.
-    This is useful when we want to add the third-party models to :obj:`mon`'s models.
-    without reimplementing the entire model.
+    """A wrapper model that wraps around another model defined in
+    :obj:`mon_extra`. This is useful when we want to add the third-party models
+    to :obj:`mon`'s models. without reimplementing the entire model.
     
     Args:
         model: The model to wrap around. To make thing simple, we agree on
@@ -1032,20 +1054,23 @@ class ExtraModel(Model, ABC):
         
         # Get the state_dict
         state_dict = None
-        if isinstance(self.weights, core.Path | str) and core.Path(self.weights).is_weights_file():
-            self.zoo_dir.mkdir(parents=True, exist_ok=True)
-            state_dict = load_state_dict(model=self, weights=self.weights, weights_only=False)
+        if (
+            isinstance(self.weights, core.Path | str)
+            and core.Path(self.weights).is_weights_file()
+        ):
+            state_dict = load_state_dict(self, self.weights, True)
             state_dict = state_dict.get("state_dict", state_dict)
         elif isinstance(self.weights, dict):
             if "path" in self.weights:
                 path = core.Path(self.weights["path"])
                 if path.is_weights_file():
-                    state_dict = load_state_dict(model=self, weights=path, weights_only=False)
+                    state_dict = load_state_dict(self, path, True)
                     state_dict = state_dict.get("state_dict", state_dict)
             else:
                 state_dict = self.weights.get("state_dict", self.weights)
         else:
-            error_console.log(f"[yellow]Cannot load from weights from: {self.weights}!")
+            error_console.log(f"[yellow]Cannot load from weights from: "
+                              f"{self.weights}!")
         
         if state_dict:
             self.model.load_state_dict(state_dict=state_dict)

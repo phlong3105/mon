@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements light effect suppression models."""
+"""Light Effect Suppression.
+
+This package implements light effect suppression algorithms and models.
+"""
 
 from __future__ import annotations
-
-import mon.vision.enhance.les.base
-from mon.vision.enhance.les.base import *

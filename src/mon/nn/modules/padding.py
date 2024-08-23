@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements padding layers."""
+"""Padding Layers.
+
+This module implements padding layers.
+"""
 
 from __future__ import annotations
 
@@ -26,9 +29,8 @@ import math
 
 import torch
 from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
 from torch.nn.modules.padding import *
-
-from mon.core import _size_2_t
 
 
 # region Helper Function
@@ -59,14 +61,14 @@ def get_symmetric_padding(
 
 def to_same_padding(
     kernel_size: _size_2_t,
-    padding    : _size_2_t | None = None,
+    padding    : _size_2_t = None,
 ) -> int | list | None:
     """It takes a kernel size and a padding, and if the padding is ``None``, it
     returns ``None``, otherwise it returns the kernel size divided by ``2``.
     
     Args:
         kernel_size: The size of the convolutional kernel.
-        padding: The padding to use for the convolution.
+        padding: The padding to use for the convolution. Default: ``None``.
     
     Returns:
         The padding is being returned.

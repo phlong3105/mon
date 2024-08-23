@@ -40,19 +40,18 @@ __all__ = [
 
 import copy
 import math
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 import torch
 
 from mon.core.rich import error_console
-from mon.core.typing import _size_any_t
 
 
 # region Assert
 
 def is_channel_first_image(image: torch.Tensor | np.ndarray) -> bool:
-    """Return ``True`` if an image is in the channel-first format. We assume
+    """Return ``True`` if an image is in channel-first format. We assume
     that if the first dimension is the smallest.
     """
     if not 3 <= image.ndim <= 5:
@@ -80,7 +79,7 @@ def is_channel_first_image(image: torch.Tensor | np.ndarray) -> bool:
 
 
 def is_channel_last_image(image: torch.Tensor | np.ndarray) -> bool:
-    """Return ``True`` if an image is in the channel-first format."""
+    """Return ``True`` if an image is in channel-first format."""
     return not is_channel_first_image(image)
 
 
@@ -103,14 +102,13 @@ def is_gray_image(image: torch.Tensor | np.ndarray) -> bool:
 
 
 def is_color_or_image(image: torch.Tensor | np.ndarray) -> bool:
-    """Return ``True`` if an image is a color or gray image.
-    """
+    """Return ``True`` if an image is a color or gray image."""
     return is_color_image(image) or is_gray_image(image)
 
 
 def is_image(image: torch.Tensor, bits: int = 8) -> bool:
     """Check whether an image tensor is ranged properly ``[0.0, 1.0]`` for
-    :obj:`float` or `[0, 2 ** bits]` for :obj:`int`.
+    :obj:`float` or ``[0, 2 ** bits]`` for :obj:`int`.
 
     Args:
         image: Image tensor to evaluate.
@@ -172,9 +170,12 @@ def is_one_hot_image(image: torch.Tensor | np.ndarray) -> bool:
     return False
 
 
-def check_image_size(size: list[int], stride: int = 32) -> int:
-    """If the input :obj:`size` isn't a multiple of the :obj:`stride`,
-    then the image size is updated to the next multiple of the stride.
+def check_image_size(
+    size  : int | Sequence[int],
+    stride: int = 32
+) -> int:
+    """If the input :obj:`size` isn't a multiple of the :obj:`stride`, then the
+    image size is updated to the next multiple of the stride.
     
     Args:
         size: An image's size.
@@ -198,14 +199,18 @@ def check_image_size(size: list[int], stride: int = 32) -> int:
 
 def get_channel(
     image   : torch.Tensor | np.ndarray,
-    index   : int | tuple[int, int] | list[int],
+    index   : int | Sequence[int],
     keep_dim: bool = True,
 ) -> torch.Tensor | np.ndarray:
-    """Return the first channel of an image.
+    """Return a channel of an image.
 
     Args:
-        image   : An image.
-        index   : The channel's index.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
+        index: The channel's index.
         keep_dim: If ``True``, keep the dimensions of the return output.
             Default: ``True``.
     """
@@ -262,7 +267,7 @@ def get_first_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.nda
 
 
 def get_last_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Return the first channel of an image."""
+    """Return the last channel of an image."""
     return get_channel(image, index=-1, keep_dim=True)
 
 
@@ -270,7 +275,11 @@ def get_image_num_channels(image: torch.Tensor | np.ndarray) -> int:
     """Return the number of channels of an image.
 
     Args:
-        image: An image in channel-last or channel-first format.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
     """
     if image.ndim == 4:
         if is_channel_first_image(image):
@@ -297,7 +306,11 @@ def get_image_center(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
     """Return the center of a given image specified as `(x=h/2, y=w/2)`.
     
     Args:
-        image: An image in channel-last or channel-first format.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
     """
     h, w = get_image_size(image)
     if isinstance(image, torch.Tensor):
@@ -314,7 +327,11 @@ def get_image_center4(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.nda
     `(x=h/2, y=w/2, x=h/2, y=w/2)`.
     
     Args:
-        image: An image in channel-last or channel-first format.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
     """
     h, w = get_image_size(image)
     if isinstance(image, torch.Tensor):
@@ -330,7 +347,11 @@ def get_image_size(image: torch.Tensor | np.ndarray) -> list[int]:
     """Return height and width value of an image.
     
     Args:
-        image: An image.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
     """
     if is_channel_first_image(image):
         return [image.shape[-2], image.shape[-1]]
@@ -342,7 +363,11 @@ def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
     """Return height, width, and channel value of an image.
     
     Args:
-        image: An image.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
     """
     if is_channel_first_image(image):
         return [image.shape[-2], image.shape[-1], image.shape[-3]]
@@ -355,14 +380,7 @@ def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
 # region Convert
 
 def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
-    """Convert a 2D or 4D image to a 3D.
-
-    Args:
-        image: An image in channel-first format.
-
-    Return:
-        A 3D image in channel-first format.
-    """
+    """Convert a 2D or 4D image to a 3D."""
     if not 2 <= image.ndim <= 4:
         raise ValueError(f"`image`'s number of dimensions must be between "
                          f"``2`` and ``4``, but got {image.ndim}.")
@@ -383,14 +401,7 @@ def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
 
 
 def to_list_of_3d_image(image: Any) -> list[torch.Tensor | np.ndarray]:
-    """Convert arbitrary input to a :obj:`list` of 3D images.
-   
-    Args:
-        image: An image of arbitrary type.
-        
-    Return:
-        A :obj:`list` of 3D images.
-    """
+    """Convert arbitrary input to a :obj:`list` of 3D images."""
     if isinstance(image, (torch.Tensor, np.ndarray)):
         if image.ndim == 3:
             image = [image]
@@ -405,14 +416,7 @@ def to_list_of_3d_image(image: Any) -> list[torch.Tensor | np.ndarray]:
 
 
 def to_4d_image(image: Any) -> torch.Tensor | np.ndarray:
-    """Convert a 2D, 3D, 5D, list of 3D, and list of 4D images to 4D.
-
-    Args:
-        image: A 2D, 3D, 5D, list of 3D, and list of 4D images in channel-first format.
-
-    Return:
-        A 4D image in channel-first format.
-    """
+    """Convert a 2D, 3D, 5D, list of 3D, and list of 4D images to 4D."""
     if isinstance(image, (torch.Tensor, np.ndarray)) and not 2 <= image.ndim <= 5:
         raise ValueError(f"`image`'s number of dimensions must be between "
                          f"``2`` and ``5``, but got {image.ndim}.")
@@ -451,14 +455,7 @@ def to_4d_image(image: Any) -> torch.Tensor | np.ndarray:
 
 
 def to_5d_image(image: Any) -> torch.Tensor | np.ndarray:
-    """Convert a 2D, 3D, 4D, or 6D image to a 5D.
-    
-    Args:
-        image: An tensor in channel-first format.
-
-    Return:
-        A 5D image in channel-first format.
-    """
+    """Convert a 2D, 3D, 4D, or 6D image to a 5D."""
     if not 2 <= image.ndim <= 6:
         raise ValueError(f"`image`'s number of dimensions must be between "
                          f"``2`` and ``6``, but got {image.ndim}.")
@@ -493,14 +490,7 @@ def to_5d_image(image: Any) -> torch.Tensor | np.ndarray:
 
 
 def to_channel_first_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert an image to the channel-first format.
-    
-    Args:
-        image: An image in channel-last or channel-first format.
-    
-    Returns:
-        An image in channel-first format.
-    """
+    """Convert an image to the channel-first format."""
     if is_channel_first_image(image):
         return image
     if not 3 <= image.ndim <= 5:
@@ -529,14 +519,7 @@ def to_channel_first_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | n
 
 
 def to_channel_last_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert an image to the channel-last format.
-
-    Args:
-        image: An image in channel-last or channel-first format.
-
-    Returns:
-        A image in channel-last format.
-    """
+    """Convert an image to the channel-last format."""
     if is_channel_last_image(image):
         return image
     if not 3 <= image.ndim <= 5:
@@ -574,13 +557,17 @@ def to_image_nparray(
     """Convert an image to :obj:`numpy.ndarray`.
     
     Args:
-        image: An image.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
         keepdim: If `True`, keep the original shape. If ``False``, convert it to
             a 3D shape. Default: ``True``.
         denormalize: If ``True``, convert image to ``[0, 255]``. Default: ``True``.
 
     Returns:
-        An :obj:`numpy.ndarray` image.
+        An image of type :obj:`numpy.ndarray`.
     """
     from mon.core.image.photometry import denormalize_image
     
@@ -608,7 +595,11 @@ def to_image_tensor(
     format and normalize it.
     
     Args:
-        image: An image in channel-last or channel-first format.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
         keepdim: If ``True``, keep the original shape. If ``False``, convert it
             to a 4D shape. Default: ``True``.
         normalize: If ``True``, normalize the image to ``[0.0, 1.0]``.
@@ -617,7 +608,7 @@ def to_image_tensor(
             ``'cpu'`` device is used.
         
     Returns:
-        A :obj:`torch.Tensor` image.
+        A image of type :obj:`torch.Tensor`.
     """
     from mon.core.image.photometry import normalize_image
     
@@ -643,7 +634,10 @@ def to_image_tensor(
 
 # region Parsing
 
-def make_imgsz_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]:
+def make_imgsz_divisible(
+    input  : int | Sequence[int],
+    divisor: int = 32
+) -> tuple[int, int]:
     """Make an image sizes divisible by a given stride.
     
     Args:
@@ -659,7 +653,7 @@ def make_imgsz_divisible(input: Any, divisor: int = 32) -> int | tuple[int, int]
     return h, w
 
 
-def parse_hw(size: _size_any_t) -> list[int]:
+def parse_hw(size: int | Sequence[int]) -> tuple[int, int]:
     """Casts a size object to the standard ``[H, W]``.
 
     Args:
@@ -677,7 +671,7 @@ def parse_hw(size: _size_any_t) -> list[int]:
         elif len(size) == 1:
             size = [size[0], size[0]]
     elif isinstance(size, int | float):
-        size = [size, size]
-    return size
+        size = (size, size)
+    return tuple(size)
 
 # endregion

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements convolutional layers."""
+"""Base Convolution Module.
+
+This module implements convolutional layers.
+"""
 
 from __future__ import annotations
 
@@ -38,10 +41,12 @@ from typing import Any
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t, _size_any_t
 from torch.nn.modules.conv import *
-from torchvision.ops.misc import Conv2dNormActivation, Conv3dNormActivation, ConvNormActivation
+from torchvision.ops.misc import (
+    Conv2dNormActivation, Conv3dNormActivation, ConvNormActivation,
+)
 
-from mon.core import _size_2_t, _size_any_t
 from mon.nn.modules import normalization, padding as pad
 
 
@@ -50,13 +55,12 @@ from mon.nn.modules import normalization, padding as pad
 def conv2d_same(
     input   : torch.Tensor,
     weight  : torch.Tensor,
-    bias    : torch.Tensor | None = None,
-    stride  : _size_any_t         = 1,
-    padding : _size_any_t | str   = 0,
-    dilation: _size_any_t         = 1,
-    groups  : int                 = 1,
+    bias    : torch.Tensor = None,
+    stride  : _size_any_t  = 1,
+    padding : _size_any_t | str = 0,
+    dilation: _size_any_t  = 1,
+    groups  : int          = 1,
 ):
-    """Functional interface for Same Padding Convolution 2D."""
     x = input
     y = pad.pad_same(
         input       = x,
@@ -77,25 +81,24 @@ def conv2d_same(
 
 
 class Conv2dBn(nn.Module):
-    """Conv2d + BatchNorm."""
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        groups      : int             = 1,
-        bias        : bool            = False,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
-        bn          : bool | None     = True,
-        eps         : float           = 1e-5,
-        momentum    : float           = 0.01,
-        affine      : bool            = True,
+        dilation    : _size_2_t = 1,
+        groups      : int   = 1,
+        bias        : bool  = False,
+        padding_mode: str   = "zeros",
+        device      : Any   = None,
+        dtype       : Any   = None,
+        bn          : bool  = True,
+        eps         : float = 1e-5,
+        momentum    : float = 0.01,
+        affine      : bool  = True,
     ):
         super().__init__()
         self.conv = Conv2d(
@@ -127,22 +130,21 @@ class Conv2dBn(nn.Module):
 
 
 class Conv2dReLU(nn.Module):
-    """Conv2d + ReLU."""
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        groups      : int             = 1,
-        bias        : bool            = False,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
-        inplace     : bool            = True,
+        dilation    : _size_2_t = 1,
+        groups      : int  = 1,
+        bias        : bool = False,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
+        inplace     : bool = True,
     ):
         super().__init__()
         self.conv = Conv2d(
@@ -167,21 +169,20 @@ class Conv2dReLU(nn.Module):
 
 
 class Conv2dTanh(nn.Module):
-    """Conv2d + Tanh."""
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t  = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        groups      : int             = 1,
-        bias        : bool            = False,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
+        dilation    : _size_2_t = 1,
+        groups      : int  = 1,
+        bias        : bool = False,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
     ):
         super().__init__()
         self.conv = Conv2d(
@@ -213,14 +214,14 @@ class Conv2dSame(nn.Conv2d):
         in_channels : int,
         out_channels: int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        groups      : int             = 1,
-        bias        : bool            = True,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
+        dilation    : _size_2_t = 1,
+        groups      : int  = 1,
+        bias        : bool = True,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -263,14 +264,14 @@ class Conv2dTF(nn.Conv2d):
         in_channels : int,
         out_channels: int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        groups      : int             = 1,
-        bias        : bool            = True,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
+        dilation    : _size_2_t = 1,
+        groups      : int  = 1,
+        bias        : bool = True,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
     ):
         super().__init__(
             in_channels  = in_channels,

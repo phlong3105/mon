@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements normalization layers."""
+"""Normalization Layers.
+
+This module implements normalization layers.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +17,6 @@ __all__ = [
     "BatchNorm2dReLU",
     "BatchNorm3d",
     "CrossMapLRN2d",
-    "FractionalInstanceNorm2d",
     "GroupNorm",
     "GroupNormAct",
     "HalfInstanceNorm2d",
@@ -54,8 +56,8 @@ class AdaptiveBatchNorm2d(nn.Module):
     """Adaptive Batch Normalization.
     
     References:
-        - `Fast Image Processing with Fully-Convolutional Networks <https://arxiv.org/abs/1709.00643>`__
-        - `<https://github.com/nrupatunga/Fast-Image-Filters>`__
+        - https://arxiv.org/abs/1709.00643
+        - https://github.com/nrupatunga/Fast-Image-Filters
     """
     
     def __init__(
@@ -67,7 +69,7 @@ class AdaptiveBatchNorm2d(nn.Module):
         super().__init__()
         self.w_0 = nn.Parameter(torch.Tensor([1.0]))
         self.w_1 = nn.Parameter(torch.Tensor([0.0]))
-        self.bn  = nn.BatchNorm2d(num_features=num_features, eps=eps, momentum=momentum)
+        self.bn  = nn.BatchNorm2d(num_features, eps, momentum)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return self.w_0 * input + self.w_1 * self.bn(input)
@@ -117,8 +119,8 @@ class BatchNorm2dReLU(BatchNorm2dAct):
     """BatchNorm2d + ReLU.
 
     This module performs BatchNorm2d + ReLU in a manner that will remain
-    backwards compatible with weights trained with separate bn, norm. This is why
-    we inherit from BN instead of composing it as a .bn member.
+    backwards compatible with weights trained with separate bn, norm. This is
+    why we inherit from BN instead of composing it as a .bn member.
     """
     
     def __init__(
@@ -166,233 +168,11 @@ class AdaptiveInstanceNorm2d(nn.Module):
         super().__init__()
         self.w_0  = nn.Parameter(torch.Tensor([1.0]))
         self.w_1  = nn.Parameter(torch.Tensor([0.0]))
-        self.norm = nn.InstanceNorm2d(num_features=num_features, eps=eps, momentum=momentum, affine=affine)
+        self.norm = nn.InstanceNorm2d(num_features, eps, momentum, affine)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return self.w_0 * input + self.w_1 * self.bn(input)
     
-
-class FractionalInstanceNorm2d(nn.InstanceNorm2d):
-    """Fractional Instance Normalization is a generalization of Half Instance
-    Normalization.
-    
-    Args:
-        num_features: Number of input features.
-        r: Ratio of input features that will be normalized. Default: ``0.5``.
-        stride: Stride to select features. Default: ``0`` means no stride (split 2 parts).
-        
-    """
-    
-    def __init__(
-        self,
-        num_features       : int,
-        r                  : float = 0.5,
-        stride             : int   = 0,
-        eps                : float = 1e-5,
-        momentum           : float = 0.1,
-        affine             : bool  = True,
-        track_running_stats: bool  = False,
-        device             : Any   = None,
-        dtype              : Any   = None,
-    ):
-        super().__init__(
-            num_features        = math.ceil(num_features * r),
-            eps                 = eps,
-            momentum            = momentum,
-            affine              = affine,
-            track_running_stats = track_running_stats,
-            device              = device,
-            dtype               = dtype,
-        )
-        assert 0 < stride < num_features, f"`stride` must be in the range `[0, num_features]`."
-        self.r      = r
-        self.stride = stride
-        
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        self._check_input_dim(input)
-        x          = input
-        b, c, h, w = x.shape
-        
-        if self.stride == 0:
-            split_size = [self.num_features, c - self.num_features]
-            y1, y2     = torch.split(x, split_size, dim=1)
-            y1         = F.instance_norm(
-                input           = y1,
-                running_mean    = self.running_mean,
-                running_var     = self.running_var,
-                weight          = self.weight,
-                bias            = self.bias,
-                use_input_stats = self.training or not self.track_running_stats,
-                momentum        = self.momentum,
-                eps             = self.eps
-            )
-            y = torch.cat([y1, y2], dim=1)
-        return y
-
-
-class FractionalInstanceNorm2d_Old2(nn.InstanceNorm2d):
-    """Apply Instance Normalization on a fraction of the input tensor.
-    
-    Args:
-        num_features: Number of input features.
-        p: Ratio of input features that will be normalized. Default: ``0.5``.
-        scheme: Feature selection mechanism. One of:
-            - ``'half'``        : Split the input tensor into two even parts.
-                                  Normalized the first half.
-            - ``'bipartite'``   : Split the input tensor into two uneven parts.
-                                  Normalized the first half.
-            - ``'checkerboard'``: Normalized the input tensor following the
-                                  checkerboard pattern.
-            - ``'random'``      : Normalized the input tensor in randomly.
-            - ``'adaptive'``    : Define a learnable weight parameter. Then
-                                  apply weighted sum between the normalized
-                                  tensor and the original tensor.
-            - ``'attentive'``   : Apply channel attention to determine the
-                                  channels' weights. Then apply weighted sum
-                                  between the normalized tensor and the original
-                                  tensor.
-            Default: ``'half'``.
-        pool: Pooling type. One of: ``'avg'``, or ``'max'``. Default: ``'avg'``.
-        bias: Add bias for ``adaptive`` scheme. Default: ``True``.
-    """
-    
-    schemes = [
-        "half", "bipartite", "checkerboard", "random", "adaptive",
-        "attentive",
-    ]
-    
-    def __init__(
-        self,
-        num_features       : int,
-        p                  : float = 0.5,
-        scheme             : Literal[
-                                "half",
-                                "bipartite",
-                                "checkerboard",
-                                "random",
-                                "adaptive",
-                                "attention",
-                            ]   = "half",
-        pool               : Literal[
-                                "avg",
-                                "max"
-                             ]   = "avg",
-        bias               : bool  = True,
-        eps                : float = 1e-5,
-        momentum           : float = 0.1,
-        affine             : bool  = True,
-        track_running_stats: bool  = False,
-        device             : Any   = None,
-        dtype              : Any   = None,
-    ):
-        super().__init__(
-            num_features        = num_features,
-            eps                 = eps,
-            momentum            = momentum,
-            affine              = affine,
-            track_running_stats = track_running_stats,
-            device              = device,
-            dtype               = dtype,
-        )
-        if scheme not in self.schemes:
-            raise ValueError(f"`scheme` must be one of: {self.schemes}, but got ``'{scheme}'``.")
-        if scheme == "half":
-            self.alpha = torch.zeros(num_features)
-            self.alpha[0:math.ceil(num_features * 0.5)] = 1
-        elif scheme == "bipartite":
-            self.alpha = torch.zeros(num_features)
-            self.alpha[0:math.ceil(num_features * p)] = 1
-        elif scheme == "checkerboard":
-            in_channels = math.ceil(num_features * p)
-            step_size   = int(math.floor(in_channels / num_features))
-            self.alpha  = torch.zeros(num_features)
-            for i in range(0, in_channels, step_size):
-                self.alpha[i] = 1
-        elif scheme == "random":
-            in_channels = math.ceil(num_features * p)
-            rand        = random.sample(range(in_channels), num_features)
-            self.alpha  = torch.zeros(num_features)
-            for i in rand:
-                self.alpha[i] = 1
-        elif scheme == "adaptive":
-            self.alpha = torch.nn.Parameter(torch.full([num_features], p))
-        elif scheme == "attentive":
-            if pool not in ["avg", "max"]:
-                raise ValueError(f"`pool` must be one of: [``'avg'``, ``'max'``], but got ``'{pool}'``.")
-            self.channel_attention = nn.Sequential(
-                self.Flatten(),
-                linear.Linear(
-                    in_features  = num_features,
-                    out_features = math.ceil(num_features * p),
-                ),
-                activation.ReLU(),
-                linear.Linear(
-                    in_features  = math.ceil(num_features * p),
-                    out_features = num_features,
-                )
-            )
-        if bias:
-            self.beta1 = torch.nn.Parameter(torch.zeros(num_features))
-            self.beta2 = torch.nn.Parameter(torch.zeros(num_features))
-        else:
-            self.beta1 = None
-            self.beta2 = None
-        
-        self.p      = p
-        self.scheme = scheme
-        self.pool   = pool
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        self._check_input_dim(input)
-        x          = input
-        b, c, h, w = x.shape
-        x_norm     = F.instance_norm(
-            input           = x,
-            running_mean    = self.running_mean,
-            running_var     = self.running_var,
-            weight          = self.weight,
-            bias            = self.bias,
-            use_input_stats = self.training or not self.track_running_stats,
-            momentum        = self.momentum,
-            eps             = self.eps
-        )
-        
-        if self.scheme in ["half", "bipartite", "checkerboard", "random"]:
-            alpha = self.alpha.reshape(-1, c, 1, 1).to(x.device)
-            y     = (x_norm * alpha) + (x * (1 - alpha))
-        elif self.scheme in ["adaptive"]:
-            alpha = self.alpha.reshape(-1, c, 1, 1).to(x.device)
-            if self.beta1 and self.beta2:
-                beta1 = self.beta1.reshape(-1, c, 1, 1).to(x.device)
-                beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
-                y     = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)
-            else:
-                y = (x_norm * alpha) + (x * (1 - alpha))
-        elif self.scheme in ["attentive"]:
-            if self.pool == "avg":
-                pool = F.avg_pool2d(
-                    input       = x,
-                    kernel_size = (x.size(2), x.size(3)),
-                    stride      = (x.size(2), x.size(3)),
-                )
-            else:
-                pool = F.max_pool2d(
-                    input       = x,
-                    kernel_size = (x.size(2), x.size(3)),
-                    stride      = (x.size(2), x.size(3)),
-                )
-            alpha = self.channel_attention(pool)
-            alpha = torch.sigmoid(alpha).unsqueeze(2).unsqueeze(3).expand_as(x)
-            if self.beta1 and self.beta2:
-                beta1 = self.beta1.reshape(-1, c, 1, 1).to(x.device)
-                beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
-                y = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)
-            else:
-                y = (x_norm * alpha) + (x * (1 - alpha))
-        else:
-            y = x_norm
-        return y
-
 
 class LearnableInstanceNorm2d(nn.InstanceNorm2d):
     """Apply Instance Normalization on a fraction of the input tensor.
@@ -401,7 +181,6 @@ class LearnableInstanceNorm2d(nn.InstanceNorm2d):
     Args:
         num_features: Number of features of the input tensor.
         r: Fraction of the input tensor to be normalized. Default: ``0.5``.
-    
     """
    
     def __init__(
@@ -452,7 +231,6 @@ class HalfInstanceNorm2d(nn.InstanceNorm2d):
         num_features: Number of features of the input tensor.
         eps: Small constant for numerical stability. Default: ``1e-5``.
         momentum: Momentum for moving average. Default: ``0.1``.
-    
     """
     
     def __init__(
@@ -505,8 +283,8 @@ class GroupNormAct(GroupNorm):
     """GroupNorm + Activation.
 
     This module performs GroupNorm + Activation in a manner that will remain
-    backwards compatible with weights trained with separate gn, norm. This is why
-    we inherit from GN instead of composing it as a .gn member.
+    backwards compatible with weights trained with separate gn, norm. This is
+    why we inherit from GN instead of composing it as a .gn member.
     """
     
     def __init__(
@@ -548,7 +326,7 @@ class GroupNormAct(GroupNorm):
 # region Layer Normalization
 
 class LayerNorm2d(nn.LayerNorm):
-    """LayerNorm for channels of 2D spatial [B, C, H, W] tensors."""
+    """LayerNorm for channels of 2D spatial ``[B, C, H, W]`` tensors."""
     
     def __init__(
         self,

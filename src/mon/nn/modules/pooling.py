@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements pooling layers."""
+"""Pooling Layers.
+
+This module implements pooling layers.
+"""
 
 from __future__ import annotations
 
@@ -42,19 +45,24 @@ __all__ = [
 
 ]
 
+from typing import Literal
+
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
 from torch.nn.modules.pooling import *
 
 from mon import core
-from mon.core import _size_2_t
 from mon.nn.modules import padding as pad
 
 
 # region Adaptive Pool
 
-def adaptive_avg_max_pool2d(input: torch.Tensor, output_size: int = 1) -> torch.Tensor:
+def adaptive_avg_max_pool2d(
+    input      : torch.Tensor,
+    output_size: int = 1
+) -> torch.Tensor:
     x     = input
     x_avg = F.adaptive_avg_pool2d(x, output_size)
     x_max = F.adaptive_max_pool2d(x, output_size)
@@ -62,7 +70,10 @@ def adaptive_avg_max_pool2d(input: torch.Tensor, output_size: int = 1) -> torch.
     return y
 
 
-def adaptive_cat_avg_max_pool2d(input: torch.Tensor, output_size: int = 1) -> torch.Tensor:
+def adaptive_cat_avg_max_pool2d(
+    input      : torch.Tensor,
+    output_size: int = 1
+) -> torch.Tensor:
     x     = input
     x_avg = F.adaptive_avg_pool2d(x, output_size)
     x_max = F.adaptive_max_pool2d(x, output_size)
@@ -99,7 +110,7 @@ class AdaptiveAvgMaxPool2d(nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = adaptive_avg_max_pool2d(input=x, output_size=self.output_size)
+        y = adaptive_avg_max_pool2d(x, self.output_size)
         return y
 
 
@@ -111,7 +122,7 @@ class AdaptiveCatAvgMaxPool2d(nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = adaptive_cat_avg_max_pool2d(input=x, output_size=self.output_size)
+        y = adaptive_cat_avg_max_pool2d(x, self.output_size)
         return y
 
 
@@ -121,7 +132,7 @@ class AdaptivePool2d(nn.Module):
     def __init__(
         self,
         output_size: int  = 1,
-        pool_type  : str  = "fast",
+        pool_type  : Literal["fast", "avg", "avg_max", "cat_avg_max", "max"] = "fast",
         flatten    : bool = False,
     ):
         from mon.nn.modules import linear, flatten
@@ -190,8 +201,8 @@ def avg_pool2d_same(
     kernel_size      : _size_2_t,
     stride           : _size_2_t,
     padding          : _size_2_t = 0,
-    ceil_mode        : bool      = False,
-    count_include_pad: bool      = True,
+    ceil_mode        : bool = False,
+    count_include_pad: bool = True,
 ) -> torch.Tensor:
     x = input
     y = pad.pad_same(
@@ -216,10 +227,10 @@ class AvgPool2dSame(nn.AvgPool2d):
     def __init__(
         self,
         kernel_size      : _size_2_t,
-        stride           : _size_2_t | None = None,
-        padding          : _size_2_t        = 0,
-        ceil_mode        : bool             = False,
-        count_include_pad: bool             = True,
+        stride           : _size_2_t = None,
+        padding          : _size_2_t = 0,
+        ceil_mode        : bool = False,
+        count_include_pad: bool = True,
     ):
         kernel_size = core.to_2tuple(kernel_size)
         stride      = core.to_2tuple(stride)
@@ -293,7 +304,7 @@ def max_pool2d_same(
     stride     : _size_2_t,
     padding    : _size_2_t = 0,
     dilation   : _size_2_t = 1,
-    ceil_mode  : bool      = False,
+    ceil_mode  : bool = False,
 ) -> torch.Tensor:
     x = input
     y = pad.pad_same(
@@ -319,10 +330,10 @@ class MaxPool2dSame(nn.MaxPool2d):
     def __init__(
         self,
         kernel_size: _size_2_t,
-        stride     : _size_2_t | None = None,
-        padding    : _size_2_t | None = (0, 0),
-        dilation   : _size_2_t        = (1, 1),
-        ceil_mode  : bool             = False,
+        stride     : _size_2_t = None,
+        padding    : _size_2_t = (0, 0),
+        dilation   : _size_2_t = (1, 1),
+        ceil_mode  : bool = False,
     ):
         kernel_size = core.to_2tuple(kernel_size)
         stride      = core.to_2tuple(stride)

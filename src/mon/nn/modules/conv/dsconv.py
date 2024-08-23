@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements convolutional layers."""
+"""Depthwise Separable Convolution Module.
+
+This module implements depthwise separable convolutional layers.
+"""
 
 from __future__ import annotations
 
@@ -22,27 +25,26 @@ from typing import Any
 
 import torch
 from torch import nn
+from torch.nn.common_types import _size_2_t
 
-from mon.core import _callable, _size_2_t
 from mon.nn.modules import activation
 
 
 # region Depthwise Separable Convolution
 
 class DepthwiseConv2d(nn.Module):
-    """Depthwise Conv2d."""
     
     def __init__(
         self,
         in_channels : int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        bias        : bool            = True,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
+        dilation    : _size_2_t = 1,
+        bias        : bool = True,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
     ):
         super().__init__()
         self.dw_conv = nn.Conv2d(
@@ -66,20 +68,19 @@ class DepthwiseConv2d(nn.Module):
 
 
 class PointwiseConv2d(nn.Module):
-    """Pointwise Conv2d."""
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        groups      : int             = 1,
-        bias        : bool            = True,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
+        dilation    : _size_2_t = 1,
+        groups      : int  = 1,
+        bias        : bool = True,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
     ):
         super().__init__()
         self.pw_conv = nn.Conv2d(
@@ -103,20 +104,19 @@ class PointwiseConv2d(nn.Module):
     
 
 class DepthwiseSeparableConv2d(nn.Module):
-    """Depthwise Separable Conv2d."""
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        bias        : bool            = True,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
+        dilation    : _size_2_t = 1,
+        bias        : bool = True,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
     ):
         super().__init__()
         self.dw_conv = nn.Conv2d(
@@ -150,21 +150,20 @@ class DepthwiseSeparableConv2d(nn.Module):
 
 
 class DepthwiseSeparableConvAct2d(nn.Module):
-    """Depthwise Separable Conv2d + Activation."""
     
     def __init__(
         self,
-        in_channels   : int,
-        out_channels  : int,
-        kernel_size   : _size_2_t,
-        stride        : _size_2_t       = 1,
-        padding       : _size_2_t | str = 0,
-        dilation      : _size_2_t       = 1,
-        bias          : bool            = True,
-        padding_mode  : str             = "zeros",
-        device        : Any             = None,
-        dtype         : Any             = None,
-        act_layer     : _callable       = nn.ReLU,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
+        act_layer   : nn.Module = nn.ReLU,
     ):
         super().__init__()
         self.ds_conv = DepthwiseSeparableConv2d(
@@ -189,20 +188,19 @@ class DepthwiseSeparableConvAct2d(nn.Module):
 
 
 class DepthwiseSeparableConv2dReLU(nn.Module):
-    """Depthwise Separable Conv2d ReLU."""
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         kernel_size : _size_2_t,
-        stride      : _size_2_t       = 1,
+        stride      : _size_2_t = 1,
         padding     : _size_2_t | str = 0,
-        dilation    : _size_2_t       = 1,
-        bias        : bool            = True,
-        padding_mode: str             = "zeros",
-        device      : Any             = None,
-        dtype       : Any             = None,
+        dilation    : _size_2_t = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
     ):
         super().__init__()
         self.ds_conv = DepthwiseSeparableConv2d(

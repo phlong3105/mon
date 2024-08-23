@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements UNet (U-Net: Convolutional Networks for Biomedical
+"""UNet.
+
+This module implements UNet (U-Net: Convolutional Networks for Biomedical
 Image Segmentation) models.
 
 References:
-    `<https://github.com/milesial/Pytorch-UNet>`__
+    https://github.com/milesial/Pytorch-UNet
 """
 
 from __future__ import annotations
@@ -19,7 +21,6 @@ from typing import Any
 import torch
 
 from mon import core, nn
-from mon.core import _callable
 from mon.globals import MODELS, Scheme
 from mon.nn import functional as F
 from mon.vision.segment import base
@@ -111,15 +112,14 @@ class OutConv(nn.Module):
 
 @MODELS.register(name="unet")
 class UNet(base.SegmentationModel):
-    """UNet (U-Net: Convolutional Networks for Biomedical Image Segmentation)
-    model.
+    """U-Net: Convolutional Networks for Biomedical Image Segmentation.
     
     References:
-        `<https://github.com/milesial/Pytorch-UNet>`__
+        https://github.com/milesial/Pytorch-UNet
     """
     
     schemes: list[Scheme] = [Scheme.SUPERVISED]
-    zoo   : dict = {}
+    zoo    : dict = {}
     
     def __init__(
         self,

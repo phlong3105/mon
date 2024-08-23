@@ -20,8 +20,6 @@ from typing import Any
 
 import humps
 
-from mon.core.typing import _callable
-
 
 # region Factory
 
@@ -59,9 +57,9 @@ class Factory(dict):
     
     def register(
         self,
-        name   : str       = None,
-        module : _callable = None,
-        replace: bool      = False,
+        name   : str  = None,
+        module : Any  = None,
+        replace: bool = False,
     ) -> callable:
         """Register a module/class.
         
@@ -112,7 +110,7 @@ class Factory(dict):
     
     def register_module(
         self,
-        module_cls : _callable,
+        module_cls : Any,
         module_name: str  = None,
         replace    : bool = False
     ):
@@ -258,10 +256,10 @@ class ModelFactory(Factory):
     
     def register(
         self,
-        name   : str       = None,
-        arch   : str       = None,
-        module : _callable = None,
-        replace: bool      = False,
+        name   : str  = None,
+        arch   : str  = None,
+        module : Any  = None,
+        replace: bool = False,
     ) -> callable:
         """Register a model.
         
@@ -301,7 +299,7 @@ class ModelFactory(Factory):
     
     def register_module(
         self,
-        module_cls : _callable,
+        module_cls : Any,
         module_name: str  = None,
         arch_name  : str  = None,
         replace    : bool = False

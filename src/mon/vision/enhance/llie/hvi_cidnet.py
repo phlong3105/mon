@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements HVI-CIDNet (You Only Need One Color Space: An Efficient
-Network for Low-light Image Enhancement) models.
+"""HVI-CIDNet.
+
+This module implements the paper: "You Only Need One Color Space: An Efficient
+Network for Low-light Image Enhancement"
 
 References:
-    `<https://github.com/Fediory/HVI-CIDNet>`__
+    https://github.com/Fediory/HVI-CIDNet
 """
 
 from __future__ import annotations
@@ -23,9 +25,8 @@ from einops import rearrange
 from torchvision.models import vgg as vgg, VGG19_Weights
 
 from mon import core, nn
-from mon.core import _callable
-from mon.globals import MODELS, Scheme
-from mon.vision.enhance.llie import base
+from mon.globals import MODELS, Scheme, Task
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -80,17 +81,17 @@ def insert_bn(names: list[str]) -> list[str]:
 class VGGFeatureExtractor(nn.Module):
     """VGG network for feature extraction.
 
-    In this implementation, we allow users to choose whether we use normalization
-    in the input feature, and the type of vgg network. Note that the pretrained
-    path must fit the vgg type.
+    In this implementation, we allow users to choose whether we use
+    normalization in the input feature, and the type of vgg network. Note that
+    the pretrained path must fit the vgg type.
 
     Args:
         layer_name_list: Forward function returns the corresponding features
             according to the layer_name_list.
             Example: {'relu1_1', 'relu2_1', 'relu3_1'}.
         vgg_type: Set the type of vgg network. Default: ``'vgg19'``.
-        use_input_norm: If ``True``, normalize the input image. Importantly,
-            the input feature must in the range ``[0.0, 1.0]``. Default: ``True``.
+        use_input_norm: If ``True``, normalize the input image. Importantly, the
+            input feature must in the range ``[0.0, 1.0]``. Default: ``True``.
         range_norm: If ``True``, norm images with range `[-1, 1]` to
             ``[0.0, 1.0]``. Default: ``False``.
         requires_grad: If ``true``, the parameters of VGG network will be
@@ -185,23 +186,22 @@ class PerceptualLoss(nn.Module):
     """Perceptual loss with commonly used style loss.
 
     Args:
-        layer_weights (dict): The weight for each layer of vgg feature.
+        layer_weights: The weight for each layer of vgg feature.
             Here is an example: {'conv5_4': 1.}, which means the conv5_4
             feature layer (before relu5_4) will be extracted with weight
             1.0 in calculting losses.
-        vgg_type (str): The type of vgg network used as feature extractor.
-            Default: 'vgg19'.
-        use_input_norm (bool):  If True, normalize the input image in vgg.
+        vgg_type: The type of vgg network used as feature extractor.
+            Default: ``'vgg19'``.
+        use_input_norm: If ``True``, normalize the input image in vgg.
             Default: True.
-        range_norm (bool): If True, norm images with range [-1, 1] to [0, 1].
-            Default: False.
-        perceptual_weight (float): If `perceptual_weight > 0`, the perceptual
-            loss will be calculated and the loss will multiplied by the
-            weight. Default: 1.0.
-        style_weight (float): If `style_weight > 0`, the style loss will be
-            calculated and the loss will multiplied by the weight.
-            Default: 0.
-        criterion (str): Criterion used for perceptual loss. Default: 'l1'.
+        range_norm: If ``True``, norm images with range ``[-1, 1]`` to
+            ``[0, 1]``. Default: ``False``.
+        perceptual_weight: If `perceptual_weight > 0`, the perceptual loss will
+            be calculated and the loss will multiplied by the weight.
+            Default: ``1.0``.
+        style_weight: If `style_weight > 0`, the style loss will be calculated
+            and the loss will multiplied by the weight. Default: ``0``.
+        criterion: Criterion used for perceptual loss. Default: ``'l1'``.
     """
     
     def __init__(
@@ -229,13 +229,14 @@ class PerceptualLoss(nn.Module):
         if self.criterion_type == "l1":
             self.criterion  = nn.L1Loss()
         elif self.criterion_type == "l2":
-            self.criterion  = nn.L2loss()
+            self.criterion  = nn.L2Loss()
         elif self.criterion_type == "mse":
             self.criterion  = nn.MSELoss(reduction="mean")
         elif self.criterion_type == "fro":
             self.criterion  = None
         else:
-            raise NotImplementedError(f"{criterion} criterion has not been supported.")
+            raise NotImplementedError(f"{criterion} criterion has not been "
+                                      f"supported.")
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         # Extract vgg features
@@ -295,7 +296,7 @@ class Loss(nn.Loss):
             criterion         = "mse",
         )
         
-    def forward(self, input: torch.Tensor, target: torch.Tensor, *_) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         l1_loss     = self.l1_loss(input, target)
         detail_loss = self.detail_loss(input, target)
         edge_loss   = self.edge_loss(input, target)
@@ -323,7 +324,7 @@ class DownsampleNorm(nn.Module):
             self.norm = nn.LayerNorm2d(out_channels)
         self.prelu = nn.PReLU()
         self.down  = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Conv2d(in_channels, out_channels, 3, 1, 1, bias=False),
             nn.UpsamplingBilinear2d(scale_factor=scale)
         )
     
@@ -353,12 +354,16 @@ class UpsampleNorm(nn.Module):
             self.norm = nn.LayerNorm2d(out_channels)
         self.prelu    = nn.PReLU()
         self.up_scale = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.Conv2d(in_channels, out_channels, 3, 1, 1, bias=False),
             nn.UpsamplingBilinear2d(scale_factor=scale)
         )
-        self.up = nn.Conv2d(out_channels * 2, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        self.up = nn.Conv2d(out_channels * 2, out_channels, 1, 1, 0, bias=False)
     
-    def forward(self, input1: torch.Tensor, input2: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        input1: torch.Tensor,
+        input2: torch.Tensor
+    ) -> torch.Tensor:
         input1 = self.up_scale(input1)
         input1 = torch.cat([input1, input2], dim=1)
         input1 = self.up(input1)
@@ -376,11 +381,11 @@ class CAB(nn.Module):
         super().__init__()
         self.num_heads   = num_heads
         self.temperature = nn.Parameter(torch.ones(num_heads, 1, 1))
-        self.q           = nn.Conv2d(dim,     dim,     kernel_size=1, bias=bias)
-        self.q_dwconv    = nn.Conv2d(dim,     dim,     kernel_size=3, stride=1, padding=1, groups=dim, bias=bias)
-        self.kv          = nn.Conv2d(dim,     dim * 2, kernel_size=1, bias=bias)
-        self.kv_dwconv   = nn.Conv2d(dim * 2, dim * 2, kernel_size=3, stride=1, padding=1, groups=dim * 2, bias=bias)
-        self.project_out = nn.Conv2d(dim,     dim,     kernel_size=1, bias=bias)
+        self.q           = nn.Conv2d(dim,     dim,     1, bias=bias)
+        self.q_dwconv    = nn.Conv2d(dim,     dim,     3, 1, 1, groups=dim, bias=bias)
+        self.kv          = nn.Conv2d(dim,     dim * 2, 1, bias=bias)
+        self.kv_dwconv   = nn.Conv2d(dim * 2, dim * 2, 3, 1, 1, groups=dim * 2, bias=bias)
+        self.project_out = nn.Conv2d(dim,     dim,     1, bias=bias)
     
     def forward(self, input1: torch.Tensor, input2: torch.Tensor) -> torch.Tensor:
         x = input1
@@ -413,13 +418,13 @@ class IEL(nn.Module):
     def __init__(self, dim: int, ffn_expansion_factor: float = 2.66, bias: bool = False):
         super().__init__()
         hidden_dim = int(dim * ffn_expansion_factor)
-        self.project_in = nn.Conv2d(dim, hidden_dim * 2, kernel_size=1, bias=bias)
+        self.project_in = nn.Conv2d(dim, hidden_dim * 2, 1, bias=bias)
         
-        self.dwconv  = nn.Conv2d(hidden_dim * 2, hidden_dim * 2, kernel_size=3, stride=1, padding=1, groups=hidden_dim * 2, bias=bias)
-        self.dwconv1 = nn.Conv2d(hidden_dim,     hidden_dim,     kernel_size=3, stride=1, padding=1, groups=hidden_dim, bias=bias)
-        self.dwconv2 = nn.Conv2d(hidden_dim,     hidden_dim,     kernel_size=3, stride=1, padding=1, groups=hidden_dim, bias=bias)
+        self.dwconv  = nn.Conv2d(hidden_dim * 2, hidden_dim * 2, 3, 1, 1, groups=hidden_dim * 2, bias=bias)
+        self.dwconv1 = nn.Conv2d(hidden_dim,     hidden_dim,     3, 1, 1, groups=hidden_dim,     bias=bias)
+        self.dwconv2 = nn.Conv2d(hidden_dim,     hidden_dim,     3, 1, 1, groups=hidden_dim,     bias=bias)
         
-        self.project_out = nn.Conv2d(hidden_dim, dim, kernel_size=1, bias=bias)
+        self.project_out = nn.Conv2d(hidden_dim, dim, 1, bias=bias)
         self.Tanh        = nn.Tanh()
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -466,18 +471,19 @@ class I_LCA(nn.Module):
 # region Model
 
 @MODELS.register(name="hvi_cidnet_re", arch="hvi_cidnet")
-class HVICIDNet_RE(base.LowLightImageEnhancementModel):
-    """HVI-CIDNet (You Only Need One Color Space: An Efficient Network for
-    Low-light Image Enhancement) models.
+class HVICIDNet_RE(base.ImageEnhancementModel):
+    """You Only Need One Color Space: An Efficient Network for Low-light Image
+    Enhancement.
     
     Notes:
         - Using batch_size = 1 or 2.
         
     References:
-        `<https://github.com/Fediory/HVI-CIDNet>`__
+        https://github.com/Fediory/HVI-CIDNet
     """
     
     arch   : str  = "hvi_cidnet"
+    tasks  : list[Task]   = [Task.LLIE]
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
     
@@ -569,7 +575,7 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
         self.trans   = core.RGBToHVI()
         
         # Loss
-        self._loss = Loss(*self.loss_weights, reduction="mean")
+        self.loss = Loss(*self.loss_weights, reduction="mean")
         
         # Load weights
         if self.weights:
@@ -582,8 +588,8 @@ class HVICIDNet_RE(base.LowLightImageEnhancementModel):
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_outputs(outputs)
         # Loss
         pred_rgb   = outputs.get("enhanced")

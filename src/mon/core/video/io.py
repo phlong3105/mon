@@ -18,6 +18,7 @@ __all__ = [
 
 import abc
 from abc import abstractmethod
+from typing import Sequence
 
 import cv2
 import ffmpeg
@@ -25,7 +26,6 @@ import numpy as np
 import torch
 
 from mon.core import image as ci, pathlib
-from mon.core.typing import _size_2_t
 
 
 # region Read
@@ -123,11 +123,11 @@ class VideoWriter(abc.ABC):
 	def __init__(
 		self,
 		dst		   : pathlib.Path,
-		image_size : _size_2_t = [480, 640],
-		frame_rate : float 	   = 10,
-		save_image : bool      = False,
-		denormalize: bool      = False,
-		verbose    : bool      = False,
+		image_size : int | Sequence[int] = [480, 640],
+		frame_rate : float = 10,
+		save_image : bool  = False,
+		denormalize: bool  = False,
+		verbose    : bool  = False,
 		*args, **kwargs
 	):
 		self.dst         = pathlib.Path(dst)
@@ -216,12 +216,12 @@ class VideoWriterCV(VideoWriter):
 	def __init__(
 		self,
 		dst		   : pathlib.Path,
-		image_size : _size_2_t = [480, 640],
-		frame_rate : float     = 30,
-		fourcc     : str       = "mp4v",
-		save_image : bool      = False,
-		denormalize: bool      = False,
-		verbose    : bool      = False,
+		image_size : int | Sequence[int] = [480, 640],
+		frame_rate : float = 30,
+		fourcc     : str   = "mp4v",
+		save_image : bool  = False,
+		denormalize: bool  = False,
+		verbose    : bool  = False,
 		*args, **kwargs
 	):
 		self.fourcc       = fourcc
@@ -333,12 +333,12 @@ class VideoWriterFFmpeg(VideoWriter):
 	def __init__(
 		self,
 		dst		   : pathlib.Path,
-		image_size : _size_2_t = [480, 640],
-		frame_rate : float     = 10,
-		pix_fmt    : str       = "yuv420p",
-		save_image : bool      = False,
-		denormalize: bool      = False,
-		verbose    : bool      = False,
+		image_size : int | Sequence[int] = [480, 640],
+		frame_rate : float = 10,
+		pix_fmt    : str   = "yuv420p",
+		save_image : bool  = False,
+		denormalize: bool  = False,
+		verbose    : bool  = False,
 		*args, **kwargs
 	):
 		self.pix_fmt        = pix_fmt

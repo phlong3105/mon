@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for segmentation models."""
+"""Base Segmentation Model.
+
+This module implements the base class for segmentation models.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +15,6 @@ __all__ = [
 from abc import ABC
 
 from mon import core, nn
-from mon.globals import ZOO_DIR
 
 console = core.console
 
@@ -21,9 +23,7 @@ console = core.console
 
 class SegmentationModel(nn.Model, ABC):
     """The base class for all segmentation models."""
-    
-    @property
-    def zoo_dir(self) -> core.Path:
-        return ZOO_DIR / "vision" / "segment" / self.name
-    
+
+    pass
+
 # endregion

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements upsampling and downsampling layers."""
+"""Sampling Layers.
+
+This module implements upsampling and downsampling layers.
+"""
 
 from __future__ import annotations
 
@@ -26,8 +29,9 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.nn.modules.upsampling import *
+from torch.nn.common_types import _size_2_t, _ratio_2_t
 
-from mon.core import _ratio_2_t, _size_2_t
+from mon import core
 
 
 # region Downsampling
@@ -75,11 +79,11 @@ class Downsample(nn.Module):
     
     def __init__(
         self,
-        size                  : _size_2_t  | None = None,
-        scale_factor          : _ratio_2_t | None = None,
-        mode                  : str               = "nearest",
-        align_corners         : bool              = False,
-        recompute_scale_factor: bool              = False,
+        size                  : _size_2_t  = None,
+        scale_factor          : _ratio_2_t = None,
+        mode                  : str        = "nearest",
+        align_corners         : bool       = False,
+        recompute_scale_factor: bool       = False,
     ):
         super().__init__()
         self.name = type(self).__name__
@@ -116,7 +120,7 @@ class DownsampleConv2d(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1),
+            nn.Conv2d(in_channels, out_channels, 4, 2, 1),
         )
         self.in_channels  = in_channels
         self.out_channels = out_channels
@@ -142,7 +146,7 @@ class CustomDownsample(nn.Module):
     """
 
     References:
-        `<http://www.realitypixels.com/turk/computergraphics/ResamplingFilters.pdf>`__
+        http://www.realitypixels.com/turk/computergraphics/ResamplingFilters.pdf
     """
 
     def __init__(
@@ -150,11 +154,11 @@ class CustomDownsample(nn.Module):
         in_channels  : int,
         scale_factor : int,
         kernel_type  : str | Literal["box", "gauss", "gauss12", "gauss1sq2", "lanczos", "lanczos2", "lanczos3"],
-        phase        : float        = 0,
-        kernel_width : int   | None = None,
-        support      : int   | None = None,
-        sigma        : float | None = None,
-        preserve_size: bool         = False,
+        phase        : float = 0,
+        kernel_width : int   = None,
+        support      : int   = None,
+        sigma        : float = None,
+        preserve_size: bool  = False,
     ):
         super().__init__()
         assert phase in [0, 0.5], "``phase`` should be 0 or 0.5"
@@ -227,10 +231,10 @@ class CustomDownsample(nn.Module):
     def get_kernel(
         scale_factor : int,
         kernel_type  : str   | Literal["box", "gauss", "gauss12", "gauss1sq2", "lanczos", "lanczos2", "lanczos3"],
-        phase        : float        = 0,
-        kernel_width : int   | None = None,
-        support      : int   | None = None,
-        sigma        : float | None = None,
+        phase        : float = 0,
+        kernel_width : int   = None,
+        support      : int   = None,
+        sigma        : float = None,
     ):
         assert kernel_type in ["lanczos", "gauss", "box"]
 
@@ -296,7 +300,7 @@ class UpsampleConv2d(nn.Module):
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.deconv = nn.Sequential(
-            nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2),
+            nn.ConvTranspose2d(in_channels, out_channels, 2, 2),
         )
         self.in_channels  = in_channels
         self.out_channels = out_channels
@@ -311,10 +315,8 @@ class UpsampleConv2d(nn.Module):
         return x
     
     def flops(self, h: int, w: int) -> int:
-        flops = 0
-        # conv
+        flops  = 0
         flops += h * 2 * w * 2 * self.in_channels * self.out_channels * 2 * 2
-        # print("Upsample:{%.2f}" % (flops / 1e9))
         return flops
 
 
@@ -339,8 +341,7 @@ class CustomUpsample(nn.Module):
 
 class Scale(nn.Module):
     """A learnable scale parameter. This layer scales the input by a learnable
-    factor. It multiplies a learnable scale parameter of shape `(1,)` with
-    input of any shape.
+    factor.
     
     Args:
         scale: Initial value of the scale factor. Default: ``1.0``.
@@ -351,20 +352,16 @@ class Scale(nn.Module):
         self.scale = scale
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = x + self.scale
-        return y
+        return input + self.scale
 
 
 class Interpolate(nn.Module):
     
     def __init__(self, size: _size_2_t):
         super().__init__()
-        self.size = math.parse_hw(size)
+        self.size = core.parse_hw(size)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = F.interpolate(input=x, size=self.size)
-        return y
+        return F.interpolate(input, self.size)
 
 # endregion

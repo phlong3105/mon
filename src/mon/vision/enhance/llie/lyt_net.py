@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements LYT-Net (LYT-Net: Lightweight YUV Transformer-based
-Network for Low-Light Image Enhancement) models.
+"""LYT-Net.
+
+This module implements the paper: "LYT-Net: Lightweight YUV Transformer-based
+Network for Low-Light Image Enhancement"
 
 References:
-    `<https://github.com/albrateanu/LYT-Net>`__
+    https://github.com/albrateanu/LYT-Net
 """
 
 from __future__ import annotations
@@ -20,10 +22,8 @@ import torch
 from torchvision.models import vgg19, VGG19_Weights
 
 from mon import core, nn
-from mon.core import _callable
-from mon.globals import MODELS, Scheme
-from mon.vision import color
-from mon.vision.enhance.llie import base
+from mon.globals import MODELS, Scheme, Task
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -155,16 +155,16 @@ class Denoiser(nn.Module):
     
     def __init__(self, channels: int, kernel_size: int = 3):
         super().__init__()
-        self.conv1        = nn.Conv2dReLU(1, channels, kernel_size=kernel_size, stride=1)
-        self.conv2        = nn.Conv2dReLU(channels, channels, kernel_size=kernel_size, stride=2)
-        self.conv3        = nn.Conv2dReLU(channels, channels, kernel_size=kernel_size, stride=2)
-        self.conv4        = nn.Conv2dReLU(channels, channels, kernel_size=kernel_size, stride=2)
-        self.bottleneck   = nn.MultiHeadAttention(in_channels=channels, num_heads=4)
+        self.conv1        = nn.Conv2dReLU(1, channels, kernel_size, 1)
+        self.conv2        = nn.Conv2dReLU(channels, channels, kernel_size, 2)
+        self.conv3        = nn.Conv2dReLU(channels, channels, kernel_size, 2)
+        self.conv4        = nn.Conv2dReLU(channels, channels, kernel_size, 2)
+        self.bottleneck   = nn.MultiHeadAttention(channels, num_heads=4)
         self.up2          = nn.Upsample(2)
         self.up3          = nn.Upsample(2)
         self.up4          = nn.Upsample(2)
-        self.output_layer = nn.Conv2dTanh(channels, 1, kernel_size=kernel_size, stride=1)
-        self.res_layer    = nn.Conv2dTanh(channels, 1, kernel_size=kernel_size, stride=1)
+        self.output_layer = nn.Conv2dTanh(channels, 1, kernel_size, 1)
+        self.res_layer    = nn.Conv2dTanh(channels, 1, kernel_size, 1)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x  = input
@@ -187,15 +187,16 @@ class Denoiser(nn.Module):
 # region Model
 
 @MODELS.register(name="lyt_net", arch="lyt_net")
-class LYTNet(base.LowLightImageEnhancementModel):
-    """LYT-Net (LYT-Net: Lightweight YUV Transformer-based Network for Low-Light
-    Image Enhancement) model.
+class LYTNet(base.ImageEnhancementModel):
+    """LYT-Net: Lightweight YUV Transformer-based Network for Low-Light Image
+    Enhancement.
     
     References:
-        `<https://github.com/albrateanu/LYT-Net>`__
+        https://github.com/albrateanu/LYT-Net
     """
     
     arch   : str  = "lyt_net"
+    tasks  : list[Task]   = [Task.LLIE]
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
 
@@ -238,7 +239,7 @@ class LYTNet(base.LowLightImageEnhancementModel):
         self.final_adjustments = nn.Conv2dTanh(self.num_channels, self.out_channels, 3)
         
         # Loss
-        self._loss = Loss()
+        self.loss = Loss()
         
         # Load weights
         if self.weights:
@@ -252,11 +253,11 @@ class LYTNet(base.LowLightImageEnhancementModel):
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
         x     = datapoint.get("image")
-        ycbcr = color.rgb_to_ycbcr(x)
+        ycbcr = core.rgb_to_ycbcr(x)
         y     = ycbcr[:, 0, :, :]
         cb    = ycbcr[:, 1, :, :]
         cr    = ycbcr[:, 2, :, :]
-        
+    
         cb    = self.denoiser_cb(cb) + cb
         cr    = self.denoiser_cr(cr) + cr
         
@@ -279,6 +280,8 @@ class LYTNet(base.LowLightImageEnhancementModel):
         
         recombined = self.recombine(torch.concat([ref, lum], dim=-1))
         output     = self.final_adjustments(recombined)
-        return {"enhanced": output}
+        return {
+            "enhanced": output
+        }
     
 # endregion

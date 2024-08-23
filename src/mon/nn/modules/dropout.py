@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements drop-out layers."""
+"""Dropout Layers.
+
+This module implements drop-out layers.
+"""
 
 from __future__ import annotations
 
@@ -22,8 +25,9 @@ __all__ = [
 import torch
 from torch import nn
 from torch.nn.modules.dropout import *
-from torchvision.ops import (drop_block2d, drop_block3d, DropBlock2d,
-                             DropBlock3d)
+from torchvision.ops import (
+    drop_block2d, drop_block3d, DropBlock2d, DropBlock3d
+)
 
 
 # region Drop Path
@@ -37,13 +41,14 @@ def drop_path(
     """Drop paths (Stochastic Depth) per sample (when applied in main path of
     residual blocks).
     
-    References:
-        `<https://github.com/rwightman/pytorch-image-models/blob/a2727c1bf78ba0d7b5727f5f95e37fb7f8866b1f/timm/models/layers/drop.py>`__
-
     Args:
         input: Input.
         p: Probability of the path to be zeroed. Default: ``0.0``.
         training: Is in training run?. Default: ``False``.
+        scale_by_keep: Scale by keep probability. Default: ``True``.
+    
+    References:
+        https://github.com/rwightman/pytorch-image-models/blob/a2727c1bf78ba0d7b5727f5f95e37fb7f8866b1f/timm/models/layers/drop.py
     """
     x = input
     if p == 0.0 or not training:

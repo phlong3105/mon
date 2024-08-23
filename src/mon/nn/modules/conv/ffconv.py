@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Fast-Fourier Convolution layers.
+"""Fast Fourier Convolution.
+
+This module implements Fast-Fourier Convolution layers.
 
 References:
-    `<https://github.com/pkumivision/FFC>`__.
+    https://github.com/pkumivision/FFC
 """
 
 from __future__ import annotations
@@ -26,8 +28,8 @@ from typing import Any
 
 import torch
 from torch import nn
+from torch.nn.common_types import _size_2_t
 
-from mon.core import _size_2_t
 from mon.nn.modules import activation, linear, normalization, pooling
 from mon.nn.modules.conv import base as conv
 

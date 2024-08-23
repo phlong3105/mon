@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements regression metrics."""
+"""Regression Metrics.
+
+This module implements regression metrics.
+"""
 
 from __future__ import annotations
 

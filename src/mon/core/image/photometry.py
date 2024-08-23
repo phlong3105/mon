@@ -39,12 +39,13 @@ def denormalize_image_mean_std(
     where `mean` is [M_1, ..., M_n] and `std` [S_1, ..., S_n] for `n` channels.
 
     Args:
-        image: An image in channel-first format.
+        image: An image of type :obj:`torch.Tensor` in ``[B, C, H, W]`` format
+            with data in the range ``[0.0, 1.0]``.
         mean: A sequence of means for each channel.
             Default: ``[0.485, 0.456, 0.406]``.
         std: A sequence of standard deviations for each channel.
             Default: ``[0.229, 0.224, 0.225]``.
-        eps: A scalar value to avoid zero divisions. Default: ``1e-6``.
+        eps: Epsilon value to avoid division by zero. Defaults: ``1e-6``.
         
     Returns:
         A denormalized image.
@@ -99,12 +100,13 @@ def normalize_image_mean_std(
     channels.
 
     Args:
-        image: An image in channel-first format.
+        image: An image of type :obj:`torch.Tensor` in ``[B, C, H, W]`` format
+            with data in the range ``[0, 255]``.
         mean: A sequence of means for each channel.
             Default: ``[0.485, 0.456, 0.406]``.
         std: A sequence of standard deviations for each channel.
             Default: ``[0.229, 0.224, 0.225]``.
-        eps: A scalar value to avoid zero divisions. Default: ``1e-6``.
+        eps: Epsilon value to avoid division by zero. Defaults: ``1e-6``.
         
     Returns:
         A normalized image.
@@ -156,7 +158,8 @@ def normalize_image_by_range(
     ``[:obj:`new_min`, :obj:`new_max`]``.
     
     Args:
-        image: An image.
+        image: An image of type :obj:`torch.Tensor` in ``[B, C, H, W]`` format
+            with data in the range ``[0, 255]``.
         min: The current minimum pixel value of the image. Default: ``0.0``.
         max: The current maximum pixel value of the image. Default: ``255.0``.
         new_min: A new minimum pixel value of the image. Default: ``0.0``.

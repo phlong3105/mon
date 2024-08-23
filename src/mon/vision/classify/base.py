@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base model class for classification models."""
+"""Base Classification Model.
+
+This module implements the base model class for classification models.
+"""
 
 from __future__ import annotations
 
@@ -21,24 +24,25 @@ console = core.console
 # region Model
 
 class ImageClassificationModel(VisionModel, ABC):
-    """The base class for all image classification models.
+    """The base class for all image classification models."""
     
-    """
-    
-    tasks  : list[Task] = [Task.CLASSIFY]
-    zoo_dir: core.Path  = ZOO_DIR / "vision" / "classify"
-    
-    # region Forward Pass
+    tasks: list[Task] = [Task.CLASSIFY]
     
     def assert_datapoint(self, datapoint: dict) -> bool:
-        assert "image" in datapoint, "The key ``'image'`` must be defined in the `datapoint`."
+        if "image" not in datapoint:
+            raise ValueError("The key ``'image'`` must be defined in the "
+                             "`datapoint`.")
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
-            assert "class_id" in datapoint, "The key ``'class_id'`` must be defined in the `datapoint`."
+            if "class_id" not in datapoint:
+                raise ValueError("The key ``'class_id'`` must be defined in "
+                                 "the `datapoint`.")
             
     def assert_outputs(self, outputs: dict) -> bool:
-        assert "logits" in outputs, "The key ``'logits'`` must be defined in the `outputs`."
+        if "logits" not in outputs:
+            raise ValueError("The key ``'logits'`` must be defined in the "
+                             "`outputs`.")
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
@@ -56,7 +60,7 @@ class ImageClassificationModel(VisionModel, ABC):
         self,
         datapoint: dict,
         outputs  : dict,
-        metrics  : list[nn.Metric] | None = None
+        metrics  : list[nn.Metric] = None
     ) -> dict:
         # Check
         self.assert_datapoint(datapoint)
@@ -71,7 +75,5 @@ class ImageClassificationModel(VisionModel, ABC):
                 results[metric_name] = metric(pred, target)
         # Return
         return results
-    
-    # endregion
     
 # endregion

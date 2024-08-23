@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements different type of priors."""
+"""Prior Package.
+
+This package implements different type of priors.
+"""
 
 from __future__ import annotations
 

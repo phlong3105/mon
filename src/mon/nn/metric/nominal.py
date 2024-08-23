@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements nominal metrics."""
+"""Nominal Metric Module.
+
+This module implements nominal metrics.
+"""
 
 from __future__ import annotations
 

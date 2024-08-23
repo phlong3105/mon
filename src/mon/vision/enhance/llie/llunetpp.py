@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements LLUnet++ (LLUnet++:UNet++ Based Nested Skip Connections Network
-for Low-Light Image Enhancement) models.
+"""LLUnet++
+
+This module implements the paper: "LLUnet++:UNet++ Based Nested Skip Connections
+Network for Low-Light Image Enhancement".
 
 References:
-    `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+    https://github.com/xiwang-online/LLUnetPlusPlus
 """
 
 from __future__ import annotations
@@ -20,9 +22,8 @@ import torch
 from torchvision.models import vgg
 
 from mon import core, nn
-from mon.core import _callable
-from mon.globals import MODELS, Scheme
-from mon.vision.enhance.llie import base
+from mon.globals import MODELS, Scheme, Task
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -60,7 +61,7 @@ class Loss(nn.Loss):
         )
         self.tv_loss = nn.TotalVariationLoss(reduction=reduction)
     
-    def forward(self, input: torch.Tensor, target: torch.Tensor, *_) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         str_loss = self.ms_ssim_loss(input, target) + self.ssim_loss(input, target)
         per_loss = self.per_loss(input, target)
         reg_loss = self.region_loss(input, target)
@@ -75,7 +76,11 @@ class Loss(nn.Loss):
     
     @staticmethod
     def region_loss(input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        gray     = 0.30 * target[:, 0, :, :] + 0.59 * target[:, 1, :, :] + 0.11 * target[:, 2, :, :]
+        gray     = (
+              0.30 * target[:, 0, :, :]
+            + 0.59 * target[:, 1, :, :]
+            + 0.11 * target[:, 2, :, :]
+        )
         gray     = gray.view(-1)
         value    = -torch.topk(-gray, int(gray.shape[0] * 0.4))[0][0]
         weight   = 1 * (target > value) + 4 * (target <= value)
@@ -96,14 +101,14 @@ class UNetConvBlock(nn.Module):
         relu_slope  : float = 0.2,
     ):
         super().__init__()
-        self.conv1   = nn.Conv2d(in_channels, in_channels, kernel_size=3, padding=1, bias=True)
+        self.conv1   = nn.Conv2d(in_channels, in_channels, 3, padding=1, bias=True)
         self.norm1   = nn.InstanceNorm2d(in_channels, affine=True)
         self.relu1   = nn.LeakyReLU(relu_slope, inplace=False)
                      
-        self.conv2   = nn.Conv2d(in_channels * 2, out_channels, kernel_size=3, padding=1, bias=True)
+        self.conv2   = nn.Conv2d(in_channels * 2, out_channels, 3, padding=1, bias=True)
         self.relu2   = nn.LeakyReLU(relu_slope, inplace=False)
                      
-        self.conv3   = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        self.conv3   = nn.Conv2d(out_channels, out_channels, 3, padding=1, bias=True)
         self.relu3   = nn.LeakyReLU(relu_slope, inplace=False)
 
         self.conv1_2 = nn.Conv2d(in_channels,     in_channels,  1, 1, 0)
@@ -135,15 +140,16 @@ class UNetConvBlock(nn.Module):
 # region Model
 
 @MODELS.register(name="llunet++_re", arch="llunet++")
-class LLUnetpp_RE(base.LowLightImageEnhancementModel):
-    """LLUnet++ (LLUnet++: UNet++ Based Nested Skip Connections Network for
-    Low-Light Image Enhancement) model.
+class LLUnetpp_RE(base.ImageEnhancementModel):
+    """LLUnet++: UNet++ Based Nested Skip Connections Network for Low-Light
+    Image Enhancement.
     
     References:
-        `<https://github.com/xiwang-online/LLUnetPlusPlus>`__
+        https://github.com/xiwang-online/LLUnetPlusPlus
     """
     
     arch   : str  = "llunet++"
+    tasks  : list[Task]   = [Task.LLIE]
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
     
@@ -192,10 +198,10 @@ class LLUnetpp_RE(base.LowLightImageEnhancementModel):
         #
         self.conv0_4 = UNetConvBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0])
         #
-        self.final   = nn.Conv2d(nb_filter[0], self.out_channels, kernel_size=1)
+        self.final   = nn.Conv2d(nb_filter[0], self.out_channels, 1)
         
         # Loss
-        self._loss = Loss(*loss_weights)
+        self.loss = Loss(*loss_weights)
         
         # Load weights
         if self.weights:

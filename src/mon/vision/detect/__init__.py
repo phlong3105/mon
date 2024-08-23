@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements several object detection algorithms."""
+"""Object Detection.
+
+This package implements several object detection algorithms.
+"""
 
 from __future__ import annotations
 

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the training procedure."""
+"""Trainer.
+
+This module implements the training procedure for neural networks.
+"""
 
 from __future__ import annotations
 
@@ -27,7 +30,6 @@ class Trainer(lightning.Trainer):
     
     Args:
         log_image_every_n_epochs: Log debugging images every n epochs.
-        
     """
     
     def __init__(
@@ -58,31 +60,27 @@ class Trainer(lightning.Trainer):
             gpu_type      = ""
         
         gpu_used = isinstance(self.accelerator, (strategy.CUDAAccelerator, strategy.MPSAccelerator))
-        console.log(f"GPU available: {gpu_available}{gpu_type}, used: {gpu_used}.")
+        console.log(f"GPU available: {gpu_available}{gpu_type}, "
+                    f"used: {gpu_used}.")
         
         num_tpu_cores = self.num_devices if isinstance(self.accelerator, strategy.TPUAccelerator) else 0
-        console.log(f"TPU available: {strategy.TPUAccelerator.is_available()}, using: {num_tpu_cores} TPU cores.")
+        console.log(f"TPU available: {strategy.TPUAccelerator.is_available()}, "
+                    f"using: {num_tpu_cores} TPU cores.")
 
         # Integrate MPS Accelerator here, once gpu maps to both
         if strategy.CUDAAccelerator.is_available() and not isinstance(self.accelerator, strategy.CUDAAccelerator):
-            console.log(
-                f"GPU available but not used. Set 'accelerator' and 'devices' "
-                f"using 'Trainer(accelerator='gpu', devices="
-                f"{strategy.CUDAAccelerator.auto_device_count()})'.",
-            )
+            console.log(f"GPU available but not used. Set `accelerator` and "
+                        f"`devices` using `Trainer(accelerator='gpu', "
+                        f"devices='{strategy.CUDAAccelerator.auto_device_count()}')`.")
         
         if strategy.TPUAccelerator.is_available() and not isinstance(self.accelerator, strategy.TPUAccelerator):
-            console.log(
-                f"TPU available but not used. Set `accelerator` and `devices` "
-                f"using `Trainer(accelerator='tpu', devices="
-                f"{strategy.TPUAccelerator.auto_device_count()})`."
-            )
+            console.log(f"TPU available but not used. Set `accelerator` and "
+                        f"`devices` using `Trainer(accelerator='tpu', "
+                        f"devices='{strategy.TPUAccelerator.auto_device_count()}')`.")
         
         if strategy.MPSAccelerator.is_available() and not isinstance(self.accelerator, strategy.MPSAccelerator):
-            console.log(
-                f"MPS available but not used. Set 'accelerator' and 'devices' "
-                f"using 'Trainer(accelerator='mps', devices="
-                f"{strategy.MPSAccelerator.auto_device_count()})'."
-            )
+            console.log(f"MPS available but not used. Set `accelerator` and "
+                        f"`devices` using `Trainer(accelerator='mps', "
+                        f"devices='{strategy.MPSAccelerator.auto_device_count()}')`.")
 
 # endregion

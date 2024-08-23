@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base classes for all metrics, and the
-corresponding helper functions.
+"""Base Metric Module.
+
+This module implements the base classes for all metrics, and the corresponding
+helper functions.
 """
 
 from __future__ import annotations
@@ -58,24 +60,24 @@ class Metric(torchmetrics.Metric, ABC):
 
 MetricCollection = torchmetrics.MetricCollection
 
-CatMetric        = torchmetrics.CatMetric
-MaxMetric        = torchmetrics.MaxMetric
-MeanMetric       = torchmetrics.MeanMetric
-MinMetric        = torchmetrics.MinMetric
-RunningMean      = torchmetrics.RunningMean
-RunningSum       = torchmetrics.RunningSum
-SumMetric        = torchmetrics.SumMetric
+CatMetric   = torchmetrics.CatMetric
+MaxMetric   = torchmetrics.MaxMetric
+MeanMetric  = torchmetrics.MeanMetric
+MinMetric   = torchmetrics.MinMetric
+RunningMean = torchmetrics.RunningMean
+RunningSum  = torchmetrics.RunningSum
+SumMetric   = torchmetrics.SumMetric
 
 # endregion
 
 
 # region Wrapper
 
-BootStrapper         = torchmetrics.BootStrapper
-ClasswiseWrapper     = torchmetrics.ClasswiseWrapper
-MetricTracker        = torchmetrics.MetricTracker
-MinMaxMetric         = torchmetrics.MinMaxMetric
-MultioutputWrapper   = torchmetrics.MultioutputWrapper
-MultitaskWrapper     = torchmetrics.MultitaskWrapper
+BootStrapper       = torchmetrics.BootStrapper
+ClasswiseWrapper   = torchmetrics.ClasswiseWrapper
+MetricTracker      = torchmetrics.MetricTracker
+MinMaxMetric       = torchmetrics.MinMaxMetric
+MultioutputWrapper = torchmetrics.MultioutputWrapper
+MultitaskWrapper   = torchmetrics.MultitaskWrapper
 
 # endregion

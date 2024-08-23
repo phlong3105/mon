@@ -14,11 +14,11 @@ from typing import Any
 import numpy as np
 import torch
 from cv2.ximgproc import guidedFilter
+from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
-from mon.core import _callable, _size_2_t
-from mon.globals import MODELS, Scheme
-from mon.vision.enhance.dehaze import base
+from mon.globals import MODELS, Scheme, Task
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -310,10 +310,11 @@ class VariationalAutoEncoder(nn.Module):
 # region Model
 
 @MODELS.register(name="zid", arch="zid")
-class ZID(base.DehazingModel):
+class ZID(base.ImageEnhancementModel):
     """ZID (Zero-Shot Image Dehazing) model."""
     
     arch   : str  = "zid"
+    tasks  : list[Task]   = [Task.DEHAZE]
     schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
     zoo    : dict = {}
     
