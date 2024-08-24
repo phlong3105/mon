@@ -50,7 +50,7 @@ class ConvNeXt(nn.ExtraModel, base.ImageClassificationModel, ABC):
         x = datapoint.get("image")
         y = self.model(x)
         return {"logits": y}
-    
+
 
 @MODELS.register(name="convnext_base", arch="convnext")
 class ConvNeXtBase(ConvNeXt):
@@ -173,8 +173,8 @@ class ConvNeXtSmall(ConvNeXt):
             self.load_weights()
         else:
             self.apply(self.init_weights)
-        
-        
+
+
 @MODELS.register(name="convnext_large", arch="convnext")
 class ConvNeXtLarge(ConvNeXt):
     
@@ -214,5 +214,5 @@ class ConvNeXtLarge(ConvNeXt):
             self.load_weights()
         else:
             self.apply(self.init_weights)
-        
+
 # endregion

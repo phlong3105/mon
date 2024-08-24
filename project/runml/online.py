@@ -99,9 +99,9 @@ def online_learning(args: dict) -> str:
                 # Save
                 if save_image:
                     output_path = save_dir / f"{meta['stem']}.png"
-                    mon.write_image(output_path, output, denormalize=True)
+                    mon.write_image(output_path, output)
                     if data_writer:
-                        data_writer.write_batch(data=output)
+                        data_writer.write_batch(frames=output)
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")
         
@@ -112,7 +112,7 @@ def online_learning(args: dict) -> str:
 
 # region Main
 
-def parse_online_args(model_root: str | mon.Path | None = None) -> dict:
+def parse_online_args(model_root: str | mon.Path = None) -> dict:
     hostname = socket.gethostname().lower()
     
     # Get input args

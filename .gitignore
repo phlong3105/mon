@@ -10,6 +10,7 @@
 *~
 .idea/
 .sync/
+Icon?
 __pycache__/
 _gsdata_/
 archive/

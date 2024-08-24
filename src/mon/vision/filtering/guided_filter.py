@@ -227,10 +227,18 @@ class ConvGuidedFilter(nn.Module):
         https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
     """
     
-    def __init__(self, radius: int = 1, norm: nn.Module = nn.BatchNorm2d, downscale: int = 8):
+    def __init__(
+        self,
+        radius   : int       = 1,
+        norm     : nn.Module = nn.BatchNorm2d,
+        downscale: int       = 8
+    ):
         super().__init__()
-        self.box_filter = nn.Conv2d(3, 3, 3, padding=radius, dilation=radius, bias=False, groups=3)
-        self.conv_a     = nn.Sequential(
+        self.box_filter = nn.Conv2d(
+            3, 3, 3,
+            padding=radius, dilation=radius, bias=False, groups=3
+        )
+        self.conv_a = nn.Sequential(
             nn.Conv2d(6, 32, 1, bias=False),
             norm(32),
             nn.ReLU(inplace=True),
@@ -494,14 +502,25 @@ class DeepGuidedFilterGuidedMapConvGF(DeepGuidedFilterConvGF):
             lr_relu_slope = lr_relu_slope,
             lr_norm       = lr_norm,
         )
+        if guided_dilation == 0:
+            first_conv = nn.Conv2d(3, guided_channels, 1, bias=False)
+        else:
+            first_conv = nn.Conv2d(
+                3, guided_channels, 5,
+                padding  = guided_dilation,
+                dilation = guided_dilation,
+                bias     = False
+            )
         self.guided_map = nn.Sequential(
-            nn.Conv2d(3, guided_channels, 1, bias=False) if guided_dilation == 0 else nn.Conv2d(3, guided_channels, 5, padding=guided_dilation, dilation=guided_dilation, bias=False),
+            first_conv,
             nn.AdaptiveBatchNorm2d(guided_channels),
             nn.LeakyReLU(0.2, inplace=True),
             nn.Conv2d(guided_channels, 3, 1)
         )
 
     def forward(self, x_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
-        return self.gf(self.guided_map(x_lr), self.lr(x_lr), self.guided_map(x_hr)).clamp(0, 1)
+        return self.gf(
+            self.guided_map(x_lr), self.lr(x_lr), self.guided_map(x_hr)
+        ).clamp(0, 1)
     
 # endregion

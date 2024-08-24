@@ -11,6 +11,7 @@ from __future__ import annotations
 __all__ = [
     "ExtraModel",
     "Model",
+    "download_weights_from_url",
     "get_epoch_from_checkpoint",
     "get_global_step_from_checkpoint",
     "get_latest_checkpoint",
@@ -30,7 +31,7 @@ from torch import nn
 
 from mon import core
 from mon.globals import (
-    LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task, ZOO_DIR,
+    LOSSES, LR_SCHEDULERS, METRICS, OPTIMIZERS, Scheme, Task,
 )
 from mon.nn import loss as L, metric as M
 
@@ -100,80 +101,69 @@ def load_state_dict(
     model       : nn.Module,
     weights     : dict | str | core.Path,
     weights_only: bool = False,
-    overwrite   : bool = False,
 ) -> dict:
-    """Load state dict from the given :obj:`weights`. If :obj:`weights`
-    contains a URL, download it.
-    """
-    path = None
-    url  = None
-
-    # Obtain weight's path
-    if isinstance(weights, dict):
-        path = weights.get("path", path)
-        url  = weights.get("url",  url)
-        if path and url:
-            path = core.Path(path)
-            core.mkdirs(paths=[path.parent], exist_ok=True)
-            if core.is_url(url):
-                if path.exists() and overwrite:
-                    core.delete_files(regex=path.name, path=path.parent)
-                    torch.hub.download_url_to_file(
-                        str(url), str(path), None, progress=True
-                    )
-                elif not path.exists():
-                    torch.hub.download_url_to_file(
-                        str(url), str(path), None, progress=True
-                    )
+    """Load state dict from the given :obj:`weights`."""
+    path       = None
+    state_dict = None
+    # First, `weights` can be a dictionary.
+    if isinstance(weights, dict) and "path" in weights:
+        if "path" in weights:
+            path = core.Path(weights["path"])
+        else:
+            state_dict = weights
+    # Second, `weights` can be a path to a weight file.
     elif isinstance(weights, str | core.Path):
-        path = weights
-    else:
-        return {}
-    
-    path = core.Path(path)
-    if not path.is_weights_file():
-        error_console.log(f"`{path}` is not a weights file.")
-    
-    # Load state dict
-    weights_state_dict = torch.load(
-        str(path),
-        weights_only = weights_only,
-        map_location = model.device
-    )
-    '''
-    weights_state_dict = weights_state_dict.get("state_dict", weights_state_dict)
-    model_state_dict   = copy.deepcopy(model.state_dict())
-    new_state_dict     = {}
-    
-    for k, v in weights_state_dict.items():
-        replace = False
-        for k1, k2 in map.items():
-            kr = k.replace(k1, k2)
-            if kr in model_state_dict and not replace:
-                new_state_dict[kr] = v
-                replace = True
-        if not replace:
-            new_state_dict[k] = v
-    
-    for k, v in new_state_dict.items():
-        if k in model_state_dict:
-            model_state_dict[k] = v
-    
-    return model_state_dict
-    '''
-    return weights_state_dict
+        if core.Path(weights).is_weights_file():
+            path = core.Path(weights)
+    # Load state dict from path
+    if path is not None:
+        if path.is_weights_file():
+            state_dict = torch.load(
+                str(path),
+                weights_only = weights_only,
+                map_location = model.device
+            )
+        else:
+            error_console.log(f"[yellow]Cannot load from weights from: "
+                              f"{weights}!")
+    # Check if the state_dict is nested
+    if "state_dict" in state_dict:
+        state_dict = state_dict["state_dict"]
+    return state_dict
 
 
 def load_weights(
     model       : nn.Module,
     weights     : dict | str | core.Path,
     weights_only: bool = True,
-    overwrite   : bool = False,
 ) -> nn.Module:
     """Load weights to model."""
-    model_state_dict = load_state_dict(model, weights, weights_only, overwrite)
+    model_state_dict = load_state_dict(model, weights, weights_only)
     model.load_state_dict(model_state_dict)
     return model
+
+
+def download_weights_from_url(
+    url      : str,
+    path     : core.Path,
+    overwrite: bool = False
+) -> core.Path:
+    """Download weights from the given `url` to the given `path`.
+    
+    Args:
+        url: The URL to download the weights.
+        path: The full path to save the weights.
+        overwrite: Whether to overwrite the existing file. Defaults: ``False``.
+    """
+    if not core.is_url(url) and path is not None:
+        raise ValueError(f"Both `url` and `path` must be given.")
+    
+    path = core.Path(path)
+    if not path.exists() or overwrite:
+        core.delete_files(regex=path.name, path=path.parent)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        torch.hub.download_url_to_file(url, path, None, progress=True)
+    return path
 
 # endregion
 
@@ -261,10 +251,10 @@ class Model(lightning.LightningModule, ABC):
             >>> )
     """
     
-    arch   : str          = ""       # The model's architecture.
-    tasks  : list[Task]   = []       # A list of tasks that the model can perform.
-    schemes: list[Scheme] = []       # A list of learning schemes that the model can perform.
-    zoo    : dict         = {}       # A dictionary containing all pretrained weights of the model.
+    arch   : str          = ""  # The model's architecture.
+    tasks  : list[Task]   = []  # A list of tasks that the model can perform.
+    schemes: list[Scheme] = []  # A list of learning schemes that the model can perform.
+    zoo    : dict         = {}  # A dictionary containing all pretrained weights of the model.
     
     def __init__(
         self,
@@ -393,62 +383,53 @@ class Model(lightning.LightningModule, ABC):
         """Initialize the model's weights."""
         pass
     
-    def assign_weights(self, weights: Any):
-        if isinstance(weights, str):
-            if core.Path(weights).is_weights_file():
-                weights = core.Path(weights)
-            elif weights in self.zoo:
-                weights         = self.zoo[weights]
-                weights["path"] = weights.get("path", "")
-                num_classes     = getattr(weights, "num_classes", None)
-                if num_classes and num_classes != self.num_classes:
-                    self.num_classes = num_classes
-                    console.log(f"Overriding `num_classes` with {num_classes}.")
-            else:
-                error_console.log(f"The key ``'{weights}'`` has not been "
-                                  f"defined in `zoo`.")
-                weights = None
-        elif isinstance(weights, core.Path):
+    def assign_weights(self, weights: Any, overwrite: bool = False):
+        """Assign pretrained weights to the model."""
+        # First thing first, check if the `weights` is ``None``
+        if weights is None:
+            pass
+        # Second, `weights` can be a key in the `zoo` dictionary.
+        elif isinstance(weights, str) and weights in self.zoo:
+            weights: dict = self.zoo[weights]
+            # Check if the weights' path exists and download if necessary.
+            url  = weights.get("url",  None)
+            path = weights.get("path", None)
+            if url and path:
+                download_weights_from_url(url, path, overwrite)
+            # Update the model's `num_classes` if necessary
+            num_classes = weights.get("num_classes", None)
+            if num_classes and num_classes != self.num_classes:
+                console.log(f"Overriding `num_classes` from {self.num_classes} "
+                            f"with {num_classes}.")
+                self.num_classes = num_classes
+        # Third, `weights` can be a path to a weight file.
+        elif isinstance(weights, str | core.Path):
+            weights: core.Path = core.Path(weights)
             if not weights.is_weights_file():
                 raise ValueError(f"`weights` must be a valid path to a weight "
                                  f"file, but got {weights}.")
+        # Fourth, `weights` can be a dictionary.
         elif isinstance(weights, dict):
-            pass  # No need to do anything here
-        else:
-            weights = None
-        self.weights = weights
+            pass
+        # OK! Done.
+        self.weights = weights or self.weights
         
     def load_weights(self, weights: Any = None, overwrite: bool = False):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
-        self.weights = weights or self.weights
-        
-        # Get the state_dict
+        # First assign new weights if it is valid.
+        self.assign_weights(weights, overwrite)
+        # Second, get the state_dict
         state_dict = None
-        if (
-            isinstance(self.weights, core.Path | str)
-            and core.Path(self.weights).is_weights_file()
-        ):
+        if self.weights:
             state_dict = load_state_dict(self, self.weights, False)
-            state_dict = state_dict.get("state_dict", state_dict)
-        elif isinstance(self.weights, dict):
-            if "path" in self.weights:
-                path = core.Path(self.weights["path"])
-                if path.is_weights_file():
-                    state_dict = load_state_dict(self, path, False)
-                    state_dict = state_dict.get("state_dict", state_dict)
-            else:
-                state_dict = self.weights.get("state_dict", self.weights)
-        else:
-            error_console.log(f"[yellow]Cannot load from weights from: "
-                              f"{self.weights}!")
-        
+        # Third, load the state_dict to the model
         if state_dict:
             self.load_state_dict(state_dict)
             if self.verbose:
                 console.log(f"Load model's weights from: {self.weights}!")
-    
+        
     def init_loss(self, loss: Any):
         """Specify the model's loss functions. This value should only be defined once."""
         if isinstance(loss, str):
@@ -638,9 +619,7 @@ class Model(lightning.LightningModule, ABC):
         self.optims = optimizers
         return self.optims
     
-    def compute_efficiency_score(
-        self, *args, **kwargs
-    ) -> tuple[float, float, float]:
+    def compute_efficiency_score(self, *args, **kwargs) -> tuple[float, float, float]:
         """Compute the efficiency score of the model, including FLOPs, number
         of parameters, and runtime.
         """
@@ -1028,9 +1007,9 @@ class Model(lightning.LightningModule, ABC):
 # region Extra Model
 
 class ExtraModel(Model, ABC):
-    """A wrapper model that wraps around another model defined in
-    :obj:`mon_extra`. This is useful when we want to add the third-party models
-    to :obj:`mon`'s models. without reimplementing the entire model.
+    """A wrapper model that wraps around another model defined in third-party
+    source code. This is useful when we want to add the third-party models to
+    :obj:`mon`'s models without reimplementing the entire model.
     
     Args:
         model: The model to wrap around. To make thing simple, we agree on
@@ -1050,28 +1029,13 @@ class ExtraModel(Model, ABC):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
-        self.weights = weights or self.weights
-        
-        # Get the state_dict
+        # First assign new weights if it is valid.
+        self.assign_weights(weights, overwrite)
+        # Second, get the state_dict
         state_dict = None
-        if (
-            isinstance(self.weights, core.Path | str)
-            and core.Path(self.weights).is_weights_file()
-        ):
-            state_dict = load_state_dict(self, self.weights, True)
-            state_dict = state_dict.get("state_dict", state_dict)
-        elif isinstance(self.weights, dict):
-            if "path" in self.weights:
-                path = core.Path(self.weights["path"])
-                if path.is_weights_file():
-                    state_dict = load_state_dict(self, path, True)
-                    state_dict = state_dict.get("state_dict", state_dict)
-            else:
-                state_dict = self.weights.get("state_dict", self.weights)
-        else:
-            error_console.log(f"[yellow]Cannot load from weights from: "
-                              f"{self.weights}!")
-        
+        if self.weights:
+            state_dict = load_state_dict(self, self.weights, False)
+        # Third, load the state_dict to the model
         if state_dict:
             self.model.load_state_dict(state_dict=state_dict)
             if self.verbose:

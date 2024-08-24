@@ -295,11 +295,12 @@ class ExampleClass(object):
     def _private_without_docstring(self):
         pass
     
-    ### HERE IS MY ADDITION ###
+    # HERE IS MY ADDITION #
     
-    def sample_function_arguments_docstring(
+    def function_arguments_docstring(
         self,
         image: torch.Tensor | np.ndarray,
+        bbox : np.ndarray,
         eps  : float = 1e-6,
     ):
         """This is an example of a function with type annotated arguments. Use
@@ -312,6 +313,8 @@ class ExampleClass(object):
                     the range ``[0.0, 1.0]``.
                 - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
                     range ``[0, 255]``.
+            bbox: Bounding box(es) of type of :obj:`numpy.ndarray` in
+                ``[4]``/``[N, 4]`` and ``XYXY`` format.
             eps: Epsilon value to avoid division by zero. Defaults: ``1e-6``.
         """
         pass

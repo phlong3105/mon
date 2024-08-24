@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements MPRNet (Multi-Stage Progressive Image Restoration)
-models.
+"""MPRNet.
+
+This module implements the paper: "Multi-Stage Progressive Image Restoration".
+
+References:
+    https://github.com/swz30/MPRNet/tree/main
 """
 
 from __future__ import annotations
@@ -14,11 +18,11 @@ __all__ = [
 from typing import Any, Sequence
 
 import torch
+from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
-from mon.core import _callable, _size_2_t
 from mon.globals import MODELS, Scheme, Task
-from mon.vision.enhance.multitask import base
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -137,7 +141,7 @@ class CAB(nn.Module):
         kernel_size: _size_2_t,
         reduction  : int,
         bias       : bool,
-        act_layer  : _callable,
+        act_layer  : nn.Module,
     ):
         super().__init__()
         modules_body = []
@@ -183,7 +187,7 @@ class Encoder(nn.Module):
         channels       : int,
         kernel_size    : _size_2_t,
         reduction      : int,
-        act_layer      : _callable,
+        act_layer      : nn.Module,
         bias           : bool,
         scale_unetfeats: int,
         csff           : bool
@@ -237,10 +241,10 @@ class Decoder(nn.Module):
     
     def __init__(
         self,
-        channels         : int,
+        channels       : int,
         kernel_size    : _size_2_t,
         reduction      : int,
-        act_layer      : _callable,
+        act_layer      : nn.Module,
         bias           : bool,
         scale_unetfeats: int
     ):
@@ -277,7 +281,7 @@ class ORB(nn.Module):
         channels   : int,
         kernel_size: _size_2_t,
         reduction  : int,
-        act_layer  : _callable,
+        act_layer  : nn.Module,
         bias       : bool,
         num_cab    : int,
     ):
@@ -304,7 +308,7 @@ class ORSNet(nn.Module):
         scale_orsnetfeats: int,
         kernel_size      : _size_2_t,
         reduction        : int,
-        act_layer        : _callable,
+        act_layer        : nn.Module,
         bias             : bool,
         scale_unetfeats  : int,
         num_cab          : int,
@@ -351,11 +355,12 @@ class ORSNet(nn.Module):
 # region Model
 
 @MODELS.register(name="mprnet", arch="mprnet")
-class MPRNet(base.MultiTaskImageEnhancementModel):
+class MPRNet(base.ImageEnhancementModel):
     """Multi-Stage Progressive Image Restoration.
     
     Args:
-        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB
+            image.
         num_channels: Output channels for subsequent layers. Default: ``64``.
         depth: The depth of the network. Default: ``5``.
         relu_slope: The slope of the ReLU activation. Default: ``0.2``,
@@ -365,11 +370,12 @@ class MPRNet(base.MultiTaskImageEnhancementModel):
             Normalization. Default: ``4``.
         
     References:
-        `<https://github.com/swz30/MPRNet/tree/main>`__
+        https://github.com/swz30/MPRNet/tree/main
     """
     
     arch   : str  = "mprnet"
-    tasks  : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW]
+    tasks  : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN,
+                             Task.DESNOW]
     schemes: list[Scheme] = [Scheme.SUPERVISED]
     zoo    : dict = {}
     

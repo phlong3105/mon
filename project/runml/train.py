@@ -87,7 +87,7 @@ def train(args: dict) -> str:
 
 # region Main
 
-def parse_train_args(model_root: str | mon.Path | None = None) -> dict:
+def parse_train_args(model_root: str | mon.Path = None) -> dict:
     hostname = socket.gethostname().lower()
     
     # Get input args

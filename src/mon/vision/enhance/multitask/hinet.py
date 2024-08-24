@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements HINet (Half-Instance Normalization Network) models."""
+"""HINet.
+
+This module implements the paper: "Half-Instance Normalization Network".
+
+References:
+    https://github.com/megvii-model/HINet
+"""
 
 from __future__ import annotations
 
@@ -12,11 +18,11 @@ __all__ = [
 from typing import Any, Sequence
 
 import torch
+from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
-from mon.core import _callable, _size_2_t
 from mon.globals import MODELS, Scheme, Task
-from mon.vision.enhance.multitask import base
+from mon.vision.enhance import base
 
 console = core.console
 
@@ -113,7 +119,6 @@ class UNetUpBlock(nn.Module):
 
 
 class SupervisedAttentionModule(nn.Module):
-    """Supervised Attention Module."""
     
     def __init__(
         self,
@@ -196,11 +201,12 @@ class SupervisedAttentionModule(nn.Module):
 # region Model
 
 @MODELS.register(name="hinet_re", arch="hinet")
-class HINet_RE(base.MultiTaskImageEnhancementModel):
+class HINet_RE(base.ImageEnhancementModel):
     """Half-Instance Normalization Network.
     
     Args:
-        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB
+            image.
         num_channels: Output channels for subsequent layers. Default: ``64``.
         depth: The depth of the network. Default: ``5``.
         relu_slope: The slope of the ReLU activation. Default: ``0.2``,
@@ -210,54 +216,14 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
             Normalization. Default: ``4``.
         
     References:
-        `<https://github.com/megvii-model/HINet>`__
+        https://github.com/megvii-model/HINet
     """
     
     arch   : str  = "hinet"
-    tasks  : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN, Task.DESNOW, Task.LES]
+    tasks  : list[Task]   = [Task.DEBLUR, Task.DENOISE, Task.DERAIN,
+                             Task.DESNOW, Task.LES]
     schemes: list[Scheme] = [Scheme.SUPERVISED]
-    zoo    : dict = {
-        "gopro": {
-            "url"         : None,
-            "path"        : "hinet/hinet_gopro.pth",
-            "channels"    : 3,
-            "num_classes" : None,
-            "num_channels": 64,
-            "in_pos_left" : 3,
-            "in_pos_right": 4,
-            "map": {},
-        },
-        "reds": {
-            "url"         : None,
-            "path"        : "hinet/hinet_reds.pth",
-            "channels"    : 3,
-            "num_classes" : None,
-            "num_channels": 64,
-            "in_pos_left" : 3,
-            "in_pos_right": 4,
-            "map": {},
-        },
-        "sidd": {
-            "url"         : None,
-            "path"        : "hinet/hinet_sidd_x1.0.pth",
-            "channels"    : 3,
-            "num_classes" : None,
-            "num_channels": 64,
-            "in_pos_left" : 0,
-            "in_pos_right": 4,
-            "map": {},
-        },
-        "rain13k": {
-            "url"         : None,
-            "path"        : "hinet/hinet_rain13k.pth",
-            "channels"    : 3,
-            "num_classes" : None,
-            "num_channels": 64,
-            "in_pos_left" : 0,
-            "in_pos_right": 4,
-            "map": {},
-        },
-    }
+    zoo    : dict = {}
     
     def __init__(
         self,
@@ -326,7 +292,7 @@ class HINet_RE(base.MultiTaskImageEnhancementModel):
             self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
-        gain      = torch.nn.init.calculate_gain('leaky_relu', 0.20)
+        gain      = torch.nn.init.calculate_gain("leaky_relu", 0.20)
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):

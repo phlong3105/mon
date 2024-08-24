@@ -39,10 +39,6 @@ def adjust_gamma(
 ) -> torch.Tensor | np.ndarray:
     """Adjust gamma value in the image. Also known as Power Law Transform.
     
-    Intensities in RGB mode are adjusted based on the following equation:
-    .. math::
-        I_{\text{out}} = 255 \times \text{gain} \times \left(\frac{I_{\text{in}}}{255}\right)^{\gamma}
-    
     Args:
         image: An RGB image of type:
             - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
