@@ -29,6 +29,7 @@ import mon.nn.modules.prior
 import mon.nn.modules.projection
 import mon.nn.modules.sampling
 import mon.nn.modules.shuffle
+import mon.nn.modules.siren
 from mon.nn.modules.activation import *
 from mon.nn.modules.attention import *
 from mon.nn.modules.bottleneck import *
@@ -47,3 +48,4 @@ from mon.nn.modules.prior import *
 from mon.nn.modules.projection import *
 from mon.nn.modules.sampling import *
 from mon.nn.modules.shuffle import *
+from mon.nn.modules.siren import *

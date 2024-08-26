@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="d2ce"
-model="d2ce_04_prediction_oldloss"
+arch="colie"
+model="colie_re"
 data=(
     "dicm"
     "lime"

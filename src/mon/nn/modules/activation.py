@@ -35,6 +35,7 @@ __all__ = [
     "SiLU",
     "Sigmoid",
     "SimpleGate",
+    "Sine",
     "Softmax",
     "Softmax2d",
     "Softmin",
@@ -113,6 +114,29 @@ class NegHardsigmoid(nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return F.relu6(3 * input + 3.0, inplace=self.inplace) / 6.0 - 0.5
+
+# endregion
+
+
+# region Sine
+
+class Sine(nn.Module):
+    """Sine activation unit.
+    
+    Args:
+        omega_0: Different signals may require different `omega_0` in the first
+            layer - this is a hyperparameter. Default: ``1.0``.
+            
+    References:
+        https://github.com/lucidrains/siren-pytorch/blob/master/siren_pytorch/siren_pytorch.py
+    """
+    
+    def __init__(self, omega_0: float = 1.0):
+        super().__init__()
+        self.omega_0 = omega_0
+        
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return torch.sin(self.omega_0 * input)
 
 # endregion
 

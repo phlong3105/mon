@@ -166,19 +166,21 @@ class CoLIE_RE(base.ImageEnhancementModel):
         self.window_size = window_size
         self.patch_dim   = window_size ** 2
         self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
-        patch_layers   = [SirenLayer(self.patch_dim, hidden_dim, is_first=True)]
-        spatial_layers = [SirenLayer(2, hidden_dim, is_first=True)]
+        patch_layers   = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_layers.append(SirenLayer(hidden_dim, hidden_dim))
-            spatial_layers.append(SirenLayer(hidden_dim, hidden_dim))
-        patch_layers.append(SirenLayer(hidden_dim, hidden_dim // 2))
-        spatial_layers.append(SirenLayer(hidden_dim, hidden_dim // 2))
+            patch_layers.append(  nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+        patch_layers.append(  nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
         output_layers  = []
         for _ in range(add_layer, num_layers - 1):
-            output_layers.append(SirenLayer(hidden_dim, hidden_dim))
-        output_layers.append(SirenLayer(hidden_dim, 1, is_last=True))
+            output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
 
         self.patch_net   = nn.Sequential(*patch_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
