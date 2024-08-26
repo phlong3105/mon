@@ -585,7 +585,7 @@ def parse_model_dir(arch: str, model: str) -> pathlib.Path | None:
     model_name = parse_model_name(model)
     if is_extra_model(model):
         return pathlib.Path(EXTRA_MODELS[arch][model_name]["model_dir"])
-    elif hasattr(MODELS[arch][model_name], "model_dir"):
+    elif getattr(MODELS[arch][model_name], "model_dir", None):
         return pathlib.Path(MODELS[arch][model_name].model_dir)
     else:
         return None

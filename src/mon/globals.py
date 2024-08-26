@@ -1128,14 +1128,12 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
         },
     },
     "zero_dce"     : {
-        "zero_dce": {
+        "zero_dce"  : {
             "tasks"    : [Task.LLIE],
             "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce",
             "torch_distributed_launch": True,
         },
-    },
-    "zero_dce++"   : {
         "zero_dce++": {
             "tasks"    : [Task.LLIE],
             "schemes"  : [Scheme.ZERO_REFERENCE],

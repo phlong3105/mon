@@ -386,14 +386,18 @@ class ZID(base.ImageEnhancementModel):
     
     @classmethod
     def assert_outputs(cls, outputs: dict) -> bool:
-        assert outputs.get("enhanced", None), \
-            "The key ``'enhanced'`` must be defined in the `outputs`."
-        assert outputs.get("image", None), \
-            "The key ``'image'`` must be defined in the `outputs`."
-        assert outputs.get("ambient", None), \
-            "The key ``'ambient'`` must be defined in the `outputs`."
-        assert outputs.get("mask", None), \
-            "The key ``'mask'`` must be defined in the `outputs`."
+        if "enhanced" not in outputs:
+            raise ValueError("The key ``'enhanced'`` must be defined in the "
+                             "`outputs`.")
+        if "image" not in outputs:
+            raise ValueError("The key ``'image'`` must be defined in the "
+                             "`outputs`.")
+        if "ambient" not in outputs:
+            raise ValueError("The key ``'ambient'`` must be defined in the "
+                             "`outputs`.")
+        if "mask" not in outputs:
+            raise ValueError("The key ``'mask'`` must be defined in the "
+                             "`outputs`.")
         
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward

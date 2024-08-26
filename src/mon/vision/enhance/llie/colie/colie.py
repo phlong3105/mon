@@ -13,7 +13,7 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "CoLIE",
+    "CoLIE_RE",
 ]
 
 from typing import Any, Literal
@@ -117,7 +117,7 @@ class SirenLayer(nn.Module):
 # region Model
 
 @MODELS.register(name="colie_re", arch="colie")
-class CoLIE(base.ImageEnhancementModel):
+class CoLIE_RE(base.ImageEnhancementModel):
     """"Fast Context-Based Low-Light Image Enhancement via Neural Implicit
     Representations," ECCV 2024.
     
@@ -376,7 +376,7 @@ def run_colie():
     image     = cv2.imread(str(path))
     datapoint = {"image": core.to_image_tensor(image, False, True)}
     device    = torch.device("cuda:0")
-    net       = CoLIE().to(device)
+    net       = CoLIE_RE().to(device)
     outputs   = net.infer(datapoint)
     enhanced  = outputs.get("enhanced")
     enhanced  = core.to_image_nparray(enhanced, False, True)

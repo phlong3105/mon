@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements ZS-N2N (Zero-Shot Noise2Noise) models."""
+"""ZS-N2N.
+
+This module implements the paper: "Zero-Shot Noise2Noise: Efficient Image
+Denoising without any Data".
+
+References:
+    https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing#scrollTo=Srf0GQTYrkxA
+"""
 
 from __future__ import annotations
 
@@ -24,10 +31,11 @@ console = core.console
 
 @MODELS.register(name="zsn2n", arch="zsn2n")
 class ZSN2N(base.ImageEnhancementModel):
-    """Zero-Shot Noise2Noise.
+    """Zero-Shot Noise2Noise: Efficient Image Denoising without any Data.
     
     Args:
-        in_channels: The first layer's input channel. Default: ``3`` for RGB image.
+        in_channels: The first layer's input channel. Default: ``3`` for RGB
+            image.
         num_channels: Output channels for subsequent layers. Default: ``48``.
     
     References:
