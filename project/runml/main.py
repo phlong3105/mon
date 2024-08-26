@@ -70,7 +70,7 @@ def run_train(args: dict):
     fullname = fullname if fullname not in [None, "None", ""] else config.stem
     config   = mon.parse_config_file(
         project_root = root,
-        model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
+        model_root   = mon.parse_model_dir(arch, model),
         weights_path = weights,
         config       = config,
     )
@@ -176,7 +176,7 @@ def run_predict(args: dict):
     fullname = fullname if fullname not in [None, "None", ""] else model
     config   = mon.parse_config_file(
         project_root = root,
-        model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
+        model_root   = mon.parse_model_dir(arch, model),
         weights_path = weights,
         config       = config,
     )

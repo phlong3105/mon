@@ -142,7 +142,7 @@ def parse_config_file(
     model_root  : str | pathlib.Path = None,
     weights_path: str | pathlib.Path = None,
 ) -> pathlib.Path | None:
-    # assert config not in [None, "None", ""]
+    from mon.core.rich import error_console, console
     if config not in [None, "None", ""]:
         # Check `config` itself
         config = pathlib.Path(config)
@@ -177,12 +177,13 @@ def parse_config_file(
             if config_.is_config_file():
                 return config_
     # That's it.
-    from mon.core.rich import error_console
-    error_console.log(f"No configuration is found at {config}.")
-    return None  # config
+    error_console.log(f"Could not find configuration file at: {config}.")
+    return None
 
 
 def load_config(config: Any) -> dict:
+    from mon.core.rich import error_console, console
+    
     if config is None:
         data = None
     elif isinstance(config, dict):
@@ -203,13 +204,13 @@ def load_config(config: Any) -> dict:
     else:
         data = None
     
-    if data is None:
-        from mon.core.rich import error_console
-        error_console.log(
-            f"No configuration is found at {config}. Setting an empty dictionary."
-        )
-        data = {}
-    return data
+    if data:
+        console.log(f"Loaded configuration from: {config}.")
+        return data
+    else:
+        error_console.log(f"Could not find configuration file at: {config}. "
+                          f"Setting an empty dictionary.")
+        return {}
 
 # endregion
 

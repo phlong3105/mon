@@ -70,7 +70,7 @@ def parse_train_input_args() -> argparse.Namespace:
     return args
 
 
-def parse_train_args(model_root: str | core.Path | None = None) -> argparse.Namespace:
+def parse_train_args(model_root: str | core.Path = None) -> argparse.Namespace:
     """Parse arguments for training."""
     hostname = socket.gethostname().lower()
     
@@ -176,7 +176,7 @@ def parse_predict_input_args() -> argparse.Namespace:
     return args
 
 
-def parse_predict_args(model_root: str | core.Path | None = None) -> argparse.Namespace:
+def parse_predict_args(model_root: str | core.Path = None) -> argparse.Namespace:
     """Parse arguments for prediction."""
     hostname = socket.gethostname().lower()
     

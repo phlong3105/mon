@@ -84,7 +84,7 @@ class Loss(nn.Loss):
 
 # region Model
 
-@MODELS.register(name="zero_dce++_re", arch="zero_dce++")
+@MODELS.register(name="zero_dce++_re", arch="zero_dce")
 class ZeroDCEpp_RE(base.ImageEnhancementModel):
     """Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
     Estimation.
@@ -103,7 +103,7 @@ class ZeroDCEpp_RE(base.ImageEnhancementModel):
     """
     
     model_dir: core.Path    = current_dir
-    arch     : str          = "zero_dce++"
+    arch     : str          = "zero_dce"
     tasks    : list[Task]   = [Task.LLIE]
     schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
     zoo      : dict         = {}
