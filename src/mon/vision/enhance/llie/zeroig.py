@@ -115,16 +115,16 @@ class Loss(nn.Loss):
         loss += self.smooth_loss(L2.detach(), s2) * 5
         loss += self.L_TV_loss(s2) * 1600
         # Loss_res_1
-        L11, L12 = geometry.pair_downsample(input)
+        L11, L12 = core.pair_downsample(input)
         loss += self.l2_loss(L11, L_pred2) * 1000
         loss += self.l2_loss(L12, L_pred1) * 1000
-        denoised1, denoised2 = geometry.pair_downsample(L2)
+        denoised1, denoised2 = core.pair_downsample(L2)
         loss += self.l2_loss(L_pred1, denoised1) * 1000
         loss += self.l2_loss(L_pred2, denoised2) * 1000
         # Loss_res_2
         loss += self.l2_loss(H3_pred, torch.cat([H12.detach(), s22.detach()], 1)) * 1000
         loss += self.l2_loss(H4_pred, torch.cat([H11.detach(), s21.detach()], 1)) * 1000
-        H3_denoised1, H3_denoised2 = geometry.pair_downsample(H3)
+        H3_denoised1, H3_denoised2 = core.pair_downsample(H3)
         loss += self.l2_loss(H3_pred[:, 0:3, :, :], H3_denoised1) * 1000
         loss += self.l2_loss(H4_pred[:, 0:3, :, :], H3_denoised2) * 1000
         # Loss_color
@@ -269,7 +269,7 @@ class ZeroIG(base.LowLightImageEnhancementModel):
     """
     
     arch   : str  = "zeroig"
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.ZERO_REFERENCE]
+    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
     zoo    : dict = {}
     
     def __init__(

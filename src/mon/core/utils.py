@@ -447,13 +447,13 @@ def list_mon_models(
     from mon.globals import Task, MODELS, Scheme
     flatten_models = dtype.flatten_models_dict(MODELS)
     task   = Task(task)   if task not in [None, "None", ""] else None
-    mode   = Scheme(mode) if mode in ["online", "instance"] else None
+    mode   = Scheme(mode) if mode in ["instance"] else None
     arch   = arch         if arch not in [None, "None", ""] else None
     models = list(flatten_models.keys())
     if task:
         models = [m for m in models if task in flatten_models[m].tasks]
     if mode:
-        models = [m for m in models if mode in flatten_models[m]._schemes]
+        models = [m for m in models if mode in flatten_models[m].schemes]
     if arch:
         models = [m for m in models if arch in flatten_models[m].arch]
     return sorted(models)
@@ -552,7 +552,10 @@ def list_archs(
     models          = list_mon_models(task, mode)
     extra_models    = list_extra_models(task, mode)
     default_configs = get_project_default_config(project_root=project_root)
-    if default_configs.get("MODELS", False) and len(default_configs["MODELS"]) > 0:
+    if (
+        default_configs.get("MODELS", False)
+        and len(default_configs["MODELS"]) > 0
+    ):
         project_models = [humps.snakecase(m) for m in default_configs["MODELS"]]
         if len(project_models) > 0:
             models       = [

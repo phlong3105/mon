@@ -98,7 +98,7 @@ class ZeroDCE_RE(base.ImageEnhancementModel):
     
     arch   : str  = "zero_dce"
     tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
+    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
     zoo    : dict = {}
     
     def __init__(

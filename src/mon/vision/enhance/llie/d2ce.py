@@ -252,8 +252,7 @@ class D2CE(base.ImageEnhancementModel):
     
     arch   : str  = "d2ce"
     tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT,
-                             Scheme.ZERO_REFERENCE]
+    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
     zoo    : dict = {}
     
     def __init__(

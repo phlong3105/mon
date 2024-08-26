@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""""""
+"""Main.
+
+This module implements main running pipeline.
+"""
 
 from __future__ import annotations
 
 import subprocess
 
 import click
-
 import mon
 
 current_file = mon.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
-_modes 	      = ["train", "predict", "online", "instance", "metric"]
+modes 	     = ["train", "predict", "instance", "metric"]
 
 
 # region Install
@@ -178,12 +180,13 @@ def run_predict(args: dict):
         weights_path = weights,
         config       = config,
     )
+    # assert config not in [None, "None", ""]
     config   = config or ""
+    weights  = mon.to_str(weights, ",")
     # if use_data_dir:
     #     save_dir = save_dir or mon.parse_save_dir(mon.DATA_DIR/task.value/"#predict", arch, model, None, project, variant)
     # else:
     #     save_dir = save_dir or mon.parse_save_dir(root/"run"/"predict", arch, model, None, project, variant)
-    weights  = mon.to_str(weights, ",")
     
     for d in data:
         kwargs  = {
@@ -245,113 +248,6 @@ def run_predict(args: dict):
 # endregion
 
 
-# region Online
-
-def run_online(args: dict):
-    # Get user input
-    task         = args["task"]
-    mode         = args["mode"]
-    config       = args["config"]
-    arch         = args["arch"]
-    model        = args["model"]
-    data         = args["data"]
-    root         = mon.Path(args["root"])
-    project      = args["project"]
-    variant      = args["variant"]
-    fullname     = args["fullname"]
-    save_dir     = args["save_dir"]
-    weights	     = args["weights"]
-    device       = args["device"]
-    epochs       = args["epochs"]
-    steps        = args["steps"]
-    imgsz        = args["imgsz"]
-    resize       = args["resize"]
-    benchmark    = args["benchmark"]
-    save_image   = args["save_image"]
-    save_debug   = args["save_debug"]
-    use_data_dir = args["use_data_dir"]
-    use_fullpath = args["use_fullpath"]
-    verbose      = args["verbose"]
-    
-    assert root.exists()
-    
-    # Parse arguments
-    use_extra_model = mon.is_extra_model(model)
-    model    = mon.parse_model_name(model)
-    fullname = fullname if fullname not in [None, "None", ""] else config.stem
-    config   = mon.parse_config_file(
-        project_root = root,
-        model_root   = mon.EXTRA_MODELS[arch][model]["model_dir"] if use_extra_model else None,
-        weights_path = weights,
-        config       = config,
-    )
-    assert config not in [None, "None", ""]
-    weights  = mon.to_str(weights, ",")
-    
-    for d in data:
-        if use_data_dir:
-            save_dir = save_dir or mon.DATA_DIR / task.value / "#predict" / model
-        else:
-            save_dir = save_dir or root / "run" / "predict" / model
-        kwargs  = {
-            "--config"  : config,
-            "--arch"    : arch,
-            "--model"   : model,
-            "--data"    : d,
-            "--root"    : str(root),
-            "--project" : project,
-            "--variant" : variant,
-            "--fullname": fullname,
-            "--save-dir": str(save_dir),
-            "--weights" : weights,
-            "--device"  : device,
-            "--imgsz"   : imgsz,
-        }
-        flags   = ["--resize"]       if resize       else []
-        flags  += ["--benchmark"]    if benchmark    else []
-        flags  += ["--save-image"]   if save_image   else []
-        flags  += ["--save-debug"]   if save_debug   else []
-        flags  += ["--use-data-dir"] if use_data_dir else []
-        flags  += ["--use-fullpath"] if use_fullpath else []
-        flags  += ["--verbose"]      if verbose      else []
-        
-        # Parse script file
-        if use_extra_model:
-            torch_distributed_launch = mon.EXTRA_MODELS[arch][model]["torch_distributed_launch"]
-            script_file = mon.EXTRA_MODELS[arch][model]["model_dir"] / "my_online.py"
-            python_call = ["python"]
-        else:
-            script_file = current_dir / "online.py"
-            python_call = ["python"]
-        
-        # Parse arguments
-        args_call: list[str] = []
-        for k, v in kwargs.items():
-            if v is None:
-                continue
-            elif isinstance(v, list | tuple):
-                args_call_ = [f"{k}={v_}" for v_ in v]
-            else:
-                args_call_ = [f"{k}={v}"]
-            args_call += args_call_
-        
-        # Run prediction
-        if script_file.is_py_file():
-            print("\n")
-            command = (
-                python_call +
-                [script_file] +
-                args_call +
-                flags
-            )
-            result = subprocess.run(command, cwd=current_dir)
-            print(result)
-        else:
-            raise ValueError(f"Cannot find Python predicting script file at: {script_file}.")
-
-# endregion
-
-
 # region Main
 
 @click.command(name="main", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
@@ -399,8 +295,8 @@ def main(
     task       = click.prompt(click.style(f"Task {tasks_str_}", fg="bright_green", bold=True), default=task)
     task       = tasks_[int(task)] if mon.is_int(task) else task
     # Mode
-    mode       = click.prompt(click.style(f"Mode {mon.parse_menu_string(_modes)}", fg="bright_green", bold=True), default=mode)
-    mode       = _modes[int(mode)] if mon.is_int(mode) else mode
+    mode       = click.prompt(click.style(f"Mode {mon.parse_menu_string(modes)}", fg="bright_green", bold=True), default=mode)
+    mode       = modes[int(mode)] if mon.is_int(mode) else mode
     # Architecture
     archs_       = mon.list_archs(project_root=root, task=task, mode=mode)
     archs_str_   = mon.parse_menu_string(archs_)
@@ -437,7 +333,7 @@ def main(
         weights = [weights_[int(w)] if mon.is_int(w) else w for w in weights]
         weights = [w.replace("'", "") for w in weights]
     # Predict data
-    if mode in ["predict", "online", "instance"]:
+    if mode in ["predict", "instance"]:
         data_     = mon.list_datasets(project_root=root, task=task, mode="predict")
         data_str_ = mon.parse_menu_string(data_)
         data      = data.replace(",", ",\n    ") if isinstance(data, str) else data
@@ -454,13 +350,13 @@ def main(
     device      = click.prompt(click.style(f"Device {devices_str}", fg="bright_green", bold=True), type=str, default=device or "cuda:0")
     device	    = devices_[int(device)] if mon.is_int(device) else device
     # Training Flags
-    if mode in ["train", "online", "instance"]:  # Epochs
+    if mode in ["train", "instance"]:  # Epochs
         epochs = click.prompt(click.style(f"Epochs              ", fg="bright_yellow", bold=True), type=int, default=epochs)
         epochs = None if epochs < 0 else epochs
         steps  = click.prompt(click.style(f"Steps               ", fg="bright_yellow", bold=True), type=int, default=steps)
         steps  = None if steps  < 0 else steps
     # Predict Flags
-    if mode in ["predict", "online", "instance"]:  # Image size
+    if mode in ["predict", "instance"]:  # Image size
         imgsz_       = imgsz
         imgsz        = click.prompt(click.style(f"Image size          ", fg="bright_yellow", bold=True), type=str, default=imgsz)
         imgsz        = mon.to_int_list(imgsz)
@@ -469,7 +365,7 @@ def main(
         resize       = "yes" if imgsz_ not in [None, -1] else "no"
         resize       = click.prompt(click.style(f"Resize?     [yes/no]", fg="bright_yellow", bold=True), type=str, default=resize)
         resize       = True if resize       == "yes" else False
-        benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
+        benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
         benchmark    = True if benchmark    == "yes" else False
         save_image   = click.prompt(click.style(f"Save image? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
         save_image   = True if save_image   == "yes" else False
@@ -516,7 +412,7 @@ def main(
             "verbose" : verbose,
         }
         run_train(args=args)
-    elif mode in ["predict"]:
+    elif mode in ["predict", "instance"]:
         args = {
             "task"        : task,
             "mode"        : mode,
@@ -541,39 +437,9 @@ def main(
             "verbose"     : verbose,
         }
         run_predict(args=args)
-    elif mode in ["online", "instance"]:
-        args = {
-            "task"        : task,
-            "mode"        : mode,
-            "config"      : config,
-            "arch"        : arch,
-            "model"       : model,
-            "data"        : data,
-            "root"        : root,
-            "project"     : project,
-            "variant"     : variant,
-            "fullname"    : fullname,
-            "save_dir"    : save_dir,
-            "weights"     : weights,
-            "device"      : device,
-            "epochs"      : epochs,
-            "steps"       : steps,
-            "imgsz"       : imgsz,
-            "resize" 	  : resize,
-            "benchmark"   : benchmark,
-            "save_image"  : save_image,
-            "save_debug"  : save_debug,
-            "use_data_dir": use_data_dir,
-            "use_fullpath": use_fullpath,
-            "verbose"     : verbose,
-        }
-        run_online(args=args)
     else:
-        raise ValueError(
-            f":param:`mode` must be one of ``'train'``, ``'predict'``, "
-            f"``'online'``, ``'instance'``, ``'metric'``, or ``'plot'``, "
-            f"but got {mode}."
-        )
+        raise ValueError(f":param:`mode` must be one of {modes}, "
+                         f"but got {mode}.")
         
 
 if __name__ == "__main__":

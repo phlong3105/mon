@@ -42,7 +42,7 @@ def predict(args: argparse.Namespace):
     
     # Benchmark
     if benchmark:
-        model = INF(patch_dim=window ** 2, num_layers=4, hidden_dim=256, add_layer=2)
+        model = INF(patch_dim=window**2, num_layers=4, hidden_dim=256, add_layer=2)
         flops, params, avg_time = mon.compute_efficiency_score(
             model      = model,
             image_size = imgsz,

@@ -17,7 +17,6 @@ python -W ignore main.py \
     --task "llie" \
     --mode "predict" \
     --data "dicm, fusion, lime, mef, npe, vv, lol_v1, lol_v2_real, lol_v2_synthetic" \
-    --imgsz 504 \
     --verbose \
     "$@"
 

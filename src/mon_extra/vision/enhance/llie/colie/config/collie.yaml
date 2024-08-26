@@ -3,18 +3,18 @@ hostname    : ~
 config      : ~
 arch        : "colie"
 model       : "colie"
-data        : "sice_mix"
+data        : ~
 data_dir    : ~
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "colie_sice_mix"
+fullname    : ~
 save_dir    : ~
 weights     : ~
 device      : 0
 local_rank  : -1
 launcher    : ~
-epochs      : 100
+epochs      : 200
 steps       : ~
 imgsz       : 256
 resize      : ~
@@ -28,7 +28,7 @@ verbose     : True
 
 # Model Specific
 window: 7    # context window size
-L     : 0.5
+L     : 0.3
 alpha : 1
 beta  : 20
 gamma : 8

@@ -379,7 +379,7 @@ class Model(lightning.LightningModule, ABC):
             path.mkdir(parents=True, exist_ok=True)
     
     @abstractmethod
-    def init_weights(self, model: nn.Module):
+    def init_weights(self, m: nn.Module):
         """Initialize the model's weights."""
         pass
     
@@ -888,8 +888,7 @@ class Model(lightning.LightningModule, ABC):
     
     # region Predicting
     
-    @abstractmethod
-    @torch.no_grad()
+    # @torch.no_grad()
     def infer(self, datapoint: dict, *args, **kwargs) -> dict:
         """Infer the model on a single datapoint. This method is different from
         :obj:`forward()` in term that you may want to perform additional
@@ -902,7 +901,7 @@ class Model(lightning.LightningModule, ABC):
         Args:
             datapoint: A :obj:`dict` containing the attributes of a datapoint.
         """
-        pass
+        return self.forward(datapoint, *args, **kwargs)
     
     # endregion
     

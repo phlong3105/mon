@@ -35,7 +35,7 @@ def diff_x(image: torch.Tensor, radius: int) -> torch.Tensor:
     References:
         https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py
     """
-    if image.dim != 4:
+    if image.ndim != 4:
         raise ValueError(f"`image` must have 4 dimensions.")
     left   = image[:, :, radius        : 2 * radius + 1]
     middle = image[:, :, 2 * radius + 1:               ] - image[: , : ,                : -2 * radius - 1]
@@ -55,7 +55,7 @@ def diff_y(image: torch.Tensor, radius: int) -> torch.Tensor:
     References:
         https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py
     """
-    if image.dim != 4:
+    if image.ndim != 4:
         raise ValueError(f"`image` must have 4 dimensions.")
     left   = image[:, :, :,         radius:2 * radius + 1]
     middle = image[:, :, :, 2 * radius + 1:              ] - image[:, :, :,                :-2 * radius - 1]
@@ -102,7 +102,7 @@ def box_filter(
     if kernel_size is None and radius is None:
         raise ValueError("Either `kernel_size` or `radius` must be provided.")
     if isinstance(image, torch.Tensor):
-        if image.dim != 4:
+        if image.ndim != 4:
             raise ValueError(f"`image` must have 4 dimensions.")
         radius = radius or int((kernel_size - 1) / 2)
         return diff_y(diff_x(image.cumsum(dim=2), radius).cumsum(dim=3), radius)

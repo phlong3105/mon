@@ -12,14 +12,17 @@ from __future__ import annotations
 __all__ = [
     "RGBToHVI",
     "bgr_to_grayscale",
+    "bgr_to_hsv",
     "bgr_to_rgb",
     "bgr_to_rgba",
+    "bgr_to_v",
     "bgr_to_xyz",
     "bgr_to_y",
     "bgr_to_ycbcr",
     "bgr_to_yuv",
     "grayscale_to_rgb",
     "hls_to_rgb",
+    "hsv_to_bgr",
     "hsv_to_rgb",
     "lab_to_rgb",
     "luv_to_rgb",
@@ -32,6 +35,7 @@ __all__ = [
     "rgb_to_luv",
     "rgb_to_rgba",
     "rgb_to_sepia",
+    "rgb_to_v",
     "rgb_to_xyz",
     "rgb_to_y",
     "rgb_to_ycbcr",
@@ -191,6 +195,82 @@ def rgb_to_hsv(
                         f"but got {type(image)}.")
 
 
+def rgb_to_v(
+    image: torch.Tensor | np.ndarray,
+    eps  : float = 1e-8
+) -> torch.Tensor | np.ndarray:
+    """Convert an RGB image to V-channel.
+
+    Args:
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[*, 3, H, W]`` format with data in the
+                range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, 3]`` format with data in the
+                range ``[0, 255]``.
+        eps: Scalar to enforce numerical stability. Defaults: ``1e-8``.
+    
+    Returns:
+        The `V` channels are in the range ``[0.0, 1.0]``.
+    """
+    hsv = rgb_to_hsv(image, eps)
+    if isinstance(image, torch.Tensor):
+        return hsv[:, 2:3, :, :]
+    elif isinstance(image, np.ndarray):
+        return hsv[:, :, 2:3]
+    else:
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
+                        f"but got {type(image)}.")
+    
+
+def bgr_to_hsv(
+    image: torch.Tensor | np.ndarray,
+    eps  : float = 1e-8
+) -> torch.Tensor | np.ndarray:
+    """Convert a BGR image to HSV.
+
+    Args:
+        image: An BGR image of type:
+            - :obj:`torch.Tensor` in ``[*, 3, H, W]`` format with data in the
+                range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, 3]`` format with data in the
+                range ``[0, 255]``.
+        eps: Scalar to enforce numerical stability. Defaults: ``1e-8``.
+    
+    Returns:
+        The `H` channel values are in the range ``[0, 2pi]``.
+        The `S` and `V` channels are in the range ``[0.0, 1.0]``.
+    """
+    rgb = bgr_to_rgb(image)
+    return rgb_to_hsv(rgb, eps)
+    
+    
+def bgr_to_v(
+    image: torch.Tensor | np.ndarray,
+    eps  : float = 1e-8
+) -> torch.Tensor | np.ndarray:
+    """Convert a BGR image to V-channel.
+
+    Args:
+        image: An BGR image of type:
+            - :obj:`torch.Tensor` in ``[*, 3, H, W]`` format with data in the
+                range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, 3]`` format with data in the
+                range ``[0, 255]``.
+        eps: Scalar to enforce numerical stability. Defaults: ``1e-8``.
+    
+    Returns:
+        The `V` channels are in the range ``[0.0, 1.0]``.
+    """
+    hsv = bgr_to_hsv(image, eps)
+    if isinstance(image, torch.Tensor):
+        return hsv[:, 2, :, :]
+    elif isinstance(image, np.ndarray):
+        return hsv[:, :, 2]
+    else:
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
+                        f"but got {type(image)}.")
+    
+    
 def hsv_to_rgb(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert an HSV image to RGB.
     
@@ -209,7 +289,22 @@ def hsv_to_rgb(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     else:
         raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
+
+
+def hsv_to_bgr(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+    """Convert an HSV image to BGR.
     
+    Args:
+        image: An HSV image of type:
+            - :obj:`torch.Tensor` in ``[*, 3, H, W]`` format. The `H` channel
+                values are in the range ``[0, 2pi]``. The `S` and `V` channels
+                are in the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, 3]`` format with data in the
+                range ``[0, 255]``.
+    """
+    rgb = hsv_to_rgb(image)
+    return rgb_to_bgr(rgb)
+
 # endregion
 
 

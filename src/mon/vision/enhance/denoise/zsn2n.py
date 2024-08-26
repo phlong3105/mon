@@ -36,7 +36,7 @@ class ZSN2N(base.ImageEnhancementModel):
     
     arch   : str          = "zsn2n"
     tasks  : list[Task]   = [Task.DENOISE]
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT, Scheme.INSTANCE]
+    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
     zoo    : dict = {}
     
     def __init__(
@@ -81,6 +81,7 @@ class ZSN2N(base.ImageEnhancementModel):
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
+        self.assert_datapoint(datapoint)
         noisy                = datapoint.get("image")
         noisy1, noisy2       = self.pair_downsampler(noisy)
         datapoint1           = datapoint | {"image": noisy1}
@@ -88,7 +89,6 @@ class ZSN2N(base.ImageEnhancementModel):
         outputs1             = self.forward(datapoint=datapoint1, *args, **kwargs)
         outputs2             = self.forward(datapoint=datapoint2, *args, **kwargs)
         outputs              = self.forward(datapoint=datapoint,  *args, **kwargs)
-        self.assert_datapoint(datapoint)
         self.assert_outputs(outputs)
         # Symmetric Loss
         pred1                = noisy1 - outputs1["enhanced"]
@@ -121,9 +121,9 @@ class ZSN2N(base.ImageEnhancementModel):
     def infer(
         self,
         datapoint    : dict,
-        imgsz        : _size_2_t = 512,
+        image_size   : _size_2_t = 512,
         resize       : bool      = False,
-        max_epochs   : int       = 3000,
+        epochs       : int       = 3000,
         lr           : float     = 0.001,
         step_size    : int       = 1000,
         gamma        : float     = 0.5,
@@ -139,9 +139,9 @@ class ZSN2N(base.ImageEnhancementModel):
         
         Args:
             datapoint: A :obj:`dict` containing the attributes of a datapoint.
-            imgsz: The input size. Default: ``512``.
+            image_size: The input size. Default: ``512``.
             resize: Resize the input image to the model's input size. Default: ``False``.
-            max_epochs: Maximum number of epochs. Default: ``3000``.
+            epochs: Maximum number of epochs. Default: ``3000``.
             lr: Learning rate. Default: ``0.001``.
             step_size: Period of learning rate decay. Default: ``1000``.
             gamma: A multiplicative factor of learning rate decay. Default: ``0.5``.
@@ -165,7 +165,7 @@ class ZSN2N(base.ImageEnhancementModel):
         for k, v in datapoint.items():
             if core.is_image(v):
                 if resize:
-                    datapoint[k] = core.resize(v, imgsz)
+                    datapoint[k] = core.resize(v, image_size)
                 else:
                     datapoint[k] = core.resize_divisible(v, 32)
         for k, v in datapoint.items():
@@ -173,31 +173,17 @@ class ZSN2N(base.ImageEnhancementModel):
                 datapoint[k] = v.to(self.device)
         
         # Training
-        if self.verbose:
-            with core.get_progress_bar() as pbar:
-                for _ in pbar.track(
-                    sequence    = range(max_epochs),
-                    total       = max_epochs,
-                    description = f"[bright_yellow] Training"
-                ):
-                    outputs = self.forward_loss(datapoint=datapoint)
-                    optimizer.zero_grad()
-                    loss = outputs["loss"]
-                    loss.backward(retain_graph=True)
-                    optimizer.step()
-                    scheduler.step()
-        else:
-            for _ in range(max_epochs):
-                outputs = self.forward_loss(datapoint=datapoint)
-                optimizer.zero_grad()
-                loss = outputs["loss"]
-                loss.backward(retain_graph=True)
-                optimizer.step()
-                scheduler.step()
+        for _ in range(epochs):
+            outputs = self.forward_loss(datapoint=datapoint)
+            optimizer.zero_grad()
+            loss = outputs["loss"]
+            loss.backward(retain_graph=True)
+            optimizer.step()
+            scheduler.step()
         
         # Forward
         self.eval()
-        timer   = core.Timer()
+        timer = core.Timer()
         timer.tick()
         outputs = self.forward(datapoint=datapoint)
         # with torch.no_grad():

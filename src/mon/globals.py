@@ -677,14 +677,12 @@ class RunMode(DT.Enum):
 class Scheme(DT.Enum):
     """Learning schemes."""
     
-    TRADITIONAL    = "traditional"     # traditional method (no learning)
-    SUPERVISED     = "supervised"      # supervised learning
-    UNSUPERVISED   = "unsupervised"    # unsupervised learning
-    ONLINE         = "online"          # online learning
+    INFERENCE      = "inference"       # inference only
     INSTANCE       = "instance"        # one-instance learning
-    ZERO_SHOT      = "zero-shot"       # zero-shot learning
-    ZERO_REFERENCE = "zero-reference"  # zero-reference learning
-    INFERENCE_ONLY = "inference only"  # inference only
+    SUPERVISED     = "supervised"      # supervised learning
+    TRADITIONAL    = "traditional"     # traditional method (no learning)
+    UNSUPERVISED   = "unsupervised"    # unsupervised learning
+    ZERO_REFERENCE = "zero_reference"  # zero-reference learning
     
 
 class Split(DT.Enum):
@@ -946,7 +944,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "zid"          : {
         "zid": {
             "tasks"    : [Task.DEHAZE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "dehaze" / "zid",
             "torch_distributed_launch": False,
         },
@@ -956,7 +954,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "colie"        : {
         "colie": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "colie",
             "torch_distributed_launch": False,
         },
@@ -1044,7 +1042,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "psenet"       : {
         "psenet": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "psenet",
             "torch_distributed_launch": False,
         }
@@ -1052,7 +1050,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "quadprior"    : {
         "quadprior": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "quadprior",
             "torch_distributed_launch": False,
         }
@@ -1076,7 +1074,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "ruas"         : {
         "ruas": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "ruas",
             "torch_distributed_launch": True,
         },
@@ -1092,7 +1090,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "sgz"          : {
         "sgz": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "sgz",
             "torch_distributed_launch": True,
         },
@@ -1132,7 +1130,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "zero_dce"     : {
         "zero_dce": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce",
             "torch_distributed_launch": True,
         },
@@ -1140,7 +1138,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "zero_dce++"   : {
         "zero_dce++": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_dce++",
             "torch_distributed_launch": True,
         },
@@ -1148,7 +1146,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "zero_didce"   : {
         "zero_didce": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_didce",
             "torch_distributed_launch": True,
         },
@@ -1156,7 +1154,7 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "zeroig"       : {
         "zeroig": {
             "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.ZERO_SHOT],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zeroig",
             "torch_distributed_launch": True,
         },

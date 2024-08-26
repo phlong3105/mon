@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements prediction pipeline."""
+"""Predict.
+
+This module implements prediction pipeline.
+"""
 
 from __future__ import annotations
 
 import socket
 
-import torch
-
 import mon
+import torch
 
 console      = mon.console
 current_file = mon.Path(__file__).absolute()
@@ -82,9 +84,9 @@ def predict(args: dict) -> str:
             
             # Infer
             outputs = model.infer(
-                datapoint = datapoint,
-                imgsz     = imgsz,
-                resize    = resize,
+                datapoint  = datapoint,
+                image_size = imgsz,
+                resize     = resize,
             )
             time = outputs.pop("time", None)
             if time:
@@ -118,7 +120,7 @@ def predict(args: dict) -> str:
                             mon.write_image(path, v)
     
     # Finish
-    avg_time = float(sum(run_time) / len(run_time))
+    avg_time = float(sum(run_time) / len(run_time)) if run_time else 0
     console.log(f"Average time: {avg_time}")
     return str(save_dir)
         

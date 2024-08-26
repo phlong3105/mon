@@ -19,6 +19,7 @@ __all__ = [
     "EdgeLoss",
     "EntropyLoss",
     "ExposureControlLoss",
+    "ExposureValueControlLoss",
     "GradientLoss",
     "HistogramLoss",
     "MSSSIMLoss",
@@ -36,19 +37,18 @@ __all__ = [
     "VGGLoss",
 ]
 
-from typing import Literal, Sequence
+from typing import Literal
 
 import numpy as np
 import torch
 import torchvision
+from mon.globals import LOSSES
+from mon.nn.loss import base
+from mon.nn.modules import prior
 from torch import nn
 from torch.nn import functional as F
 from torch.nn.common_types import _size_2_t
 from torchvision import models, transforms
-
-from mon.globals import LOSSES
-from mon.nn.loss import base
-from mon.nn.modules import prior
 
 
 # region Loss
@@ -58,11 +58,11 @@ class BrightnessConstancyLoss(base.Loss):
 
     def __init__(
         self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
         gamma      : float = 2.5,
         ksize      : int   = 9,
-        eps        : float = 1e-3
+        eps        : float = 1e-3,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.gamma = gamma
@@ -91,9 +91,9 @@ class ChannelConsistencyLoss(base.Loss):
     
     def __init__(
         self,
+        log_target : bool = True,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        log_target : bool = True,
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.log_target = log_target
@@ -210,9 +210,9 @@ class ContradictChannelLoss(base.Loss):
     
     def __init__(
         self,
+        kernel_size: _size_2_t = 35,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        kernel_size: _size_2_t = 35,
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.pool    = nn.MaxPool2d(
@@ -284,9 +284,9 @@ class EdgeConstancyLoss(base.Loss):
    
     def __init__(
         self,
+        eps        : float = 1e-3,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        eps        : float = 1e-3
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.eps    = eps
@@ -335,9 +335,10 @@ class EdgeCharbonnierLoss(base.Loss):
         self,
         edge_loss_weight: float = 1.0,
         char_loss_weight: float = 1.0,
+        loss_weight     : float = 1.0,
         reduction       : Literal["none", "mean", "sum"] = "mean"
     ):
-        super().__init__(reduction=reduction)
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.edge_loss_weight = edge_loss_weight
         self.char_loss_weight = char_loss_weight
         self.edge_loss        = EdgeLoss()
@@ -364,7 +365,7 @@ class EntropyLoss(base.Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor | None = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
         b, c, h, w = input.shape
         e_sum      = torch.zeros(b, c, h, w).to(input.device)
@@ -375,7 +376,7 @@ class EntropyLoss(base.Loss):
         loss  = torch.mean(e_sum)
         loss  = self.loss_weight * loss
         return loss
-    
+
 
 @LOSSES.register(name="exposure_control_loss")
 class ExposureControlLoss(base.Loss):
@@ -389,15 +390,15 @@ class ExposureControlLoss(base.Loss):
         reduction: Specifies the reduction to apply to the output.
     
     References:
-        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74>`__
+        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
     """
     
     def __init__(
         self,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
         patch_size : _size_2_t = 16,
         mean_val   : float     = 0.6,
+        loss_weight: float     = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.patch_size = patch_size
@@ -407,7 +408,7 @@ class ExposureControlLoss(base.Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor | None  = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
         x    = input
         x    = torch.mean(x, 1, keepdim=True)
@@ -417,6 +418,47 @@ class ExposureControlLoss(base.Loss):
         loss = self.loss_weight * loss
         return loss
 
+
+@LOSSES.register(name="exposure_value_control_loss")
+class ExposureValueControlLoss(base.Loss):
+    """Exposure Value Control Loss measures the absolute value of
+    :obj:`ExposureControlLoss`.
+
+    Args:
+        patch_size: Kernel size for pooling layer.
+        mean_val: The `E` value (or optimally-intense threshold) proposed in the
+            paper, lower values produce brighter images. Default: ``0.6``.
+        reduction: Specifies the reduction to apply to the output.
+    
+    References:
+        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
+    """
+    
+    def __init__(
+        self,
+        patch_size : _size_2_t = 16,
+        mean_val   : float     = 0.6,
+        loss_weight: float     = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean",
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.patch_size = patch_size
+        self.mean_val   = mean_val
+        self.pool       = nn.AvgPool2d(self.patch_size)
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor = None
+    ) -> torch.Tensor:
+        x    = input
+        x    = torch.mean(x, 1, keepdim=True)
+        mean = self.pool(x) ** 0.5
+        loss = torch.pow(mean - torch.FloatTensor([self.mean_val]).to(input.device), 2)
+        loss = torch.abs(torch.mean(loss))
+        loss = self.loss_weight * loss
+        return loss
+    
 
 @LOSSES.register(name="gradient_loss")
 class GradientLoss(base.Loss):
@@ -432,7 +474,7 @@ class GradientLoss(base.Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor | None = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
         gradient_a_x = torch.abs(input[:, :, :, :-1] - input[:, :, :, 1:])
         gradient_a_y = torch.abs(input[:, :, :-1, :] - input[:, :, 1:, :])
@@ -565,7 +607,7 @@ class PerceptualL1Loss(base.Loss):
         l1_weight : float = 1.0,
         reduction : Literal["none", "mean", "sum"] = "mean"
     ):
-        super().__init__(reduction=reduction)
+        super().__init__(loss_weight=1.0, reduction=reduction)
         self.per_weight = per_weight
         self.l1_weight  = l1_weight
         self.per_loss   = PerceptualLoss(net=net, layers=layers, reduction=reduction)
@@ -588,9 +630,9 @@ class PSNRLoss(base.Loss):
     
     def __init__(
         self,
+        to_y       : bool  = False,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        to_y       : bool  = False,
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.scale = 10 / np.log(10)
@@ -691,7 +733,7 @@ class SmoothLoss(base.Loss):
     """Smooth Loss
     
     References:
-        `<https://github.com/Doyle59217/ZeroIG/blob/main/loss.py>`__
+        https://github.com/Doyle59217/ZeroIG/blob/main/loss.py
     """
     
     def __init__(
@@ -1189,7 +1231,7 @@ class StdLoss(base.Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor | None = None
+        target: torch.Tensor = None
     ) -> torch.Tensor:
         x    = input
         x    = torch.mean(x, 1, keepdim=True)
@@ -1206,7 +1248,7 @@ class TextureDifferenceLoss(base.Loss):
     """Texture Difference Loss.
     
     References:
-        `<https://github.com/Doyle59217/ZeroIG/blob/main/loss.py>`__
+        https://github.com/Doyle59217/ZeroIG/blob/main/loss.py
     """
     
     def __init__(
@@ -1215,7 +1257,7 @@ class TextureDifferenceLoss(base.Loss):
         constant_c : float = 1e-5,
         threshold  : float = 0.975,
         loss_weight: float = 1.0,
-        reduction: Literal["none", "mean", "sum"] = "mean",
+        reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.patch_size = patch_size
@@ -1290,8 +1332,9 @@ class TotalVariationLoss(base.Loss):
         count_w = self._tensor_size(x[:, :, :, 1:])  # x.size()[2] * (x.size()[3] - 1)
         h_tv    = torch.pow((x[:, :, 1:,  :] - x[:, :, :h_x - 1, :]), 2).sum()
         w_tv    = torch.pow((x[:, :,  :, 1:] - x[:, :, :, :w_x - 1]), 2).sum()
-        loss    = self.loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
+        loss    = 2 * (h_tv / count_h + w_tv / count_w) / b
         # loss    = base.reduce_loss(loss=loss, reduction=self.reduction)
+        loss    = self.loss_weight * loss
         return loss
     
     @staticmethod
@@ -1341,7 +1384,7 @@ class VGGLoss(base.Loss):
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "sum",
     ):
-        super().__init__(reduction=reduction)
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.vgg     = self.VGG19()
         self.l1_loss = nn.L1Loss(reduction="sum")
         self.weights = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
@@ -1369,9 +1412,10 @@ class VGGCharbonnierLoss(base.Loss):
         self,
         vgg_loss_weight : float = 1.0,
         char_loss_weight: float = 1.0,
+        loss_weight     : float = 1.0,
         reduction       : Literal["none", "mean", "sum"] = "mean",
     ):
-        super().__init__(reduction=reduction)
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.vgg_loss_weight  = vgg_loss_weight
         self.char_loss_weight = char_loss_weight
         self.vgg_loss         = VGGLoss(reduction=reduction)

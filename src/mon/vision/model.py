@@ -35,16 +35,16 @@ class VisionModel(nn.Model, ABC):
     
     def compute_efficiency_score(
         self,
-        imgsz   : int | Sequence[int] = 512,
-        channels: int  = 3,
-        runs    : int  = 100,
-        verbose : bool = False,
+        image_size: int | Sequence[int] = 512,
+        channels  : int  = 3,
+        runs      : int  = 100,
+        verbose   : bool = False,
     ) -> tuple[float, float, float]:
         """Compute the efficiency score of the model, including FLOPs, number
         of parameters, and runtime.
         """
         # Define input tensor
-        h, w      = core.parse_hw(imgsz)
+        h, w      = core.parse_hw(image_size)
         datapoint = {"image": torch.rand(1, channels, h, w).to(self.device)}
         
         # Get FLOPs and Params
@@ -73,12 +73,12 @@ class VisionModel(nn.Model, ABC):
     
     # region Predicting
     
-    @torch.no_grad()
+    # @torch.no_grad()
     def infer(
         self,
-        datapoint: dict,
-        imgsz    : int | Sequence[int] = 512,
-        resize   : bool = False,
+        datapoint : dict,
+        image_size: int | Sequence[int] = 512,
+        resize    : bool = False,
         *args, **kwargs
     ) -> dict:
         """Infer the model on a single datapoint. This method is different from
@@ -91,7 +91,7 @@ class VisionModel(nn.Model, ABC):
         
         Args:
             datapoint: A :obj:`dict` containing the attributes of a datapoint.
-            imgsz: The input size. Default: ``512``.
+            image_size: The input size. Default: ``512``.
             resize: Resize the input image to the model's input size.
                 Default: ``False``.
         """
@@ -102,7 +102,7 @@ class VisionModel(nn.Model, ABC):
         for k, v in datapoint.items():
             if core.is_image(v):
                 if resize:
-                    datapoint[k] = core.resize(v, imgsz)
+                    datapoint[k] = core.resize(v, image_size)
                 else:
                     datapoint[k] = core.resize_divisible(v, 32)
         for k, v in datapoint.items():

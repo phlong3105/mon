@@ -315,7 +315,7 @@ class ZID(base.ImageEnhancementModel):
     
     arch   : str  = "zid"
     tasks  : list[Task]   = [Task.DEHAZE]
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
+    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
     zoo    : dict = {}
     
     def __init__(

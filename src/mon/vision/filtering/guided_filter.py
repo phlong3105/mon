@@ -182,7 +182,9 @@ class FastGuidedFilter(nn.Module):
         assert h_xlr == h_ylr and w_xlr == w_ylr
         assert h_xlr > 2 * self.radius + 1 and w_xlr > 2 * self.radius + 1
         # N
-        N = self.box_filter(Variable(x_lr.data.new().resize_((1, 1, h_xlr, w_xlr)).fill_(1.0)))
+        N = self.box_filter(
+            Variable(x_lr.data.new().resize_((1, 1, h_xlr, w_xlr)).fill_(1.0))
+        )
         # mean_x
         mean_x = self.box_filter(x_lr) / N
         # mean_y

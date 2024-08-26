@@ -51,7 +51,7 @@ class DepthAnythingV2(nn.ExtraModel, base.DepthEstimationModel, ABC):
     """
     
     arch   : str          = "depth_anything_v2"
-    schemes: list[Scheme] = [Scheme.INFERENCE_ONLY]
+    schemes: list[Scheme] = [Scheme.INFERENCE]
     zoo    : dict         = {}
     
     def init_weights(self, m: nn.Module):

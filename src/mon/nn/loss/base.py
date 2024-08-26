@@ -95,7 +95,7 @@ class Loss(_Loss, ABC):
     def __init__(
         self,
         loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
+        reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(reduction=reduction)
         if self.reduction not in self.reductions:
@@ -122,9 +122,9 @@ class CharbonnierLoss(Loss):
     
     def __init__(
         self,
+        eps        : float = 1e-3,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
-        eps        : float = 1e-3
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.eps = eps
@@ -145,7 +145,7 @@ class L1Loss(Loss):
     def __init__(
         self,
         loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
+        reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
     
@@ -162,7 +162,7 @@ class L2Loss(Loss):
     def __init__(
         self,
         loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
+        reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight, reduction=reduction)
     
@@ -179,7 +179,7 @@ class ExtendedL1Loss(Loss):
     def __init__(
         self,
         loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean"
+        reduction  : Literal["none", "mean", "sum"] = "mean",
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self._l1_loss = L1Loss()
