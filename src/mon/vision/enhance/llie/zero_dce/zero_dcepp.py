@@ -25,7 +25,9 @@ from mon.globals import MODELS, Scheme, Task
 from mon.nn import functional as F
 from mon.vision.enhance import base
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Loss
@@ -100,10 +102,11 @@ class ZeroDCEpp_RE(base.ImageEnhancementModel):
         https://github.com/Li-Chongyi/Zero-DCE_extension
     """
     
-    arch   : str  = "zero_dce++"
-    tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "zero_dce++"
+    tasks    : list[Task]   = [Task.LLIE]
+    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
+    zoo      : dict         = {}
 
     def __init__(
         self,

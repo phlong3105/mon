@@ -22,11 +22,13 @@ from typing import Any, Literal
 import torch
 
 from mon import core, nn
-from mon.globals import MODELS, Scheme
+from mon.globals import MODELS, Scheme, Task
 from mon.nn import functional as F
 from mon.vision.enhance import base
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Loss
@@ -268,9 +270,11 @@ class ZeroIG(base.LowLightImageEnhancementModel):
         https://github.com/Doyle59217/ZeroIG
     """
     
-    arch   : str  = "zeroig"
-    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "zeroig"
+    tasks    : list[Task]   = [Task.LLIE]
+    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
+    zoo      : dict         = {}
     
     def __init__(
         self,

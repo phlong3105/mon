@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements ZID (Zero-Shot Image Dehazing) models."""
+"""ZID.
+
+This module implements the paper: "Zero-Shot Image Dehazing".
+
+References:
+    https://github.com/XLearning-SCU/2020-TIP-ZID
+"""
 
 from __future__ import annotations
 
@@ -20,7 +26,9 @@ from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
 from mon.vision.enhance import base
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Module
@@ -313,10 +321,11 @@ class VariationalAutoEncoder(nn.Module):
 class ZID(base.ImageEnhancementModel):
     """ZID (Zero-Shot Image Dehazing) model."""
     
-    arch   : str  = "zid"
-    tasks  : list[Task]   = [Task.DEHAZE]
-    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "zid"
+    tasks    : list[Task]   = [Task.DEHAZE]
+    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
+    zoo      : dict         = {}
     
     def __init__(
         self,

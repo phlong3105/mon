@@ -24,7 +24,9 @@ from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
 from mon.vision.enhance import base
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Model
@@ -42,10 +44,11 @@ class ZSN2N(base.ImageEnhancementModel):
         https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing#scrollTo=Srf0GQTYrkxA
     """
     
-    arch   : str          = "zsn2n"
-    tasks  : list[Task]   = [Task.DENOISE]
-    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "zsn2n"
+    tasks    : list[Task]   = [Task.DENOISE]
+    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
+    zoo      : dict         = {}
     
     def __init__(
         self,

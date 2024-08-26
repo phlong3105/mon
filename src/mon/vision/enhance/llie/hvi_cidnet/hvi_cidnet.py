@@ -28,7 +28,9 @@ from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
 from mon.vision.enhance import base
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Loss
@@ -482,10 +484,11 @@ class HVICIDNet_RE(base.ImageEnhancementModel):
         https://github.com/Fediory/HVI-CIDNet
     """
     
-    arch   : str  = "hvi_cidnet"
-    tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.SUPERVISED]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "hvi_cidnet"
+    tasks    : list[Task]   = [Task.LLIE]
+    schemes  : list[Scheme] = [Scheme.SUPERVISED]
+    zoo      : dict         = {}
     
     def __init__(
         self,
