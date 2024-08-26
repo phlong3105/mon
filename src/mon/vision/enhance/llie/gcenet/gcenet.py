@@ -26,7 +26,9 @@ from mon.nn import init
 from mon.vision import filtering
 from mon.vision.enhance import base
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Loss
@@ -305,10 +307,11 @@ class DenoiseNet(nn.Module):
 class GCENet(base.ImageEnhancementModel):
     """Guided Curve Estimation Network."""
     
-    arch   : str  = "gcenet"
-    tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "gcenet"
+    tasks    : list[Task]   = [Task.LLIE]
+    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
+    zoo      : dict         = {}
     
     def __init__(
         self,

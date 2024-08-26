@@ -35,6 +35,8 @@ __all__ = [
     "parse_config_file",
     "parse_device",
     "parse_menu_string",
+    "parse_model_dir",
+    "parse_model_fullname",
     "parse_model_name",
     "parse_save_dir",
     "parse_weights_file",
@@ -61,7 +63,7 @@ except ImportError:
     pynvml_available = False
 
 from mon.globals import MemoryUnit
-from mon.core import pathlib, dtype, file, humps
+from mon.core import pathlib, dtype, file, humps, rich
 
 
 # region Config
@@ -142,7 +144,7 @@ def parse_config_file(
 ) -> pathlib.Path | None:
     # assert config not in [None, "None", ""]
     if config not in [None, "None", ""]:
-        # Check ``config`` itself
+        # Check `config` itself
         config = pathlib.Path(config)
         if config.is_config_file():
             return config
@@ -150,7 +152,7 @@ def parse_config_file(
         config_ = config.config_file()
         if config_.is_config_file():
             return config_
-        # Check for config file in ``'config'`` directory in ``project_root``.
+        # Check for config file in `'config'` directory in `project_root`.
         if project_root not in [None, "None", ""]:
             config_dirs  = [pathlib.Path(project_root / "config")]
             config_dirs += pathlib.Path(project_root / "config").subdirs(recursive=True)
@@ -158,7 +160,7 @@ def parse_config_file(
                 config_ = (config_dir / config.name).config_file()
                 if config_.is_config_file():
                     return config_
-        # Check for config file in ``'config'`` directory in ``model_root``.
+        # Check for config file in `'config'` directory in `model_root`.
         if model_root not in [None, "None", ""]:
             config_dirs  = [pathlib.Path(model_root / "config")]
             config_dirs += pathlib.Path(model_root / "config").subdirs(recursive=True)
@@ -166,7 +168,7 @@ def parse_config_file(
                 config_ = (config_dir / config.name).config_file()
                 if config_.is_config_file():
                     return config_
-    # Check for config file that comes along with ``weights_path``.
+    # Check for config file that comes along with `weights_path`.
     if weights_path not in [None, "None", ""]:
         weights_path = weights_path[0] if isinstance(weights_path, list) else weights_path
         weights_path = pathlib.Path(weights_path)
@@ -324,7 +326,7 @@ def set_device(device: Any, use_single_device: bool = True) -> torch.device:
     
     Args:
         device: Cuda devices to set.
-        use_single_device: If ``True``, set a single-device cuda device in the list.
+        use_single_device: If `True`, set a single-device cuda device in the list.
     
     Returns:
         A cuda device in the current machine.
@@ -341,7 +343,7 @@ def get_machine_memory(unit: MemoryUnit = MemoryUnit.GB) -> list[int]:
     """Return the RAM status as a :obj:`list` of `[total, used, free]`.
     
     Args:
-        unit: The memory unit. Default: ``'GB'``.
+        unit: The memory unit. Default: `'GB'`.
     """
     memory = psutil.virtual_memory()
     unit   = MemoryUnit.from_value(value=unit)
@@ -356,8 +358,8 @@ def get_gpu_device_memory(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> 
     """Return the GPU memory status as a :obj:`list` of `[total, used, free]`.
     
     Args:
-        device: The index of the GPU device. Default: ``0``.
-        unit: The memory unit. Default: ``'GB'``.
+        device: The index of the GPU device. Default: `0`.
+        unit: The memory unit. Default: `'GB'`.
     """
     pynvml.nvmlInit()
     unit  = MemoryUnit.from_value(value=unit)
@@ -577,9 +579,43 @@ def list_archs(
     return sorted(dtype.unique(archs))
 
 
+def parse_model_dir(arch: str, model: str) -> pathlib.Path | None:
+    """Parse model's directory from given components."""
+    from mon.globals import EXTRA_MODELS, MODELS
+    model_name = parse_model_name(model)
+    if is_extra_model(model):
+        return pathlib.Path(EXTRA_MODELS[arch][model_name]["model_dir"])
+    elif hasattr(MODELS[arch][model_name], "model_dir"):
+        return pathlib.Path(MODELS[arch][model_name].model_dir)
+    else:
+        return None
+
+
 def parse_model_name(model: str) -> str:
     from mon.globals import EXTRA_MODEL_STR
     return model.replace(f" {EXTRA_MODEL_STR}", "").strip()
+
+
+def parse_model_fullname(name: str, data: str, suffix: str = None) -> str:
+    """Parse model's fullname from given components as ``name-data-suffix``.
+    
+    Args:
+        name: The model's name.
+        data: The dataset's name.
+        suffix: The suffix of the model's name.
+    """
+    if name in [None, ""]:
+        rich.error_console.log(f"Model's `name` must be given.")
+    
+    fullname = name
+    if data not in [None, ""]:
+        fullname = f"{fullname}_{data}"
+    if suffix not in [None, ""]:
+        _fullname = humps.snakecase(fullname)
+        _suffix   = humps.snakecase(suffix)
+        if _suffix not in _fullname:
+            fullname = f"{fullname}_{humps.kebabize(suffix)}"
+    return fullname
 
 # endregion
 
@@ -618,12 +654,12 @@ def parse_save_dir(
     variant: str = None,
 ) -> str | pathlib.Path:
     """Parse save_dir in the following format:
-    ``
+    `
         root              | root
          |_ arch          |  |_ arch
              |_ model     |      |_ project
                  |_ data  |          |_ variant
-    ``
+    `
     
     Args:
         root: The project root.
@@ -631,9 +667,9 @@ def parse_save_dir(
         model: The model's name.
         data: The dataset's name.
         project: The project's name. Usually used to perform ablation studies.
-            Default is ``None``.
+            Default is `None`.
         variant: The variant's name. Usually used to perform ablation studies.
-            Default is ``None``.
+            Default is `None`.
     """
     save_dir = pathlib.Path(root)
     if arch not in [None, "None", ""]:
@@ -803,7 +839,7 @@ def list_weights_files(
 def parse_weights_file(
     weights: str | pathlib.Path | Sequence[str | pathlib.Path]
 ) -> str | pathlib.Path | Sequence[str | pathlib.Path]:
-    """Parse weights file. If the weights file is a relative path in the ``zoo``
+    """Parse weights file. If the weights file is a relative path in the `zoo`
     directory, then it will be converted to the absolute path. If the weights
     file is a list with a single weights files, then it will be converted to a
     single weights.

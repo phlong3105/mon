@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements D2CE (Depth to Curve Estimation Network / Deep Depth
-Curve Estimation Network) models.
+"""D2CE.
+
+This module implements Depth to Curve Estimation Network.
 """
 
 from __future__ import annotations
@@ -27,7 +28,9 @@ from mon.globals import MODELS, Scheme, Task
 from mon.vision import filtering
 from mon.vision.enhance import base
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Loss
@@ -250,10 +253,11 @@ class D2CE(base.ImageEnhancementModel):
     Network) models.
     """
     
-    arch   : str  = "d2ce"
-    tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "d2ce"
+    tasks    : list[Task]   = [Task.LLIE]
+    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
+    zoo      : dict         = {}
     
     def __init__(
         self,

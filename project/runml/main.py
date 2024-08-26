@@ -309,7 +309,7 @@ def main(
     model 	     = models_[int(model)] if mon.is_int(model) else model
     model_name   = mon.parse_model_name(model)
     # Config
-    model_dir    = mon.EXTRA_MODELS[arch][model_name]["model_dir"] if mon.is_extra_model(model) else None
+    model_dir    = mon.parse_model_dir(arch, model)
     configs_     = mon.list_configs(project_root=root, model_root=model_dir, model=model)
     configs_str_ = mon.parse_menu_string(configs_)
     config	     = click.prompt(click.style(f"Config {configs_str_}", fg="bright_green", bold=True), type=str, default="")

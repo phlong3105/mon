@@ -17,7 +17,6 @@ __all__ = [
     "get_latest_checkpoint",
     "load_state_dict",
     "load_weights",
-    "parse_model_fullname",
 ]
 
 from abc import ABC, abstractmethod
@@ -170,28 +169,6 @@ def download_weights_from_url(
 
 # region Model
 
-def parse_model_fullname(name: str, data: str, suffix: str = None) -> str:
-    """Parse model's fullname from given components as ``name-data-suffix``.
-    
-    Args:
-        name: The model's name.
-        data: The dataset's name.
-        suffix: The suffix of the model's name.
-    """
-    if name in [None, ""]:
-        error_console.log(f"Model's `name` must be given.")
-    
-    fullname = name
-    if data not in [None, ""]:
-        fullname = f"{fullname}_{data}"
-    if suffix not in [None, ""]:
-        _fullname = core.snakecase(fullname)
-        _suffix   = core.snakecase(suffix)
-        if _suffix not in _fullname:
-            fullname = f"{fullname}_{core.kebabize(suffix)}"
-    return fullname
-
-
 class Model(lightning.LightningModule, ABC):
     """The base class for all machine learning models.
     
@@ -251,10 +228,11 @@ class Model(lightning.LightningModule, ABC):
             >>> )
     """
     
-    arch   : str          = ""  # The model's architecture.
-    tasks  : list[Task]   = []  # A list of tasks that the model can perform.
-    schemes: list[Scheme] = []  # A list of learning schemes that the model can perform.
-    zoo    : dict         = {}  # A dictionary containing all pretrained weights of the model.
+    model_dir: core.Path    = None
+    arch     : str          = ""  # The model's architecture.
+    tasks    : list[Task]   = []  # A list of tasks that the model can perform.
+    schemes  : list[Scheme] = []  # A list of learning schemes that the model can perform.
+    zoo      : dict         = {}  # A dictionary containing all pretrained weights of the model.
     
     def __init__(
         self,

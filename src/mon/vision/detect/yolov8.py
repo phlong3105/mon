@@ -51,7 +51,7 @@ class YOLOv8Detector(base.Detector):
     
     def __init__(
         self,
-        config : dict | str | core.Path | None = current_dir / "config/yolov8.yaml",
+        config : dict | str | core.Path = current_dir / "config/yolov8.yaml",
         *args, **kwargs
     ):
         super().__init__(config=config, *args, **kwargs)

@@ -27,7 +27,9 @@ from mon.vision import filtering
 from mon.vision.enhance import base
 from torch.nn import functional as F
 
-console = core.console
+console      = core.console
+current_file = core.Path(__file__).absolute()
+current_dir  = current_file.parents[0]
 
 
 # region Loss
@@ -134,10 +136,11 @@ class CoLIE(base.ImageEnhancementModel):
         https://github.com/ctom2/colie
     """
     
-    arch   : str  = "colie"
-    tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
-    zoo    : dict = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "colie"
+    tasks    : list[Task]   = [Task.LLIE]
+    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
+    zoo      : dict         = {}
     
     def __init__(
         self,

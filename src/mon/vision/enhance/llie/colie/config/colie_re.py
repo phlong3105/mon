@@ -73,11 +73,7 @@ model = {
 data = {
     "name"      : data_name,
     "root"      : data_root,     # A root directory where the data is stored.
-	"transform" : None,  # A.Compose(transforms=[
-		# A.Resize(height=image_size[0], width=image_size[1]),
-		# A.Flip(),
-		# A.Rotate(),
-	# ]),  # Transformations performing on both the input and target.
+	"transform" : None,          # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
     "batch_size": 1,             # The number of samples in one forward pass.
@@ -110,12 +106,11 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
-	"gradient_clip_val": 0.1,
 	"log_image_every_n_epochs": 1,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 100,
+	"max_epochs"       : 200,
 }
 
 # endregion
