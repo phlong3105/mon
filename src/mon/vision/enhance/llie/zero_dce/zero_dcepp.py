@@ -123,8 +123,6 @@ class ZeroDCEpp_RE(base.ImageEnhancementModel):
             weights     = weights,
             *args, **kwargs
         )
-        assert num_iters <= 8
-       
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
             in_channels  = self.weights.get("in_channels" , in_channels)

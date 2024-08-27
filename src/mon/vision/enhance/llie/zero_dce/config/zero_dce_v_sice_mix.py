@@ -11,8 +11,8 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "colie_re"
-data_name  = ""
+model_name = "zero_dce_v"
+data_name  = "sice_mix"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
@@ -31,19 +31,11 @@ model = {
 	"name"        : model_name,     # The model's name.
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"root"        : root,           # The root directory of the model.
-	"in_channels" : 3,              # The first layer's input channel.
+	"in_channels" : 1,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"window_size" : 7,              # Context window size.
+	"num_channels": 32,
+	"num_iters"   : 15,
 	"down_size"   : 256,            # Downsampling size.
-	"num_layers"  : 4,              # Number of layers.
-	"hidden_dim"  : 256,            # Hidden dimension.
-	"add_layer"   : 2,              # Additional layer.
-	"weight_decay": [0.1, 0.0001, 0.001],
-	"L"           : 0.3,            # L parameter.
-	"alpha"       : 1,              # Fidelity control.
-	"beta"        : 20,             # Illumination smoothness.
-	"gamma"       : 8,              # Exposure control.
-	"delta"       : 5,              # Sparsity level.
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,

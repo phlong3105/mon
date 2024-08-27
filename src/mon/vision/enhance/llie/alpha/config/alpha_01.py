@@ -11,7 +11,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "colie_re"
+model_name = "alpha_01"
 data_name  = ""
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -33,7 +33,7 @@ model = {
 	"root"        : root,           # The root directory of the model.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"window_size" : 7,              # Context window size.
+	"window_size" : 1,              # Context window size.
 	"down_size"   : 256,            # Downsampling size.
 	"num_layers"  : 4,              # Number of layers.
 	"hidden_dim"  : 256,            # Hidden dimension.

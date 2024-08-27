@@ -147,16 +147,8 @@ class ConvBlock(nn.Module):
     ):
         super().__init__()
         self.conv = nn.DSConv2d(in_channels, out_channels, 3, 1, 1, bias=True)
-        #
-        if norm:
-            self.norm = norm(out_channels)
-        else:
-            self.norm = nn.Identity()
-        #
-        if is_last_layer:
-            self.relu = nn.Tanh()
-        else:
-            self.relu = nn.LeakyReLU(relu_slope, inplace=False)
+        self.norm = nn.Identity() if norm is None  else norm(out_channels)
+        self.relu = nn.Tanh()     if is_last_layer else nn.LeakyReLU(relu_slope, inplace=False)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input

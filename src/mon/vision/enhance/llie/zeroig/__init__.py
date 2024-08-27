@@ -3,8 +3,8 @@
 
 """ZeroIG.
 
-This modules implements the algorithm described in the paper "ZERO-IG: Zero-Shot
-Illumination-Guided Joint Denoising and Adaptive Enhancement for Low-Light Images".
+This modules implements the paper "ZERO-IG: Zero-Shot Illumination-Guided Joint
+Denoising and Adaptive Enhancement for Low-Light Images".
 
 References:
     Code: https://github.com/Doyle59217/ZeroIG

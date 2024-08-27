@@ -13,6 +13,8 @@ References:
 from __future__ import annotations
 
 import mon.vision.enhance.llie.zero_dce.zero_dce
+import mon.vision.enhance.llie.zero_dce.zero_dce_v
 import mon.vision.enhance.llie.zero_dce.zero_dcepp
 from mon.vision.enhance.llie.zero_dce.zero_dce import *
+from mon.vision.enhance.llie.zero_dce.zero_dce_v import *
 from mon.vision.enhance.llie.zero_dce.zero_dcepp import *

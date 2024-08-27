@@ -52,9 +52,9 @@ class Loss(nn.Loss):
         
         self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
         self.loss_exp = nn.ExposureControlLoss(
-            reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
+            reduction  = reduction,
         )
         self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
         self.loss_tva = nn.TotalVariationLoss(reduction=reduction)
@@ -118,8 +118,6 @@ class ZeroDCE_RE(base.ImageEnhancementModel):
             weights     = weights,
             *args, **kwargs
         )
-        assert num_iters <= 8
-        
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
             in_channels  = self.weights.get("in_channels" , in_channels)

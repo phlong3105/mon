@@ -1,31 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""CoLIE.
+"""Alpha 01.
 
-This module implements the paper: "Fast Context-Based Low-Light Image
-Enhancement via Neural Implicit Representations," ECCV 2024.
-
-References:
-    https://github.com/ctom2/colie
+Test new idea: starting with CoLIE, instead of following the Retinex approach,
+we use Zero-DCE iterative approach to enhance the image.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "CoLIE_RE",
+    "Alpha01",
 ]
 
 from typing import Any, Literal
 
-import cv2
 import numpy as np
 import torch
+from torch.nn import functional as F
+
 from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
 from mon.vision import filtering
 from mon.vision.enhance import base
-from torch.nn import functional as F
 
 console      = core.console
 current_file = core.Path(__file__).absolute()
@@ -72,41 +69,24 @@ class Loss(nn.Loss):
             + loss_sparsity * self.delta
         )
         return loss
-
+    
 # endregion
 
 
 # region Model
 
-@MODELS.register(name="colie_re", arch="colie")
-class CoLIE_RE(base.ImageEnhancementModel):
-    """Fast Context-Based Low-Light Image Enhancement via Neural Implicit
-    Representations.
-    
-    Args:
-        window_size: Context window size. Default: ``1``.
-        down_size  : Downsampling size. Default: ``256``.
-        add_layer: Should be in range of  ``[1, :obj:`num_layers` - 2]``.
-        L: The "optimally-intense threshold", lower values produce brighter
-            images. Default: ``0.3``.
-        alpha: Fidelity control. Default: ``1``.
-        beta: Illumination smoothness. Default: ``20``.
-        gamma: Exposure control. Default: ``8``.
-        delta: Sparsity level. Default: ``5``.
-    
-    References:
-        https://github.com/ctom2/colie
-    """
-    
+@MODELS.register(name="alpha_01", arch="alpha")
+class Alpha01(base.ImageEnhancementModel):
+
     model_dir: core.Path    = current_dir
-    arch     : str          = "colie"
+    arch     : str          = "alpha"
     tasks    : list[Task]   = [Task.LLIE]
     schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
     zoo      : dict         = {}
     
     def __init__(
         self,
-        window_size : int   = 7,
+        window_size : int   = 1,
         down_size   : int   = 256,
         num_layers  : int   = 4,
         hidden_dim  : int   = 256,
@@ -121,7 +101,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name    = "colie_re",
+            name    = "alpha_01",
             weights = weights,
             *args, **kwargs
         )
@@ -132,19 +112,24 @@ class CoLIE_RE(base.ImageEnhancementModel):
         self.siren_C     = 6.0
         
         patch_layers   = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        depth_layers   = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
             patch_layers.append(  nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+            depth_layers.append(  nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
             spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
         patch_layers.append(  nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        depth_layers.append(  nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
-        output_layers  = []
+        output_in_channels = 3 * (hidden_dim // 2)
+        output_layers      = []
         for _ in range(add_layer, num_layers - 1):
-            output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
-
+            output_layers.append(nn.SIREN(output_in_channels, output_in_channels, self.omega_0, self.siren_C))
+        output_layers.append(nn.SIREN(output_in_channels, 1, self.omega_0, self.siren_C, is_last=True))
+        
         self.patch_net   = nn.Sequential(*patch_layers)
+        self.depth_net   = nn.Sequential(*depth_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
         
@@ -192,15 +177,24 @@ class CoLIE_RE(base.ImageEnhancementModel):
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
         image_rgb   = datapoint.get("image")
+        depth       = datapoint.get("depth")
         image_hsv   = core.rgb_to_hsv(image_rgb)
         image_v     = core.rgb_to_v(image_rgb)
         image_v_lr  = self.interpolate_image(image_v)
+        depth_lr    = self.interpolate_image(depth)
         patch       = self.get_patches(image_v_lr)
+        depth_patch = self.get_patches(depth_lr)
         spatial     = self.get_coords()
         
-        illu_res_lr = self.output_net(torch.cat(
-            [self.patch_net(patch), self.spatial_net(spatial)], -1
-        ))
+        illu_res_lr = self.output_net(
+            torch.cat(
+                [
+                    self.patch_net(patch),
+                    self.depth_net(depth_patch),
+                    self.spatial_net(spatial)
+                ], -1
+            )
+        )
         illu_res_lr      = illu_res_lr.view(1, 1, self.down_size, self.down_size)
         illu_lr          = illu_res_lr + image_v_lr
         image_v_fixed_lr = image_v_lr / (illu_lr + 1e-4)
@@ -208,12 +202,12 @@ class CoLIE_RE(base.ImageEnhancementModel):
         image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
         image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
-
+        
         return {
             "image_v"         : image_v,
             "image_v_lr"      : image_v_lr,
-            "patch"           : patch,
-            "spatial"         : spatial,
+            # "patch"           : patch,
+            # "spatial"         : spatial,
             "illu_res_lr"     : illu_res_lr,
             "illu_lr"         : illu_lr,
             "image_v_fixed_lr": image_v_fixed_lr,
@@ -308,6 +302,8 @@ class CoLIE_RE(base.ImageEnhancementModel):
             loss = outputs["loss"]
             loss.backward(retain_graph=True)
             optimizer.step()
+            # if self.verbose:
+            #    console.log(f"Loss: {loss.item()}")
             
         # Forward
         self.eval()
@@ -321,26 +317,4 @@ class CoLIE_RE(base.ImageEnhancementModel):
         outputs["time"] = timer.avg_time
         return outputs
     
-# endregion
-
-
-# region Main
-
-def run_colie():
-    path      = core.Path("./data/00691.png")
-    image     = cv2.imread(str(path))
-    datapoint = {"image": core.to_image_tensor(image, False, True)}
-    device    = torch.device("cuda:0")
-    net       = CoLIE_RE().to(device)
-    outputs   = net.infer(datapoint)
-    enhanced  = outputs.get("enhanced")
-    enhanced  = core.to_image_nparray(enhanced, False, True)
-    cv2.imshow("Image",    image)
-    cv2.imshow("Enhanced", enhanced)
-    cv2.waitKey(0)
-
-
-if __name__ == "__main__":
-    run_colie()
-
 # endregion
