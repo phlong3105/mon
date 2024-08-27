@@ -207,6 +207,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
         image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
+        # Normalize the image in the range `[0, 1]`.
         image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
 
         return {
