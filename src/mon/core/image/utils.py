@@ -26,7 +26,7 @@ __all__ = [
     "is_integer_image",
     "is_normalized_image",
     "is_one_hot_image",
-    "make_imgsz_divisible",
+    "make_image_size_divisible",
     "parse_hw",
     "to_3d_image",
     "to_4d_image",
@@ -186,7 +186,7 @@ def check_image_size(
     """
     size     = parse_hw(size)
     size     = size[0]
-    new_size = make_imgsz_divisible(size, int(stride))
+    new_size = make_image_size_divisible(size, int(stride))
     if new_size != size:
         error_console.log("WARNING: image_size %g must be multiple of max "
                           "stride %g, updating to %g" % (size, stride, new_size))
@@ -634,7 +634,7 @@ def to_image_tensor(
 
 # region Parsing
 
-def make_imgsz_divisible(
+def make_image_size_divisible(
     input  : int | Sequence[int],
     divisor: int = 32
 ) -> tuple[int, int]:

@@ -196,12 +196,13 @@ def measure_metric_pyiqa(
             total       = len(image_files),
             description = f"[bright_yellow] Measuring"
         ):
+            # Image
             image = mon.read_image(path=image_file, to_tensor=True, normalize=True).to(device=device)
             if torch.any(image.isnan()):
                 continue
             if resize:
                 image = mon.resize(image, (h, w))
-            
+            # Target
             has_target  = need_target
             target_file = None
             for ext in mon.IMAGE_FILE_FORMATS:
@@ -214,7 +215,10 @@ def measure_metric_pyiqa(
                     target = mon.resize(target, (h, w))
             else:
                 has_target = False
-            
+            # GT mean
+            if use_gt_mean and has_target:
+                image = mon.scale_gt_mean(image, target)
+            # Measure metric
             for m in metric:
                 if m not in _METRICS:
                     continue

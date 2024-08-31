@@ -33,8 +33,9 @@ model = {
 	"root"        : root,           # The root directory of the model.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"window_size" : 1,              # Context window size.
+	"window_size" : 7,              # Context window size.
 	"down_size"   : 256,            # Downsampling size.
+	"num_iters"   : 8,              # The number of progressive loop.
 	"num_layers"  : 4,              # Number of layers.
 	"hidden_dim"  : 256,            # Hidden dimension.
 	"add_layer"   : 2,              # Additional layer.

@@ -14,6 +14,7 @@ __all__ = [
     "GCENet_02_GF_NewLoss",
     "GCENet_03_FilterInput_OldLoss",
     "GCENet_04_FilterInput_NewLoss",
+    "GCENet_05_NoGF_NewLoss",
 ]
 
 from typing import Any, Literal
@@ -76,7 +77,7 @@ class Loss(nn.Loss):
         loss_col = self.loss_col(input=enhance)               if self.weight_col  > 0 else 0
         loss_exp = self.loss_exp(input=enhance)               if self.weight_exp  > 0 else 0
         loss_spa = self.loss_spa(input=enhance, target=input) if self.weight_spa  > 0 else 0
-        if adjust:
+        if adjust is not None:
             loss_tva = self.loss_tva(input=adjust)  if self.weight_tva > 0 else 0
         else:
             loss_tva = self.loss_tva(input=enhance) if self.weight_tva > 0 else 0
@@ -629,7 +630,50 @@ class GCENet_04_FilterInput_NewLoss(GCENet):
             "dark"    : dark,
             "enhanced": enhanced,
         }
+
+
+@MODELS.register(name="gcenet_05_nogf_newloss", arch="gcenet")
+class GCENet_05_NoGF_NewLoss(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_05_nogf_newloss",
+            *args, **kwargs
+        )
     
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        image  = datapoint.get("image")
+        # Enhancement
+        adjust = self.en(image)
+        # Enhancement loop
+        if self.bam_gamma in [None, 0.0]:
+            guide  = image
+            bam    = None
+            bright = None
+            dark   = None
+            for i in range(self.num_iters):
+                guide = guide + adjust * (torch.pow(guide, 2) - guide)
+        else:
+            guide  = image
+            bam    = self.bam(image)
+            bright = None
+            dark   = None
+            for i in range(0, self.num_iters):
+                bright = guide * (1 - bam)
+                dark   = guide * bam
+                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
+        # Guided Filter
+        enhanced = guide
+        return {
+            "adjust"  : adjust,
+            "bam"     : bam,
+            "bright"  : bright,
+            "dark"    : dark,
+            "guidance": guide,
+            "enhanced": enhanced,
+        }
+
 # endregion
 
 

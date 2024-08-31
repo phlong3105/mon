@@ -197,7 +197,7 @@ def resize_divisible(
 ) -> torch.Tensor | np.ndarray:
     """Resize an :obj:`image` to a size that is divisible by :obj:`divisor`."""
     h, w  = utils.get_image_size(image)
-    h, w  = utils.make_imgsz_divisible((h, w), divisor)
+    h, w  = utils.make_image_size_divisible((h, w), divisor)
     image = resize(image, (w, h))
     return image
 

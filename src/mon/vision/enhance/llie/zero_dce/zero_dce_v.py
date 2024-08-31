@@ -4,7 +4,8 @@
 """Zero-DCE-V.
 
 This module implements our idea. Base on Zero-DCE, we use the V-channel of the
-HSV color space to enhance the low-light image.
+HSV color space to enhance the low-light image. We also use the down-sampling
+idea from CoLIE to improve the performance of the model.
 """
 
 from __future__ import annotations
@@ -85,7 +86,17 @@ class Loss(nn.Loss):
 
 @MODELS.register(name="zero_dce_v", arch="zero_dce")
 class ZeroDCEV(base.ImageEnhancementModel):
-
+    """Zero-DCE-V model for low-light image enhancement.
+    
+    Args:
+        in_channels: The first layer's input channel. Default: ``3`` for RGB
+            image.
+        num_channels: The number of input and output channels for subsequent
+            layers. Default: ``32``.
+        num_iters: The number of progressive loop. Default: ``8``.
+        down_size: The size of the down-sampled image.
+    """
+    
     model_dir: core.Path    = current_dir
     arch     : str          = "zero_dce"
     tasks    : list[Task]   = [Task.LLIE]
@@ -178,7 +189,7 @@ class ZeroDCEV(base.ImageEnhancementModel):
         y = image_v_lr
         for i in range(0, self.num_iters):
             y = y + x_rs[i] * (torch.pow(y, 2) - y)
-
+        
         image_v_fixed_lr = y
         image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)

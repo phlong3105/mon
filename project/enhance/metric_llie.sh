@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="zero_dce"
-model="zero_dce_v"
+arch="gcenet_exp_02"
+model="gcenet_a1_ablation_20"
 data=(
     "dicm"
     "lime"
@@ -48,6 +48,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "niqe" \
         --metric "pi" \
         --backend "pyiqa" \
+        --use-gt-mean \
         --show-results
 done
 

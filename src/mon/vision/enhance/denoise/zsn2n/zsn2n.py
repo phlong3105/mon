@@ -104,7 +104,7 @@ class ZSN2N(base.ImageEnhancementModel):
         # Symmetric Loss
         pred1                = noisy1 - outputs1["enhanced"]
         pred2                = noisy2 - outputs2["enhanced"]
-        noisy_denoised       =  noisy - outputs["enhanced"]
+        noisy_denoised       =  noisy -  outputs["enhanced"]
         denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
         mse_loss  = nn.MSELoss()
         loss_res  = 0.5 * (mse_loss(noisy1, pred2)    + mse_loss(noisy2, pred1))

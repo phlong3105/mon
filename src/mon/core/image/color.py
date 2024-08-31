@@ -116,7 +116,7 @@ def bgr_to_grayscale(
     """
     rgb = bgr_to_rgb(image)
     return rgb_to_grayscale(rgb)
-    
+
 # endregion
 
 

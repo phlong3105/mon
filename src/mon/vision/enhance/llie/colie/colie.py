@@ -134,16 +134,16 @@ class CoLIE_RE(base.ImageEnhancementModel):
         patch_layers   = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_layers.append(  nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-        patch_layers.append(  nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+            patch_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+        patch_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
         output_layers  = []
         for _ in range(add_layer, num_layers - 1):
             output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
         output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
-
+        
         self.patch_net   = nn.Sequential(*patch_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
@@ -197,9 +197,11 @@ class CoLIE_RE(base.ImageEnhancementModel):
         image_v_lr  = self.interpolate_image(image_v)
         patch       = self.get_patches(image_v_lr)
         spatial     = self.get_coords()
-        
         illu_res_lr = self.output_net(torch.cat(
-            [self.patch_net(patch), self.spatial_net(spatial)], -1
+            [
+                self.patch_net(patch),
+                self.spatial_net(spatial)
+            ], -1
         ))
         illu_res_lr      = illu_res_lr.view(1, 1, self.down_size, self.down_size)
         illu_lr          = illu_res_lr + image_v_lr
@@ -209,7 +211,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
         image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
         # Normalize the image in the range `[0, 1]`.
         image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
-
+        
         return {
             "image_v"         : image_v,
             "image_v_lr"      : image_v_lr,
