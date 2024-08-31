@@ -1,4 +1,4 @@
-#!/usr/bin/edenoised1nv python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "gcenet_02_gf_newloss"
+model_name = "gcenet_06_wo_spa"
 data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"

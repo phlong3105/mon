@@ -10,11 +10,19 @@ from __future__ import annotations
 
 __all__ = [
     "GCENet",
-    "GCENet_01_GF_OldLoss",
-    "GCENet_02_GF_NewLoss",
-    "GCENet_03_FilterInput_OldLoss",
-    "GCENet_04_FilterInput_NewLoss",
-    "GCENet_05_NoGF_NewLoss",
+    "GCENet_01_GFA_OldLoss",
+    "GCENet_02_GFA_NewLoss",
+    "GCENet_03_GFB_OldLoss",
+    "GCENet_04_GFB_NewLoss",
+    "GCENet_05_Wo_Col",
+    "GCENet_06_Wo_Exp",
+    "GCENet_07_Wo_Spa",
+    "GCENet_08_Wo_TV",
+    "GCENet_09_Wo_Bri",
+    "GCENet_10_Wo_Sym",
+    "GCENet_11_Wo_DGF",
+    "GCENet_12_Wo_Sym_DGF",
+    "GCENet_13_Wo_Bri_Sym_DGF",
 ]
 
 from typing import Any, Literal
@@ -430,14 +438,18 @@ class GCENet(base.ImageEnhancementModel):
             "guidance": guide,
             "enhanced": enhanced,
         }
-    
 
-@MODELS.register(name="gcenet_01_gf_oldloss", arch="gcenet")
-class GCENet_01_GF_OldLoss(GCENet):
+# endregion
+
+
+# region Ablation Study
+
+@MODELS.register(name="gcenet_01_gfa_oldloss", arch="gcenet")
+class GCENet_01_GFA_OldLoss(GCENet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name="gcenet_01_gf_oldloss",
+            name="gcenet_01_gfa_oldloss",
             *args, **kwargs
         )
     
@@ -455,89 +467,23 @@ class GCENet_01_GF_OldLoss(GCENet):
         # Return
         return outputs
     
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        # Enhancement
-        adjust = self.en(image)
-        # Enhancement loop
-        if self.bam_gamma in [None, 0.0]:
-            guide  = image
-            bam    = None
-            bright = None
-            dark   = None
-            for i in range(self.num_iters):
-                guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        else:
-            guide  = image
-            bam    = self.bam(image)
-            bright = None
-            dark   = None
-            for i in range(0, self.num_iters):
-                bright = guide * (1 - bam)
-                dark   = guide * bam
-                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        # Guided Filter
-        enhanced = self.gf(image, guide)
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
 
-
-@MODELS.register(name="gcenet_02_gf_newloss", arch="gcenet")
-class GCENet_02_GF_NewLoss(GCENet):
+@MODELS.register(name="gcenet_02_gfa_newloss", arch="gcenet")
+class GCENet_02_GFA_NewLoss(GCENet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name="gcenet_02_gf_newloss",
+            name="gcenet_02_gfa_newloss",
             *args, **kwargs
         )
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        # Enhancement
-        adjust = self.en(image)
-        # Enhancement loop
-        if self.bam_gamma in [None, 0.0]:
-            guide  = image
-            bam    = None
-            bright = None
-            dark   = None
-            for i in range(self.num_iters):
-                guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        else:
-            guide  = image
-            bam    = self.bam(image)
-            bright = None
-            dark   = None
-            for i in range(0, self.num_iters):
-                bright = guide * (1 - bam)
-                dark   = guide * bam
-                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        # Guided Filter
-        enhanced = self.gf(image, guide)
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
 
 
-@MODELS.register(name="gcenet_03_filterinput_oldloss", arch="gcenet")
-class GCENet_03_FilterInput_OldLoss(GCENet):
+@MODELS.register(name="gcenet_03_gfb_oldloss", arch="gcenet")
+class GCENet_03_GFB_OldLoss(GCENet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name="gcenet_03_filterinput_oldloss",
+            name="gcenet_03_gfb_oldloss",
             *args, **kwargs
         )
     
@@ -589,12 +535,12 @@ class GCENet_03_FilterInput_OldLoss(GCENet):
         }
 
 
-@MODELS.register(name="gcenet_04_filterinput_newloss", arch="gcenet")
-class GCENet_04_FilterInput_NewLoss(GCENet):
+@MODELS.register(name="gcenet_04_gfb_newloss", arch="gcenet")
+class GCENet_04_GFB_NewLoss(GCENet):
     
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name="gcenet_04_filterinput_newloss",
+            name="gcenet_04_gfb_newloss",
             *args, **kwargs
         )
     
@@ -632,12 +578,113 @@ class GCENet_04_FilterInput_NewLoss(GCENet):
         }
 
 
-@MODELS.register(name="gcenet_05_nogf_newloss", arch="gcenet")
-class GCENet_05_NoGF_NewLoss(GCENet):
+@MODELS.register(name="gcenet_05_wo_col", arch="gcenet")
+class GCENet_05_Wo_Col(GCENet):
 
     def __init__(self, *args, **kwargs):
         super().__init__(
-            name="gcenet_05_nogf_newloss",
+            name="gcenet_05_wo_col",
+            *args, **kwargs
+        )
+        self.loss = Loss(reduction="mean", weight_col=0.0)
+
+
+@MODELS.register(name="gcenet_06_wo_exp", arch="gcenet")
+class GCENet_06_Wo_Exp(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_06_wo_exp",
+            *args, **kwargs
+        )
+        self.loss = Loss(reduction="mean", weight_exp=0.0)
+
+
+@MODELS.register(name="gcenet_07_wo_spa", arch="gcenet")
+class GCENet_07_Wo_Spa(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_07_wo_spa",
+            *args, **kwargs
+        )
+        self.loss = Loss(reduction="mean", weight_spa=0.0)
+
+
+@MODELS.register(name="gcenet_08_wo_tv", arch="gcenet")
+class GCENet_08_Wo_TV(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_08_wo_tv",
+            *args, **kwargs
+        )
+        self.loss = Loss(reduction="mean", weight_tva=0.0)
+
+
+@MODELS.register(name="gcenet_09_wo_bri", arch="gcenet")
+class GCENet_09_Wo_Bri(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_09_wo_bri",
+            *args, **kwargs
+        )
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        image  = datapoint.get("image")
+        # Enhancement
+        adjust = self.en(image)
+        # Enhancement loop
+        guide  = image
+        bam    = None
+        bright = None
+        dark   = None
+        for i in range(self.num_iters):
+            guide = guide + adjust * (torch.pow(guide, 2) - guide)
+        # Guided Filter
+        enhanced = self.gf(image, guide)
+        return {
+            "adjust"  : adjust,
+            "bam"     : bam,
+            "bright"  : bright,
+            "dark"    : dark,
+            "guidance": guide,
+            "enhanced": enhanced,
+        }
+
+
+@MODELS.register(name="gcenet_10_wo_sym", arch="gcenet")
+class GCENet_10_Wo_Sym(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_10_wo_sym",
+            *args, **kwargs
+        )
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        image = datapoint.get("image")
+        adjust, bam, bright, dark, guide, enhanced = outputs.values()
+        loss  = self.loss(image, adjust, enhanced)
+        # Return
+        outputs["loss"] = loss
+        # Return
+        return outputs
+
+
+@MODELS.register(name="gcenet_11_wo_dgf", arch="gcenet")
+class GCENet_11_Wo_DGF(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_11_wo_dgf",
             *args, **kwargs
         )
     
@@ -674,6 +721,111 @@ class GCENet_05_NoGF_NewLoss(GCENet):
             "enhanced": enhanced,
         }
 
+
+@MODELS.register(name="gcenet_12_wo_sym_dgf", arch="gcenet")
+class GCENet_12_Wo_Sym_DGF(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_12_wo_sym_dgf",
+            *args, **kwargs
+        )
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        image = datapoint.get("image")
+        adjust, bam, bright, dark, guide, enhanced = outputs.values()
+        loss  = self.loss(image, adjust, enhanced)
+        # Return
+        outputs["loss"] = loss
+        # Return
+        return outputs
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        image  = datapoint.get("image")
+        # Enhancement
+        adjust = self.en(image)
+        # Enhancement loop
+        if self.bam_gamma in [None, 0.0]:
+            guide  = image
+            bam    = None
+            bright = None
+            dark   = None
+            for i in range(self.num_iters):
+                guide = guide + adjust * (torch.pow(guide, 2) - guide)
+        else:
+            guide  = image
+            bam    = self.bam(image)
+            bright = None
+            dark   = None
+            for i in range(0, self.num_iters):
+                bright = guide * (1 - bam)
+                dark   = guide * bam
+                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
+        # Guided Filter
+        enhanced = guide
+        return {
+            "adjust"  : adjust,
+            "bam"     : bam,
+            "bright"  : bright,
+            "dark"    : dark,
+            "guidance": guide,
+            "enhanced": enhanced,
+        }
+
+
+@MODELS.register(name="gcenet_13_wo_bri_sym_dgf", arch="gcenet")
+class GCENet_13_Wo_Bri_Sym_DGF(GCENet):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(
+            name="gcenet_13_wo_bri_sym_dgf",
+            *args, **kwargs
+        )
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        image = datapoint.get("image")
+        adjust, bam, bright, dark, guide, enhanced = outputs.values()
+        loss  = self.loss(image, adjust, enhanced)
+        # Return
+        outputs["loss"] = loss
+        # Return
+        return outputs
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        image  = datapoint.get("image")
+        # Enhancement
+        adjust = self.en(image)
+        # Enhancement loop
+        guide  = image
+        bam    = self.bam(image)
+        bright = None
+        dark   = None
+        for i in range(0, self.num_iters):
+            bright = guide * (1 - bam)
+            dark   = guide * bam
+            guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
+        # Guided Filter
+        enhanced = guide
+        return {
+            "adjust"  : adjust,
+            "bam"     : bam,
+            "bright"  : bright,
+            "dark"    : dark,
+            "guidance": guide,
+            "enhanced": enhanced,
+        }
 # endregion
 
 

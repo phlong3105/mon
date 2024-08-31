@@ -1,4 +1,4 @@
-#!/usr/bin/edenoised1nv python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "gcenet_01_gf_oldloss"
+model_name = "gcenet_09_wo_bri"
 data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -34,7 +34,7 @@ model = {
 	"root"        : root,           # The root directory of the model.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,		        # The number of input and output channels for subsequent layers.
+	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
 	"gf_radius"   : 3,              # The radius for GuidedFilter.
 	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
