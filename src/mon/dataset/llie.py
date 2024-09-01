@@ -35,6 +35,8 @@ __all__ = [
     "MEFDataModule",
     "NPE",
     "NPEDataModule",
+    "NightCity",
+    "NightCityDataModule",
     "SICEGrad",
     "SICEGradDataModule",
     "SICEMix",
@@ -68,7 +70,7 @@ ImageDataset        = core.ImageDataset
 class DarkFace(ImageDataset):
     """DarkFace dataset consists of ``6,490`` low-light images."""
     
-    tasks : list[Task]  = [Task.LLIE]
+    tasks : list[Task]  = [Task.LLIE, Task.DETECT]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image": ImageAnnotation,
@@ -109,8 +111,8 @@ class DarkFace(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
-        
+
+
 @DATASETS.register(name="dicm")
 class DICM(ImageDataset):
     """DICM dataset consists of ``64`` low-light images."""
@@ -156,7 +158,7 @@ class DICM(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
+
 
 @DATASETS.register(name="exdark")
 class ExDark(ImageDataset):
@@ -190,7 +192,7 @@ class ExDark(ImageDataset):
                         lq_images.append(ImageAnnotation(path=path))
         
         self.datapoints["image"] = lq_images
-        
+
 
 @DATASETS.register(name="fivek_c")
 class FiveKC(ImageDataset):
@@ -352,7 +354,7 @@ class FiveKE(ImageDataset):
         self.datapoints["depth"]    = lq_depth_maps
         self.datapoints["hq_image"] = hq_images
         self.datapoints["hq_depth"] = hq_depth_maps
-        
+
 
 @DATASETS.register(name="fusion")
 class Fusion(ImageDataset):
@@ -402,7 +404,7 @@ class Fusion(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
+
 
 @DATASETS.register(name="lime")
 class LIME(ImageDataset):
@@ -452,7 +454,7 @@ class LIME(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
+
 
 @DATASETS.register(name="lol_blur")
 class LOLBlur(ImageDataset):
@@ -501,7 +503,7 @@ class LOLBlur(ImageDataset):
         
         self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
-        
+
 
 @DATASETS.register(name="lol_v1")
 class LOLV1(ImageDataset):
@@ -585,7 +587,7 @@ class LOLV1(ImageDataset):
         self.datapoints["depth"]    = lq_depth_maps
         self.datapoints["hq_image"] = hq_images
         self.datapoints["hq_depth"] = hq_depth_maps
-        
+
 
 @DATASETS.register(name="lol_v2_real")
 class LOLV2Real(ImageDataset):
@@ -669,7 +671,7 @@ class LOLV2Real(ImageDataset):
         self.datapoints["depth"]    = lq_depth_maps
         self.datapoints["hq_image"] = hq_images
         self.datapoints["hq_depth"] = hq_depth_maps
-        
+
 
 @DATASETS.register(name="lol_v2_synthetic")
 class LOLV2Synthetic(ImageDataset):
@@ -753,7 +755,7 @@ class LOLV2Synthetic(ImageDataset):
         self.datapoints["depth"]    = lq_depth_maps
         self.datapoints["hq_image"] = hq_images
         self.datapoints["hq_depth"] = hq_depth_maps
-        
+
 
 @DATASETS.register(name="mef")
 class MEF(ImageDataset):
@@ -802,8 +804,61 @@ class MEF(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
+
+
+@DATASETS.register(name="nightcity")
+class NightCity(ImageDataset):
+    """NightCity dataset."""
+    
+    tasks : list[Task]  = [Task.LLIE, Task.SEGMENT]
+    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "image": ImageAnnotation,
+        # "depth": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
+    
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
         
-                        
+    def get_data(self):
+        if self.split == Split.TEST:
+            patterns = [
+                self.root / "nightcity" / "val" / "lq",
+            ]
+        else:
+            patterns = [
+                self.root / "nightcity" / self.split_str / "lq",
+            ]
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
+                ):
+                    if path.is_image_file():
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        '''
+        # LQ depth images
+        depth_maps: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq depth maps"
+            ):
+                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
+                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+        '''
+        self.datapoints["image"] = lq_images
+        # self.datapoints["depth"] = depth_maps
+        
+
 @DATASETS.register(name="npe")
 class NPE(ImageDataset):
 
@@ -851,8 +906,8 @@ class NPE(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
-    
+
+
 @DATASETS.register(name="sice_grad")
 class SICEGrad(ImageDataset):
 
@@ -884,8 +939,8 @@ class SICEGrad(ImageDataset):
                         lq_images.append(ImageAnnotation(path=path))
         
         self.datapoints["image"] = lq_images
-        
-                        
+
+
 @DATASETS.register(name="sice_mix")
 class SICEMix(ImageDataset):
     
@@ -933,7 +988,7 @@ class SICEMix(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
+
 
 @DATASETS.register(name="sice_mix_v2")
 class SICEMixV2(ImageDataset):
@@ -982,7 +1037,7 @@ class SICEMixV2(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
+
 
 @DATASETS.register(name="ulol")
 class ULOL(ImageDataset):
@@ -1044,7 +1099,7 @@ class ULOL(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
+
 
 @DATASETS.register(name="vv")
 class VV(ImageDataset):
@@ -1093,7 +1148,7 @@ class VV(ImageDataset):
         
         self.datapoints["image"] = lq_images
         self.datapoints["depth"] = depth_maps
-        
+
 # endregion
 
 
@@ -1437,6 +1492,36 @@ class MEFDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = MEF(split=Split.TEST, **self.dataset_kwargs)
         
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        pass
+
+
+@DATAMODULES.register(name="nightcity")
+class NightCityDataModule(DataModule):
+    
+    tasks: list[Task] = [Task.LLIE, Task.SEGMENT]
+    
+    def prepare_data(self, *args, **kwargs):
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = NightCity(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = NightCity(split=Split.VAL,   **self.dataset_kwargs)
+            # self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test  = NightCity(split=Split.TEST,  **self.dataset_kwargs)
+            
         if self.classlabels is None:
             self.get_classlabels()
         

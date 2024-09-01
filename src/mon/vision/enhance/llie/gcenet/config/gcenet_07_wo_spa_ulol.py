@@ -12,7 +12,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "gcenet_06_wo_spa"
+model_name = "gcenet_07_wo_spa"
 data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -58,6 +58,7 @@ model = {
 			"network_params_only": True,
         }
     ],          # Optimizer(s) for training model.
+	"debug"       : False,          # If ``True``, run the model in debug mode (when predicting).
 	"verbose"     : verbose,        # Verbosity.
 }
 

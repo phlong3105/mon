@@ -190,6 +190,7 @@ def parse_predict_args(model_root: str | mon.Path = None) -> dict:
         "loss"      : None,
         "metrics"   : None,
         "optimizers": None,
+        "debug"     : save_debug,
         "verbose"   : verbose,
     }
     args["predictor"]  |= {

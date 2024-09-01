@@ -250,10 +250,13 @@ class Model(lightning.LightningModule, ABC):
         metrics     : Any  = None,
         optimizers  : Any  = None,
         # Misc
+        debug       : bool = True,
         verbose     : bool = True,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
+        # Misc
+        self.debug         = debug
         self.verbose       = verbose
         # For saving/loading
         self.name          = name
@@ -344,8 +347,22 @@ class Model(lightning.LightningModule, ABC):
         True ``'predicting'`` mode happens when :obj:`_trainer` is ``None``,
         i.e., not being handled by :obj:`lightning.Trainer`.
         """
-        return True if (not self.training
-                        and getattr(self, "_trainer", None) is None) else False
+        return True \
+            if (not self.training and getattr(self, "_trainer", None) is None) \
+            else False
+    
+    @property
+    def debug(self) -> bool:
+        """Return ``True`` if the model is in debug mode."""
+        if self.predicting:
+            return self._debug
+        else:
+            return True
+    
+    @debug.setter
+    def debug(self, debug: bool):
+        """Set the debug mode."""
+        self._debug = debug
     
     # endregion
     

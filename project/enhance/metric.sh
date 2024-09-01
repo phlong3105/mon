@@ -14,16 +14,7 @@ data_dir="${mon_dir}/data"
 task="llie"
 arch="gcenet"
 model="zerodce"
-data=(
-    "dicm"
-    "lime"
-    "mef"
-    "npe"
-    "vv"
-    "lol_v1"
-    "lol_v2_real"
-    "lol_v2_synthetic"
-)
+data=()
 
 # Run
 cd "${runml_dir}" || exit
@@ -48,6 +39,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --test-y-channel \
         --backend "pyiqa" \
         --show-results
+        # --use-gt-mean \
 done
 
 # Done

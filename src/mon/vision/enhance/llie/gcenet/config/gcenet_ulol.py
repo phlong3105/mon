@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import cv2
-
 import mon
 from mon import albumentation as A
 from mon.config import default
@@ -14,14 +12,14 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "d2ce_01_baseline"
+model_name = "gcenet"
 data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
 variant    = None
 fullname   = f"{model_name}_{data_name}"
-image_size = [504, 504]
+image_size = [512, 512]
 seed	   = 100
 verbose    = True
 
@@ -36,9 +34,8 @@ model = {
 	"root"        : root,           # The root directory of the model.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,		        # The number of input and output channels for subsequent layers.
+	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
 	"num_iters"   : 15,             # The number of progressive loop.
-	"dba_eps"     : 0.05,		    # The epsilon for DepthBoundaryAware.
 	"gf_radius"   : 3,              # The radius for GuidedFilter.
 	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
 	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap.
@@ -72,27 +69,15 @@ model = {
 
 data = {
     "name"      : data_name,
-    "root"      : data_root,  # A root directory where the data is stored.
+    "root"      : data_root,     # A root directory where the data is stored.
 	"transform" : A.Compose(transforms=[
-		# A.Resize(height=image_size[0], width=image_size[1], interpolation=cv2.INTER_AREA),
-		A.ResizeMultipleOf(
-			height            = image_size[0],
-			width             = image_size[1],
-			keep_aspect_ratio = False,
-			multiple_of       = 14,
-			resize_method     = "lower_bound",
-			interpolation     = cv2.INTER_AREA,
-		),
-		# A.NormalizeImageMeanStd(
-		# 	mean = [0.485, 0.456, 0.406],
-		# 	std  = [0.229, 0.224, 0.225]
-		# ),
+		A.Resize(height=image_size[0], width=image_size[1]),
 		# A.Flip(),
 		# A.Rotate(),
 	]),  # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 4,             # The number of samples in one forward pass.
+    "batch_size": 8,             # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.
@@ -109,7 +94,7 @@ trainer = default.trainer | {
 		default.model_checkpoint | {
 			"filename": fullname,
 			"monitor" : "val/psnr",
-			"mode"    : "max"
+			"mode"    : "max",
 		},
 		default.model_checkpoint | {
 			"filename" : fullname,
@@ -127,8 +112,7 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 50,
-	"strategy"         : "ddp_find_unused_parameters_true",
+	"max_epochs"       : 200,
 }
 
 # endregion
@@ -137,7 +121,7 @@ trainer = default.trainer | {
 # region Predicting
 
 predictor = default.predictor | {
-	"default_root_dir": root,   # Default path for saving results.
+	"default_root_dir": root,  # Default path for saving results.
 }
 
 # endregion

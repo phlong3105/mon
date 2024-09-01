@@ -133,7 +133,7 @@ def parse_train_args(model_root: str | mon.Path = None) -> dict:
     weights  = weights[0] if isinstance(weights, list | tuple) and len(weights) == 1 else weights
     devices  = mon.parse_device(devices)
     devices  = mon.to_int_list(devices) if "auto" not in devices else "auto"
-    devices  = len(devices) if isinstance(devices, list | tuple) else devices
+    # devices  = len(devices) if isinstance(devices, list | tuple) else devices
     
     # Update arguments
     args["hostname"]  = hostname

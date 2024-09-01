@@ -369,7 +369,7 @@ def main(
         benchmark    = True if benchmark    == "yes" else False
         save_image   = click.prompt(click.style(f"Save image? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
         save_image   = True if save_image   == "yes" else False
-        save_debug   = click.prompt(click.style(f"Save debug? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
+        save_debug   = click.prompt(click.style(f"Save debug? [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
         save_debug   = True if save_debug   == "yes" else False
         use_data_dir = click.prompt(click.style(f"Data dir?   [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
         use_data_dir = True if use_data_dir == "yes" else False

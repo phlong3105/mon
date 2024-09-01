@@ -430,14 +430,20 @@ class GCENet(base.ImageEnhancementModel):
                 guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         # Guided Filter
         enhanced = self.gf(image, guide)
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
+        # Return
+        if self.debug:
+            return {
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "bright"  : bright,
+                "dark"    : dark,
+                "guidance": guide,
+                "enhanced": enhanced,
+            }
+        else:
+            return {
+                "enhanced": enhanced,
+            }
 
 # endregion
 
@@ -525,14 +531,20 @@ class GCENet_03_GFB_OldLoss(GCENet):
                 bright   = enhanced * (1 - bam)
                 dark     = enhanced * bam
                 enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        return {
-            "denoised": denoised,
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "enhanced": enhanced,
-        }
+        # Return
+        if self.debug:
+            return {
+                "denoised": denoised,
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "bright"  : bright,
+                "dark"    : dark,
+                "enhanced": enhanced,
+            }
+        else:
+            return {
+                "enhanced": enhanced,
+            }
 
 
 @MODELS.register(name="gcenet_04_gfb_newloss", arch="gcenet")
@@ -568,14 +580,20 @@ class GCENet_04_GFB_NewLoss(GCENet):
                 bright   = enhanced * (1 - bam)
                 dark     = enhanced * bam
                 enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        return {
-            "denoised": denoised,
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "enhanced": enhanced,
-        }
+        # Return
+        if self.debug:
+            return {
+                "denoised": denoised,
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "bright"  : bright,
+                "dark"    : dark,
+                "enhanced": enhanced,
+            }
+        else:
+            return {
+                "enhanced": enhanced,
+            }
 
 
 @MODELS.register(name="gcenet_05_wo_col", arch="gcenet")
@@ -645,14 +663,20 @@ class GCENet_09_Wo_Bri(GCENet):
             guide = guide + adjust * (torch.pow(guide, 2) - guide)
         # Guided Filter
         enhanced = self.gf(image, guide)
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
+        # Return
+        if self.debug:
+            return {
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "bright"  : bright,
+                "dark"    : dark,
+                "guidance": guide,
+                "enhanced": enhanced,
+            }
+        else:
+            return {
+                "enhanced": enhanced,
+            }
 
 
 @MODELS.register(name="gcenet_10_wo_sym", arch="gcenet")
@@ -712,14 +736,20 @@ class GCENet_11_Wo_DGF(GCENet):
                 guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         # Guided Filter
         enhanced = guide
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
+        # Return
+        if self.debug:
+            return {
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "bright"  : bright,
+                "dark"    : dark,
+                "guidance": guide,
+                "enhanced": enhanced,
+            }
+        else:
+            return {
+                "enhanced": enhanced,
+            }
 
 
 @MODELS.register(name="gcenet_12_wo_sym_dgf", arch="gcenet")
@@ -769,14 +799,20 @@ class GCENet_12_Wo_Sym_DGF(GCENet):
                 guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         # Guided Filter
         enhanced = guide
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
+        # Return
+        if self.debug:
+            return {
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "bright"  : bright,
+                "dark"    : dark,
+                "guidance": guide,
+                "enhanced": enhanced,
+            }
+        else:
+            return {
+                "enhanced": enhanced,
+            }
 
 
 @MODELS.register(name="gcenet_13_wo_bri_sym_dgf", arch="gcenet")
@@ -809,23 +845,28 @@ class GCENet_13_Wo_Bri_Sym_DGF(GCENet):
         adjust = self.en(image)
         # Enhancement loop
         guide  = image
-        bam    = self.bam(image)
+        bam    = None
         bright = None
         dark   = None
         for i in range(0, self.num_iters):
-            bright = guide * (1 - bam)
-            dark   = guide * bam
-            guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
+            guide  = guide + adjust * (torch.pow(guide, 2) - guide)
         # Guided Filter
         enhanced = guide
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
+        # Return
+        if self.debug:
+            return {
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "bright"  : bright,
+                "dark"    : dark,
+                "guidance": guide,
+                "enhanced": enhanced,
+            }
+        else:
+            return {
+                "enhanced": enhanced,
+            }
+    
 # endregion
 
 
