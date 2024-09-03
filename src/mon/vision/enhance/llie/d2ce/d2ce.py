@@ -10,10 +10,6 @@ from __future__ import annotations
 
 __all__ = [
     "D2CE",
-    "D2CE_01_Baseline",
-    "D2CE_02_Prediction",
-    "D2CE_03_OldLoss",
-    "D2CE_04_Prediction_OldLoss",
 ]
 
 from copy import deepcopy
@@ -442,181 +438,21 @@ class D2CE(base.ImageEnhancementModel):
                 guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         # Guided Filter
         enhanced = self.gf(image, guide)
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "depth"   : depth,
-            "edge"    : edge,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
-
-
-@MODELS.register(name="d2ce_01_baseline", arch="d2ce")
-class D2CE_01_Baseline(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name      = "d2ce_01_baseline",
-            use_depth = False,
-            use_edge  = False,
-            *args, **kwargs
-        )
-    
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        # Forward
-        self.assert_datapoint(datapoint)
-        image   = datapoint.get("image")
-        depth   = datapoint.get("depth")
-        outputs = self.forward(datapoint=datapoint,  *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Symmetric Loss
-        adjust, bam, depth, edge, bright, dark, guide, enhanced = outputs.values()
-        loss = self.loss(image, adjust, enhanced)
-        outputs["loss"] = loss
         # Return
-        return outputs
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        depth  = datapoint.get("depth")
-        # Enhancement
-        adjust, edge = self.en(image, depth)
-        edge   = edge.detach() if edge is not None else None  # Must call detach() else error
-        # Enhancement loop
-        guide  = image
-        bam    = None
-        bright = None
-        dark   = None
-        for i in range(self.num_iters):
-            guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        # Guided Filter
-        enhanced = guide
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "depth"   : depth,
-            "edge"    : edge,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
-    
-
-@MODELS.register(name="d2ce_02_prediction", arch="d2ce")
-class D2CE_02_Prediction(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(name="d2ce_02_prediction", *args, **kwargs)
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image = datapoint.get("image")
-        depth = datapoint.get("depth")
-        # Enhancement
-        adjust, edge = self.en(image, depth)
-        edge  = edge.detach() if edge is not None else None  # Must call detach() else error
-        # Enhancement loop
-        if not self.predicting:
-            guide  = image
-            bam    = None
-            bright = None
-            dark   = None
-            for i in range(self.num_iters):
-                guide = guide + adjust * (torch.pow(guide, 2) - guide)
+        if self.debug:
+            return {
+                "adjust"  : adjust,
+                "bam"     : bam,
+                "depth"   : depth,
+                "edge"    : edge,
+                "bright"  : bright,
+                "dark"    : dark,
+                "guidance": guide,
+                "enhanced": enhanced,
+            }
         else:
-            guide  = image
-            bam    = self.bam(image)
-            bright = None
-            dark   = None
-            for i in range(0, self.num_iters):
-                bright = guide * (1 - bam)
-                dark   = guide * bam
-                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        # Guided Filter
-        enhanced = self.gf(image, guide)
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "depth"   : depth,
-            "edge"    : edge,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
-
-
-@MODELS.register(name="d2ce_03_oldloss", arch="d2ce")
-class D2CE_03_OldLoss(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(name="d2ce_03_oldloss", *args, **kwargs)
-    
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        # Forward
-        self.assert_datapoint(datapoint)
-        image   = datapoint.get("image")
-        depth   = datapoint.get("depth")
-        outputs = self.forward(datapoint=datapoint,  *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Symmetric Loss
-        adjust, bam, depth, edge, bright, dark, guide, enhanced = outputs.values()
-        loss = self.loss(image, adjust, enhanced)
-        outputs["loss"] = loss
-        # Return
-        return outputs
-
-
-@MODELS.register(name="d2ce_04_prediction_oldloss", arch="d2ce")
-class D2CE_04_Prediction_OldLoss(D2CE):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(name="d2ce_04_prediction_oldloss", *args, **kwargs)
-    
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        # Forward
-        self.assert_datapoint(datapoint)
-        image   = datapoint.get("image")
-        depth   = datapoint.get("depth")
-        outputs = self.forward(datapoint=datapoint,  *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Symmetric Loss
-        adjust, bam, depth, edge, bright, dark, guide, enhanced = outputs.values()
-        loss = self.loss(image, adjust, enhanced)
-        outputs["loss"] = loss
-        # Return
-        return outputs
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        depth  = datapoint.get("depth")
-        # Enhancement
-        adjust, edge = self.en(image, depth)
-        edge   = edge.detach() if edge is not None else None  # Must call detach() else error
-        # Enhancement loop
-        guide  = image
-        bam    = None
-        bright = None
-        dark   = None
-        for i in range(self.num_iters):
-            guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        # Guided Filter
-        enhanced = guide
-        return {
-            "adjust"  : adjust,
-            "bam"     : bam,
-            "depth"   : depth,
-            "edge"    : edge,
-            "bright"  : bright,
-            "dark"    : dark,
-            "guidance": guide,
-            "enhanced": enhanced,
-        }
-    
+            return {
+                "enhanced": enhanced,
+            }
+        
 # endregion

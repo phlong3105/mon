@@ -76,7 +76,6 @@ class Network(nn.Module):
 
     def __init__(self):
         super(Network, self).__init__()
-
         self.enhance    = Enhancer(layers=3, channels=64)
         self.denoise_1  = Denoise_1(chan_embed=48)
         self.denoise_2  = Denoise_2(chan_embed=48)
@@ -183,7 +182,6 @@ class Finetunemodel(nn.Module):
         if isinstance(m, nn.Conv2d):
             m.weight.data.normal_(0, 0.02)
             m.bias.data.zero_()
-
         if isinstance(m, nn.BatchNorm2d):
             m.weight.data.normal_(1., 0.02)
 

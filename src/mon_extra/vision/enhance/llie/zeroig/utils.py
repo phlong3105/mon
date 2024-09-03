@@ -56,7 +56,7 @@ def blur(x):
     padding     = kernel_size // 2
     kernel_var  = gauss_kernel(kernel_size, 1, x.size(1)).to(device)
     x_padded    = torch.nn.functional.pad(x, (padding, padding, padding, padding), mode='reflect')
-    return torch.nn.functional .conv2d(x_padded, kernel_var, padding=0, groups=x.size(1))
+    return torch.nn.functional.conv2d(x_padded, kernel_var, padding=0, groups=x.size(1))
 
 
 def padr_tensor(img):

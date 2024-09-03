@@ -12,13 +12,13 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="gcenet"
-model="gcenet"
+arch="zeroig"
+model="zeroig_re"
 data=(
     "dicm"
     "lime"
     "mef"
-    # "nightcity"  # 6.6817815728	5.5781864773
+    # "nightcity" 
     "npe"
     "vv"
     "lol_v1"
@@ -49,6 +49,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "niqe" \
         --metric "pi" \
         --backend "pyiqa" \
+        --use-gt-mean \
         --show-results
         # --use-gt-mean \
 done

@@ -42,13 +42,15 @@ from typing import Literal
 import numpy as np
 import torch
 import torchvision
-from mon.globals import LOSSES
-from mon.nn.loss import base
-from mon.nn.modules import prior
 from torch import nn
 from torch.nn import functional as F
 from torch.nn.common_types import _size_2_t
 from torchvision import models, transforms
+
+from mon import core
+from mon.globals import LOSSES
+from mon.nn.loss import base
+from mon.nn.modules import prior
 
 
 # region Loss
@@ -1264,16 +1266,6 @@ class TextureDifferenceLoss(base.Loss):
         self.constant_c = constant_c
         self.threshold  = threshold
     
-    def local_stddev(self, image: torch.Tensor) -> torch.Tensor:
-        padding        = self.patch_size // 2
-        image          = F.pad(image, (padding, padding, padding, padding), mode="reflect")
-        patches        = image.unfold(2, self.patch_size, 1).unfold(3, self.patch_size, 1)
-        mean           = patches.mean(dim=(4, 5), keepdim=True)
-        squared_diff   = (patches - mean) ** 2
-        local_variance = squared_diff.mean(dim=(4, 5))
-        local_stddev   = torch.sqrt(local_variance + 1e-9)
-        return local_stddev
-    
     def rgb_to_gray(self, image: torch.Tensor) -> torch.Tensor:
         # Convert RGB image to grayscale using the luminance formula
         gray_image =  0.144 * image[:, 0, :, :] + 0.5870 * image[:, 1, :, :] + 0.299 * image[:, 2, :, :]
@@ -1284,8 +1276,8 @@ class TextureDifferenceLoss(base.Loss):
         input       = self.rgb_to_gray(input)
         target      = self.rgb_to_gray(target)
         # Calculate local standard deviation for input and target images
-        stddev1     = self.local_stddev(input)
-        stddev2     = self.local_stddev(target)
+        stddev1     = core.image_local_stddev(input)
+        stddev2     = core.image_local_stddev(target)
         numerator   = 2 * stddev1 * stddev2
         denominator = stddev1 ** 2 + stddev2 ** 2 + self.constant_c
         diff        = numerator / denominator

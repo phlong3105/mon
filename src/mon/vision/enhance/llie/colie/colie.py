@@ -211,18 +211,23 @@ class CoLIE_RE(base.ImageEnhancementModel):
         image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
         # Normalize the image in the range `[0, 1]`.
         image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
-        
-        return {
-            "image_v"         : image_v,
-            "image_v_lr"      : image_v_lr,
-            "patch"           : patch,
-            "spatial"         : spatial,
-            "illu_res_lr"     : illu_res_lr,
-            "illu_lr"         : illu_lr,
-            "image_v_fixed_lr": image_v_fixed_lr,
-            "image_v_fixed"   : image_v_fixed,
-            "enhanced"        : image_rgb_fixed,
-        }
+        # Return
+        if self.debug:
+            return {
+                "image_v"         : image_v,
+                "image_v_lr"      : image_v_lr,
+                "patch"           : patch,
+                "spatial"         : spatial,
+                "illu_res_lr"     : illu_res_lr,
+                "illu_lr"         : illu_lr,
+                "image_v_fixed_lr": image_v_fixed_lr,
+                "image_v_fixed"   : image_v_fixed,
+                "enhanced"        : image_rgb_fixed,
+            }
+        else:
+            return {
+                "enhanced": image_rgb_fixed,
+            }
     
     def interpolate_image(self, image: torch.Tensor) -> torch.Tensor:
         """Reshapes the image based on new resolution."""

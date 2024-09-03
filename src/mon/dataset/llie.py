@@ -56,12 +56,13 @@ import cv2
 from mon import core
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console             = core.console
-default_root_dir    = DATA_DIR / "enhance" / "llie"
-DataModule          = core.DataModule
-DatapointAttributes = core.DatapointAttributes
-ImageAnnotation     = core.ImageAnnotation
-ImageDataset        = core.ImageDataset
+console                = core.console
+default_root_dir       = DATA_DIR / "enhance" / "llie"
+DataModule             = core.DataModule
+DatapointAttributes    = core.DatapointAttributes
+ImageAnnotation        = core.ImageAnnotation
+ImageDataset           = core.ImageDataset
+SegmentationAnnotation = core.SegmentationAnnotation
 
 
 # region Dataset
@@ -813,8 +814,9 @@ class NightCity(ImageDataset):
     tasks : list[Task]  = [Task.LLIE, Task.SEGMENT]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image": ImageAnnotation,
-        # "depth": ImageAnnotation,
+        "image"  : ImageAnnotation,
+        "depth"  : ImageAnnotation,
+        "segment": SegmentationAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -843,7 +845,6 @@ class NightCity(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        '''
         # LQ depth images
         depth_maps: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -854,9 +855,21 @@ class NightCity(ImageDataset):
             ):
                 path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
                 depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
-        '''
-        self.datapoints["image"] = lq_images
-        # self.datapoints["depth"] = depth_maps
+        
+        # LQ segmentation maps
+        segments: list[SegmentationAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} lq segmentation maps"
+            ):
+                path = img.path.replace("/lq/", "/labelIds/")
+                segments.append(SegmentationAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+        
+        self.datapoints["image"]   = lq_images
+        self.datapoints["depth"]   = depth_maps
+        self.datapoints["segment"] = segments
         
 
 @DATASETS.register(name="npe")

@@ -37,8 +37,7 @@ __all__ = [
 ]
 
 import math
-import random
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 
 import torch
 from torch import nn
@@ -47,7 +46,7 @@ from torch.nn.modules.batchnorm import *
 from torch.nn.modules.instancenorm import *
 from torch.nn.modules.normalization import *
 
-from mon.nn.modules import activation, linear
+from mon.nn.modules import activation
 
 
 # region Batch Normalization

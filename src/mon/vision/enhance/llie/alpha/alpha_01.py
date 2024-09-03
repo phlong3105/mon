@@ -225,16 +225,21 @@ class Alpha01(base.ImageEnhancementModel):
         image_b_fixed   = self.filter_up(image_b_lr, illu_b_fixed_lr, image_b)
         image_rgb_fixed = torch.cat([image_r_fixed, image_g_fixed, image_b_fixed], 1)
         image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
+        # Return
+        if self.debug:
+            return {
+                "image_rgb_lr"      : image_rgb_lr,
+                "illu_res_lr"       : illu_res_lr,
+                "illu_lr"           : illu_lr,
+                "image_rgb_fixed_lr": image_rgb_fixed_lr,
+                "image_rgb_fixed"   : image_rgb_fixed,
+                "enhanced"          : image_rgb_fixed,
+            }
+        else:
+            return {
+                "enhanced": image_rgb_fixed,
+            }
         
-        return {
-            "image_rgb_lr"      : image_rgb_lr,
-            "illu_res_lr"       : illu_res_lr,
-            "illu_lr"           : illu_lr,
-            "image_rgb_fixed_lr": image_rgb_fixed_lr,
-            "image_rgb_fixed"   : image_rgb_fixed,
-            "enhanced"          : image_rgb_fixed,
-        }
-    
     def interpolate_image(self, image: torch.Tensor) -> torch.Tensor:
         """Reshapes the image based on new resolution."""
         return F.interpolate(image, size=(self.down_size, self.down_size))

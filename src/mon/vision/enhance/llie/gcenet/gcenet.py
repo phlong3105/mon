@@ -866,11 +866,7 @@ class GCENet_13_Wo_Bri_Sym_DGF(GCENet):
             return {
                 "enhanced": enhanced,
             }
-    
-# endregion
 
-
-# region Old Model (CVPR 2024, ECCV 2024)
 
 '''
 # @MODELS.register(name="gcenet_old")
