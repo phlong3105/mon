@@ -471,8 +471,7 @@ class GTSnowDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -489,9 +488,6 @@ class GTSnowDataModule(DataModule):
 
         self.summarize()
 
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="kitti_snow")
 class KITTISnowDataModule(DataModule):
@@ -499,8 +495,7 @@ class KITTISnowDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -512,14 +507,9 @@ class KITTISnowDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = KITTISnow(split=Split.TRAIN, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="kitti_snow_s")
@@ -528,8 +518,7 @@ class KITTISnowSDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -541,14 +530,9 @@ class KITTISnowSDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = KITTISnowS(split=Split.TEST, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="kitti_snow_m")
@@ -557,8 +541,7 @@ class KITTISnowMDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -570,14 +553,9 @@ class KITTISnowMDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = KITTISnowM(split=Split.TEST, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="kitti_snow_l")
@@ -586,8 +564,7 @@ class KITTISnowLDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -599,14 +576,9 @@ class KITTISnowLDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = KITTISnowL(split=Split.TEST, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="snow100k")
@@ -615,8 +587,7 @@ class Snow100KDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -628,15 +599,10 @@ class Snow100KDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Snow100K(split=Split.TRAIN, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="snow100k_s")
 class Snow100KSDataModule(DataModule):
@@ -644,8 +610,7 @@ class Snow100KSDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -657,15 +622,10 @@ class Snow100KSDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Snow100KS(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="snow100k_m")
 class Snow100KMDataModule(DataModule):
@@ -674,8 +634,7 @@ class Snow100KMDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -687,15 +646,10 @@ class Snow100KMDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Snow100KM(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="snow100k_l")
 class Snow100KLDataModule(DataModule):
@@ -704,8 +658,7 @@ class Snow100KLDataModule(DataModule):
     tasks: list[Task] = [Task.DESNOW]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -717,13 +670,8 @@ class Snow100KLDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Snow100KL(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 # endregion

@@ -270,8 +270,7 @@ class Flare7KPPRealDataModule(DataModule):
     tasks: list[Task] = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -283,15 +282,10 @@ class Flare7KPPRealDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Flare7KPPReal(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="flare7k++_syn")
 class Flare7KPPSynDataModule(DataModule):
@@ -299,8 +293,7 @@ class Flare7KPPSynDataModule(DataModule):
     tasks: list[Task] = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -312,14 +305,9 @@ class Flare7KPPSynDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Flare7KPPSyn(split=Split.TEST, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="flarereal800")
@@ -328,8 +316,7 @@ class FlareReal800DataModule(DataModule):
     tasks: list[Task] = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -341,15 +328,10 @@ class FlareReal800DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = FlareReal800(split=Split.VAL,   **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="ledlight")
 class LEDLightDataModule(DataModule):
@@ -357,8 +339,7 @@ class LEDLightDataModule(DataModule):
     tasks: list[Task] = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -370,14 +351,9 @@ class LEDLightDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LEDLight(split=Split.TEST, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="lighteffect")
@@ -386,8 +362,7 @@ class LightEffectDataModule(DataModule):
     tasks: list[Task] = [Task.LES]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -399,13 +374,8 @@ class LightEffectDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LightEffect(split=Split.TRAIN, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 # endregion

@@ -11,7 +11,7 @@ from __future__ import annotations
 __all__ = [
     "ImageAnnotation",
     "FrameAnnotation",
-    "SegmentationAnnotation",
+    "SemanticSegmentationAnnotation",
 ]
 
 import cv2
@@ -264,8 +264,8 @@ class FrameAnnotation(base.Annotation):
 
 # region Segmentation
 
-class SegmentationAnnotation(base.Annotation):
-    """A segmentation annotation (mask) for an image.
+class SemanticSegmentationAnnotation(base.Annotation):
+    """A semantic segmentation annotation (mask) for an image.
     
     Args:
         path: The path to the image file.

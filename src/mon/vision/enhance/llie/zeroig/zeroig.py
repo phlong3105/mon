@@ -339,7 +339,8 @@ class ZeroIG(base.ImageEnhancementModel):
             h5_pred = torch.clamp(h5_pred, eps, 1)
             h3      = h5_pred[:, :3, :, :]
             return {
-                "enhanced": h3,
+                "denoise" : h3,
+                "enhanced": h2,
             }
         # Training
         else:
@@ -397,7 +398,8 @@ class ZeroIG(base.ImageEnhancementModel):
                 "h3_denoised1_h3_denoised2_diff": h3_denoised1_h3_denoised2_diff,
                 "h2_blur" : h2_blur,
                 "h3_blur" : h3_blur,
-                "enhanced": h3_blur,
+                "denoise" : h3_blur,
+                "enhanced": h2_blur,
             }
         
     def blur(self, image: torch.Tensor) -> torch.Tensor:
@@ -420,8 +422,8 @@ class ZeroIG(base.ImageEnhancementModel):
              kernel_size + 1,
         ).cuda()
         # kern1d=torch.diff(torch.erf(x/math.sqrt(2.0)))/2.0
-        kern1d     = torch.diff(self.gaussian_cdf(x))
-        kernel_raw = torch.sqrt(torch.outer(kern1d, kern1d))
+        kernel_1d  = torch.diff(self.gaussian_cdf(x))
+        kernel_raw = torch.sqrt(torch.outer(kernel_1d, kernel_1d))
         kernel     = kernel_raw / torch.sum(kernel_raw)
         # out_filter=kernel.unsqueeze(2).unsqueeze(3).repeat(1,1,channels,1)
         out_filter = kernel.view(1, 1, kernel_size, kernel_size)

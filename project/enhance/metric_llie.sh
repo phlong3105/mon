@@ -15,15 +15,15 @@ task="llie"
 arch="zeroig"
 model="zeroig_re"
 data=(
-    "dicm"
-    "lime"
-    "mef"
+    # "dicm"
+    # "lime"
+    # "mef"
     # "nightcity" 
-    "npe"
-    "vv"
+    # "npe"
+    # "vv"
     "lol_v1"
-    "lol_v2_real"
-    "lol_v2_synthetic"
+    # "lol_v2_real"
+    # "lol_v2_synthetic"
 )
 
 # Run
@@ -49,7 +49,6 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "niqe" \
         --metric "pi" \
         --backend "pyiqa" \
-        --use-gt-mean \
         --show-results
         # --use-gt-mean \
 done

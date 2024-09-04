@@ -82,13 +82,6 @@ class DataModule(lightning.LightningDataModule, ABC):
         self.classlabels = None
     
     @property
-    def num_classes(self) -> int:
-        """The number of classes in the dataset."""
-        if hasattr(self.classlabels, "num_classes"):
-            return self.classlabels.num_classes()
-        return 0
-    
-    @property
     def num_workers(self) -> int:
         """The number of workers used in the data loading pipeline.
         Set to: 4 * the number of :obj:`devices` to avoid a bottleneck.
@@ -122,7 +115,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         exists. Otherwise, returns ``None``.
         """
         if self.val:
-            self.classlabels = getattr(self.val, "classlabels", self.classlabels)
+            # self.classlabels = getattr(self.val, "classlabels", self.classlabels)
             return data.DataLoader(
                 dataset     = self.val,
                 batch_size  = self.batch_size,
@@ -142,7 +135,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         exists. Otherwise, returns ``None``.
         """
         if self.test:
-            self.classlabels = getattr(self.test, "classlabels", self.classlabels)
+            # self.classlabels = getattr(self.test, "classlabels", self.classlabels)
             return data.DataLoader(
                 dataset     = self.test,
                 batch_size  = 1,  # self.batch_size,
@@ -212,6 +205,21 @@ class DataModule(lightning.LightningDataModule, ABC):
         """
         pass
     
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        if isinstance(self.classlabels, base.ClassLabels):
+            return
+        elif self.train is not None:
+            self.classlabels = getattr(self.train, "classlabels", None)
+        elif self.val is not None:
+            self.classlabels = getattr(self.val, "classlabels", None)
+        elif self.test is not None:
+            self.classlabels = getattr(self.test, "classlabels", None)
+        elif self.predict is not None:
+            self.classlabels = getattr(self.predict, "classlabels", None)
+        else:
+            rich.console.log("[yellow]No classlabels found.")
+        
     def split_train_val(
         self,
         dataset    : base.Dataset,
@@ -224,11 +232,6 @@ class DataModule(lightning.LightningDataModule, ABC):
         self.train       = dataset if full_train else train
         self.classlabels = getattr(dataset, "classlabels", None)
         self.collate_fn  = getattr(dataset, "collate_fn",  None)
-    
-    @abstractmethod
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
     
     def summarize(self):
         """Print a summary."""

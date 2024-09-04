@@ -106,8 +106,7 @@ class MIPI24FlareDataModule(DataModule):
 	tasks: list[Task] = [Task.LES]
 	
 	def prepare_data(self, *args, **kwargs):
-		if self.classlabels is None:
-			self.get_classlabels()
+		pass
 	
 	def setup(self, stage: Literal["train", "test", "predict", None] = None):
 		if self.can_log:
@@ -119,13 +118,8 @@ class MIPI24FlareDataModule(DataModule):
 		if stage in [None, "test"]:
 			self.test  = MIPI24Flare(split=Split.VAL, **self.dataset_kwargs)
 		
-		if self.classlabels is None:
-			self.get_classlabels()
-		
+		self.get_classlabels()
 		if self.can_log:
 			self.summarize()
-	
-	def get_classlabels(self):
-		pass
 	
 # endregion

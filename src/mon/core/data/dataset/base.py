@@ -47,7 +47,9 @@ class Dataset(dataset.Dataset, ABC):
             Default: ``False``.
         datapoint_attrs: A :obj:`dict` of datapoint attributes with the keys
             are the attribute names and the values are the attribute types.
-    
+        classlabels: A :obj:`ClassLabels`, i.e., a list of class labels that the
+            dataset supports. Default: ``None``.
+        
     Args:
         root: The root directory where the data is stored.
         split: The data split to use. Default: ``'Split.TRAIN'``.
@@ -64,8 +66,9 @@ class Dataset(dataset.Dataset, ABC):
     tasks : list[Task]  = []
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
     datapoint_attrs     = DatapointAttributes({})
-    has_test_annotations: bool = False
-
+    has_test_annotations: bool        = False
+    classlabels         : ClassLabels = None
+    
     def __init__(
         self,
         root       : pathlib.Path,

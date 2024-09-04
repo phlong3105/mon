@@ -41,7 +41,7 @@ def get_albumentation_target_type(annotation) -> str | None:
         return "bboxes"
     elif annotation in [ClassificationAnnotation, RegressionAnnotation]:
         return "values"
-    elif annotation in [SegmentationAnnotation]:
+    elif annotation in [SemanticSegmentationAnnotation]:
         return "mask"
     else:
         error_console.log(f"Unknown annotation type: {annotation}, {type(annotation)}")

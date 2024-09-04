@@ -858,8 +858,7 @@ class DenseHazeDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -871,14 +870,9 @@ class DenseHazeDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = DenseHaze(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="ihaze")
@@ -887,8 +881,7 @@ class IHazeDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -900,15 +893,10 @@ class IHazeDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = IHaze(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="nhhaze")
 class NHHazeDataModule(DataModule):
@@ -916,8 +904,7 @@ class NHHazeDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -929,15 +916,10 @@ class NHHazeDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = NHHaze(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="ohaze")
 class OHazeDataModule(DataModule):
@@ -945,8 +927,7 @@ class OHazeDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -958,15 +939,10 @@ class OHazeDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = OHaze(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="reside_hsts_real")
 class RESIDEHSTSRealDataModule(DataModule):
@@ -974,8 +950,7 @@ class RESIDEHSTSRealDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -987,14 +962,9 @@ class RESIDEHSTSRealDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_hsts_syn")
@@ -1003,8 +973,7 @@ class RESIDEHSTSSynDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1016,14 +985,9 @@ class RESIDEHSTSSynDataModule(DataModule):
         if stage in [None, "test"]:
             self.test = RESIDEHSTSSyn(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_its")
@@ -1032,8 +996,7 @@ class RESIDEITSDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1045,14 +1008,9 @@ class RESIDEITSDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_its_v2")
@@ -1061,8 +1019,7 @@ class RESIDEITSV2DataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1074,14 +1031,9 @@ class RESIDEITSV2DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  =   RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_ots")
@@ -1090,8 +1042,7 @@ class RESIDEOTSDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1103,14 +1054,9 @@ class RESIDEOTSDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_rtts")
@@ -1119,8 +1065,7 @@ class RESIDERTTSDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1132,14 +1077,9 @@ class RESIDERTTSDataModule(DataModule):
         if stage in [None, "test"]:
             self.test = RESIDERTTS(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_sots_indoor")
@@ -1148,8 +1088,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1161,14 +1100,9 @@ class RESIDESOTSIndoorDataModule(DataModule):
         if stage in [None, "test"]:
             self.test = RESIDESOTSIndoor(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_sots_outdoor")
@@ -1177,8 +1111,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1190,14 +1123,9 @@ class RESIDESOTSOutdoorDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="reside_uhi")
@@ -1206,8 +1134,7 @@ class RESIDEUHIDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1219,15 +1146,10 @@ class RESIDEUHIDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="satehaze1k")
 class SateHaze1KDataModule(DataModule):
@@ -1235,8 +1157,7 @@ class SateHaze1KDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1248,15 +1169,10 @@ class SateHaze1KDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = SateHaze1K(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="satehaze1k_thin")
 class SateHaze1KThinDataModule(DataModule):
@@ -1264,8 +1180,7 @@ class SateHaze1KThinDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1277,15 +1192,10 @@ class SateHaze1KThinDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = SateHaze1KThin(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="satehaze1k_moderate")
 class SateHaze1KModerateDataModule(DataModule):
@@ -1293,8 +1203,7 @@ class SateHaze1KModerateDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1306,15 +1215,10 @@ class SateHaze1KModerateDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = SateHaze1KModerate(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="satehaze1k_thick")
 class SateHaze1KThickDataModule(DataModule):
@@ -1322,8 +1226,7 @@ class SateHaze1KThickDataModule(DataModule):
     tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1335,13 +1238,8 @@ class SateHaze1KThickDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = SateHaze1KThick(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 # endregion

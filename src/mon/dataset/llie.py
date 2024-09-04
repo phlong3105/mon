@@ -35,8 +35,6 @@ __all__ = [
     "MEFDataModule",
     "NPE",
     "NPEDataModule",
-    "NightCity",
-    "NightCityDataModule",
     "SICEGrad",
     "SICEGradDataModule",
     "SICEMix",
@@ -56,13 +54,12 @@ import cv2
 from mon import core
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
-console                = core.console
-default_root_dir       = DATA_DIR / "enhance" / "llie"
-DataModule             = core.DataModule
-DatapointAttributes    = core.DatapointAttributes
-ImageAnnotation        = core.ImageAnnotation
-ImageDataset           = core.ImageDataset
-SegmentationAnnotation = core.SegmentationAnnotation
+console             = core.console
+default_root_dir    = DATA_DIR / "enhance" / "llie"
+DataModule          = core.DataModule
+DatapointAttributes = core.DatapointAttributes
+ImageAnnotation     = core.ImageAnnotation
+ImageDataset        = core.ImageDataset
 
 
 # region Dataset
@@ -807,71 +804,6 @@ class MEF(ImageDataset):
         self.datapoints["depth"] = depth_maps
 
 
-@DATASETS.register(name="nightcity")
-class NightCity(ImageDataset):
-    """NightCity dataset."""
-    
-    tasks : list[Task]  = [Task.LLIE, Task.SEGMENT]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    datapoint_attrs     = DatapointAttributes({
-        "image"  : ImageAnnotation,
-        "depth"  : ImageAnnotation,
-        "segment": SegmentationAnnotation,
-    })
-    has_test_annotations: bool = False
-    
-    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
-        super().__init__(root=root, *args, **kwargs)
-        
-    def get_data(self):
-        if self.split == Split.TEST:
-            patterns = [
-                self.root / "nightcity" / "val" / "lq",
-            ]
-        else:
-            patterns = [
-                self.root / "nightcity" / self.split_str / "lq",
-            ]
-        
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
-                ):
-                    if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
-        
-        # LQ depth images
-        depth_maps: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} lq depth maps"
-            ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
-        
-        # LQ segmentation maps
-        segments: list[SegmentationAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} lq segmentation maps"
-            ):
-                path = img.path.replace("/lq/", "/labelIds/")
-                segments.append(SegmentationAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
-        
-        self.datapoints["image"]   = lq_images
-        self.datapoints["depth"]   = depth_maps
-        self.datapoints["segment"] = segments
-        
-
 @DATASETS.register(name="npe")
 class NPE(ImageDataset):
 
@@ -1173,8 +1105,7 @@ class DarkFaceDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1186,15 +1117,10 @@ class DarkFaceDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = DarkFace(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="dicm")
 class DICMDataModule(DataModule):
@@ -1202,8 +1128,7 @@ class DICMDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1215,15 +1140,10 @@ class DICMDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = DICM(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="exdark")
 class ExDarkDataModule(DataModule):
@@ -1231,8 +1151,7 @@ class ExDarkDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1244,15 +1163,10 @@ class ExDarkDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = ExDark(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="fivek_c")
 class FiveKCDataModule(DataModule):
@@ -1260,8 +1174,7 @@ class FiveKCDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1273,14 +1186,9 @@ class FiveKCDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="fivek_e")
@@ -1289,8 +1197,7 @@ class FiveKEDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1302,14 +1209,9 @@ class FiveKEDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
     
 
 @DATAMODULES.register(name="fusion")
@@ -1318,8 +1220,7 @@ class FusionDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1331,14 +1232,9 @@ class FusionDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Fusion(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="lime")
@@ -1347,8 +1243,7 @@ class LIMEDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1360,14 +1255,9 @@ class LIMEDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LIME(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="lol_blur")
@@ -1376,8 +1266,7 @@ class LOLBlurDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1389,14 +1278,9 @@ class LOLBlurDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLBlur(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
     
 
 @DATAMODULES.register(name="lol_v1")
@@ -1405,8 +1289,7 @@ class LOLV1DataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1418,14 +1301,9 @@ class LOLV1DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="lol_v2_real")
@@ -1434,8 +1312,7 @@ class LOLV2RealDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1447,14 +1324,9 @@ class LOLV2RealDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV2Real(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="lol_v2_synthetic")
@@ -1463,8 +1335,7 @@ class LOLV2SyntheticDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1476,14 +1347,9 @@ class LOLV2SyntheticDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV2Synthetic(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="mef")
@@ -1492,8 +1358,7 @@ class MEFDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1505,44 +1370,9 @@ class MEFDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = MEF(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
-
-
-@DATAMODULES.register(name="nightcity")
-class NightCityDataModule(DataModule):
-    
-    tasks: list[Task] = [Task.LLIE, Task.SEGMENT]
-    
-    def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        if stage in [None, "train"]:
-            self.train = NightCity(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = NightCity(split=Split.VAL,   **self.dataset_kwargs)
-            # self.val   = LOLV1(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = NightCity(split=Split.TEST,  **self.dataset_kwargs)
-            
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="npe")
@@ -1551,8 +1381,7 @@ class NPEDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1564,14 +1393,9 @@ class NPEDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = NPE(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="sice_grad")
@@ -1580,8 +1404,7 @@ class SICEGradDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1593,14 +1416,9 @@ class SICEGradDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="sice_mix")
@@ -1609,8 +1427,7 @@ class SICEMixDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1622,14 +1439,9 @@ class SICEMixDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
             
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="sice_mix_v2")
@@ -1638,8 +1450,7 @@ class SICEMixV2DataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1651,15 +1462,10 @@ class SICEMixV2DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
-    
+
 
 @DATAMODULES.register(name="ulol")
 class ULOLMixDataModule(DataModule):
@@ -1667,8 +1473,7 @@ class ULOLMixDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1680,14 +1485,9 @@ class ULOLMixDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = LOLV1(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="vv")
@@ -1696,8 +1496,7 @@ class VVDataModule(DataModule):
     tasks: list[Task] = [Task.LLIE]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -1709,13 +1508,8 @@ class VVDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = VV(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-    def get_classlabels(self):
-        pass
 
 # endregion

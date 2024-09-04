@@ -567,8 +567,7 @@ class GTRainDataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
 
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -580,14 +579,9 @@ class GTRainDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = GTRain(split=Split.TEST,  **self.dataset_kwargs)
 
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
-
-    def get_classlabels(self):
-        pass
 
 
 @DATAMODULES.register(name="rain100")
@@ -596,8 +590,7 @@ class Rain100DataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -609,15 +602,10 @@ class Rain100DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain100(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain100h")
 class Rain100HDataModule(DataModule):
@@ -625,8 +613,7 @@ class Rain100HDataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -638,15 +625,10 @@ class Rain100HDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain100H(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain100l")
 class Rain100LDataModule(DataModule):
@@ -654,8 +636,7 @@ class Rain100LDataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -667,15 +648,10 @@ class Rain100LDataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain100L(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain12")
 class Rain12DataModule(DataModule):
@@ -683,8 +659,7 @@ class Rain12DataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -696,15 +671,10 @@ class Rain12DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain1200")
 class Rain1200DataModule(DataModule):
@@ -712,8 +682,7 @@ class Rain1200DataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -725,15 +694,10 @@ class Rain1200DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain1200(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain13k")
 class Rain13KDataModule(DataModule):
@@ -741,8 +705,7 @@ class Rain13KDataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -755,15 +718,10 @@ class Rain13KDataModule(DataModule):
             # self.test  = Rain13K(split=Split.TEST,  **self.dataset_kwargs)
             self.test  = Rain100(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain1400")
 class Rain1400DataModule(DataModule):
@@ -771,8 +729,7 @@ class Rain1400DataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -784,15 +741,10 @@ class Rain1400DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain1400(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain2800")
 class Rain2800DataModule(DataModule):
@@ -800,8 +752,7 @@ class Rain2800DataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -813,15 +764,10 @@ class Rain2800DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain2800(split=Split.TEST, **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 
 @DATAMODULES.register(name="rain800")
 class Rain800DataModule(DataModule):
@@ -829,8 +775,7 @@ class Rain800DataModule(DataModule):
     tasks: list[Task] = [Task.DERAIN]
     
     def prepare_data(self, *args, **kwargs):
-        if self.classlabels is None:
-            self.get_classlabels()
+        pass
     
     def setup(self, stage: Literal["train", "test", "predict", None] = None):
         if self.can_log:
@@ -842,13 +787,8 @@ class Rain800DataModule(DataModule):
         if stage in [None, "test"]:
             self.test  = Rain800(split=Split.TEST,  **self.dataset_kwargs)
         
-        if self.classlabels is None:
-            self.get_classlabels()
-        
+        self.get_classlabels()
         if self.can_log:
             self.summarize()
     
-    def get_classlabels(self):
-        pass
-
 # endregion

@@ -15,7 +15,7 @@ __all__ = [
 from abc import ABC
 
 from mon import core, nn
-from mon.globals import Scheme, Task, ZOO_DIR
+from mon.globals import Scheme, Task
 from mon.vision.model import VisionModel
 
 console = core.console
@@ -30,19 +30,19 @@ class ImageClassificationModel(VisionModel, ABC):
     
     def assert_datapoint(self, datapoint: dict) -> bool:
         if "image" not in datapoint:
-            raise ValueError("The key ``'image'`` must be defined in the "
-                             "`datapoint`.")
+            raise ValueError(f"The key ``'image'`` must be defined in the "
+                             f"`datapoint`.")
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
             if "class_id" not in datapoint:
-                raise ValueError("The key ``'class_id'`` must be defined in "
-                                 "the `datapoint`.")
+                raise ValueError(f"The key ``'class_id'`` must be defined in "
+                                 f"the `datapoint`.")
             
     def assert_outputs(self, outputs: dict) -> bool:
         if "logits" not in outputs:
-            raise ValueError("The key ``'logits'`` must be defined in the "
-                             "`outputs`.")
+            raise ValueError(f"The key ``'logits'`` must be defined in the "
+                             f"`outputs`.")
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward

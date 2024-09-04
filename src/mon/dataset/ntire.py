@@ -110,8 +110,7 @@ class NTIRE24LLIEDataModule(DataModule):
 	tasks: list[Task] = [Task.LLIE]
 	
 	def prepare_data(self, *args, **kwargs):
-		if self.classlabels is None:
-			self.get_classlabels()
+		pass
 	
 	def setup(self, stage: Literal["train", "test", "predict", None] = None):
 		if self.can_log:
@@ -123,13 +122,8 @@ class NTIRE24LLIEDataModule(DataModule):
 		if stage in [None, "test"]:
 			self.test  = NTIRE24LLIE(split=Split.TEST,  **self.dataset_kwargs)
 		
-		if self.classlabels is None:
-			self.get_classlabels()
-		
+		self.get_classlabels()
 		if self.can_log:
 			self.summarize()
-	
-	def get_classlabels(self):
-		pass
 	
 # endregion

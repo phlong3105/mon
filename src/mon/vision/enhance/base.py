@@ -28,23 +28,21 @@ console = core.console
 class ImageEnhancementModel(VisionModel, ABC):
     """The base class for all image enhancement models."""
     
-    # region Forward Pass
-    
     def assert_datapoint(self, datapoint: dict) -> bool:
         if "image" not in datapoint:
-            raise ValueError("The key ``'image'`` must be defined in the "
-                             "`datapoint`.")
+            raise ValueError(f"The key ``'image'`` must be defined in the "
+                             f"`datapoint`.")
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
         if has_target:
             if "hq_image" not in datapoint:
-                raise ValueError("The key ``'hq_image'`` must be defined in "
-                                 "the `datapoint`.")
+                raise ValueError(f"The key ``'hq_image'`` must be defined in "
+                                 f"the `datapoint`.")
             
     def assert_outputs(self, outputs: dict) -> bool:
         if "enhanced" not in outputs:
-            raise ValueError("The key ``'enhanced'`` must be defined in the "
-                             "`outputs`.")
+            raise ValueError(f"The key ``'enhanced'`` must be defined in the "
+                             f"`outputs`.")
     
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
@@ -77,11 +75,7 @@ class ImageEnhancementModel(VisionModel, ABC):
                 results[metric_name] = metric(pred, target)
         # Return
         return results
-    
-    # endregion
-    
-    # region Logging
-    
+        
     def log_images(
         self,
         epoch    : int,
@@ -108,10 +102,15 @@ class ImageEnhancementModel(VisionModel, ABC):
             for k, v in extra_images.items()
         } if extra_images else {}
         
-        assert len(image) == len(enhanced)
-        if hq_image:
-            assert len(image) == len(hq_image)
-        
+        if len(image) != len(enhanced):
+            raise ValueError(f"The number of `images` and `enhanced` must be "
+                             f"the same, but got {len(image)} != {len(enhanced)}.")
+        if hq_image is not None:
+            if len(image) != len(hq_image):
+                raise ValueError(f"The number of `images` and `hq_images` must "
+                                 f"be the same, but got "
+                                 f"{len(image)} != {len(hq_image)}.")
+            
         for i in range(len(image)):
             if hq_image:
                 combined = cv2.hconcat([image[i], enhanced[i], hq_image[i]])
@@ -125,7 +124,5 @@ class ImageEnhancementModel(VisionModel, ABC):
                 v_i = v[i]
                 extra_path = save_dir / f"{i}_{k}{extension}"
                 cv2.imwrite(str(extra_path), v_i)
-    
-    # endregion
-    
+        
 # endregion

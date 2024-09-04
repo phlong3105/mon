@@ -93,9 +93,14 @@ trainer = default.trainer | {
 			"mode"    : "max",
 		},
 		default.model_checkpoint | {
+			"filename": fullname,
+			"monitor" : "val/ssim",
+			"mode"    : "max",
+		},
+		default.model_checkpoint | {
 			"filename" : fullname,
-			"monitor"  : "val/ssim",
-			"mode"     : "max",
+			"monitor"  : "train/loss",
+			"mode"     : "min",
 			"save_last": True,
 		},
 		default.learning_rate_monitor,
