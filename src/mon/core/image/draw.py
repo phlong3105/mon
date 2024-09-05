@@ -11,6 +11,7 @@ from __future__ import annotations
 __all__ = [
     "draw_bbox",
     "draw_heatmap",
+    "draw_semantic",
     "draw_trajectory",
 ]
 
@@ -86,7 +87,7 @@ def draw_bbox(
 
 def draw_heatmap(
     image     : np.ndarray,
-    mask      : np.ndarray,
+    heatmap   : np.ndarray,
     color_map : int   = cv2.COLORMAP_JET,
     alpha     : float = 0.5,
     use_rgb   : bool  = False,
@@ -97,7 +98,7 @@ def draw_heatmap(
     Args:
         image: An RGB or BGR image of type :obj:`numpy.ndarray` in ``[H, W, C]``
             format with data in the range ``[0.0, 1.0]``.
-        mask: A heatmap mask.
+        heatmap: A heatmap mask.
         color_map: A color map for the heatmap. Default: ``cv2.COLORMAP_JET``.
         alpha: The transparency ratio of the image. The final result is:
             `alpha * image + (1 - alpha) * mask`. Default: ``0.5``.
@@ -113,19 +114,38 @@ def draw_heatmap(
     if not 0.0 <= alpha <= 1.0:
         raise ValueError(f"`alpha` should be in the range ``[0.0, 1.0]``, "
                          f"but got: {alpha}.")
-    
-    if utils.is_normalized_image(mask):
-        mask = np.uint8(255 * mask)
-    heatmap  = cv2.applyColorMap(np.uint8(255 * mask), color_map)
-    if use_rgb:
-        heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
-    heatmap  = np.float32(heatmap) / 255
-    
-    drawing = (1 - alpha) * heatmap + alpha * image
+
+    heatmap = utils.depth_map_to_color(heatmap, color_map, use_rgb)
+    heatmap = np.float32(heatmap) / 255
+    drawing = utils.blend_images(image, heatmap, alpha)
+    # drawing = (1 - alpha) * heatmap + alpha * image
     drawing = drawing / np.max(drawing)
     drawing = np.uint8(255 * drawing)
     return drawing
 
+
+def draw_semantic(
+    image      : np.ndarray,
+    semantic   : np.ndarray,
+    classlabels: "ClassLabels",
+    alpha      : float = 0.5,
+) -> np.ndarray:
+    """Overlay a semantic mask on the image.
+    
+    Args:
+        image: An RGB image of type :obj:`numpy.ndarray` in ``[H, W, C]``
+            format with data in the range ``[0, 255]``.
+        semantic: A semantic mask of type :obj:`numpy.ndarray` in ``[H, W, 1]``
+            format.
+        classlabels: A list of class-labels.
+        alpha: The transparency ratio of the image. The final result is:
+            `alpha * image + (1 - alpha) * mask`. Default: ``0.5``.
+    """
+    color_map = utils.label_map_id_to_color(semantic, classlabels)
+    drawing   = utils.blend_images(image, color_map, alpha)
+    drawing   = drawing.astype(np.uint8)
+    return drawing
+    
 
 def draw_trajectory(
     image     : np.ndarray,

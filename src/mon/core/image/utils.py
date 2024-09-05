@@ -9,13 +9,22 @@ This module implements utility functions for image processing.
 from __future__ import annotations
 
 __all__ = [
+    "ImageLocalMean",
+    "ImageLocalStdDev",
+    "ImageLocalVariance",
+    "add_weighted",
+    "blend_images",
     "check_image_size",
+    "depth_map_to_color",
     "get_image_center",
     "get_image_center4",
     "get_image_channel",
     "get_image_num_channels",
     "get_image_shape",
     "get_image_size",
+    "image_local_mean",
+    "image_local_stddev",
+    "image_local_variance",
     "is_channel_first_image",
     "is_channel_last_image",
     "is_color_image",
@@ -23,12 +32,16 @@ __all__ = [
     "is_image",
     "is_integer_image",
     "is_normalized_image",
-    "is_one_hot_image",
+    "label_map_color_to_id",
+    "label_map_id_to_color",
+    "label_map_id_to_one_hot",
+    "label_map_id_to_train_id",
+    "label_map_one_hot_to_id",
     "make_image_size_divisible",
     "parse_hw",
+    "to_2d_image",
     "to_3d_image",
     "to_4d_image",
-    "to_5d_image",
     "to_channel_first_image",
     "to_channel_last_image",
     "to_image_nparray",
@@ -40,8 +53,11 @@ import copy
 import math
 from typing import Any, Sequence
 
+import cv2
 import numpy as np
 import torch
+from torch import nn
+from torch.nn import functional as F
 
 from mon.core.rich import error_console
 
@@ -158,14 +174,6 @@ def is_normalized_image(image: torch.Tensor | np.ndarray) -> bool:
     else:
         raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
                         f"but got {type(image)}.")
-
-
-def is_one_hot_image(image: torch.Tensor | np.ndarray) -> bool:
-    """Return ``True`` if an image is one-hot encoded."""
-    c = get_image_num_channels(image)
-    if c > 1:
-        return True
-    return False
 
 
 def check_image_size(
@@ -365,7 +373,244 @@ def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
 # endregion
 
 
+# region Combination
+
+def add_weighted(
+    image1: torch.Tensor | np.ndarray,
+    image2: torch.Tensor | np.ndarray,
+    alpha : float,
+    beta  : float,
+    gamma : float = 0.0,
+) -> torch.Tensor | np.ndarray:
+    """Calculate the weighted sum of two image tensors as follows:
+        output = image1 * alpha + image2 * beta + gamma
+
+    Args:
+        image1: The first image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in the
+                range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
+        image2: The same as :obj:`image1`.
+        alpha: The weight of the :obj:`image1` elements.
+        beta: The weight of the :obj:`image2` elements.
+        gamma: A scalar added to each sum. Default: ``0.0``.
+
+    Returns:
+        A weighted image.
+    """
+    if image1.shape != image2.shape:
+        raise ValueError(f"`image1` and `image2` must have the same shape, "
+                         f"but got {image1.shape} != {image2.shape}.")
+    if type(image1) is not type(image2):
+        raise ValueError(f"`image1` and `image2` must have the same type, "
+                         f"but got {type(image1)} != {type(image2)}.")
+    
+    output = image1 * alpha + image2 * beta + gamma
+    bound  = 1.0 if is_normalized_image(image1) else 255.0
+    
+    if isinstance(output, torch.Tensor):
+        output = output.clamp(0, bound).to(image1.dtype)
+    elif isinstance(output, np.ndarray):
+        output = np.clip(output, 0, bound).astype(image1.dtype)
+    else:
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(input)}.")
+    return output
+
+
+def blend_images(
+    image1: torch.Tensor | np.ndarray,
+    image2: torch.Tensor | np.ndarray,
+    alpha : float,
+    gamma : float = 0.0
+) -> torch.Tensor | np.ndarray:
+    """Blend 2 images together using the formula:
+        output = :obj:`image1` * alpha + :obj:`image2` * beta + gamma
+
+    Args:
+        image1: A source image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
+        image2: An overlay image that we want to blend on top of :obj:`image1`.
+        alpha: An alpha transparency of the overlay.
+        gamma: A scalar added to each sum. Default: ``0.0``.
+    
+    Returns:
+        A blended image.
+    """
+    return add_weighted(
+        image1 = image2,
+        image2 = image1,
+        alpha  = alpha,
+        beta   = 1.0 - alpha,
+        gamma  = gamma,
+    )
+
+# endregion
+
+
 # region Conversion
+
+def depth_map_to_color(
+    depth_map: np.ndarray,
+    color_map: int = cv2.COLORMAP_JET,
+    use_rgb  : bool = False,
+) -> np.ndarray:
+    """Convert depth map to color-coded images.
+    
+    Args:
+        depth_map: A depth map of type :obj:`numpy.ndarray` in ``[H, W, 1]``
+            format.
+        color_map: A color map for the depth map. Default: ``cv2.COLORMAP_JET``.
+        use_rgb: If ``True``, convert the heatmap to RGB format.
+            Default: ``False``.
+    """
+    if is_normalized_image(depth_map):
+        depth_map = np.uint8(255 * depth_map)
+    depth_map = cv2.applyColorMap(np.uint8(255 * depth_map), color_map)
+    if use_rgb:
+        depth_map = cv2.cvtColor(depth_map, cv2.COLOR_BGR2RGB)
+    return depth_map
+    
+
+def label_map_id_to_train_id(
+    label_map  : np.ndarray,
+    classlabels: "ClassLabels",
+) -> np.ndarray:
+    """Convert label map from IDs to train IDs.
+    
+    Args:
+        label_map: An IDs label map of type :obj:`numpy.ndarray` in
+            ``[H, W, C]`` format.
+        classlabels: A list of class-labels.
+    """
+    id2train_id = classlabels.id2train_id
+    h, w        = get_image_size(label_map)
+    label_ids   = np.zeros((h, w), dtype=np.uint8)
+    label_map   = to_2d_image(label_map)
+    for id, train_id in id2train_id.items():
+        label_ids[label_map == id] = train_id
+    label_ids   = np.expand_dims(label_ids, axis=-1)
+    return label_ids
+ 
+
+def label_map_id_to_color(
+    label_map  : np.ndarray,
+    classlabels: "ClassLabels",
+) -> np.ndarray:
+    """Convert label map from label IDs to color-coded.
+    
+    Args:
+        label_map: An IDs label map of type :obj:`numpy.ndarray` in
+            ``[H, W, C]`` format.
+        classlabels: A list of class-labels, each has predefined color.
+    """
+    id2color  = classlabels.id2color
+    h, w      = get_image_size(label_map)
+    color_map = np.zeros((h, w, 3), dtype=np.uint8)
+    label_map = to_2d_image(label_map)
+    for id, color in id2color.items():
+        color_map[label_map == id] = color
+    return color_map
+
+
+def label_map_color_to_id(
+    label_map  : np.ndarray,
+    classlabels: "ClassLabels",
+) -> np.ndarray:
+    """Convert label map from color-coded to label IDS.
+
+    Args:
+        label_map: A color-coded label map of type :obj:`numpy.ndarray` in
+            ``[H, W, C]`` format.
+        classlabels: A list of class-labels, each has predefined color.
+    """
+    id2color  = classlabels.id2color
+    h, w      = get_image_size(label_map)
+    label_ids = np.zeros((h, w), dtype=np.uint8)
+    for id, color in id2color.items():
+        label_ids[np.all(label_map == color, axis=-1)] = id
+    label_ids = np.expand_dims(label_ids, axis=-1)
+    return label_ids
+
+
+def label_map_id_to_one_hot(
+    label_map  : torch.Tensor | np.ndarray,
+    num_classes: int           = None,
+    classlabels: "ClassLabels" = None,
+) ->torch.Tensor | np.ndarray:
+    """Convert label map from label IDs to one-hot encoded.
+    
+    Args:
+        label_map: An IDs label map of type:
+            - :obj:`torch.Tensor` in ``[B, 1, H, W]`` format.
+            - :obj:`numpy.ndarray` in ``[H, W, 1]`` format.
+        num_classes: The number of classes in the label map.
+        classlabels: A list of class-labels.
+    """
+    if num_classes is None and classlabels is None:
+        raise ValueError("Either `num_classes` or `classlabels` must be "
+                         "provided.")
+    
+    num_classes = num_classes or classlabels.num_trainable_classes
+    if isinstance(label_map, torch.Tensor):
+        label_map = to_3d_image(label_map).long()
+        one_hot   = F.one_hot(label_map, num_classes)
+        one_hot   = to_channel_first_image(one_hot).contiguous()
+    elif isinstance(label_map, np.ndarray):
+        label_map = to_2d_image(label_map)
+        one_hot   = np.eye(num_classes)[label_map]
+    else:
+        raise TypeError(f"`label_map` must be a `numpy.ndarray` or "
+                        f"`torch.Tensor`, but got {type(label_map)}.")
+    return one_hot
+
+
+def label_map_one_hot_to_id(
+    label_map: torch.Tensor | np.ndarray,
+) -> torch.Tensor | np.ndarray:
+    """Convert label map from one-hot encoded to label IDs.
+    
+    Args:
+        label_map: A one-hot encoded label map of type:
+            - :obj:`torch.Tensor` in ``[B, num_classes, H, W]`` format.
+            - :obj:`numpy.ndarray` in ``[H, W, num_classes]`` format.
+    """
+    if isinstance(label_map, torch.Tensor):
+        label_map = torch.argmax(label_map, dim=-1, keepdim=True)
+    elif isinstance(label_map, np.ndarray):
+        label_map = np.argmax(label_map, axis=-1, keepdims=True)
+    else:
+        raise TypeError(f"`label_map` must be a `numpy.ndarray` or "
+                        f"`torch.Tensor`, but got {type(label_map)}.")
+    return label_map
+
+
+def to_2d_image(image: Any) -> torch.Tensor | np.ndarray:
+    """Convert a 3D or 4D image to a 2D."""
+    if not 3 <= image.ndim <= 4:
+        raise ValueError(f"`image`'s number of dimensions must be between "
+                         f"``3`` and ``4``, but got {image.ndim}.")
+    if isinstance(image, torch.Tensor):
+        if image.ndim == 3:  # 1HW -> HW
+            image = image.squeeze(dim=0)
+        elif image.ndim == 4 and image.shape[0] == 1 and image.shape[1] == 1:  # 11HW -> HW
+            image = image.squeeze(dim=0)
+            image = image.squeeze(dim=0)
+    elif isinstance(image, np.ndarray):
+        if image.ndim == 3:  # HW1 -> HW
+            image = np.squeeze(image, axis=-1)
+        elif image.ndim == 4 and image.shape[0] == 1 and image.shape[3] == 1:  # 1HW1 -> HW
+            image = np.squeeze(image, axis=0)
+            image = np.squeeze(image, axis=-1)
+    else:
+        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+                        f"but got {type(image)}.")
+    return image
+
 
 def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
     """Convert a 2D or 4D image to a 3D."""
@@ -375,12 +620,14 @@ def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
     if isinstance(image, torch.Tensor):
         if image.ndim == 2:  # HW -> 1HW
             image = image.unsqueeze(dim=0)
+        elif image.ndim == 4 and image.shape[1] == 1:  # B1HW -> BHW
+            image = image.squeeze(dim=1)
         elif image.ndim == 4 and image.shape[0] == 1:  # 1CHW -> CHW
             image = image.squeeze(dim=0)
     elif isinstance(image, np.ndarray):
-        if image.ndim == 2:  # HW -> 1HW
-            image = np.expand_dims(image, axis=0)
-        elif image.ndim == 4 and image.shape[0] == 1:  # 1CHW -> CHW
+        if image.ndim == 2:  # HW -> HW1
+            image = np.expand_dims(image, axis=-1)
+        elif image.ndim == 4 and image.shape[0] == 1:  # 1HWC -> HWC
             image = np.squeeze(image, axis=0)
     else:
         raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
@@ -414,15 +661,15 @@ def to_4d_image(image: Any) -> torch.Tensor | np.ndarray:
             image = image.unsqueeze(dim=0)
         elif image.ndim == 3:  # CHW -> 1CHW
             image = image.unsqueeze(dim=0)
-        elif image.ndim == 5 and image.shape[0] == 1:  # 1NCHW -> NCHW
+        elif image.ndim == 5 and image.shape[0] == 1:  # 1BCHW -> BCHW
             image = image.squeeze(dim=0)
     elif isinstance(image, np.ndarray):
-        if image.ndim == 2:  # HW -> 11HW
+        if image.ndim == 2:  # HW -> 1HW1
+            image = np.expand_dims(image, axis=-1)
             image = np.expand_dims(image, axis=0)
+        elif image.ndim == 3:  # HWC -> 1HWC
             image = np.expand_dims(image, axis=0)
-        elif image.ndim == 3:  # CHW -> 1CHW
-            image = np.expand_dims(image, axis=0)
-        elif image.ndim == 5 and image.shape[0] == 1:  # 1NCHW -> NHWC
+        elif image.ndim == 5 and image.shape[0] == 1:  # 1BHWC -> BHWC
             image = np.squeeze(image, axis=0)
     elif isinstance(image, list | tuple):
         if all(isinstance(i, torch.Tensor)   and i.ndim == 3 for i in image):
@@ -439,41 +686,6 @@ def to_4d_image(image: Any) -> torch.Tensor | np.ndarray:
     else:
         raise TypeError(f"`image` must be a `numpy.ndarray`, `torch.Tensor`, "
                         f"or a `list` of either of them, but got {type(image)}.")
-    return image
-
-
-def to_5d_image(image: Any) -> torch.Tensor | np.ndarray:
-    """Convert a 2D, 3D, 4D, or 6D image to a 5D."""
-    if not 2 <= image.ndim <= 6:
-        raise ValueError(f"`image`'s number of dimensions must be between "
-                         f"``2`` and ``6``, but got {image.ndim}.")
-    if isinstance(image, torch.Tensor):
-        if image.ndim == 2:  # HW -> 111HW
-            image = image.unsqueeze(dim=0)
-            image = image.unsqueeze(dim=0)
-            image = image.unsqueeze(dim=0)
-        elif image.ndim == 3:  # CHW -> 11CHW
-            image = image.unsqueeze(dim=0)
-            image = image.unsqueeze(dim=0)
-        elif image.ndim == 4:  # NCHW -> 1NCHW
-            image = image.unsqueeze(dim=0)
-        elif image.ndim == 6 and image.shape[0] == 1:  # 1*NCHW -> *NCHW
-            image = image.squeeze(dim=0)
-    elif isinstance(image, np.ndarray):
-        if image.ndim == 2:  # HW -> 111HW
-            image = np.expand_dims(image, axis=0)
-            image = np.expand_dims(image, axis=0)
-            image = np.expand_dims(image, axis=0)
-        elif image.ndim == 3:  # HWC -> 11HWC
-            image = np.expand_dims(image, axis=0)
-            image = np.expand_dims(image, axis=0)
-        elif image.ndim == 4:  # BHWC -> 1BHWC
-            image = np.expand_dims(image, axis=0)
-        elif image.ndim == 6 and image.shape[0] == 1:  # 1*BHWC -> *BHWC
-            image = np.squeeze(image, axis=0)
-    else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
-                        f"but got {type(image)}.")
     return image
 
 
@@ -617,6 +829,106 @@ def to_image_tensor(
         image = image.to(device)
     return image
 
+# endregion
+
+
+# region Gradient
+
+def image_local_mean(image: torch.Tensor, patch_size: int = 5) -> torch.Tensor:
+    """Calculate the local mean of an image using a sliding window.
+    
+    Args:
+        image: The input image tensor of shape ``[B, C, H, W]``.
+        patch_size: The size of the sliding window. Default: ``5``.
+    """
+    padding = patch_size // 2
+    image   = F.pad(image, (padding, padding, padding, padding), mode="reflect")
+    patches = image.unfold(2, patch_size, 1).unfold(3, patch_size, 1)
+    return patches.mean(dim=(4, 5))
+
+
+def image_local_variance(image: torch.Tensor, patch_size: int = 5) -> torch.Tensor:
+    """Calculate the local variance of an image using a sliding window.
+    
+    Args:
+        image: The input image tensor of shape ``[B, C, H, W]``.
+        patch_size: The size of the sliding window. Default: ``5``.
+    """
+    padding = patch_size // 2
+    image   = F.pad(image, (padding, padding, padding, padding), mode="reflect")
+    patches = image.unfold(2, patch_size, 1).unfold(3, patch_size, 1)
+    mean    = patches.mean(dim=(4, 5))
+    return ((patches - mean.unsqueeze(4).unsqueeze(5)) ** 2).mean(dim=(4, 5))
+
+
+def image_local_stddev(
+    image     : torch.Tensor,
+    patch_size: int   = 5,
+    eps       : float = 1e-9
+) -> torch.Tensor:
+    """Calculate the local standard deviation of an image using a sliding window.
+    
+    Args:
+        image: The input image tensor of shape ``[B, C, H, W]``.
+        patch_size: The size of the sliding window. Default: ``5``.
+        eps: A small value to avoid sqrt by zero. Default: ``1e-9``.
+    """
+    padding        = patch_size // 2
+    image          = F.pad(image, (padding, padding, padding, padding), mode="reflect")
+    patches        = image.unfold(2, patch_size, 1).unfold(3, patch_size, 1)
+    mean           = patches.mean(dim=(4, 5), keepdim=True)
+    squared_diff   = (patches - mean) ** 2
+    local_variance = squared_diff.mean(dim=(4, 5))
+    local_stddev   = torch.sqrt(local_variance + eps)
+    return local_stddev
+
+
+class ImageLocalMean(nn.Module):
+    """Calculate the local mean of an image using a sliding window.
+    
+    Args:
+        patch_size: The size of the sliding window. Default: ``5``.
+    """
+    
+    def __init__(self, patch_size: int = 5):
+        super().__init__()
+        self.patch_size = patch_size
+    
+    def forward(self, image):
+        return image_local_mean(image, self.patch_size)
+
+
+class ImageLocalVariance(nn.Module):
+    """Calculate the local variance of an image using a sliding window.
+    
+    Args:
+        patch_size: The size of the sliding window. Default: ``5``.
+    """
+    
+    def __init__(self, patch_size: int = 5):
+        super().__init__()
+        self.patch_size = patch_size
+    
+    def forward(self, image):
+        return image_local_variance(image, self.patch_size)
+
+
+class ImageLocalStdDev(nn.Module):
+    """Calculate the local standard deviation of an image using a sliding window.
+    
+    Args:
+        patch_size: The size of the sliding window. Default: ``5``.
+        eps: A small value to avoid sqrt by zero. Default: ``1e-9``.
+    """
+    
+    def __init__(self, patch_size: int = 5, eps: float = 1e-9):
+        super().__init__()
+        self.patch_size = patch_size
+        self.eps        = eps
+    
+    def forward(self, image):
+        return image_local_stddev(image, self.patch_size, self.eps)
+    
 # endregion
 
 

@@ -169,7 +169,7 @@ class NightCityDataModule(DataModule):
             self.val   = NightCity(split=Split.VAL,   **self.dataset_kwargs)
         if stage in [None, "test"]:
             self.test  = NightCity(split=Split.TEST,  **self.dataset_kwargs)
-            
+        
         self.get_classlabels()
         if self.can_log:
             self.summarize()

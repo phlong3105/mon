@@ -28,16 +28,18 @@ def train(args: dict) -> str:
     # Seed
     mon.set_random_seed(args["seed"])
     
-    # Model
-    model: mon.Model = mon.MODELS.build(config=args["model"])
-    if mon.is_rank_zero():
-        mon.print_dict(args, title=model.fullname)
-        console.log("[green]Done")
-    
     # Data I/O
     datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["data"])
     datamodule.prepare_data()
     datamodule.setup(stage="train")
+    
+    # Model
+    num_classes = getattr(datamodule.classlabels, "num_trainable_classes", None)
+    args["model"]["num_classes"] = num_classes
+    model: mon.Model = mon.MODELS.build(config=args["model"])
+    if mon.is_rank_zero():
+        mon.print_dict(args, title=model.fullname)
+        console.log("[green]Done")
     
     # Trainer
     if mon.is_rank_zero():

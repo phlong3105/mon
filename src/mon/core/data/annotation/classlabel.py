@@ -19,7 +19,6 @@ from mon.core.rich import console, print_table
 
 # region ClassLabel
 
-
 class ClassLabels(list[dict]):
 	"""A :obj:`list` of all the class-labels defined in a dataset.
 	
