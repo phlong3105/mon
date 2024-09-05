@@ -10,14 +10,12 @@ from __future__ import annotations
 
 __all__ = [
     "check_image_size",
-    "get_channel",
-    "get_first_channel",
     "get_image_center",
     "get_image_center4",
+    "get_image_channel",
     "get_image_num_channels",
     "get_image_shape",
     "get_image_size",
-    "get_last_channel",
     "is_channel_first_image",
     "is_channel_last_image",
     "is_color_image",
@@ -48,7 +46,7 @@ import torch
 from mon.core.rich import error_console
 
 
-# region Assert
+# region Assertion
 
 def is_channel_first_image(image: torch.Tensor | np.ndarray) -> bool:
     """Return ``True`` if an image is in channel-first format. We assume
@@ -195,9 +193,9 @@ def check_image_size(
 # endregion
 
 
-# region Access
+# region Accessing
 
-def get_channel(
+def get_image_channel(
     image   : torch.Tensor | np.ndarray,
     index   : int | Sequence[int],
     keep_dim: bool = True,
@@ -260,16 +258,6 @@ def get_channel(
         else:
             raise ValueError
     
-
-def get_first_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Return the first channel of an image."""
-    return get_channel(image, index=0, keep_dim=True)
-
-
-def get_last_channel(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Return the last channel of an image."""
-    return get_channel(image, index=-1, keep_dim=True)
-
 
 def get_image_num_channels(image: torch.Tensor | np.ndarray) -> int:
     """Return the number of channels of an image.
@@ -377,7 +365,7 @@ def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
 # endregion
 
 
-# region Convert
+# region Conversion
 
 def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
     """Convert a 2D or 4D image to a 3D."""

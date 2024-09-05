@@ -92,7 +92,11 @@ class NightCity(ImageDataset):
         {"name": "license plate"       , "id": -1, "train_id": -1 , "category": "vehicle"     , "category_id": 7, "ignore_in_eval": True , "color": [0  , 0  , 142]},
     ])
     
-    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
+    def __init__(
+        self,
+        root: core.Path = default_root_dir,
+        *args, **kwargs
+    ):
         super().__init__(root=root, *args, **kwargs)
         
     def get_data(self):

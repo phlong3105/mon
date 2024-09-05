@@ -19,8 +19,10 @@ import numpy as np
 import torch
 
 from mon.core import pathlib
-from mon.core.data.annotation import base
+from mon.core.data.annotation import base, classlabel
 from mon.core.image import io, utils
+
+ClassLabels = classlabel.ClassLabels
 
 
 # region Image

@@ -45,7 +45,6 @@ class VideoDataset(base.Dataset, ABC):
 	Args:
 		root: A data source. It can be a path to a single video file or a stream.
 		split: The data split to use. Default: ``'Split.PREDICT'``.
-		classlabels: :obj:`ClassLabels` object. Default: ``None``.
 		transform: Transformations performed on both the input and target. We use
 			`albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
 		to_tensor: If ``True``, convert input and target to :obj:`torch.Tensor`.
@@ -62,19 +61,17 @@ class VideoDataset(base.Dataset, ABC):
 	def __init__(
 		self,
 		root       : pathlib.Path,
-		split      : Split       = Split.PREDICT,
-		classlabels: ClassLabels = None,
-		transform  : A.Compose   = None,
-		to_tensor  : bool        = False,
-		cache_data : bool        = False,
-		verbose    : bool        = True,
+		split      : Split     = Split.PREDICT,
+		transform  : A.Compose = None,
+		to_tensor  : bool      = False,
+		cache_data : bool      = False,
+		verbose    : bool      = True,
 		*args, **kwargs
 	):
 		self.num_frames = 0
 		super().__init__(
 			root        = root,
 			split       = split,
-			classlabels = classlabels,
 			transform   = transform,
 			to_tensor   = to_tensor,
 			cache_data  = cache_data,
@@ -138,23 +135,21 @@ class VideoLoaderCV(VideoDataset):
 	def __init__(
 		self,
 		root       : pathlib.Path,
-		split      : Split       = Split.PREDICT,
-		classlabels: ClassLabels = None,
-		transform  : A.Compose   = None,
-		to_tensor  : bool        = False,
-		cache_data : bool        = False,
-		verbose    : bool        = True,
+		split      : Split     = Split.PREDICT,
+		transform  : A.Compose = None,
+		to_tensor  : bool      = False,
+		cache_data : bool      = False,
+		verbose    : bool      = True,
 		*args, **kwargs
 	):
 		self.video_capture = None
 		super().__init__(
-			root        = root,
-			split       = split,
-			classlabels = classlabels,
-			transform   = transform,
-			to_tensor   = to_tensor,
-			cache_data  = cache_data,
-			verbose     = verbose,
+			root       = root,
+			split      = split,
+			transform  = transform,
+			to_tensor  = to_tensor,
+			cache_data = cache_data,
+			verbose    = verbose,
 			*args, **kwargs
 		)
 	

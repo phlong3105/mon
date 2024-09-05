@@ -126,7 +126,7 @@ class ImageDataset(base.Dataset, ABC):
 		first attribute in :obj:`datapoint_attrs` as the main image attribute.
 		"""
 		return self.datapoints[self.main_attribute][index].meta
-		
+
 
 class ImageLoader(ImageDataset):
 	"""A general image loader that retrieves and loads image(s) from a file
@@ -136,18 +136,16 @@ class ImageLoader(ImageDataset):
 	def __init__(
 		self,
 		root       : pathlib.Path,
-		split      : Split       = Split.PREDICT,
-		classlabels: ClassLabels = None,
-		transform  : A.Compose   = None,
-		to_tensor  : bool        = False,
-		cache_data : bool        = False,
-		verbose    : bool        = True,
+		split      : Split     = Split.PREDICT,
+		transform  : A.Compose = None,
+		to_tensor  : bool      = False,
+		cache_data : bool      = False,
+		verbose    : bool      = True,
 		*args, **kwargs
 	):
 		super().__init__(
 			root        = root,
 			split		= split,
-			classlabels = classlabels,
 			transform   = transform,
 			to_tensor   = to_tensor,
 			cache_data	= cache_data,

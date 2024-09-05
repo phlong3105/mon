@@ -24,6 +24,7 @@ import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
+from mon.core.image import utils
 
 
 # region Combination
@@ -55,7 +56,7 @@ def add_weighted(
     if image1.shape != image2.shape:
         raise ValueError(f"`image1` and `image2` must have the same shape, "
                          f"but got {image1.shape} and {image2.shape}.")
-    bound  = 1.0 if image1.is_floating_point() else 255.0
+    bound  = 1.0 if utils.is_normalized_image(image1) else 255.0
     output = image1 * alpha + image2 * beta + gamma
     if isinstance(output, torch.Tensor):
         output = output.clamp(0, bound).to(image1.dtype)

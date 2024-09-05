@@ -246,5 +246,8 @@ class DataModule(lightning.LightningDataModule, ABC):
         table.add_row("5", "batch_size",  f"{self.batch_size}")
         table.add_row("6", "num_workers", f"{self.num_workers}")
         rich.console.log(table)
-    
+        
+        if self.classlabels:
+            self.classlabels.print()
+        
 # endregion

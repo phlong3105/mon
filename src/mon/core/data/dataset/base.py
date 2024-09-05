@@ -53,7 +53,6 @@ class Dataset(dataset.Dataset, ABC):
     Args:
         root: The root directory where the data is stored.
         split: The data split to use. Default: ``'Split.TRAIN'``.
-        classlabels: :obj:`ClassLabels` object. Default: ``None``.
         transform: Transformations performed on both the input and target. We use
             `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
         to_tensor: If ``True``, convert input and target to :obj:`torch.Tensor`.
@@ -71,19 +70,17 @@ class Dataset(dataset.Dataset, ABC):
     
     def __init__(
         self,
-        root       : pathlib.Path,
-        split      : Split           = Split.TRAIN,
-        classlabels: ClassLabels     = None,
-        transform  : A.Compose | Any = None,
-        to_tensor  : bool            = False,
-        cache_data : bool            = False,
-        verbose    : bool            = False,
+        root      : pathlib.Path,
+        split     : Split           = Split.TRAIN,
+        transform : A.Compose | Any = None,
+        to_tensor : bool            = False,
+        cache_data: bool            = False,
+        verbose   : bool            = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.root        = pathlib.Path(root)
         self.split 	     = split
-        self.classlabels = ClassLabels.from_value(classlabels)
         self.transform   = transform
         self.to_tensor   = to_tensor
         self.verbose     = verbose
