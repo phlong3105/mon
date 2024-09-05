@@ -105,7 +105,7 @@ class ViT_B_16(VisionTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = vit_b_16(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -156,7 +156,7 @@ class ViT_B_32(VisionTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = vit_b_32(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -217,7 +217,7 @@ class ViT_L_16(VisionTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = vit_l_16(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -268,7 +268,7 @@ class ViT_L_32(VisionTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = vit_l_32(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -324,7 +324,7 @@ class ViT_H_14(VisionTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = vit_h_14(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )

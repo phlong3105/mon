@@ -89,11 +89,11 @@ class MobileNetV3Large(MobileNetV3):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
         
         self.model = mobilenet_v3_large(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout,
         )
         
@@ -136,11 +136,11 @@ class MobileNetV3Small(MobileNetV3):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
         
         self.model = mobilenet_v3_small(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout,
         )
         

@@ -96,9 +96,9 @@ class EfficientNet_B0(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b0(num_classes=self.num_classes)
+        self.model = efficientnet_b0(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -142,9 +142,9 @@ class EfficientNet_B1(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b1(num_classes=self.num_classes)
+        self.model = efficientnet_b1(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -183,9 +183,9 @@ class EfficientNet_B2(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b2(num_classes=self.num_classes)
+        self.model = efficientnet_b2(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -224,9 +224,9 @@ class EfficientNet_B3(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b3(num_classes=self.num_classes)
+        self.model = efficientnet_b3(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -265,9 +265,9 @@ class EfficientNet_B4(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b4(num_classes=self.num_classes)
+        self.model = efficientnet_b4(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -306,9 +306,9 @@ class EfficientNet_B5(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b5(num_classes=self.num_classes)
+        self.model = efficientnet_b5(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -347,9 +347,9 @@ class EfficientNet_B6(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b6(num_classes=self.num_classes)
+        self.model = efficientnet_b6(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -388,9 +388,9 @@ class EfficientNet_B7(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_b7(num_classes=self.num_classes)
+        self.model = efficientnet_b7(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -429,9 +429,9 @@ class EfficientNet_V2_S(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_v2_s(num_classes=self.num_classes)
+        self.model = efficientnet_v2_s(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -470,9 +470,9 @@ class EfficientNet_V2_M(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_v2_m(num_classes=self.num_classes)
+        self.model = efficientnet_v2_m(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -511,9 +511,9 @@ class EfficientNet_V2_L(EfficientNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = efficientnet_v2_l(num_classes=self.num_classes)
+        self.model = efficientnet_v2_l(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()

@@ -98,7 +98,7 @@ class Swin_T(SwinTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = swin_t(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -149,7 +149,7 @@ class Swin_S(SwinTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = swin_s(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -200,7 +200,7 @@ class Swin_B(SwinTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = swin_b(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -251,7 +251,7 @@ class Swin_V2_T(SwinTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = swin_v2_t(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -302,7 +302,7 @@ class Swin_V2_S(SwinTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = swin_v2_s(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )
@@ -353,7 +353,7 @@ class Swin_V2_B(SwinTransformer):
         self.attention_dropout = attention_dropout
 
         self.model = swin_v2_b(
-            num_classes       = self.num_classes,
+            num_classes       = self.out_channels,
             dropout           = self.dropout,
             attention_dropout = self.attention_dropout,
         )

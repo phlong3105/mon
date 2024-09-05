@@ -88,9 +88,9 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = shufflenet_v2_x0_5(num_classes=self.num_classes)
+        self.model = shufflenet_v2_x0_5(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -129,9 +129,9 @@ class ShuffleNetV2_X1_0(ShuffleNetV2):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = shufflenet_v2_x1_0(num_classes=self.num_classes)
+        self.model = shufflenet_v2_x1_0(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -170,9 +170,9 @@ class ShuffleNetV2_X1_5(ShuffleNetV2):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = shufflenet_v2_x1_5(num_classes=self.num_classes)
+        self.model = shufflenet_v2_x1_5(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -212,9 +212,9 @@ class ShuffleNetV2_X2_0(ShuffleNetV2):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = shufflenet_v2_x2_0(num_classes=self.num_classes)
+        self.model = shufflenet_v2_x2_0(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()

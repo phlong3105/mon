@@ -87,9 +87,9 @@ class DenseNet121(DenseNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = densenet121(num_classes=self.num_classes)
+        self.model = densenet121(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -128,9 +128,9 @@ class DenseNet161(DenseNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = densenet161(num_classes=self.num_classes)
+        self.model = densenet161(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -170,9 +170,9 @@ class DenseNet169(DenseNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = densenet169(num_classes=self.num_classes)
+        self.model = densenet169(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -211,9 +211,9 @@ class DenseNet201(DenseNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = densenet201(num_classes=self.num_classes)
+        self.model = densenet201(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()

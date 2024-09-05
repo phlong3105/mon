@@ -3,8 +3,8 @@
 
 """UNet.
 
-This module implements UNet (U-Net: Convolutional Networks for Biomedical
-Image Segmentation) models.
+This module implements the paper: U-Net: Convolutional Networks for Biomedical
+Image Segmentation.
 
 References:
     https://github.com/milesial/Pytorch-UNet

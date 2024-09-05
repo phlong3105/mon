@@ -95,9 +95,9 @@ class ResNet18(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnet18(num_classes=self.num_classes)
+        self.model = resnet18(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -136,9 +136,9 @@ class ResNet34(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnet34(num_classes=self.num_classes)
+        self.model = resnet34(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -182,9 +182,9 @@ class ResNet50(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnet50(num_classes=self.num_classes)
+        self.model = resnet50(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -228,9 +228,9 @@ class ResNet101(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnet101(num_classes=self.num_classes)
+        self.model = resnet101(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -274,9 +274,9 @@ class ResNet152(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnet152(num_classes=self.num_classes)
+        self.model = resnet152(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -324,9 +324,9 @@ class ResNeXt50_32X4D(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnext50_32x4d(num_classes=self.num_classes)
+        self.model = resnext50_32x4d(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -370,9 +370,9 @@ class ResNeXt101_32X8D(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnext101_32x8d(num_classes=self.num_classes)
+        self.model = resnext101_32x8d(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -411,9 +411,9 @@ class ResNeXt101_64X4D(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = resnext101_64x4d(num_classes=self.num_classes)
+        self.model = resnext101_64x4d(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -461,9 +461,9 @@ class WideResNet50_2(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = wide_resnet50_2(num_classes=self.num_classes)
+        self.model = wide_resnet50_2(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -507,9 +507,9 @@ class WideResNet101_2(ResNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
 
-        self.model = wide_resnet101_2(num_classes=self.num_classes)
+        self.model = wide_resnet101_2(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()

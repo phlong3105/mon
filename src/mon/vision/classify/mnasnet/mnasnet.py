@@ -87,11 +87,11 @@ class MNASNet0_5(MNASNet):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
         
         self.model = mnasnet0_5(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout,
         )
         
@@ -134,11 +134,11 @@ class MNASNet0_75(MNASNet):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
         
         self.model = mnasnet0_75(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout,
         )
         
@@ -181,11 +181,11 @@ class MNASNet1_0(MNASNet):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
         
         self.model = mnasnet1_0(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout,
         )
         
@@ -228,11 +228,11 @@ class MNASNet1_3(MNASNet):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
         
         self.model = mnasnet1_3(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout,
         )
         

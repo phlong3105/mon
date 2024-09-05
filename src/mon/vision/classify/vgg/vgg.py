@@ -93,11 +93,11 @@ class VGG11(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg11(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         
@@ -140,11 +140,11 @@ class VGG11_BN(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg11_bn(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         
@@ -187,11 +187,11 @@ class VGG13(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg13(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         
@@ -234,11 +234,11 @@ class VGG13_BN(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg13_bn(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         
@@ -281,11 +281,11 @@ class VGG16(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg16(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         
@@ -328,11 +328,11 @@ class VGG16_BN(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg16_bn(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         
@@ -375,11 +375,11 @@ class VGG19(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg19(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         
@@ -422,11 +422,11 @@ class VGG19_BN(VGG):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
 
         self.model = vgg19_bn(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             dropout     = self.dropout
         )
         

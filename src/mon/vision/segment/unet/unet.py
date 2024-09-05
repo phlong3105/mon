@@ -127,25 +127,25 @@ class UNet(base.SegmentationModel):
     
     def __init__(
         self,
-        in_channels : int = 3,
-        out_channels: int = 1,
-        weights     : Any = None,
+        in_channels: int = 3,
+        num_classes: int = 1,
+        weights    : Any = None,
         *args, **kwargs
     ):
         super().__init__(
-            name         = "unet",
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            weights      = weights,
+            name        = "unet",
+            in_channels = in_channels,
+            num_classes = num_classes,
+            weights     = weights,
             *args, **kwargs
         )
         
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels",  in_channels)
-            out_channels = self.weights.get("out_channels", out_channels)
-        self.in_channels  = in_channels  or self.in_channels
-        self.out_channels = out_channels or self.out_channels
+            in_channels = self.weights.get("in_channels", in_channels)
+            num_classes = self.weights.get("num_classes", num_classes)
+        self.in_channels  = in_channels or self.in_channels
+        self.out_channels = num_classes or self.out_channels
         
         # Construct model
         nb_filter  = [64, 128, 256, 512, 1024]

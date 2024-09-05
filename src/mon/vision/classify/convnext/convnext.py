@@ -86,9 +86,9 @@ class ConvNeXtBase(ConvNeXt):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = convnext_base(num_classes=self.num_classes)
+        self.model = convnext_base(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -127,9 +127,9 @@ class ConvNeXtTiny(ConvNeXt):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = convnext_tiny(num_classes=self.num_classes)
+        self.model = convnext_tiny(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -168,9 +168,9 @@ class ConvNeXtSmall(ConvNeXt):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = convnext_small(num_classes=self.num_classes)
+        self.model = convnext_small(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -209,9 +209,9 @@ class ConvNeXtLarge(ConvNeXt):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = convnext_large(num_classes=self.num_classes)
+        self.model = convnext_large(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()

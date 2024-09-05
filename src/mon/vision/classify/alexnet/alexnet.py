@@ -62,10 +62,10 @@ class AlexNet(nn.ExtraModel, base.ImageClassificationModel):
             num_classes = self.weights.get("num_classes", num_classes)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.dropout      = dropout
         
-        self.model = alexnet(num_classes=self.num_classes, dropout=self.dropout)
+        self.model = alexnet(num_classes=self.out_channels, dropout=self.dropout)
         
         if self.weights:
             self.load_weights()

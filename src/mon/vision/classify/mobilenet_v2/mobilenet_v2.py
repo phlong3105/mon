@@ -76,12 +76,12 @@ class MobileNetV2(nn.ExtraModel, base.ImageClassificationModel):
             width_mult  = self.weights.get("width_mult" , width_mult )
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.width_mult   = width_mult
         self.dropout      = dropout
         
         self.model = mobilenet_v2(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             width_mult  = self.width_mult,
             dropout     = self.dropout,
         )

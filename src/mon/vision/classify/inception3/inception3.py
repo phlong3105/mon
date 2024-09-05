@@ -74,12 +74,12 @@ class Inception3(nn.ExtraModel, base.ImageClassificationModel):
             aux_logits  = self.weights.get("aux_logits" , aux_logits)
             dropout     = self.weights.get("dropout"    , dropout)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.aux_logits   = aux_logits
         self.dropout      = dropout
         
         self.model = inception_v3(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             aux_logits  = self.aux_logits,
             dropout     = self.dropout,
         )

@@ -105,9 +105,9 @@ class RegNet_Y_400MF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_400mf(num_classes=self.num_classes)
+        self.model = regnet_y_400mf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -151,9 +151,9 @@ class RegNet_Y_800MF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_800mf(num_classes=self.num_classes)
+        self.model = regnet_y_800mf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -197,9 +197,9 @@ class RegNet_Y_1_6GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_1_6gf(num_classes=self.num_classes)
+        self.model = regnet_y_1_6gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -243,9 +243,9 @@ class RegNet_Y_3_2GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_3_2gf(num_classes=self.num_classes)
+        self.model = regnet_y_3_2gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -289,9 +289,9 @@ class RegNet_Y_8GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_8gf(num_classes=self.num_classes)
+        self.model = regnet_y_8gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -345,9 +345,9 @@ class RegNet_Y_16GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_16gf(num_classes=self.num_classes)
+        self.model = regnet_y_16gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -401,9 +401,9 @@ class RegNet_Y_32GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_32gf(num_classes=self.num_classes)
+        self.model = regnet_y_32gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -447,9 +447,9 @@ class RegNet_Y_128GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_y_128gf(num_classes=self.num_classes)
+        self.model = regnet_y_128gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -493,9 +493,9 @@ class RegNet_X_400MF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_x_400mf(num_classes=self.num_classes)
+        self.model = regnet_x_400mf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -539,9 +539,9 @@ class RegNet_X_800MF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_x_800mf(num_classes=self.num_classes)
+        self.model = regnet_x_800mf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -585,9 +585,9 @@ class RegNet_X_1_6GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_x_1_6gf(num_classes=self.num_classes)
+        self.model = regnet_x_1_6gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -631,9 +631,9 @@ class RegNet_X_3_2GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_x_3_2gf(num_classes=self.num_classes)
+        self.model = regnet_x_3_2gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -677,9 +677,9 @@ class RegNet_X_8GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_x_8gf(num_classes=self.num_classes)
+        self.model = regnet_x_8gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -723,9 +723,9 @@ class RegNet_X_16GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_x_16gf(num_classes=self.num_classes)
+        self.model = regnet_x_16gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()
@@ -769,9 +769,9 @@ class RegNetX_32GF(RegNet):
             in_channels = self.weights.get("in_channels", in_channels)
             num_classes = self.weights.get("num_classes", num_classes)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         
-        self.model = regnet_x_32gf(num_classes=self.num_classes)
+        self.model = regnet_x_32gf(num_classes=self.out_channels)
         
         if self.weights:
             self.load_weights()

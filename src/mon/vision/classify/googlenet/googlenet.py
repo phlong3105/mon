@@ -73,13 +73,13 @@ class GoogleNet(nn.ExtraModel, base.ImageClassificationModel):
             dropout     = self.weights.get("dropout"    , dropout)
             dropout_aux = self.weights.get("dropout_aux", dropout_aux)
         self.in_channels  = in_channels or self.in_channels
-        self.num_channels = num_classes
+        self.out_channels = num_classes or self.out_channels
         self.aux_logits   = aux_logits
         self.dropout      = dropout
         self.dropout_aux  = dropout_aux
         
         self.model = googlenet(
-            num_classes = self.num_classes,
+            num_classes = self.out_channels,
             aux_logits  = self.aux_logits,
             dropout     = self.dropout,
             dropout_aux = self.dropout_aux,
