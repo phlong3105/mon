@@ -128,7 +128,7 @@ class UNet(base.SegmentationModel):
     def __init__(
         self,
         in_channels: int = 3,
-        num_classes: int = 1,
+        num_classes: int = 34,
         weights    : Any = None,
         *args, **kwargs
     ):

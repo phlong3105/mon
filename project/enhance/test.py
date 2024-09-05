@@ -6,7 +6,7 @@ import torch
 
 import mon
 
-dataset     = mon.NightCity(split=mon.Split.VAL)
+dataset     = mon.Cityscapes(split=mon.Split.VAL)
 iterator    = iter(dataset)
 datapoint   = next(iterator)
 datapoint2  = next(iterator)

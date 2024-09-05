@@ -1,21 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""NightCity Datasets.
+"""Cityscapes.
 
-This module implements the paper: "Night-time Scene Parsing with a Large Real
-Dataset". The largest real-world night-time semantic segmentation dataset with
-pixel-level labels.
+This module implements the Cityscapes dataset.
 
 References:
-	https://dmcv.sjtu.edu.cn/people/phd/tanxin/NightCity/index.html
+	https://www.cityscapes-dataset.com/
 """
 
 from __future__ import annotations
 
 __all__ = [
-	"NightCity",
-	"NightCityDataModule",
+    "Cityscapes",
+    "CityscapesDataModule",
 ]
 
 from typing import Literal
@@ -26,7 +24,7 @@ from mon import core
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console                        = core.console
-default_root_dir               = DATA_DIR / "enhance" / "llie"
+default_root_dir               = DATA_DIR / "cityscapes"
 ClassLabels                    = core.ClassLabels
 DataModule                     = core.DataModule
 DatapointAttributes            = core.DatapointAttributes
@@ -37,23 +35,28 @@ SemanticSegmentationAnnotation = core.SemanticSegmentationAnnotation
 
 # region Dataset
 
-@DATASETS.register(name="nightcity")
-class NightCity(ImageDataset):
-    """NightCity dataset consists of 4,297 real night-time images with ground
-    truth pixel-level semantic annotations.
+@DATASETS.register(name="cityscapes")
+class Cityscapes(ImageDataset):
+    """Cityscapes dataset.
     
-    References:
-    	https://dmcv.sjtu.edu.cn/people/phd/tanxin/NightCity/index.html
+    Args:
+        root       : The root directory of the dataset.
+        use_blurred: If ``True``, use the blurred images. Defaults: ``False``.
+        use_coarse : If ``True``, use the coarse annotations. Defaults: ``False``.
     """
     
-    tasks : list[Task]  = [Task.LLIE, Task.SEGMENT]
+    tasks : list[Task]  = [Task.SEGMENT]
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "depth"   : ImageAnnotation,
-        "semantic": SemanticSegmentationAnnotation,
+        "image"      : ImageAnnotation,                 # leftImg8bit
+        "semantic"   : SemanticSegmentationAnnotation,  # gtFine
+        # "right_image": ImageAnnotation,                 # rightImg8bit
+        # "disparity"  : ImageAnnotation,                 # disparity
+        # "camera"     : ImageAnnotation,                 # camera
+        # "vehicle"    : ImageAnnotation,                 # vehicle
+        # "bbox3d"     : ImageAnnotation,                 # bbox3d
     })
-    has_test_annotations: bool        = True
+    has_test_annotations: bool        = False
     classlabels         : ClassLabels = ClassLabels([
         {"name": "unlabeled"           , "id": 0 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
         {"name": "ego vehicle"         , "id": 1 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
@@ -92,55 +95,49 @@ class NightCity(ImageDataset):
         {"name": "license plate"       , "id": -1, "train_id": -1 , "category": "vehicle"     , "category_id": 7, "ignore_in_eval": True , "color": [0  , 0  , 142]},
     ])
     
-    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
+    def __init__(
+        self,
+        root       : core.Path = default_root_dir,
+        use_blurred: bool = False,
+        use_coarse : bool = False,
+        *args, **kwargs
+    ):
+        self.use_blurred = use_blurred
+        self.use_coarse  = use_coarse
         super().__init__(root=root, *args, **kwargs)
-        
+    
     def get_data(self):
-        if self.split == Split.TEST:
-            patterns = [
-                self.root / "nightcity" / "val" / "lq",
-            ]
-        else:
-            patterns = [
-                self.root / "nightcity" / self.split_str / "lq",
-            ]
+        image_name = "leftImg8bit_blurred"  if self.use_blurred else "leftImg8bit"
+        gt_name    = "gtCoarse"             if self.use_coarse  else "gtFine"
+        patterns   = [
+            self.root / self.split_str / image_name,
+        ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Left Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
                     description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                                f"{self.split_str} {image_name} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path))
         
-        # LQ depth images
-        depth_maps: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} lq depth maps"
-            ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
-        
-        # LQ semantic segmentation maps
+        # Semantic segmentation maps
         semantic: list[SemanticSegmentationAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
+                images,
                 description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} lq semantic segmentation"
+                            f"{self.split_str} {gt_name} maps"
             ):
-                path = img.path.replace("/lq/", "/labelIds/")
+                path = img.path.replace(f"{image_name}", f"{gt_name}")
+                path = path.parent / f"{path.stem}_labelIds{path.suffix}"
                 semantic.append(SemanticSegmentationAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["depth"]    = depth_maps
+        self.datapoints["image"]    = images
         self.datapoints["semantic"] = semantic
         
 # endregion
@@ -148,10 +145,10 @@ class NightCity(ImageDataset):
 
 # region Datamodule
 
-@DATAMODULES.register(name="nightcity")
-class NightCityDataModule(DataModule):
+@DATAMODULES.register(name="cityscapes")
+class CityscapesDataModule(DataModule):
     
-    tasks: list[Task] = [Task.LLIE, Task.SEGMENT]
+    tasks: list[Task] = [Task.SEGMENT]
     
     def prepare_data(self, *args, **kwargs):
         pass
@@ -161,10 +158,10 @@ class NightCityDataModule(DataModule):
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
         if stage in [None, "train"]:
-            self.train = NightCity(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = NightCity(split=Split.VAL,   **self.dataset_kwargs)
+            self.train = Cityscapes(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = Cityscapes(split=Split.VAL, **self.dataset_kwargs)
         if stage in [None, "test"]:
-            self.test  = NightCity(split=Split.TEST,  **self.dataset_kwargs)
+            self.test  = Cityscapes(split=Split.TEST, **self.dataset_kwargs)
         
         self.get_classlabels()
         if self.can_log:
