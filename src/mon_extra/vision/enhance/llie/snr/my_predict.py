@@ -80,7 +80,7 @@ def predict(args: argparse.Namespace):
                 image      = image[:, :, ::-1]
                 h, w       = mon.get_image_size(image)
                 # image      = cv2.resize(image, (600, 400))
-                image      = mon.resize_divisible(image, 32)
+                image      = mon.resize(image, divisible_by=32)
                 image_nf   = cv2.blur(image, (5, 5))
                 image_nf   = image_nf * 1.0 / 255.0
                 image_nf   = torch.from_numpy(np.ascontiguousarray(np.transpose(image_nf, (2, 0, 1)))).float()

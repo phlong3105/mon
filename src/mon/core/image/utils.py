@@ -172,7 +172,7 @@ def is_normalized_image(image: torch.Tensor | np.ndarray) -> bool:
     elif isinstance(image, np.ndarray):
         return abs(np.amax(image)) <= 1.0
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
 
 
@@ -314,7 +314,7 @@ def get_image_center(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
     elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2])
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
 
 
@@ -335,7 +335,7 @@ def get_image_center4(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.nda
     elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2, h / 2, w / 2])
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
 
 
@@ -414,7 +414,7 @@ def add_weighted(
     elif isinstance(output, np.ndarray):
         output = np.clip(output, 0, bound).astype(image1.dtype)
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(input)}.")
     return output
 
@@ -607,7 +607,7 @@ def to_2d_image(image: Any) -> torch.Tensor | np.ndarray:
             image = np.squeeze(image, axis=0)
             image = np.squeeze(image, axis=-1)
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
     return image
 
@@ -630,7 +630,7 @@ def to_3d_image(image: Any) -> torch.Tensor | np.ndarray:
         elif image.ndim == 4 and image.shape[0] == 1:  # 1HWC -> HWC
             image = np.squeeze(image, axis=0)
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
     return image
 
@@ -713,7 +713,7 @@ def to_channel_first_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | n
         elif image.ndim == 5:
             image = np.transpose(image, (0, 1, 4, 2, 3))
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
     return image
 
@@ -743,7 +743,7 @@ def to_channel_last_image(image: torch.Tensor | np.ndarray) -> torch.Tensor | np
             image = np.transpose(image, (0, 1, 3, 4, 2))
     else:
         raise TypeError(
-            f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+            f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
             f"but got {type(image)}."
         )
     return image
@@ -817,7 +817,7 @@ def to_image_tensor(
     elif isinstance(image, torch.Tensor):
         image = image.clone()
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
     image = to_channel_first_image(image)
     if not keepdim:

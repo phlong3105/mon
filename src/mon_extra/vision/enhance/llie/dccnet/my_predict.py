@@ -85,7 +85,7 @@ def predict(args: argparse.Namespace):
                 data_lowlight = data_lowlight.permute(2, 0, 1)
                 data_lowlight = data_lowlight.cuda().unsqueeze(0)
                 h, w          = mon.get_image_size(data_lowlight)
-                data_lowlight = mon.resize_divisible(data_lowlight, 32)
+                data_lowlight = mon.resize(data_lowlight, divisible_by=32)
                 
                 # Infer
                 timer.tick()

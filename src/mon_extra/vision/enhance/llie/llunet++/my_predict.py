@@ -91,7 +91,7 @@ def predict(args: argparse.Namespace):
                 if resize:
                     image = mon.resize(image, imgsz)
                 else:
-                    image = mon.resize_divisible(image, 32)
+                    image = mon.resize(image, divisible_by=32)
                 
                 # Infer
                 timer.tick()

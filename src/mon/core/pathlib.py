@@ -138,6 +138,15 @@ class Path(type(pathlib.Path())):
             and self.suffix.lower() in [".py"]
         )
     
+    def is_raw_image_file(self, exist: bool = True) -> bool:
+        """Return ``True`` if the current path is a raw image file. Otherwise,
+        return ``False``.
+        """
+        return (
+            (self.is_file() if exist else True)
+            and self.suffix.lower() in ".dng"
+        )
+    
     def is_stem(self) -> bool:
         """Return ``True`` if the current path isn't ``None``, and the parent of
         the path is the current :obj:`dict`, and the path has no extension.

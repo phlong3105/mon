@@ -1,36 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Derain Datasets.
-
-This module implements de-raining datasets and datamodules.
-"""
+"""RESIDE Datasets."""
 
 from __future__ import annotations
 
 __all__ = [
-    "CityscapesRain",
-    "CityscapesRainDataModule",
-    "GTRain",
-    "GTRainDataModule",
-    "Rain100",
-    "Rain100DataModule",
-    "Rain100H",
-    "Rain100HDataModule",
-    "Rain100L",
-    "Rain100LDataModule",
-    "Rain12",
-    "Rain1200",
-    "Rain1200DataModule",
-    "Rain12DataModule",
-    "Rain13K",
-    "Rain13KDataModule",
-    "Rain1400",
-    "Rain1400DataModule",
-    "Rain2800",
-    "Rain2800DataModule",
-    "Rain800",
-    "Rain800DataModule",
+    "RESIDEHSTSReal",
+    "RESIDEHSTSRealDataModule",
+    "RESIDEHSTSSyn",
+    "RESIDEHSTSSynDataModule",
+    "RESIDEITS",
+    "RESIDEITSDataModule",
+    "RESIDEITSV2",
+    "RESIDEITSV2DataModule",
+    "RESIDEOTS",
+    "RESIDEOTSDataModule",
+    "RESIDERTTS",
+    "RESIDERTTSDataModule",
+    "RESIDESOTSIndoor",
+    "RESIDESOTSIndoorDataModule",
+    "RESIDESOTSOutdoor",
+    "RESIDESOTSOutdoorDataModule",
+    "RESIDEUHI",
+    "RESIDEUHIDataModule",
 ]
 
 from typing import Literal
@@ -39,83 +32,30 @@ from mon import core
 from mon.globals import DATA_DIR, DATAMODULES, DATASETS, Split, Task
 
 console             = core.console
-default_root_dir    = DATA_DIR / "enhance" / "derain"
+default_root_dir    = DATA_DIR / "enhance" / "dehaze"
 DataModule          = core.DataModule
 DatapointAttributes = core.DatapointAttributes
 ImageAnnotation     = core.ImageAnnotation
 ImageDataset        = core.ImageDataset
 
 
-# region Dataset
-
-@DATASETS.register(name="cityscapes_rain")
-class CityscapesRain(ImageDataset):
-
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.VAL]
+@DATASETS.register(name="reside_hsts_real")
+class RESIDEHSTSReal(ImageDataset):
+    """RESIDE-HSTS-Real dataset consists of 10 real hazy images."""
+    
+    tasks : list[Task]  = [Task.DEHAZE]
+    splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image": ImageAnnotation,
     })
-    has_test_annotations: bool = True
-    
-    def __init__(self, root: core.Path = DATA_DIR / "cityscapes", *args, **kwargs):
-        super().__init__(root=root, *args, **kwargs)
-    
-    def get_data(self):
-        patterns = [
-            self.root / self.split_str /  "leftImg8bit_rain",
-        ]
-        
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
-                ):
-                    if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
-        
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/leftImg8bit_rain/", "/leftImg8bit/")
-                stem = path.stem
-                path = path.parent / f"{stem.split("leftImg8bit")[0]}leftImg8bit{path.suffix}"
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
-        
-        
-@DATASETS.register(name="gtrain")
-class GTRain(ImageDataset):
-    """GT-Rain dataset consists ``26,124`` train and ``1,793`` val pairs of
-    rain/no-rain images.
-    """
-    
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
-    })
-    has_test_annotations: bool = True
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "gtrain" / self.split_str / "lq",
+            self.root / "reside_hsts_real" / self.split_str / "lq",
         ]
         
         # LQ images
@@ -130,45 +70,29 @@ class GTRain(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = str(img.path)
-                if "Gurutto_1-2" in path:
-                    path = path.replace("-R-", "-C-")
-                else:
-                    path = path[:-9] + "C-000.png"
-                path = path.replace("/lq/", "/hq/")
-                path = core.Path(path)
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+        self.datapoints["image"] = lq_images
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
         
-
-@DATASETS.register(name="rain100")
-class Rain100(ImageDataset):
-    """Rain100 dataset consists ``100`` pairs of rain/no-rain test images."""
+@DATASETS.register(name="reside_hsts_syn")
+class RESIDEHSTSSyn(ImageDataset):
+    """RESIDE-HSTS-Syn dataset consists of ``10`` pairs of hazy and
+    corresponding haze-free images.
+    """
     
-    tasks : list[Task]  = [Task.DERAIN]
+    tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
     })
-    has_test_annotations: bool = True
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "rain100" / self.split_str / "lq",
+            self.root / "reside_hsts_syn" / self.split_str / "lq",
         ]
         
         # LQ images
@@ -198,14 +122,65 @@ class Rain100(ImageDataset):
         self.datapoints["hq_image"] = hq_images
         
 
-@DATASETS.register(name="rain100h")
-class Rain100H(ImageDataset):
-    """Rain100H dataset consists ``100`` pairs of rain/no-rain test images and
-    ``100`` pairs of rain/no-rain train-val images.
+@DATASETS.register(name="reside_its")
+class RESIDEITS(ImageDataset):
+    """RESIDE-ITS dataset consists of ``13,990`` pairs of hazy and corresponding
+    haze-free images.
     """
     
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.TEST]
+    tasks : list[Task]  = [Task.DEHAZE]
+    splits: list[Split] = [Split.TRAIN, Split.VAL]
+    datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = False
+    
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
+    
+    def get_data(self):
+        patterns = [
+            self.root / "reside_its" / self.split_str / "lq",
+        ]
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
+                ):
+                    if path.is_image_file():
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
+            ):
+                stem = str(img.path.stem).split("_")[0]
+                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["image"]    = lq_images
+        self.datapoints["hq_image"] = hq_images
+        
+
+@DATASETS.register(name="reside_its_v2")
+class RESIDEITSV2(ImageDataset):
+    """RESIDE-ITS-V2 dataset consists of ``13,990`` pairs of hazy and
+    corresponding haze-free images.
+    """
+    
+    tasks : list[Task]  = [Task.DEHAZE]
+    splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
@@ -217,7 +192,7 @@ class Rain100H(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "rain100h" / self.split_str / "lq",
+            self.root / "reside_its_v2" / self.split_str / "lq",
         ]
         
         # LQ images
@@ -240,67 +215,22 @@ class Rain100H(ImageDataset):
                 description=f"Listing {self.__class__.__name__} "
                             f"{self.split_str} hq images"
             ):
+                stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
-@DATASETS.register(name="rain100l")
-class Rain100L(ImageDataset):
-    """Rain100L dataset consists ``100`` pairs of rain/no-rain test images and
-    ``200`` pairs of rain/no-rain train-val images.
+@DATASETS.register(name="reside_ots")
+class RESIDEOTS(ImageDataset):
+    """RESIDE-OTS dataset consists of ``73,135`` pairs of hazy and corresponding
+    haze-free images.
     """
     
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.TEST]
-    datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
-    })
-    has_test_annotations: bool = True
-    
-    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
-        super().__init__(root=root, *args, **kwargs)
-
-    def get_data(self):
-        patterns = [
-            self.root / "rain100l" / self.split_str / "lq"
-        ]
-        
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
-                ):
-                    if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
-        
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
-        
-
-@DATASETS.register(name="rain12")
-class Rain12(ImageDataset):
-    """Rain12 dataset consists ``12`` pairs of rain/no-rain images."""
-    
-    tasks : list[Task]  = [Task.DERAIN]
+    tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
@@ -313,7 +243,7 @@ class Rain12(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "rain12" / self.split_str / "lq",
+            self.root / "reside_ots" / self.split_str / "lq",
         ]
         
         # LQ images
@@ -327,62 +257,6 @@ class Rain12(ImageDataset):
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
-
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
-        
-
-@DATASETS.register(name="rain1200")
-class Rain1200(ImageDataset):
-    """Rain1200 dataset consists ``1,200`` pairs of rain/no-rain test images and
-    ``12,000`` pairs of rain/no-rain train images.
-    """
-    
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
-    })
-    has_test_annotations: bool = True
-    
-    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
-        super().__init__(root=root, *args, **kwargs)
-    
-    def get_data(self):
-        if self.split in [Split.TRAIN]:
-            patterns = [
-                self.root / "rain1200_light"  / self.split_str / "lq",
-                self.root / "rain1200_medium" / self.split_str / "lq",
-                self.root / "rain1200_heavy"  / self.split_str / "lq",
-            ]
-        else:
-            patterns = [
-                self.root / "rain1200" / self.split_str / "lq",
-            ]
-        
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
-                ):
-                    if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
         
         # HQ images
         hq_images: list[ImageAnnotation] = []
@@ -392,96 +266,32 @@ class Rain1200(ImageDataset):
                 description=f"Listing {self.__class__.__name__} "
                             f"{self.split_str} hq images"
             ):
+                stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
-
-
-@DATASETS.register(name="rain13k")
-class Rain13K(ImageDataset):
-    """Rain13K dataset consists ``13k`` pairs of rain/no-rain train images."""
-    
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
-    })
-    has_test_annotations: bool = True
-    
-    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
-        super().__init__(root=root, *args, **kwargs)
-    
-    def get_data(self):
-        if self.split in [Split.TRAIN]:
-            patterns = [
-                self.root / "rain13k" / self.split_str / "lq",
-            ]
-        elif self.split in [Split.VAL]:
-            patterns = [
-                self.root / "rain1200" / self.split_str / "lq",
-                self.root / "rain800"  / self.split_str / "lq",
-            ]
-        else:
-            patterns = [
-                self.root / "rain100"  / self.split_str / "lq",
-                self.root / "rain100h" / self.split_str / "lq",
-                self.root / "rain100l" / self.split_str / "lq",
-                self.root / "rain1200" / self.split_str / "lq",
-                self.root / "rain1400" / self.split_str / "lq",
-                self.root / "rain2800" / self.split_str / "lq",
-                self.root / "rain800"  / self.split_str / "lq",
-            ]
-        
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
-                ):
-                    if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
-
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
-@DATASETS.register(name="rain1400")
-class Rain1400(ImageDataset):
-    """Rain1400 dataset consists ``1,400`` pairs of rain/no-rain test images and
-    ``12,600`` pairs of rain/no-rain train images.
-    """
+@DATASETS.register(name="reside_rtts")
+class RESIDERTTS(ImageDataset):
+    """RESIDE-RTTS dataset consists of ``4,322`` real hazy images."""
     
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.TEST]
+    tasks : list[Task]  = [Task.DEHAZE]
+    splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
     })
-    has_test_annotations: bool = True
+    has_test_annotations: bool = False
     
     def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
         super().__init__(root=root, *args, **kwargs)
     
     def get_data(self):
         patterns = [
-            self.root / "rain1400" / self.split_str / "lq",
+            self.root / "reside_rtts" / self.split_str / "lq",
         ]
         
         # LQ images
@@ -495,27 +305,17 @@ class Rain1400(ImageDataset):
                 ):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
-
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"] = lq_images
         
 
-@DATASETS.register(name="rain2800")
-class Rain2800(ImageDataset):
-    """Rain2800 dataset consists ``2,800`` pairs of rain/no-rain test images."""
+@DATASETS.register(name="reside_sots_indoor")
+class RESIDESOTSIndoor(ImageDataset):
+    """RESIDE-SOTS-Indoor dataset consists of ``500`` pairs of hazy and
+    corresponding haze-free images.
+    """
     
-    tasks : list[Task]  = [Task.DERAIN]
+    tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
@@ -528,7 +328,7 @@ class Rain2800(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "rain2800" / self.split_str / "lq",
+            self.root / "reside_sots_indoor " / self.split_str / "lq",
         ]
         
         # LQ images
@@ -541,9 +341,8 @@ class Rain2800(ImageDataset):
                                 f"{self.split_str} lq images"
                 ):
                     if path.is_image_file():
-                        
                         lq_images.append(ImageAnnotation(path=path))
-
+        
         # HQ images
         hq_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
@@ -552,20 +351,23 @@ class Rain2800(ImageDataset):
                 description=f"Listing {self.__class__.__name__} "
                             f"{self.split_str} hq images"
             ):
+                stem = str(img.path.stem).split("_")[0]
                 path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
                 hq_images.append(ImageAnnotation(path=path.image_file()))
         
         self.datapoints["image"]    = lq_images
         self.datapoints["hq_image"] = hq_images
         
 
-@DATASETS.register(name="rain800")
-class Rain800(ImageDataset):
-    """Rain800 dataset consists ``800`` pairs of rain/no-rain train-val images.
+@DATASETS.register(name="reside_sots_outdoor")
+class RESIDESOTSOutdoor(ImageDataset):
+    """RESIDE-SOTS-Outdoor dataset consists of ``500`` pairs of hazy and
+    corresponding haze-free images.
     """
     
-    tasks : list[Task]  = [Task.DERAIN]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    tasks : list[Task]  = [Task.DEHAZE]
+    splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
@@ -577,7 +379,55 @@ class Rain800(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "rain800" / self.split_str / "lq",
+            self.root / "reside_sots_outdoor" / self.split_str / "lq",
+        ]
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
+                ):
+                    if path.is_image_file():
+                        lq_images.append(ImageAnnotation(path=path))
+
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
+            ):
+                stem = str(img.path.stem).split("_")[0]
+                path = img.path.replace("/lq/", "/hq/")
+                path = path.parent / f"{stem}.{img.path.suffix}"
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["image"]    = lq_images
+        self.datapoints["hq_image"] = hq_images
+
+
+@DATASETS.register(name="reside_uhi")
+class RESIDEUHI(ImageDataset):
+    """RESIDE-UHI dataset consists of ``4,809`` real hazy images."""
+    
+    tasks : list[Task]  = [Task.DEHAZE]
+    splits: list[Split] = [Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
+    })
+    has_test_annotations: bool = False
+    
+    def __init__(self, root: core.Path = default_root_dir, *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
+    
+    def get_data(self):
+        patterns = [
+            self.root / "reside_uhi" / self.split_str / "lq"
         ]
         
         # LQ images
@@ -592,29 +442,13 @@ class Rain800(ImageDataset):
                     if path.is_image_file():
                         lq_images.append(ImageAnnotation(path=path))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+        self.datapoints["image"] = lq_images
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
-        
-# endregion
 
+@DATAMODULES.register(name="reside_hsts_real")
+class RESIDEHSTSRealDataModule(DataModule):
 
-# region Datamodule
-
-@DATAMODULES.register(name="cityscapes_rain")
-class CityscapesRainDataModule(DataModule):
-    
-    tasks: list[Task] = [Task.DERAIN]
+    tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         pass
@@ -624,20 +458,20 @@ class CityscapesRainDataModule(DataModule):
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
         if stage in [None, "train"]:
-            self.train = CityscapesRain(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = CityscapesRain(split=Split.VAL,   **self.dataset_kwargs)
+            self.train = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
+            self.val   = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
         if stage in [None, "test"]:
-            self.test  = CityscapesRain(split=Split.VAL,   **self.dataset_kwargs)
-        
+            self.test  = RESIDEHSTSReal(split=Split.TEST, **self.dataset_kwargs)
+
         self.get_classlabels()
         if self.can_log:
             self.summarize()
-            
-            
-@DATAMODULES.register(name="gtrain")
-class GTRainDataModule(DataModule):
-    
-    tasks: list[Task] = [Task.DERAIN]
+
+
+@DATAMODULES.register(name="reside_hsts_syn")
+class RESIDEHSTSSynDataModule(DataModule):
+
+    tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         pass
@@ -647,20 +481,158 @@ class GTRainDataModule(DataModule):
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
         if stage in [None, "train"]:
-            self.train = GTRain(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = GTRain(split=Split.VAL,   **self.dataset_kwargs)
+            self.train = RESIDEHSTSSyn(split=Split.TEST, **self.dataset_kwargs)
+            self.val   = RESIDEHSTSSyn(split=Split.TEST, **self.dataset_kwargs)
         if stage in [None, "test"]:
-            self.test  = GTRain(split=Split.TEST,  **self.dataset_kwargs)
+            self.test = RESIDEHSTSSyn(split=Split.TEST,  **self.dataset_kwargs)
 
         self.get_classlabels()
         if self.can_log:
             self.summarize()
 
 
-@DATAMODULES.register(name="rain100")
-class Rain100DataModule(DataModule):
+@DATAMODULES.register(name="reside_its")
+class RESIDEITSDataModule(DataModule):
 
-    tasks: list[Task] = [Task.DERAIN]
+    tasks: list[Task] = [Task.DEHAZE]
+    
+    def prepare_data(self, *args, **kwargs):
+        pass
+
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = RESIDEITS(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
+
+        self.get_classlabels()
+        if self.can_log:
+            self.summarize()
+
+
+@DATAMODULES.register(name="reside_its_v2")
+class RESIDEITSV2DataModule(DataModule):
+
+    tasks: list[Task] = [Task.DEHAZE]
+    
+    def prepare_data(self, *args, **kwargs):
+        pass
+
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = RESIDEITSV2(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   =   RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test  =   RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
+
+        self.get_classlabels()
+        if self.can_log:
+            self.summarize()
+
+
+@DATAMODULES.register(name="reside_ots")
+class RESIDEOTSDataModule(DataModule):
+
+    tasks: list[Task] = [Task.DEHAZE]
+    
+    def prepare_data(self, *args, **kwargs):
+        pass
+
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = RESIDEOTS(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = RESIDEITS(split=Split.VAL,   **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test  = RESIDEITS(split=Split.TEST,  **self.dataset_kwargs)
+
+        self.get_classlabels()
+        if self.can_log:
+            self.summarize()
+
+
+@DATAMODULES.register(name="reside_rtts")
+class RESIDERTTSDataModule(DataModule):
+
+    tasks: list[Task] = [Task.DEHAZE]
+    
+    def prepare_data(self, *args, **kwargs):
+        pass
+
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = RESIDERTTS(split=Split.TEST, **self.dataset_kwargs)
+            self.val   = RESIDERTTS(split=Split.TEST, **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test = RESIDERTTS(split=Split.TEST,  **self.dataset_kwargs)
+
+        self.get_classlabels()
+        if self.can_log:
+            self.summarize()
+
+
+@DATAMODULES.register(name="reside_sots_indoor")
+class RESIDESOTSIndoorDataModule(DataModule):
+
+    tasks: list[Task] = [Task.DEHAZE]
+    
+    def prepare_data(self, *args, **kwargs):
+        pass
+
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = RESIDESOTSIndoor(split=Split.TEST, **self.dataset_kwargs)
+            self.val   = RESIDESOTSIndoor(split=Split.TEST, **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test = RESIDESOTSIndoor(split=Split.TEST,  **self.dataset_kwargs)
+
+        self.get_classlabels()
+        if self.can_log:
+            self.summarize()
+
+
+@DATAMODULES.register(name="reside_sots_outdoor")
+class RESIDESOTSOutdoorDataModule(DataModule):
+
+    tasks: list[Task] = [Task.DEHAZE]
+    
+    def prepare_data(self, *args, **kwargs):
+        pass
+
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
+            self.val   = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test  = RESIDESOTSOutdoor(split=Split.TEST, **self.dataset_kwargs)
+
+        self.get_classlabels()
+        if self.can_log:
+            self.summarize()
+
+
+@DATAMODULES.register(name="reside_uhi")
+class RESIDEUHIDataModule(DataModule):
+
+    tasks: list[Task] = [Task.DEHAZE]
     
     def prepare_data(self, *args, **kwargs):
         pass
@@ -670,198 +642,11 @@ class Rain100DataModule(DataModule):
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
         if stage in [None, "train"]:
-            self.train = Rain100(split=Split.TEST, **self.dataset_kwargs)
-            self.val   = Rain100(split=Split.TEST, **self.dataset_kwargs)
+            self.train = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
+            self.val   = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
         if stage in [None, "test"]:
-            self.test  = Rain100(split=Split.TEST, **self.dataset_kwargs)
+            self.test  = RESIDEUHI(split=Split.TEST, **self.dataset_kwargs)
         
         self.get_classlabels()
         if self.can_log:
             self.summarize()
-    
-
-@DATAMODULES.register(name="rain100h")
-class Rain100HDataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        if stage in [None, "train"]:
-            self.train = Rain100H(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = Rain100H(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = Rain100H(split=Split.TEST,  **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-
-@DATAMODULES.register(name="rain100l")
-class Rain100LDataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        if stage in [None, "train"]:
-            self.train = Rain100L(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = Rain100L(split=Split.TRAIN, **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = Rain100L(split=Split.TEST,  **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-
-@DATAMODULES.register(name="rain12")
-class Rain12DataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        if stage in [None, "train"]:
-            self.train = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = Rain12(split=Split.TRAIN, **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-
-@DATAMODULES.register(name="rain1200")
-class Rain1200DataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        if stage in [None, "train"]:
-            self.train = Rain1200(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = Rain1200(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = Rain1200(split=Split.TEST,  **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-
-@DATAMODULES.register(name="rain13k")
-class Rain13KDataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        if stage in [None, "train"]:
-            self.train = Rain13K(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = Rain100(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            # self.test  = Rain13K(split=Split.TEST,  **self.dataset_kwargs)
-            self.test  = Rain100(split=Split.TEST,  **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-
-@DATAMODULES.register(name="rain1400")
-class Rain1400DataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        if stage in [None, "train"]:
-            self.train = Rain1400(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = Rain1400(split=Split.TEST,  **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = Rain1400(split=Split.TEST,  **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-
-@DATAMODULES.register(name="rain2800")
-class Rain2800DataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-       
-        if stage in [None, "train"]:
-            self.train = Rain2800(split=Split.TEST, **self.dataset_kwargs)
-            self.val   = Rain2800(split=Split.TEST, **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = Rain2800(split=Split.TEST, **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-
-@DATAMODULES.register(name="rain800")
-class Rain800DataModule(DataModule):
-
-    tasks: list[Task] = [Task.DERAIN]
-    
-    def prepare_data(self, *args, **kwargs):
-        pass
-    
-    def setup(self, stage: Literal["train", "test", "predict", None] = None):
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-       
-        if stage in [None, "train"]:
-            self.train = Rain800(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = Rain800(split=Split.VAL,   **self.dataset_kwargs)
-        if stage in [None, "test"]:
-            self.test  = Rain800(split=Split.TEST,  **self.dataset_kwargs)
-        
-        self.get_classlabels()
-        if self.can_log:
-            self.summarize()
-    
-# endregion

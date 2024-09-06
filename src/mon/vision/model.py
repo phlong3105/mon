@@ -104,7 +104,7 @@ class VisionModel(nn.Model, ABC):
                 if resize:
                     datapoint[k] = core.resize(v, image_size)
                 else:
-                    datapoint[k] = core.resize_divisible(v, 32)
+                    datapoint[k] = core.resize(v, divisible_by=32)
         for k, v in datapoint.items():
             if isinstance(v, torch.Tensor):
                 datapoint[k] = v.to(self.device)

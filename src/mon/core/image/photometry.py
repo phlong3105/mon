@@ -164,7 +164,7 @@ def denormalize_image_mean_std(
     elif isinstance(image, np.ndarray):
         raise NotImplementedError(f"This function has not been implemented.")
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
     return image
 
@@ -224,7 +224,7 @@ def normalize_image_mean_std(
     elif isinstance(image, np.ndarray):
         raise NotImplementedError(f"This function has not been implemented.")
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
     return image
 
@@ -269,7 +269,7 @@ def normalize_image_by_range(
         image = (image - min) * ratio + new_min
         # image = np.clip(image, new_min, new_max)
     else:
-        raise TypeError(f"`image` must be a `numpy.ndarray` or `torch.Tensor`, "
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
     return image
 

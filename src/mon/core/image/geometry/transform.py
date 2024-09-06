@@ -57,7 +57,6 @@ __all__ = [
     "remap",
     "rescale",
     "resize",
-    "resize_divisible",
 ]
 
 from typing import Sequence
@@ -103,28 +102,43 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     return output1, output2
 
 
-@dispatch
 def resize(
-    image        : torch.Tensor,
-    size         : int | Sequence[int],
-    interpolation: str = "bilinear",
+    image           : torch.Tensor | np.ndarray,
+    size            : int | Sequence[int],
+    interpolation   : int | str = "bilinear",
+    divisible_by    : int       = None,
+    resize_short_dim: bool      = False,
     **kwargs,
-) -> torch.Tensor:
-    """Resize an image using :obj:`kornia`.
+) -> torch.Tensor | np.ndarray:
+    """Resize an image
     
     Args:
-        image: An image of type :obj:`torch.Tensor` in ``[B, C, H, W]`` format
-            with data in the range ``[0.0, 1.0]``.
+        image: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
         size: The target size.
-        interpolation: Algorithm used for upsampling. One of:
-            - ``'nearest'``
-            - ``'linear'``
-            - ``'bilinear'``
-            - ``'bicubic'``
-            - ``'trilinear'``
-            -  ``'area'``
-            Defaults: ``'bilinear'``.
-    
+        interpolation: Algorithm used for upsampling.
+            - For :obj:`kornia`:
+                - ``'nearest'``
+                - ``'linear'``
+                - ``'bilinear'``
+                - ``'bicubic'``
+                - ``'trilinear'``
+                -  ``'area'``
+                Defaults: ``'bilinear'``.
+            - For :obj:`cv2`:
+                - cv2.INTER_AREA: This is used when we need to shrink an image.
+                - cv2.INTER_CUBIC: This is slow but more efficient.
+                - cv2.INTER_LINEAR: This is primarily used when zooming is
+                    required. This is the default interpolation technique in
+                    OpenCV.
+        divisible_by: If not ``None``, then the image will be resized to a size
+            that is divisible by this number. Default: ``None``.
+        resize_short_dim: If ``True``, resize the image such that the shortest
+            dimension is equal to the target size. Default: ``False``.
+            
     **kwargs (korina.geometry.transform.resize):
         - align_corners: interpolation flag.
         - side: Corresponding side if ``size`` is an integer. One of:
@@ -141,64 +155,44 @@ def resize(
         - antialias: If ``True``, then image will be filtered with Gaussian
             before downscaling. No effect for upscaling.
     """
-    align_corners = kwargs.pop("align_corners", None)
-    side          = kwargs.pop("side",          "short")
-    antialias     = kwargs.pop("antialias",     False)
-    return transform.resize(
-        input         = image,
-        size          = size,
-        interpolation = interpolation,
-        align_corners = align_corners,
-        side          = side,
-        antialias     = antialias,
-    )
-
-
-@dispatch
-def resize(
-    image        : np.ndarray,
-    size         : int | Sequence[int],
-    interpolation: int = cv2.INTER_LINEAR,
-    **kwargs,
-) -> np.ndarray:
-    """Resize an :obj:`image` using :obj:`kornia`.
+    size = utils.parse_hw(size)
+    if divisible_by:
+        h, w = utils.get_image_size(image)
+        size = utils.make_image_size_divisible((h, w), divisible_by)
+    elif resize_short_dim:
+        h, w = utils.get_image_size(image)
+        if h < w:
+            scale = size[0] / h
+        else:
+            scale = size[1] / w
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        size  = (new_w, new_h)
     
-    Args:
-        image: An image of type :obj:`numpy.ndarray` in ``[H, W, C]`` format
-            with data in the range ``[0, 255]``.
-        size: The target size.
-        interpolation: Algorithm used for upsampling:
-            - cv2.INTER_AREA: This is used when we need to shrink an image.
-            - cv2.INTER_CUBIC: This is slow but more efficient.
-            - cv2.INTER_LINEAR: This is primarily used when zooming is required.
-                This is the default interpolation technique in OpenCV.
-    
-    **kwargs (cv2.resize):
-        - fx: Scale factor along the horizontal axis.
-        - fy: Scale factor along the vertical axis.
-        - antialias: If ``True``, then image will be filtered with Gaussian
-            before downscaling. No effect for upscaling.
-    """
-    fx   = kwargs.pop("fx", None)
-    fy   = kwargs.pop("fy", None)
-    h, w = utils.parse_hw(size)
-    return cv2.resize(
-        src           = image,
-        dsize         = (w, h),
-        fx            = fx,
-        fy            = fy,
-        interpolation = interpolation,
-    )
-
-
-def resize_divisible(
-    image  : torch.Tensor | np.ndarray,
-    divisor: int = 32
-) -> torch.Tensor | np.ndarray:
-    """Resize an :obj:`image` to a size that is divisible by :obj:`divisor`."""
-    h, w  = utils.get_image_size(image)
-    h, w  = utils.make_image_size_divisible((h, w), divisor)
-    image = resize(image, (w, h))
-    return image
+    if isinstance(image, torch.Tensor):
+        align_corners = kwargs.pop("align_corners", None)
+        side          = kwargs.pop("side",          "short")
+        antialias     = kwargs.pop("antialias",     False)
+        return transform.resize(
+            input         = image,
+            size          = size,
+            interpolation = interpolation,
+            align_corners = align_corners,
+            side          = side,
+            antialias     = antialias,
+        )
+    elif isinstance(image, np.ndarray):
+        fx = kwargs.pop("fx", None)
+        fy = kwargs.pop("fy", None)
+        return cv2.resize(
+            src           = image,
+            dsize         = (size[1], size[0]),
+            fx            = fx,
+            fy            = fy,
+            interpolation = interpolation,
+        )
+    else:
+        raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
+                        f"but got {type(image)}.")
 
 # endregion

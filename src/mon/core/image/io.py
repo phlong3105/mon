@@ -23,6 +23,7 @@ import multiprocessing
 import cv2
 import joblib
 import numpy as np
+import rawpy
 import torch
 import torchvision
 from PIL import Image
@@ -71,11 +72,18 @@ def read_image(
             - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
                 range ``[0, 255]``.
     """
-    image = cv2.imread(str(path), flags)  # BGR
-    if image.ndim == 2:  # HW -> HW1 (OpenCV read grayscale image)
-        image = np.expand_dims(image, axis=-1)
-    if utils.is_color_image(image):
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Read raw image
+    if path.is_raw_image_file():
+        image = rawpy.imread(str(path))
+        image = image.postprocess()
+    # Read other types of image
+    else:
+        image = cv2.imread(str(path), flags)  # BGR
+        if image.ndim == 2:  # HW -> HW1 (OpenCV read grayscale image)
+            image = np.expand_dims(image, axis=-1)
+        if utils.is_color_image(image):
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Convert to tensor
     if to_tensor:
         image = utils.to_image_tensor(image, False, normalize)
     return image
@@ -88,18 +96,26 @@ def read_image_shape(path: pathlib.Path) -> tuple[int, int, int]:
     Args:
         path: An image file path.
     """
-    with Image.open(str(path)) as image:
-        w, h = image.size
-        mode = image.mode  # This tells the color depth (e.g., "RGB", "L", "RGBA")
-        # Determine the number of channels (depth) based on the mode
-        if mode == "RGB":
-            c = 3
-        elif mode == "RGBA":
-            c = 4
-        elif mode == "L":  # Grayscale
-            c = 1
-        else:
-            raise ValueError(f"Unsupported image mode: {mode}.")
+    # Read raw image
+    if path.is_raw_image_file():
+        image = rawpy.imread('path_to_your_image.dng')
+        image = image.raw_image_visible
+        h, w  = image.shape
+        c     = 3
+    # Read other types of image
+    else:
+        with Image.open(str(path)) as image:
+            w, h = image.size
+            mode = image.mode  # This tells the color depth (e.g., "RGB", "L", "RGBA")
+            # Determine the number of channels (depth) based on the mode
+            if mode == "RGB":
+                c = 3
+            elif mode == "RGBA":
+                c = 4
+            elif mode == "L":  # Grayscale
+                c = 1
+            else:
+                raise ValueError(f"Unsupported image mode: {mode}.")
     return h, w, c
 
 # endregion
