@@ -9,6 +9,8 @@ This module implements de-hazing datasets and datamodules.
 from __future__ import annotations
 
 __all__ = [
+    "CityscapesFoggy",
+    "CityscapesFoggyDataModule",
     "DenseHaze",
     "DenseHazeDataModule",
     "IHaze",
@@ -59,6 +61,54 @@ ImageDataset        = core.ImageDataset
 
 
 # region Dataset
+
+@DATASETS.register(name="cityscapes_foggy")
+class CityscapesFoggy(ImageDataset):
+
+    tasks : list[Task]  = [Task.DERAIN]
+    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    datapoint_attrs     = DatapointAttributes({
+        "image"   : ImageAnnotation,
+        "hq_image": ImageAnnotation,
+    })
+    has_test_annotations: bool = True
+    
+    def __init__(self, root: core.Path = DATA_DIR / "cityscapes", *args, **kwargs):
+        super().__init__(root=root, *args, **kwargs)
+    
+    def get_data(self):
+        patterns = [
+            self.root / self.split_str /  "leftImg8bit_foggy",
+        ]
+        
+        # LQ images
+        lq_images: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    sorted(list(pattern.rglob("*"))),
+                    description=f"Listing {self.__class__.__name__} "
+                                f"{self.split_str} lq images"
+                ):
+                    if path.is_image_file():
+                        lq_images.append(ImageAnnotation(path=path))
+        
+        # HQ images
+        hq_images: list[ImageAnnotation] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                lq_images,
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split_str} hq images"
+            ):
+                path = img.path.replace("/leftImg8bit_foggy/", "/leftImg8bit/")
+                stem = path.stem
+                path = path.parent / f"{stem.split("leftImg8bit")[0]}leftImg8bit{path.suffix}"
+                hq_images.append(ImageAnnotation(path=path.image_file()))
+        
+        self.datapoints["image"]    = lq_images
+        self.datapoints["hq_image"] = hq_images
+        
 
 @DATASETS.register(name="densehaze")
 class DenseHaze(ImageDataset):
@@ -851,6 +901,29 @@ class SateHaze1KThick(ImageDataset):
 
 
 # region Datamodule
+
+@DATAMODULES.register(name="cityscapes_foggy")
+class CityscapesFoggyDataModule(DataModule):
+    
+    tasks: list[Task] = [Task.DERAIN]
+    
+    def prepare_data(self, *args, **kwargs):
+        pass
+
+    def setup(self, stage: Literal["train", "test", "predict", None] = None):
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        if stage in [None, "train"]:
+            self.train = CityscapesFoggy(split=Split.TRAIN, **self.dataset_kwargs)
+            self.val   = CityscapesFoggy(split=Split.VAL,   **self.dataset_kwargs)
+        if stage in [None, "test"]:
+            self.test  = CityscapesFoggy(split=Split.TEST,  **self.dataset_kwargs)
+        
+        self.get_classlabels()
+        if self.can_log:
+            self.summarize()
+            
 
 @DATAMODULES.register(name="densehaze")
 class DenseHazeDataModule(DataModule):

@@ -25,6 +25,7 @@ import joblib
 import numpy as np
 import torch
 import torchvision
+from PIL import Image
 
 from mon.core import pathlib
 from mon.core.image import photometry, utils
@@ -81,14 +82,25 @@ def read_image(
 
 
 def read_image_shape(path: pathlib.Path) -> tuple[int, int, int]:
-    """Read an image from a file path using :obj:`cv2` and get its shape in
-    ``[H, W, C]`` format.
+    """Read an image from a file path using :obj:`PIL` and get its shape in
+    ``[H, W, C]`` format. Using :obj:`PIL` is faster than using OpenCV.
     
     Args:
         path: An image file path.
     """
-    image = cv2.imread(str(path))  # BGR
-    return image.shape
+    with Image.open(str(path)) as image:
+        w, h = image.size
+        mode = image.mode  # This tells the color depth (e.g., "RGB", "L", "RGBA")
+        # Determine the number of channels (depth) based on the mode
+        if mode == "RGB":
+            c = 3
+        elif mode == "RGBA":
+            c = 4
+        elif mode == "L":  # Grayscale
+            c = 1
+        else:
+            raise ValueError(f"Unsupported image mode: {mode}.")
+    return h, w, c
 
 # endregion
 

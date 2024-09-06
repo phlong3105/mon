@@ -40,9 +40,9 @@ class Cityscapes(ImageDataset):
     """Cityscapes dataset.
     
     Args:
-        root       : The root directory of the dataset.
+        root: The root directory of the dataset.
         use_blurred: If ``True``, use the blurred images. Defaults: ``False``.
-        use_coarse : If ``True``, use the coarse annotations. Defaults: ``False``.
+        use_coarse: If ``True``, use the coarse annotations. Defaults: ``False``.
     """
     
     tasks : list[Task]  = [Task.SEGMENT]
@@ -51,9 +51,7 @@ class Cityscapes(ImageDataset):
         "image"      : ImageAnnotation,                 # leftImg8bit
         "semantic"   : SemanticSegmentationAnnotation,  # gtFine
         # "right_image": ImageAnnotation,                 # rightImg8bit
-        # "disparity"  : ImageAnnotation,                 # disparity
         # "camera"     : ImageAnnotation,                 # camera
-        # "vehicle"    : ImageAnnotation,                 # vehicle
         # "bbox3d"     : ImageAnnotation,                 # bbox3d
     })
     has_test_annotations: bool        = False
@@ -120,7 +118,7 @@ class Cityscapes(ImageDataset):
                 for path in pbar.track(
                     sorted(list(pattern.rglob("*"))),
                     description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} {image_name} images"
+                                f"{self.split_str} left images"
                 ):
                     if path.is_image_file():
                         images.append(ImageAnnotation(path=path))
@@ -131,7 +129,7 @@ class Cityscapes(ImageDataset):
             for img in pbar.track(
                 images,
                 description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} {gt_name} maps"
+                            f"{self.split_str} semantic maps"
             ):
                 path = img.path.replace(f"{image_name}", f"{gt_name}")
                 path = path.parent / f"{path.stem}_labelIds{path.suffix}"

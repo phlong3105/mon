@@ -126,9 +126,10 @@ class ImageAnnotation(base.Annotation):
             An RGB or grayscale image of type :obj:`numpy.ndarray` in
             ``[H, W, C]`` format with data in the range ``[0, 255]``.
         """
+        # Return the image if it is already loaded
         if self.image is not None:
             return self.image
-        
+        # Load the image
         self.path  = path  if path  else self.path
         self.flags = flags if flags else self.flags
         image = io.read_image(
@@ -137,6 +138,10 @@ class ImageAnnotation(base.Annotation):
             to_tensor = False,
             normalize = False
         )
+        # Update the shape of the image
+        if self._shape != image.shape:
+            self._shape = image.shape
+        # Cache the image if needed
         self.image = image if cache else None
         return image
     

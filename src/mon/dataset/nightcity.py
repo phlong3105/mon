@@ -134,7 +134,7 @@ class NightCity(ImageDataset):
             for img in pbar.track(
                 lq_images,
                 description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} lq semantic segmentation"
+                            f"{self.split_str} lq semantic maps"
             ):
                 path = img.path.replace("/lq/", "/labelIds/")
                 semantic.append(SemanticSegmentationAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
