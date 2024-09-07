@@ -33,13 +33,18 @@ for (( i=0; i<${#data[@]}; i++ )); do
     if ! [ -d "${input_dir}" ]; then
         input_dir="${current_dir}/run/predict/${arch}/${model}/${data[i]}"
     fi
+    target_dir="${data_dir}/enhance/${task}/${data[i]}/test/hq"
+    if ! [ -d "${target_dir}" ]; then
+        target_dir="${data_dir}/enhance/${task}/${data[i]}/val/hq"
+    fi
 
     python -W ignore metric.py \
         --input-dir "${input_dir}" \
-        --target-dir "${data_dir}/enhance/${task}/${data[i]}/test/hq" \
+        --target-dir "${target_dir}" \
         --result-file "${current_dir}" \
         --arch "${arch}" \
         --model "${model}" \
+        --data "${data[i]}" \
         --device "cuda:0" \
         --metric "psnr" \
         --metric "ssimc" \

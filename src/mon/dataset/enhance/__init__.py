@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Enhancement Dataset.
+"""Enhancement Datasets.
 
 This package implements image/video enhancement datasets.
 """

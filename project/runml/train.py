@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements training pipeline."""
+"""Train Pipeline.
+
+This script trains a model on a given dataset.
+"""
 
 from __future__ import annotations
 

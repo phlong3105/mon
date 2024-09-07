@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Measure metrics for image enhancement methods."""
+"""Metric Pipeline.
+
+This script is used to measure metrics for a given model and dataset.
+"""
 
 from __future__ import annotations
 
 import logging
 import os
+import socket
 
 import click
-# import piqa
 import pyiqa
 import torch
 
@@ -18,116 +21,7 @@ import mon
 console = mon.console
 
 
-# region Function
-'''
-def measure_metric_piqa(
-    input_dir     : mon.Path,
-    target_dir    : mon.Path | None,
-    result_file   : mon.Path | str,
-    imgsz         : int,
-    resize        : bool,
-    metric        : list[str],
-    test_y_channel: bool,
-    use_gt_mean   : bool,
-    save_txt      : bool,
-    verbose       : bool,
-) -> dict:
-    """Measure metrics."""
-    _METRICS = {
-        # "fid"    : piqa.FID,
-        "fsim"   : piqa.FSIM,
-        "haarpsi": piqa.HaarPSI,
-        "lpips"  : piqa.LPIPS,
-        "mdsi"   : piqa.MDSI,
-        "ms-gmsd": piqa.MS_GMSD,
-        "ms-ssim": piqa.MS_SSIM,
-        "psnr"   : piqa.PSNR,
-        "ssim"   : piqa.SSIM,
-        "tv"     : piqa.TV,
-        "vsi"    : piqa.VSI,
-    }
-
-    assert input_dir and mon.Path(input_dir).is_dir()
-    # if target_dir:
-    #     assert mon.Path(target_dir).is_dir()
-    if result_file:
-        assert (mon.Path(result_file).is_dir()
-                or mon.Path(result_file).is_file()
-                or isinstance(result_file, str))
-        result_file = mon.Path(result_file)
-        
-    input_dir   = mon.Path(input_dir)
-    target_dir  = mon.Path(target_dir) \
-        if target_dir \
-        else input_dir.replace("low", "high")
-    
-    result_file = mon.Path(result_file) if result_file else None
-    if save_txt and result_file and result_file.is_dir():
-        result_file /= "metric.txt"
-        result_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    image_files = list(input_dir.rglob("*"))
-    image_files = [f for f in image_files if f.is_image_file()]
-    image_files = sorted(image_files)
-    num_items   = len(image_files)
-    
-    device      = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    metric      = _METRICS if ("all" in metric or "*" in metric) else metric
-    metric      = [m.lower() for m in metric]
-    values      = {m: []     for m in metric}
-    results     = {}
-    metric_f    = {}
-    for i, m in enumerate(metric):
-        if m in _METRICS:
-            metric_f[m] = _METRICS[m]().to(device=device)
-        
-    need_target = any(m in _METRICS and mon.EXTRA_METRICS[m]["metric_mode"] == "FR" for m in metric)
-   
-    # Measuring
-    h, w = mon.parse_hw(imgsz)
-    with mon.get_progress_bar(transient=not verbose) as pbar:
-        for image_file in pbar.track(
-            sequence    = image_files,
-            total       = len(image_files),
-            description = f"[bright_yellow] Measuring"
-        ):
-            image = mon.read_image(path=image_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
-            if torch.any(image.isnan()):
-                continue
-            if resize:
-                image = mon.resize(input=image, size=[h, w])
-            
-            has_target  = need_target
-            target_file = None
-            for ext in mon.IMAGE_FILE_FORMATS:
-                temp = target_dir / f"{image_file.stem}{ext}"
-                if temp.exists():
-                    target_file = temp
-            if target_file and target_file.exists():
-                target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
-                if resize:
-                    target = mon.resize(input=target, size=[h, w])
-            else:
-                has_target = False
-            
-            for m in metric:
-                if m not in _METRICS:
-                    continue
-                if not has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
-                    continue
-                elif has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
-                    values[m].append(float(metric_f[m](image, target)))
-                else:
-                    values[m].append(float(metric_f[m](image)))
-
-    for m, v in values.items():
-        if len(v) > 0:
-            results[m] = float(sum(v) / num_items)
-        else:
-            results[m] = None
-    return results
-'''
-
+# region Metric
 
 def measure_metric_pyiqa(
     input_dir  : mon.Path,
@@ -237,7 +131,7 @@ def measure_metric_pyiqa(
     return results
 
 
-def update_results(results: dict, new_values: dict) -> dict:
+def update_best_results(results: dict, new_values: dict) -> dict:
     for m, v in new_values.items():
         if m in mon.EXTRA_METRICS:
             lower_is_better = mon.EXTRA_METRICS[m]["lower_is_better"]
@@ -247,9 +141,12 @@ def update_results(results: dict, new_values: dict) -> dict:
                 results[m] = v
             elif v:
                 results[m] = min(results[m], v) if lower_is_better else max(results[m], v)
-
     return results
 
+# endregion
+
+
+# region Main
 
 @click.command(name="metric", context_settings=dict(ignore_unknown_options=True, allow_extra_args=True))
 @click.option("--input-dir",      type=click.Path(exists=True),  default=None, help="Image directory.")
@@ -257,6 +154,7 @@ def update_results(results: dict, new_values: dict) -> dict:
 @click.option("--result-file",    type=str,                      default=None, help="Result file.")
 @click.option("--arch",           type=str,                      default=None, help="Model's architecture.")
 @click.option("--model",          type=str,                      default=None, help="Model's fullname.")
+@click.option("--data",           type=str,                      default=None, help="Source data.")
 @click.option("--device",         type=str,                      default=None, help="Running devices.")
 @click.option("--imgsz",          type=int,                      default=512)
 @click.option("--resize",         is_flag=True)
@@ -269,10 +167,11 @@ def update_results(results: dict, new_values: dict) -> dict:
 @click.option("--verbose",        is_flag=True)
 def main(
     input_dir     : mon.Path,
-    target_dir    : mon.Path | None,
+    target_dir    : mon.Path,
     result_file   : mon.Path | str,
     arch          : str,
     model         : str,
+    data          : str,
     device        : int | list[int] | str,
     imgsz         : int,
     resize        : bool,
@@ -322,7 +221,7 @@ def main(
                 save_txt    = save_txt,
                 verbose     = verbose,
             )
-            results = update_results(results, new_values)
+            results = update_best_results(results, new_values)
         else:
             console.log(f"`{backend}` is not supported!")
     
@@ -359,7 +258,6 @@ def main(
         with open(str(result_file), "a") as f:
             if os.stat(str(result_file)).st_size == 0:
                 f.write(f"{'model':<10}\t{'data':<10}\t")
-                
                 for m, v in results.items():
                     f.write(f"{f'{m}':<10}\t")
             f.write(f"{f'{model}':<10}\t{f'{input_dir.name}':<10}\t")

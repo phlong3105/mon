@@ -3,7 +3,7 @@
 
 """Bounding Box Annotation.
 
-This module implements bounding box annotations in an image.
+This module implements bounding box annotations.
 """
 
 from __future__ import annotations
@@ -12,8 +12,6 @@ __all__ = [
     "BBoxAnnotation",
     "BBoxesAnnotation",
 ]
-
-from abc import ABC
 
 import numpy as np
 import torch
@@ -114,31 +112,23 @@ class BBoxAnnotation(base.Annotation):
             return None
     
 
-class BBoxesAnnotation(base.Annotation, ABC):
-    """A list of all bounding box annotations in an image.
-    
-    Args:
-    
-    """
-    
-    def __init__(self):
-        super().__init__()
-        self.annotations: list[BBoxAnnotation] = []
+class BBoxesAnnotation(list[BBoxAnnotation]):
+    """A list of all bounding box annotations in an image."""
     
     @property
     def data(self) -> list | None:
-        return [i.data for i in self.annotations]
+        return [i.data for i in self]
     
     @property
     def class_ids(self) -> list[int]:
-        return [i.class_id for i in self.annotations]
+        return [i.class_id for i in self]
     
     @property
     def bboxes(self) -> list:
-        return [i.bbox for i in self.annotations]
+        return [i.bbox for i in self]
     
     @property
     def confidences(self) -> list[float]:
-        return [i.confidence for i in self.annotations]
+        return [i.confidence for i in self]
     
 # endregion

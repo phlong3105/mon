@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Predict.
+"""Predict Pipeline.
 
-This module implements prediction pipeline.
+This script predicts the output of a model on a given dataset.
 """
 
 from __future__ import annotations
