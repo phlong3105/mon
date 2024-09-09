@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Alpha 01.
+"""CoLIE-RGB.
 
-Test new idea: starting with CoLIE, instead of following the Retinex approach,
-we use Zero-DCE iterative approach to enhance the image.
+Test new idea: starting with CoLIE, instead of using the HSV color space, we
+use the RGB color space.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "Alpha01",
+    "CoLIE_RGB",
 ]
 
 from typing import Any, Literal
@@ -76,11 +76,11 @@ class Loss(nn.Loss):
 
 # region Model
 
-@MODELS.register(name="alpha_01", arch="alpha")
-class Alpha01(base.ImageEnhancementModel):
+@MODELS.register(name="colie_rgb", arch="colie")
+class CoLIE_RGB(base.ImageEnhancementModel):
 
     model_dir: core.Path    = current_dir
-    arch     : str          = "alpha"
+    arch     : str          = "colie"
     tasks    : list[Task]   = [Task.LLIE]
     schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
     zoo      : dict         = {}
@@ -103,7 +103,7 @@ class Alpha01(base.ImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name    = "alpha_01",
+            name    = "colie_rgb",
             weights = weights,
             *args, **kwargs
         )

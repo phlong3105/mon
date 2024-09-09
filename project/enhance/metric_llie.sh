@@ -12,18 +12,18 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="zeroig"
-model="zeroig_re"
+arch="alpha"
+model="alpha_01"
 data=(
-    # "dicm"
-    # "lime"
-    # "mef"
+    "dicm"
+    "lime"
+    "mef"
     # "nightcity" 
-    # "npe"
-    # "vv"
+    "npe"
+    "vv"
     "lol_v1"
-    # "lol_v2_real"
-    # "lol_v2_synthetic"
+    "lol_v2_real"
+    "lol_v2_synthetic"
 )
 
 # Run
@@ -54,7 +54,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "niqe" \
         --metric "pi" \
         --backend "pyiqa" \
-        --show-results
+        --show-results \
         # --use-gt-mean \
 done
 

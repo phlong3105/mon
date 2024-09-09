@@ -13,4 +13,6 @@ References:
 from __future__ import annotations
 
 import mon.vision.enhance.llie.colie.colie
+import mon.vision.enhance.llie.colie.colie_rgb
 from mon.vision.enhance.llie.colie.colie import *
+from mon.vision.enhance.llie.colie.colie_rgb import *

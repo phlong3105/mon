@@ -98,7 +98,7 @@ class SIREN(nn.Module):
         y = self.activation(y)
         y = self.dropout(y)
         return y
-
+    
 # endregion
 
 

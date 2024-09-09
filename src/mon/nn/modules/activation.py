@@ -137,7 +137,12 @@ class Sine(nn.Module):
         
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return torch.sin(self.omega_0 * input)
-
+    
+    def forward_with_intermediate(self, input: torch.Tensor) -> torch.Tensor:
+        # For visualization of activation distributions
+        intermediate = self.omega_0 * self.linear(input)
+        return torch.sin(intermediate), intermediate
+    
 # endregion
 
 
