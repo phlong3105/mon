@@ -3,9 +3,8 @@
 
 """SIREN Network.
 
-This module implements SIREN layers. The concept of SIREN is introduced in the
-paper: "Implicit Neural Representations with Periodic Activation Functions," by
-Sitzmann et al. (2020).
+This module implements SIREN, introduced in the paper: "Implicit Neural
+Representations with Periodic Activation Functions," by Sitzmann et al. (2020).
 
 References:
     https://github.com/lucidrains/siren-pytorch

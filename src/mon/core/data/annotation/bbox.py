@@ -110,7 +110,7 @@ class BBoxAnnotation(base.Annotation):
             return np.concatenate(batch, axis=0)
         else:
             return None
-    
+
 
 class BBoxesAnnotation(list[BBoxAnnotation]):
     """A list of all bounding box annotations in an image."""
