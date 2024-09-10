@@ -34,7 +34,7 @@ def predict(args: argparse.Namespace):
     weights      = args.weights
     device       = mon.set_device(args.device)
     imgsz        = args.imgsz
-    imgsz        = mon.parse_hw(imgsz)
+    imgsz        = mon.get_image_size(imgsz)
     resize       = args.resize
     benchmark    = args.benchmark
     save_image   = args.save_image

@@ -359,7 +359,7 @@ class Interpolate(nn.Module):
     
     def __init__(self, size: _size_2_t):
         super().__init__()
-        self.size = core.parse_hw(size)
+        self.size = core.get_image_size(size)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         return F.interpolate(input, self.size)

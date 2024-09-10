@@ -133,7 +133,7 @@ class VideoWriter(abc.ABC):
 		self.dst         = pathlib.Path(dst)
 		self.denormalize = denormalize
 		self.index       = 0
-		self.image_size  = ci.parse_hw(size=image_size)
+		self.image_size  = ci.get_image_size(image_size)
 		self.frame_rate  = frame_rate
 		self.save_image  = save_image
 		self.verbose     = verbose

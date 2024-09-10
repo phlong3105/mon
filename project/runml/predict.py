@@ -23,7 +23,7 @@ current_dir  = current_file.parents[0]
 def predict(args: dict) -> str:
     # Get arguments
     fullname     = args["fullname"]
-    imgsz        = mon.parse_hw(args["image_size"])
+    imgsz        = mon.get_image_size(args["image_size"])
     seed         = args["seed"]
     save_dir     = args["predictor"]["default_root_dir"]
     source       = args["predictor"]["source"]

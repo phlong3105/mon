@@ -37,7 +37,7 @@ def measure_metric_pyiqa(
 ) -> dict:
     """Measure metrics using :mod:`pyiqa` package."""
     _METRICS = list(pyiqa.DEFAULT_CONFIGS.keys())
-
+    
     assert input_dir and mon.Path(input_dir).is_dir()
     # if target_dir:
     #     assert mon.Path(target_dir).is_dir()
@@ -46,30 +46,34 @@ def measure_metric_pyiqa(
                 or mon.Path(result_file).is_file()
                 or isinstance(result_file, str))
         result_file = mon.Path(result_file)
-        
-    input_dir  = mon.Path(input_dir)
-    target_dir = mon.Path(target_dir) \
-        if target_dir \
-        else input_dir.replace("lq", "hq")
     
+    # Parse input and target directories
+    input_dir  = mon.Path(input_dir)
+    target_dir = mon.Path(target_dir) if target_dir else input_dir.replace("lq", "hq")
+    
+    # Parse result file
     result_file = mon.Path(result_file) if result_file else None
     if save_txt and result_file and result_file.is_dir():
         result_file /= "metric.txt"
         result_file.parent.mkdir(parents=True, exist_ok=True)
     
+    # List image files
     image_files = list(input_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
     num_items   = len(image_files)
     
-    device      = device [0] if len(device) == 1 else device
+    # Parse arguments
+    device      = device[0] if len(device) == 1 else device
     device      = torch.device(("cpu" if not torch.cuda.is_available() else device))
     metric      = _METRICS   if ("all" in metric or "*" in metric) else metric
     metric      = [m.lower() for m in metric]
     values      = {m: []     for m in metric}
     results     = {}
-    metric_f    = {}
+    h, w        = mon.get_image_size(imgsz)
     
+    # Parse metrics
+    metric_f    = {}
     mon.disable_print()
     for i, m in enumerate(metric):
         if m not in _METRICS:
@@ -83,7 +87,6 @@ def measure_metric_pyiqa(
     need_target = any(mon.EXTRA_METRICS[m]["metric_mode"] == "FR" for m in metric)
     
     # Measuring
-    h, w = mon.parse_hw(imgsz)
     with mon.get_progress_bar(transient=not verbose) as pbar:
         for image_file in pbar.track(
             sequence    = image_files,
@@ -91,11 +94,14 @@ def measure_metric_pyiqa(
             description = f"[bright_yellow] Measuring"
         ):
             # Image
-            image = mon.read_image(path=image_file, to_tensor=True, normalize=True).to(device=device)
+            image  = mon.read_image(path=image_file, to_tensor=True, normalize=True).to(device=device)
+            h0, w0 = mon.get_image_size(image)
             if torch.any(image.isnan()):
                 continue
+            # Force resize
             if resize:
                 image = mon.resize(image, (h, w))
+                
             # Target
             has_target  = need_target
             target_file = None
@@ -103,15 +109,23 @@ def measure_metric_pyiqa(
                 temp = target_dir / f"{image_file.stem}{ext}"
                 if temp.exists():
                     target_file = temp
+            # Has target file
             if target_file and target_file.exists():
                 target = mon.read_image(path=target_file, to_tensor=True, normalize=True).to(device=device)
+                h1, w1 = mon.get_image_size(target)
+                # Force resize
                 if resize:
                     target = mon.resize(target, (h, w))
+                # Mismatch size between image and target
+                elif h1 != h0 or w1 != w0:
+                    image  = mon.resize(image, (h1, w1))
             else:
                 has_target = False
+            
             # GT mean
             if use_gt_mean and has_target:
                 image = mon.scale_gt_mean(image, target)
+            
             # Measure metric
             for m in metric:
                 if m not in _METRICS:

@@ -54,7 +54,7 @@ def calculate_efficiency_score(
     verbose   : bool      = False,
 ):
     # Define input tensor
-    h, w  = core.parse_hw(image_size)
+    h, w  = core.get_image_size(image_size)
     input = torch.rand(1, channels, h, w)
     hist  = np.zeros((3, 256))
     hist  = torch.from_numpy(hist).float()

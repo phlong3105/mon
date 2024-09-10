@@ -220,7 +220,7 @@ def parse_predict_args(model_root: str | core.Path = None) -> argparse.Namespace
     save_dir = core.Path(save_dir)
     weights  = core.parse_weights_file(weights)
     device   = core.parse_device(device)
-    imgsz    = core.parse_hw(imgsz)
+    imgsz    = core.get_image_size(imgsz)
     
     # Update arguments
     args["hostname"]     = hostname

@@ -1,21 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""CoLIE-RGB.
+"""CoLIE-HVI.
 
-Test new idea: starting with CoLIE, instead of using the HSV color space, we
-use the RGB color space.
+This module implements the paper: "Fast Context-Based Low-Light Image
+Enhancement via Neural Implicit Representations," ECCV 2024.
+
+References:
+    https://github.com/ctom2/colie
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "CoLIE_RGB",
+    "CoLIE_HVI",
 ]
 
 from typing import Any
 
-import kornia.filters
+import cv2
 import numpy as np
 import torch
 from torch.nn import functional as F
@@ -33,9 +36,26 @@ current_dir  = current_file.parents[0]
 
 # region Model
 
-@MODELS.register(name="colie_rgb", arch="colie")
-class CoLIE_RGB(base.ImageEnhancementModel):
-
+@MODELS.register(name="colie_hvi", arch="colie")
+class CoLIE_HVI(base.ImageEnhancementModel):
+    """Fast Context-Based Low-Light Image Enhancement via Neural Implicit
+    Representations.
+    
+    Args:
+        window_size: Context window size. Default: ``1``.
+        down_size  : Downsampling size. Default: ``256``.
+        add_layer: Should be in range of  ``[1, :obj:`num_layers` - 2]``.
+        L: The "optimally-intense threshold", lower values produce brighter
+            images. Default: ``0.3``.
+        alpha: Fidelity control. Default: ``1``.
+        beta: Illumination smoothness. Default: ``20``.
+        gamma: Exposure control. Default: ``8``.
+        delta: Sparsity level. Default: ``5``.
+    
+    References:
+        https://github.com/ctom2/colie
+    """
+    
     model_dir: core.Path    = current_dir
     arch     : str          = "colie"
     tasks    : list[Task]   = [Task.LLIE]
@@ -44,7 +64,7 @@ class CoLIE_RGB(base.ImageEnhancementModel):
     
     def __init__(
         self,
-        window_size : int   = 1,
+        window_size : int   = 7,
         down_size   : int   = 256,
         num_layers  : int   = 4,
         hidden_dim  : int   = 256,
@@ -59,7 +79,7 @@ class CoLIE_RGB(base.ImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name    = "colie_rgb",
+            name    = "colie_hvi",
             weights = weights,
             *args, **kwargs
         )
@@ -69,33 +89,25 @@ class CoLIE_RGB(base.ImageEnhancementModel):
         self.omega_0     = 30.0
         self.siren_C     = 6.0
         
-        patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_b_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_layers   = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
             spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-        patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        patch_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
-        output_layers = []
+        output_layers  = []
         for _ in range(add_layer, num_layers - 1):
             output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
         output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
         
-        self.patch_r_net = nn.Sequential(*patch_r_layers)
-        self.patch_g_net = nn.Sequential(*patch_g_layers)
-        self.patch_b_net = nn.Sequential(*patch_b_layers)
+        self.patch_net   = nn.Sequential(*patch_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
-        
-        # Loss
-        self.loss = Loss(L, alpha, beta, gamma, delta)
+        self.trans       = core.RGBToHVI()
+        # self.denoise1    = Denoise1(embed_channels=self.embed_channels)
+        # self.denoise2    = Denoise2(embed_channels=self.embed_channels)
         
         weight_decay = weight_decay or [0.1, 0.0001, 0.001]
         self.params  = []
@@ -104,21 +116,16 @@ class CoLIE_RGB(base.ImageEnhancementModel):
 	        "weight_decay": weight_decay[0]
         }]
         self.params += [{
-	        "params"      : self.patch_r_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_g_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_b_net.parameters(),
+	        "params"      : self.patch_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
 	        "params"      : self.output_net.parameters(),
 	        "weight_decay": weight_decay[2]
         }]
+        
+        # Loss
+        self.loss = Loss(L, alpha, beta, gamma, delta)
         
         # Load weights
         if self.weights:
@@ -136,65 +143,49 @@ class CoLIE_RGB(base.ImageEnhancementModel):
         outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_outputs(outputs)
         # Loss
-        illu_lr            = outputs["illu_lr"]
-        image_rgb_lr       = outputs["image_rgb_lr"]
-        image_rgb_fixed_lr = outputs["image_rgb_fixed_lr"]
-        outputs["loss"]    = self.loss(illu_lr, image_rgb_lr, image_rgb_fixed_lr)
+        illu_lr          = outputs["illu_lr"]
+        image_i_lr       = outputs["image_i_lr"]
+        image_i_fixed_lr = outputs["image_i_fixed_lr"]
+        outputs["loss"]  = self.loss(illu_lr, image_i_lr, image_i_fixed_lr)
         # Return
         return outputs
         
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image_rgb       = datapoint.get("image")
-        image_r         = image_rgb[:, 0:1, :, :]
-        image_g         = image_rgb[:, 1:2, :, :]
-        image_b         = image_rgb[:, 2:3, :, :]
-        image_rgb_lr    = self.interpolate_image(image_rgb)
-        image_r_lr      = image_rgb_lr[:, 0:1, :, :]
-        image_g_lr      = image_rgb_lr[:, 1:2, :, :]
-        image_b_lr      = image_rgb_lr[:, 2:3, :, :]
-        patch_r         = self.get_patches(image_r_lr)
-        patch_g         = self.get_patches(image_g_lr)
-        patch_b         = self.get_patches(image_b_lr)
-        spatial         = self.get_coords()
-        illu_res_r_lr   = self.output_net(torch.cat([self.patch_r_net(patch_r), self.spatial_net(spatial)], -1))
-        illu_res_g_lr   = self.output_net(torch.cat([self.patch_g_net(patch_g), self.spatial_net(spatial)], -1))
-        illu_res_b_lr   = self.output_net(torch.cat([self.patch_b_net(patch_b), self.spatial_net(spatial)], -1))
-        illu_res_r_lr   = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_g_lr   = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_b_lr   = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_lr     = torch.cat([illu_res_r_lr, illu_res_g_lr, illu_res_b_lr], 1)
-        illu_r_lr       = illu_res_r_lr + image_r_lr
-        illu_g_lr       = illu_res_g_lr + image_g_lr
-        illu_b_lr       = illu_res_b_lr + image_b_lr
-        illu_lr         = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
-        illu_r_fixed_lr = image_r_lr / (illu_r_lr + 1e-4)
-        illu_g_fixed_lr = image_g_lr / (illu_g_lr + 1e-4)
-        illu_b_fixed_lr = image_b_lr / (illu_b_lr + 1e-4)
-        illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_rgb_fixed_lr = torch.cat([illu_r_fixed_lr, illu_g_fixed_lr, illu_b_fixed_lr], 1)
-        image_r_fixed   = self.filter_up(image_r_lr, illu_r_fixed_lr, image_r)
-        image_g_fixed   = self.filter_up(image_g_lr, illu_g_fixed_lr, image_g)
-        image_b_fixed   = self.filter_up(image_b_lr, illu_b_fixed_lr, image_b)
-        image_rgb_fixed = torch.cat([image_r_fixed, image_g_fixed, image_b_fixed], 1)
-        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
+        image_rgb        = datapoint.get("image")
+        image_hvi        = self.trans.rgb_to_hvi(image_rgb)
+        image_i          = image_hvi.clone().detach()
+        image_i          = image_i[:, 2:3, :, :]
+        image_i_lr       = self.interpolate_image(image_i)
+        patch            = self.get_patches(image_i_lr)
+        spatial          = self.get_coords()
+        illu_res_lr      = self.output_net(torch.cat([self.patch_net(patch), self.spatial_net(spatial)], -1))
+        illu_res_lr      = illu_res_lr.view(1, 1, self.down_size, self.down_size)
+        illu_lr          = illu_res_lr + image_i_lr
+        image_i_fixed_lr = image_i_lr / (illu_lr + 1e-4)
+        image_i_fixed    = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
+        image_hvi_fixed  = self.replace_i_component(image_hvi, image_i_fixed)
+        image_rgb_fixed  = self.trans.hvi_to_rgb(image_hvi_fixed)
+        # Normalize the image in the range `[0, 1]`.
+        image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
         # Return
         if self.debug:
             return {
-                "image_rgb_lr"      : image_rgb_lr,
-                "illu_res_lr"       : illu_res_lr,
-                "illu_lr"           : illu_lr,
-                "image_rgb_fixed_lr": image_rgb_fixed_lr,
-                "image_rgb_fixed"   : image_rgb_fixed,
-                "enhanced"          : image_rgb_fixed,
+                "image_i"         : image_i,
+                "image_i_lr"      : image_i_lr,
+                "patch"           : patch,
+                "spatial"         : spatial,
+                "illu_res_lr"     : illu_res_lr,
+                "illu_lr"         : illu_lr,
+                "image_i_fixed_lr": image_i_fixed_lr,
+                "image_i_fixed"   : image_i_fixed,
+                "enhanced"        : image_rgb_fixed,
             }
         else:
             return {
                 "enhanced": image_rgb_fixed,
             }
-        
+    
     def interpolate_image(self, image: torch.Tensor) -> torch.Tensor:
         """Reshapes the image based on new resolution."""
         return F.interpolate(image, size=(self.down_size, self.down_size))
@@ -239,12 +230,12 @@ class CoLIE_RGB(base.ImageEnhancementModel):
         return y_hr
     
     @staticmethod
-    def replace_v_component(
-        image_hsv: torch.Tensor, v_new: torch.Tensor
+    def replace_i_component(
+        image_hvi: torch.Tensor, i_new: torch.Tensor
     ) -> torch.Tensor:
         """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
-        image_hsv[:, -1, :, :] = v_new
-        return image_hsv
+        image_hvi[:, 2, :, :] = i_new
+        return image_hvi
     
     def infer(
         self,
@@ -282,8 +273,6 @@ class CoLIE_RGB(base.ImageEnhancementModel):
             loss = outputs["loss"]
             loss.backward(retain_graph=True)
             optimizer.step()
-            # if self.verbose:
-            #    console.log(f"Loss: {loss.item()}")
             
         # Forward
         self.eval()
@@ -297,4 +286,26 @@ class CoLIE_RGB(base.ImageEnhancementModel):
         outputs["time"] = timer.avg_time
         return outputs
     
+# endregion
+
+
+# region Main
+
+def run_colie():
+    path      = core.Path("./data/00691.png")
+    image     = cv2.imread(str(path))
+    datapoint = {"image": core.to_image_tensor(image, False, True)}
+    device    = torch.device("cuda:0")
+    net       = CoLIE_HVI().to(device)
+    outputs   = net.infer(datapoint)
+    enhanced  = outputs.get("enhanced")
+    enhanced  = core.to_image_nparray(enhanced, False, True)
+    cv2.imshow("Image",    image)
+    cv2.imshow("Enhanced", enhanced)
+    cv2.waitKey(0)
+
+
+if __name__ == "__main__":
+    run_colie()
+
 # endregion

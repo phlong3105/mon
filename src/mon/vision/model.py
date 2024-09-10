@@ -44,7 +44,7 @@ class VisionModel(nn.Model, ABC):
         of parameters, and runtime.
         """
         # Define input tensor
-        h, w      = core.parse_hw(image_size)
+        h, w      = core.get_image_size(image_size)
         datapoint = {"image": torch.rand(1, channels, h, w).to(self.device)}
         
         # Get FLOPs and Params

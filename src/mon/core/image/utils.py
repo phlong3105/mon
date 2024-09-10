@@ -22,6 +22,7 @@ __all__ = [
     "get_image_num_channels",
     "get_image_shape",
     "get_image_size",
+    "get_imgsz",
     "image_local_mean",
     "image_local_stddev",
     "image_local_variance",
@@ -37,8 +38,6 @@ __all__ = [
     "label_map_id_to_one_hot",
     "label_map_id_to_train_id",
     "label_map_one_hot_to_id",
-    "make_image_size_divisible",
-    "parse_hw",
     "to_2d_image",
     "to_3d_image",
     "to_4d_image",
@@ -190,9 +189,10 @@ def check_image_size(
     Returns:
         A new size of the image.
     """
-    size     = parse_hw(size)
+    size     = get_image_size(size)
     size     = size[0]
-    new_size = make_image_size_divisible(size, int(stride))
+    new_size = get_image_size(size, int(stride))
+    new_size = new_size[0]
     if new_size != size:
         error_console.log("WARNING: image_size %g must be multiple of max "
                           "stride %g, updating to %g" % (size, stride, new_size))
@@ -339,22 +339,6 @@ def get_image_center4(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.nda
                         f"but got {type(image)}.")
 
 
-def get_image_size(image: torch.Tensor | np.ndarray) -> list[int]:
-    """Return height and width value of an image.
-    
-    Args:
-        image: An RGB image of type:
-            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
-                the range ``[0.0, 1.0]``.
-            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
-                range ``[0, 255]``.
-    """
-    if is_channel_first_image(image):
-        return [image.shape[-2], image.shape[-1]]
-    else:
-        return [image.shape[-3], image.shape[-2]]
-
-
 def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
     """Return height, width, and channel value of an image.
     
@@ -369,6 +353,56 @@ def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
         return [image.shape[-2], image.shape[-1], image.shape[-3]]
     else:
         return [image.shape[-3], image.shape[-2], image.shape[-1]]
+
+
+def get_image_size(
+    input  : torch.Tensor | np.ndarray | int | Sequence[int],
+    divisor: int = None,
+) -> tuple[int, int]:
+    """Return height and width value of an image in the ``[H, W]`` format.
+    
+    Args:
+        input: An RGB image of type:
+            - :obj:`torch.Tensor` in ``[B, C, H, W]`` format with data in
+                the range ``[0.0, 1.0]``.
+            - :obj:`numpy.ndarray` in ``[H, W, C]`` format with data in the
+                range ``[0, 255]``.
+            - A size of an image, windows, or kernels, etc.
+        divisor: The divisor. Default: ``None``.
+        
+    Returns:
+        A size in ``[H, W]`` format.
+    """
+    # Get raw size
+    if isinstance(input, list | tuple):
+        if len(input) == 3:
+            if input[0] >= input[3]:
+                size = input[0:2]
+            else:
+                size = input[1:3]
+        elif len(input) == 1:
+            size = (input[0], input[0])
+    elif isinstance(input, int | float):
+        size = (input, input)
+    elif isinstance(input, torch.Tensor | np.ndarray):
+        if is_channel_first_image(input):
+            size = (input.shape[-2], input.shape[-1])
+        else:
+            size = (input.shape[-3], input.shape[-2])
+    else:
+        raise TypeError(f"`input` must be a `torch.Tensor`, `numpy.ndarray`, "
+                        f"or a `list` of `int`, but got {type(input)}.")
+    
+    # Divisible
+    if divisor:
+        h, w  = size
+        new_h = int(math.ceil(h / divisor) * divisor)
+        new_w = int(math.ceil(w / divisor) * divisor)
+        size  = (new_h, new_w)
+    return size
+
+
+get_imgsz = get_image_size
 
 # endregion
 
@@ -929,49 +963,4 @@ class ImageLocalStdDev(nn.Module):
     def forward(self, image):
         return image_local_stddev(image, self.patch_size, self.eps)
     
-# endregion
-
-
-# region Parsing
-
-def make_image_size_divisible(
-    input  : int | Sequence[int],
-    divisor: int = 32
-) -> tuple[int, int]:
-    """Make an image sizes divisible by a given stride.
-    
-    Args:
-        input: An image size, size, or shape.
-        divisor: The divisor. Default: ``32``.
-    
-    Returns:
-        A new image size.
-    """
-    h, w = parse_hw(input)
-    h    = int(math.ceil(h / divisor) * divisor)
-    w    = int(math.ceil(w / divisor) * divisor)
-    return h, w
-
-
-def parse_hw(size: int | Sequence[int]) -> tuple[int, int]:
-    """Casts a size object to the standard ``[H, W]``.
-
-    Args:
-        size: A size of an image, windows, or kernels, etc.
-
-    Returns:
-        A size in ``[H, W]`` format.
-    """
-    if isinstance(size, list | tuple):
-        if len(size) == 3:
-            if size[0] >= size[3]:
-                size = size[0:2]
-            else:
-                size = size[1:3]
-        elif len(size) == 1:
-            size = [size[0], size[0]]
-    elif isinstance(size, int | float):
-        size = (size, size)
-    return tuple(size)
-
 # endregion

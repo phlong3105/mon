@@ -13,7 +13,7 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "HVICIDNet_RE"
+    "HVI_CIDNet_RE"
 ]
 
 import os
@@ -473,7 +473,7 @@ class I_LCA(nn.Module):
 # region Model
 
 @MODELS.register(name="hvi_cidnet_re", arch="hvi_cidnet")
-class HVICIDNet_RE(base.ImageEnhancementModel):
+class HVI_CIDNet_RE(base.ImageEnhancementModel):
     """You Only Need One Color Space: An Efficient Network for Low-light Image
     Enhancement.
     
@@ -527,7 +527,7 @@ class HVICIDNet_RE(base.ImageEnhancementModel):
         [ch1, ch2, ch3, ch4]         = self.channels
         [head1, head2, head3, head4] = self.heads
         
-        # HW Branch
+        # HV Branch
         self.hve_block0 = nn.Sequential(
             nn.ReplicationPad2d(1),
             nn.Conv2d(3, ch1, 3, stride=1, padding=0, bias=False)

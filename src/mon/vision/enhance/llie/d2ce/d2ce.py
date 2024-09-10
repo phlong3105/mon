@@ -108,7 +108,7 @@ class MixtureOfExperts(nn.Module):
         self.in_channels  = in_channels
         self.out_channels = out_channels
         self.num_experts  = len(self.in_channels)
-        self.dim          = core.parse_hw(dim)
+        self.dim          = core.get_image_size(dim)
         # Resize & linear
         self.resize  = nn.Upsample(size=self.dim, mode="bilinear", align_corners=False)
         linears      = []
@@ -329,7 +329,7 @@ class D2CE(base.ImageEnhancementModel):
         of parameters, and runtime.
         """
         # Define input tensor
-        h, w      = core.parse_hw(imgsz)
+        h, w      = core.get_image_size(imgsz)
         datapoint = {
             "image": torch.rand(1, channels, h, w).to(self.device),
             "depth": torch.rand(1,        1, h, w).to(self.device)

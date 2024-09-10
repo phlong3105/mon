@@ -376,7 +376,7 @@ class LLFlowModel(BaseModel):
         return self.get_sr(lq, heat, seed, z, epses)[0]
     
     def measure_efficiency_score(self, image_size=512, channels=6, runs=100):
-        h, w          = mon.parse_hw(image_size)
+        h, w          = mon.get_image_size(image_size)
         input         = torch.rand(1, channels, h, w).cuda()
         flops, params = profile(self, inputs=(input, ), verbose=False)
         g_flops       = flops  * 1e-9

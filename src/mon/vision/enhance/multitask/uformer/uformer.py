@@ -751,7 +751,7 @@ class Uformer_RE(base.MultiTaskImageEnhancementModel):
             dd_in       = self.weights.get("dd_in"      , dd_in)
             in_channels = self.weights.get("in_channels", in_channels)
         
-        self.image_size       = core.parse_hw(image_size)
+        self.image_size       = core.get_image_size(image_size)
         self.in_channels      = in_channels
         self.dd_in            = dd_in
         self.embed_channels   = embed_channels

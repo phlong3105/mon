@@ -346,7 +346,7 @@ class ZID(base.ImageEnhancementModel):
             loss         = loss,
             *args, **kwargs
         )
-        self.image_size = core.parse_hw(size=image_size or [512, 512])
+        self.image_size = core.get_image_size(image_size or [512, 512])
         self.clip       = clip
         self.save_image = save_image
         

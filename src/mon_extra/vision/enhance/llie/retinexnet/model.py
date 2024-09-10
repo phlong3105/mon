@@ -99,7 +99,7 @@ def calculate_efficiency_score(
     verbose   : bool            = False,
 ):
     # Define input tensor
-    h, w  = mon.parse_hw(image_size)
+    h, w  = mon.get_image_size(image_size)
     input = torch.rand(1, 1, h, w)
     mask  = torch.rand(1, 3, h, w)
 

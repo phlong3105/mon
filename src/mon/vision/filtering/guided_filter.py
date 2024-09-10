@@ -207,8 +207,8 @@ class FastGuidedFilter(nn.Module):
         _, _, x_h, x_w = x_lr.size()
         h    = x_h // self.downscale
         w    = x_w // self.downscale
-        x_lr = core.resize(x_lr, (h, w), "bilinear")
-        y_lr = core.resize(x_hr, (h, w), "bilinear")
+        x_lr = core.resize(x_lr, (h, w), interpolation="bilinear")
+        y_lr = core.resize(x_hr, (h, w), interpolation="bilinear")
         return self.forward(x_lr, y_lr, x_hr)
 
 # endregion
