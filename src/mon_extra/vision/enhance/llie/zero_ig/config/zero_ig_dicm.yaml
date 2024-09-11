@@ -1,16 +1,16 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "zeroig"
-model       : "zeroig"
-data        : "lol_v2_synthetic"
-data_dir    : "data/enhance/llie/lol_v2_synthetic"
+arch        : "zero_ig"
+model       : "zero_ig"
+data        : "dicm"
+data_dir    : "data/enhance/llie/dicm"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "zeroig_lol_v2_synthetic"
+fullname    : "zero_ig_dicm"
 save_dir    : ~
-weights     : "zoo/vision/enhance/llie/zeroig/zeroig/lol_v2_synthetic/zeroig_lol_v2_synthetic.pt"
+weights     : "zoo/vision/enhance/llie/zero_ig/zero_ig/dicm/zero_ig_dicm.pt"
 device      : 0
 local_rank  : ~
 launcher    : ~

@@ -1,17 +1,17 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "zeroig"
-model       : "zeroig"
-data        : "fusion"
-data_dir    : "data/enhance/llie/fusion"
+arch        : "zero_ig"
+model       : "zero_ig"
+data        : "npe"
+data_dir    : "data/enhance/llie/npe"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "zeroig_fusion"
+fullname    : "zero_ig_npe"
 save_dir    : ~
-weights     : "zoo/vision/enhance/llie/zeroig/zeroig/fusion/zeroig_fusion.pt"
-device      : ~
+weights     : "zoo/vision/enhance/llie/zero_ig/zero_ig/npe/zero_ig_npe.pt"
+device      : 0
 local_rank  : ~
 launcher    : ~
 epochs      : 2001

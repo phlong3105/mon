@@ -12,8 +12,8 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "zeroig_re"
-data_name  = "lol_v1"
+model_name = "zero_ig_re"
+data_name  = "mef"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
@@ -39,8 +39,8 @@ model = {
 	"weights"       : None,           # The model's weights.
 	"metrics"       : {
 	    "train": None,
-		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+		"val"  : None,
+		"test" : None,
     },          # A list metrics for validating and testing model.
 	"optimizers"    : [
 		{
@@ -87,16 +87,6 @@ data = {
 trainer = default.trainer | {
 	"callbacks"        : [
 		default.log_training_progress,
-		default.model_checkpoint | {
-			"filename": fullname,
-			"monitor" : "val/psnr",
-			"mode"    : "max",
-		},
-		default.model_checkpoint | {
-			"filename": fullname,
-			"monitor" : "val/ssim",
-			"mode"    : "max",
-		},
 		default.model_checkpoint | {
 			"filename" : fullname,
 			"monitor"  : "train/loss",

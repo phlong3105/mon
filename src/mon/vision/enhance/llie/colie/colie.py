@@ -191,18 +191,13 @@ class CoLIE_RE(base.ImageEnhancementModel):
         
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image_rgb   = datapoint.get("image")
-        image_hsv   = core.rgb_to_hsv(image_rgb)
-        image_v     = core.rgb_to_v(image_rgb)
-        image_v_lr  = self.interpolate_image(image_v)
-        patch       = self.get_patches(image_v_lr)
-        spatial     = self.get_coords()
-        illu_res_lr = self.output_net(torch.cat(
-            [
-                self.patch_net(patch),
-                self.spatial_net(spatial)
-            ], -1
-        ))
+        image_rgb        = datapoint.get("image")
+        image_hsv        = core.rgb_to_hsv(image_rgb)
+        image_v          = core.rgb_to_v(image_rgb)
+        image_v_lr       = self.interpolate_image(image_v)
+        patch            = self.get_patches(image_v_lr)
+        spatial          = self.get_coords()
+        illu_res_lr      = self.output_net(torch.cat([self.patch_net(patch), self.spatial_net(spatial)], -1))
         illu_res_lr      = illu_res_lr.view(1, 1, self.down_size, self.down_size)
         illu_lr          = illu_res_lr + image_v_lr
         image_v_fixed_lr = image_v_lr / (illu_lr + 1e-4)

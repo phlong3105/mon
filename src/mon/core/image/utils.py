@@ -14,7 +14,6 @@ __all__ = [
     "ImageLocalVariance",
     "add_weighted",
     "blend_images",
-    "check_image_size",
     "depth_map_to_color",
     "get_image_center",
     "get_image_center4",
@@ -22,7 +21,6 @@ __all__ = [
     "get_image_num_channels",
     "get_image_shape",
     "get_image_size",
-    "get_imgsz",
     "image_local_mean",
     "image_local_stddev",
     "image_local_variance",
@@ -57,8 +55,6 @@ import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
-
-from mon.core.rich import error_console
 
 
 # region Assertion
@@ -173,30 +169,6 @@ def is_normalized_image(image: torch.Tensor | np.ndarray) -> bool:
     else:
         raise TypeError(f"`image` must be a `torch.Tensor` or `numpy.ndarray`, "
                         f"but got {type(image)}.")
-
-
-def check_image_size(
-    size  : int | Sequence[int],
-    stride: int = 32
-) -> int:
-    """If the input :obj:`size` isn't a multiple of the :obj:`stride`, then the
-    image size is updated to the next multiple of the stride.
-    
-    Args:
-        size: An image's size.
-        stride: The stride of a network. Default: ``32``.
-    
-    Returns:
-        A new size of the image.
-    """
-    size     = get_image_size(size)
-    size     = size[0]
-    new_size = get_image_size(size, int(stride))
-    new_size = new_size[0]
-    if new_size != size:
-        error_console.log("WARNING: image_size %g must be multiple of max "
-                          "stride %g, updating to %g" % (size, stride, new_size))
-    return new_size
 
 # endregion
 
@@ -380,8 +352,13 @@ def get_image_size(
                 size = input[0:2]
             else:
                 size = input[1:3]
+        elif len(input) == 2:
+            size = input
         elif len(input) == 1:
             size = (input[0], input[0])
+        else:
+            raise ValueError(f"`input` must be a `list` of length in range "
+                             f"``[1, 3]``, but got {input}.")
     elif isinstance(input, int | float):
         size = (input, input)
     elif isinstance(input, torch.Tensor | np.ndarray):
@@ -401,8 +378,6 @@ def get_image_size(
         size  = (new_h, new_w)
     return size
 
-
-get_imgsz = get_image_size
 
 # endregion
 

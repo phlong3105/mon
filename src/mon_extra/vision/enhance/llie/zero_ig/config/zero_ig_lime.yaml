@@ -1,16 +1,16 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "zeroig"
-model       : "zeroig"
-data        : "vv"
-data_dir    : "data/enhance/llie/vv"
+arch        : "zero_ig"
+model       : "zero_ig"
+data        : "lime"
+data_dir    : "data/enhance/llie/lime"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "zeroig_vv"
+fullname    : "zero_ig_lime"
 save_dir    : ~
-weights     : "zoo/vision/enhance/llie/zeroig/zeroig/vv/zeroig_vv.pt"
+weights     : "zoo/vision/enhance/llie/zero_ig/zero_ig/lime/zero_ig_lime.pt"
 device      : 0
 local_rank  : ~
 launcher    : ~

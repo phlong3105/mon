@@ -98,10 +98,9 @@ def measure_metric_pyiqa(
             h0, w0 = mon.get_image_size(image)
             if torch.any(image.isnan()):
                 continue
-            # Force resize
-            if resize:
+            if resize:  # Force resize
                 image = mon.resize(image, (h, w))
-                
+            
             # Target
             has_target  = need_target
             target_file = None
@@ -109,16 +108,13 @@ def measure_metric_pyiqa(
                 temp = target_dir / f"{image_file.stem}{ext}"
                 if temp.exists():
                     target_file = temp
-            # Has target file
-            if target_file and target_file.exists():
+            if target_file and target_file.exists():  # Has target file
                 target = mon.read_image(path=target_file, to_tensor=True, normalize=True).to(device=device)
                 h1, w1 = mon.get_image_size(target)
-                # Force resize
-                if resize:
+                if resize:  # Force resize
                     target = mon.resize(target, (h, w))
-                # Mismatch size between image and target
-                elif h1 != h0 or w1 != w0:
-                    image  = mon.resize(image, (h1, w1))
+                # elif h1 != h0 or w1 != w0:  # Mismatch size between image and target
+                #     image  = mon.resize(image, (h1, w1))
             else:
                 has_target = False
             

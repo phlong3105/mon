@@ -13,5 +13,5 @@ References:
 
 from __future__ import annotations
 
-import mon.vision.enhance.llie.zeroig.zeroig
-from mon.vision.enhance.llie.zeroig.zeroig import *
+import mon.vision.enhance.llie.zero_ig.zero_ig
+from mon.vision.enhance.llie.zero_ig.zero_ig import *

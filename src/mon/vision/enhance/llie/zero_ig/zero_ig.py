@@ -243,7 +243,7 @@ class Enhance(nn.Module):
 
 # region Model
 
-@MODELS.register(name="zeroig_re", arch="zeroig")
+@MODELS.register(name="zero_ig_re", arch="zero_ig")
 class ZeroIG(base.ImageEnhancementModel):
     """ZERO-IG: Zero-Shot Illumination-Guided Joint Denoising and Adaptive
     Enhancement for Low-Light Images.
@@ -254,14 +254,14 @@ class ZeroIG(base.ImageEnhancementModel):
     """
     
     model_dir: core.Path    = current_dir
-    arch     : str          = "zeroig"
+    arch     : str          = "zero_ig"
     tasks    : list[Task]   = [Task.LLIE]
     schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
     zoo      : dict         = {}
     
     def __init__(
         self,
-        name          : str = "zeroig_re",
+        name          : str = "zero_ig_re",
         in_channels   : int = 3,
         num_channels  : int = 64,
         embed_channels: int = 48,

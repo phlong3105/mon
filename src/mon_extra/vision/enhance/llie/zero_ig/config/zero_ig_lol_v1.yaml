@@ -1,16 +1,16 @@
 # Basic
 hostname    : ~
 config      : ~
-arch        : "zeroig"
-model       : "zeroig"
-data        : "mef"
-data_dir    : "data/enhance/llie/mef"
+arch        : "zero_ig"
+model       : "zero_ig"
+data        : "lol_v1"
+data_dir    : "data/enhance/llie/lol_v1"
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "zeroig_mef"
+fullname    : "zero_ig_lol_v1"
 save_dir    : ~
-weights     : "zoo/vision/enhance/llie/zeroig/zeroig/mef/zeroig_mef.pt"
+weights     : "zoo/vision/enhance/llie/zero_ig/zero_ig/lol_v1/zero_ig_lol_v1.pt"
 device      : 0
 local_rank  : ~
 launcher    : ~

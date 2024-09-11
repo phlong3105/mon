@@ -164,12 +164,16 @@ def resize(
         h0, w0 = utils.get_image_size(image)
         h1, w1 = size
         if h0 < w0:
-            scale = h1 / h0
+            new_h = min(h1, w1)
+            new_w = max(h1, w1)
+        elif h0 > w0:
+            new_h = max(h1, w1)
+            new_w = min(h1, w1)
         else:
-            scale = w1 / w0
-        new_h = int(h0 * scale)
-        new_w = int(w0 * scale)
-        size  = (new_h, new_w)
+            scale = h1 / h0 if h1 < w1 else w1 / w0
+            new_h = int(h0 * scale)
+            new_w = int(w0 * scale)
+        size = (new_h, new_w)
     # Apply the transformation
     if isinstance(image, torch.Tensor):
         align_corners = kwargs.pop("align_corners", None)

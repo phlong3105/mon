@@ -1149,11 +1149,11 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "torch_distributed_launch": True,
         },
     },
-    "zeroig"       : {
-        "zeroig": {
+    "zero_ig"      : {
+        "zero_ig": {
             "tasks"    : [Task.LLIE],
             "schemes"  : [Scheme.ZERO_REFERENCE],
-            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zeroig",
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "zero_ig",
             "torch_distributed_launch": True,
         },
     },

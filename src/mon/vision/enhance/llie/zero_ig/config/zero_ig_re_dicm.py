@@ -12,8 +12,8 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "zeroig_re"
-data_name  = "npe"
+model_name = "zero_ig_re"
+data_name  = "dicm"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
