@@ -475,7 +475,7 @@ def delete_cache(path: Path | str, recursive: bool = True):
         recursive: If ``True``, recursively look for cache files in
             subdirectories. Default: ``True``.
     """
-    delete_files(regex=".cache", path=path, recursive=recursive)
+    delete_files(path=path, regex=".cache", recursive=recursive)
 
 
 def delete_dir(paths: Path | str | list[Path | str]):
@@ -484,29 +484,33 @@ def delete_dir(paths: Path | str | list[Path | str]):
     for p in paths:
         p = Path(p)
         if p.exists():
-            delete_files(regex="*", path=p, recursive=True)
+            delete_files(path=p, regex="*", recursive=True)
             shutil.rmtree(p)
 
 
 def delete_files(
-    regex    : str,
-    path     : Path | str = "",
-    recursive: bool       = False
+    path     : Path | str,
+    regex    : str  = None,
+    recursive: bool = False
 ):
     """Delete all files matching the given regular expression.
     
     Args:
-        regex: A file path patterns.
         path: A path to a directory to search for the files to delete.
+        regex: A file path patterns. Default: ``None``.
         recursive: If ``True``, look for file in subdirectories.
             Default: ``False``.
     """
-    path  = Path(path)
-    files = []
-    if recursive:
-        files += list(path.rglob(*{regex}))
+    path = Path(path)
+    if regex:
+        if not path.is_dir():
+            path = path.parent
+        if recursive:
+            files = list(path.rglob(*{regex}))
+        else:
+            files = list(path.glob(regex))
     else:
-        files += list(path.glob(regex))
+        files = [path]
     try:
         for f in files:
             f.unlink()
@@ -553,7 +557,7 @@ def mkdirs(
                 continue
             p = p.parent if p.is_file_like() else p
             if replace:
-                delete_files(regex="*", path=p)
+                delete_files(path=p, regex="*")
                 p.rmdir()
             p.mkdir(mode=mode, parents=parents, exist_ok=exist_ok)
     except Exception as err:
@@ -574,7 +578,7 @@ def rmdirs(paths: Path | str | list[pathlib.Path | str]):
             if p.is_url():
                 continue
             p = p.parent if p.is_file_like() else p
-            delete_files(regex="*", path=p)
+            delete_files(path=p, regex="*")
             p.rmdir()
     except Exception as err:
         print(f"Cannot delete directory: {err}.")

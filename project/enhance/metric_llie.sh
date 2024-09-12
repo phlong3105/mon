@@ -13,7 +13,7 @@ data_dir="${mon_dir}/data"
 # Input
 task="llie"
 arch="zero_nir"
-model="zero_nir_01_rgb"
+model="zero_nir_04_rgbd_sep"
 data=(
     "dicm"
     "lime"

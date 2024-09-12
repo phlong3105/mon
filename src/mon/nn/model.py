@@ -159,7 +159,7 @@ def download_weights_from_url(
     
     path = core.Path(path)
     if not path.exists() or overwrite:
-        core.delete_files(regex=path.name, path=path.parent)
+        core.delete_files(path=path.parent, regex=path.name)
         path.parent.mkdir(parents=True, exist_ok=True)
         torch.hub.download_url_to_file(url, path, None, progress=True)
     return path
