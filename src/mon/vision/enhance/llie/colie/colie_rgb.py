@@ -44,6 +44,7 @@ class CoLIE_RGB(base.ImageEnhancementModel):
     
     def __init__(
         self,
+        name        : str   = "colie_rgb",
         window_size : int   = 1,
         down_size   : int   = 256,
         num_layers  : int   = 4,
@@ -59,7 +60,7 @@ class CoLIE_RGB(base.ImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name    = "colie_rgb",
+            name    = name,
             weights = weights,
             *args, **kwargs
         )
@@ -183,11 +184,9 @@ class CoLIE_RGB(base.ImageEnhancementModel):
         # Return
         if self.debug:
             return {
-                "image_rgb_lr"      : image_rgb_lr,
-                "illu_res_lr"       : illu_res_lr,
                 "illu_lr"           : illu_lr,
+                "image_rgb_lr"      : image_rgb_lr,
                 "image_rgb_fixed_lr": image_rgb_fixed_lr,
-                "image_rgb_fixed"   : image_rgb_fixed,
                 "enhanced"          : image_rgb_fixed,
             }
         else:
@@ -201,10 +200,7 @@ class CoLIE_RGB(base.ImageEnhancementModel):
     
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
-        kernel = torch.zeros(
-            (self.window_size ** 2, 1, self.window_size, self.window_size)
-        ).cuda()
-        
+        kernel = torch.zeros((self.window_size ** 2, 1, self.window_size, self.window_size)).cuda()
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -240,7 +236,8 @@ class CoLIE_RGB(base.ImageEnhancementModel):
     
     @staticmethod
     def replace_v_component(
-        image_hsv: torch.Tensor, v_new: torch.Tensor
+        image_hsv: torch.Tensor,
+        v_new    : torch.Tensor
     ) -> torch.Tensor:
         """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
         image_hsv[:, -1, :, :] = v_new

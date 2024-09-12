@@ -45,7 +45,28 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "pi" \
         --backend "pyiqa" \
         --show-results
-        # --use-gt-mean \
+
+    if ! [ -d "${target_dir}" ]; then
+        python -W ignore metric.py \
+          --input-dir "${input_dir}" \
+          --target-dir "${target_dir}" \
+          --result-file "${current_dir}" \
+          --arch "${arch}" \
+          --model "${model}" \
+          --data "${data[i]}" \
+          --device "cuda:0" \
+          --metric "psnr" \
+          --metric "ssimc" \
+          --metric "psnry" \
+          --metric "ssim" \
+          --metric "lpips" \
+          --metric "niqe" \
+          --metric "pi" \
+          --backend "pyiqa" \
+          --use-gt-mean \
+          --show-results
+    fi
+
 done
 
 # Done

@@ -106,6 +106,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
     
     def __init__(
         self,
+        name        : str   = "colie_re",
         window_size : int   = 7,
         down_size   : int   = 256,
         num_layers  : int   = 4,
@@ -121,7 +122,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name    = "colie_re",
+            name    = name,
             weights = weights,
             *args, **kwargs
         )
@@ -209,14 +210,9 @@ class CoLIE_RE(base.ImageEnhancementModel):
         # Return
         if self.debug:
             return {
-                "image_v"         : image_v,
-                "image_v_lr"      : image_v_lr,
-                "patch"           : patch,
-                "spatial"         : spatial,
-                "illu_res_lr"     : illu_res_lr,
                 "illu_lr"         : illu_lr,
+                "image_v_lr"      : image_v_lr,
                 "image_v_fixed_lr": image_v_fixed_lr,
-                "image_v_fixed"   : image_v_fixed,
                 "enhanced"        : image_rgb_fixed,
             }
         else:
@@ -230,10 +226,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
     
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
-        kernel = torch.zeros(
-            (self.window_size ** 2, 1, self.window_size, self.window_size)
-        ).cuda()
-        
+        kernel = torch.zeros((self.window_size ** 2, 1, self.window_size, self.window_size)).cuda()
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -269,7 +262,8 @@ class CoLIE_RE(base.ImageEnhancementModel):
     
     @staticmethod
     def replace_v_component(
-        image_hsv: torch.Tensor, v_new: torch.Tensor
+        image_hsv: torch.Tensor,
+        v_new    : torch.Tensor
     ) -> torch.Tensor:
         """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
         image_hsv[:, -1, :, :] = v_new

@@ -12,20 +12,19 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="colie"
-model="colie_re"
+arch="zero_nir"
+model="zero_nir_01_rgb"
 data=(
-    # "dicm"
-    # "lime"
-    # "mef"
-    # "nightcity" 
-    # "npe"
-    # "vv"
-    # "fivek_c"
+    "dicm"
+    "lime"
+    "mef"
+    "nightcity"
+    "npe"
+    "vv"
     "fivek_e"
-    # "lol_v1"
-    # "lol_v2_real"
-    # "lol_v2_synthetic"
+    "lol_v1"
+    "lol_v2_real"
+    "lol_v2_synthetic"
 )
 
 # Run
@@ -56,9 +55,29 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "niqe" \
         --metric "pi" \
         --backend "pyiqa" \
-        --show-results \
-        --use-gt-mean \
-        
+        --show-results
+
+    if [ -d "${target_dir}" ]; then
+        python -W ignore metric.py \
+          --input-dir "${input_dir}" \
+          --target-dir "${target_dir}" \
+          --result-file "${current_dir}" \
+          --arch "${arch}" \
+          --model "${model}" \
+          --data "${data[i]}" \
+          --device "cuda:0" \
+          --metric "psnr" \
+          --metric "ssimc" \
+          --metric "psnry" \
+          --metric "ssim" \
+          --metric "lpips" \
+          --metric "niqe" \
+          --metric "pi" \
+          --backend "pyiqa" \
+          --use-gt-mean \
+          --show-results
+    fi
+
 done
 
 # Done

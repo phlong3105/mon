@@ -20,6 +20,7 @@ import mon.vision.enhance.llie.llunetpp
 import mon.vision.enhance.llie.zero_dce
 import mon.vision.enhance.llie.zero_didce
 import mon.vision.enhance.llie.zero_ig
+import mon.vision.enhance.llie.zero_nir
 from mon.vision.enhance.llie.colie import *
 from mon.vision.enhance.llie.d2ce import *
 from mon.vision.enhance.llie.gcenet import *
@@ -29,3 +30,4 @@ from mon.vision.enhance.llie.llunetpp import *
 from mon.vision.enhance.llie.zero_dce import *
 from mon.vision.enhance.llie.zero_didce import *
 from mon.vision.enhance.llie.zero_ig import *
+from mon.vision.enhance.llie.zero_nir import *

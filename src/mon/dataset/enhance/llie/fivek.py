@@ -40,7 +40,7 @@ class FiveKA(ImageDataset):
     """
     
     tasks : list[Task]  = [Task.LLIE]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
@@ -89,7 +89,7 @@ class FiveKB(ImageDataset):
     """
     
     tasks : list[Task]  = [Task.LLIE]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
@@ -138,7 +138,7 @@ class FiveKC(ImageDataset):
     """
     
     tasks : list[Task]  = [Task.LLIE]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
@@ -187,7 +187,7 @@ class FiveKD(ImageDataset):
     """
     
     tasks : list[Task]  = [Task.LLIE]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
@@ -236,7 +236,7 @@ class FiveKE(ImageDataset):
     """
     
     tasks : list[Task]  = [Task.LLIE]
-    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    splits: list[Split] = [Split.TRAIN, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
         "hq_image": ImageAnnotation,
@@ -292,7 +292,7 @@ class FiveKADataModule(DataModule):
        
         if stage in [None, "train"]:
             self.train = FiveKA(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = FiveKA(split=Split.VAL,   **self.dataset_kwargs)
+            self.val   = FiveKA(split=Split.TEST,  **self.dataset_kwargs)
         if stage in [None, "test"]:
             self.test  = FiveKA(split=Split.TEST,  **self.dataset_kwargs)
         
@@ -315,7 +315,7 @@ class FiveKBDataModule(DataModule):
        
         if stage in [None, "train"]:
             self.train = FiveKB(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = FiveKB(split=Split.VAL,   **self.dataset_kwargs)
+            self.val   = FiveKB(split=Split.TEST,  **self.dataset_kwargs)
         if stage in [None, "test"]:
             self.test  = FiveKB(split=Split.TEST,  **self.dataset_kwargs)
         
@@ -338,7 +338,7 @@ class FiveKCDataModule(DataModule):
        
         if stage in [None, "train"]:
             self.train = FiveKC(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = FiveKC(split=Split.VAL,   **self.dataset_kwargs)
+            self.val   = FiveKC(split=Split.TEST,  **self.dataset_kwargs)
         if stage in [None, "test"]:
             self.test  = FiveKC(split=Split.TEST,  **self.dataset_kwargs)
         
@@ -361,7 +361,7 @@ class FiveKDDataModule(DataModule):
        
         if stage in [None, "train"]:
             self.train = FiveKD(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = FiveKD(split=Split.VAL,   **self.dataset_kwargs)
+            self.val   = FiveKD(split=Split.TEST,  **self.dataset_kwargs)
         if stage in [None, "test"]:
             self.test  = FiveKD(split=Split.TEST,  **self.dataset_kwargs)
         
@@ -384,7 +384,7 @@ class FiveKEDataModule(DataModule):
         
         if stage in [None, "train"]:
             self.train = FiveKE(split=Split.TRAIN, **self.dataset_kwargs)
-            self.val   = FiveKE(split=Split.VAL,   **self.dataset_kwargs)
+            self.val   = FiveKE(split=Split.TEST,  **self.dataset_kwargs)
         if stage in [None, "test"]:
             self.test  = FiveKE(split=Split.TEST,  **self.dataset_kwargs)
         

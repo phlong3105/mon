@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 import os
-import socket
 
 import click
 import pyiqa
@@ -18,7 +17,8 @@ import torch
 
 import mon
 
-console = mon.console
+console  = mon.console
+_METRICS = pyiqa.DEFAULT_CONFIGS
 
 
 # region Metric
@@ -36,8 +36,6 @@ def measure_metric_pyiqa(
     verbose    : bool,
 ) -> dict:
     """Measure metrics using :mod:`pyiqa` package."""
-    _METRICS = list(pyiqa.DEFAULT_CONFIGS.keys())
-    
     assert input_dir and mon.Path(input_dir).is_dir()
     # if target_dir:
     #     assert mon.Path(target_dir).is_dir()
@@ -66,7 +64,7 @@ def measure_metric_pyiqa(
     # Parse arguments
     device      = device[0] if len(device) == 1 else device
     device      = torch.device(("cpu" if not torch.cuda.is_available() else device))
-    metric      = _METRICS   if ("all" in metric or "*" in metric) else metric
+    metric      = list(_METRICS.keys()) if ("all" in metric or "*" in metric) else metric
     metric      = [m.lower() for m in metric]
     values      = {m: []     for m in metric}
     results     = {}
@@ -84,7 +82,7 @@ def measure_metric_pyiqa(
             device      = device,
         )
     mon.enable_print()
-    need_target = any(mon.EXTRA_METRICS[m]["metric_mode"] == "FR" for m in metric)
+    need_target = any(_METRICS[m]["metric_mode"] == "FR" for m in metric)
     
     # Measuring
     with mon.get_progress_bar(transient=not verbose) as pbar:
@@ -126,9 +124,9 @@ def measure_metric_pyiqa(
             for m in metric:
                 if m not in _METRICS:
                     continue
-                if not has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
+                if not has_target and _METRICS[m]["metric_mode"] == "FR":
                     continue
-                elif has_target and mon.EXTRA_METRICS[m]["metric_mode"] == "FR":
+                elif has_target and _METRICS[m]["metric_mode"] == "FR":
                     values[m].append(metric_f[m](image, target))
                 else:
                     values[m].append(metric_f[m](image))
@@ -143,14 +141,14 @@ def measure_metric_pyiqa(
 
 def update_best_results(results: dict, new_values: dict) -> dict:
     for m, v in new_values.items():
-        if m in mon.EXTRA_METRICS:
-            lower_is_better = mon.EXTRA_METRICS[m]["lower_is_better"]
+        if m in _METRICS:
+            lower_better = _METRICS[m].get("lower_better", False)
             if m not in results:
                 results[m] = v
             elif results[m] is None:
                 results[m] = v
             elif v:
-                results[m] = min(results[m], v) if lower_is_better else max(results[m], v)
+                results[m] = min(results[m], v) if lower_better else max(results[m], v)
     return results
 
 # endregion
@@ -239,7 +237,10 @@ def main(
     if verbose:
         console.rule(f"[bold red] {model}")
         console.log(f"{model}")
-        console.log(f"{input_dir.name}")
+        if use_gt_mean:
+            console.log(f"{input_dir.name} (with gt-mean)")
+        else:
+            console.log(f"{input_dir.name}")
         for m, v in results.items():
             console.log(f"{m:<10}: {v:.10f}")
     if show_results:
@@ -258,7 +259,10 @@ def main(
         if verbose:
             console.log(f"{message}")
         if not append_results:
-            print(f"COPY THIS: {input_dir.name}")
+            if use_gt_mean:
+                print(f"COPY THIS: {input_dir.name} (with gt-mean)")
+            else:
+                print(f"COPY THIS: {input_dir.name}")
         print(f"{message}\n")
         
     # Save results

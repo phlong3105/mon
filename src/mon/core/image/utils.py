@@ -56,6 +56,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from mon.core import pathlib
+
 
 # region Assertion
 
@@ -328,7 +330,7 @@ def get_image_shape(image: torch.Tensor | np.ndarray) -> list[int]:
 
 
 def get_image_size(
-    input  : torch.Tensor | np.ndarray | int | Sequence[int],
+    input  : torch.Tensor | np.ndarray | int | Sequence[int] | str | pathlib.Path,
     divisor: int = None,
 ) -> tuple[int, int]:
     """Return height and width value of an image in the ``[H, W]`` format.
@@ -366,6 +368,9 @@ def get_image_size(
             size = (input.shape[-2], input.shape[-1])
         else:
             size = (input.shape[-3], input.shape[-2])
+    elif isinstance(input, str | pathlib.Path):
+        from mon.core.image.io import read_image_shape
+        size = read_image_shape(input)[0:2]
     else:
         raise TypeError(f"`input` must be a `torch.Tensor`, `numpy.ndarray`, "
                         f"or a `list` of `int`, but got {type(input)}.")

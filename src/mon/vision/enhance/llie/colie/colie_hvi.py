@@ -64,6 +64,7 @@ class CoLIE_HVI(base.ImageEnhancementModel):
     
     def __init__(
         self,
+        name        : str   = "colie_hvi",
         window_size : int   = 7,
         down_size   : int   = 256,
         num_layers  : int   = 4,
@@ -79,7 +80,7 @@ class CoLIE_HVI(base.ImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name    = "colie_hvi",
+            name    = name,
             weights = weights,
             *args, **kwargs
         )
@@ -171,14 +172,9 @@ class CoLIE_HVI(base.ImageEnhancementModel):
         # Return
         if self.debug:
             return {
-                "image_i"         : image_i,
-                "image_i_lr"      : image_i_lr,
-                "patch"           : patch,
-                "spatial"         : spatial,
-                "illu_res_lr"     : illu_res_lr,
                 "illu_lr"         : illu_lr,
+                "image_i_lr"      : image_i_lr,
                 "image_i_fixed_lr": image_i_fixed_lr,
-                "image_i_fixed"   : image_i_fixed,
                 "enhanced"        : image_rgb_fixed,
             }
         else:
@@ -192,10 +188,7 @@ class CoLIE_HVI(base.ImageEnhancementModel):
     
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
-        kernel = torch.zeros(
-            (self.window_size ** 2, 1, self.window_size, self.window_size)
-        ).cuda()
-        
+        kernel = torch.zeros((self.window_size ** 2, 1, self.window_size, self.window_size)).cuda()
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -231,7 +224,8 @@ class CoLIE_HVI(base.ImageEnhancementModel):
     
     @staticmethod
     def replace_i_component(
-        image_hvi: torch.Tensor, i_new: torch.Tensor
+        image_hvi: torch.Tensor,
+        i_new    : torch.Tensor
     ) -> torch.Tensor:
         """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
         image_hvi[:, 2, :, :] = i_new

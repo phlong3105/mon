@@ -325,18 +325,19 @@ class ZeroIG(base.ImageEnhancementModel):
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image = datapoint.get("image")
+        # Prepare input
         eps   = 1e-4
+        image = datapoint.get("image")
         image = image + eps
         # Predicting
         if self.predicting:
             l2      = image - self.denoise1(image)
-            l2      = torch.clamp(l2, eps, 1)
+            l2      = torch.clamp(l2, eps, 1.0)
             s2      = self.enhance(l2)
             h2      = image / s2
-            h2      = torch.clamp(h2, eps, 1)
+            h2      = torch.clamp(h2, eps, 1.0)
             h5_pred = torch.cat([h2, s2], 1).detach() - self.denoise2(torch.cat([h2, s2], 1))
-            h5_pred = torch.clamp(h5_pred, eps, 1)
+            h5_pred = torch.clamp(h5_pred, eps, 1.0)
             h3      = h5_pred[:, :3, :, :]
             return {
                 "denoise" : h3,
@@ -352,28 +353,28 @@ class ZeroIG(base.ImageEnhancementModel):
             s2       = self.enhance(l2.detach())
             s21, s22 = core.pair_downsample(s2)
             h2       = image / s2
-            h2       = torch.clamp(h2, eps, 1)
+            h2       = torch.clamp(h2, eps, 1.0)
             h11      = l11 / s21
-            h11      = torch.clamp(h11, eps, 1)
+            h11      = torch.clamp(h11, eps, 1.0)
             h12      = l12 / s22
-            h12      = torch.clamp(h12, eps, 1)
+            h12      = torch.clamp(h12, eps, 1.0)
             h3_pred  = torch.cat([h11, s21], 1).detach() - self.denoise2(torch.cat([h11, s21], 1))
-            h3_pred  = torch.clamp(h3_pred, eps, 1)
+            h3_pred  = torch.clamp(h3_pred, eps, 1.0)
             h13      = h3_pred[:, :3, :, :]
             s13      = h3_pred[:, 3:, :, :]
             h4_pred  = torch.cat([h12, s22], 1).detach() - self.denoise2(torch.cat([h12, s22], 1))
-            h4_pred  = torch.clamp(h4_pred, eps, 1)
+            h4_pred  = torch.clamp(h4_pred, eps, 1.0)
             h14      = h4_pred[:, :3, :, :]
             s14      = h4_pred[:, 3:, :, :]
             h5_pred  = torch.cat([h2, s2], 1).detach() - self.denoise2(torch.cat([h2, s2], 1))
-            h5_pred  = torch.clamp(h5_pred, eps, 1)
+            h5_pred  = torch.clamp(h5_pred, eps, 1.0)
             h3       = h5_pred[:, :3, :, :]
             s3       = h5_pred[:, 3:, :, :]
             l_pred1_l_pred2_diff           = self.texture_difference(l_pred1, l_pred2)
             h3_denoised1, h3_denoised2     = core.pair_downsample(h3)
             h3_denoised1_h3_denoised2_diff = self.texture_difference(h3_denoised1, h3_denoised2)
             h1       = l2 / s2
-            h1       = torch.clamp(h1, 0, 1)
+            h1       = torch.clamp(h1, 0.0, 1.0)
             h2_blur  = self.blur(h1)
             h3_blur  = self.blur(h3)
             return {

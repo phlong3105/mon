@@ -44,6 +44,7 @@ class CoLIE_RGBD(base.ImageEnhancementModel):
     
     def __init__(
         self,
+        name        : str   = "colie_rgbd",
         window_size : int   = 1,
         down_size   : int   = 256,
         num_layers  : int   = 4,
@@ -59,7 +60,7 @@ class CoLIE_RGBD(base.ImageEnhancementModel):
         *args, **kwargs
     ):
         super().__init__(
-            name    = "colie_rgbd",
+            name    = name,
             weights = weights,
             *args, **kwargs
         )
@@ -162,35 +163,35 @@ class CoLIE_RGBD(base.ImageEnhancementModel):
         
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image_rgb     = datapoint.get("image")
-        depth         = datapoint.get("depth")
-        edge          = self.dba(depth)
-        image_r       = image_rgb[:, 0:1, :, :]
-        image_g       = image_rgb[:, 1:2, :, :]
-        image_b       = image_rgb[:, 2:3, :, :]
-        image_rgb_lr  = self.interpolate_image(image_rgb)
-        depth_lr      = self.interpolate_image(depth)
-        edge_lr       = self.interpolate_image(edge)
-        image_r_lr    = image_rgb_lr[:, 0:1, :, :]
-        image_g_lr    = image_rgb_lr[:, 1:2, :, :]
-        image_b_lr    = image_rgb_lr[:, 2:3, :, :]
-        patch_r       = self.get_patches(image_r_lr)
-        patch_g       = self.get_patches(image_g_lr)
-        patch_b       = self.get_patches(image_b_lr)
-        patch_d       = self.get_patches(depth_lr)
-        patch_e       = self.get_patches(edge_lr)
-        spatial       = self.get_coords()
-        illu_res_r_lr = self.output_net(torch.cat([self.patch_r_net(patch_r), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_g_lr = self.output_net(torch.cat([self.patch_g_net(patch_g), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_b_lr = self.output_net(torch.cat([self.patch_b_net(patch_b), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_r_lr = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_g_lr = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_b_lr = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_lr   = torch.cat([illu_res_r_lr, illu_res_g_lr, illu_res_b_lr], 1)
-        illu_r_lr     = illu_res_r_lr + image_r_lr
-        illu_g_lr     = illu_res_g_lr + image_g_lr
-        illu_b_lr     = illu_res_b_lr + image_b_lr
-        illu_lr       = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
+        image_rgb       = datapoint.get("image")
+        depth           = datapoint.get("depth")
+        edge            = self.dba(depth)
+        image_r         = image_rgb[:, 0:1, :, :]
+        image_g         = image_rgb[:, 1:2, :, :]
+        image_b         = image_rgb[:, 2:3, :, :]
+        image_rgb_lr    = self.interpolate_image(image_rgb)
+        depth_lr        = self.interpolate_image(depth)
+        edge_lr         = self.interpolate_image(edge)
+        image_r_lr      = image_rgb_lr[:, 0:1, :, :]
+        image_g_lr      = image_rgb_lr[:, 1:2, :, :]
+        image_b_lr      = image_rgb_lr[:, 2:3, :, :]
+        patch_r         = self.get_patches(image_r_lr)
+        patch_g         = self.get_patches(image_g_lr)
+        patch_b         = self.get_patches(image_b_lr)
+        patch_d         = self.get_patches(depth_lr)
+        patch_e         = self.get_patches(edge_lr)
+        spatial         = self.get_coords()
+        illu_res_r_lr   = self.output_net(torch.cat([self.patch_r_net(patch_r), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
+        illu_res_g_lr   = self.output_net(torch.cat([self.patch_g_net(patch_g), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
+        illu_res_b_lr   = self.output_net(torch.cat([self.patch_b_net(patch_b), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
+        illu_res_r_lr   = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
+        illu_res_g_lr   = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
+        illu_res_b_lr   = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
+        illu_res_lr     = torch.cat([illu_res_r_lr, illu_res_g_lr, illu_res_b_lr], 1)
+        illu_r_lr       = illu_res_r_lr + image_r_lr
+        illu_g_lr       = illu_res_g_lr + image_g_lr
+        illu_b_lr       = illu_res_b_lr + image_b_lr
+        illu_lr         = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
         illu_r_fixed_lr = image_r_lr / (illu_r_lr + 1e-4)
         illu_g_fixed_lr = image_g_lr / (illu_g_lr + 1e-4)
         illu_b_fixed_lr = image_b_lr / (illu_b_lr + 1e-4)
@@ -206,11 +207,9 @@ class CoLIE_RGBD(base.ImageEnhancementModel):
         # Return
         if self.debug:
             return {
-                "image_rgb_lr"      : image_rgb_lr,
-                "illu_res_lr"       : illu_res_lr,
                 "illu_lr"           : illu_lr,
+                "image_rgb_lr"      : image_rgb_lr,
                 "image_rgb_fixed_lr": image_rgb_fixed_lr,
-                "image_rgb_fixed"   : image_rgb_fixed,
                 "enhanced"          : image_rgb_fixed,
             }
         else:
@@ -224,10 +223,7 @@ class CoLIE_RGBD(base.ImageEnhancementModel):
     
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
-        kernel = torch.zeros(
-            (self.window_size ** 2, 1, self.window_size, self.window_size)
-        ).cuda()
-        
+        kernel = torch.zeros((self.window_size ** 2, 1, self.window_size, self.window_size)).cuda()
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -263,7 +259,8 @@ class CoLIE_RGBD(base.ImageEnhancementModel):
     
     @staticmethod
     def replace_v_component(
-        image_hsv: torch.Tensor, v_new: torch.Tensor
+        image_hsv: torch.Tensor,
+        v_new    : torch.Tensor
     ) -> torch.Tensor:
         """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
         image_hsv[:, -1, :, :] = v_new
