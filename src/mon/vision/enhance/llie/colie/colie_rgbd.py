@@ -165,6 +165,8 @@ class CoLIE_RGBD(base.ImageEnhancementModel):
         self.assert_datapoint(datapoint)
         image_rgb       = datapoint.get("image")
         depth           = datapoint.get("depth")
+        if depth is None:
+            depth = core.rgb_to_grayscale(image_rgb)
         edge            = self.dba(depth)
         image_r         = image_rgb[:, 0:1, :, :]
         image_g         = image_rgb[:, 1:2, :, :]

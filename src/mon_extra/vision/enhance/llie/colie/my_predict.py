@@ -123,15 +123,12 @@ def predict(args: argparse.Namespace):
             # Save
             if save_image:
                 if use_fullpath:
-                    rel_path = image_path.relative_path(data_name)
-                    save_dir = save_dir / rel_path.parent
+                    rel_path    = image_path.relative_path(data_name)
+                    output_path = save_dir / rel_path.parent / image_path.name
                 else:
-                    save_dir = save_dir / data_name
-                output_path  = save_dir / image_path.name
+                    output_path = save_dir / data_name / image_path.name
                 output_path.parent.mkdir(parents=True, exist_ok=True)
-                Image.fromarray(
-                    (torch.movedim(img_rgb_fixed, 1, -1)[0].detach().cpu().numpy() * 255).astype(np.uint8)
-                ).save(str(output_path))
+                Image.fromarray((torch.movedim(img_rgb_fixed, 1, -1)[0].detach().cpu().numpy() * 255).astype(np.uint8)).save(str(output_path))
     
     avg_time = float(timer.avg_time)
     console.log(f"Average time: {avg_time}")

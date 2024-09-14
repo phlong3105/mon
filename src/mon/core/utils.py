@@ -859,8 +859,10 @@ def parse_weights_file(
                 weights[i] = ZOO_DIR / w
     
     if isinstance(weights, list | tuple):
-        weights = None       if len(weights) == 0 else weights
-        weights = weights[0] if len(weights) == 1 else weights
+        if len(weights) == 1:
+            weights = weights[0]
+        elif len(weights) == 0:
+            weights = None
     return weights
 
 # endregion

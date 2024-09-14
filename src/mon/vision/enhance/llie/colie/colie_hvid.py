@@ -170,6 +170,8 @@ class CoLIE_HVID(base.ImageEnhancementModel):
         self.assert_datapoint(datapoint)
         image_rgb        = datapoint.get("image")
         depth            = datapoint.get("depth")
+        if depth is None:
+            depth = core.rgb_to_grayscale(image_rgb)
         edge             = self.dba(depth)
         image_hvi        = self.trans.rgb_to_hvi(image_rgb)
         image_i          = image_hvi.clone().detach()

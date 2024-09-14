@@ -260,9 +260,9 @@ def main(
             console.log(f"{message}")
         if not append_results:
             if use_gt_mean:
-                print(f"COPY THIS: {input_dir.name} (with gt-mean)")
+                print(f"COPY THIS: {model} | {input_dir.name} (with gt-mean)")
             else:
-                print(f"COPY THIS: {input_dir.name}")
+                print(f"COPY THIS: {model} | {input_dir.name}")
         print(f"{message}\n")
         
     # Save results

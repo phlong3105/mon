@@ -113,7 +113,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
         hidden_dim  : int   = 256,
         add_layer   : int   = 2,
         weight_decay: list[float] = [0.1, 0.0001, 0.001],
-        L           : float = 0.3,
+        L           : float = 0.1,
         alpha       : float = 1,
         beta        : float = 20,
         gamma       : float = 8,
