@@ -87,9 +87,7 @@ class ZSN2N(base.ImageEnhancementModel):
     
     def init_weights(self, m: nn.Module):
         pass
-    
-    # region Forward Pass
-    
+        
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
         self.assert_datapoint(datapoint)
@@ -124,11 +122,7 @@ class ZSN2N(base.ImageEnhancementModel):
         if self.predicting:
             y = torch.clamp(y, 0, 1)
         return {"enhanced": y}
-    
-    # endregion
-    
-    # region Training
-    
+  
     def infer(
         self,
         datapoint    : dict,
@@ -213,8 +207,6 @@ class ZSN2N(base.ImageEnhancementModel):
         outputs["time"] = timer.avg_time
         return outputs
         
-    # endregion
-    
 # endregion
 
 

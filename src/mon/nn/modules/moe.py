@@ -39,18 +39,18 @@ class LayeredFeatureAggregation(nn.Module):
         self.in_channels  = core.to_int_list(in_channels)
         self.out_channels = out_channels
         self.num_experts  = len(self.in_channels)
-        # Resize
+        # Resize & Linear
         if size is not None:
-            self.size   = core.get_image_size(size)
-            self.resize = nn.Upsample(size=self.size, mode="bilinear", align_corners=False)
+            self.size    = core.get_image_size(size)
+            self.resize  = nn.Upsample(size=self.size, mode="bilinear", align_corners=False)
+            linears      = []
+            for in_c in self.in_channels:
+                linears.append(nn.Conv2d(in_c, self.out_channels, 1))
+            self.linears = nn.ModuleList(linears)
         else:
-            self.size   = None
-            self.resize = None
-        # Linears
-        linears = []
-        for in_c in self.in_channels:
-            linears.append(nn.Conv2d(in_c, self.out_channels, 1))
-        self.linears = nn.ModuleList(linears)
+            self.size    = None
+            self.resize  = None
+            self.linears = None
         # Conv & softmax
         self.conv    = nn.Conv2d(self.out_channels * self.num_experts, self.out_channels, 1)
         self.softmax = nn.Softmax(dim=1)
