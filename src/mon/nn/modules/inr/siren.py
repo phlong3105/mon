@@ -57,13 +57,13 @@ class SIREN(nn.Module):
         self,
         in_channels : int,
         out_channels: int,
-        omega_0     : int   = 1.0,
-        C           : float = 6.0,
-        is_first    : bool  = False,
-        is_last     : bool  = False,
-        use_bias    : bool  = True,
+        omega_0     : int       = 1.0,
+        C           : float     = 6.0,
+        is_first    : bool      = False,
+        is_last     : bool      = False,
+        use_bias    : bool      = True,
         activation  : nn.Module = None,
-        dropout     : float = 0.0
+        dropout     : float     = 0.0
     ):
         super().__init__()
         self.in_channels  = in_channels

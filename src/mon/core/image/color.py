@@ -364,7 +364,7 @@ class RGBToHVI(nn.Module):
         pi      = 3.141592653589793
         H, V, I = image[:, 0, :, :], image[:, 1, :, :], image[:, 2, :, :]
         
-        # clip
+        # Clip
         H = torch.clamp(H, -1, 1)
         V = torch.clamp(V, -1, 1)
         I = torch.clamp(I, 0, 1)
