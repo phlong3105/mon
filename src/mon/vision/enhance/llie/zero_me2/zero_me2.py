@@ -157,20 +157,20 @@ class ZeroME2(base.ImageEnhancementModel):
     
     def __init__(
         self,
-        name          : str   = "zero_me2",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
+        name          : str         = "zero_me2",
+        embed_channels: int         = 48,
+        window_size   : int         = 1,
+        down_size     : int         = 256,
+        num_layers    : int         = 4,
+        hidden_dim    : int         = 256,
+        add_layer     : int         = 2,
         weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any   = None,
+        L             : float       = 0.3,
+        alpha         : float       = 1,
+        beta          : float       = 20,
+        gamma         : float       = 8,
+        delta         : float       = 5,
+        weights       : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -385,20 +385,19 @@ class ZeroME2_01_RGB(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_01_rgb",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_01_rgb",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -406,12 +405,11 @@ class ZeroME2_01_RGB(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -545,20 +543,19 @@ class ZeroME2_02_RGBD(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_02_rgbd",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_02_rgbd",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -566,12 +563,11 @@ class ZeroME2_02_RGBD(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -782,20 +778,19 @@ class ZeroME2_04_HSV(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_04_hsv",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_04_hsv",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -803,12 +798,11 @@ class ZeroME2_04_HSV(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_v_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -904,20 +898,19 @@ class ZeroME2_05_HSVD(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_05_hsvd",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_05_hsvd",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -925,12 +918,11 @@ class ZeroME2_05_HSVD(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_v_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_d_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -1103,20 +1095,19 @@ class ZeroME2_07_HVI(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_07_hvi",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_07_hvi",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -1124,12 +1115,11 @@ class ZeroME2_07_HVI(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_i_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -1233,20 +1223,19 @@ class ZeroME2_08_HVID(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_08_hvid",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_08_hvid",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -1254,12 +1243,11 @@ class ZeroME2_08_HVID(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_i_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_d_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -1440,20 +1428,19 @@ class ZeroME2_10_HVI3(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_10_hvi3",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_10_hvi3",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -1461,38 +1448,33 @@ class ZeroME2_10_HVI3(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
-        patch_h_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_v_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_i_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_hv_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_i_layers  = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        spatial_layers  = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_h_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_v_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_i_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-        patch_h_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_v_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_i_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+            patch_hv_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_i_layers.append( nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            spatial_layers.append( nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+        patch_hv_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        patch_i_layers.append( nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        spatial_layers.append( nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
         output_layers = []
         for _ in range(add_layer, num_layers - 1):
             output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
         output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
         
-        self.patch_h_net = nn.Sequential(*patch_h_layers)
-        self.patch_v_net = nn.Sequential(*patch_v_layers)
-        self.patch_i_net = nn.Sequential(*patch_i_layers)
-        self.spatial_net = nn.Sequential(*spatial_layers)
-        self.output_net  = nn.Sequential(*output_layers)
-        self.trans       = core.RGBToHVI()
+        self.patch_hv_net = nn.Sequential(*patch_hv_layers)
+        self.patch_i_net  = nn.Sequential(*patch_i_layers)
+        self.spatial_net  = nn.Sequential(*spatial_layers)
+        self.output_net   = nn.Sequential(*output_layers)
+        self.trans        = core.RGBToHVI()
         
         # Loss
         self.loss = Loss(L, alpha, beta, gamma, delta)
@@ -1504,11 +1486,7 @@ class ZeroME2_10_HVI3(ZeroME2):
 	        "weight_decay": weight_decay[0]
         }]
         self.params += [{
-	        "params"      : self.patch_h_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_v_net.parameters(),
+	        "params"      : self.patch_hv_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
@@ -1533,80 +1511,59 @@ class ZeroME2_10_HVI3(ZeroME2):
         outputs = self.forward(datapoint=datapoint, *args, **kwargs)
         self.assert_outputs(outputs)
         # Loss
-        illu_h_lr        = outputs["illu_h_lr"]
-        illu_v_lr        = outputs["illu_v_lr"]
-        illu_i_lr        = outputs["illu_i_lr"]
-        image_h_lr       = outputs["image_h_lr"]
-        image_v_lr       = outputs["image_v_lr"]
-        image_i_lr       = outputs["image_i_lr"]
-        image_h_fixed_lr = outputs["image_h_fixed_lr"]
-        image_v_fixed_lr = outputs["image_v_fixed_lr"]
-        image_i_fixed_lr = outputs["image_i_fixed_lr"]
-        loss_h           = self.loss(illu_h_lr, image_h_lr, image_h_fixed_lr)
-        loss_v           = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
-        loss_i           = self.loss(illu_i_lr, image_i_lr, image_i_fixed_lr)
-        outputs["loss"]  = (loss_h + loss_v + loss_i) / 3
+        illu_hvi_lr        = outputs["illu_hvi_lr"]
+        image_hvi_lr       = outputs["image_hvi_lr"]
+        image_hvi_fixed_lr = outputs["image_hvi_fixed_lr"]
+        outputs["loss"]    = self.loss(illu_hvi_lr, image_hvi_lr, image_hvi_fixed_lr)
         # Return
         return outputs
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
         # Prepare inputs
-        image_rgb        = datapoint.get("image")
-        # Enhance
-        image_hvi        = self.trans.rgb_to_hvi(image_rgb)
-        image_hvi_clone  = image_hvi.clone().detach()
-        image_h          = image_hvi_clone[:, 0:1, :, :]
-        image_v          = image_hvi_clone[:, 1:2, :, :]
-        image_i          = image_hvi_clone[:, 2:3, :, :]
-        image_h_lr       = self.interpolate_image(image_h)
-        image_v_lr       = self.interpolate_image(image_v)
-        image_i_lr       = self.interpolate_image(image_i)
-        patch_h          = self.patch_h_net(self.get_patches(image_h_lr))
-        patch_v          = self.patch_v_net(self.get_patches(image_v_lr))
-        patch_i          = self.patch_i_net(self.get_patches(image_i_lr))
-        spatial          = self.spatial_net(self.get_coords())
-        illu_res_h_lr    = self.output_net(torch.cat([patch_h, spatial], -1))
-        illu_res_v_lr    = self.output_net(torch.cat([patch_v, spatial], -1))
-        illu_res_i_lr    = self.output_net(torch.cat([patch_i, spatial], -1))
-        illu_res_h_lr    = illu_res_h_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_v_lr    = illu_res_v_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_i_lr    = illu_res_i_lr.view(1, 1, self.down_size, self.down_size)
-        illu_h_lr        = illu_res_h_lr + image_h_lr
-        illu_v_lr        = illu_res_v_lr + image_v_lr
-        illu_i_lr        = illu_res_i_lr + image_i_lr
-        image_h_fixed_lr = image_h_lr / (illu_h_lr + 1e-4)
-        image_v_fixed_lr = image_v_lr / (illu_v_lr + 1e-4)
-        image_i_fixed_lr = image_i_lr / (illu_i_lr + 1e-4)
-        image_h_fixed_lr = torch.clamp(image_h_fixed_lr, 1e-4, 1)
-        image_v_fixed_lr = torch.clamp(image_v_fixed_lr, 1e-4, 1)
-        image_i_fixed_lr = torch.clamp(image_i_fixed_lr, 1e-4, 1)
-        image_h_fixed_lr = kornia.filters.bilateral_blur(image_h_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_h_fixed    = self.filter_up(image_h_lr, image_h_fixed_lr, image_h)
-        image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
-        image_i_fixed    = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
-        image_hvi_fixed  = torch.cat([image_h_fixed, image_v_fixed, image_i_fixed], 1)
-        image_rgb_fixed  = self.trans.hvi_to_rgb(image_hvi_fixed)
-        image_rgb_fixed  = image_rgb_fixed.clone().detach()
-        image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
+        image_rgb          = datapoint.get("image")
+        # Enhance         
+        image_hvi          = self.trans.rgb_to_hvi(image_rgb)
+        image_hvi_clone    = image_hvi.clone().detach()
+        image_hv           = image_hvi_clone[:, 0:2, :, :]
+        image_i            = image_hvi_clone[:, 2:3, :, :]
+        image_hv_lr        = self.interpolate_image(image_hv)
+        image_i_lr         = self.interpolate_image(image_i)
+        image_hvi_lr       = torch.cat([image_hv_lr, image_i_lr], 1)
+        patch_hv           = self.patch_hv_net(self.get_patches(image_hv_lr))
+        patch_i            = self.patch_i_net(self.get_patches(image_i_lr))
+        spatial            = self.spatial_net(self.get_coords())
+        illu_res_hv_lr     = self.output_net(torch.cat([patch_hv, spatial], -1))
+        illu_res_i_lr      = self.output_net(torch.cat([patch_i,  spatial], -1))
+        illu_res_hv_lr     = illu_res_hv_lr.view(1, 1, self.down_size, self.down_size)
+        illu_res_i_lr      = illu_res_i_lr.view( 1, 1, self.down_size, self.down_size)
+        illu_hv_lr         = illu_res_hv_lr + image_hv_lr
+        illu_i_lr          = illu_res_i_lr  + image_i_lr
+        illu_hvi_lr        = torch.cat([illu_hv_lr, illu_i_lr], 1)
+        image_hv_fixed_lr  = image_hv_lr / (illu_hv_lr + 1e-4)
+        image_i_fixed_lr   = image_i_lr  / (illu_i_lr  + 1e-4)
+        image_hv_fixed_lr  = torch.clamp(image_hv_fixed_lr, 1e-4, 1)
+        image_i_fixed_lr   = torch.clamp(image_i_fixed_lr, 1e-4,  1)
+        image_hvi_fixed_lr = torch.cat([image_hv_fixed_lr, image_i_fixed_lr], 1)
+        image_hvi_fixed_lr = kornia.filters.bilateral_blur(image_hvi_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_hvi_fixed    = self.filter_up(image_hvi_lr, image_hvi_fixed_lr, image_hvi_clone)
+        # image_hv_fixed_lr = kornia.filters.bilateral_blur(image_hv_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        # image_i_fixed_lr  = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        # image_h_fixed      = self.filter_up(image_h_lr, image_h_fixed_lr, image_h)
+        # image_v_fixed      = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
+        # image_i_fixed      = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
+        # image_hvi_fixed    = torch.cat([image_h_fixed, image_v_fixed, image_i_fixed], 1)
+        image_rgb_fixed    = self.trans.hvi_to_rgb(image_hvi_fixed)
+        image_rgb_fixed    = image_rgb_fixed.clone().detach()
+        image_rgb_fixed    = image_rgb_fixed / torch.max(image_rgb_fixed)
         # Return
         if self.debug:
             return {
-                "image_h"         : image_h,
-                "image_v"         : image_v,
-                "image_i"         : image_i,
-                "illu_h_lr"       : illu_h_lr,
-                "illu_v_lr"       : illu_v_lr,
-                "illu_i_lr"       : illu_i_lr,
-                "image_h_lr"      : image_h_lr,
-                "image_v_lr"      : image_v_lr,
-                "image_i_lr"      : image_i_lr,
-                "image_h_fixed_lr": image_h_fixed_lr,
-                "image_v_fixed_lr": image_v_fixed_lr,
-                "image_i_fixed_lr": image_i_fixed_lr,
-                "enhanced"        : image_rgb_fixed,
+                "image_i"           : image_i,
+                "illu_hvi_lr"       : illu_hvi_lr,
+                "image_hvi_lr"      : image_hvi_lr,
+                "image_hvi_fixed_lr": image_hvi_fixed_lr,
+                "enhanced"          : image_rgb_fixed,
             }
         else:
             return {
@@ -1619,20 +1576,19 @@ class ZeroME2_11_HVID3(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_11_hvid3",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_11_hvid3",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -1640,12 +1596,11 @@ class ZeroME2_11_HVID3(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_h_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_v_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -1679,6 +1634,7 @@ class ZeroME2_11_HVID3(ZeroME2):
         self.patch_e_net = nn.Sequential(*patch_e_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
+        self.dba         = nn.BoundaryAwarePrior(eps=0.05, normalized=False)
         self.trans       = core.RGBToHVI()
         
         # Loss
@@ -1737,10 +1693,11 @@ class ZeroME2_11_HVID3(ZeroME2):
         image_h_fixed_lr = outputs["image_h_fixed_lr"]
         image_v_fixed_lr = outputs["image_v_fixed_lr"]
         image_i_fixed_lr = outputs["image_i_fixed_lr"]
-        loss_h           = self.loss(illu_h_lr, image_h_lr, image_h_fixed_lr)
-        loss_v           = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
+        # loss_h           = self.loss(illu_h_lr, image_h_lr, image_h_fixed_lr)
+        # loss_v           = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
         loss_i           = self.loss(illu_i_lr, image_i_lr, image_i_fixed_lr)
-        outputs["loss"]  = (loss_h + loss_v + loss_i) / 3
+        # outputs["loss"]  = (loss_h + loss_v + loss_i) / 3
+        outputs["loss"]  = loss_i
         # Return
         return outputs
     
@@ -1868,10 +1825,11 @@ class ZeroME2_12_HVID3_ZSN2N(ZeroME2_11_HVID3):
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(image1,           image_rgb_fixed_2) + mse_loss(image2,           image_rgb_fixed_1))
         loss_con = 0.5 * (mse_loss(image_rgb_fixed1, image_rgb_fixed_1) + mse_loss(image_rgb_fixed2, image_rgb_fixed_2))
-        loss_h   = self.loss(illu_h_lr, image_h_lr, image_h_fixed_lr)
-        loss_v   = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
-        loss_i   = self.loss(illu_i_lr, image_i_lr, image_i_fixed_lr)
-        loss_enh = (loss_h + loss_v + loss_i) / 3
+        # loss_h   = self.loss(illu_h_lr, image_h_lr, image_h_fixed_lr)
+        # loss_v   = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
+        loss_i           = self.loss(illu_i_lr, image_i_lr, image_i_fixed_lr)
+        # loss_enh = (loss_h + loss_v + loss_i) / 3
+        loss_enh = loss_i
         loss     = 0.25 * loss_res + 0.25 * loss_con + 0.5 * loss_enh
         outputs["loss"] = loss
         # Return
@@ -1883,20 +1841,19 @@ class ZeroME2_13_RGBD_HSVD(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_13_rgbd_hsvd",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_13_rgbd_hsvd",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -1904,12 +1861,11 @@ class ZeroME2_13_RGBD_HSVD(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
@@ -2083,20 +2039,19 @@ class ZeroME2_14_RGBD_HSVD_ZSN2N(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_14_rgbd_hsvd_zsn2n",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
+        name        : str         = "zero_me2_14_rgbd_hsvd_zsn2n",
+        window_size : int         = 1,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
+        weight_decay: list[float] = [0.1, 0.0001, 0.001],
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -2104,12 +2059,11 @@ class ZeroME2_14_RGBD_HSVD_ZSN2N(ZeroME2):
             weights = weights,
             *args, **kwargs
         )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
+        self.window_size = window_size
+        self.patch_dim   = window_size ** 2
+        self.down_size   = down_size
+        self.omega_0     = 30.0
+        self.siren_C     = 6.0
         
         patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-NIR.
+"""Zero-ME2.
 
 This module implement our idea of combining CoLIE and Zero-IG models.
 """
