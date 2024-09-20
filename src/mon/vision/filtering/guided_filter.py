@@ -198,8 +198,8 @@ class FastGuidedFilter(nn.Module):
         # b
         b = mean_y - A * mean_x
         # mean_A; mean_b
-        mean_A = F.interpolate(A, (h_xhr, w_xhr), mode="bilinear", align_corners=True)
-        mean_b = F.interpolate(b, (h_xhr, w_xhr), mode="bilinear", align_corners=True)
+        mean_A = F.interpolate(A, (h_xhr, w_xhr), mode="bicubic", align_corners=True)
+        mean_b = F.interpolate(b, (h_xhr, w_xhr), mode="bicubic", align_corners=True)
         return mean_A * x_hr + mean_b
     
     @dispatch
@@ -207,8 +207,8 @@ class FastGuidedFilter(nn.Module):
         _, _, x_h, x_w = x_lr.size()
         h    = x_h // self.downscale
         w    = x_w // self.downscale
-        x_lr = core.resize(x_lr, (h, w), interpolation="bilinear")
-        y_lr = core.resize(x_hr, (h, w), interpolation="bilinear")
+        x_lr = core.resize(x_lr, (h, w), interpolation="bicubic")
+        y_lr = core.resize(x_hr, (h, w), interpolation="bicubic")
         return self.forward(x_lr, y_lr, x_hr)
 
 # endregion
@@ -275,8 +275,8 @@ class ConvGuidedFilter(nn.Module):
         # b
         b = mean_y - A * mean_x
         # mean_A; mean_b
-        mean_A = F.interpolate(A, (h_hrx, w_hrx), mode="bilinear", align_corners=True)
-        mean_b = F.interpolate(b, (h_hrx, w_hrx), mode="bilinear", align_corners=True)
+        mean_A = F.interpolate(A, (h_hrx, w_hrx), mode="bicubic", align_corners=True)
+        mean_b = F.interpolate(b, (h_hrx, w_hrx), mode="bicubic", align_corners=True)
         return mean_A * x_hr + mean_b
         
     @dispatch
@@ -284,8 +284,8 @@ class ConvGuidedFilter(nn.Module):
         _, _, x_h, x_w = x_lr.size()
         h    = x_h // self.downscale
         w    = x_w // self.downscale
-        x_lr = core.resize(x_lr, (h, w), "bilinear")
-        y_lr = core.resize(x_hr, (h, w), "bilinear")
+        x_lr = core.resize(x_lr, (h, w), "bicubic")
+        y_lr = core.resize(x_hr, (h, w), "bicubic")
         return self.forward(x_lr, y_lr, x_hr)
 
 
@@ -521,8 +521,6 @@ class DeepGuidedFilterGuidedMapConvGF(DeepGuidedFilterConvGF):
         )
 
     def forward(self, x_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
-        return self.gf(
-            self.guided_map(x_lr), self.lr(x_lr), self.guided_map(x_hr)
-        ).clamp(0, 1)
+        return self.gf(self.guided_map(x_lr), self.lr(x_lr), self.guided_map(x_hr)).clamp(0, 1)
     
 # endregion

@@ -269,8 +269,8 @@ def brightness_attention_map(
     """
     if isinstance(image, torch.Tensor):
         if denoise_ksize:
-            # input = filtering.guided_filter(input, input, denoise_ksize)
             image = kornia.filters.median_blur(image, denoise_ksize)
+            # image = kornia.filters.bilateral_blur(image, denoise_ksize, 0.1, (1.5, 1.5))
         hsv = kornia.color.rgb_to_hsv(image)
         v   = core.get_image_channel(image=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
         bam = torch.pow((1 - v), gamma)

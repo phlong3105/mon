@@ -11,7 +11,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "zero_me2_06_rgbd_hsvd_adaptive"
+model_name = "zero_me2_09_hvid_zsn2n"
 data_name  = ""
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -112,7 +112,7 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 1000,
+	"max_epochs"       : 200,
 }
 
 # endregion

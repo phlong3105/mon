@@ -107,9 +107,7 @@ class CoLIE_HVI(base.ImageEnhancementModel):
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
         self.trans       = core.RGBToHVI()
-        # self.denoise1    = Denoise1(embed_channels=self.embed_channels)
-        # self.denoise2    = Denoise2(embed_channels=self.embed_channels)
-        
+       
         weight_decay = weight_decay or [0.1, 0.0001, 0.001]
         self.params  = []
         self.params += [{

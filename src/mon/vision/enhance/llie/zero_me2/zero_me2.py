@@ -12,12 +12,16 @@ from __future__ import annotations
 __all__ = [
     "ZeroME2",
     "ZeroME2_01_RGB",
-    "ZeroME2_02_RGB_Sep",
-    "ZeroME2_03_RGB_Sep_Bilateral",
-    "ZeroME2_04_RGBD_Sep",
-    "ZeroME2_05_RGBD_Sep_Bilateral",
-    "ZeroME2_06_RGBD_HSVD_Adaptive",
-    "ZeroME2_07_RGBD_HSVD_MoE",
+    "ZeroME2_02_RGBD",
+    "ZeroME2_03_RGBD_ZSN2N",
+    "ZeroME2_04_HSV",
+    "ZeroME2_05_HSVD",
+    "ZeroME2_06_HSVD_ZSN2N",
+    "ZeroME2_07_HVI",
+    "ZeroME2_08_HVID",
+    "ZeroME2_09_HVID_ZSN2N",
+    "ZeroME2_10_RGBD_HSVD",
+    "ZeroME2_11_RGBD_HSVD_ZSN2N",
 ]
 
 from typing import Any, Literal
@@ -194,9 +198,7 @@ class ZeroME2(base.ImageEnhancementModel):
         self.patch_net   = nn.Sequential(*patch_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
-        # self.denoise1    = Denoise1(embed_channels=self.embed_channels)
-        # self.denoise2    = Denoise2(embed_channels=self.embed_channels)
-        
+
         # Loss
         self.loss = Loss(L, alpha, beta, gamma, delta)
         
@@ -244,12 +246,12 @@ class ZeroME2(base.ImageEnhancementModel):
         image_rgb          = datapoint.get("image")
         # Forward
         image_rgb_lr       = self.interpolate_image(image_rgb)
-        patch              = self.get_patches(image_rgb_lr)
-        spatial            = self.get_coords()
-        illu_res_lr        = self.output_net(torch.cat([self.patch_net(patch), self.spatial_net(spatial)], -1))
+        patch              = self.patch_net(self.get_patches(image_rgb_lr))
+        spatial            = self.spatial_net(self.get_coords())
+        illu_res_lr        = self.output_net(torch.cat([patch, spatial], -1))
         illu_res_lr        = illu_res_lr.view(1, 3, self.down_size, self.down_size)
         illu_lr            = illu_res_lr + image_rgb_lr
-        image_rgb_fixed_lr = image_rgb_lr / illu_lr
+        image_rgb_fixed_lr = image_rgb_lr / (illu_lr + 1e-4)
         image_rgb_fixed_lr = kornia.filters.bilateral_blur(image_rgb_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
         image_rgb_fixed    = self.filter_up(image_rgb_lr, image_rgb_fixed_lr, image_rgb)
         # Normalize the image in the range `[0, 1]`.
@@ -269,11 +271,12 @@ class ZeroME2(base.ImageEnhancementModel):
         
     def interpolate_image(self, image: torch.Tensor) -> torch.Tensor:
         """Reshapes the image based on new resolution."""
-        return F.interpolate(image, size=(self.down_size, self.down_size))
+        return F.interpolate(image, size=(self.down_size, self.down_size), mode="bicubic")
     
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
-        kernel = torch.zeros((self.window_size ** 2, 1, self.window_size, self.window_size)).cuda()
+        num_channels = core.get_image_num_channels(image)
+        kernel       = torch.zeros((self.window_size ** 2, num_channels, self.window_size, self.window_size)).cuda()
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -315,6 +318,15 @@ class ZeroME2(base.ImageEnhancementModel):
         """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
         image_hsv[:, -1, :, :] = v_new
         return image_hsv
+    
+    @staticmethod
+    def replace_i_component(
+        image_hvi: torch.Tensor,
+        i_new    : torch.Tensor
+    ) -> torch.Tensor:
+        """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
+        image_hvi[:, 2, :, :] = i_new
+        return image_hvi
     
     def infer(
         self,
@@ -362,7 +374,13 @@ class ZeroME2(base.ImageEnhancementModel):
         outputs = self.forward(datapoint=datapoint)
         timer.tock()
         self.assert_outputs(outputs)
-    
+        
+        # Log
+        meta       = datapoint.get("meta")
+        image_path = core.Path(meta["path"])
+        if hasattr(self, "w_0"):
+            console.log(f"{image_path.name}: {self.w_0.item()}")
+        
         # Return
         outputs["time"] = timer.avg_time
         return outputs
@@ -390,7 +408,7 @@ class ZeroME2_01_RGB(ZeroME2):
         beta          : float = 20,
         gamma         : float = 8,
         delta         : float = 5,
-        weights       : Any   = None,
+        weights       : Any = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -405,24 +423,30 @@ class ZeroME2_01_RGB(ZeroME2):
         self.omega_0        = 30.0
         self.siren_C        = 6.0
         
-        patch_layers   = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_b_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-        patch_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+            patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+        patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
         output_layers = []
         for _ in range(add_layer, num_layers - 1):
             output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-        output_layers.append(nn.SIREN(hidden_dim, 3, self.omega_0, self.siren_C, is_last=True))
+        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
         
-        self.patch_net   = nn.Sequential(*patch_layers)
+        self.patch_r_net = nn.Sequential(*patch_r_layers)
+        self.patch_g_net = nn.Sequential(*patch_g_layers)
+        self.patch_b_net = nn.Sequential(*patch_b_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
-        # self.denoise1    = Denoise1(embed_channels=self.embed_channels)
-        # self.denoise2    = Denoise2(embed_channels=self.embed_channels)
         
         # Loss
         self.loss = Loss(L, alpha, beta, gamma, delta)
@@ -434,7 +458,15 @@ class ZeroME2_01_RGB(ZeroME2):
 	        "weight_decay": weight_decay[0]
         }]
         self.params += [{
-	        "params"      : self.patch_net.parameters(),
+	        "params"      : self.patch_r_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.patch_g_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.patch_b_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
@@ -448,159 +480,224 @@ class ZeroME2_01_RGB(ZeroME2):
         else:
             self.apply(self.init_weights)
         self.initial_state_dict = self.state_dict()
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        illu_lr            = outputs["illu_lr"]
+        image_rgb_lr       = outputs["image_rgb_lr"]
+        image_rgb_fixed_lr = outputs["image_rgb_fixed_lr"]
+        outputs["loss"]    = self.loss(illu_lr, image_rgb_lr, image_rgb_fixed_lr)
+        # Return
+        return outputs
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
         # Prepare input
-        image_rgb          = datapoint.get("image")
+        image_rgb       = datapoint.get("image")
+        image_r         = image_rgb[:, 0:1, :, :]
+        image_g         = image_rgb[:, 1:2, :, :]
+        image_b         = image_rgb[:, 2:3, :, :]
+        # Enhance
+        image_rgb_lr    = self.interpolate_image(image_rgb)
+        image_r_lr      = image_rgb_lr[:, 0:1, :, :]
+        image_g_lr      = image_rgb_lr[:, 1:2, :, :]
+        image_b_lr      = image_rgb_lr[:, 2:3, :, :]
+        patch_r         = self.patch_r_net(self.get_patches(image_r_lr))
+        patch_g         = self.patch_g_net(self.get_patches(image_g_lr))
+        patch_b         = self.patch_b_net(self.get_patches(image_b_lr))
+        spatial         = self.spatial_net(self.get_coords())
+        illu_res_r_lr   = self.output_net(torch.cat([patch_r, spatial], -1))
+        illu_res_g_lr   = self.output_net(torch.cat([patch_g, spatial], -1))
+        illu_res_b_lr   = self.output_net(torch.cat([patch_b, spatial], -1))
+        illu_res_r_lr   = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
+        illu_res_g_lr   = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
+        illu_res_b_lr   = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
+        illu_res_lr     = torch.cat([illu_res_r_lr, illu_res_g_lr, illu_res_b_lr], 1)
+        illu_r_lr       = illu_res_r_lr + image_r_lr
+        illu_g_lr       = illu_res_g_lr + image_g_lr
+        illu_b_lr       = illu_res_b_lr + image_b_lr
+        illu_lr         = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
+        illu_r_fixed_lr = image_r_lr / (illu_r_lr + 1e-4)
+        illu_g_fixed_lr = image_g_lr / (illu_g_lr + 1e-4)
+        illu_b_fixed_lr = image_b_lr / (illu_b_lr + 1e-4)
+        illu_r_fixed_lr = torch.clamp(illu_r_fixed_lr, 1e-4, 1)
+        illu_g_fixed_lr = torch.clamp(illu_g_fixed_lr, 1e-4, 1)
+        illu_b_fixed_lr = torch.clamp(illu_b_fixed_lr, 1e-4, 1)
+        illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_rgb_fixed_lr = torch.cat([illu_r_fixed_lr, illu_g_fixed_lr, illu_b_fixed_lr], 1)
+        image_r_fixed   = self.filter_up(image_r_lr, illu_r_fixed_lr, image_r)
+        image_g_fixed   = self.filter_up(image_g_lr, illu_g_fixed_lr, image_g)
+        image_b_fixed   = self.filter_up(image_b_lr, illu_b_fixed_lr, image_b)
+        image_rgb_fixed = torch.cat([image_r_fixed, image_g_fixed, image_b_fixed], 1)
+        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
+        # Return
+        if self.debug:
+            return {
+                "illu_lr"           : illu_lr,
+                "image_rgb_lr"      : image_rgb_lr,
+                "image_rgb_fixed_lr": image_rgb_fixed_lr,
+                "enhanced"          : image_rgb_fixed,
+            }
+        else:
+            return {
+                "enhanced": image_rgb_fixed,
+            }
+
+
+@MODELS.register(name="zero_me2_02_rgbd", arch="zero_me2")
+class ZeroME2_02_RGBD(ZeroME2):
+    
+    def __init__(
+        self,
+        name          : str   = "zero_me2_02_rgbd",
+        embed_channels: int   = 48,
+        window_size   : int   = 1,
+        down_size     : int   = 256,
+        num_layers    : int   = 4,
+        hidden_dim    : int   = 256,
+        add_layer     : int   = 2,
+        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
+        L             : float = 0.3,
+        alpha         : float = 1,
+        beta          : float = 20,
+        gamma         : float = 8,
+        delta         : float = 5,
+        weights       : Any = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name    = name,
+            weights = weights,
+            *args, **kwargs
+        )
+        self.embed_channels = embed_channels
+        self.window_size    = window_size
+        self.patch_dim      = window_size ** 2
+        self.down_size      = down_size
+        self.omega_0        = 30.0
+        self.siren_C        = 6.0
+        
+        patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_b_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_d_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_e_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        for _ in range(1, add_layer - 2):
+            patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+        patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        
+        output_layers = []
+        for _ in range(add_layer, num_layers - 1):
+            output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
+        
+        self.patch_r_net = nn.Sequential(*patch_r_layers)
+        self.patch_g_net = nn.Sequential(*patch_g_layers)
+        self.patch_b_net = nn.Sequential(*patch_b_layers)
+        self.patch_d_net = nn.Sequential(*patch_d_layers)
+        self.patch_e_net = nn.Sequential(*patch_e_layers)
+        self.spatial_net = nn.Sequential(*spatial_layers)
+        self.output_net  = nn.Sequential(*output_layers)
+        self.dba         = nn.BoundaryAwarePrior(eps=0.05, normalized=False)
+        
+        # Loss
+        self.loss = Loss(L, alpha, beta, gamma, delta)
+        
+        weight_decay = weight_decay or [0.1, 0.0001, 0.001]
+        self.params  = []
+        self.params += [{
+	        "params"      : self.spatial_net.parameters(),
+	        "weight_decay": weight_decay[0]
+        }]
+        self.params += [{
+	        "params"      : self.patch_r_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.patch_g_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.patch_b_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.patch_d_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.patch_e_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.output_net.parameters(),
+	        "weight_decay": weight_decay[2]
+        }]
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
+        self.initial_state_dict = self.state_dict()
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
-        image_rgb_lr       = self.interpolate_image(image_rgb)
-        patch              = self.get_patches(image_rgb_lr)
-        spatial            = self.get_coords()
-        illu_res_lr        = self.output_net(torch.cat([self.patch_net(patch), self.spatial_net(spatial)], -1))
-        illu_res_lr        = illu_res_lr.view(1, 3, self.down_size, self.down_size)
-        illu_lr            = illu_res_lr + image_rgb_lr
-        image_rgb_fixed_lr = image_rgb_lr / illu_lr
-        image_rgb_fixed_lr = torch.clamp(image_rgb_fixed_lr, 1e-4, 1)
-        image_rgb_fixed_lr = kornia.filters.bilateral_blur(image_rgb_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_rgb_fixed    = self.filter_up(image_rgb_lr, image_rgb_fixed_lr, image_rgb)
-        # Normalize the image in the range `[0, 1]`.
-        image_rgb_fixed    = image_rgb_fixed / torch.max(image_rgb_fixed)
-        # Return
-        if self.debug:
-            return {
-                "illu_lr"           : illu_lr,
-                "image_rgb_lr"      : image_rgb_lr,
-                "image_rgb_fixed_lr": image_rgb_fixed_lr,
-                "enhanced"          : image_rgb_fixed,
-            }
-        else:
-            return {
-                "enhanced": image_rgb_fixed,
-            }
-    
-    def get_patches(self, image: torch.Tensor) -> torch.Tensor:
-        """Creates a tensor where the channel contains patch information."""
-        kernel = torch.zeros((self.window_size ** 2, 3, self.window_size, self.window_size)).cuda()
-        
-        for i in range(self.window_size):
-            for j in range(self.window_size):
-                kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
-    
-        pad       = nn.ReflectionPad2d(self.window_size // 2)
-        im_padded = pad(image)
-        extracted = F.conv2d(im_padded, kernel, padding=0).squeeze(0)
-        return torch.movedim(extracted, 0, -1)
-
-
-@MODELS.register(name="zero_me2_02_rgb_sep", arch="zero_me2")
-class ZeroME2_02_RGB_Sep(ZeroME2):
-    
-    def __init__(
-        self,
-        name          : str   = "zero_me2_02_rgb_sep",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            name    = name,
-            weights = weights,
-            *args, **kwargs
-        )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
-        
-        patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_b_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        for _ in range(1, add_layer - 2):
-            patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-        patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        
-        output_layers = []
-        for _ in range(add_layer, num_layers - 1):
-            output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
-        
-        self.patch_r_net = nn.Sequential(*patch_r_layers)
-        self.patch_g_net = nn.Sequential(*patch_g_layers)
-        self.patch_b_net = nn.Sequential(*patch_b_layers)
-        self.spatial_net = nn.Sequential(*spatial_layers)
-        self.output_net  = nn.Sequential(*output_layers)
-        
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
         # Loss
-        self.loss = Loss(L, alpha, beta, gamma, delta)
-        
-        weight_decay = weight_decay or [0.1, 0.0001, 0.001]
-        self.params  = []
-        self.params += [{
-	        "params"      : self.spatial_net.parameters(),
-	        "weight_decay": weight_decay[0]
-        }]
-        self.params += [{
-	        "params"      : self.patch_r_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_g_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_b_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.output_net.parameters(),
-	        "weight_decay": weight_decay[2]
-        }]
-        
-        # Load weights
-        if self.weights:
-            self.load_weights()
-        else:
-            self.apply(self.init_weights)
-        self.initial_state_dict = self.state_dict()
+        illu_lr            = outputs["illu_lr"]
+        image_rgb_lr       = outputs["image_rgb_lr"]
+        image_rgb_fixed_lr = outputs["image_rgb_fixed_lr"]
+        outputs["loss"]    = self.loss(illu_lr, image_rgb_lr, image_rgb_fixed_lr)
+        # Return
+        return outputs
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image_rgb       = datapoint.get("image")
+        # Prepare input
+        image_rgb = datapoint.get("image")
+        depth     = datapoint.get("depth")
+        if depth is None:
+            depth = core.rgb_to_grayscale(image_rgb)
+        edge      = self.dba(depth)
+        # Enhance
         image_r         = image_rgb[:, 0:1, :, :]
         image_g         = image_rgb[:, 1:2, :, :]
         image_b         = image_rgb[:, 2:3, :, :]
         image_rgb_lr    = self.interpolate_image(image_rgb)
+        depth_lr        = self.interpolate_image(depth)
+        edge_lr         = self.interpolate_image(edge)
         image_r_lr      = image_rgb_lr[:, 0:1, :, :]
         image_g_lr      = image_rgb_lr[:, 1:2, :, :]
         image_b_lr      = image_rgb_lr[:, 2:3, :, :]
-        patch_r         = self.get_patches(image_r_lr)
-        patch_g         = self.get_patches(image_g_lr)
-        patch_b         = self.get_patches(image_b_lr)
-        spatial         = self.get_coords()
-        illu_res_r_lr   = self.output_net(torch.cat([self.patch_r_net(patch_r), self.spatial_net(spatial)], -1))
-        illu_res_g_lr   = self.output_net(torch.cat([self.patch_g_net(patch_g), self.spatial_net(spatial)], -1))
-        illu_res_b_lr   = self.output_net(torch.cat([self.patch_b_net(patch_b), self.spatial_net(spatial)], -1))
+        patch_r         = self.patch_r_net(self.get_patches(image_r_lr))
+        patch_g         = self.patch_g_net(self.get_patches(image_g_lr))
+        patch_b         = self.patch_b_net(self.get_patches(image_b_lr))
+        patch_d         = self.patch_d_net(self.get_patches(depth_lr))
+        patch_e         = self.patch_e_net(self.get_patches(edge_lr))
+        spatial         = self.spatial_net(self.get_coords())
+        illu_res_r_lr   = self.output_net(torch.cat([patch_r, patch_e, patch_d, spatial], -1))
+        illu_res_g_lr   = self.output_net(torch.cat([patch_g, patch_e, patch_d, spatial], -1))
+        illu_res_b_lr   = self.output_net(torch.cat([patch_b, patch_e, patch_d, spatial], -1))
         illu_res_r_lr   = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
         illu_res_g_lr   = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
         illu_res_b_lr   = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
@@ -609,154 +706,9 @@ class ZeroME2_02_RGB_Sep(ZeroME2):
         illu_g_lr       = illu_res_g_lr + image_g_lr
         illu_b_lr       = illu_res_b_lr + image_b_lr
         illu_lr         = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
-        illu_r_fixed_lr = image_r_lr / illu_r_lr
-        illu_g_fixed_lr = image_g_lr / illu_g_lr
-        illu_b_fixed_lr = image_b_lr / illu_b_lr
-        illu_r_fixed_lr = torch.clamp(illu_r_fixed_lr, 1e-4, 1)
-        illu_g_fixed_lr = torch.clamp(illu_g_fixed_lr, 1e-4, 1)
-        illu_b_fixed_lr = torch.clamp(illu_b_fixed_lr, 1e-4, 1)
-        # illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        # illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        # illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_rgb_fixed_lr = torch.cat([illu_r_fixed_lr, illu_g_fixed_lr, illu_b_fixed_lr], 1)
-        image_r_fixed   = self.filter_up(image_r_lr, illu_r_fixed_lr, image_r)
-        image_g_fixed   = self.filter_up(image_g_lr, illu_g_fixed_lr, image_g)
-        image_b_fixed   = self.filter_up(image_b_lr, illu_b_fixed_lr, image_b)
-        image_rgb_fixed = torch.cat([image_r_fixed, image_g_fixed, image_b_fixed], 1)
-        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
-        # Return
-        if self.debug:
-            return {
-                "illu_lr"           : illu_lr,
-                "image_rgb_lr"      : image_rgb_lr,
-                "image_rgb_fixed_lr": image_rgb_fixed_lr,
-                "enhanced"          : image_rgb_fixed,
-            }
-        else:
-            return {
-                "enhanced": image_rgb_fixed,
-            }
-    
-
-@MODELS.register(name="zero_me2_03_rgb_sep_bilateral", arch="zero_me2")
-class ZeroME2_03_RGB_Sep_Bilateral(ZeroME2):
-    
-    def __init__(
-        self,
-        name          : str   = "zero_me2_03_rgb_sep_bilateral",
-        embed_channels: int   = 48,
-        window_size   : int   = 1,
-        down_size     : int   = 256,
-        num_layers    : int   = 4,
-        hidden_dim    : int   = 256,
-        add_layer     : int   = 2,
-        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
-        L             : float = 0.3,
-        alpha         : float = 1,
-        beta          : float = 20,
-        gamma         : float = 8,
-        delta         : float = 5,
-        weights       : Any = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            name    = name,
-            weights = weights,
-            *args, **kwargs
-        )
-        self.embed_channels = embed_channels
-        self.window_size    = window_size
-        self.patch_dim      = window_size ** 2
-        self.down_size      = down_size
-        self.omega_0        = 30.0
-        self.siren_C        = 6.0
-        
-        patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_b_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        for _ in range(1, add_layer - 2):
-            patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-        patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
-        
-        output_layers = []
-        for _ in range(add_layer, num_layers - 1):
-            output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
-        
-        self.patch_r_net = nn.Sequential(*patch_r_layers)
-        self.patch_g_net = nn.Sequential(*patch_g_layers)
-        self.patch_b_net = nn.Sequential(*patch_b_layers)
-        self.spatial_net = nn.Sequential(*spatial_layers)
-        self.output_net  = nn.Sequential(*output_layers)
-        
-        # Loss
-        self.loss = Loss(L, alpha, beta, gamma, delta)
-        
-        weight_decay = weight_decay or [0.1, 0.0001, 0.001]
-        self.params  = []
-        self.params += [{
-	        "params"      : self.spatial_net.parameters(),
-	        "weight_decay": weight_decay[0]
-        }]
-        self.params += [{
-	        "params"      : self.patch_r_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_g_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_b_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.output_net.parameters(),
-	        "weight_decay": weight_decay[2]
-        }]
-        
-        # Load weights
-        if self.weights:
-            self.load_weights()
-        else:
-            self.apply(self.init_weights)
-        self.initial_state_dict = self.state_dict()
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image_rgb       = datapoint.get("image")
-        image_r         = image_rgb[:, 0:1, :, :]
-        image_g         = image_rgb[:, 1:2, :, :]
-        image_b         = image_rgb[:, 2:3, :, :]
-        image_rgb_lr    = self.interpolate_image(image_rgb)
-        image_r_lr      = image_rgb_lr[:, 0:1, :, :]
-        image_g_lr      = image_rgb_lr[:, 1:2, :, :]
-        image_b_lr      = image_rgb_lr[:, 2:3, :, :]
-        patch_r         = self.get_patches(image_r_lr)
-        patch_g         = self.get_patches(image_g_lr)
-        patch_b         = self.get_patches(image_b_lr)
-        spatial         = self.get_coords()
-        illu_res_r_lr   = self.output_net(torch.cat([self.patch_r_net(patch_r), self.spatial_net(spatial)], -1))
-        illu_res_g_lr   = self.output_net(torch.cat([self.patch_g_net(patch_g), self.spatial_net(spatial)], -1))
-        illu_res_b_lr   = self.output_net(torch.cat([self.patch_b_net(patch_b), self.spatial_net(spatial)], -1))
-        illu_res_r_lr   = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_g_lr   = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_b_lr   = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_lr     = torch.cat([illu_res_r_lr, illu_res_g_lr, illu_res_b_lr], 1)
-        illu_r_lr       = illu_res_r_lr + image_r_lr
-        illu_g_lr       = illu_res_g_lr + image_g_lr
-        illu_b_lr       = illu_res_b_lr + image_b_lr
-        illu_lr         = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
-        illu_r_fixed_lr = image_r_lr / illu_r_lr
-        illu_g_fixed_lr = image_g_lr / illu_g_lr
-        illu_b_fixed_lr = image_b_lr / illu_b_lr
+        illu_r_fixed_lr = image_r_lr / (illu_r_lr + 1e-4)
+        illu_g_fixed_lr = image_g_lr / (illu_g_lr + 1e-4)
+        illu_b_fixed_lr = image_b_lr / (illu_b_lr + 1e-4)
         illu_r_fixed_lr = torch.clamp(illu_r_fixed_lr, 1e-4, 1)
         illu_g_fixed_lr = torch.clamp(illu_g_fixed_lr, 1e-4, 1)
         illu_b_fixed_lr = torch.clamp(illu_b_fixed_lr, 1e-4, 1)
@@ -772,6 +724,8 @@ class ZeroME2_03_RGB_Sep_Bilateral(ZeroME2):
         # Return
         if self.debug:
             return {
+                "depth"             : depth,
+                "edge"              : edge,
                 "illu_lr"           : illu_lr,
                 "image_rgb_lr"      : image_rgb_lr,
                 "image_rgb_fixed_lr": image_rgb_fixed_lr,
@@ -781,14 +735,64 @@ class ZeroME2_03_RGB_Sep_Bilateral(ZeroME2):
             return {
                 "enhanced": image_rgb_fixed,
             }
-        
 
-@MODELS.register(name="zero_me2_04_rgbd_sep", arch="zero_me2")
-class ZeroME2_04_RGBD_Sep(ZeroME2):
+
+@MODELS.register(name="zero_me2_03_rgbd_zsn2n", arch="zero_me2")
+class ZeroME2_03_RGBD_ZSN2N(ZeroME2_02_RGBD):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_04_rgbd_sep",
+        name   : str = "zero_me2_03_rgbd_zsn2n",
+        weights: Any = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name    = name,
+            weights = weights,
+            *args, **kwargs
+        )
+        
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        image          = datapoint.get("image")
+        image1, image2 = core.pair_downsample(image)
+        datapoint1     = datapoint | {"image": image1}
+        datapoint2     = datapoint | {"image": image2}
+        outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        illu_lr1            = outputs1["illu_lr"]
+        image_rgb_lr1       = outputs1["image_rgb_lr"]
+        image_rgb_fixed_lr1 = outputs1["image_rgb_fixed_lr"]
+        image_rgb_fixed1    = outputs1["enhanced"]
+        illu_lr2            = outputs2["illu_lr"]
+        image_rgb_lr2       = outputs2["image_rgb_lr"]
+        image_rgb_fixed_lr2 = outputs2["image_rgb_fixed_lr"]
+        image_rgb_fixed2    = outputs2["enhanced"]
+        illu_lr             = outputs["illu_lr"]
+        image_rgb_lr        = outputs["image_rgb_lr"]
+        image_rgb_fixed_lr  = outputs["image_rgb_fixed_lr"]
+        image_rgb_fixed     = outputs["enhanced"]
+        image_rgb_fixed_1, image_rgb_fixed_2 = core.pair_downsample(image_rgb_fixed)
+        mse_loss = nn.MSELoss()
+        loss_res = 0.5 * (mse_loss(image1,           image_rgb_fixed_2) + mse_loss(image2,           image_rgb_fixed_1))
+        loss_con = 0.5 * (mse_loss(image_rgb_fixed1, image_rgb_fixed_1) + mse_loss(image_rgb_fixed2, image_rgb_fixed_2))
+        loss_enh = self.loss(illu_lr, image_rgb_lr, image_rgb_fixed_lr)
+        loss     = 0.15 * loss_res + 0.15 * loss_con + 0.7 * loss_enh
+        outputs["loss"] = loss
+        # Return
+        return outputs
+    
+
+@MODELS.register(name="zero_me2_04_hsv", arch="zero_me2")
+class ZeroME2_04_HSV(ZeroME2):
+    
+    def __init__(
+        self,
+        name          : str   = "zero_me2_04_hsv",
         embed_channels: int   = 48,
         window_size   : int   = 1,
         down_size     : int   = 256,
@@ -816,22 +820,138 @@ class ZeroME2_04_RGBD_Sep(ZeroME2):
         self.omega_0        = 30.0
         self.siren_C        = 6.0
         
-        patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_b_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_v_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        for _ in range(1, add_layer - 2):
+            patch_v_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+        patch_v_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        
+        output_layers = []
+        for _ in range(add_layer, num_layers - 1):
+            output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
+        
+        self.patch_v_net = nn.Sequential(*patch_v_layers)
+        self.spatial_net = nn.Sequential(*spatial_layers)
+        self.output_net  = nn.Sequential(*output_layers)
+        
+        # Loss
+        self.loss = Loss(L, alpha, beta, gamma, delta)
+        
+        weight_decay = weight_decay or [0.1, 0.0001, 0.001]
+        self.params  = []
+        self.params += [{
+	        "params"      : self.spatial_net.parameters(),
+	        "weight_decay": weight_decay[0]
+        }]
+        self.params += [{
+	        "params"      : self.patch_v_net.parameters(),
+	        "weight_decay": weight_decay[1]
+        }]
+        self.params += [{
+	        "params"      : self.output_net.parameters(),
+	        "weight_decay": weight_decay[2]
+        }]
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
+        self.initial_state_dict = self.state_dict()
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        illu_v_lr        = outputs["illu_v_lr"]
+        image_v_lr       = outputs["image_v_lr"]
+        image_v_fixed_lr = outputs["image_v_fixed_lr"]
+        outputs["loss"]  = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
+        # Return
+        return outputs
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        # Prepare inputs
+        image_rgb        = datapoint.get("image")
+        # Enhance
+        image_hsv        = core.rgb_to_hsv(image_rgb)
+        image_v          = core.rgb_to_v(image_rgb)
+        image_v_lr       = self.interpolate_image(image_v)
+        patch_v          = self.patch_v_net(self.get_patches(image_v_lr))
+        spatial          = self.spatial_net(self.get_coords())
+        illu_res_v_lr    = self.output_net(torch.cat([patch_v, spatial], -1))
+        illu_res_v_lr    = illu_res_v_lr.view(1, 1, self.down_size, self.down_size)
+        illu_v_lr        = illu_res_v_lr + image_v_lr
+        image_v_fixed_lr = image_v_lr / (illu_v_lr + 1e-4)
+        image_v_fixed_lr = torch.clamp(image_v_fixed_lr, 1e-4, 1)
+        # image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
+        image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)
+        image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
+        image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
+        # Return
+        if self.debug:
+            return {
+                "illu_v_lr"       : illu_v_lr,
+                "image_v_lr"      : image_v_lr,
+                "image_v_fixed_lr": image_v_fixed_lr,
+                "enhanced"        : image_rgb_fixed,
+            }
+        else:
+            return {
+                "enhanced": image_rgb_fixed,
+            }
+
+    
+@MODELS.register(name="zero_me2_05_hsvd", arch="zero_me2")
+class ZeroME2_05_HSVD(ZeroME2):
+    
+    def __init__(
+        self,
+        name          : str   = "zero_me2_05_hsvd",
+        embed_channels: int   = 48,
+        window_size   : int   = 1,
+        down_size     : int   = 256,
+        num_layers    : int   = 4,
+        hidden_dim    : int   = 256,
+        add_layer     : int   = 2,
+        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
+        L             : float = 0.3,
+        alpha         : float = 1,
+        beta          : float = 20,
+        gamma         : float = 8,
+        delta         : float = 5,
+        weights       : Any = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name    = name,
+            weights = weights,
+            *args, **kwargs
+        )
+        self.embed_channels = embed_channels
+        self.window_size    = window_size
+        self.patch_dim      = window_size ** 2
+        self.down_size      = down_size
+        self.omega_0        = 30.0
+        self.siren_C        = 6.0
+        
+        patch_v_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_d_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         patch_e_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_v_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
             patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
             patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
             spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-        patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
-        patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
-        patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_v_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
         patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
         patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
         spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
@@ -841,9 +961,7 @@ class ZeroME2_04_RGBD_Sep(ZeroME2):
             output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
         output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
         
-        self.patch_r_net = nn.Sequential(*patch_r_layers)
-        self.patch_g_net = nn.Sequential(*patch_g_layers)
-        self.patch_b_net = nn.Sequential(*patch_b_layers)
+        self.patch_v_net = nn.Sequential(*patch_v_layers)
         self.patch_d_net = nn.Sequential(*patch_d_layers)
         self.patch_e_net = nn.Sequential(*patch_e_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
@@ -860,15 +978,7 @@ class ZeroME2_04_RGBD_Sep(ZeroME2):
 	        "weight_decay": weight_decay[0]
         }]
         self.params += [{
-	        "params"      : self.patch_r_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_g_net.parameters(),
-	        "weight_decay": weight_decay[1]
-        }]
-        self.params += [{
-	        "params"      : self.patch_b_net.parameters(),
+	        "params"      : self.patch_v_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
@@ -891,61 +1001,56 @@ class ZeroME2_04_RGBD_Sep(ZeroME2):
             self.apply(self.init_weights)
         self.initial_state_dict = self.state_dict()
     
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        illu_v_lr        = outputs["illu_v_lr"]
+        image_v_lr       = outputs["image_v_lr"]
+        image_v_fixed_lr = outputs["image_v_fixed_lr"]
+        outputs["loss"]  = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
+        # Return
+        return outputs
+    
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image_rgb       = datapoint.get("image")
-        depth           = datapoint.get("depth")
+        # Prepare inputs
+        image_rgb = datapoint.get("image")
+        depth     = datapoint.get("depth")
         if depth is None:
             depth = core.rgb_to_grayscale(image_rgb)
-        edge            = self.dba(depth)
-        image_r         = image_rgb[:, 0:1, :, :]
-        image_g         = image_rgb[:, 1:2, :, :]
-        image_b         = image_rgb[:, 2:3, :, :]
-        image_rgb_lr    = self.interpolate_image(image_rgb)
-        depth_lr        = self.interpolate_image(depth)
-        edge_lr         = self.interpolate_image(edge)
-        image_r_lr      = image_rgb_lr[:, 0:1, :, :]
-        image_g_lr      = image_rgb_lr[:, 1:2, :, :]
-        image_b_lr      = image_rgb_lr[:, 2:3, :, :]
-        patch_r         = self.get_patches(image_r_lr)
-        patch_g         = self.get_patches(image_g_lr)
-        patch_b         = self.get_patches(image_b_lr)
-        patch_d         = self.get_patches(depth_lr)
-        patch_e         = self.get_patches(edge_lr)
-        spatial         = self.get_coords()
-        illu_res_r_lr   = self.output_net(torch.cat([self.patch_r_net(patch_r), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_g_lr   = self.output_net(torch.cat([self.patch_g_net(patch_g), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_b_lr   = self.output_net(torch.cat([self.patch_b_net(patch_b), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_r_lr   = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_g_lr   = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_b_lr   = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_lr     = torch.cat([illu_res_r_lr, illu_res_g_lr, illu_res_b_lr], 1)
-        illu_r_lr       = illu_res_r_lr + image_r_lr
-        illu_g_lr       = illu_res_g_lr + image_g_lr
-        illu_b_lr       = illu_res_b_lr + image_b_lr
-        illu_lr         = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
-        illu_r_fixed_lr = image_r_lr / illu_r_lr
-        illu_g_fixed_lr = image_g_lr / illu_g_lr
-        illu_b_fixed_lr = image_b_lr / illu_b_lr
-        illu_r_fixed_lr = torch.clamp(illu_r_fixed_lr, 1e-4, 1)
-        illu_g_fixed_lr = torch.clamp(illu_g_fixed_lr, 1e-4, 1)
-        illu_b_fixed_lr = torch.clamp(illu_b_fixed_lr, 1e-4, 1)
-        # illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        # illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        # illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_rgb_fixed_lr = torch.cat([illu_r_fixed_lr, illu_g_fixed_lr, illu_b_fixed_lr], 1)
-        image_r_fixed   = self.filter_up(image_r_lr, illu_r_fixed_lr, image_r)
-        image_g_fixed   = self.filter_up(image_g_lr, illu_g_fixed_lr, image_g)
-        image_b_fixed   = self.filter_up(image_b_lr, illu_b_fixed_lr, image_b)
-        image_rgb_fixed = torch.cat([image_r_fixed, image_g_fixed, image_b_fixed], 1)
-        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
+        edge      = self.dba(depth)
+        # Enhance
+        image_hsv        = core.rgb_to_hsv(image_rgb)
+        image_v          = core.rgb_to_v(image_rgb)
+        image_v_lr       = self.interpolate_image(image_v)
+        depth_lr         = self.interpolate_image(depth)
+        edge_lr          = self.interpolate_image(edge)
+        patch_v          = self.patch_v_net(self.get_patches(image_v_lr))
+        patch_d          = self.patch_d_net(self.get_patches(depth_lr))
+        patch_e          = self.patch_e_net(self.get_patches(edge_lr))
+        spatial          = self.spatial_net(self.get_coords())
+        illu_res_v_lr    = self.output_net(torch.cat([patch_v, patch_e, patch_d, spatial], -1))
+        illu_res_v_lr    = illu_res_v_lr.view(1, 1, self.down_size, self.down_size)
+        illu_v_lr        = illu_res_v_lr + image_v_lr
+        image_v_fixed_lr = image_v_lr / (illu_v_lr + 1e-4)
+        image_v_fixed_lr = torch.clamp(image_v_fixed_lr, 1e-4, 1)
+        # image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
+        image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)
+        image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
+        image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
         # Return
         if self.debug:
             return {
-                "illu_lr"           : illu_lr,
-                "image_rgb_lr"      : image_rgb_lr,
-                "image_rgb_fixed_lr": image_rgb_fixed_lr,
-                "enhanced"          : image_rgb_fixed,
+                "depth"           : depth,
+                "edge"            : edge,
+                "illu_v_lr"       : illu_v_lr,
+                "image_v_lr"      : image_v_lr,
+                "image_v_fixed_lr": image_v_fixed_lr,
+                "enhanced"        : image_rgb_fixed,
             }
         else:
             return {
@@ -953,12 +1058,62 @@ class ZeroME2_04_RGBD_Sep(ZeroME2):
             }
 
 
-@MODELS.register(name="zero_me2_05_rgbd_sep_bilateral", arch="zero_me2")
-class ZeroME2_05_RGBD_Sep_Bilateral(ZeroME2):
+@MODELS.register(name="zero_me2_06_hsvd_zsn2n", arch="zero_me2")
+class ZeroME2_06_HSVD_ZSN2N(ZeroME2_05_HSVD):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_05_rgbd_sep_bilateral",
+        name   : str = "zero_me2_05_hsvd_zsn2n",
+        weights: Any = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name    = name,
+            weights = weights,
+            *args, **kwargs
+        )
+        
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        image          = datapoint.get("image")
+        image1, image2 = core.pair_downsample(image)
+        datapoint1     = datapoint | {"image": image1}
+        datapoint2     = datapoint | {"image": image2}
+        outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        illu_v_lr1        = outputs1["illu_v_lr"]
+        image_v_lr1       = outputs1["image_v_lr"]
+        image_v_fixed_lr1 = outputs1["image_v_fixed_lr"]
+        image_rgb_fixed1  = outputs1["enhanced"]
+        illu_v_lr2        = outputs2["illu_v_lr"]
+        image_v_lr2       = outputs2["image_v_lr"]
+        image_v_fixed_lr2 = outputs2["image_v_fixed_lr"]
+        image_rgb_fixed2  = outputs2["enhanced"]
+        illu_v_lr         = outputs["illu_v_lr"]
+        image_v_lr        = outputs["image_v_lr"]
+        image_v_fixed_lr  = outputs["image_v_fixed_lr"]
+        image_rgb_fixed   = outputs["enhanced"]
+        image_rgb_fixed_1, image_rgb_fixed_2 = core.pair_downsample(image_rgb_fixed)
+        mse_loss = nn.MSELoss()
+        loss_res = 0.5 * (mse_loss(image1,           image_rgb_fixed_2) + mse_loss(image2,           image_rgb_fixed_1))
+        loss_con = 0.5 * (mse_loss(image_rgb_fixed1, image_rgb_fixed_1) + mse_loss(image_rgb_fixed2, image_rgb_fixed_2))
+        loss_enh = self.loss(illu_v_lr, image_v_lr, image_v_fixed_lr)
+        loss     = 0.15 * loss_res + 0.15 * loss_con + 0.7 * loss_enh
+        outputs["loss"] = loss
+        # Return
+        return outputs
+    
+
+@MODELS.register(name="zero_me2_07_hvi", arch="zero_me2")
+class ZeroME2_07_HVI(ZeroME2):
+    
+    def __init__(
+        self,
+        name          : str   = "zero_me2_07_hvi",
         embed_channels: int   = 48,
         window_size   : int   = 1,
         down_size     : int   = 256,
@@ -986,39 +1141,23 @@ class ZeroME2_05_RGBD_Sep_Bilateral(ZeroME2):
         self.omega_0        = 30.0
         self.siren_C        = 6.0
         
-        patch_r_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_g_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_b_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_d_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
-        patch_e_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_i_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_i_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
             spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-        patch_r_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
-        patch_g_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
-        patch_b_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
-        patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
-        patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
-        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_i_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
         output_layers = []
         for _ in range(add_layer, num_layers - 1):
             output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
         output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
         
-        self.patch_r_net = nn.Sequential(*patch_r_layers)
-        self.patch_g_net = nn.Sequential(*patch_g_layers)
-        self.patch_b_net = nn.Sequential(*patch_b_layers)
-        self.patch_d_net = nn.Sequential(*patch_d_layers)
-        self.patch_e_net = nn.Sequential(*patch_e_layers)
+        self.patch_i_net = nn.Sequential(*patch_i_layers)
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
-        self.dba         = nn.BoundaryAwarePrior(eps=0.05, normalized=False)
+        self.trans       = core.RGBToHVI()
         
         # Loss
         self.loss = Loss(L, alpha, beta, gamma, delta)
@@ -1030,15 +1169,145 @@ class ZeroME2_05_RGBD_Sep_Bilateral(ZeroME2):
 	        "weight_decay": weight_decay[0]
         }]
         self.params += [{
-	        "params"      : self.patch_r_net.parameters(),
+	        "params"      : self.patch_i_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
-	        "params"      : self.patch_g_net.parameters(),
-	        "weight_decay": weight_decay[1]
+	        "params"      : self.output_net.parameters(),
+	        "weight_decay": weight_decay[2]
+        }]
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
+        self.initial_state_dict = self.state_dict()
+    
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        illu_i_lr        = outputs["illu_i_lr"]
+        image_i_lr       = outputs["image_i_lr"]
+        image_i_fixed_lr = outputs["image_i_fixed_lr"]
+        outputs["loss"]  = self.loss(illu_i_lr, image_i_lr, image_i_fixed_lr)
+        # Return
+        return outputs
+    
+    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        self.assert_datapoint(datapoint)
+        # Prepare inputs
+        image_rgb        = datapoint.get("image")
+        # Enhance
+        image_hvi        = self.trans.rgb_to_hvi(image_rgb)
+        image_hvi_clone  = image_hvi.clone().detach()
+        image_h          = image_hvi_clone[:, 0:1, :, :]
+        image_v          = image_hvi_clone[:, 1:2, :, :]
+        image_i          = image_hvi_clone[:, 2:3, :, :]
+        image_i_lr       = self.interpolate_image(image_i)
+        patch_i          = self.patch_i_net(self.get_patches(image_i_lr))
+        spatial          = self.spatial_net(self.get_coords())
+        illu_res_i_lr    = self.output_net(torch.cat([patch_i, spatial], -1))
+        illu_res_i_lr    = illu_res_i_lr.view(1, 1, self.down_size, self.down_size)
+        illu_i_lr        = illu_res_i_lr + image_i_lr
+        image_i_fixed_lr = image_i_lr / (illu_i_lr + 1e-4)
+        image_i_fixed_lr = torch.clamp(image_i_fixed_lr, 1e-4, 1)
+        # image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_i_fixed    = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
+        image_hvi_fixed  = self.replace_i_component(image_hvi, image_i_fixed)
+        image_rgb_fixed  = self.trans.hvi_to_rgb(image_hvi_fixed)
+        image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
+        # Return
+        if self.debug:
+            return {
+                "image_h"         : image_h,
+                "image_v"         : image_v,
+                "image_i"         : image_i,
+                "illu_i_lr"       : illu_i_lr,
+                "image_i_lr"      : image_i_lr,
+                "image_i_fixed_lr": image_i_fixed_lr,
+                "enhanced"        : image_rgb_fixed,
+            }
+        else:
+            return {
+                "enhanced": image_rgb_fixed,
+            }
+    
+
+@MODELS.register(name="zero_me2_08_hvid", arch="zero_me2")
+class ZeroME2_08_HVID(ZeroME2):
+    
+    def __init__(
+        self,
+        name          : str   = "zero_me2_08_hvid",
+        embed_channels: int   = 48,
+        window_size   : int   = 1,
+        down_size     : int   = 256,
+        num_layers    : int   = 4,
+        hidden_dim    : int   = 256,
+        add_layer     : int   = 2,
+        weight_decay  : list[float] = [0.1, 0.0001, 0.001],
+        L             : float = 0.3,
+        alpha         : float = 1,
+        beta          : float = 20,
+        gamma         : float = 8,
+        delta         : float = 5,
+        weights       : Any = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name    = name,
+            weights = weights,
+            *args, **kwargs
+        )
+        self.embed_channels = embed_channels
+        self.window_size    = window_size
+        self.patch_dim      = window_size ** 2
+        self.down_size      = down_size
+        self.omega_0        = 30.0
+        self.siren_C        = 6.0
+        
+        patch_i_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_d_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        patch_e_layers = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
+        for _ in range(1, add_layer - 2):
+            patch_i_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
+        patch_i_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_d_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        patch_e_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 4, self.omega_0, self.siren_C))
+        
+        output_layers = []
+        for _ in range(add_layer, num_layers - 1):
+            output_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+        output_layers.append(nn.SIREN(hidden_dim, 1, self.omega_0, self.siren_C, is_last=True))
+        
+        self.patch_i_net = nn.Sequential(*patch_i_layers)
+        self.patch_d_net = nn.Sequential(*patch_d_layers)
+        self.patch_e_net = nn.Sequential(*patch_e_layers)
+        self.spatial_net = nn.Sequential(*spatial_layers)
+        self.output_net  = nn.Sequential(*output_layers)
+        self.dba         = nn.BoundaryAwarePrior(eps=0.05, normalized=False)
+        self.trans       = core.RGBToHVI()
+        
+        # Loss
+        self.loss = Loss(L, alpha, beta, gamma, delta)
+        
+        weight_decay = weight_decay or [0.1, 0.0001, 0.001]
+        self.params  = []
+        self.params += [{
+	        "params"      : self.spatial_net.parameters(),
+	        "weight_decay": weight_decay[0]
         }]
         self.params += [{
-	        "params"      : self.patch_b_net.parameters(),
+	        "params"      : self.patch_i_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
@@ -1061,74 +1330,125 @@ class ZeroME2_05_RGBD_Sep_Bilateral(ZeroME2):
             self.apply(self.init_weights)
         self.initial_state_dict = self.state_dict()
     
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Loss
+        illu_i_lr        = outputs["illu_i_lr"]
+        image_i_lr       = outputs["image_i_lr"]
+        image_i_fixed_lr = outputs["image_i_fixed_lr"]
+        outputs["loss"]  = self.loss(illu_i_lr, image_i_lr, image_i_fixed_lr)
+        # Return
+        return outputs
+    
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
-        image_rgb       = datapoint.get("image")
-        depth           = datapoint.get("depth")
+        # Prepare inputs
+        image_rgb = datapoint.get("image")
+        depth     = datapoint.get("depth")
         if depth is None:
             depth = core.rgb_to_grayscale(image_rgb)
-        edge            = self.dba(depth)
-        image_r         = image_rgb[:, 0:1, :, :]
-        image_g         = image_rgb[:, 1:2, :, :]
-        image_b         = image_rgb[:, 2:3, :, :]
-        image_rgb_lr    = self.interpolate_image(image_rgb)
-        depth_lr        = self.interpolate_image(depth)
-        edge_lr         = self.interpolate_image(edge)
-        image_r_lr      = image_rgb_lr[:, 0:1, :, :]
-        image_g_lr      = image_rgb_lr[:, 1:2, :, :]
-        image_b_lr      = image_rgb_lr[:, 2:3, :, :]
-        patch_r         = self.get_patches(image_r_lr)
-        patch_g         = self.get_patches(image_g_lr)
-        patch_b         = self.get_patches(image_b_lr)
-        patch_d         = self.get_patches(depth_lr)
-        patch_e         = self.get_patches(edge_lr)
-        spatial         = self.get_coords()
-        illu_res_r_lr   = self.output_net(torch.cat([self.patch_r_net(patch_r), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_g_lr   = self.output_net(torch.cat([self.patch_g_net(patch_g), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_b_lr   = self.output_net(torch.cat([self.patch_b_net(patch_b), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_r_lr   = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_g_lr   = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_b_lr   = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
-        illu_res_lr     = torch.cat([illu_res_r_lr, illu_res_g_lr, illu_res_b_lr], 1)
-        illu_r_lr       = illu_res_r_lr + image_r_lr
-        illu_g_lr       = illu_res_g_lr + image_g_lr
-        illu_b_lr       = illu_res_b_lr + image_b_lr
-        illu_lr         = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
-        illu_r_fixed_lr = image_r_lr / illu_r_lr
-        illu_g_fixed_lr = image_g_lr / illu_g_lr
-        illu_b_fixed_lr = image_b_lr / illu_b_lr
-        illu_r_fixed_lr = torch.clamp(illu_r_fixed_lr, 1e-4, 1)
-        illu_g_fixed_lr = torch.clamp(illu_g_fixed_lr, 1e-4, 1)
-        illu_b_fixed_lr = torch.clamp(illu_b_fixed_lr, 1e-4, 1)
-        illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_rgb_fixed_lr = torch.cat([illu_r_fixed_lr, illu_g_fixed_lr, illu_b_fixed_lr], 1)
-        image_r_fixed   = self.filter_up(image_r_lr, illu_r_fixed_lr, image_r)
-        image_g_fixed   = self.filter_up(image_g_lr, illu_g_fixed_lr, image_g)
-        image_b_fixed   = self.filter_up(image_b_lr, illu_b_fixed_lr, image_b)
-        image_rgb_fixed = torch.cat([image_r_fixed, image_g_fixed, image_b_fixed], 1)
-        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
+        edge      = self.dba(depth)
+        # Enhance
+        image_hvi        = self.trans.rgb_to_hvi(image_rgb)
+        image_hvi_clone  = image_hvi.clone().detach()
+        image_h          = image_hvi_clone[:, 0:1, :, :]
+        image_v          = image_hvi_clone[:, 1:2, :, :]
+        image_i          = image_hvi_clone[:, 2:3, :, :]
+        image_i_lr       = self.interpolate_image(image_i)
+        depth_lr         = self.interpolate_image(depth)
+        edge_lr          = self.interpolate_image(edge)
+        patch_i          = self.patch_i_net(self.get_patches(image_i_lr))
+        patch_d          = self.patch_d_net(self.get_patches(depth_lr))
+        patch_e          = self.patch_e_net(self.get_patches(edge_lr))
+        spatial          = self.spatial_net(self.get_coords())
+        illu_res_i_lr    = self.output_net(torch.cat([patch_i, patch_e, patch_d, spatial], -1))
+        illu_res_i_lr    = illu_res_i_lr.view(1, 1, self.down_size, self.down_size)
+        illu_i_lr        = illu_res_i_lr + image_i_lr
+        image_i_fixed_lr = image_i_lr / (illu_i_lr + 1e-4)
+        image_i_fixed_lr = torch.clamp(image_i_fixed_lr, 1e-4, 1)
+        # image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_i_fixed    = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
+        image_hvi_fixed  = self.replace_i_component(image_hvi, image_i_fixed)
+        image_rgb_fixed  = self.trans.hvi_to_rgb(image_hvi_fixed)
+        image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
         # Return
         if self.debug:
             return {
-                "illu_lr"           : illu_lr,
-                "image_rgb_lr"      : image_rgb_lr,
-                "image_rgb_fixed_lr": image_rgb_fixed_lr,
-                "enhanced"          : image_rgb_fixed,
+                "image_h"         : image_h,
+                "image_v"         : image_v,
+                "image_i"         : image_i,
+                "depth"           : depth,
+                "edge"            : edge,
+                "illu_i_lr"       : illu_i_lr,
+                "image_i_lr"      : image_i_lr,
+                "image_i_fixed_lr": image_i_fixed_lr,
+                "enhanced"        : image_rgb_fixed,
             }
         else:
             return {
                 "enhanced": image_rgb_fixed,
             }
-
-
-@MODELS.register(name="zero_me2_06_rgbd_hsvd_adaptive", arch="zero_me2")
-class ZeroME2_06_RGBD_HSVD_Adaptive(ZeroME2):
+    
+    
+@MODELS.register(name="zero_me2_09_hvid_zsn2n", arch="zero_me2")
+class ZeroME2_09_HVID_ZSN2N(ZeroME2_08_HVID):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_06_rgbd_hsvd_adaptive",
+        name   : str = "zero_me2_09_hvid_zsn2n",
+        weights: Any = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name    = name,
+            weights = weights,
+            *args, **kwargs
+        )
+        
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        image          = datapoint.get("image")
+        image1, image2 = core.pair_downsample(image)
+        datapoint1     = datapoint | {"image": image1}
+        datapoint2     = datapoint | {"image": image2}
+        outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        illu_i_lr1        = outputs1["illu_i_lr"]
+        image_i_lr1       = outputs1["image_i_lr"]
+        image_i_fixed_lr1 = outputs1["image_i_fixed_lr"]
+        image_rgb_fixed1  = outputs1["enhanced"]
+        illu_i_lr2        = outputs2["illu_i_lr"]
+        image_i_lr2       = outputs2["image_i_lr"]
+        image_i_fixed_lr2 = outputs2["image_i_fixed_lr"]
+        image_rgb_fixed2  = outputs2["enhanced"]
+        illu_i_lr         = outputs["illu_i_lr"]
+        image_i_lr        = outputs["image_i_lr"]
+        image_i_fixed_lr  = outputs["image_i_fixed_lr"]
+        image_rgb_fixed   = outputs["enhanced"]
+        image_rgb_fixed_1, image_rgb_fixed_2 = core.pair_downsample(image_rgb_fixed)
+        mse_loss = nn.MSELoss()
+        loss_res = 0.5 * (mse_loss(image1,           image_rgb_fixed_2) + mse_loss(image2,           image_rgb_fixed_1))
+        loss_con = 0.5 * (mse_loss(image_rgb_fixed1, image_rgb_fixed_1) + mse_loss(image_rgb_fixed2, image_rgb_fixed_2))
+        loss_enh = self.loss(illu_i_lr, image_i_lr, image_i_fixed_lr)
+        loss     = 0.15 * loss_res + 0.15 * loss_con + 0.7 * loss_enh
+        outputs["loss"] = loss
+        # Return
+        return outputs
+    
+
+@MODELS.register(name="zero_me2_10_rgbd_hsvd", arch="zero_me2")
+class ZeroME2_10_RGBD_HSVD(ZeroME2):
+    
+    def __init__(
+        self,
+        name          : str   = "zero_me2_10_rgbd_hsvd",
         embed_channels: int   = 48,
         window_size   : int   = 1,
         down_size     : int   = 256,
@@ -1258,15 +1578,15 @@ class ZeroME2_06_RGBD_HSVD_Adaptive(ZeroME2):
         image_b_lr         = image_rgb_lr[:, 2:3, :, :]
         depth_lr           = self.interpolate_image(depth)
         edge_lr            = self.interpolate_image(edge)
-        patch_r            = self.get_patches(image_r_lr)
-        patch_g            = self.get_patches(image_g_lr)
-        patch_b            = self.get_patches(image_b_lr)
-        patch_d            = self.get_patches(depth_lr)
-        patch_e            = self.get_patches(edge_lr)
-        spatial            = self.get_coords()
-        illu_res_r_lr      = self.output_net(torch.cat([self.patch_r_net(patch_r), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_g_lr      = self.output_net(torch.cat([self.patch_g_net(patch_g), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_b_lr      = self.output_net(torch.cat([self.patch_b_net(patch_b), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
+        patch_r            = self.patch_r_net(self.get_patches(image_r_lr))
+        patch_g            = self.patch_g_net(self.get_patches(image_g_lr))
+        patch_b            = self.patch_b_net(self.get_patches(image_b_lr))
+        patch_d            = self.patch_d_net(self.get_patches(depth_lr))
+        patch_e            = self.patch_e_net(self.get_patches(edge_lr))
+        spatial            = self.spatial_net(self.get_coords())
+        illu_res_r_lr      = self.output_net(torch.cat([patch_r, patch_e, patch_d, spatial], -1))
+        illu_res_g_lr      = self.output_net(torch.cat([patch_g, patch_e, patch_d, spatial], -1))
+        illu_res_b_lr      = self.output_net(torch.cat([patch_b, patch_e, patch_d, spatial], -1))
         illu_res_r_lr      = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
         illu_res_g_lr      = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
         illu_res_b_lr      = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
@@ -1275,9 +1595,9 @@ class ZeroME2_06_RGBD_HSVD_Adaptive(ZeroME2):
         illu_g_lr          = illu_res_g_lr + image_g_lr
         illu_b_lr          = illu_res_b_lr + image_b_lr
         illu_lr            = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
-        image_r_fixed_lr   = image_r_lr / illu_r_lr
-        image_g_fixed_lr   = image_g_lr / illu_g_lr
-        image_b_fixed_lr   = image_b_lr / illu_b_lr
+        image_r_fixed_lr   = image_r_lr / (illu_r_lr + 1e-4)
+        image_g_fixed_lr   = image_g_lr / (illu_g_lr + 1e-4)
+        image_b_fixed_lr   = image_b_lr / (illu_b_lr + 1e-4)
         image_r_fixed_lr   = torch.clamp(image_r_fixed_lr, 1e-4, 1)
         image_g_fixed_lr   = torch.clamp(image_g_fixed_lr, 1e-4, 1)
         image_b_fixed_lr   = torch.clamp(image_b_fixed_lr, 1e-4, 1)
@@ -1294,11 +1614,13 @@ class ZeroME2_06_RGBD_HSVD_Adaptive(ZeroME2):
         image_hsv          = core.rgb_to_hsv(image_rgb)
         image_v            = core.rgb_to_v(image_rgb)
         image_v_lr         = self.interpolate_image(image_v)
-        patch_v            = self.get_patches(image_v_lr)
-        illu_res_v_lr      = self.output_net(torch.cat([self.patch_v_net(patch_v), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
+        patch_v            = self.patch_v_net(self.get_patches(image_v_lr))
+        illu_res_v_lr      = self.output_net(torch.cat([patch_v, patch_e, patch_d, spatial], -1))
         illu_res_v_lr      = illu_res_v_lr.view(1, 1, self.down_size, self.down_size)
         illu_v_lr          = illu_res_v_lr + image_v_lr
-        image_v_fixed_lr   = image_v_lr / illu_v_lr
+        image_v_fixed_lr   = image_v_lr / (illu_v_lr + 1e-4)
+        image_v_fixed_lr   = torch.clamp(image_v_fixed_lr, 1e-4, 1)
+        # image_v_fixed_lr   = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
         image_v_fixed      = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed    = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed2   = core.hsv_to_rgb(image_hsv_fixed)
@@ -1309,6 +1631,7 @@ class ZeroME2_06_RGBD_HSVD_Adaptive(ZeroME2):
         # Return
         if self.debug:
             return {
+                "w_0"               : self.w_0,
                 "illu_lr"           : illu_lr,
                 "image_rgb_lr"      : image_rgb_lr,
                 "image_rgb_fixed_lr": image_rgb_fixed_lr,
@@ -1319,22 +1642,13 @@ class ZeroME2_06_RGBD_HSVD_Adaptive(ZeroME2):
                 "enhanced": image_rgb_fixed,
             }
     
-    @staticmethod
-    def replace_v_component(
-        image_hsv: torch.Tensor,
-        v_new    : torch.Tensor
-    ) -> torch.Tensor:
-        """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
-        image_hsv[:, -1, :, :] = v_new
-        return image_hsv
 
-
-@MODELS.register(name="zero_me2_07_rgbd_hsvd_moe", arch="zero_me2")
-class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
+@MODELS.register(name="zero_me2_11_rgbd_hsvd_zsn2n", arch="zero_me2")
+class ZeroME2_11_RGBD_HSVD_ZSN2N(ZeroME2):
     
     def __init__(
         self,
-        name          : str   = "zero_me2_07_rgbd_hsvd_moe",
+        name          : str   = "zero_me2_11_rgbd_hsvd_zsn2n",
         embed_channels: int   = 48,
         window_size   : int   = 1,
         down_size     : int   = 256,
@@ -1399,7 +1713,7 @@ class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
         self.spatial_net = nn.Sequential(*spatial_layers)
         self.output_net  = nn.Sequential(*output_layers)
         self.dba         = nn.BoundaryAwarePrior(eps=0.05, normalized=False)
-        self.lda         = LDA([3, 3], 3)
+        self.w_0         = nn.Parameter(torch.Tensor([0.5]))
         
         # Loss
         self.loss = Loss(L, alpha, beta, gamma, delta)
@@ -1419,11 +1733,11 @@ class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
-	        "params"      : self.patch_v_net.parameters(),
+	        "params"      : self.patch_b_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
-	        "params"      : self.patch_b_net.parameters(),
+	        "params"      : self.patch_v_net.parameters(),
 	        "weight_decay": weight_decay[1]
         }]
         self.params += [{
@@ -1445,6 +1759,31 @@ class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
         else:
             self.apply(self.init_weights)
         self.initial_state_dict = self.state_dict()
+        
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        image          = datapoint.get("image")
+        image1, image2 = core.pair_downsample(image)
+        datapoint1     = datapoint | {"image": image1}
+        datapoint2     = datapoint | {"image": image2}
+        outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        illu_lr1, image_rgb_lr1, image_rgb_fixed_lr1, image_rgb_fixed1 = outputs1.values()
+        illu_lr2, image_rgb_lr2, image_rgb_fixed_lr2, image_rgb_fixed2 = outputs2.values()
+        illu_lr , image_rgb_lr , image_rgb_fixed_lr ,  image_rgb_fixed = outputs.values()
+        image_rgb_fixed_1, image_rgb_fixed_2 = core.pair_downsample(image_rgb_fixed)
+        mse_loss = nn.MSELoss()
+        loss_res = 0.5 * (mse_loss(image1,           image_rgb_fixed_2) + mse_loss(image2,           image_rgb_fixed_1))
+        loss_con = 0.5 * (mse_loss(image_rgb_fixed1, image_rgb_fixed_1) + mse_loss(image_rgb_fixed2, image_rgb_fixed_2))
+        loss_enh = self.loss(illu_lr, image_rgb_lr, image_rgb_fixed_lr)
+        loss     = 0.15 * loss_res + 0.15 * loss_con + 0.7 * loss_enh
+        outputs["loss"] = loss
+        # Return
+        return outputs
     
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
@@ -1464,15 +1803,15 @@ class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
         image_b_lr         = image_rgb_lr[:, 2:3, :, :]
         depth_lr           = self.interpolate_image(depth)
         edge_lr            = self.interpolate_image(edge)
-        patch_r            = self.get_patches(image_r_lr)
-        patch_g            = self.get_patches(image_g_lr)
-        patch_b            = self.get_patches(image_b_lr)
-        patch_d            = self.get_patches(depth_lr)
-        patch_e            = self.get_patches(edge_lr)
-        spatial            = self.get_coords()
-        illu_res_r_lr      = self.output_net(torch.cat([self.patch_r_net(patch_r), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_g_lr      = self.output_net(torch.cat([self.patch_g_net(patch_g), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
-        illu_res_b_lr      = self.output_net(torch.cat([self.patch_b_net(patch_b), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
+        patch_r            = self.patch_r_net(self.get_patches(image_r_lr))
+        patch_g            = self.patch_g_net(self.get_patches(image_g_lr))
+        patch_b            = self.patch_b_net(self.get_patches(image_b_lr))
+        patch_d            = self.patch_d_net(self.get_patches(depth_lr))
+        patch_e            = self.patch_e_net(self.get_patches(edge_lr))
+        spatial            = self.spatial_net(self.get_coords())
+        illu_res_r_lr      = self.output_net(torch.cat([patch_r, patch_e, patch_d, spatial], -1))
+        illu_res_g_lr      = self.output_net(torch.cat([patch_g, patch_e, patch_d, spatial], -1))
+        illu_res_b_lr      = self.output_net(torch.cat([patch_b, patch_e, patch_d, spatial], -1))
         illu_res_r_lr      = illu_res_r_lr.view(1, 1, self.down_size, self.down_size)
         illu_res_g_lr      = illu_res_g_lr.view(1, 1, self.down_size, self.down_size)
         illu_res_b_lr      = illu_res_b_lr.view(1, 1, self.down_size, self.down_size)
@@ -1481,9 +1820,9 @@ class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
         illu_g_lr          = illu_res_g_lr + image_g_lr
         illu_b_lr          = illu_res_b_lr + image_b_lr
         illu_lr            = torch.cat([illu_r_lr, illu_g_lr, illu_b_lr], 1)
-        image_r_fixed_lr   = image_r_lr / illu_r_lr
-        image_g_fixed_lr   = image_g_lr / illu_g_lr
-        image_b_fixed_lr   = image_b_lr / illu_b_lr
+        image_r_fixed_lr   = image_r_lr / (illu_r_lr + 1e-4)
+        image_g_fixed_lr   = image_g_lr / (illu_g_lr + 1e-4)
+        image_b_fixed_lr   = image_b_lr / (illu_b_lr + 1e-4)
         image_r_fixed_lr   = torch.clamp(image_r_fixed_lr, 1e-4, 1)
         image_g_fixed_lr   = torch.clamp(image_g_fixed_lr, 1e-4, 1)
         image_b_fixed_lr   = torch.clamp(image_b_fixed_lr, 1e-4, 1)
@@ -1500,17 +1839,19 @@ class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
         image_hsv          = core.rgb_to_hsv(image_rgb)
         image_v            = core.rgb_to_v(image_rgb)
         image_v_lr         = self.interpolate_image(image_v)
-        patch_v            = self.get_patches(image_v_lr)
-        illu_res_v_lr      = self.output_net(torch.cat([self.patch_v_net(patch_v), self.patch_e_net(patch_e), self.patch_d_net(patch_d), self.spatial_net(spatial)], -1))
+        patch_v            = self.patch_v_net(self.get_patches(image_v_lr))
+        illu_res_v_lr      = self.output_net(torch.cat([patch_v, patch_e, patch_d, spatial], -1))
         illu_res_v_lr      = illu_res_v_lr.view(1, 1, self.down_size, self.down_size)
         illu_v_lr          = illu_res_v_lr + image_v_lr
-        image_v_fixed_lr   = image_v_lr / illu_v_lr
+        image_v_fixed_lr   = image_v_lr / (illu_v_lr + 1e-4)
+        image_v_fixed_lr   = torch.clamp(image_v_fixed_lr, 1e-4, 1)
+        # image_v_fixed_lr   = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
         image_v_fixed      = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed    = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed2   = core.hsv_to_rgb(image_hsv_fixed)
         image_rgb_fixed2   = image_rgb_fixed2 / torch.max(image_rgb_fixed2)
         # Combine
-        image_rgb_fixed    = self.lda([image_rgb_fixed1, image_rgb_fixed2])
+        image_rgb_fixed    = image_rgb_fixed1 * self.w_0 + image_rgb_fixed2 * (1 - self.w_0)
         # Return
         if self.debug:
             return {
@@ -1523,14 +1864,5 @@ class ZeroME2_07_RGBD_HSVD_MoE(ZeroME2):
             return {
                 "enhanced": image_rgb_fixed,
             }
-    
-    @staticmethod
-    def replace_v_component(
-        image_hsv: torch.Tensor,
-        v_new    : torch.Tensor
-    ) -> torch.Tensor:
-        """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
-        image_hsv[:, -1, :, :] = v_new
-        return image_hsv
     
 # endregion

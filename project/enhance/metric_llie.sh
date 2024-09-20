@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="zero_nir"
-model="zero_nir_06_rgbd_moe"
+arch="zero_me2"
+model="zero_me2_06_rgbd_hsvd_adaptive_epoch_1000_L_0.1"
 data=(
     # "dicm"
     # "lime"
@@ -51,6 +51,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "ssimc" \
         --metric "psnry" \
         --metric "ssim" \
+        --metric "ms_ssim" \
         --metric "lpips" \
         --metric "niqe" \
         --metric "pi" \
@@ -70,6 +71,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --metric "ssimc" \
           --metric "psnry" \
           --metric "ssim" \
+          --metric "ms_ssim" \
           --metric "lpips" \
           --metric "niqe" \
           --metric "pi" \

@@ -59,12 +59,15 @@ class LayeredFeatureAggregation(nn.Module):
         if len(input) != self.num_experts:
             raise ValueError(f"Expected {self.num_experts} input tensors, "
                              f"but got {len(input)}")
-        r = []
-        for i, inp in enumerate(input):
-            if self.resize is not None:
-                r.append(self.linears[i](self.resize(inp)))
-            else:
-                r.append(self.linears[i](inp))
+        if self.linears:
+            r = []
+            for i, inp in enumerate(input):
+                if self.resize is not None:
+                    r.append(self.linears[i](self.resize(inp)))
+                else:
+                    r.append(self.linears[i](inp))
+        else:
+            r = input
         o_s = torch.cat(r, dim=1)
         w   = self.softmax(self.conv(o_s))
         o_w = torch.stack([r[i] * w[:, i] for i, _ in enumerate(r)], dim=1)
