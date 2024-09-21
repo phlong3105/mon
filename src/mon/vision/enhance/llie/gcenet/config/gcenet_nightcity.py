@@ -35,11 +35,15 @@ model = {
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
 	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
-	"num_iters"   : 8,              # The number of progressive loop.
-	"gf_radius"   : 3,              # The radius for GuidedFilter.
+	"num_iters"   : 15,             # The number of progressive loop.
+	"down_size"   : 256,            # The size of the down-sampled image.
+	"dba_eps"     : 0.05,		    # The epsilon for DepthBoundaryAware.
+	"gf_radius"   : 1,              # The radius for GuidedFilter.
 	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
 	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap.
 	"bam_ksize"   : 9,			    # The kernel size for BrightnessAttentionMap.
+	"use_depth"   : True,           # If ``True``, use depth information.
+	"use_edge"    : True,           # If ``True``, use edge information.
 	"weights"     : None,           # The model's weights.
 	"metrics"     : {
 	    "train": None,
@@ -112,7 +116,7 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 200,
+	"max_epochs"       : 50,
 }
 
 # endregion

@@ -3,7 +3,8 @@
 
 """Zero-ME2.
 
-This module implement our idea of combining CoLIE and Zero-IG models.
+This module implement our idea: Zero-shot Multimodal Multiple Exposure
+Enhancement via Neural Implicit Representations.
 """
 
 from __future__ import annotations

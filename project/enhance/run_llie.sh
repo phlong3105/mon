@@ -16,7 +16,7 @@ python -W ignore main.py \
     --root "${current_dir}" \
     --task "llie" \
     --mode "predict" \
-    --data "dicm, fusion, lime, mef, npe, vv, nightcity, fivek_e, lol_v1, lol_v2_real, lol_v2_synthetic" \
+    --data "dicm, fusion, lime, mef, npe, vv, fivek_e, lol_v1, lol_v2_real, lol_v2_synthetic" \
     --verbose \
     "$@"
 

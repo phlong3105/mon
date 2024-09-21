@@ -3,7 +3,7 @@
 
 """Zero-ME2.
 
-This module implement our paper: Zero-shot Multimodal Multiple Exposure
+This module implement our idea: Zero-shot Multimodal Multiple Exposure
 Enhancement via Neural Implicit Representations.
 """
 
@@ -42,8 +42,11 @@ from mon.vision.enhance import base
 console      = core.console
 current_file = core.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
+LDA          = nn.LayeredFeatureAggregation
 
-LDA = nn.LayeredFeatureAggregation
+bilateral_ksize = (3, 3)
+bilateral_color = 0.1
+bilateral_space = (1.5, 1.5)
 
 
 # region Loss
@@ -188,9 +191,9 @@ class ZeroME2(base.ImageEnhancementModel):
         patch_layers   = [nn.SIREN(self.patch_dim, hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         spatial_layers = [nn.SIREN(2,   hidden_dim, self.omega_0, self.siren_C, is_first=True)]
         for _ in range(1, add_layer - 2):
-            patch_layers.append(nn.SIREN(hidden_dim, hidden_dim,  self.omega_0, self.siren_C))
-            spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
-        patch_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
+            patch_layers.append(   nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+            spatial_layers.append( nn.SIREN(hidden_dim, hidden_dim, self.omega_0, self.siren_C))
+        patch_layers.append(  nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         spatial_layers.append(nn.SIREN(hidden_dim, hidden_dim // 2, self.omega_0, self.siren_C))
         
         output_layers = []
@@ -515,9 +518,9 @@ class ZeroME2_01_RGB(ZeroME2):
         illu_r_fixed_lr = torch.clamp(illu_r_fixed_lr, 1e-4, 1)
         illu_g_fixed_lr = torch.clamp(illu_g_fixed_lr, 1e-4, 1)
         illu_b_fixed_lr = torch.clamp(illu_b_fixed_lr, 1e-4, 1)
-        illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_rgb_fixed_lr = torch.cat([illu_r_fixed_lr, illu_g_fixed_lr, illu_b_fixed_lr], 1)
         image_r_fixed   = self.filter_up(image_r_lr, illu_r_fixed_lr, image_r)
         image_g_fixed   = self.filter_up(image_g_lr, illu_g_fixed_lr, image_g)
@@ -698,9 +701,9 @@ class ZeroME2_02_RGBD(ZeroME2):
         illu_r_fixed_lr = torch.clamp(illu_r_fixed_lr, 1e-4, 1)
         illu_g_fixed_lr = torch.clamp(illu_g_fixed_lr, 1e-4, 1)
         illu_b_fixed_lr = torch.clamp(illu_b_fixed_lr, 1e-4, 1)
-        illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        illu_r_fixed_lr = kornia.filters.bilateral_blur(illu_r_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        illu_g_fixed_lr = kornia.filters.bilateral_blur(illu_g_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        illu_b_fixed_lr = kornia.filters.bilateral_blur(illu_b_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_rgb_fixed_lr = torch.cat([illu_r_fixed_lr, illu_g_fixed_lr, illu_b_fixed_lr], 1)
         image_r_fixed   = self.filter_up(image_r_lr, illu_r_fixed_lr, image_r)
         image_g_fixed   = self.filter_up(image_g_lr, illu_g_fixed_lr, image_g)
@@ -874,7 +877,7 @@ class ZeroME2_04_HSV(ZeroME2):
         illu_v_lr        = illu_res_v_lr + image_v_lr
         image_v_fixed_lr = image_v_lr / (illu_v_lr + 1e-4)
         image_v_fixed_lr = torch.clamp(image_v_fixed_lr, 1e-4, 1)
-        image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
@@ -1019,7 +1022,7 @@ class ZeroME2_05_HSVD(ZeroME2):
         illu_v_lr        = illu_res_v_lr + image_v_lr
         image_v_fixed_lr = image_v_lr / (illu_v_lr + 1e-4)
         image_v_fixed_lr = torch.clamp(image_v_fixed_lr, 1e-4, 1)
-        image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
@@ -1195,7 +1198,7 @@ class ZeroME2_07_HVI(ZeroME2):
         illu_i_lr        = illu_res_i_lr + image_i_lr
         image_i_fixed_lr = image_i_lr / (illu_i_lr + 1e-4)
         image_i_fixed_lr = torch.clamp(image_i_fixed_lr, 1e-4, 1)
-        image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_i_fixed    = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
         image_hvi_fixed  = self.replace_i_component(image_hvi, image_i_fixed)
         image_rgb_fixed  = self.trans.hvi_to_rgb(image_hvi_fixed)
@@ -1348,7 +1351,7 @@ class ZeroME2_08_HVID(ZeroME2):
         illu_i_lr        = illu_res_i_lr + image_i_lr
         image_i_fixed_lr = image_i_lr / (illu_i_lr + 1e-4)
         image_i_fixed_lr = torch.clamp(image_i_fixed_lr, 1e-4, 1)
-        image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_i_fixed    = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
         image_hvi_fixed  = self.replace_i_component(image_hvi, image_i_fixed)
         image_rgb_fixed  = self.trans.hvi_to_rgb(image_hvi_fixed)
@@ -1545,7 +1548,7 @@ class ZeroME2_10_HVI3(ZeroME2):
         image_hv_fixed_lr  = torch.clamp(image_hv_fixed_lr, 1e-4, 1)
         image_i_fixed_lr   = torch.clamp(image_i_fixed_lr, 1e-4,  1)
         image_hvi_fixed_lr = torch.cat([image_hv_fixed_lr, image_i_fixed_lr], 1)
-        image_hvi_fixed_lr = kornia.filters.bilateral_blur(image_hvi_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_hvi_fixed_lr = kornia.filters.bilateral_blur(image_hvi_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_hvi_fixed    = self.filter_up(image_hvi_lr, image_hvi_fixed_lr, image_hvi_clone)
         # image_hv_fixed_lr = kornia.filters.bilateral_blur(image_hv_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
         # image_i_fixed_lr  = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
@@ -1741,9 +1744,9 @@ class ZeroME2_11_HVID3(ZeroME2):
         image_h_fixed_lr = torch.clamp(image_h_fixed_lr, 1e-4, 1)
         image_v_fixed_lr = torch.clamp(image_v_fixed_lr, 1e-4, 1)
         image_i_fixed_lr = torch.clamp(image_i_fixed_lr, 1e-4, 1)
-        image_h_fixed_lr = kornia.filters.bilateral_blur(image_h_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_h_fixed_lr = kornia.filters.bilateral_blur(image_h_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        image_v_fixed_lr = kornia.filters.bilateral_blur(image_v_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        image_i_fixed_lr = kornia.filters.bilateral_blur(image_i_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_h_fixed    = self.filter_up(image_h_lr, image_h_fixed_lr, image_h)
         image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_i_fixed    = self.filter_up(image_i_lr, image_i_fixed_lr, image_i)
@@ -1992,9 +1995,9 @@ class ZeroME2_13_RGBD_HSVD(ZeroME2):
         image_r_fixed_lr   = torch.clamp(image_r_fixed_lr, 1e-4, 1)
         image_g_fixed_lr   = torch.clamp(image_g_fixed_lr, 1e-4, 1)
         image_b_fixed_lr   = torch.clamp(image_b_fixed_lr, 1e-4, 1)
-        image_r_fixed_lr   = kornia.filters.bilateral_blur(image_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_g_fixed_lr   = kornia.filters.bilateral_blur(image_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_b_fixed_lr   = kornia.filters.bilateral_blur(image_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_r_fixed_lr   = kornia.filters.bilateral_blur(image_r_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        image_g_fixed_lr   = kornia.filters.bilateral_blur(image_g_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        image_b_fixed_lr   = kornia.filters.bilateral_blur(image_b_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_rgb_fixed_lr = torch.cat([image_r_fixed_lr, image_g_fixed_lr, image_b_fixed_lr], 1)
         image_r_fixed      = self.filter_up(image_r_lr, image_r_fixed_lr, image_r)
         image_g_fixed      = self.filter_up(image_g_lr, image_g_fixed_lr, image_g)
@@ -2011,7 +2014,7 @@ class ZeroME2_13_RGBD_HSVD(ZeroME2):
         illu_v_lr          = illu_res_v_lr + image_v_lr
         image_v_fixed_lr   = image_v_lr / (illu_v_lr + 1e-4)
         image_v_fixed_lr   = torch.clamp(image_v_fixed_lr, 1e-4, 1)
-        # image_v_fixed_lr   = kornia.filters.bilateral_blur(image_v_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        # image_v_fixed_lr   = kornia.filters.bilateral_blur(image_v_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_v_fixed      = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed    = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed2   = core.hsv_to_rgb(image_hsv_fixed)
@@ -2215,9 +2218,9 @@ class ZeroME2_14_RGBD_HSVD_ZSN2N(ZeroME2):
         image_r_fixed_lr   = torch.clamp(image_r_fixed_lr, 1e-4, 1)
         image_g_fixed_lr   = torch.clamp(image_g_fixed_lr, 1e-4, 1)
         image_b_fixed_lr   = torch.clamp(image_b_fixed_lr, 1e-4, 1)
-        image_r_fixed_lr   = kornia.filters.bilateral_blur(image_r_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_g_fixed_lr   = kornia.filters.bilateral_blur(image_g_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
-        image_b_fixed_lr   = kornia.filters.bilateral_blur(image_b_fixed_lr, (3, 3), 0.1, (1.5, 1.5))
+        image_r_fixed_lr   = kornia.filters.bilateral_blur(image_r_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        image_g_fixed_lr   = kornia.filters.bilateral_blur(image_g_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
+        image_b_fixed_lr   = kornia.filters.bilateral_blur(image_b_fixed_lr, bilateral_ksize, bilateral_color, bilateral_space)
         image_rgb_fixed_lr = torch.cat([image_r_fixed_lr, image_g_fixed_lr, image_b_fixed_lr], 1)
         image_r_fixed      = self.filter_up(image_r_lr, image_r_fixed_lr, image_r)
         image_g_fixed      = self.filter_up(image_g_lr, image_g_fixed_lr, image_g)

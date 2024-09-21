@@ -3,31 +3,23 @@
 
 """GCE-Net
 
-This module implements the model "Guided Curve Estimation Network".
+This module implements our idea: Guided Curve Estimation Network.
 """
 
 from __future__ import annotations
 
 __all__ = [
     "GCENet",
-    "GCENet_01_GFA_OldLoss",
-    "GCENet_02_GFA_NewLoss",
-    "GCENet_03_GFB_OldLoss",
-    "GCENet_04_GFB_NewLoss",
-    "GCENet_05_Wo_Col",
-    "GCENet_06_Wo_Exp",
-    "GCENet_07_Wo_Spa",
-    "GCENet_08_Wo_TV",
-    "GCENet_09_Wo_Bri",
-    "GCENet_10_Wo_Sym",
-    "GCENet_11_Wo_DGF",
-    "GCENet_12_Wo_Sym_DGF",
-    "GCENet_13_Wo_Bri_Sym_DGF",
 ]
 
+from copy import deepcopy
 from typing import Any, Literal
 
+import kornia
 import torch
+from fvcore.nn import parameter_count
+from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
@@ -38,6 +30,11 @@ from mon.vision.enhance import base
 console      = core.console
 current_file = core.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
+
+DepthBoundaryAware = nn.BoundaryAwarePrior
+bilateral_ksize    = (5, 5)
+bilateral_color    = 0.5
+bilateral_space    = (1, 1)
 
 
 # region Loss
@@ -102,7 +99,6 @@ class Loss(nn.Loss):
 
 # region Module
 
-# noinspection PyMethodMayBeStatic
 class LRNet(nn.Module):
     
     def __init__(
@@ -158,7 +154,6 @@ class LRNet(nn.Module):
         return self.net(input)
 
 
-# noinspection PyMethodMayBeStatic
 class GuidedMap(nn.Module):
     
     def __init__(
@@ -238,7 +233,6 @@ class ConvBlock(nn.Module):
         return x
 
 
-# noinspection PyMethodMayBeStatic
 class EnhanceNet(nn.Module):
     
     def __init__(
@@ -247,16 +241,29 @@ class EnhanceNet(nn.Module):
         num_channels: int,
         num_iters   : int,
         norm        : nn.Module = nn.AdaptiveBatchNorm2d,
+        eps         : float = 0.05,
+        use_depth   : bool  = False,
+        use_edge    : bool  = False,
     ):
         super().__init__()
-        out_channels = 3  # in_channels * num_iters
-        self.e_conv1 = ConvBlock(in_channels,      num_channels, norm=norm)
-        self.e_conv2 = ConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv3 = ConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv4 = ConvBlock(num_channels,     num_channels, norm=norm)
-        self.e_conv5 = ConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv6 = ConvBlock(num_channels * 2, num_channels, norm=norm)
-        self.e_conv7 = ConvBlock(num_channels * 2, out_channels, norm=norm, is_last_layer=True)
+        self.use_depth     = use_depth
+        self.use_edge      = use_edge
+        in_channels       += 1 if self.use_depth else 0
+        in_channels       += 1 if self.use_edge  else 0
+        self.in_channels   = in_channels
+        self.num_channels  = num_channels
+        self.out_channels  = 3
+        # Depth Boundary Aware
+        self.dba     = DepthBoundaryAware(eps=eps, normalized=False)
+        # Encoder
+        self.e_conv1 = ConvBlock(self.in_channels,  self.num_channels, norm=norm)
+        self.e_conv2 = ConvBlock(self.num_channels, self.num_channels, norm=norm)
+        self.e_conv3 = ConvBlock(self.num_channels, self.num_channels, norm=norm)
+        self.e_conv4 = ConvBlock(self.num_channels, self.num_channels, norm=norm)
+        # Decoder
+        self.e_conv5 = ConvBlock(self.num_channels * 2, self.num_channels, norm=norm)
+        self.e_conv6 = ConvBlock(self.num_channels * 2, self.num_channels, norm=norm)
+        self.e_conv7 = ConvBlock(self.num_channels * 2, self.out_channels, norm=norm, is_last_layer=True)
         self.apply(self.init_weights)
         
     def init_weights(self, m: nn.Module):
@@ -273,17 +280,34 @@ class EnhanceNet(nn.Module):
             elif classname.find("BatchNorm") != -1:
                 m.weight.data.normal_(1.0, 0.02)
                 m.bias.data.fill_(0)
-            
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x   = input
-        x1  = self.e_conv1(x)
-        x2  = self.e_conv2(x1)
-        x3  = self.e_conv3(x2)
-        x4  = self.e_conv4(x3)
-        x5  = self.e_conv5(torch.cat([x3, x4], 1))
-        x6  = self.e_conv6(torch.cat([x2, x5], 1))
-        x_r = self.e_conv7(torch.cat([x1, x6], 1))
-        return x_r
+
+    def forward(
+        self,
+        image: torch.Tensor,
+        depth: torch.Tensor = None
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        x    = image
+        gray = core.rgb_to_grayscale(image)
+        edge = None
+        if depth is not None and core.is_color_image(depth):
+            depth = core.rgb_to_grayscale(depth)
+        if self.use_depth:
+            x = torch.cat([x, depth], 1)
+        if self.use_edge:
+            if depth is not None:
+                edge = self.dba(depth)
+            else:
+                edge = self.dba(gray)
+            x = torch.cat([x, edge], 1)
+
+        x1     = self.e_conv1(x)
+        x2     = self.e_conv2(x1)
+        x3     = self.e_conv3(x2)
+        x4     = self.e_conv4(x3)
+        x5     = self.e_conv5(torch.cat([x3, x4], 1))
+        x6     = self.e_conv6(torch.cat([x2, x5], 1))
+        adjust = self.e_conv7(torch.cat([x1, x6], 1))
+        return adjust, edge
 
 
 class DenoiseNet(nn.Module):
@@ -328,10 +352,14 @@ class GCENet(base.ImageEnhancementModel):
         in_channels : int   = 3,
         num_channels: int   = 32,
         num_iters   : int   = 15,
-        gf_radius   : int   = 3,
+        down_size   : int   = 256,
+        dba_eps     : float = 0.05,
+        gf_radius   : int   = 1,
         gf_eps      : float = 1e-4,
         bam_gamma   : float = 2.6,
         bam_ksize   : int   = 9,
+        use_depth   : bool  = True,
+        use_edge    : bool  = True,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -341,30 +369,27 @@ class GCENet(base.ImageEnhancementModel):
             weights     = weights,
             *args, **kwargs
         )
-        
-        # Populate hyperparameter values from pretrained weights
-        if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels" , in_channels)
-            num_channels = self.weights.get("num_channels", num_channels)
-            num_iters    = self.weights.get("num_iters"   , num_iters)
-            gf_radius    = self.weights.get("gf_radius"   , gf_radius)
-            gf_eps       = self.weights.get("gf_eps"      , gf_eps)
-            bam_gamma    = self.weights.get("bam_gamma"   , bam_gamma)
-            bam_ksize    = self.weights.get("bam_ksize"   , bam_ksize)
-        self.in_channels  = in_channels or self.in_channels
+        self.in_channels  = in_channels
         self.num_channels = num_channels
+        self.down_size    = down_size
         self.num_iters    = num_iters
+        self.dba_eps      = dba_eps
         self.gf_radius    = gf_radius
         self.gf_eps       = gf_eps
         self.bam_gamma    = bam_gamma
         self.bam_ksize    = bam_ksize
+        self.use_depth    = use_depth
+        self.use_edge     = use_edge
         
         # Construct model
         self.en  = EnhanceNet(
             in_channels  = self.in_channels,
             num_channels = self.num_channels,
             num_iters    = self.num_iters,
-            norm         = None,
+            norm         = None,  # nn.AdaptiveBatchNorm2d,
+            eps          = self.dba_eps,
+            use_depth    = self.use_depth,
+            use_edge     = self.use_edge,
         )
         self.gf  = filtering.GuidedFilter(radius=self.gf_radius, eps=self.gf_eps)
         self.bam = nn.BrightnessAttentionMap(gamma=self.bam_gamma, denoise_ksize=self.bam_ksize)
@@ -381,21 +406,64 @@ class GCENet(base.ImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
+    def compute_efficiency_score(
+        self,
+        imgsz   : _size_2_t = 512,
+        channels: int       = 3,
+        runs    : int       = 100,
+        verbose : bool      = False,
+    ) -> tuple[float, float, float]:
+        """Compute the efficiency score of the model, including FLOPs, number
+        of parameters, and runtime.
+        """
+        # Define input tensor
+        h, w      = core.get_image_size(imgsz)
+        datapoint = {
+            "image": torch.rand(1, channels, h, w).to(self.device),
+            "depth": torch.rand(1,        1, h, w).to(self.device)
+        }
+        
+        # Get FLOPs and Params
+        flops, params = core.custom_profile(deepcopy(self), inputs=datapoint, verbose=verbose)
+        # flops         = FlopCountAnalysis(self, datapoint).total() if flops == 0 else flops
+        params        = self.params                if hasattr(self, "params") and params == 0 else params
+        params        = parameter_count(self)      if hasattr(self, "params")  else params
+        params        = sum(list(params.values())) if isinstance(params, dict) else params
+        
+        # Get time
+        timer = core.Timer()
+        for i in range(runs):
+            timer.tick()
+            _ = self(datapoint)
+            timer.tock()
+        avg_time = timer.avg_time
+        
+        # Print
+        if verbose:
+            console.log(f"FLOPs (G) : {flops:.4f}")
+            console.log(f"Params (M): {params:.4f}")
+            console.log(f"Time (s)  : {avg_time:.4f}")
+        
+        return flops, params, avg_time
+    
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
         self.assert_datapoint(datapoint)
         image          = datapoint.get("image")
+        depth          = datapoint.get("depth")
         image1, image2 = core.pair_downsample(image)
-        datapoint1     = datapoint | {"image": image1}
-        datapoint2     = datapoint | {"image": image2}
+        depth1, depth2 = core.pair_downsample(depth)
+        datapoint1     = datapoint | {"image": image1, "depth": depth1}
+        datapoint2     = datapoint | {"image": image2, "depth": depth2}
         outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
         outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
         outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
         self.assert_outputs(outputs)
         # Symmetric Loss
-        adjust1, bam1, bright1, dark1, guide1, enhanced1 = outputs1.values()
-        adjust2, bam2, bright2, dark2, guide2, enhanced2 = outputs2.values()
-        adjust , bam , bright,  dark,  guide , enhanced  = outputs.values()
+        enhanced1 = outputs1["enhanced"]
+        enhanced2 = outputs2["enhanced"]
+        adjust    =  outputs["adjust"]
+        enhanced  =  outputs["enhanced"]
         enhanced_1, enhanced_2 = core.pair_downsample(enhanced)
         mse_loss = nn.MSELoss()
         loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,     enhanced1))
@@ -407,115 +475,15 @@ class GCENet(base.ImageEnhancementModel):
         return outputs
         
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Prepare input
         self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
+        image = datapoint.get("image")
+        depth = datapoint.get("depth")
         # Enhancement
-        adjust = self.en(image)
+        adjust, edge = self.en(image, depth)
+        edge = edge.detach() if edge is not None else None  # Must call detach() else error
         # Enhancement loop
         if self.bam_gamma in [None, 0.0]:
-            guide  = image
-            bam    = None
-            bright = None
-            dark   = None
-            for i in range(self.num_iters):
-                guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        else:
-            guide  = image
-            bam    = self.bam(image)
-            bright = None
-            dark   = None
-            for i in range(0, self.num_iters):
-                bright = guide * (1 - bam)
-                dark   = guide * bam
-                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        # Guided Filter
-        enhanced = self.gf(image, guide)
-        # Return
-        if self.debug:
-            return {
-                "adjust"  : adjust,
-                "bam"     : bam,
-                "bright"  : bright,
-                "dark"    : dark,
-                "guidance": guide,
-                "enhanced": enhanced,
-            }
-        else:
-            return {
-                "enhanced": enhanced,
-            }
-
-# endregion
-
-
-# region Ablation Study
-
-@MODELS.register(name="gcenet_01_gfa_oldloss", arch="gcenet")
-class GCENet_01_GFA_OldLoss(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_01_gfa_oldloss",
-            *args, **kwargs
-        )
-    
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
-        # Forward
-        self.assert_datapoint(datapoint)
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Loss
-        image = datapoint.get("image")
-        adjust, bam, bright, dark, guide, enhanced = outputs.values()
-        loss  = self.loss(image, adjust, enhanced)
-        # Return
-        outputs["loss"] = loss
-        # Return
-        return outputs
-    
-
-@MODELS.register(name="gcenet_02_gfa_newloss", arch="gcenet")
-class GCENet_02_GFA_NewLoss(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_02_gfa_newloss",
-            *args, **kwargs
-        )
-
-
-@MODELS.register(name="gcenet_03_gfb_oldloss", arch="gcenet")
-class GCENet_03_GFB_OldLoss(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_03_gfb_oldloss",
-            *args, **kwargs
-        )
-    
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
-        # Forward
-        self.assert_datapoint(datapoint)
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Loss
-        image = datapoint.get("image")
-        denoised, adjust, bam, bright, dark, enhanced = outputs.values()
-        loss  = self.loss(image, adjust, enhanced)
-        # Return
-        outputs["loss"] = loss
-        # Return
-        return outputs
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image    = datapoint.get("image")
-        # Guided Filter
-        denoised = self.gf(image, image)
-        # Enhancement
-        adjust   = self.en(denoised)
-        # Enhancement loop
-        if not self.predicting:
             enhanced = image
             bam      = None
             bright   = None
@@ -528,63 +496,17 @@ class GCENet_03_GFB_OldLoss(GCENet):
             bright   = None
             dark     = None
             for i in range(0, self.num_iters):
-                bright   = enhanced * (1 - bam)
-                dark     = enhanced * bam
+                bright  = enhanced * (1 - bam)
+                dark    = enhanced * bam
                 enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        # Return
-        if self.debug:
-            return {
-                "denoised": denoised,
-                "adjust"  : adjust,
-                "bam"     : bam,
-                "bright"  : bright,
-                "dark"    : dark,
-                "enhanced": enhanced,
-            }
-        else:
-            return {
-                "enhanced": enhanced,
-            }
-
-
-@MODELS.register(name="gcenet_04_gfb_newloss", arch="gcenet")
-class GCENet_04_GFB_NewLoss(GCENet):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_04_gfb_newloss",
-            *args, **kwargs
-        )
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image    = datapoint.get("image")
         # Guided Filter
-        denoised = self.gf(image, image)
-        # Enhancement
-        adjust   = self.en(denoised)
-        # Enhancement loop
-        if not self.predicting:
-            enhanced = image
-            bam      = None
-            bright   = None
-            dark     = None
-            for i in range(self.num_iters):
-                enhanced = enhanced + adjust * (torch.pow(enhanced, 2) - enhanced)
-        else:
-            enhanced = image
-            bam      = self.bam(image)
-            bright   = None
-            dark     = None
-            for i in range(0, self.num_iters):
-                bright   = enhanced * (1 - bam)
-                dark     = enhanced * bam
-                enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
+        enhanced = kornia.filters.bilateral_blur(enhanced, bilateral_ksize, bilateral_color, bilateral_space)
         # Return
         if self.debug:
             return {
-                "denoised": denoised,
                 "adjust"  : adjust,
+                "depth"   : depth,
+                "edge"    : edge,
                 "bam"     : bam,
                 "bright"  : bright,
                 "dark"    : dark,
@@ -594,417 +516,28 @@ class GCENet_04_GFB_NewLoss(GCENet):
             return {
                 "enhanced": enhanced,
             }
-
-
-@MODELS.register(name="gcenet_05_wo_col", arch="gcenet")
-class GCENet_05_Wo_Col(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_05_wo_col",
-            *args, **kwargs
-        )
-        self.loss = Loss(reduction="mean", weight_col=0.0)
-
-
-@MODELS.register(name="gcenet_06_wo_exp", arch="gcenet")
-class GCENet_06_Wo_Exp(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_06_wo_exp",
-            *args, **kwargs
-        )
-        self.loss = Loss(reduction="mean", weight_exp=0.0)
-
-
-@MODELS.register(name="gcenet_07_wo_spa", arch="gcenet")
-class GCENet_07_Wo_Spa(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_07_wo_spa",
-            *args, **kwargs
-        )
-        self.loss = Loss(reduction="mean", weight_spa=0.0)
-
-
-@MODELS.register(name="gcenet_08_wo_tv", arch="gcenet")
-class GCENet_08_Wo_TV(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_08_wo_tv",
-            *args, **kwargs
-        )
-        self.loss = Loss(reduction="mean", weight_tva=0.0)
-
-
-@MODELS.register(name="gcenet_09_wo_bri", arch="gcenet")
-class GCENet_09_Wo_Bri(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_09_wo_bri",
-            *args, **kwargs
-        )
     
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        # Enhancement
-        adjust = self.en(image)
-        # Enhancement loop
-        guide  = image
-        bam    = None
-        bright = None
-        dark   = None
-        for i in range(self.num_iters):
-            guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        # Guided Filter
-        enhanced = self.gf(image, guide)
-        # Return
-        if self.debug:
-            return {
-                "adjust"  : adjust,
-                "bam"     : bam,
-                "bright"  : bright,
-                "dark"    : dark,
-                "guidance": guide,
-                "enhanced": enhanced,
-            }
-        else:
-            return {
-                "enhanced": enhanced,
-            }
-
-
-@MODELS.register(name="gcenet_10_wo_sym", arch="gcenet")
-class GCENet_10_Wo_Sym(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_10_wo_sym",
-            *args, **kwargs
-        )
+    def interpolate_image(self, image: torch.Tensor) -> torch.Tensor:
+        """Reshapes the image based on new resolution."""
+        return F.interpolate(image, size=(self.down_size, self.down_size), mode="bicubic")
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
-        # Forward
-        self.assert_datapoint(datapoint)
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Loss
-        image = datapoint.get("image")
-        adjust, bam, bright, dark, guide, enhanced = outputs.values()
-        loss  = self.loss(image, adjust, enhanced)
-        # Return
-        outputs["loss"] = loss
-        # Return
-        return outputs
-
-
-@MODELS.register(name="gcenet_11_wo_dgf", arch="gcenet")
-class GCENet_11_Wo_DGF(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_11_wo_dgf",
-            *args, **kwargs
-        )
+    def filter_up(self, x_lr: torch.Tensor, y_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
+        """Applies the guided filter to upscale the predicted image. """
+        gf   = filtering.FastGuidedFilter(radius=self.gf_radius, eps=self.gf_eps)
+        y_hr = gf(x_lr, y_lr, x_hr)
+        y_hr = torch.clip(y_hr, 0, 1)
+        return y_hr
     
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        # Enhancement
-        adjust = self.en(image)
-        # Enhancement loop
-        if self.bam_gamma in [None, 0.0]:
-            guide  = image
-            bam    = None
-            bright = None
-            dark   = None
-            for i in range(self.num_iters):
-                guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        else:
-            guide  = image
-            bam    = self.bam(image)
-            bright = None
-            dark   = None
-            for i in range(0, self.num_iters):
-                bright = guide * (1 - bam)
-                dark   = guide * bam
-                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        # Guided Filter
-        enhanced = guide
-        # Return
-        if self.debug:
-            return {
-                "adjust"  : adjust,
-                "bam"     : bam,
-                "bright"  : bright,
-                "dark"    : dark,
-                "guidance": guide,
-                "enhanced": enhanced,
-            }
-        else:
-            return {
-                "enhanced": enhanced,
-            }
-
-
-@MODELS.register(name="gcenet_12_wo_sym_dgf", arch="gcenet")
-class GCENet_12_Wo_Sym_DGF(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_12_wo_sym_dgf",
-            *args, **kwargs
-        )
+    @staticmethod
+    def replace_v_component(image_hsv: torch.Tensor, v_new: torch.Tensor) -> torch.Tensor:
+        """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
+        image_hsv[:, -1, :, :] = v_new
+        return image_hsv
     
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
-        # Forward
-        self.assert_datapoint(datapoint)
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Loss
-        image = datapoint.get("image")
-        adjust, bam, bright, dark, guide, enhanced = outputs.values()
-        loss  = self.loss(image, adjust, enhanced)
-        # Return
-        outputs["loss"] = loss
-        # Return
-        return outputs
+    @staticmethod
+    def replace_i_component(image_hvi: torch.Tensor, i_new: torch.Tensor) -> torch.Tensor:
+        """Replaces the `I` component of an HVI image `[1, 3, H, W]`."""
+        image_hvi[:, 2, :, :] = i_new
+        return image_hvi
     
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        # Enhancement
-        adjust = self.en(image)
-        # Enhancement loop
-        if self.bam_gamma in [None, 0.0]:
-            guide  = image
-            bam    = None
-            bright = None
-            dark   = None
-            for i in range(self.num_iters):
-                guide = guide + adjust * (torch.pow(guide, 2) - guide)
-        else:
-            guide  = image
-            bam    = self.bam(image)
-            bright = None
-            dark   = None
-            for i in range(0, self.num_iters):
-                bright = guide * (1 - bam)
-                dark   = guide * bam
-                guide  = bright + dark + adjust * (torch.pow(dark, 2) - dark)
-        # Guided Filter
-        enhanced = guide
-        # Return
-        if self.debug:
-            return {
-                "adjust"  : adjust,
-                "bam"     : bam,
-                "bright"  : bright,
-                "dark"    : dark,
-                "guidance": guide,
-                "enhanced": enhanced,
-            }
-        else:
-            return {
-                "enhanced": enhanced,
-            }
-
-
-@MODELS.register(name="gcenet_13_wo_bri_sym_dgf", arch="gcenet")
-class GCENet_13_Wo_Bri_Sym_DGF(GCENet):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(
-            name="gcenet_13_wo_bri_sym_dgf",
-            *args, **kwargs
-        )
-    
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
-        # Forward
-        self.assert_datapoint(datapoint)
-        outputs = self.forward(datapoint=datapoint, *args, **kwargs)
-        self.assert_outputs(outputs)
-        # Loss
-        image = datapoint.get("image")
-        adjust, bam, bright, dark, guide, enhanced = outputs.values()
-        loss  = self.loss(image, adjust, enhanced)
-        # Return
-        outputs["loss"] = loss
-        # Return
-        return outputs
-    
-    def forward(self, datapoint: dict, *args, **kwargs) -> dict:
-        self.assert_datapoint(datapoint)
-        image  = datapoint.get("image")
-        # Enhancement
-        adjust = self.en(image)
-        # Enhancement loop
-        guide  = image
-        bam    = None
-        bright = None
-        dark   = None
-        for i in range(0, self.num_iters):
-            guide  = guide + adjust * (torch.pow(guide, 2) - guide)
-        # Guided Filter
-        enhanced = guide
-        # Return
-        if self.debug:
-            return {
-                "adjust"  : adjust,
-                "bam"     : bam,
-                "bright"  : bright,
-                "dark"    : dark,
-                "guidance": guide,
-                "enhanced": enhanced,
-            }
-        else:
-            return {
-                "enhanced": enhanced,
-            }
-
-
-'''
-# @MODELS.register(name="gcenet_old")
-class GCENetOld(base.ImageEnhancementModel):
-    """GCENet (Guided Curve Estimation Network) model.
-    
-    Args:
-        in_channels: The first layer's input channel. Default: ``3`` for RGB
-            image.
-        out_channels: The output channel of the network. Default: ``3`` for RGB
-            image.
-        num_filters: Output channels for subsequent layers. Default: ``32``.
-        num_iters: The number of convolutional layers in the model.
-            Default: ``8``.
-        scale_factor: Downsampling/upsampling ratio. Defaults: ``1``.
-        gamma: Gamma value for dark channel prior. Default: ``2.8``.
-    """
-    
-    tasks  : list[Task]   = [Task.LLIE]
-    schemes: list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_SHOT]
-    zoo    : dict = {}
-    
-    def __init__(
-        self,
-        in_channels : int   = 3,
-        out_channels: int   = 3,
-        num_filters : int   = 32,
-        num_iters   : int   = 8,
-        scale_factor: int   = 1,
-        gamma       : float = 2.8,
-        weights     : Any   = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            name        = "gcenet_old",
-            in_channels = in_channels,
-            weights     = weights,
-            *args, **kwargs
-        )
-        
-        # Populate hyperparameter values from pretrained weights
-        if isinstance(self.weights, dict):
-            in_channels  = self.weights.get("in_channels" , in_channels)
-            out_channels = self.weights.get("out_channels", out_channels)
-            num_filters  = self.weights.get("num_filters",  num_filters)
-            num_iters    = self.weights.get("num_iters"   , num_iters)
-            scale_factor = self.weights.get("scale_factor", scale_factor)
-            gamma        = self.weights.get("gamma"       , gamma)
-        self.in_channels  = in_channels  or self.in_channels
-        self.out_channels = out_channels or self.out_channels
-        self.num_filters  = num_filters
-        self.num_iters    = num_iters
-        self.scale_factor = scale_factor
-        self.gamma        = gamma
-        
-        # Construct model
-        self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-        self.enc1     = nn.DSConv2d(self.in_channels,     self.num_filters,  3, 1, 1, bias=True)
-        self.enc2     = nn.DSConv2d(self.num_filters,     self.num_filters,  3, 1, 1, bias=True)
-        self.enc3     = nn.DSConv2d(self.num_filters,     self.num_filters,  3, 1, 1, bias=True)
-        self.mid      = nn.DSConv2d(self.num_filters,     self.num_filters,  3, 1, 1, bias=True)
-        self.dec3     = nn.DSConv2d(self.num_filters * 2, self.num_filters,  3, 1, 1, bias=True)
-        self.dec2     = nn.DSConv2d(self.num_filters * 2, self.num_filters,  3, 1, 1, bias=True)
-        self.dec1     = nn.DSConv2d(self.num_filters * 2, self.out_channels, 3, 1, 1, bias=True)
-        self.act      = nn.PReLU()
-        
-        # Loss
-        self._loss = Loss(reduction="mean")
-        
-        # Load weights
-        if self.weights:
-            self.load_weights()
-        else:
-            self.apply(self.init_weights)
-    
-    def init_weights(self, m: nn.Module):
-        classname = m.__class__.__name__
-        if classname.find("Conv") != -1:
-            if hasattr(m, "conv"):
-                m.conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "dw_conv"):
-                m.dw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "pw_conv"):
-                m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "weight"):
-                m.weight.data.normal_(0.0, 0.02)  # 0.02
-    
-    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict | None:
-        image  = datapoint.get("image",  None)
-        target = datapoint.get("target", None)
-        meta   = datapoint.get("meta",   None)
-        pred   = self.forward(input=image, *args, **kwargs)
-        adjust, enhance = pred
-        loss   = self.loss(image, adjust, enhance)
-        return {
-            "pred": enhance,
-            "loss": loss,
-        }
-    
-    def forward(
-        self,
-        input    : torch.Tensor,
-        augment  : _callable = None,
-        profile  : bool      = False,
-        out_index: int       = -1,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        x = input
-        # Denoising
-        x = kornia.filters.bilateral_blur(x, (3, 3), 0.1, (1.5, 1.5))
-        # Downsampling
-        x_down = x
-        if self.scale_factor != 1:
-            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
-        enc1   = self.act(self.enc1(x_down))
-        enc2   = self.act(self.enc2(enc1))
-        enc3   = self.act(self.enc3(enc2))
-        mid    = self.act(self.mid(enc3))
-        dec3   = self.act(self.dec3(torch.cat([mid,  enc3], dim=1)))
-        dec2   = self.act(self.dec2(torch.cat([dec3, enc2], dim=1)))
-        dec1   =   F.tanh(self.dec1(torch.cat([dec2, enc1], dim=1)))
-        l      = dec1
-        # Upsampling
-        if self.scale_factor != 1:
-            l = self.upsample(l)
-        # Enhancement
-        if not self.predicting:
-            y = x
-            for _ in range(self.num_iters):
-                y = y + l * (torch.pow(y, 2) - y)
-        else:
-            y = x
-            g = nn.brightness_attention_map(x, self.gamma, 9)
-            for _ in range(self.num_iters):
-                b = y * (1 - g)
-                d = y * g
-                y = b + d + l * (torch.pow(d, 2) - d)
-        return l, y
-'''
-
 # endregion

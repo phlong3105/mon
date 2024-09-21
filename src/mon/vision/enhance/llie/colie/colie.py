@@ -106,19 +106,19 @@ class CoLIE_RE(base.ImageEnhancementModel):
     
     def __init__(
         self,
-        name        : str   = "colie_re",
-        window_size : int   = 7,
-        down_size   : int   = 256,
-        num_layers  : int   = 4,
-        hidden_dim  : int   = 256,
-        add_layer   : int   = 2,
+        name        : str         = "colie_re",
+        window_size : int         = 7,
+        down_size   : int         = 256,
+        num_layers  : int         = 4,
+        hidden_dim  : int         = 256,
+        add_layer   : int         = 2,
         weight_decay: list[float] = [0.1, 0.0001, 0.001],
-        L           : float = 0.1,
-        alpha       : float = 1,
-        beta        : float = 20,
-        gamma       : float = 8,
-        delta       : float = 5,
-        weights     : Any   = None,
+        L           : float       = 0.3,
+        alpha       : float       = 1,
+        beta        : float       = 20,
+        gamma       : float       = 8,
+        delta       : float       = 5,
+        weights     : Any         = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -191,8 +191,10 @@ class CoLIE_RE(base.ImageEnhancementModel):
         return outputs
         
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Prepare input
         self.assert_datapoint(datapoint)
         image_rgb        = datapoint.get("image")
+        # Enhance
         image_hsv        = core.rgb_to_hsv(image_rgb)
         image_v          = core.rgb_to_v(image_rgb)
         image_v_lr       = self.interpolate_image(image_v)
@@ -205,7 +207,6 @@ class CoLIE_RE(base.ImageEnhancementModel):
         image_v_fixed    = self.filter_up(image_v_lr, image_v_fixed_lr, image_v)
         image_hsv_fixed  = self.replace_v_component(image_hsv, image_v_fixed)
         image_rgb_fixed  = core.hsv_to_rgb(image_hsv_fixed)
-        # Normalize the image in the range `[0, 1]`.
         image_rgb_fixed  = image_rgb_fixed / torch.max(image_rgb_fixed)
         # Return
         if self.debug:
@@ -222,11 +223,12 @@ class CoLIE_RE(base.ImageEnhancementModel):
     
     def interpolate_image(self, image: torch.Tensor) -> torch.Tensor:
         """Reshapes the image based on new resolution."""
-        return F.interpolate(image, size=(self.down_size, self.down_size))
+        return F.interpolate(image, size=(self.down_size, self.down_size), mode="bicubic")
     
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
-        kernel = torch.zeros((self.window_size ** 2, 1, self.window_size, self.window_size)).cuda()
+        num_channels = core.get_image_num_channels(image)
+        kernel       = torch.zeros((self.window_size ** 2, num_channels, self.window_size, self.window_size)).cuda()
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -261,13 +263,16 @@ class CoLIE_RE(base.ImageEnhancementModel):
         return y_hr
     
     @staticmethod
-    def replace_v_component(
-        image_hsv: torch.Tensor,
-        v_new    : torch.Tensor
-    ) -> torch.Tensor:
+    def replace_v_component(image_hsv: torch.Tensor, v_new: torch.Tensor) -> torch.Tensor:
         """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
         image_hsv[:, -1, :, :] = v_new
         return image_hsv
+    
+    @staticmethod
+    def replace_i_component(image_hvi: torch.Tensor, i_new: torch.Tensor) -> torch.Tensor:
+        """Replaces the `I` component of an HVI image `[1, 3, H, W]`."""
+        image_hvi[:, 2, :, :] = i_new
+        return image_hvi
     
     def infer(
         self,
