@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="zero_me2"
-model="zero_me2_09_hvid_zsn2n"
+arch="zero_dce"
+model="zero_dce++"
 data=(
     "dicm"
     "lime"
@@ -39,25 +39,6 @@ for (( i=0; i<${#data[@]}; i++ )); do
         target_dir="${data_dir}/enhance/${task}/${data[i]}/val/hq"
     fi
 
-    python -W ignore metric.py \
-        --input-dir "${input_dir}" \
-        --target-dir "${target_dir}" \
-        --result-file "${current_dir}" \
-        --arch "${arch}" \
-        --model "${model}" \
-        --data "${data[i]}" \
-        --device "cuda:0" \
-        --metric "psnr" \
-        --metric "ssimc" \
-        --metric "psnry" \
-        --metric "ssim" \
-        --metric "ms_ssim" \
-        --metric "lpips" \
-        --metric "niqe" \
-        --metric "pi" \
-        --backend "pyiqa" \
-        --show-results
-
     if [ -d "${target_dir}" ]; then
         python -W ignore metric.py \
           --input-dir "${input_dir}" \
@@ -67,6 +48,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --model "${model}" \
           --data "${data[i]}" \
           --device "cuda:0" \
+          --imgsz 512 \
           --metric "psnr" \
           --metric "ssimc" \
           --metric "psnry" \
@@ -76,8 +58,26 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --metric "niqe" \
           --metric "pi" \
           --backend "pyiqa" \
-          --use-gt-mean \
-          --show-results
+          --use-gt-mean
+    else
+        python -W ignore metric.py \
+          --input-dir "${input_dir}" \
+          --target-dir "${target_dir}" \
+          --result-file "${current_dir}" \
+          --arch "${arch}" \
+          --model "${model}" \
+          --data "${data[i]}" \
+          --device "cuda:0" \
+          --imgsz 512 \
+          --metric "psnr" \
+          --metric "ssimc" \
+          --metric "psnry" \
+          --metric "ssim" \
+          --metric "ms_ssim" \
+          --metric "lpips" \
+          --metric "niqe" \
+          --metric "pi" \
+          --backend "pyiqa"
     fi
 
 done

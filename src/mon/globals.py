@@ -662,6 +662,7 @@ class Task(DT.Enum):
     POSE     = "pose"      # pose estimation
     SEGMENT  = "segment"   # semantic segmentation
     TRACK    = "track"     # object tracking
+    UIE      = "uie"       # underwater image enhancement
 
 
 class RunMode(DT.Enum):

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import mon.vision.enhance.multitask.hinet
 import mon.vision.enhance.multitask.mprnet
-# import mon.vision.enhance.multitask.uformer
+import mon.vision.enhance.multitask.zero_restore
 from mon.vision.enhance.multitask.hinet import *
 from mon.vision.enhance.multitask.mprnet import *
-# from mon.vision.enhance.multitask.uformer import *
+from mon.vision.enhance.multitask.zero_restore import *

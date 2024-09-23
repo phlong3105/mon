@@ -29,6 +29,7 @@ def predict(args: argparse.Namespace):
     weights      = args.weights
     device       = mon.set_device(args.device)
     imgsz        = args.imgsz
+    imgsz        = imgsz[0] if isinstance(imgsz, (list, tuple)) else imgsz
     resize       = args.resize
     benchmark    = args.benchmark
     save_image   = args.save_image
@@ -36,7 +37,7 @@ def predict(args: argparse.Namespace):
     use_fullpath = args.use_fullpath
     
     # Model
-    scale_factor = 12
+    scale_factor = args.scale_factor
     DCE_net      = model.enhance_net_nopool(scale_factor).to(device)
     DCE_net.load_state_dict(torch.load(weights))
     DCE_net.eval()

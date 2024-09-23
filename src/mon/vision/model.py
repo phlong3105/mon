@@ -73,7 +73,6 @@ class VisionModel(nn.Model, ABC):
     
     # region Predicting
     
-    # @torch.no_grad()
     def infer(
         self,
         datapoint : dict,

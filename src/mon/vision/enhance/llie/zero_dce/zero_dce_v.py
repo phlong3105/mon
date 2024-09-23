@@ -229,6 +229,7 @@ class ZeroDCEV(base.ImageEnhancementModel):
         image_hsv[:, -1, :, :] = v_new
         return image_hsv
     
+    '''
     def infer(
         self,
         datapoint    : dict,
@@ -277,5 +278,6 @@ class ZeroDCEV(base.ImageEnhancementModel):
         # Return
         outputs["time"] = timer.avg_time
         return outputs
+    '''
     
 # endregion

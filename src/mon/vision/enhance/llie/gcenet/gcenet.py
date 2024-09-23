@@ -481,7 +481,7 @@ class GCENet(base.ImageEnhancementModel):
         depth = datapoint.get("depth")
         # Enhancement
         adjust, edge = self.en(image, depth)
-        edge = edge.detach() if edge is not None else None  # Must call detach() else error
+        edge  = edge.detach() if edge is not None else None  # Must call detach() else error
         # Enhancement loop
         if self.bam_gamma in [None, 0.0]:
             enhanced = image
@@ -496,11 +496,12 @@ class GCENet(base.ImageEnhancementModel):
             bright   = None
             dark     = None
             for i in range(0, self.num_iters):
-                bright  = enhanced * (1 - bam)
-                dark    = enhanced * bam
+                bright   = enhanced * (1 - bam)
+                dark     = enhanced * bam
                 enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         # Guided Filter
-        enhanced = kornia.filters.bilateral_blur(enhanced, bilateral_ksize, bilateral_color, bilateral_space)
+        # enhanced = kornia.filters.bilateral_blur(enhanced, bilateral_ksize, bilateral_color, bilateral_space)
+        enhanced = self.gf(image, enhanced)
         # Return
         if self.debug:
             return {
@@ -527,17 +528,5 @@ class GCENet(base.ImageEnhancementModel):
         y_hr = gf(x_lr, y_lr, x_hr)
         y_hr = torch.clip(y_hr, 0, 1)
         return y_hr
-    
-    @staticmethod
-    def replace_v_component(image_hsv: torch.Tensor, v_new: torch.Tensor) -> torch.Tensor:
-        """Replaces the `V` component of an HSV image `[1, 3, H, W]`."""
-        image_hsv[:, -1, :, :] = v_new
-        return image_hsv
-    
-    @staticmethod
-    def replace_i_component(image_hvi: torch.Tensor, i_new: torch.Tensor) -> torch.Tensor:
-        """Replaces the `I` component of an HVI image `[1, 3, H, W]`."""
-        image_hvi[:, 2, :, :] = i_new
-        return image_hvi
-    
+        
 # endregion

@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import mon
-from mon import albumentation as A
 from mon.config import default
 
 current_file = mon.Path(__file__).absolute()
@@ -12,8 +11,8 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "gcenet"
-data_name  = "ulol"
+model_name = "zero_restore_llie"
+data_name  = ""
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
@@ -29,41 +28,31 @@ verbose    = True
 # region Model
 
 model = {
-	"name"        : model_name,     # The model's name.
-	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
-	"root"        : root,           # The root directory of the model.
-	"in_channels" : 3,              # The first layer's input channel.
-	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
-	"num_iters"   : 8,              # The number of progressive loop.
-	"down_size"   : 256,            # The size of the down-sampled image.
-	"dba_eps"     : 0.05,		    # The epsilon for DepthBoundaryAware.
-	"gf_radius"   : 1,              # The radius for GuidedFilter.
-	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
-	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap.
-	"bam_ksize"   : 9,			    # The kernel size for BrightnessAttentionMap.
-	"use_depth"   : False,          # If ``True``, use depth information.
-	"use_edge"    : False,          # If ``True``, use edge information.
-	"weights"     : None,           # The model's weights.
-	"metrics"     : {
+	"name"          : model_name,     # The model's name.
+	"fullname"      : fullname,       # A full model name to save the checkpoint or weight.
+	"root"          : root,           # The root directory of the model.
+	"in_channels"   : 3,              # The first layer's input channel.
+	"num_channels"  : 64,             #
+	"weights"       : None,           # The model's weights.
+	"metrics"       : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
 		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
-	"optimizers"  : [
+	"optimizers"    : [
 		{
             "optimizer"          : {
 	            "name"        : "adam",
-	            "lr"          : 0.00005,
-	            "weight_decay": 0.00001,
+	            "lr"          : 0.001,
+	            "weight_decay": 0.01,
 	            "betas"       : [0.9, 0.99],
 			},
 			"lr_scheduler"       : None,
 			"network_params_only": True,
         }
     ],          # Optimizer(s) for training model.
-	"debug"       : False,          # If ``True``, run the model in debug mode (when predicting).
-	"verbose"     : verbose,        # Verbosity.
+	"debug"         : False,          # If ``True``, run the model in debug mode (when predicting).
+	"verbose"       : verbose,        # Verbosity.
 }
 
 # endregion
@@ -74,14 +63,10 @@ model = {
 data = {
     "name"      : data_name,
     "root"      : data_root,     # A root directory where the data is stored.
-	"transform" : A.Compose(transforms=[
-		A.Resize(height=image_size[0], width=image_size[1]),
-		# A.Flip(),
-		# A.Rotate(),
-	]),  # Transformations performing on both the input and target.
+	"transform" : None,          # Transformations performing on both the input and target.
     "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 8,             # The number of samples in one forward pass.
+    "batch_size": 1,             # The number of samples in one forward pass.
     "devices"   : 0,             # A list of devices to use. Default: ``0``.
     "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"   : verbose,       # Verbosity.
@@ -111,12 +96,11 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
-	"gradient_clip_val": 0.1,
 	"log_image_every_n_epochs": 1,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 50,
+	"max_epochs"       : 1000,
 }
 
 # endregion

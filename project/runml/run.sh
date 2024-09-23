@@ -11,4 +11,10 @@ runml_dir="${project_dir}/runml"
 data_dir="${mon_dir}/data"
 
 # Run
-python -W ignore main.py "$@"
+cd "${runml_dir}" || exit
+python -W ignore main.py \
+    --root "${current_dir}" \
+    "$@"
+
+# Done
+cd "${current_dir}" || exit

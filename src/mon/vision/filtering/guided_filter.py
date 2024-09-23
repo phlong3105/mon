@@ -284,8 +284,8 @@ class ConvGuidedFilter(nn.Module):
         _, _, x_h, x_w = x_lr.size()
         h    = x_h // self.downscale
         w    = x_w // self.downscale
-        x_lr = core.resize(x_lr, (h, w), "bicubic")
-        y_lr = core.resize(x_hr, (h, w), "bicubic")
+        x_lr = core.resize(x_lr, (h, w), interpolation="bicubic")
+        y_lr = core.resize(x_hr, (h, w), interpolation="bicubic")
         return self.forward(x_lr, y_lr, x_hr)
 
 

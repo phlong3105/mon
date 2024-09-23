@@ -59,7 +59,7 @@ __all__ = [
     "resize",
 ]
 
-from typing import Sequence
+from typing import Literal, Sequence
 
 import cv2
 import numpy as np
@@ -102,11 +102,12 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
 
 def resize(
-    image           : torch.Tensor | np.ndarray,
-    size            : int | Sequence[int] = None,
-    divisible_by    : int       = None,
-    resize_short_dim: bool      = False,
-    interpolation   : int | str = "bilinear",
+    image        : torch.Tensor | np.ndarray,
+    size         : int | Sequence[int] = None,
+    divisible_by : int = None,
+    side         : Literal["short", "long", "vert", "horz"] = "short",
+    interpolation: Literal["nearest", "linear", "bilinear", "bicubic", "trilinear", "area",
+                           cv2.INTER_AREA, cv2.INTER_CUBIC, cv2.INTER_LINEAR] = "bilinear",
     **kwargs,
 ) -> torch.Tensor | np.ndarray:
     """Resize an image
@@ -120,8 +121,12 @@ def resize(
         size: The target size.
         divisible_by: If not ``None``, then the image will be resized to a size
             that is divisible by this number. Default: ``None``.
-        resize_short_dim: If ``True``, resize the image such that the shortest
-            dimension is equal to the target size. Default: ``False``.
+        side: Corresponding side if ``size`` is an integer. One of:
+            - ``'short'``: Resize based on the shortest dimension.
+            - ``'long'``: Resize based on the longest dimension.
+            - ``'vert'``: Resize based on the vertical dimension.
+            - ``'horz'``: Resize based on the horizontal dimension.
+            Defaults: ``'short'``.
         interpolation: Algorithm used for upsampling.
             - For :obj:`kornia`:
                 - ``'nearest'``
@@ -140,11 +145,6 @@ def resize(
                     
     **kwargs (korina.geometry.transform.resize):
         - align_corners: interpolation flag.
-        - side: Corresponding side if ``size`` is an integer. One of:
-            + ``'short'``
-            + ``'long'``
-            + ``'vert'``
-            + ``'horz'``
         - antialias: if ``True``, then image will be filtered with Gaussian
             before downscaling. No effect for upscaling.
     
@@ -160,24 +160,42 @@ def resize(
     else:
         size = utils.get_image_size(image, divisible_by)
     # Resize based on the shortest dimension
-    if resize_short_dim:
+    if side == "short":
         h0, w0 = utils.get_image_size(image)
         h1, w1 = size
         if h0 < w0:
-            new_h = min(h1, w1)
-            new_w = max(h1, w1)
+            scale = h1 / h0
+            new_h = h1
+            new_w = int(w0 * scale)
         elif h0 > w0:
-            new_h = max(h1, w1)
-            new_w = min(h1, w1)
+            scale = w1 / w0
+            new_h = int(h0 * scale)
+            new_w = w1
         else:
             scale = h1 / h0 if h1 < w1 else w1 / w0
+            new_h = int(h0 * scale)
+            new_w = int(w0 * scale)
+        size = (new_h, new_w)
+    # Resize based on the longest dimension
+    elif side == "long":
+        h0, w0 = utils.get_image_size(image)
+        h1, w1 = size
+        if h0 > w0:
+            scale = h1 / h0
+            new_h = h1
+            new_w = int(w0 * scale)
+        elif h0 < w0:
+            scale = w1 / w0
+            new_h = int(h0 * scale)
+            new_w = w1
+        else:
+            scale = h1 / h0 if h1 > w1 else w1 / w0
             new_h = int(h0 * scale)
             new_w = int(w0 * scale)
         size = (new_h, new_w)
     # Apply the transformation
     if isinstance(image, torch.Tensor):
         align_corners = kwargs.pop("align_corners", None)
-        side          = kwargs.pop("side",          "short")
         antialias     = kwargs.pop("antialias",     False)
         return transform.resize(
             input         = image,

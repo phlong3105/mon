@@ -883,7 +883,6 @@ class Model(lightning.LightningModule, ABC):
     
     # region Predicting
     
-    # @torch.no_grad()
     def infer(self, datapoint: dict, *args, **kwargs) -> dict:
         """Infer the model on a single datapoint. This method is different from
         :obj:`forward()` in term that you may want to perform additional
