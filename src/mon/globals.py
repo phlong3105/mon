@@ -919,14 +919,6 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "torch_distributed_launch": True,
         },
     },
-    "kind"         : {
-        "kind": {
-            "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.SUPERVISED],
-            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "kind",
-            "torch_distributed_launch": True,
-        },
-    },
     "lime"         : {
         "lime": {
             "tasks"    : [Task.LLIE],
