@@ -17,8 +17,11 @@ import albumentations
 from albumentations import *
 from albumentations.augmentations.geometric import functional as fgeometric
 from albumentations.core.pydantic import InterpolationType, ProbabilityType
-from albumentations.core.transforms_interface import BaseTransformInitSchema, DualTransform
-from albumentations.core.types import (BoxInternalType, KeypointInternalType, Targets)
+from albumentations.core.transforms_interface import (
+	BaseTransformInitSchema,
+	DualTransform,
+)
+from albumentations.core.types import Targets
 from pydantic import Field
 
 
@@ -220,11 +223,11 @@ class ResizeMultipleOf(DualTransform):
 		height, width = self.get_size(img.shape[0], img.shape[1])
 		return fgeometric.resize(img, height=height, width=width, interpolation=interpolation)
 	
-	def apply_to_bbox(self, bbox: BoxInternalType, **params: Any) -> BoxInternalType:
+	def apply_to_bbox(self, bbox: np.ndarray, **params: Any) -> np.ndarray:
 		# Bounding box coordinates are scale invariant
 		return bbox
 	
-	def apply_to_keypoint(self, keypoint: KeypointInternalType, **params: Any) -> KeypointInternalType:
+	def apply_to_keypoint(self, keypoint: np.ndarray, **params: Any) -> np.ndarray:
 		height, width = self.get_size(params["rows"], params["cols"])
 		scale_x       = self.width  / width
 		scale_y       = self.height / height

@@ -16,16 +16,19 @@ __all__ = [
     "CoLIE_RE",
 ]
 
+from copy import deepcopy
 from typing import Any, Literal
 
-import cv2
 import numpy as np
 import torch
+from fvcore.nn import parameter_count
+from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
+
 from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
 from mon.vision import filtering
 from mon.vision.enhance import base
-from torch.nn import functional as F
 
 console      = core.console
 current_file = core.Path(__file__).absolute()
@@ -177,6 +180,46 @@ class CoLIE_RE(base.ImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
+    def compute_efficiency_score(
+        self,
+        image_size: _size_2_t = 512,
+        channels  : int       = 3,
+        runs      : int       = 1000,
+        verbose   : bool      = False,
+    ) -> tuple[float, float, float]:
+        """Compute the efficiency score of the model, including FLOPs, number
+        of parameters, and runtime.
+        """
+        # Define input tensor
+        h, w      = core.get_image_size(image_size)
+        datapoint = {
+            "image": torch.rand(1, channels, h, w).to(self.device),
+            # "depth": torch.rand(1,        1, h, w).to(self.device)
+        }
+        
+        # Get FLOPs and Params
+        flops, params = core.custom_profile(self, inputs=datapoint, verbose=verbose)
+        # flops         = FlopCountAnalysis(self, datapoint).total() if flops == 0 else flops
+        params        = self.params                if hasattr(self, "params") and params == 0 else params
+        params        = parameter_count(self)      if hasattr(self, "params")  else params
+        params        = sum(list(params.values())) if isinstance(params, dict) else params
+        
+        # Get time
+        timer = core.Timer()
+        for i in range(runs):
+            timer.tick()
+            _ = self(datapoint)
+            timer.tock()
+        avg_time = timer.avg_time
+        
+        # Print
+        if verbose:
+            console.log(f"FLOPs (G) : {flops:.4f}")
+            console.log(f"Params (M): {params:.4f}")
+            console.log(f"Time (s)  : {avg_time:.17f}")
+        
+        return flops, params, avg_time
+    
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
         self.assert_datapoint(datapoint)
@@ -323,26 +366,4 @@ class CoLIE_RE(base.ImageEnhancementModel):
         outputs["time"] = timer.avg_time
         return outputs
     
-# endregion
-
-
-# region Main
-
-def run_colie():
-    path      = core.Path("./data/00691.png")
-    image     = cv2.imread(str(path))
-    datapoint = {"image": core.to_image_tensor(image, False, True)}
-    device    = torch.device("cuda:0")
-    net       = CoLIE_RE().to(device)
-    outputs   = net.infer(datapoint)
-    enhanced  = outputs.get("enhanced")
-    enhanced  = core.to_image_nparray(enhanced, False, True)
-    cv2.imshow("Image",    image)
-    cv2.imshow("Enhanced", enhanced)
-    cv2.waitKey(0)
-
-
-if __name__ == "__main__":
-    run_colie()
-
 # endregion

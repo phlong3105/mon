@@ -8,11 +8,14 @@
 from __future__ import annotations
 
 import argparse
+from typing import Sequence
 
 import cv2
+import numpy as np
 import torch
 
 import mon
+from mon import nn
 from onnx_model import EnlightenOnnxModel
 
 console      = mon.console
@@ -22,12 +25,39 @@ current_dir  = current_file.parents[0]
 
 # region Predict
 
+def compute_efficiency_score(
+    model     : nn.Module,
+    image_size: int | Sequence[int] = 512,
+    channels  : int  = 3,
+    runs      : int  = 1000,
+    use_cuda  : bool = True,
+    verbose   : bool = False,
+):
+    # Define input tensor
+    h, w  = mon.get_image_size(image_size)
+    input = np.random.rand(h, w, channels)
+    
+    # Get time
+    timer = mon.Timer()
+    for i in range(runs):
+        timer.tick()
+        _ = model.predict(input)
+        timer.tock()
+    avg_time = timer.avg_time
+    
+    # Print
+    if verbose:
+        # console.log(f"FLOPs (G) : {flops:.4f}")
+        # console.log(f"Params (M): {params:.4f}")
+        console.log(f"Time (s)  : {avg_time:.17f}")
+    
+
 def predict(args: argparse.Namespace):
     # General config
     data         = args.data
     save_dir     = args.save_dir
     weights      = args.weights
-    weights      = weights or mon.ZOO_DIR / "vision/enhance/llie/enlightengan/enlightengan/custom/enlightengan.onnx"
+    weights      = weights
     device       = mon.set_device(args.device)
     imgsz        = args.imgsz
     resize       = args.resize
@@ -36,14 +66,22 @@ def predict(args: argparse.Namespace):
     save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
     
-    # Measure efficiency score
-    # if benchmark:
-    #     model  = EnlightenOnnxModel(weights=weights)
-    #     inputs = {"input": create_ndarray_f32((1, 3, 512, 512)), }
-    #     onnx_tool.model_profile(str(current_dir/"enlighten_inference/enlighten.onnx"), inputs, None)
-    
     # Model
     model = EnlightenOnnxModel(weights=weights)
+    
+    # Measure efficiency score
+    if benchmark:
+        compute_efficiency_score(
+            model      = model,
+            image_size = imgsz,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = True,
+        )
+        # model  = EnlightenOnnxModel(weights=weights)
+        # inputs = {"input": create_ndarray_f32((1, 3, 512, 512)), }
+        # onnx_tool.model_profile(str(current_dir/"enlighten_inference/enlighten.onnx"), inputs, None)
     
     # Data I/O
     console.log(f"[bold red]{data}")
@@ -73,6 +111,9 @@ def predict(args: argparse.Namespace):
                 timer.tick()
                 enhanced_image = model.predict(image)
                 timer.tock()
+                
+                # Post-process
+                enhanced_image = cv2.cvtColor(enhanced_image, cv2.COLOR_RGB2BGR)
                 
                 # Save
                 if save_image:

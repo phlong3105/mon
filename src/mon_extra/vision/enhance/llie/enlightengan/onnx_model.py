@@ -26,7 +26,7 @@ class EnlightenOnnxModel:
     def __init__(
         self,
         model  : Union[bytes, str, None] = None,
-        weights: core.Path = ZOO_DIR / "vision/enhance/llie/enlightengan/enlightengan.onnx",
+        weights: core.Path = ZOO_DIR / "vision/enhance/llie/enlightengan/enlightengan/custom/enlightengan.onnx",
     ):
         self.graph = InferenceSession(
             model or weights or str(ZOO_DIR / "vision/enhance/llie/enlightengan/enlightengan.onnx"),
