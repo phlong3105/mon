@@ -110,7 +110,7 @@ def predict(args: argparse.Namespace):
         flops, params, avg_time = copy.deepcopy(model).measure_efficiency_score(image_size=imgsz)
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
     
     # Data I/O
     console.log(f"[bold red]{data}")

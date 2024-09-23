@@ -65,13 +65,13 @@ def test(args):
             model      = model,
             image_size = args.image_size,
             channels   = 3,
-            runs       = 100,
+            runs       = 1000,
             use_cuda   = True,
             verbose    = False,
         )
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
     
     # Prepare DataLoader
     # test_low_data_names = r"H:\CVPR2021\LOL-700\input-100/*.png"

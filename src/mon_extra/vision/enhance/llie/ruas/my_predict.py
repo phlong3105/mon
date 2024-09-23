@@ -54,7 +54,7 @@ def predict(args: argparse.Namespace):
     
     # Model
     model = Network().to(device)
-    model.load_state_dict(torch.load(str(weights)))
+    model.load_state_dict(torch.load(str(weights), weights_only=True))
     for p in model.parameters():
         p.requires_grad = False
     model.eval()
@@ -71,7 +71,7 @@ def predict(args: argparse.Namespace):
         )
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.6f}")
+        console.log(f"Time   = {avg_time:.17f}")
     
     # Data I/O
     console.log(f"[bold red]{data}")

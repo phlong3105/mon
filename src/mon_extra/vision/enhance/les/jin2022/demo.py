@@ -307,13 +307,13 @@ def main(args: args.Namespace):
             model      = dle_net,
             image_size = args.image_size,
             channels   = 3,
-            runs       = 100,
+            runs       = 1000,
             use_cuda   = True,
             verbose    = False,
         )
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
 
     dle_net = nn.DataParallel(dle_net).cuda()
     if args.weights is not None:

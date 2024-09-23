@@ -65,7 +65,7 @@ class VisionModel(nn.Model, ABC):
         if verbose:
             console.log(f"FLOPs (G) : {flops:.4f}")
             console.log(f"Params (M): {params:.4f}")
-            console.log(f"Time (s)  : {avg_time:.4f}")
+            console.log(f"Time (s)  : {avg_time:.17f}")
         
         return flops, params, avg_time
         

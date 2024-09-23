@@ -64,13 +64,13 @@ class Tester:
                 model      = self.net,
                 image_size = [h, w],
                 channels   = 3,
-                runs       = 100,
+                runs       = 1000,
                 use_cuda   = True,
                 verbose    = False,
             )
             console.log(f"FLOPs  = {flops:.4f}")
             console.log(f"Params = {params:.4f}")
-            console.log(f"Time   = {avg_time:.4f}")
+            console.log(f"Time   = {avg_time:.17f}")
         
         sum_time = 0
         with mon.get_progress_bar() as pbar:

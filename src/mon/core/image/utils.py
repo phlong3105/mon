@@ -350,7 +350,7 @@ def get_image_size(
     # Get raw size
     if isinstance(input, list | tuple):
         if len(input) == 3:
-            if input[0] >= input[3]:
+            if input[0] >= input[2]:
                 size = input[0:2]
             else:
                 size = input[1:3]
@@ -376,7 +376,7 @@ def get_image_size(
                         f"or a `list` of `int`, but got {type(input)}.")
     
     # Divisible
-    if divisor:
+    if divisor is not None:
         h, w  = size
         new_h = int(math.ceil(h / divisor) * divisor)
         new_w = int(math.ceil(w / divisor) * divisor)

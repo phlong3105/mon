@@ -31,33 +31,35 @@ def predict(args: argparse.Namespace):
     weights      = args.weights
     device       = mon.set_device(args.device)
     imgsz        = args.imgsz
+    imgsz        = imgsz[0] if isinstance(imgsz, list | tuple) else imgsz
     resize       = args.resize
     benchmark    = args.benchmark
     save_image   = args.save_image
     save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
+    scale_factor = args.scale_factor
     
     # Model
-    scale_factor = 12
     net          = mmodel.enhance_net_nopool(scale_factor, conv_type="dsc").to(device)
-    net.load_state_dict(torch.load(weights, map_location=device))
+    net.load_state_dict(torch.load(weights, map_location=device, weights_only=True))
     net.eval()
     
     # Benchmark
     if benchmark:
         h = (imgsz // scale_factor) * scale_factor
         w = (imgsz // scale_factor) * scale_factor
+        # h, w = imgsz, imgsz
         flops, params, avg_time = mon.compute_efficiency_score(
             model      = copy.deepcopy(net),
             image_size = [h, w],
             channels   = 3,
-            runs       = 100,
+            runs       = 1000,
             use_cuda   = True,
             verbose    = False,
         )
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
     
     # Data I/O
     console.log(f"[bold red]{data}")
@@ -82,6 +84,7 @@ def predict(args: argparse.Namespace):
                 meta          = datapoint.get("meta")
                 image_path    = mon.Path(meta["path"])
                 data_lowlight = utils.image_from_path(str(image_path))
+                h0, w0        = mon.get_image_size(meta["shape"])
                 # Scale image to have the resolution of multiple of 4
                 data_lowlight = utils.scale_image(data_lowlight, scale_factor, device) if scale_factor != 1 else data_lowlight
                 data_lowlight = data_lowlight.to(device)
@@ -90,6 +93,9 @@ def predict(args: argparse.Namespace):
                 timer.tick()
                 enhanced_image, params_maps = net(data_lowlight)
                 timer.tock()
+                
+                # Post-processing
+                enhanced_image = mon.resize(enhanced_image, (h0, w0), side=None)
                 
                 # Save
                 if save_image:
@@ -111,7 +117,7 @@ def predict(args: argparse.Namespace):
 
 def main() -> str:
     args = mon.parse_predict_args(model_root=current_dir)
-    args.weights = args.weights or mon.ZOO_DIR / "vision/enhance/llie/sgz/sgz/lol_v1/sgz_lol_v1_pretrained.pt"
+    args.weights = args.weights
     predict(args)
 
 

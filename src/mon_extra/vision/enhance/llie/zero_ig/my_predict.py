@@ -74,7 +74,7 @@ def predict(args: argparse.Namespace):
             model      = copy.deepcopy(model),
             image_size = imgsz,
             channels   = 3,
-            runs       = 100,
+            runs       = 1000,
             use_cuda   = True,
             verbose    = False,
         )

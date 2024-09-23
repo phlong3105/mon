@@ -25,3 +25,6 @@ use_data_dir: False
 use_fullpath: False
 exist_ok    : False
 verbose     : True
+
+# Model Specific
+scale_factor: 12

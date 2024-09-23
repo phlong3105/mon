@@ -137,7 +137,7 @@ class Finetunemodel(nn.Module):
         self.enhance = EnhanceNetwork(layers=1, channels=3)
         self._criterion = LossFunction()
 
-        base_weights = torch.load(weights)
+        base_weights = torch.load(weights, weights_only=True)
         pretrained_dict = base_weights
         model_dict = self.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}

@@ -365,7 +365,7 @@ def main(
         resize       = "yes" if imgsz_ not in [None, -1] else "no"
         resize       = click.prompt(click.style(f"Resize?     [yes/no]", fg="bright_yellow", bold=True), type=str, default=resize)
         resize       = True if resize       == "yes" else False
-        benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="no")
+        benchmark    = click.prompt(click.style(f"Benchmark?  [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
         benchmark    = True if benchmark    == "yes" else False
         save_image   = click.prompt(click.style(f"Save image? [yes/no]", fg="bright_yellow", bold=True), type=str, default="yes")
         save_image   = True if save_image   == "yes" else False

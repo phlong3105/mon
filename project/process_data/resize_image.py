@@ -18,7 +18,7 @@ import mon
 @click.option("--output-dir",   type=click.Path(exists=False), default=None,         help="Output directory.")
 @click.option("--imgsz",        type=int,                      default=512)
 @click.option("--divisible-by", type=int,                      default=32)
-@click.option("--side",         type=click.Choice(["short", "long", "vert", "horz"], case_sensitive=False), default="short")
+@click.option("--side",         type=click.Choice(["short", "long", "vert", "horz", None], case_sensitive=False), default="short")
 @click.option("--replace",      is_flag=True)
 @click.option("--verbose",      is_flag=True)
 def resize_image(

@@ -56,13 +56,13 @@ def predict(args: argparse.Namespace):
             model      = copy.deepcopy(model),
             image_size = imgsz,
             channels   = 3,
-            runs       = 100,
+            runs       = 1000,
             use_cuda   = True,
             verbose    = False,
         )
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
     
     # Data I/O
     console.log(f"[bold red]{data}")
@@ -114,7 +114,7 @@ def predict(args: argparse.Namespace):
 
 def main() -> str:
     args = mon.parse_predict_args(model_root=current_dir)
-    args.weights = args.weights or mon.ZOO_DIR / "vision/enhance/llie/sci/sci/lol_v1/sci_lol_v1_pretrained.pt"
+    args.weights = args.weights
     predict(args)
 
 

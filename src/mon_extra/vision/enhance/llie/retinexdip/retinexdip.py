@@ -322,7 +322,7 @@ class Enhancement(object):
         avg_time = (avg_time_1 + avg_time_2) / 2
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
     
 
 def lowlight_enhancer(image_name, image):
@@ -374,7 +374,7 @@ def test(args: argparse.Namespace):
                         s.calculate_efficiency_score(
                             image_size = args.image_size,
                             channels   = 8,
-                            runs       = 100,
+                            runs       = 1000,
                         )
 
         avg_time = float(sum_time / len(image_paths))

@@ -62,8 +62,10 @@ __all__ = [
 from typing import Literal, Sequence
 
 import cv2
+import kornia.geometry
 import numpy as np
 import torch
+import torchvision.transforms.functional
 from kornia.geometry import transform
 from kornia.geometry.transform import *
 from torch.nn import functional as F
@@ -105,7 +107,7 @@ def resize(
     image        : torch.Tensor | np.ndarray,
     size         : int | Sequence[int] = None,
     divisible_by : int = None,
-    side         : Literal["short", "long", "vert", "horz"] = "short",
+    side         : Literal["short", "long", "vert", "horz", None] = None,
     interpolation: Literal["nearest", "linear", "bilinear", "bicubic", "trilinear", "area",
                            cv2.INTER_AREA, cv2.INTER_CUBIC, cv2.INTER_LINEAR] = "bilinear",
     **kwargs,
@@ -202,7 +204,7 @@ def resize(
             size          = size,
             interpolation = interpolation,
             align_corners = align_corners,
-            side          = side,
+            side          = side or "short",
             antialias     = antialias,
         )
     elif isinstance(image, np.ndarray):

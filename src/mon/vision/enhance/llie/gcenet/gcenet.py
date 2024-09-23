@@ -15,7 +15,6 @@ __all__ = [
 from copy import deepcopy
 from typing import Any, Literal
 
-import kornia
 import torch
 from fvcore.nn import parameter_count
 from torch.nn import functional as F
@@ -410,7 +409,7 @@ class GCENet(base.ImageEnhancementModel):
         self,
         imgsz   : _size_2_t = 512,
         channels: int       = 3,
-        runs    : int       = 100,
+        runs    : int       = 1000,
         verbose : bool      = False,
     ) -> tuple[float, float, float]:
         """Compute the efficiency score of the model, including FLOPs, number
@@ -442,7 +441,7 @@ class GCENet(base.ImageEnhancementModel):
         if verbose:
             console.log(f"FLOPs (G) : {flops:.4f}")
             console.log(f"Params (M): {params:.4f}")
-            console.log(f"Time (s)  : {avg_time:.4f}")
+            console.log(f"Time (s)  : {avg_time:.17f}")
         
         return flops, params, avg_time
     

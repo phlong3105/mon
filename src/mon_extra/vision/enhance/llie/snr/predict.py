@@ -45,7 +45,7 @@ def predict(args: argparse.Namespace):
         flops, params, avg_time = model.measure_efficiency_score(image_size=args.image_size)
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
 
     #
     with torch.no_grad():

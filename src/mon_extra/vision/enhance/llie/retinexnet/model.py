@@ -142,7 +142,7 @@ class RetinexNet(nn.Module):
                 model      = self.DecomNet,
                 image_size = image_size,
                 channels   = 3,
-                runs       = 100,
+                runs       = 1000,
                 use_cuda   = True,
                 verbose    = False,
             )
@@ -150,7 +150,7 @@ class RetinexNet(nn.Module):
                 model      = self.RelightNet,
                 image_size = image_size,
                 channels   = 3,
-                runs       = 100,
+                runs       = 1000,
                 use_cuda   = True,
                 verbose    = False,
             )

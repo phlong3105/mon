@@ -324,7 +324,7 @@ class Enhancement(object):
         avg_time = (avg_time_1 + avg_time_2) / 2
         console.log(f"FLOPs  = {flops:.4f}")
         console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        console.log(f"Time   = {avg_time:.17f}")
     
 
 def lowlight_enhancer(image_name, image):

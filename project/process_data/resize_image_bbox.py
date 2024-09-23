@@ -24,7 +24,7 @@ import mon
 @click.option("--format",       type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), default="voc", help="Bounding bbox format.")
 @click.option("--imgsz",        type=int,                      default=512)
 @click.option("--divisible-by", type=int,                      default=32)
-@click.option("--side",         type=click.Choice(["short", "long", "vert", "horz"], case_sensitive=False), default="short")
+@click.option("--side",         type=click.Choice(["short", "long", "vert", "horz", None], case_sensitive=False), default="short")
 @click.option("--replace",      is_flag=True)
 @click.option("--verbose",      is_flag=True)
 def convert_bbox(
