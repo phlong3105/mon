@@ -1,8 +1,12 @@
-import data
-import framework
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.utilities.cli import DATAMODULE_REGISTRY, MODEL_REGISTRY, LightningCLI
+from pytorch_lightning.utilities.cli import (
+    DATAMODULE_REGISTRY, LightningCLI,
+    MODEL_REGISTRY,
+)
+
+import data
+import framework
 
 
 class CustomLightningCLI(LightningCLI):
@@ -18,25 +22,25 @@ MODEL_REGISTRY.register_classes(framework, pl.core.lightning.LightningModule)
 DATAMODULE_REGISTRY.register_classes(data, pl.core.LightningDataModule)
 
 cli = CustomLightningCLI(
-    auto_registry=True,
-    subclass_mode_model=True,
-    subclass_mode_data=True,
-    save_config_overwrite=True,
-    run=False,
-    trainer_defaults={
+    auto_registry         = True,
+    subclass_mode_model   = True,
+    subclass_mode_data    = True,
+    save_config_overwrite = True,
+    run                   = False,
+    trainer_defaults      = {
         "callbacks": ModelCheckpoint(
-            filename="{epoch:02d}-{val_metric:.2f}",
-            every_n_epochs=10,
-            save_last=True,
+            filename       = "{epoch:02d}-{val_metric:.2f}",
+            every_n_epochs = 10,
+            save_last      = True,
         )
     },
 )
 
 cli.trainer.logger = pl.loggers.TensorBoardLogger(
-    save_dir=cli.trainer.default_root_dir,
-    name=cli.config["exp_name"],
-    version=cli.config["version"],
-    default_hp_metric=False,
+    save_dir          = cli.trainer.default_root_dir,
+    name              = cli.config["exp_name"],
+    version           = cli.config["version"],
+    default_hp_metric = False,
 )
 
 if cli.config["pipeline"] == "full":

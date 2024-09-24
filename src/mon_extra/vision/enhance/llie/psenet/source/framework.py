@@ -3,11 +3,12 @@ import os
 import piq
 import torch
 import torchvision
+from pytorch_lightning.core.lightning import LightningModule
+from pytorch_lightning.utilities.cli import MODEL_REGISTRY
+
 from iqa import IQA
 from loss import TVLoss
 from model import UnetTMO
-from pytorch_lightning.core.lightning import LightningModule
-from pytorch_lightning.utilities.cli import MODEL_REGISTRY
 
 
 def save_image(im, p):

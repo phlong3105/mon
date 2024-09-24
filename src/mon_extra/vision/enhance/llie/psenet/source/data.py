@@ -36,6 +36,7 @@ class NoGTDataset(data.Dataset):
 
 
 class PairedDataset(data.Dataset):
+    
     def __init__(self, root_folder, pattern, get_label_fn, resize=None, return_name=False):
         super().__init__()
         self.data_list = sorted(glob.glob(root_folder + pattern, recursive=True))
