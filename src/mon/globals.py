@@ -891,14 +891,6 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "torch_distributed_launch": True,
         },
     },
-    "gsad"         : {
-        "gsad": {
-            "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.SUPERVISED],
-            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "gsad",
-            "torch_distributed_launch": True,
-        },
-    },
     "hvi_cidnet"   : {
         "hvi_cidnet": {
             "tasks"    : [Task.LLIE],

@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import copy
 import sys
-import time
 
 import cv2
 import numpy as np
@@ -16,7 +15,6 @@ import torch.utils
 from PIL import Image
 from thop import profile
 from torch.autograd import Variable
-from torchvision import transforms
 
 import mon
 from model import Finetunemodel
