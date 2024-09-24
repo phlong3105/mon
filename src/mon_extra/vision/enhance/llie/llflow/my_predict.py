@@ -83,7 +83,6 @@ def format_measurements(meas):
 
 def predict(args: argparse.Namespace):
     # General config
-    opt_path     = str(current_dir / "model_config" / args.opt_path)
     data         = args.data
     save_dir     = mon.Path(args.save_dir)
     weights      = args.weights
@@ -94,7 +93,9 @@ def predict(args: argparse.Namespace):
     save_image   = args.save_image
     save_debug   = args.save_debug
     use_fullpath = args.use_fullpath
+    opt_path     = str(current_dir / "model_config" / args.opt_path)
     
+    # Override options with args
     opt            = option.parse(opt_path, is_train=False)
     opt["gpu_ids"] = None
     opt            = option.dict_to_nonedict(opt)
