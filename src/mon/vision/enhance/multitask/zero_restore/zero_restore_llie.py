@@ -287,8 +287,8 @@ class ZeroRestoreLLIE(base.ImageEnhancementModel):
         atm_map_x   = outputs_x["atm"]
         enhanced_x  = outputs_x["enhanced"]
         # Loss
-        o_tensor  = torch.ones(enhanced.shape).cuda()
-        z_tensor  = torch.zeros(enhanced.shape).cuda()
+        o_tensor  = torch.ones(enhanced.shape).to(self.device)
+        z_tensor  = torch.zeros(enhanced.shape).to(self.device)
         loss_t    = torch.sum((trans_map_x - p_x * trans_map) ** 2)
         loss_a    = torch.sum((atm_map - atm_map_x) ** 2)
         loss_mx_r = torch.sum(torch.max(enhanced[:, 0:1, :, :], o_tensor)) + torch.sum(torch.max(enhanced_x[:, 0:1, :, :], o_tensor)) - 2 * torch.sum(o_tensor)
@@ -389,6 +389,8 @@ class ZeroRestoreLLIE(base.ImageEnhancementModel):
         timer.tick()
         outputs  = self.forward(datapoint={"image": image})
         timer.tock()
+        
+        # Post-processing
         enhanced = outputs["enhanced"]
         enhanced = core.resize(enhanced, (h, w))
         outputs["enhanced"] = torch.clamp(enhanced, 0, 1)

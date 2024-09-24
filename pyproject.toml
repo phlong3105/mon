@@ -59,7 +59,7 @@ exclude       = []
 [tool.poetry.dependencies]
 python            = ">=3.11, <3.13"
 depth_anything_v2 = {path="src/mon_extra/vision/depth/depth_anything_v2", develop=true}
-mobile_sam        = {path="src/mon_extra/vision/segment/mobile_sam"     , develop=true}
+# mobile_sam        = {path="src/mon_extra/vision/segment/mobile_sam"     , develop=true}
 sam               = {path="src/mon_extra/vision/segment/sam"            , develop=true}
 sam2              = {path="src/mon_extra/vision/segment/sam2"           , develop=true}
 ultralytics       = {path="src/mon_extra/vision/ultralytics"            , develop=true}
@@ -71,7 +71,7 @@ yolox             = {path="src/mon_extra/vision/detect/yolox"           , develo
 [tool.poetry.extras]
 dev = [
     "depth_anything_v2",
-    "mobile_sam",
+    # "mobile_sam",
     "sam",
     "sam2",
     "ultralytics",

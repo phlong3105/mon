@@ -6,14 +6,12 @@ from __future__ import annotations
 import argparse
 import copy
 
-import numpy as np
 import torch
 import torch.optim
 import torchvision
-from PIL import Image
 
-import model as mmodel
 import mon
+from model import LYT
 
 console      = mon.console
 current_file = mon.Path(__file__).absolute()
@@ -29,6 +27,7 @@ def predict(args: argparse.Namespace):
     weights      = args.weights
     device       = mon.set_device(args.device)
     imgsz        = args.imgsz
+    imgsz        = imgsz[0] if isinstance(imgsz, list | tuple) else imgsz
     resize       = args.resize
     benchmark    = args.benchmark
     save_image   = args.save_image
@@ -36,14 +35,14 @@ def predict(args: argparse.Namespace):
     use_fullpath = args.use_fullpath
     
     # Model
-    DCE_net = mmodel.enhance_net_nopool().to(device)
-    DCE_net.load_state_dict(torch.load(weights, weights_only=True))
-    DCE_net.eval()
+    model = LYT().to(device)
+    model.load_state_dict(torch.load(weights, map_location=device, weights_only=True))
+    model.eval()
     
     # Benchmark
     if benchmark:
         flops, params, avg_time = mon.compute_efficiency_score(
-            model      = copy.deepcopy(DCE_net),
+            model      = copy.deepcopy(model),
             image_size = imgsz,
             channels   = 3,
             runs       = 1000,
@@ -74,17 +73,15 @@ def predict(args: argparse.Namespace):
                 description = f"[bright_yellow] Predicting"
             ):
                 # Input
-                meta          = datapoint.get("meta")
-                image_path    = mon.Path(meta["path"])
-                data_lowlight = Image.open(image_path).convert("RGB")
-                data_lowlight = (np.asarray(data_lowlight) / 255.0)
-                data_lowlight = torch.from_numpy(data_lowlight).float()
-                data_lowlight = data_lowlight.permute(2, 0, 1)
-                data_lowlight = data_lowlight.to(device).unsqueeze(0)
+                image      = datapoint.get("image")
+                meta       = datapoint.get("meta")
+                image_path = mon.Path(meta["path"])
+                input      = image.to(device)
                 
                 # Infer
                 timer.tick()
-                _, enhanced_image, _ = DCE_net(data_lowlight)
+                enhanced_image = model(input)
+                enhanced_image = torch.clamp(enhanced_image, 0, 1)
                 timer.tock()
                 
                 # Save

@@ -923,6 +923,14 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "torch_distributed_launch": True,
         },
     },
+    "lyt_net"      : {
+        "lyt_net": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "lyt_net",
+            "torch_distributed_launch": True,
+        },
+    },
     "mtfe"         : {
         "mtfe": {
             "tasks"    : [Task.LLIE],

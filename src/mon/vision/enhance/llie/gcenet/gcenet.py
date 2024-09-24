@@ -3,13 +3,15 @@
 
 """GCE-Net
 
-This module implements our idea: Guided Curve Estimation Network.
+This module implements our idea: "Guided Curve Estimation Network for Low-Light
+Image Enhancement".
 """
 
 from __future__ import annotations
 
 __all__ = [
     "GCENet",
+    "GCENet_ZSN2N",
 ]
 
 from copy import deepcopy
@@ -17,7 +19,6 @@ from typing import Any, Literal
 
 import torch
 from fvcore.nn import parameter_count
-from torch.nn import functional as F
 from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
@@ -31,9 +32,6 @@ current_file = core.Path(__file__).absolute()
 current_dir  = current_file.parents[0]
 
 DepthBoundaryAware = nn.BoundaryAwarePrior
-bilateral_ksize    = (5, 5)
-bilateral_color    = 0.5
-bilateral_space    = (1, 1)
 
 
 # region Loss
@@ -213,6 +211,7 @@ class ConvBlock(nn.Module):
     ):
         super().__init__()
         self.conv = nn.DSConv2d(in_channels, out_channels, 3, 1, 1, bias=True)
+        # self.conv = nn.Conv2d(in_channels, out_channels, 3, 1, 1, bias=True)
         #
         if norm:
             self.norm = norm(out_channels)
@@ -337,7 +336,7 @@ class DenoiseNet(nn.Module):
 
 @MODELS.register(name="gcenet", arch="gcenet")
 class GCENet(base.ImageEnhancementModel):
-    """Guided Curve Estimation Network."""
+    """Guided Curve Estimation Network for Low-Light Image Enhancement."""
     
     model_dir: core.Path    = current_dir
     arch     : str          = "gcenet"
@@ -351,9 +350,8 @@ class GCENet(base.ImageEnhancementModel):
         in_channels : int   = 3,
         num_channels: int   = 32,
         num_iters   : int   = 15,
-        down_size   : int   = 256,
         dba_eps     : float = 0.05,
-        gf_radius   : int   = 1,
+        gf_radius   : int   = 3,
         gf_eps      : float = 1e-4,
         bam_gamma   : float = 2.6,
         bam_ksize   : int   = 9,
@@ -370,7 +368,6 @@ class GCENet(base.ImageEnhancementModel):
         )
         self.in_channels  = in_channels
         self.num_channels = num_channels
-        self.down_size    = down_size
         self.num_iters    = num_iters
         self.dba_eps      = dba_eps
         self.gf_radius    = gf_radius
@@ -448,27 +445,13 @@ class GCENet(base.ImageEnhancementModel):
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
         self.assert_datapoint(datapoint)
-        image          = datapoint.get("image")
-        depth          = datapoint.get("depth")
-        image1, image2 = core.pair_downsample(image)
-        depth1, depth2 = core.pair_downsample(depth)
-        datapoint1     = datapoint | {"image": image1, "depth": depth1}
-        datapoint2     = datapoint | {"image": image2, "depth": depth2}
-        outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
-        outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
-        outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
+        image    = datapoint.get("image")
+        outputs  = self.forward(datapoint=datapoint,  *args, **kwargs)
         self.assert_outputs(outputs)
         # Symmetric Loss
-        enhanced1 = outputs1["enhanced"]
-        enhanced2 = outputs2["enhanced"]
-        adjust    =  outputs["adjust"]
-        enhanced  =  outputs["enhanced"]
-        enhanced_1, enhanced_2 = core.pair_downsample(enhanced)
-        mse_loss = nn.MSELoss()
-        loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,     enhanced1))
-        loss_con = 0.5 * (mse_loss(enhanced_1, enhanced1) + mse_loss(enhanced_2, enhanced2))
-        loss_enh = self.loss(image, adjust, enhanced)
-        loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
+        adjust   = outputs["adjust"]
+        enhanced = outputs["enhanced"]
+        loss     = self.loss(image, adjust, enhanced)
         outputs["loss"] = loss
         # Return
         return outputs
@@ -499,7 +482,6 @@ class GCENet(base.ImageEnhancementModel):
                 dark     = enhanced * bam
                 enhanced = bright + dark + adjust * (torch.pow(dark, 2) - dark)
         # Guided Filter
-        # enhanced = kornia.filters.bilateral_blur(enhanced, bilateral_ksize, bilateral_color, bilateral_space)
         enhanced = self.gf(image, enhanced)
         # Return
         if self.debug:
@@ -516,16 +498,40 @@ class GCENet(base.ImageEnhancementModel):
             return {
                 "enhanced": enhanced,
             }
+
+
+@MODELS.register(name="gcenet_zsn2n", arch="gcenet")
+class GCENet_ZSN2N(GCENet):
     
-    def interpolate_image(self, image: torch.Tensor) -> torch.Tensor:
-        """Reshapes the image based on new resolution."""
-        return F.interpolate(image, size=(self.down_size, self.down_size), mode="bicubic")
+    def __init__(self, name: str = "gcenet_zsn2n", *args, **kwargs):
+        super().__init__(name=name, *args, **kwargs)
     
-    def filter_up(self, x_lr: torch.Tensor, y_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
-        """Applies the guided filter to upscale the predicted image. """
-        gf   = filtering.FastGuidedFilter(radius=self.gf_radius, eps=self.gf_eps)
-        y_hr = gf(x_lr, y_lr, x_hr)
-        y_hr = torch.clip(y_hr, 0, 1)
-        return y_hr
-        
+    def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
+        # Forward
+        self.assert_datapoint(datapoint)
+        image          = datapoint.get("image")
+        depth          = datapoint.get("depth")
+        image1, image2 = core.pair_downsample(image)
+        depth1, depth2 = core.pair_downsample(depth)
+        datapoint1     = datapoint | {"image": image1, "depth": depth1}
+        datapoint2     = datapoint | {"image": image2, "depth": depth2}
+        outputs1       = self.forward(datapoint=datapoint1, *args, **kwargs)
+        outputs2       = self.forward(datapoint=datapoint2, *args, **kwargs)
+        outputs        = self.forward(datapoint=datapoint,  *args, **kwargs)
+        self.assert_outputs(outputs)
+        # Symmetric Loss
+        enhanced1 = outputs1["enhanced"]
+        enhanced2 = outputs2["enhanced"]
+        adjust    =  outputs["adjust"]
+        enhanced  =  outputs["enhanced"]
+        enhanced_1, enhanced_2 = core.pair_downsample(enhanced)
+        mse_loss = nn.MSELoss()
+        loss_res = 0.5 * (mse_loss(image1,     enhanced2) + mse_loss(image2,     enhanced1))
+        loss_con = 0.5 * (mse_loss(enhanced_1, enhanced1) + mse_loss(enhanced_2, enhanced2))
+        loss_enh = self.loss(image, adjust, enhanced)
+        loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
+        outputs["loss"] = loss
+        # Return
+        return outputs
+
 # endregion

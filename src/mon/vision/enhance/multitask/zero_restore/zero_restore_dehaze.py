@@ -248,8 +248,8 @@ class ZeroRestoreDehaze(base.ImageEnhancementModel):
         atm_map_x   = outputs_x["atm"]
         enhanced_x  = outputs_x["enhanced"]
         # Loss
-        o_tensor = torch.ones(enhanced.shape).cuda()
-        z_tensor = torch.zeros(enhanced.shape).cuda()
+        o_tensor = torch.ones(enhanced.shape).to(self.device)
+        z_tensor = torch.zeros(enhanced.shape).to(self.device)
         loss_t   = torch.sum((trans_map_x - p_x * trans_map) ** 2)
         loss_a   = torch.sum((atm_map - atm_map_x) ** 2)
         loss_mx  =   torch.sum(torch.max(enhanced, o_tensor)) + torch.sum(torch.max(enhanced_x, o_tensor)) - 2 * torch.sum(o_tensor)

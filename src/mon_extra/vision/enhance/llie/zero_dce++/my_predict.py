@@ -39,7 +39,7 @@ def predict(args: argparse.Namespace):
     # Model
     scale_factor = args.scale_factor
     DCE_net      = model.enhance_net_nopool(scale_factor).to(device)
-    DCE_net.load_state_dict(torch.load(weights))
+    DCE_net.load_state_dict(torch.load(weights, weights_only=True))
     DCE_net.eval()
     
     # Benchmark

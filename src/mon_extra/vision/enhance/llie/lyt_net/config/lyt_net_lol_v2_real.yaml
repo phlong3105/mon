@@ -1,0 +1,30 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "lyt_net"
+model       : "lyt_net"
+data        : "lol_v2_real"
+data_dir    : "data/enhance/llie/lol_v2_real"
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "lyt_net_lol_v2_real"
+save_dir    : ~
+weights     : "zoo/vision/enhance/llie/lyt_net/lyt_net/lol_v2_real/lyt_net_lol_v2_real.pth"
+device      : 0
+local_rank  : -1
+launcher    : ~
+epochs      : 1500
+steps       : ~
+imgsz       : 256
+resize      : ~
+benchmark   : False
+save_image  : True
+save_debug  : False
+use_data_dir: False
+use_fullpath: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+lr: 0.0002

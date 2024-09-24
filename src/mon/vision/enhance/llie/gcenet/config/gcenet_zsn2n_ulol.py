@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/edenoised1nv python
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
@@ -12,15 +12,15 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "llunet++_re"
-data_name  = "lol_v1"
+model_name = "gcenet_zsn2n"
+data_name  = "ulol"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
 variant    = None
 fullname   = f"{model_name}_{data_name}"
-image_size = [384, 384]
-seed	   = 1234
+image_size = [512, 512]
+seed	   = 100
 verbose    = True
 
 # endregion
@@ -34,9 +34,16 @@ model = {
 	"root"        : root,           # The root directory of the model.
 	"in_channels" : 3,              # The first layer's input channel.
 	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
+	"num_channels": 32,			    # The number of input and output channels for subsequent layers.
+	"num_iters"   : 15,             # The number of progressive loop.
+	"dba_eps"     : 0.05,		    # The epsilon for DepthBoundaryAware.
+	"gf_radius"   : 3,              # The radius for GuidedFilter.
+	"gf_eps"	  : 1e-4,           # The epsilon for GuidedFilter.
+	"bam_gamma"	  : 2.6,            # The gamma for BrightnessAttentionMap.
+	"bam_ksize"   : 9,			    # The kernel size for BrightnessAttentionMap.
+	"use_depth"   : True,           # If ``True``, use depth information.
+	"use_edge"    : True,           # If ``True``, use edge information.
 	"weights"     : None,           # The model's weights.
-	"loss"        : None,           # Loss function for training the model.
-	"loss_weights": [0.40, 0.05, 0.15, 0.40],
 	"metrics"     : {
 	    "train": None,
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
@@ -45,23 +52,12 @@ model = {
 	"optimizers"  : [
 		{
             "optimizer"          : {
-				"name"        : "adam",
-				"lr"          : 0.00001,
-				"weight_decay": 1e-4,
-				"betas"       : [0.9, 0.999],
-				"eps"		    : 1e-8,
+	            "name"        : "adam",
+	            "lr"          : 0.00005,
+	            "weight_decay": 0.00001,
+	            "betas"       : [0.9, 0.99],
 			},
-	        "lr_scheduler"       : {
-				"scheduler": {
-					"name" : "exponential_lr",
-					"gamma": 0.99,
-				},
-				"interval" : "epoch",       # Unit of the scheduler's step size. One of ['step', 'epoch'].
-				"frequency": 1,             # How many epochs/steps should pass between calls to `scheduler.step()`.
-				"monitor"  : "train/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
-				"strict"   : True,
-				"name"     : None,
-			},
+			"lr_scheduler"       : None,
 			"network_params_only": True,
         }
     ],          # Optimizer(s) for training model.
@@ -76,18 +72,18 @@ model = {
 
 data = {
     "name"      : data_name,
-    "root"      : data_root,    # A root directory where the data is stored.
-    "transform" : A.Compose(transforms=[
+    "root"      : data_root,     # A root directory where the data is stored.
+	"transform" : A.Compose(transforms=[
 		A.Resize(height=image_size[0], width=image_size[1]),
-		A.Flip(),
-		A.Rotate(),
-    ]),  # Transformations performing on both the input and target.
-    "to_tensor" : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
-    "cache_data": False,        # If ``True``, cache data to disk for faster loading next time.
-    "batch_size": 4,            # The number of samples in one forward pass.
-    "devices"   : 0,            # A list of devices to use. Default: ``0``.
-    "shuffle"   : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
-    "verbose"   : verbose,      # Verbosity.
+		# A.Flip(),
+		# A.Rotate(),
+	]),  # Transformations performing on both the input and target.
+    "to_tensor" : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "cache_data": False,         # If ``True``, cache data to disk for faster loading next time.
+    "batch_size": 8,             # The number of samples in one forward pass.
+    "devices"   : 0,             # A list of devices to use. Default: ``0``.
+    "shuffle"   : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
+    "verbose"   : verbose,       # Verbosity.
 }
 
 # endregion
@@ -114,12 +110,12 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
-	"devices"          : [0],
+	"gradient_clip_val": 0.1,
 	"log_image_every_n_epochs": 1,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 300,
+	"max_epochs"       : 50,
 }
 
 # endregion
@@ -128,7 +124,7 @@ trainer = default.trainer | {
 # region Predicting
 
 predictor = default.predictor | {
-	"default_root_dir": root,   # Default path for saving results.
+	"default_root_dir": root,  # Default path for saving results.
 }
 
 # endregion

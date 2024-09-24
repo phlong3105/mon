@@ -45,7 +45,7 @@ def train(args: argparse.Namespace):
     DCE_net = mmodel.enhance_net_nopool(args.scale_factor).to(device)
     # DCE_net.apply(weights_init)
     if weights is not None and mon.Path(weights).is_weights_file():
-        DCE_net.load_state_dict(torch.load(weights))
+        DCE_net.load_state_dict(torch.load(weights, map_location=device, weights_only=True))
     DCE_net.train()
     
     # Loss
