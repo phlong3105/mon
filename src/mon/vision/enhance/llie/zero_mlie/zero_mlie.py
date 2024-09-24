@@ -32,7 +32,9 @@ from typing import Any, Literal
 import kornia
 import numpy as np
 import torch
+from fvcore.nn import parameter_count
 from torch.nn import functional as F
+from torch.nn.common_types import _size_2_t
 
 from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
@@ -233,6 +235,46 @@ class ZeroMLIE(base.ImageEnhancementModel):
     def init_weights(self, m: nn.Module):
         pass
     
+    def compute_efficiency_score(
+        self,
+        image_size: _size_2_t = 512,
+        channels  : int       = 3,
+        runs      : int       = 1000,
+        verbose   : bool      = False,
+    ) -> tuple[float, float, float]:
+        """Compute the efficiency score of the model, including FLOPs, number
+        of parameters, and runtime.
+        """
+        # Define input tensor
+        h, w      = core.get_image_size(image_size)
+        datapoint = {
+            "image": torch.rand(1, channels, h, w).to(self.device),
+            "depth": torch.rand(1,        1, h, w).to(self.device)
+        }
+        
+        # Get FLOPs and Params
+        flops, params = core.custom_profile(self, inputs=datapoint, verbose=verbose)
+        # flops         = FlopCountAnalysis(self, datapoint).total() if flops == 0 else flops
+        params        = self.params                if hasattr(self, "params") and params == 0 else params
+        params        = parameter_count(self)      if hasattr(self, "params")  else params
+        params        = sum(list(params.values())) if isinstance(params, dict) else params
+        
+        # Get time
+        timer = core.Timer()
+        for i in range(runs):
+            timer.tick()
+            _ = self(datapoint)
+            timer.tock()
+        avg_time = timer.avg_time
+        
+        # Print
+        if verbose:
+            console.log(f"FLOPs (G) : {flops:.4f}")
+            console.log(f"Params (M): {params:.4f}")
+            console.log(f"Time (s)  : {avg_time:.17f}")
+        
+        return flops, params, avg_time
+    
     def forward_loss(self, datapoint: dict, *args, **kwargs) -> dict:
         # Forward
         self.assert_datapoint(datapoint)
@@ -281,7 +323,7 @@ class ZeroMLIE(base.ImageEnhancementModel):
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
         num_channels = core.get_image_num_channels(image)
-        kernel       = torch.zeros((self.window_size ** 2, num_channels, self.window_size, self.window_size)).cuda()
+        kernel       = torch.zeros((self.window_size ** 2, num_channels, self.window_size, self.window_size)).to(self.device)
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -299,7 +341,7 @@ class ZeroMLIE(base.ImageEnhancementModel):
                 np.linspace(0, 1, self.down_size)
             )
         )
-        coords = torch.from_numpy(coords).float().cuda()
+        coords = torch.from_numpy(coords).float().to(self.device)
         return coords
     
     @staticmethod

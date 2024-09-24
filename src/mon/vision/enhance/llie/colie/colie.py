@@ -16,7 +16,6 @@ __all__ = [
     "CoLIE_RE",
 ]
 
-from copy import deepcopy
 from typing import Any, Literal
 
 import numpy as np
@@ -271,7 +270,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
     def get_patches(self, image: torch.Tensor) -> torch.Tensor:
         """Creates a tensor where the channel contains patch information."""
         num_channels = core.get_image_num_channels(image)
-        kernel       = torch.zeros((self.window_size ** 2, num_channels, self.window_size, self.window_size)).cuda()
+        kernel       = torch.zeros((self.window_size ** 2, num_channels, self.window_size, self.window_size)).to(self.device)
         for i in range(self.window_size):
             for j in range(self.window_size):
                 kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
@@ -289,7 +288,7 @@ class CoLIE_RE(base.ImageEnhancementModel):
                 np.linspace(0, 1, self.down_size)
             )
         )
-        coords = torch.from_numpy(coords).float().cuda()
+        coords = torch.from_numpy(coords).float().to(self.device)
         return coords
     
     @staticmethod
