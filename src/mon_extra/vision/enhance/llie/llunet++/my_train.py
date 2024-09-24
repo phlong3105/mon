@@ -34,13 +34,14 @@ def train_epoch(train_loader, model, criterion, optimizer, device):
     loss_meters = AverageMeter()
     model.train()
     with mon.get_progress_bar() as pbar:
-        for input, target, meta in pbar.track(
-            sequence    = train_loader,
+        for i, datapoint in pbar.track(
+            sequence    = enumerate(train_loader),
             total       = len(train_loader),
             description = f"[bright_yellow] Training"
         ):
-            input  = input.to(device)
-            target = target.to(device)
+            input  = datapoint.get("image").to(device)
+            target = datapoint.get("hq_image").to(device)
+            meta   = datapoint.get("meta")
             output = model(input)
             loss   = criterion(output, target)
             optimizer.zero_grad()
@@ -57,13 +58,14 @@ def val_epoch(val_loader, model, criterion, device):
     ssim_meters = mon.StructuralSimilarityIndexMeasure().to(device)
     model.eval()
     with mon.get_progress_bar() as pbar:
-        for input, target, meta in pbar.track(
-            sequence    = val_loader,
+        for i, datapoint in pbar.track(
+            sequence    = enumerate(val_loader),
             total       = len(val_loader),
             description = f"[bright_yellow] Validating"
         ):
-            input  = input.to(device)
-            target = target.to(device)
+            input  = datapoint.get("image").to(device)
+            target = datapoint.get("hq_image").to(device)
+            meta   = datapoint.get("meta")
             output = model(input)
             loss   = criterion(output, target)
             loss_meters.update(loss.item(), input.size(0))
@@ -103,7 +105,7 @@ def train(args: argparse.Namespace):
     # Data I/O
     data_args = {
         "name"      : args.data,
-        "root"      : mon.DATA_DIR / "llie",
+        "root"      : mon.DATA_DIR / "enhance" / "llie",
         "transform" : A.Compose(transforms=[
             A.Resize(width=imgsz, height=imgsz),
         ]),
@@ -116,7 +118,7 @@ def train(args: argparse.Namespace):
     }
     datamodule: mon.DataModule = mon.DATAMODULES.build(config=data_args)
     datamodule.prepare_data()
-    datamodule.setup(stage="training")
+    datamodule.setup(stage="train")
     train_dataloader = datamodule.train_dataloader
     val_dataloader   = datamodule.val_dataloader
     
@@ -137,7 +139,7 @@ def train(args: argparse.Namespace):
     # Training
     for epoch in range(epochs):
         train_loss  = train_epoch(train_dataloader, model, criterion, optimizer, device)
-        val_results = val_epoch(val_dataloader, model, criterion, device)
+        val_results = val_epoch(val_dataloader,     model, criterion, device)
         val_loss    = float(val_results[0])
         val_psnr    = float(val_results[1].cpu().detach().numpy())
         val_ssim    = float(val_results[2].cpu().detach().numpy())

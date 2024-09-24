@@ -15,7 +15,7 @@ def load_state_dict(ckpt_path, location='cpu'):
         import safetensors.torch
         state_dict = safetensors.torch.load_file(ckpt_path, device=location)
     else:
-        state_dict = get_state_dict(torch.load(ckpt_path, map_location=torch.device(location)))
+        state_dict = get_state_dict(torch.load(ckpt_path, map_location=torch.device(location), weights_only=True))
     state_dict = get_state_dict(state_dict)
     print(f'Loaded state_dict from [{ckpt_path}]')
     return state_dict

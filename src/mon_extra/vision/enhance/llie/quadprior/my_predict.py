@@ -184,7 +184,8 @@ def predict(args: argparse.Namespace):
                 timer.tock()
                 
                 # Post-process
-                output = mon.resize(output, (h0, w0))
+                output = mon.resize(output, (h0, w0), interpolation=cv2.INTER_LINEAR)
+                output = cv2.cvtColor(output, cv2.COLOR_BGR2RGB)
                 
                 # Save
                 if save_image:

@@ -62,10 +62,8 @@ __all__ = [
 from typing import Literal, Sequence
 
 import cv2
-import kornia.geometry
 import numpy as np
 import torch
-import torchvision.transforms.functional
 from kornia.geometry import transform
 from kornia.geometry.transform import *
 from torch.nn import functional as F
@@ -108,8 +106,7 @@ def resize(
     size         : int | Sequence[int] = None,
     divisible_by : int = None,
     side         : Literal["short", "long", "vert", "horz", None] = None,
-    interpolation: Literal["nearest", "linear", "bilinear", "bicubic", "trilinear", "area",
-                           cv2.INTER_AREA, cv2.INTER_CUBIC, cv2.INTER_LINEAR] = "bilinear",
+    interpolation: Literal["nearest", "linear", "bilinear", "bicubic", "trilinear", "area", cv2.INTER_AREA, cv2.INTER_CUBIC, cv2.INTER_LINEAR] = "bilinear",
     **kwargs,
 ) -> torch.Tensor | np.ndarray:
     """Resize an image
@@ -156,7 +153,7 @@ def resize(
         - antialias: If ``True``, then image will be filtered with Gaussian
             before downscaling. No effect for upscaling.
     """
-    # Parse target size
+    # Parse size
     if size:
         size = utils.get_image_size(size, divisible_by)
     else:
@@ -195,6 +192,23 @@ def resize(
             new_h = int(h0 * scale)
             new_w = int(w0 * scale)
         size = (new_h, new_w)
+    
+    # Parse interpolation
+    if isinstance(image, torch.Tensor):
+        if interpolation in [cv2.INTER_AREA]:
+            interpolation = "area"
+        elif interpolation in [cv2.INTER_CUBIC]:
+            interpolation = "bicubic"
+        elif interpolation in [cv2.INTER_LINEAR]:
+            interpolation = "linear"
+    elif isinstance(image, np.ndarray):
+        if interpolation in ["area"]:
+            interpolation = cv2.INTER_AREA
+        elif interpolation in ["bicubic"]:
+            interpolation = cv2.INTER_CUBIC
+        elif interpolation in ["linear", "bilinear", "trilinear", "nearest"]:
+            interpolation = cv2.INTER_LINEAR
+    
     # Apply the transformation
     if isinstance(image, torch.Tensor):
         align_corners = kwargs.pop("align_corners", None)

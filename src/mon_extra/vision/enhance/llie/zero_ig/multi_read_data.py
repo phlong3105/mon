@@ -6,11 +6,17 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from PIL import Image
 
+import mon
+
 
 class DataLoader(torch.utils.data.Dataset):
     
     def __init__(self, img_dir, task):
-        self.low_img_dir             = img_dir
+        low_img_dir = mon.Path(img_dir) / task / "lq"
+        if not img_dir.exists():
+            low_img_dir = mon.Path(img_dir) / "test" / "lq"
+        
+        self.low_img_dir             = low_img_dir
         self.task                    = task
         self.train_low_data_names    = []
         self.train_target_data_names = []

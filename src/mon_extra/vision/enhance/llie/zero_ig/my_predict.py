@@ -8,6 +8,7 @@ import copy
 import sys
 import time
 
+import cv2
 import numpy as np
 import torch
 import torch.optim
@@ -81,7 +82,7 @@ def predict(args: argparse.Namespace):
         total_params = calculate_model_parameters(model)
         console.log(f"FLOPs        = {flops:.4f}")
         console.log(f"Params       = {params:.4f}")
-        console.log(f"Time         = {avg_time:.4f}")
+        console.log(f"Time         = {avg_time:.17f}")
         console.log(f"Total Params = {total_params:.4f}")
         
     # Data I/O
@@ -129,6 +130,8 @@ def predict(args: argparse.Namespace):
                 # Post-process
                 enhance = save_images(enhance)
                 output  = save_images(output)
+                enhance = cv2.cvtColor(enhance, cv2.COLOR_BGR2RGB)
+                output  = cv2.cvtColor(output,  cv2.COLOR_BGR2RGB)
                 
                 # Save
                 if save_image:
@@ -137,18 +140,18 @@ def predict(args: argparse.Namespace):
                         output_dir = save_dir / rel_path.parents[0]
                     else:
                         output_dir = save_dir / data_name
-                    output_path    = save_dir / image_path.name
+                    output_path    = output_dir / image_path.name
                     output_path.parent.mkdir(parents=True, exist_ok=True)
-                    Image.fromarray(enhance).save(str(output_dir / f"{image_path.stem}.png"), "PNG")
+                    cv2.imwrite(str(output_path), enhance)
                 if save_debug:
                     if use_fullpath:
                         rel_path   = image_path.relative_path(data_name)
                         debug_dir  = save_dir / rel_path.parents[1] / f"{rel_path.parent.name}_denoise"
                     else:
                         debug_dir  = save_dir / f"{data_name}_denoise"
-                    output_path    = save_dir / image_path.name
+                    output_path    = debug_dir / image_path.name
                     output_path.parent.mkdir(parents=True, exist_ok=True)
-                    Image.fromarray(output).save(str(debug_dir / f"{image_path.stem}.png"), "PNG")
+                    cv2.imwrite(str(output_path), output)
                 
         avg_time = float(timer.avg_time)
         console.log(f"Average time: {avg_time}")

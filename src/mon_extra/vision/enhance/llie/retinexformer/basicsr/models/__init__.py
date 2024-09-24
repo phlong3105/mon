@@ -1,7 +1,7 @@
 import importlib
 from os import path as osp
 
-from basicsr.utils import get_root_logger, scandir
+from ..utils import get_root_logger, scandir
 
 # automatically scan and import model modules
 # scan all the files under the 'models' folder and collect files ending with

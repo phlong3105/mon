@@ -43,7 +43,7 @@ def predict(args: argparse.Namespace):
     
     # Model
     model = NestedUNet().to(device)
-    model.load_state_dict(torch.load(weights))
+    model.load_state_dict(torch.load(weights, weights_only=True))
     model.eval()
     
     # Benchmark

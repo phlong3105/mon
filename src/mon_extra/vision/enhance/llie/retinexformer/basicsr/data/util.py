@@ -1,11 +1,11 @@
+import glob
 import os
-import math
 import pickle
 import random
-import numpy as np
-import glob
-import torch
+
 import cv2
+import numpy as np
+import torch
 
 ####################
 # Files & IO

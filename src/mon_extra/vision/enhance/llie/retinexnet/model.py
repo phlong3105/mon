@@ -90,11 +90,49 @@ class RelightNet(nn.Module):
         return output
 
 
-def calculate_efficiency_score(
+def calculate_efficiency_score_decomnet(
     model,
     image_size: int | list[int] = 512,
     channels  : int             = 3,
-    runs      : int             = 100,
+    runs      : int             = 1000,
+    use_cuda  : bool            = True,
+    verbose   : bool            = False,
+):
+    # Define input tensor
+    h, w  = mon.get_image_size(image_size)
+    input = torch.rand(1, 3, h, w)
+    
+    # Deploy to cuda
+    if use_cuda:
+        input = input.cuda()
+        model = model.cuda()
+     
+    # Get FLOPs and Params
+    flops, params = thop.profile(deepcopy(model), inputs=(input, ), verbose=verbose)
+    g_flops       = flops  * 1e-9
+    m_params      = params * 1e-6
+    
+    # Get time
+    start_time = time.time()
+    for i in range(runs):
+        _ = model(input)
+    runtime  = time.time() - start_time
+    avg_time = runtime / runs
+    
+    # Print
+    if verbose:
+        console.log(f"FLOPs (G)  = {flops:.4f}")
+        console.log(f"Params (M) = {params:.4f}")
+        console.log(f"Time (s)   = {avg_time:.17f}")
+    
+    return flops, params, avg_time
+
+
+def calculate_efficiency_score_enhancenet(
+    model,
+    image_size: int | list[int] = 512,
+    channels  : int             = 3,
+    runs      : int             = 1000,
     use_cuda  : bool            = True,
     verbose   : bool            = False,
 ):
@@ -102,7 +140,7 @@ def calculate_efficiency_score(
     h, w  = mon.get_image_size(image_size)
     input = torch.rand(1, 1, h, w)
     mask  = torch.rand(1, 3, h, w)
-
+    
     # Deploy to cuda
     if use_cuda:
         input = input.cuda()
@@ -125,7 +163,7 @@ def calculate_efficiency_score(
     if verbose:
         console.log(f"FLOPs (G)  = {flops:.4f}")
         console.log(f"Params (M) = {params:.4f}")
-        console.log(f"Time (s)   = {avg_time:.4f}")
+        console.log(f"Time (s)   = {avg_time:.17f}")
     
     return flops, params, avg_time
 
@@ -138,7 +176,7 @@ class RetinexNet(nn.Module):
         self.DecomNet   = DecomNet()
         self.RelightNet = RelightNet()
         if benchmark:
-            flops1, params1, avg_time1 = calculate_efficiency_score(
+            flops1, params1, avg_time1 = calculate_efficiency_score_decomnet(
                 model      = self.DecomNet,
                 image_size = image_size,
                 channels   = 3,
@@ -146,7 +184,7 @@ class RetinexNet(nn.Module):
                 use_cuda   = True,
                 verbose    = False,
             )
-            flops2, params2, avg_time2 = calculate_efficiency_score(
+            flops2, params2, avg_time2 = calculate_efficiency_score_enhancenet(
                 model      = self.RelightNet,
                 image_size = image_size,
                 channels   = 3,
@@ -154,9 +192,9 @@ class RetinexNet(nn.Module):
                 use_cuda   = True,
                 verbose    = False,
             )
-            console.log(f"FLOPs  = {flops1+flops2:.4f}")
-            console.log(f"Params = {params1+params2:.4f}")
-            console.log(f"Time   = {avg_time1+avg_time2:.4f}")
+            console.log(f"FLOPs  = {flops1 + flops2:.4f}")
+            console.log(f"Params = {params1 + params2:.4f}")
+            console.log(f"Time   = {avg_time1 + avg_time2:.17f}")
 
     def forward(self, input_low, input_high):
         # Forward DecompNet
@@ -407,23 +445,26 @@ class RetinexNet(nn.Module):
         imgsz : int  = 512,
         resize: bool = False,
     ):
-
         # Load the network with a pre-trained checkpoint
         self.train_phase = "decom"
         load_model_status, _ = self.load(ckpt_dir)
         if load_model_status:
             print(self.train_phase, "  : Model restore success!")
         else:
-            print("No pretrained model to restore!")
-            raise Exception
+            print("No pretrained model to restore! Use default pretrained weights.")
+            ckpt_dict = torch.load(str(mon.Path(ckpt_dir) / "retinexnet_lol_v1_decom_9200.tar"), weights_only=True)
+            self.DecomNet.load_state_dict(ckpt_dict)
+            # raise Exception
         self.train_phase = "relight"
         load_model_status, _ = self.load(ckpt_dir)
         if load_model_status:
             print(self.train_phase, ": Model restore success!")
         else:
-            print("No pretrained model to restore!")
-            raise Exception
-
+            print("No pretrained model to restore! Use default pretrained weights.")
+            ckpt_dict = torch.load(str(mon.Path(ckpt_dir) / "retinexnet_lol_v1_relight_9200.tar"), weights_only=True)
+            self.RelightNet.load_state_dict(ckpt_dict)
+            # raise Exception
+            
         # Set this switch to True to also save the reflectance and shading maps
         save_R_L = False
         

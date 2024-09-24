@@ -21,7 +21,6 @@ from torch import nn
 import mon
 from model import Image_network
 from mon import core
-from mon.core import _size_2_t
 
 console      = mon.console
 current_file = mon.Path(__file__).absolute()
@@ -47,11 +46,11 @@ def get_hist(file_name):
 
 def calculate_efficiency_score(
     model     : nn.Module,
-    image_size: _size_2_t = 512,
-    channels  : int       = 3,
-    runs      : int       = 100,
-    use_cuda  : bool      = True,
-    verbose   : bool      = False,
+    image_size: int  = 512,
+    channels  : int  = 3,
+    runs      : int  = 100,
+    use_cuda  : bool = True,
+    verbose   : bool = False,
 ):
     # Define input tensor
     h, w  = core.get_image_size(image_size)
@@ -106,7 +105,7 @@ def predict(args: argparse.Namespace):
     
     # Model
     Imgnet = Image_network().to(device)
-    Imgnet.load_state_dict(torch.load(weights))
+    Imgnet.load_state_dict(torch.load(weights, weights_only=True))
     Imgnet.eval()
     
     # Benchmark

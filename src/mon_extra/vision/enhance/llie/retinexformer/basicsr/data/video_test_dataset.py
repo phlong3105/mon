@@ -1,11 +1,14 @@
 import glob
-import torch
 from os import path as osp
+
+import torch
 from torch.utils import data as data
 
-from basicsr.data.data_util import (duf_downsample, generate_frame_indices,
-                                    read_img_seq)
-from basicsr.utils import get_root_logger, scandir
+from .data_util import (
+    duf_downsample, generate_frame_indices,
+    read_img_seq,
+)
+from ..utils import get_root_logger, scandir
 
 
 class VideoTestDataset(data.Dataset):

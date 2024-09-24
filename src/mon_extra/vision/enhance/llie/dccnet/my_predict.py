@@ -38,9 +38,14 @@ def predict(args: argparse.Namespace):
     use_fullpath = args.use_fullpath
     
     # Model
-    color_net = mmodel.color_net().to(device)
+    color_net  = mmodel.color_net().to(device)
     # color_net = mon.DataParallel(color_net)
-    color_net.load_state_dict(torch.load(weights))
+    state_dict     = torch.load(weights, weights_only=True)
+    new_state_dict = {}
+    for k, v in state_dict.items():
+        k = k.replace("module.", "")
+        new_state_dict[k] = v
+    color_net.load_state_dict(new_state_dict)
     color_net.eval()
     
     # Benchmark

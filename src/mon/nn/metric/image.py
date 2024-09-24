@@ -215,7 +215,7 @@ def custom_ssim(
     # if not X.type() == Y.type():
     #    raise ValueError(f"Input images should have the same dtype, but got {X.type()} and {Y.type()}.")
     
-    if window:  # set win_size
+    if window is not None:  # set win_size
         window_size = window.shape[-1]
 
     if not (window_size % 2 == 1):
@@ -270,7 +270,7 @@ def custom_ms_ssim(
         raise ValueError(f"`image1` and `image2` must be 4D or 5D tensors, "
                          f"but got {image1.shape}")
 
-    if window:  # set win_size
+    if window is not None:  # set win_size
         window_size = window.shape[-1]
 
     if not (window_size % 2 == 1):

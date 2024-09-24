@@ -1,8 +1,7 @@
 import importlib
 from os import path as osp
-from pdb import set_trace as stx
 
-from basicsr.utils import scandir
+from ...utils import scandir
 
 # automatically scan and import arch modules
 # scan all the files under the 'archs' folder and collect files ending with

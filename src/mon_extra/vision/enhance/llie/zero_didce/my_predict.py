@@ -37,7 +37,7 @@ def predict(args: argparse.Namespace):
     
     # Model
     DiDCE_net = model.enhance_net_nopool().to(device)
-    DiDCE_net.load_state_dict(torch.load(weights))
+    DiDCE_net.load_state_dict(torch.load(weights, weights_only=True))
     DiDCE_net.eval()
     
     # Benchmark

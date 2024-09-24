@@ -1,0 +1,29 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "retinexformer"
+data        : "fivek_c"
+data_dir    : ~
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "retinexformer_fivek_c"
+save_dir    : ~
+weights     : "zoo/vision/enhance/llie/retinexformer/retinexformer/fivek_c/retinexformer_fivek_c.pth"
+device      : 0
+local_rank  : ~
+launcher    : ~
+epochs      : ~
+steps       : 300000
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+use_fullpath: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+opt_path: "fivek_c.yaml"

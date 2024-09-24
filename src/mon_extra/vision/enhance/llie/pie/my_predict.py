@@ -31,7 +31,7 @@ def compute_efficiency_score(
 ):
     # Define input tensor
     h, w  = mon.get_image_size(image_size)
-    input = np.random.rand(h, w, channels)
+    input = np.random.rand(h, w, channels).astype(np.uint8)
     
     # Get time
     timer = mon.Timer()

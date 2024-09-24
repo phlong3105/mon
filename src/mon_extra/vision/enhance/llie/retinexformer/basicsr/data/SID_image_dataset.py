@@ -1,14 +1,9 @@
-import os.path as osp
-import torch
-import torch.utils.data as data
-import basicsr.data.util as util
-import torch.nn.functional as F
-import random
-import cv2
-import numpy as np
-import glob
 import os
-import functools
+import os.path as osp
+
+import torch.utils.data as data
+
+import util as util
 
 
 class Dataset_SIDImage(data.Dataset):

@@ -5,8 +5,8 @@ from collections import OrderedDict
 from copy import deepcopy
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
-from basicsr.models import lr_scheduler as lr_scheduler
-from basicsr.utils.dist_util import master_only
+from ..models import lr_scheduler as lr_scheduler
+from ..utils.dist_util import master_only
 
 import mon
 

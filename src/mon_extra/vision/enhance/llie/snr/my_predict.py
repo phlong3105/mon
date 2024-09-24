@@ -27,6 +27,7 @@ current_dir  = current_file.parents[0]
 
 def predict(args: argparse.Namespace):
     # General config
+    opt_path     = str(current_dir / "model_config" / args.opt_path)
     data         = args.data
     save_dir     = mon.Path(args.save_dir)
     weights      = args.weights
@@ -39,7 +40,7 @@ def predict(args: argparse.Namespace):
     use_fullpath = args.use_fullpath
     
     # Override options with args
-    opt           = option.parse(args.opt, is_train=False)
+    opt           = option.parse(opt_path, is_train=False)
     opt           = option.dict_to_nonedict(opt)
     opt["device"] = device
     
@@ -92,7 +93,7 @@ def predict(args: argparse.Namespace):
                 timer.tick()
                 model.feed_data(
                     data = {
-                        "idx": meta["id"],
+                        "idx": i,
                         "LQs": image,
                         "nf" : image_nf,
                     },

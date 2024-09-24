@@ -1,0 +1,33 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "zero_ig"
+model       : "zero_ig"
+data        : "fivek_e"
+data_dir    : "data/enhance/llie/fivek_e"
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "zero_ig_fivek_e"
+save_dir    : ~
+weights     : "zoo/vision/enhance/llie/zero_ig/zero_ig/fivek_e/zero_ig_fivek_e.pt"
+device      : 0
+local_rank  : ~
+launcher    : ~
+epochs      : 2001
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+use_fullpath: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+seed       : 2
+batch_size : 1
+num_workers: 0
+lr         : 0.0003

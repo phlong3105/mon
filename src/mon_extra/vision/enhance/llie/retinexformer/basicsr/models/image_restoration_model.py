@@ -1,22 +1,20 @@
+import glob
 import importlib
-import torch
 from collections import OrderedDict
 from copy import deepcopy
 from os import path as osp
-from tqdm import tqdm
-import glob
 
-from basicsr.models.archs import define_network
-from basicsr.models.base_model import BaseModel
-from basicsr.utils import get_root_logger, imwrite, tensor2img
+import torch
+
+from .archs import define_network
+from .base_model import BaseModel
+from ..utils import get_root_logger, imwrite, tensor2img
 
 loss_module = importlib.import_module('basicsr.models.losses')
 metric_module = importlib.import_module('basicsr.metrics')
 
 import os
 import random
-import numpy as np
-import cv2
 import torch.nn.functional as F
 from functools import partial
 

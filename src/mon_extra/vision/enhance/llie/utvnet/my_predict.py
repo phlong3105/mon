@@ -60,7 +60,7 @@ def predict(args: argparse.Namespace):
     
     # Model
     model = network.UTVNet().to(device)
-    model.load_state_dict(torch.load(str(weights), map_location=device))
+    model.load_state_dict(torch.load(str(weights), map_location=device, weights_only=True))
     model.eval()
     
     # Benchmark

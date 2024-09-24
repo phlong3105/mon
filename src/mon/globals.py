@@ -96,8 +96,6 @@ if not DATA_DIR.is_dir():
 
 # region Enum
 
-# region Color
-
 class RGB(DT.Enum):
     """138 RGB colors."""
     
@@ -280,10 +278,6 @@ class BasicRGB(DT.Enum):
     TEAL    = (0  , 128, 128)
     NAVY    = (0  , 0  , 128)
 
-# endregion
-
-
-# region Geometry
 
 class BBoxFormat(DT.Enum):
     """Bounding box formats.
@@ -440,10 +434,6 @@ class ShapeCode(DT.Enum):
             return cls.from_int(value=value)
         return None
 
-# endregion
-
-
-# region Tracking
 
 class TrackState(DT.Enum):
     
@@ -570,8 +560,6 @@ class MovingState(DT.Enum):
             return cls.from_int(value)
         return None
 
-# endregion
-
 
 class MemoryUnit(DT.Enum):
     """Memory units."""
@@ -672,7 +660,7 @@ class RunMode(DT.Enum):
     PREDICT = "predict"
     METRIC  = "metric"
     PLOT    = "plot"
-    
+
 
 class Scheme(DT.Enum):
     """Learning schemes."""
@@ -683,7 +671,7 @@ class Scheme(DT.Enum):
     TRADITIONAL    = "traditional"     # traditional method (no learning)
     UNSUPERVISED   = "unsupervised"    # unsupervised learning
     ZERO_REFERENCE = "zero_reference"  # zero-reference learning
-    
+
 
 class Split(DT.Enum):
     """Dataset split types."""
@@ -1020,14 +1008,6 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "tasks"    : [Task.LLIE],
             "schemes"  : [Scheme.SUPERVISED],
             "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "snr",
-            "torch_distributed_launch": True,
-        },
-    },
-    "stablellve"   : {
-        "stablellve": {
-            "tasks"    : [Task.LLIE],
-            "schemes"  : [Scheme.SUPERVISED],
-            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "stablellve",
             "torch_distributed_launch": True,
         },
     },
