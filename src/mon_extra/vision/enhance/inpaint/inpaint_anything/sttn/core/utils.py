@@ -183,7 +183,7 @@ def get_random_shape(edge_num=9, ratio=0.7, width=432, height=240):
     data = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
     data = data.reshape((fig.canvas.get_width_height()[::-1] + (3,)))
     plt.close(fig)
-    # Post-process
+    # Post-processing
     data = cv2.resize(data, (width, height))[:, :, 0]
     data = (1 - np.array(data > 0).astype(np.uint8))*255
     corrdinates = np.where(data > 0)

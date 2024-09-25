@@ -35,6 +35,7 @@ __all__ = [
 import torch
 import torch.nn.functional as F
 import torchmetrics
+from torch import nn
 
 from mon.globals import METRICS
 
@@ -311,7 +312,7 @@ def custom_ms_ssim(
         return ms_ssim_val.mean(1)
 
 
-class CustomSSIM(torch.nn.Module):
+class CustomSSIM(nn.Module):
 
     def __init__(
         self,

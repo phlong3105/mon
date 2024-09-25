@@ -99,7 +99,7 @@ def predict(args: argparse.Namespace):
             enhanced_image = pie.PIE(image)
             timer.tock()
             
-            # Post-process
+            # Post-processing
             enhanced_image = cv2.cvtColor(enhanced_image, cv2.COLOR_RGB2BGR)
             
             # Save

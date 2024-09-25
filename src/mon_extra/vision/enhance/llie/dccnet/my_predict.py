@@ -97,7 +97,7 @@ def predict(args: argparse.Namespace):
                 gray, color_hist, enhanced_image = color_net(data_lowlight)
                 timer.tock()
                 
-                # Post-process
+                # Post-processing
                 enhanced_image = mon.resize(enhanced_image, (h, w))
                 
                 # Save

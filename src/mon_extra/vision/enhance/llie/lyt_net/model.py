@@ -122,7 +122,7 @@ class Denoiser(nn.Module):
         self.up3          = nn.Upsample(scale_factor=2, mode='nearest')
         self.up4          = nn.Upsample(scale_factor=2, mode='nearest')
         self.output_layer = nn.Conv2d(1, 1, kernel_size=kernel_size, padding=1)
-        self.res_layer    = nn.Conv2d(num_filters, 1, kernel_size=kernel_size, padding=1)
+        self.res_layer    = nn.Conv2d(num_filters,  1, kernel_size=kernel_size, padding=1)
         self.activation   = getattr(F, activation)
         self._init_weights()
 

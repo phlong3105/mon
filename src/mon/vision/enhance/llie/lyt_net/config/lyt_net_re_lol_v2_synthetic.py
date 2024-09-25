@@ -13,7 +13,7 @@ current_file = mon.Path(__file__).absolute()
 # region Basic
 
 model_name = "lyt_net_re"
-data_name  = "lol_v1"
+data_name  = "lol_v2_synthetic"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
@@ -32,9 +32,9 @@ model = {
 	"name"        : model_name,     # The model's name.
 	"fullname"    : fullname,       # A full model name to save the checkpoint or weight.
 	"root"        : root,           # The root directory of the model.
-	"in_channels" : 3,              # The first layer's input channel.
-	"out_channels": None,           # A number of classes, which is also the last layer's output channels.
-	"num_channels": 32,
+	"in_channels" : 1,              # The first layer's input channel.
+	"out_channels": 3,              # A number of classes, which is also the last layer's output channels.
+	"filters"     : 32,
 	"weights"     : None,           # The model's weights.
 	"loss"        : None,           # Loss function for training the model.
 	"metrics"     : {
@@ -78,8 +78,8 @@ data = {
     "name"      : data_name,
     "root"      : data_root,    # A root directory where the data is stored.
     "transform" : A.Compose(transforms=[
-		# A.Resize(height=image_size[0], width=image_size[1]),
-	    A.RandomCrop(height=image_size[0], width=image_size[1], p=1.0),
+		A.Resize(height=image_size[0], width=image_size[1]),
+	    # A.RandomCrop(height=image_size[0], width=image_size[1], p=1.0),
 		# A.Flip(),
 		# A.Rotate(),
     ]),  # Transformations performing on both the input and target.

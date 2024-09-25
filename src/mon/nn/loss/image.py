@@ -13,6 +13,7 @@ __all__ = [
     "ChannelConsistencyLoss",
     "ChannelRatioConsistencyLoss",
     "ColorConstancyLoss",
+    "ColorLoss",
     "ContradictChannelLoss",
     "EdgeCharbonnierLoss",
     "EdgeConstancyLoss",
@@ -27,7 +28,6 @@ __all__ = [
     "PerceptualL1Loss",
     "PerceptualLoss",
     "SSIMLoss",
-    "SmoothLoss",
     "SpatialConsistencyLoss",
     "StdLoss",
     "TVLoss",
@@ -35,6 +35,7 @@ __all__ = [
     "TotalVariationLoss",
     "VGGCharbonnierLoss",
     "VGGLoss",
+    "VGGPerceptualLoss",
 ]
 
 from typing import Literal
@@ -194,6 +195,27 @@ class ColorConstancyLoss(base.Loss):
         loss       = self.loss_weight * loss
         return loss
 
+
+@LOSSES.register(name="color_loss")
+class ColorLoss(base.Loss):
+    """Color Loss.
+    
+    References:
+        https://github.com/albrateanu/LYT-Net/blob/main/PyTorch/losses.py
+    """
+    
+    def __init__(
+        self,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        loss = torch.mean(torch.abs(torch.mean(input, dim=[1, 2, 3]) - torch.mean(target, dim=[1, 2, 3])))
+        loss = self.loss_weight * loss
+        return loss
+    
 
 @LOSSES.register(name="contradict_channel_loss")
 class ContradictChannelLoss(base.Loss):
@@ -507,32 +529,40 @@ class GrayscaleLoss(base.Loss):
         return loss
 
 
+# noinspection PyMethodMayBeStatic
 @LOSSES.register(name="histogram_loss")
 class HistogramLoss(base.Loss):
+    """Histogram Loss.
+    
+    References:
+        https://github.com/albrateanu/LYT-Net/blob/main/PyTorch/losses.py
+    """
     
     def __init__(
         self,
         bins       : int   = 256,
+        sigma      : float = 0.01,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
         self.bins    = bins
+        self.sigma   = sigma
         self.l1_loss = base.L1Loss(reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        # Compute histograms for y_true and y_pred
-        input_hist  = torch.histc(input.view(-1),  bins=self.bins, min=0, max=1)
-        target_hist = torch.histc(target.view(-1), bins=self.bins, min=0, max=1)
-        # Normalize histograms
-        input_hist  = input_hist.float()  / input_hist.sum()
-        target_hist = target_hist.float() / target_hist.sum()
-        # Compute histogram distance
-        loss = self.l1_loss(input_hist, target_hist)
-        loss = self.loss_weight * loss
-        return loss
-        
+        bin_edges     = torch.linspace(0.0, 1.0, self.bins, device=target.device)
+        y_true_hist   = torch.sum(self.gaussian_kernel(target.unsqueeze(-1), bin_edges, self.sigma), dim=0)
+        y_pred_hist   = torch.sum(self.gaussian_kernel(input.unsqueeze(-1),  bin_edges, self.sigma), dim=0)
+        y_true_hist  /= y_true_hist.sum()
+        y_pred_hist  /= y_pred_hist.sum()
+        hist_distance = torch.mean(torch.abs(y_true_hist - y_pred_hist))
+        return hist_distance
     
+    def gaussian_kernel(self, x: torch.Tensor, mu: int, sigma: float) -> torch.Tensor:
+        return torch.exp(-0.5 * ((x - mu) / sigma) ** 2)
+    
+
 @LOSSES.register(name="perceptual_loss")
 class PerceptualLoss(base.Loss):
     """Perceptual Loss."""
@@ -729,115 +759,6 @@ class MSSSIMLoss(base.Loss):
         loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
-
-@LOSSES.register(name="smooth_loss")
-class SmoothLoss(base.Loss):
-    """Smooth Loss
-    
-    References:
-        https://github.com/Doyle59217/ZeroIG/blob/main/loss.py
-    """
-    
-    def __init__(
-        self,
-        sigma      : float = 10.0,
-        loss_weight: float = 1.0,
-        reduction  : Literal["none", "mean", "sum"] = "mean",
-    ):
-        super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.sigma = sigma
-    
-    def rgb2yCbCr(self, image: torch.Tensor) -> torch.Tensor:
-        im_flat = image.contiguous().view(-1, 3).float()  # [w,h,3] => [w*h,3]
-        mat     = torch.Tensor([[0.257, -0.148, 0.439], [0.564, -0.291, -0.368], [0.098, 0.439, -0.071]]).cuda()  # [3,3]
-        bias    = torch.Tensor([16.0 / 255.0, 128.0 / 255.0, 128.0 / 255.0]).cuda()  # [1,3]
-        temp    = im_flat.mm(mat) + bias  # [w*h,3]*[3,3]+[1,3] => [w*h,3]
-        out     = temp.view(image.shape[0], 3, image.shape[2], image.shape[3])
-        return out
-
-    # output: output      input:input
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        input       = self.rgb2yCbCr(input)
-        sigma_color = -1.0 / (2 * self.sigma * self.sigma)
-        w1  = torch.exp(torch.sum(torch.pow(input[:, :, 1:, :]    - input[:, :, :-1, :], 2),   dim=1, keepdim=True) * sigma_color)
-        w2  = torch.exp(torch.sum(torch.pow(input[:, :, :-1, :]   - input[:, :, 1:, :],  2),   dim=1, keepdim=True) * sigma_color)
-        w3  = torch.exp(torch.sum(torch.pow(input[:, :, :, 1:]    - input[:, :, :, :-1], 2),   dim=1, keepdim=True) * sigma_color)
-        w4  = torch.exp(torch.sum(torch.pow(input[:, :, :, :-1]   - input[:, :, :, 1:],  2),   dim=1, keepdim=True) * sigma_color)
-        w5  = torch.exp(torch.sum(torch.pow(input[:, :, :-1, :-1] - input[:, :, 1:, 1:], 2),   dim=1, keepdim=True) * sigma_color)
-        w6  = torch.exp(torch.sum(torch.pow(input[:, :, 1:, 1:]   - input[:, :, :-1, :-1], 2), dim=1, keepdim=True) * sigma_color)
-        w7  = torch.exp(torch.sum(torch.pow(input[:, :, 1:, :-1]  - input[:, :, :-1, 1:], 2),  dim=1, keepdim=True) * sigma_color)
-        w8  = torch.exp(torch.sum(torch.pow(input[:, :, :-1, 1:]  - input[:, :, 1:, :-1], 2),  dim=1, keepdim=True) * sigma_color)
-        w9  = torch.exp(torch.sum(torch.pow(input[:, :, 2:, :]    - input[:, :, :-2, :], 2),   dim=1, keepdim=True) * sigma_color)
-        w10 = torch.exp(torch.sum(torch.pow(input[:, :, :-2, :]   - input[:, :, 2:, :], 2),    dim=1, keepdim=True) * sigma_color)
-        w11 = torch.exp(torch.sum(torch.pow(input[:, :, :, 2:]    - input[:, :, :, :-2], 2),   dim=1, keepdim=True) * sigma_color)
-        w12 = torch.exp(torch.sum(torch.pow(input[:, :, :, :-2]   - input[:, :, :, 2:], 2),    dim=1, keepdim=True) * sigma_color)
-        w13 = torch.exp(torch.sum(torch.pow(input[:, :, :-2, :-1] - input[:, :, 2:, 1:], 2),   dim=1, keepdim=True) * sigma_color)
-        w14 = torch.exp(torch.sum(torch.pow(input[:, :, 2:, 1:]   - input[:, :, :-2, :-1], 2), dim=1, keepdim=True) * sigma_color)
-        w15 = torch.exp(torch.sum(torch.pow(input[:, :, 2:, :-1]  - input[:, :, :-2, 1:], 2),  dim=1, keepdim=True) * sigma_color)
-        w16 = torch.exp(torch.sum(torch.pow(input[:, :, :-2, 1:]  - input[:, :, 2:, :-1], 2),  dim=1, keepdim=True) * sigma_color)
-        w17 = torch.exp(torch.sum(torch.pow(input[:, :, :-1, :-2] - input[:, :, 1:, 2:], 2),   dim=1, keepdim=True) * sigma_color)
-        w18 = torch.exp(torch.sum(torch.pow(input[:, :, 1:, 2:]   - input[:, :, :-1, :-2], 2), dim=1, keepdim=True) * sigma_color)
-        w19 = torch.exp(torch.sum(torch.pow(input[:, :, 1:, :-2]  - input[:, :, :-1, 2:], 2),  dim=1, keepdim=True) * sigma_color)
-        w20 = torch.exp(torch.sum(torch.pow(input[:, :, :-1, 2:]  - input[:, :, 1:, :-2], 2),  dim=1, keepdim=True) * sigma_color)
-        w21 = torch.exp(torch.sum(torch.pow(input[:, :, :-2, :-2] - input[:, :, 2:, 2:], 2),   dim=1, keepdim=True) * sigma_color)
-        w22 = torch.exp(torch.sum(torch.pow(input[:, :, 2:, 2:]   - input[:, :, :-2, :-2], 2), dim=1, keepdim=True) * sigma_color)
-        w23 = torch.exp(torch.sum(torch.pow(input[:, :, 2:, :-2]  - input[:, :, :-2, 2:], 2),  dim=1, keepdim=True) * sigma_color)
-        w24 = torch.exp(torch.sum(torch.pow(input[:, :, :-2, 2:]  - input[:, :, 2:, :-2], 2),  dim=1, keepdim=True) * sigma_color)
-        p   = 1.0
-
-        pixel_grad1  = w1  * torch.norm((target[:, :, 1:, :]    - target[:, :, :-1, :]),   p, dim=1, keepdim=True)
-        pixel_grad2  = w2  * torch.norm((target[:, :, :-1, :]   - target[:, :, 1:, :]),    p, dim=1, keepdim=True)
-        pixel_grad3  = w3  * torch.norm((target[:, :, :, 1:]    - target[:, :, :, :-1]),   p, dim=1, keepdim=True)
-        pixel_grad4  = w4  * torch.norm((target[:, :, :, :-1]   - target[:, :, :, 1:]),    p, dim=1, keepdim=True)
-        pixel_grad5  = w5  * torch.norm((target[:, :, :-1, :-1] - target[:, :, 1:, 1:]),   p, dim=1, keepdim=True)
-        pixel_grad6  = w6  * torch.norm((target[:, :, 1:, 1:]   - target[:, :, :-1, :-1]), p, dim=1, keepdim=True)
-        pixel_grad7  = w7  * torch.norm((target[:, :, 1:, :-1]  - target[:, :, :-1, 1:]),  p, dim=1, keepdim=True)
-        pixel_grad8  = w8  * torch.norm((target[:, :, :-1, 1:]  - target[:, :, 1:, :-1]),  p, dim=1, keepdim=True)
-        pixel_grad9  = w9  * torch.norm((target[:, :, 2:, :]    - target[:, :, :-2, :]),   p, dim=1, keepdim=True)
-        pixel_grad10 = w10 * torch.norm((target[:, :, :-2, :]   - target[:, :, 2:, :]),    p, dim=1, keepdim=True)
-        pixel_grad11 = w11 * torch.norm((target[:, :, :, 2:]    - target[:, :, :, :-2]),   p, dim=1, keepdim=True)
-        pixel_grad12 = w12 * torch.norm((target[:, :, :, :-2]   - target[:, :, :, 2:]),    p, dim=1, keepdim=True)
-        pixel_grad13 = w13 * torch.norm((target[:, :, :-2, :-1] - target[:, :, 2:, 1:]),   p, dim=1, keepdim=True)
-        pixel_grad14 = w14 * torch.norm((target[:, :, 2:, 1:]   - target[:, :, :-2, :-1]), p, dim=1, keepdim=True)
-        pixel_grad15 = w15 * torch.norm((target[:, :, 2:, :-1]  - target[:, :, :-2, 1:]),  p, dim=1, keepdim=True)
-        pixel_grad16 = w16 * torch.norm((target[:, :, :-2, 1:]  - target[:, :, 2:, :-1]),  p, dim=1, keepdim=True)
-        pixel_grad17 = w17 * torch.norm((target[:, :, :-1, :-2] - target[:, :, 1:, 2:]),   p, dim=1, keepdim=True)
-        pixel_grad18 = w18 * torch.norm((target[:, :, 1:, 2:]   - target[:, :, :-1, :-2]), p, dim=1, keepdim=True)
-        pixel_grad19 = w19 * torch.norm((target[:, :, 1:, :-2]  - target[:, :, :-1, 2:]),  p, dim=1, keepdim=True)
-        pixel_grad20 = w20 * torch.norm((target[:, :, :-1, 2:]  - target[:, :, 1:, :-2]),  p, dim=1, keepdim=True)
-        pixel_grad21 = w21 * torch.norm((target[:, :, :-2, :-2] - target[:, :, 2:, 2:]),   p, dim=1, keepdim=True)
-        pixel_grad22 = w22 * torch.norm((target[:, :, 2:, 2:]   - target[:, :, :-2, :-2]), p, dim=1, keepdim=True)
-        pixel_grad23 = w23 * torch.norm((target[:, :, 2:, :-2]  - target[:, :, :-2, 2:]),  p, dim=1, keepdim=True)
-        pixel_grad24 = w24 * torch.norm((target[:, :, :-2, 2:]  - target[:, :, 2:, :-2]),  p, dim=1, keepdim=True)
-        
-        total_term = (
-            torch.mean(pixel_grad1)
-            + torch.mean(pixel_grad2)
-            + torch.mean(pixel_grad3)
-            + torch.mean(pixel_grad4)
-            + torch.mean(pixel_grad5)
-            + torch.mean(pixel_grad6)
-            + torch.mean(pixel_grad7)
-            + torch.mean(pixel_grad8)
-            + torch.mean(pixel_grad9)
-            + torch.mean(pixel_grad10)
-            + torch.mean(pixel_grad11)
-            + torch.mean(pixel_grad12)
-            + torch.mean(pixel_grad13)
-            + torch.mean(pixel_grad14)
-            + torch.mean(pixel_grad15)
-            + torch.mean(pixel_grad16)
-            + torch.mean(pixel_grad17)
-            + torch.mean(pixel_grad18)
-            + torch.mean(pixel_grad19)
-            + torch.mean(pixel_grad20)
-            + torch.mean(pixel_grad21)
-            + torch.mean(pixel_grad22)
-            + torch.mean(pixel_grad23)
-            + torch.mean(pixel_grad24)
-        )
-        return total_term
-    
 
 @LOSSES.register(name="spatial_consistency_loss")
 class SpatialConsistencyLoss(base.Loss):
@@ -1332,8 +1253,38 @@ class TotalVariationLoss(base.Loss):
     @staticmethod
     def _tensor_size(t: torch.Tensor) -> int:
         return t.size()[1] * t.size()[2] * t.size()[3]
+
+
+@LOSSES.register(name="vgg_charbonnier_loss")
+class VGGCharbonnierLoss(base.Loss):
+    """VGG Charbonnier Loss.
     
+        :obj:`torchmetrics.image.LearnedPerceptualImagePatchSimilarity`.
+    """
     
+    def __init__(
+        self,
+        vgg_loss_weight : float = 1.0,
+        char_loss_weight: float = 1.0,
+        loss_weight     : float = 1.0,
+        reduction       : Literal["none", "mean", "sum"] = "mean",
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.vgg_loss_weight  = vgg_loss_weight
+        self.char_loss_weight = char_loss_weight
+        self.vgg_loss         = VGGLoss(reduction=reduction)
+        self.char_loss        = base.CharbonnierLoss(reduction=reduction)
+    
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        vgg_loss  =  self.vgg_loss(input=input, target=target)
+        char_loss = self.char_loss(input=input, target=target)
+        # vgg_loss  = base.reduce_loss(loss=vgg_loss,  reduction=self.reduction)
+        # char_loss = base.reduce_loss(loss=char_loss, reduction=self.reduction)
+        loss      = vgg_loss * self.vgg_loss_weight + char_loss * self.char_loss_weight
+        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
+
 @LOSSES.register(name="vgg_loss")
 class VGGLoss(base.Loss):
     
@@ -1393,35 +1344,28 @@ class VGGLoss(base.Loss):
         return loss
 
 
-@LOSSES.register(name="vgg_charbonnier_loss")
-class VGGCharbonnierLoss(base.Loss):
-    """VGG Charbonnier Loss.
-    
-        :obj:`torchmetrics.image.LearnedPerceptualImagePatchSimilarity`.
-    """
+@LOSSES.register(name="vgg_perceptual_loss")
+class VGGPerceptualLoss(base.Loss):
+    """VGG19 Perceptual Loss."""
     
     def __init__(
         self,
-        vgg_loss_weight : float = 1.0,
-        char_loss_weight: float = 1.0,
-        loss_weight     : float = 1.0,
-        reduction       : Literal["none", "mean", "sum"] = "mean",
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
-        self.vgg_loss_weight  = vgg_loss_weight
-        self.char_loss_weight = char_loss_weight
-        self.vgg_loss         = VGGLoss(reduction=reduction)
-        self.char_loss        = base.CharbonnierLoss(reduction=reduction)
+        vgg = models.vgg19(weights=True).features[:16]  # Until block3_conv3
+        self.loss_model = vgg.eval()
+        for param in self.loss_model.parameters():
+            param.requires_grad = False
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        vgg_loss  =  self.vgg_loss(input=input, target=target)
-        char_loss = self.char_loss(input=input, target=target)
-        # vgg_loss  = base.reduce_loss(loss=vgg_loss,  reduction=self.reduction)
-        # char_loss = base.reduce_loss(loss=char_loss, reduction=self.reduction)
-        loss      = vgg_loss * self.vgg_loss_weight + char_loss * self.char_loss_weight
-        # loss = base.reduce_loss(loss=loss, reduction=self.reduction)
+        y_true = target.to(next(self.loss_model.parameters()))
+        y_pred = input.to(next(self.loss_model.parameters()))
+        loss   = F.mse_loss(self.loss_model(y_true), self.loss_model(y_pred))
+        loss   = self.loss_weight * loss
         return loss
-
+    
 
 TVLoss = TotalVariationLoss
 

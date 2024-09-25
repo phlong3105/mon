@@ -94,7 +94,7 @@ def predict(args: argparse.Namespace):
                 enhanced_image, params_maps = net(data_lowlight)
                 timer.tock()
                 
-                # Post-process
+                # Post-processing
                 enhanced_image = mon.resize(enhanced_image, (h0, w0), side=None)
                 
                 # Save

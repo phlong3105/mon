@@ -125,7 +125,7 @@ def predict(args: argparse.Namespace):
                 enhance, output = model(input)
                 timer.tock()
                 
-                # Post-process
+                # Post-processing
                 enhance = save_images(enhance)
                 output  = save_images(output)
                 enhance = cv2.cvtColor(enhance, cv2.COLOR_BGR2RGB)

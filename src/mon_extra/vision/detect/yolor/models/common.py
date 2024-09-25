@@ -833,7 +833,7 @@ class autoShape(nn.Module):
             y = self.model(x, augment, profile)[0]  # forward
         y = non_max_suppression(y, conf_thres=self.conf, iou_thres=self.iou, classes=self.classes)  # NMS
 
-        # Post-process
+        # Post-processing
         for i in batch:
             if y[i] is not None:
                 y[i][:, :4] = scale_coords(shape1, y[i][:, :4], shape0[i])

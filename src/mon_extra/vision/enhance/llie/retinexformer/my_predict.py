@@ -114,7 +114,7 @@ def predict(args: argparse.Namespace):
                 restored = model(input)
                 timer.tock()
                 
-                # Post-process
+                # Post-processing
                 # Unpad images to original dimensions
                 restored = restored[:, :, :h, :w]
                 if resize:

@@ -21,7 +21,6 @@ from typing import Any, Literal
 import torch
 import torch.nn.functional as F
 import torch.nn.init as init
-from torchvision.models import vgg19, VGG19_Weights
 
 from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
@@ -34,6 +33,7 @@ current_dir  = current_file.parents[0]
 
 # region Loss
 
+# noinspection PyMethodMayBeStatic
 class Loss(nn.Loss):
     
     def __init__(
@@ -56,36 +56,74 @@ class Loss(nn.Loss):
         self.alpha6 = alpha6
         
         self.smooth_l1_loss  = nn.SmoothL1Loss(reduction=reduction)
-        self.perceptual_loss = nn.PerceptualLoss(net=vgg19(weights=VGG19_Weights))
-        self.histogram_loss  = nn.HistogramLoss(bins=256, reduction=reduction)
-        self.psnr_loss       = nn.PSNRLoss(reduction=reduction)
-        self.ssim_loss       = nn.SSIMLoss(reduction)
+        self.perceptual_loss = nn.VGGPerceptualLoss(reduction=reduction)
+        self.histogram_loss  = nn.HistogramLoss(reduction=reduction)
+        self.ms_ssim_loss    = nn.MSSSIMLoss(data_range=1.0, reduction=reduction, size_average=True)
+        self.color_loss      = nn.ColorLoss(reduction=reduction)
         
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         smooth_l1_loss  = self.smooth_l1_loss(input, target)
         perceptual_loss = self.perceptual_loss(input, target)
         histogram_loss  = self.histogram_loss(input, target)
-        ssim_loss       = self.ssim_loss(input, target)
+        ms_ssim_loss    = self.ms_ssim_loss(input, target)
         psnr_loss       = self.psnr_loss(input, target)
-        color_loss      = self._color_loss(input, target)
+        color_loss      = self.color_loss(input, target)
         loss = (
               self.alpha1 * smooth_l1_loss
             + self.alpha2 * perceptual_loss
             + self.alpha3 * histogram_loss
-            + self.alpha4 * ssim_loss
+            + self.alpha4 * ms_ssim_loss
             + self.alpha5 * psnr_loss
             + self.alpha6 * color_loss
         )
         loss = nn.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
     
-    @staticmethod
-    def _color_loss(input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        mean_input  = torch.mean(input,  dim=[1, 2])
-        mean_target = torch.mean(target, dim=[1, 2])
-        abs_diff    = torch.abs(mean_input - mean_target)
-        result      = torch.mean(abs_diff)
-        return result
+    '''
+    def smooth_l1_loss(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        loss = F.smooth_l1_loss(input, target)
+        return loss
+    
+    def multiscale_ssim_loss(
+        self,
+        input        : torch.Tensor,
+        target       : torch.Tensor,
+        max_val      : float     = 1.0,
+        power_factors: list[int] = [0.5, 0.5]
+    ) -> torch.Tensor:
+        loss = 1.0 - nn.custom_ms_ssim(input, target, data_range=max_val, size_average=True)
+        return loss
+    
+    def color_loss(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        loss = torch.mean(torch.abs(torch.mean(input, dim=[1, 2, 3]) - torch.mean(target, dim=[1, 2, 3])))
+        return loss
+    '''
+    
+    def psnr_loss(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        mse  = F.mse_loss(input, target)
+        psnr = 20 * torch.log10(1.0 / torch.sqrt(mse))
+        loss = 40.0 - torch.mean(psnr)
+        return loss
+    
+    '''
+    def gaussian_kernel(self, x: torch.Tensor, mu: int, sigma: float) -> torch.Tensor:
+        return torch.exp(-0.5 * ((x - mu) / sigma) ** 2)
+    
+    def histogram_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor,
+        bins  : int   = 256,
+        sigma : float = 0.01
+    ) -> torch.Tensor:
+        bin_edges     = torch.linspace(0.0, 1.0, bins, device=target.device)
+        y_true_hist   = torch.sum(self.gaussian_kernel(target.unsqueeze(-1), bin_edges, sigma), dim=0)
+        y_pred_hist   = torch.sum(self.gaussian_kernel(input.unsqueeze(-1),  bin_edges, sigma), dim=0)
+        y_true_hist  /= y_true_hist.sum()
+        y_pred_hist  /= y_pred_hist.sum()
+        hist_distance = torch.mean(torch.abs(y_true_hist - y_pred_hist))
+        return hist_distance
+    '''
     
 # endregion
 
@@ -309,7 +347,7 @@ class LYTNet_RE(base.ImageEnhancementModel):
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
         self.assert_datapoint(datapoint)
         x         = datapoint.get("image")
-        ycbcr     = self._rgb_to_ycbcr(x)
+        ycbcr     = self.rgb_to_ycbcr(x)
         y, cb, cr = torch.split(ycbcr, 1, dim=1)
         cb        = self.denoiser_cb(cb) + cb
         cr        = self.denoiser_cr(cr) + cr

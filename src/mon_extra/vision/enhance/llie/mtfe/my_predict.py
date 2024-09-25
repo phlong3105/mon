@@ -162,7 +162,7 @@ def predict(args: argparse.Namespace):
                 enhanced_image, vec, wm, xy = Imgnet(image, histogram)
                 timer.tock()
                 
-                # Post-process
+                # Post-processing
                 enhanced_image = mon.resize(enhanced_image, (h0, w0))
                 
                 # Save

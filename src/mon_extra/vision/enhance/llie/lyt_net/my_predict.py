@@ -76,13 +76,21 @@ def predict(args: argparse.Namespace):
                 image      = datapoint.get("image")
                 meta       = datapoint.get("meta")
                 image_path = mon.Path(meta["path"])
-                input      = image.to(device)
-                
+                image      = image.to(device)
+                h0, w0     = mon.get_image_size(image)
+                if resize:
+                    image = mon.resize(image, imgsz)
+                else:
+                    image = mon.resize(image, divisible_by=32)
+                    
                 # Infer
                 timer.tick()
-                enhanced_image = model(input)
+                enhanced_image = model(image)
                 enhanced_image = torch.clamp(enhanced_image, 0, 1)
                 timer.tock()
+                
+                # Post-processing
+                enhanced_image = mon.resize(enhanced_image, (h0, w0))
                 
                 # Save
                 if save_image:

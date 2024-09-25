@@ -124,7 +124,7 @@ def predict(args: argparse.Namespace):
             )
             timer.tock()
             
-            # Post-process
+            # Post-processing
             if resize:
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
             enhanced_image = cv2.cvtColor(enhanced_image, cv2.COLOR_RGB2BGR)

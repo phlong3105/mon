@@ -101,7 +101,7 @@ def predict(args: argparse.Namespace):
                 model.test()
                 timer.tock()
                 
-                # Post-process
+                # Post-processing
                 visuals        = model.get_current_visuals(need_GT=False)
                 enhanced_image = util.tensor2img(visuals["rlt"])  # uint8
                 enhanced_image = cv2.resize(enhanced_image, (w, h))

@@ -107,7 +107,7 @@ def predict(args: argparse.Namespace):
                 enhanced_image = model(image)
                 timer.tock()
                 
-                # Post-process
+                # Post-processing
                 enhanced_image = torch.clamp(enhanced_image, 0, 1)
                 enhanced_image = mon.resize(enhanced_image, (h0, w0))
                 
