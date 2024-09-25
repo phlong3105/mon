@@ -12,6 +12,7 @@ from __future__ import annotations
 __all__ = [
     "GCENet",
     "GCENet_ZSN2N",
+    "GCENet_Instance",
 ]
 
 from copy import deepcopy
@@ -532,6 +533,65 @@ class GCENet_ZSN2N(GCENet):
         loss     = 0.5 * (loss_res + loss_con) + 0.5 * loss_enh
         outputs["loss"] = loss
         # Return
+        return outputs
+
+
+@MODELS.register(name="gcenet_instance", arch="gcenet")
+class GCENet_Instance(GCENet):
+    
+    schemes: list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
+    
+    def __init__(self, name: str = "gcenet_instance", *args, **kwargs):
+        super().__init__(name=name, *args, **kwargs)
+        self.initial_state_dict = self.state_dict()
+        
+    def infer(
+        self,
+        datapoint    : dict,
+        epochs       : int   = 500,
+        lr           : float = 0.00005,
+        weight_decay : float = 0.00001,
+        reset_weights: bool  = True,
+        *args, **kwargs
+    ) -> dict:
+        # Initialize training components
+        self.train()
+        if reset_weights:
+            self.load_state_dict(self.initial_state_dict)
+        if isinstance(self.optims, dict):
+            optimizer = self.optims.get("optimizer", None)
+        else:
+            optimizer = nn.Adam(
+                self.parameters(),
+                lr           = lr,
+                betas        = (0.9, 0.999),
+                weight_decay = weight_decay,
+            )
+        
+        # Pre-processing
+        self.assert_datapoint(datapoint)
+        for k, v in datapoint.items():
+            if isinstance(v, torch.Tensor):
+                datapoint[k] = v.to(self.device)
+        
+        # Training
+        for _ in range(epochs):
+            outputs = self.forward_loss(datapoint=datapoint)
+            optimizer.zero_grad()
+            loss = outputs["loss"]
+            loss.backward(retain_graph=True)
+            optimizer.step()
+            
+        # Forward
+        self.eval()
+        timer = core.Timer()
+        timer.tick()
+        outputs = self.forward(datapoint=datapoint)
+        timer.tock()
+        self.assert_outputs(outputs)
+    
+        # Return
+        outputs["time"] = timer.avg_time
         return outputs
 
 # endregion

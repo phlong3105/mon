@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="gcenet"
-model="gcenet"
+arch="zero_mlie"
+model="zero_mlie_07_hvi"
 data=(
     "dicm"
     "lime"
