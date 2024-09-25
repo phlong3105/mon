@@ -23,18 +23,18 @@ class PSENet(LightningModule):
     
     def __init__(self, tv_w, gamma_lower, gamma_upper, number_refs, lr, afifi_evaluation=False):
         super().__init__()
-        self.tv_w = tv_w
-        self.gamma_lower = gamma_lower
-        self.gamma_upper = gamma_upper
-        self.number_refs = number_refs
+        self.tv_w             = tv_w
+        self.gamma_lower      = gamma_lower
+        self.gamma_upper      = gamma_upper
+        self.number_refs      = number_refs
         self.afifi_evaluation = afifi_evaluation
-        self.lr = lr
-        self.model = UnetTMO()
-        self.mse = torch.nn.MSELoss()
-        self.tv = TVLoss()
-        self.iqa = IQA()
-        self.saved_input = None
-        self.saved_pseudo_gt = None
+        self.lr               = lr
+        self.model            = UnetTMO()
+        self.mse              = torch.nn.MSELoss()
+        self.tv               = TVLoss()
+        self.iqa              = IQA()
+        self.saved_input      = None
+        self.saved_pseudo_gt  = None
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, betas=[0.9, 0.99])

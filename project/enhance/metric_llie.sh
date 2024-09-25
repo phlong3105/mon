@@ -12,8 +12,8 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="lyt_net"
-model="lyt_net_lol_v1"
+arch="zero_mlie"
+model="zero_mlie_08_hvid"
 data=(
     "dicm"
     "lime"
