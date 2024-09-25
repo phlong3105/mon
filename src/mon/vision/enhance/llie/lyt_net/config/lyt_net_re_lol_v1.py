@@ -78,8 +78,8 @@ data = {
     "name"      : data_name,
     "root"      : data_root,    # A root directory where the data is stored.
     "transform" : A.Compose(transforms=[
-		A.Resize(height=image_size[0], width=image_size[1]),
-	    # A.RandomCrop(height=image_size[0], width=image_size[1], p=1.0),
+		# A.Resize(height=image_size[0], width=image_size[1]),
+	    A.RandomCrop(height=image_size[0], width=image_size[1], p=1.0),
 		# A.Flip(),
 		# A.Rotate(),
     ]),  # Transformations performing on both the input and target.
@@ -116,7 +116,7 @@ trainer = default.trainer | {
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
 	"devices"          : [0],
-	"log_image_every_n_epochs": 1,
+	"log_image_every_n_epochs": 100,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},

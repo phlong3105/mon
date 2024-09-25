@@ -33,7 +33,7 @@ class ImageEnhancementModel(VisionModel, ABC):
             raise ValueError(f"The key ``'image'`` must be defined in the "
                              f"`datapoint`.")
         
-        has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
+        has_target = any(item in self.schemes for item in [Scheme.SUPERVISED]) and not self.predicting
         if has_target:
             if "hq_image" not in datapoint:
                 raise ValueError(f"The key ``'hq_image'`` must be defined in "

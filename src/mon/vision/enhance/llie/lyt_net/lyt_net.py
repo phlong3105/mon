@@ -371,6 +371,7 @@ class LYTNet_RE(base.ImageEnhancementModel):
         
         recombined = self.recombine(torch.cat([ref, lum], dim=1))
         enhanced   = self.final_adjustments(recombined)
+        enhanced    = torch.sigmoid(enhanced)
         return {
             "enhanced": enhanced
         }

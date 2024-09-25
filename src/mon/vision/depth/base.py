@@ -35,7 +35,7 @@ class DepthEstimationModel(VisionModel, ABC):
             raise ValueError("The key ``'image'`` must be defined in the "
                              "`datapoint`.")
         
-        has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
+        has_target = any(item in self.schemes for item in [Scheme.SUPERVISED]) and not self.predicting
         if has_target:
             if "depth" not in datapoint:
                 raise ValueError("The key ``'depth'`` must be defined in the "

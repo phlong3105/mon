@@ -35,7 +35,7 @@ class SegmentationModel(VisionModel, ABC):
             raise ValueError(f"The key ``'image'`` must be defined in the "
                              f"`datapoint`.")
         
-        has_target = any(item in self.schemes for item in [Scheme.SUPERVISED])
+        has_target = any(item in self.schemes for item in [Scheme.SUPERVISED]) and not self.predicting
         if has_target:
             if "semantic" not in datapoint:
                 raise ValueError(f"The key ``'semantic'`` must be defined in "
