@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""DepthAnythingV2.
+"""DepthAnythingV2
 
 This module implements a wrapper for DepthAnythingV2 models. It provides a
 simple interface for loading pre-trained models and performing inference.

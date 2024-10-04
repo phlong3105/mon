@@ -670,7 +670,8 @@ class Scheme(DT.Enum):
     SUPERVISED     = "supervised"      # supervised learning
     TRADITIONAL    = "traditional"     # traditional method (no learning)
     UNSUPERVISED   = "unsupervised"    # unsupervised learning
-    ZERO_REFERENCE = "zero_reference"  # zero-reference learning
+    ZERO_REFERENCE = "zero_reference"  # zero-reference learning (for image enhancement)
+    ZERO_SHOT      = "zero_shot"       # zero-shot learning (for classification)
 
 
 class Split(DT.Enum):
@@ -728,6 +729,14 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
         "depth_anything_v2_vitg": {
             "tasks"    : [Task.DEPTH],
             "schemes"  : [Scheme.SUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "depth" / "depth_anything_v2",
+            "torch_distributed_launch": True,
+        },
+    },
+    "depth_pro"        : {
+        "depth_pro": {
+            "tasks"    : [Task.DEPTH],
+            "schemes"  : [Scheme.ZERO_REFERENCE],
             "model_dir": MON_EXTRA_DIR / "vision" / "depth" / "depth_anything_v2",
             "torch_distributed_launch": True,
         },

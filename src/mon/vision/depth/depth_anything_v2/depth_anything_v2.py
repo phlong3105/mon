@@ -31,11 +31,13 @@ from mon.vision.depth import base
 
 console       = core.console
 error_console = core.error_console
+current_file  = core.Path(__file__).absolute()
+current_dir   = current_file.parents[0]
 
 try:
     import depth_anything_v2
     from depth_anything_v2 import dpt
-    depth_anything_v2s_available = True
+    depth_anything_v2_available = True
 except ImportError:
     depth_anything_v2_available = False
     error_console.log("The package 'depth_anything_v2' has not been installed.")
@@ -50,9 +52,10 @@ class DepthAnythingV2(nn.ExtraModel, base.DepthEstimationModel, ABC):
     defined in :obj:`mon_extra.vision.depth.depth_anything_v2`.
     """
     
-    arch   : str          = "depth_anything_v2"
-    schemes: list[Scheme] = [Scheme.INFERENCE]
-    zoo    : dict         = {}
+    model_dir: core.Path    = current_dir
+    arch     : str          = "depth_anything_v2"
+    schemes  : list[Scheme] = [Scheme.INFERENCE]
+    zoo      : dict         = {}
     
     def init_weights(self, m: nn.Module):
         pass
@@ -90,11 +93,8 @@ class DepthAnythingV2_ViTS(DepthAnythingV2):
             weights     = weights,
             *args, **kwargs
         )
-        if isinstance(self.weights, dict):
-            in_channels = self.weights.get("in_channels", in_channels)
         self.in_channels = in_channels or self.in_channels
-        
-        self.model = dpt.DepthAnythingV2(
+        self.model       = dpt.DepthAnythingV2(
             encoder      = "vits",
             features     = 64,
             out_channels = [48, 96, 192, 384],
@@ -131,11 +131,8 @@ class DepthAnythingV2_ViTB(DepthAnythingV2):
             weights     = weights,
             *args, **kwargs
         )
-        if isinstance(self.weights, dict):
-            in_channels = self.weights.get("in_channels", in_channels)
         self.in_channels = in_channels or self.in_channels
-        
-        self.model = dpt.DepthAnythingV2(
+        self.model       = dpt.DepthAnythingV2(
             encoder      = "vitb",
             features     = 128,
             out_channels = [96, 192, 384, 768],
@@ -172,11 +169,8 @@ class DepthAnythingV2_ViTL(DepthAnythingV2):
             weights     = weights,
             *args, **kwargs
         )
-        if isinstance(self.weights, dict):
-            in_channels = self.weights.get("in_channels", in_channels)
         self.in_channels = in_channels or self.in_channels
-        
-        self.model = dpt.DepthAnythingV2(
+        self.model       = dpt.DepthAnythingV2(
             encoder      = "vitl",
             features     = 256,
             out_channels = [256, 512, 1024, 1024],

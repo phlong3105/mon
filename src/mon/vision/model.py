@@ -109,7 +109,7 @@ class VisionModel(nn.Model, ABC):
                 datapoint[k] = v.to(self.device)
                 
         # Forward
-        timer   = core.Timer()
+        timer = core.Timer()
         timer.tick()
         outputs = self.forward(datapoint, *args, **kwargs)
         timer.tock()
