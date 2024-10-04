@@ -54,11 +54,11 @@ class Loss(nn.Loss):
     
     def __init__(
         self,
-        L     : float = 0.5,
-        alpha : float = 1,
-        beta  : float = 20,
-        gamma : float = 8,
-        delta : float = 5,
+        L          : float = 0.5,
+        alpha      : float = 1,
+        beta       : float = 20,
+        gamma      : float = 8,
+        delta      : float = 5,
         loss_weight: float = 1.0,
         reduction  : Literal["none", "mean", "sum"] = "mean",
         *args, **kwargs

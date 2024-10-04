@@ -19,12 +19,11 @@ __all__ = [
 from typing import Any, Literal
 
 import torch
-import torchvision
 
 from mon import core, nn
 from mon.globals import MODELS, Scheme, Task
 from mon.nn import functional as F
-from mon.vision.enhance import base
+from mon.vision.enhance import base, utils
 
 console      = core.console
 current_file = core.Path(__file__).absolute()
@@ -55,25 +54,6 @@ class TVLoss(nn.Loss):
 
 
 # region Module
-
-class IQA(nn.Module):
-    
-    def __init__(self):
-        super().__init__()
-        ps                 = 25
-        self.exposed_level = 0.5
-        self.mean_pool     = nn.Sequential(torch.nn.ReflectionPad2d(ps // 2), torch.nn.AvgPool2d(ps, stride=1))
-
-    def forward(self, images: torch.Tensor) -> torch.Tensor:
-        eps         = 1 / 255.0
-        max_rgb     = torch.max(images, dim=1, keepdim=True)[0]
-        min_rgb     = torch.min(images, dim=1, keepdim=True)[0]
-        saturation  = (max_rgb - min_rgb + eps) / (max_rgb + eps)
-        mean_rgb    = self.mean_pool(images).mean(dim=1, keepdim=True)
-        exposedness = torch.abs(mean_rgb - self.exposed_level) + eps
-        contrast    = self.mean_pool(images * images).mean(dim=1, keepdim=True) - mean_rgb**2
-        return torch.mean((saturation * contrast) / exposedness, dim=[1], keepdim=True)
-    
 
 class Hswish(nn.Module):
     
@@ -292,7 +272,14 @@ class PSENet(base.ImageEnhancementModel):
         # Loss
         self.mse  = nn.MSELoss()
         self.loss = TVLoss(reduction="mean")
-        self.iqa  = IQA()
+        
+        self.pseudo_gt_generator = utils.PseudoGTGenerator(
+            number_refs   = self.number_refs,
+            gamma_upper   = self.gamma_upper,
+            gamma_lower   = self.gamma_lower,
+            exposed_level = 0.5,
+            pool_size     = 25,
+        )
         
         # Load weights
         if self.weights:
@@ -318,9 +305,10 @@ class PSENet(base.ImageEnhancementModel):
         image = datapoint.get("image")
         # Saving n-th input and n-th pseudo gt
         nth_input     = image
-        nth_pseudo_gt = self.generate_pseudo_gt(image)
+        nth_output    = self.model(image)[0].clone().detach()
+        nth_pseudo_gt = self.pseudo_gt_generator(image, nth_output)
         if self.saved_input is not None:
-            # Getting (n - 1)th input and (n - 1)-th pseudo gt -> calculate loss -> update model weight (handeled automatically by pytorch lightning)
+            # Getting (n - 1)th input and (n - 1)-th pseudo gt -> calculate loss -> update model weight (handled automatically by pytorch lightning)
             x          = self.saved_input
             y, r       = self.model(x)
             pseudo_gt  = self.saved_pseudo_gt
@@ -348,27 +336,6 @@ class PSENet(base.ImageEnhancementModel):
             "adjust"  : r,
             "enhanced": y,
         }
-    
-    def generate_pseudo_gt(self, image: torch.Tensor) -> torch.Tensor:
-        b, c, h, w           = image.shape
-        underexposed_ranges  = torch.linspace(0, self.gamma_upper, steps=self.number_refs + 1).to(image.device)[:-1]
-        step_size            = self.gamma_upper / self.number_refs
-        underexposed_gamma   = torch.exp(torch.rand([b, self.number_refs], device=image.device) * step_size + underexposed_ranges[None, :])
-        overrexposed_ranges  = torch.linspace(self.gamma_lower, 0, steps=self.number_refs + 1).to(image.device)[:-1]
-        step_size            = - self.gamma_lower / self.number_refs
-        overrexposed_gamma   = torch.exp(torch.rand([b, self.number_refs], device=image.device) * overrexposed_ranges[None, :])
-        gammas = torch.cat([underexposed_gamma, overrexposed_gamma], dim=1)
-        # gammas: [b, nref], im: [b, c, h, w] -> synthetic_references: [b, nref, c, h, w]
-        synthetic_references = 1 - (1 - image[:, None]) ** gammas[:, :, None, None, None]
-        previous_iter_output = self.model(image)[0].clone().detach()
-        references           = torch.cat([image[:, None], previous_iter_output[:, None], synthetic_references], dim=1)
-        nref                 = references.shape[1]
-        scores               = self.iqa(references.view(b * nref, c, h, w))
-        scores               = scores.view(b, nref, 1, h, w)
-        max_idx              = torch.argmax(scores, dim=1)
-        max_idx              = max_idx.repeat(1, c, 1, 1)[:, None]
-        pseudo_gt            = torch.gather(references, 1, max_idx)
-        return pseudo_gt.squeeze(1)
     
     def on_train_epoch_end(self):
         sch = self.lr_schedulers()

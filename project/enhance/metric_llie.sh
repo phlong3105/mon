@@ -13,12 +13,11 @@ data_dir="${mon_dir}/data"
 # Input
 task="llie"
 arch="zero_mlie"
-model="zero_mlie_08_hvid"
+model="zero_mlie_03_rgbd_zsn2n"
 data=(
     "dicm"
     "lime"
     "mef"
-    # "nightcity"
     "npe"
     "vv"
     "fivek_e"
