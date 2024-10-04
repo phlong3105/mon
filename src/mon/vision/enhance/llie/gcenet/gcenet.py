@@ -548,7 +548,7 @@ class GCENet_Instance(GCENet):
     def infer(
         self,
         datapoint    : dict,
-        epochs       : int   = 500,
+        epochs       : int   = 300,
         lr           : float = 0.00005,
         weight_decay : float = 0.00001,
         reset_weights: bool  = True,
