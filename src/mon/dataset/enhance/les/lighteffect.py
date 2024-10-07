@@ -20,12 +20,13 @@ default_root_dir    = DATA_DIR / "enhance" / "les"
 ClassLabels         = core.ClassLabels
 DataModule          = core.DataModule
 DatapointAttributes = core.DatapointAttributes
+DepthMapAnnotation  = core.DepthMapAnnotation
 ImageAnnotation     = core.ImageAnnotation
-ImageDataset        = core.ImageDataset
+MultimodalDataset   = core.MultimodalDataset
 
 
 @DATASETS.register(name="lighteffect")
-class LightEffect(ImageDataset):
+class LightEffect(MultimodalDataset):
     """LightEffect dataset consists 961 flare images."""
     
     tasks : list[Task]  = [Task.LES]
@@ -41,22 +42,21 @@ class LightEffect(ImageDataset):
     def get_data(self):
         patterns = [
             # self.root / self.split / "light-effect" / "clear",
-            self.root / "lighteffect" / self.split_str / "lq",
+            self.root / "lighteffect" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        self.datapoints["image"] = lq_images
+        self.datapoints["image"] = images
 
 
 @DATAMODULES.register(name="lighteffect")

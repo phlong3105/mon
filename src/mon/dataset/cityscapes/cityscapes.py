@@ -28,13 +28,14 @@ default_root_dir               = DATA_DIR / "cityscapes"
 ClassLabels                    = core.ClassLabels
 DataModule                     = core.DataModule
 DatapointAttributes            = core.DatapointAttributes
+DepthMapAnnotation             = core.DepthMapAnnotation
 ImageAnnotation                = core.ImageAnnotation
-ImageDataset                   = core.ImageDataset
+MultimodalDataset              = core.MultimodalDataset
 SemanticSegmentationAnnotation = core.SemanticSegmentationAnnotation
 
 
 @DATASETS.register(name="cityscapes")
-class Cityscapes(ImageDataset):
+class Cityscapes(MultimodalDataset):
     """Cityscapes dataset.
     
     Args:
@@ -114,24 +115,22 @@ class Cityscapes(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} left images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} left images"
                 ):
                     if path.is_image_file():
-                        images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
         # Semantic segmentation maps
         semantic: list[SemanticSegmentationAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} semantic maps"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} semantic maps"
             ):
                 path = img.path.replace(f"{image_name}", f"{gt_name}")
                 path = path.parent / f"{path.stem}_labelIds{path.suffix}"
-                semantic.append(SemanticSegmentationAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                semantic.append(SemanticSegmentationAnnotation(path=path.image_file(), root=img.root, flags=cv2.IMREAD_GRAYSCALE))
         
         self.datapoints["image"]    = images
         self.datapoints["semantic"] = semantic

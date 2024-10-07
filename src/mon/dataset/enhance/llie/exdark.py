@@ -19,12 +19,13 @@ console             = core.console
 default_root_dir    = DATA_DIR / "enhance" / "llie"
 DataModule          = core.DataModule
 DatapointAttributes = core.DatapointAttributes
+DepthMapAnnotation  = core.DepthMapAnnotation
 ImageAnnotation     = core.ImageAnnotation
-ImageDataset        = core.ImageDataset
+MultimodalDataset   = core.MultimodalDataset
 
 
 @DATASETS.register(name="exdark")
-class ExDark(ImageDataset):
+class ExDark(MultimodalDataset):
     """ExDark dataset consists of 7,363 low-light images."""
     
     tasks : list[Task]  = [Task.LLIE]
@@ -39,22 +40,21 @@ class ExDark(ImageDataset):
         
     def get_data(self):
         patterns = [
-            self.root / "exdark" / self.split_str / "lq",
+            self.root / "exdark" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        self.datapoints["image"] = lq_images
+        self.datapoints["image"] = images
 
 
 @DATAMODULES.register(name="exdark")

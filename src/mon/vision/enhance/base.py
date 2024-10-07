@@ -35,8 +35,8 @@ class ImageEnhancementModel(VisionModel, ABC):
         
         has_target = any(item in self.schemes for item in [Scheme.SUPERVISED]) and not self.predicting
         if has_target:
-            if "hq_image" not in datapoint:
-                raise ValueError(f"The key ``'hq_image'`` must be defined in "
+            if "ref_image" not in datapoint:
+                raise ValueError(f"The key ``'ref_image'`` must be defined in "
                                  f"the `datapoint`.")
             
     def assert_outputs(self, outputs: dict) -> bool:
@@ -51,7 +51,7 @@ class ImageEnhancementModel(VisionModel, ABC):
         self.assert_outputs(outputs)
         # Loss
         pred   = outputs.get("enhanced")
-        target = datapoint.get("hq_image")
+        target = datapoint.get("ref_image")
         outputs["loss"] = self.loss(pred, target)
         # Return
         return outputs
@@ -67,7 +67,7 @@ class ImageEnhancementModel(VisionModel, ABC):
         self.assert_outputs(outputs)
         # Metrics
         pred    = outputs.get("enhanced")
-        target  = datapoint.get("hq_image")
+        target  = datapoint.get("ref_image")
         results = {}
         if metrics is not None:
             for i, metric in enumerate(metrics):
@@ -88,14 +88,14 @@ class ImageEnhancementModel(VisionModel, ABC):
         save_dir = self.debug_dir / f"epoch_{epoch:04d}"
         save_dir.mkdir(parents=True, exist_ok=True)
         
-        image    =    data.get("image",    None)
-        hq_image =    data.get("hq_image", None)
-        outputs  =    data.get("outputs",  {})
-        enhanced = outputs.pop("enhanced", None)
+        image     =    data.get("image",    None)
+        ref_image =    data.get("ref_image", None)
+        outputs   =    data.get("outputs",  {})
+        enhanced  = outputs.pop("enhanced", None)
         
-        image        = list(core.to_image_nparray(image,    keepdim=False, denormalize=True))
-        hq_image     = list(core.to_image_nparray(hq_image, keepdim=False, denormalize=True)) if hq_image is not None else None
-        enhanced     = list(core.to_image_nparray(enhanced, keepdim=False, denormalize=True))
+        image        = list(core.to_image_nparray(image,     keepdim=False, denormalize=True))
+        ref_image    = list(core.to_image_nparray(ref_image, keepdim=False, denormalize=True)) if ref_image is not None else None
+        enhanced     = list(core.to_image_nparray(enhanced,  keepdim=False, denormalize=True))
         extra_images = {k: v for k, v in outputs.items() if core.is_image(v)}
         extra        = {
             k: list(core.to_image_nparray(v, keepdim=False, denormalize=True))
@@ -103,17 +103,17 @@ class ImageEnhancementModel(VisionModel, ABC):
         } if extra_images else {}
         
         if len(image) != len(enhanced):
-            raise ValueError(f"The number of `images` and `enhanced` must be "
+            raise ValueError(f"The number of `image` and `enhanced` must be "
                              f"the same, but got {len(image)} != {len(enhanced)}.")
-        if hq_image is not None:
-            if len(image) != len(hq_image):
-                raise ValueError(f"The number of `images` and `hq_images` must "
+        if ref_image is not None:
+            if len(image) != len(ref_image):
+                raise ValueError(f"The number of `image` and `ref_image` must "
                                  f"be the same, but got "
-                                 f"{len(image)} != {len(hq_image)}.")
+                                 f"{len(image)} != {len(ref_image)}.")
             
         for i in range(len(image)):
-            if hq_image:
-                combined = cv2.hconcat([image[i], enhanced[i], hq_image[i]])
+            if ref_image:
+                combined = cv2.hconcat([image[i], enhanced[i], ref_image[i]])
             else:
                 combined = cv2.hconcat([image[i], enhanced[i]])
             combined    = cv2.cvtColor(combined, cv2.COLOR_RGB2BGR)

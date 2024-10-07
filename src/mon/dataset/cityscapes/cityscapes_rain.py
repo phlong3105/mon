@@ -29,8 +29,9 @@ default_root_dir               = DATA_DIR / "cityscapes"
 ClassLabels                    = core.ClassLabels
 DataModule                     = core.DataModule
 DatapointAttributes            = core.DatapointAttributes
+DepthMapAnnotation             = core.DepthMapAnnotation
 ImageAnnotation                = core.ImageAnnotation
-ImageDataset                   = core.ImageDataset
+MultimodalDataset              = core.MultimodalDataset
 SemanticSegmentationAnnotation = core.SemanticSegmentationAnnotation
 
 
@@ -40,9 +41,9 @@ class CityscapesRain(Cityscapes):
     tasks : list[Task]  = [Task.DERAIN]
     splits: list[Split] = [Split.TRAIN, Split.VAL]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
-        "semantic": SemanticSegmentationAnnotation,  # gtFine
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
+        "semantic" : SemanticSegmentationAnnotation,  # gtFine
     })
     has_test_annotations: bool = True
     
@@ -54,45 +55,48 @@ class CityscapesRain(Cityscapes):
             self.root / self.split_str /  "leftImg8bit_rain",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
+        # Reference images
+        ref_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} reference images"
             ):
                 path = img.path.replace("/leftImg8bit_rain/", "/leftImg8bit/")
                 stem = path.stem
                 path = path.parent / f"{stem.split("leftImg8bit")[0]}leftImg8bit{path.suffix}"
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+                ref_images.append(ImageAnnotation(path=path.image_file(), root=img.root))
         
         # Semantic segmentation maps
         semantic: list[SemanticSegmentationAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                hq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} semantic maps"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} semantic maps"
             ):
                 path = img.path.replace("/leftImg8bit/", "/gtFine/")
-                semantic.append(SemanticSegmentationAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
+                semantic.append(
+                    SemanticSegmentationAnnotation(
+                        path  = path.image_file(),
+                        root  = img.root,
+                        flags = cv2.IMREAD_GRAYSCALE
+                    )
+                )
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
-        self.datapoints["semantic"] = semantic
+        self.datapoints["image"]     = images
+        self.datapoints["ref_image"] = ref_images
+        self.datapoints["semantic"]  = semantic
 
 
 @DATAMODULES.register(name="cityscapes_rain")

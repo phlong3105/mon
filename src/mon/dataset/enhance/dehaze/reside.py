@@ -35,12 +35,13 @@ console             = core.console
 default_root_dir    = DATA_DIR / "enhance" / "dehaze"
 DataModule          = core.DataModule
 DatapointAttributes = core.DatapointAttributes
+DepthMapAnnotation  = core.DepthMapAnnotation
 ImageAnnotation     = core.ImageAnnotation
-ImageDataset        = core.ImageDataset
+MultimodalDataset   = core.MultimodalDataset
 
 
 @DATASETS.register(name="reside_hsts_real")
-class RESIDEHSTSReal(ImageDataset):
+class RESIDEHSTSReal(MultimodalDataset):
     """RESIDE-HSTS-Real dataset consists of 10 real hazy images."""
     
     tasks : list[Task]  = [Task.DEHAZE]
@@ -55,26 +56,25 @@ class RESIDEHSTSReal(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_hsts_real" / self.split_str / "lq",
+            self.root / "reside_hsts_real" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        self.datapoints["image"] = lq_images
+        self.datapoints["image"] = images
         
         
 @DATASETS.register(name="reside_hsts_syn")
-class RESIDEHSTSSyn(ImageDataset):
+class RESIDEHSTSSyn(MultimodalDataset):
     """RESIDE-HSTS-Syn dataset consists of ``10`` pairs of hazy and
     corresponding haze-free images.
     """
@@ -82,8 +82,8 @@ class RESIDEHSTSSyn(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -92,38 +92,25 @@ class RESIDEHSTSSyn(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_hsts_syn" / self.split_str / "lq",
+            self.root / "reside_hsts_syn" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"] = images
         
 
 @DATASETS.register(name="reside_its")
-class RESIDEITS(ImageDataset):
+class RESIDEITS(MultimodalDataset):
     """RESIDE-ITS dataset consists of ``13,990`` pairs of hazy and corresponding
     haze-free images.
     """
@@ -131,8 +118,8 @@ class RESIDEITS(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN, Split.VAL]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -141,40 +128,38 @@ class RESIDEITS(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_its" / self.split_str / "lq",
+            self.root / "reside_its" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = (list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
+        # Reference images
+        ref_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} reference images"
             ):
                 stem = str(img.path.stem).split("_")[0]
-                path = img.path.replace("/lq/", "/hq/")
+                path = img.path.replace("/image/", "/ref/")
                 path = path.parent / f"{stem}.{img.path.suffix}"
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+                ref_images.append(ImageAnnotation(path=path.image_file(), root=pattern))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"]     = images
+        self.datapoints["ref_image"] = ref_images
         
 
 @DATASETS.register(name="reside_its_v2")
-class RESIDEITSV2(ImageDataset):
+class RESIDEITSV2(MultimodalDataset):
     """RESIDE-ITS-V2 dataset consists of ``13,990`` pairs of hazy and
     corresponding haze-free images.
     """
@@ -182,8 +167,8 @@ class RESIDEITSV2(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -192,40 +177,38 @@ class RESIDEITSV2(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_its_v2" / self.split_str / "lq",
+            self.root / "reside_its_v2" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
+        # Reference images
+        ref_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} reference images"
             ):
                 stem = str(img.path.stem).split("_")[0]
-                path = img.path.replace("/lq/", "/hq/")
+                path = img.path.replace("/image/", "/ref/")
                 path = path.parent / f"{stem}.{img.path.suffix}"
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+                ref_images.append(ImageAnnotation(path=path.image_file(), root=pattern))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"]     = images
+        self.datapoints["ref_image"] = ref_images
         
 
 @DATASETS.register(name="reside_ots")
-class RESIDEOTS(ImageDataset):
+class RESIDEOTS(MultimodalDataset):
     """RESIDE-OTS dataset consists of ``73,135`` pairs of hazy and corresponding
     haze-free images.
     """
@@ -233,8 +216,8 @@ class RESIDEOTS(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -243,46 +226,44 @@ class RESIDEOTS(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_ots" / self.split_str / "lq",
+            self.root / "reside_ots" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
+        # Reference images
+        ref_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} reference images"
             ):
                 stem = str(img.path.stem).split("_")[0]
-                path = img.path.replace("/lq/", "/hq/")
+                path = img.path.replace("/image/", "/ref/")
                 path = path.parent / f"{stem}.{img.path.suffix}"
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+                ref_images.append(ImageAnnotation(path=path.image_file(), root=pattern))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"]     = images
+        self.datapoints["ref_image"] = ref_images
         
 
 @DATASETS.register(name="reside_rtts")
-class RESIDERTTS(ImageDataset):
+class RESIDERTTS(MultimodalDataset):
     """RESIDE-RTTS dataset consists of ``4,322`` real hazy images."""
     
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -291,26 +272,25 @@ class RESIDERTTS(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_rtts" / self.split_str / "lq",
+            self.root / "reside_rtts" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        self.datapoints["image"] = lq_images
+        self.datapoints["image"] = images
         
 
 @DATASETS.register(name="reside_sots_indoor")
-class RESIDESOTSIndoor(ImageDataset):
+class RESIDESOTSIndoor(MultimodalDataset):
     """RESIDE-SOTS-Indoor dataset consists of ``500`` pairs of hazy and
     corresponding haze-free images.
     """
@@ -318,8 +298,8 @@ class RESIDESOTSIndoor(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -328,40 +308,38 @@ class RESIDESOTSIndoor(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_sots_indoor " / self.split_str / "lq",
+            self.root / "reside_sots_indoor " / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
+        # Reference images
+        ref_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} hq images"
             ):
                 stem = str(img.path.stem).split("_")[0]
-                path = img.path.replace("/lq/", "/hq/")
+                path = img.path.replace("/image/", "/ref/")
                 path = path.parent / f"{stem}.{img.path.suffix}"
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+                ref_images.append(ImageAnnotation(path=path.image_file(), root=pattern))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"]     = images
+        self.datapoints["ref_image"] = ref_images
         
 
 @DATASETS.register(name="reside_sots_outdoor")
-class RESIDESOTSOutdoor(ImageDataset):
+class RESIDESOTSOutdoor(MultimodalDataset):
     """RESIDE-SOTS-Outdoor dataset consists of ``500`` pairs of hazy and
     corresponding haze-free images.
     """
@@ -369,8 +347,8 @@ class RESIDESOTSOutdoor(ImageDataset):
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -379,46 +357,44 @@ class RESIDESOTSOutdoor(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_sots_outdoor" / self.split_str / "lq",
+            self.root / "reside_sots_outdoor" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
 
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
+        # Reference images
+        ref_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} reference images"
             ):
                 stem = str(img.path.stem).split("_")[0]
-                path = img.path.replace("/lq/", "/hq/")
+                path = img.path.replace("/image/", "/ref/")
                 path = path.parent / f"{stem}.{img.path.suffix}"
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+                ref_images.append(ImageAnnotation(path=path.image_file(), root=pattern))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"]     = images
+        self.datapoints["ref_image"] = ref_images
 
 
 @DATASETS.register(name="reside_uhi")
-class RESIDEUHI(ImageDataset):
+class RESIDEUHI(MultimodalDataset):
     """RESIDE-UHI dataset consists of ``4,809`` real hazy images."""
     
     tasks : list[Task]  = [Task.DEHAZE]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
+        "image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -427,22 +403,21 @@ class RESIDEUHI(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "reside_uhi" / self.split_str / "lq"
+            self.root / "reside_uhi" / self.split_str / "image"
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        self.datapoints["image"] = lq_images
+        self.datapoints["image"] = images
         
 
 @DATAMODULES.register(name="reside_hsts_real")

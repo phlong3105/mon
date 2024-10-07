@@ -21,6 +21,7 @@ __all__ = [
     "DATAMODULES",
     "DATASETS",
     "DATA_DIR",
+    "DEPTH_DATA_SOURCES",
     "DETECTORS",
     "DISTANCES",
     "EMBEDDERS",
@@ -95,6 +96,8 @@ if not DATA_DIR.is_dir():
 
 
 # region Enum
+
+# region Color
 
 class RGB(DT.Enum):
     """138 RGB colors."""
@@ -278,6 +281,10 @@ class BasicRGB(DT.Enum):
     TEAL    = (0  , 128, 128)
     NAVY    = (0  , 0  , 128)
 
+# endregion
+
+
+# region Geometry
 
 class BBoxFormat(DT.Enum):
     """Bounding box formats.
@@ -434,6 +441,10 @@ class ShapeCode(DT.Enum):
             return cls.from_int(value=value)
         return None
 
+# endregion
+
+
+# region Tracking
 
 class TrackState(DT.Enum):
     
@@ -559,6 +570,8 @@ class MovingState(DT.Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         return None
+
+# endregion
 
 
 class MemoryUnit(DT.Enum):
@@ -692,6 +705,7 @@ IMAGE_FILE_FORMATS   = [".arw", ".bmp", ".dng", ".jpg", ".jpeg", ".png", ".ppm",
 VIDEO_FILE_FORMATS   = [".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv"]
 TORCH_FILE_FORMATS   = [".pt", ".pth", ".weights", ".ckpt", ".tar", ".onnx"]
 WEIGHTS_FILE_FORMATS = [".pt", ".pth", ".onnx"]
+DEPTH_DATA_SOURCES   = [None, "dav2_vitb_c", "dav2_vitb_g", "dp_c", "dp_c_i", "dp_g", "dp_g_i"]
 
 # List 3rd party modules
 EXTRA_DATASET_STR = "[extra]"
@@ -736,9 +750,15 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
     "depth_pro"        : {
         "depth_pro": {
             "tasks"    : [Task.DEPTH],
-            "schemes"  : [Scheme.ZERO_REFERENCE],
-            "model_dir": MON_EXTRA_DIR / "vision" / "depth" / "depth_anything_v2",
-            "torch_distributed_launch": True,
+            "schemes"  : [Scheme.ZERO_SHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "depth" / "depth_pro",
+            "torch_distributed_launch": False,
+        },
+        "depth_pro_2": {
+            "tasks"    : [Task.DEPTH],
+            "schemes"  : [Scheme.ZERO_SHOT],
+            "model_dir": MON_EXTRA_DIR / "vision" / "depth" / "depth_pro",
+            "torch_distributed_launch": False,
         },
     },
     # endregion

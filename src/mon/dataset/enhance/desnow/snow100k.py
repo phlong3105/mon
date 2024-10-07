@@ -25,18 +25,19 @@ console             = core.console
 default_root_dir    = DATA_DIR / "enhance" / "desnow"
 DataModule          = core.DataModule
 DatapointAttributes = core.DatapointAttributes
+DepthMapAnnotation  = core.DepthMapAnnotation
 ImageAnnotation     = core.ImageAnnotation
-ImageDataset        = core.ImageDataset
+MultimodalDataset   = core.MultimodalDataset
 
 
 @DATASETS.register(name="snow100k")
-class Snow100K(ImageDataset):
+class Snow100K(MultimodalDataset):
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -48,41 +49,28 @@ class Snow100K(ImageDataset):
             self.root / "snow100k" / self.split_str / "lq",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"] = images
         
 
 @DATASETS.register(name="snow100k_s")
-class Snow100KS(ImageDataset):
+class Snow100KS(MultimodalDataset):
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -91,44 +79,31 @@ class Snow100KS(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "snow100k_s" / self.split_str / "lq",
+            self.root / "snow100k_s" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} s{self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"] = images
         
 
 @DATASETS.register(name="snow100k_m")
-class Snow100KM(ImageDataset):
+class Snow100KM(MultimodalDataset):
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -137,44 +112,31 @@ class Snow100KM(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "snow100k_m" / self.split_str / "lq",
+            self.root / "snow100k_m" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"] = images
         
 
 @DATASETS.register(name="snow100k_l")
-class Snow100KL(ImageDataset):
+class Snow100KL(MultimodalDataset):
 
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TEST]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = True
     
@@ -183,7 +145,7 @@ class Snow100KL(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "snow100k_l" / self.split_str / "lq",
+            self.root / "snow100k_l" / self.split_str / "image",
         ]
         
         # LQ images
@@ -191,26 +153,13 @@ class Snow100KL(ImageDataset):
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        lq_images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
-            ):
-                path = img.path.replace("/lq/", "/hq/")
-                hq_images.append(ImageAnnotation(path=path.image_file()))
-        
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"] = lq_images
 
 
 @DATAMODULES.register(name="snow100k")

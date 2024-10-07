@@ -177,7 +177,9 @@ def parse_config_file(
             if config_.is_config_file():
                 return config_
     # That's it.
-    error_console.log(f"Could not find configuration file at: {config}.")
+    error_console.log(f"Could not find configuration file given: "
+                      f"config={config}, project_root={project_root}, "
+                      f"model_root={model_root}, weights_path={weights_path}.")
     return None
 
 
@@ -194,7 +196,7 @@ def load_config(config: Any) -> dict:
             spec   = importlib.util.spec_from_file_location(str(config.stem), str(config))
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            data  = {
+            data   = {
                 key: value
                 for key, value in module.__dict__.items()
                 if not key.startswith("__")

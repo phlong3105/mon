@@ -309,7 +309,7 @@ class HINet_RE(base.ImageEnhancementModel):
         self.assert_datapoint(datapoint)
         self.assert_outputs(outputs)
         # Loss
-        target = datapoint.get("hq_image")
+        target = datapoint.get("ref_image")
         if self.loss:
             loss = 0
             for p in outputs.values():

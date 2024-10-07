@@ -345,7 +345,7 @@ class LLLINetHVI(LLLINet):
         # Loss
         pred_rgb   = outputs.get("enhanced")
         pred_hvi   = self.rgb_to_hvi(pred_rgb)
-        target_rgb = datapoint.get("hq_image")
+        target_rgb = datapoint.get("ref_image")
         target_hvi = self.rgb_to_hvi(target_rgb)
         loss_rgb   = self.loss(pred_rgb, target_rgb)
         loss_hvi   = self.loss(pred_hvi, target_hvi)

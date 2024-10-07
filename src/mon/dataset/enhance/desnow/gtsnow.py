@@ -19,18 +19,19 @@ console             = core.console
 default_root_dir    = DATA_DIR / "enhance" / "desnow"
 DataModule          = core.DataModule
 DatapointAttributes = core.DatapointAttributes
+DepthMapAnnotation  = core.DepthMapAnnotation
 ImageAnnotation     = core.ImageAnnotation
-ImageDataset        = core.ImageDataset
+MultimodalDataset   = core.MultimodalDataset
 
 
 @DATASETS.register(name="gtsnow")
-class GTSnow(ImageDataset):
+class GTSnow(MultimodalDataset):
  
     tasks : list[Task]  = [Task.DESNOW]
     splits: list[Split] = [Split.TRAIN]
     datapoint_attrs     = DatapointAttributes({
-        "image"   : ImageAnnotation,
-        "hq_image": ImageAnnotation,
+        "image"    : ImageAnnotation,
+        "ref_image": ImageAnnotation,
     })
     has_test_annotations: bool = False
     
@@ -39,37 +40,35 @@ class GTSnow(ImageDataset):
     
     def get_data(self):
         patterns = [
-            self.root / "gtsnow" / self.split_str / "lq",
+            self.root / "gtsnow" / self.split_str / "image",
         ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # HQ images
-        hq_images: list[ImageAnnotation] = []
+        # Reference images
+        ref_images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} hq images"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} reference images"
             ):
                 path = str(img.path)
                 path = path[:-9] + "C-000.png"
-                path = path.replace("/lq/", "/hq/")
+                path = path.replace("/image/", "/ref/")
                 path = core.Path(path)
-                hq_images.append(ImageAnnotation(path=path.image_file()))
+                ref_images.append(ImageAnnotation(path=path.image_file()))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["hq_image"] = hq_images
+        self.datapoints["image"]     = images
+        self.datapoints["ref_image"] = ref_images
 
 
 @DATAMODULES.register(name="gtsnow")

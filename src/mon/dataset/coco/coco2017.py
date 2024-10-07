@@ -26,11 +26,11 @@ ClassLabels         = core.ClassLabels
 DataModule          = core.DataModule
 DatapointAttributes = core.DatapointAttributes
 ImageAnnotation     = core.ImageAnnotation
-ImageDataset        = core.ImageDataset
+MultimodalDataset   = core.MultimodalDataset
 
 
 @DATASETS.register(name="coco")
-class COCO(ImageDataset):
+class COCO(MultimodalDataset):
     """COCO dataset."""
     
     tasks : list[Task]  = [Task.DETECT]

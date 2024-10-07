@@ -78,7 +78,7 @@ class VideoDataset(base.Dataset, ABC):
 			verbose     = verbose,
 			*args, **kwargs
 		)
-		
+	
 	def __getitem__(self, index: int) -> dict:
 		"""Returns a dictionary containing the datapoint and metadata at the
 		given :obj:`index`.

@@ -9,10 +9,13 @@ This module implements annotations that take the form of an image.
 from __future__ import annotations
 
 __all__ = [
-    "ImageAnnotation",
+    "DepthMapAnnotation",
     "FrameAnnotation",
+    "ImageAnnotation",
     "SemanticSegmentationAnnotation",
 ]
+
+from typing import Literal
 
 import cv2
 import numpy as np
@@ -21,6 +24,7 @@ import torch
 from mon.core import pathlib
 from mon.core.data.annotation import base, classlabel
 from mon.core.image import io, utils
+from mon.globals import DEPTH_DATA_SOURCES
 
 ClassLabels = classlabel.ClassLabels
 
@@ -32,6 +36,7 @@ class ImageAnnotation(base.Annotation):
     
     Args:
         path: A path to the image file.
+        root: The root directory where the data is stored. Default: ``None``.
         flags: A flag to read the image. One of:
             - cv2.IMREAD_UNCHANGED           = -1,
             - cv2.IMREAD_GRAYSCALE           = 0,
@@ -55,10 +60,12 @@ class ImageAnnotation(base.Annotation):
     def __init__(
         self,
         path : pathlib.Path | str,
-        flags: int = cv2.IMREAD_COLOR,
+        root : pathlib.Path | str = None,
+        flags: int                = cv2.IMREAD_COLOR,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
+        self.root   = root
         self.path   = path
         self.flags  = flags
         self.image  = None
@@ -269,6 +276,29 @@ class FrameAnnotation(base.Annotation):
 # endregion
 
 
+# region Depth Map
+
+class DepthMapAnnotation(ImageAnnotation):
+    """A dense depth map annotation for an image."""
+    
+    def __init__(
+        self,
+        path  : pathlib.Path | str,
+        root  : pathlib.Path | str           = None,
+        source: Literal[*DEPTH_DATA_SOURCES] = None,
+        flags : int                          = cv2.IMREAD_COLOR,
+        *args, **kwargs
+    ):
+        super().__init__(path=path, root=root, flags=flags, *args, **kwargs)
+        if source not in DEPTH_DATA_SOURCES:
+            raise ValueError(f"`source` must be one of {DEPTH_DATA_SOURCES}, "
+                             f"but got {source}.")
+        self.source = source
+        self.flags  = cv2.IMREAD_GRAYSCALE if (source is not None and "g" in source) else cv2.IMREAD_COLOR
+        
+# endregion
+
+
 # region Segmentation
 
 class SemanticSegmentationAnnotation(base.Annotation):
@@ -296,10 +326,12 @@ class SemanticSegmentationAnnotation(base.Annotation):
     def __init__(
         self,
         path : pathlib.Path | str,
-        flags: int = cv2.IMREAD_COLOR,
+        root : pathlib.Path | str = None,
+        flags: int                = cv2.IMREAD_COLOR,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
+        self.root   = root
         self.path   = path
         self.flags  = flags
         self.mask   = None

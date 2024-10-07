@@ -30,15 +30,16 @@ default_root_dir               = DATA_DIR / "enhance" / "llie"
 ClassLabels                    = core.ClassLabels
 DataModule                     = core.DataModule
 DatapointAttributes            = core.DatapointAttributes
+DepthMapAnnotation             = core.DepthMapAnnotation
 ImageAnnotation                = core.ImageAnnotation
-ImageDataset                   = core.ImageDataset
+MultimodalDataset              = core.MultimodalDataset
 SemanticSegmentationAnnotation = core.SemanticSegmentationAnnotation
 
 
 # region Dataset
 
 @DATASETS.register(name="nightcity")
-class NightCity(ImageDataset):
+class NightCity(MultimodalDataset):
     """NightCity dataset consists of 4,297 real night-time images with ground
     truth pixel-level semantic annotations.
     
@@ -50,7 +51,7 @@ class NightCity(ImageDataset):
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     datapoint_attrs     = DatapointAttributes({
         "image"   : ImageAnnotation,
-        "depth"   : ImageAnnotation,
+        "depth"   : DepthMapAnnotation,
         "semantic": SemanticSegmentationAnnotation,
     })
     has_test_annotations: bool        = True
@@ -98,49 +99,35 @@ class NightCity(ImageDataset):
     def get_data(self):
         if self.split == Split.TEST:
             patterns = [
-                self.root / "nightcity" / "val" / "lq",
+                self.root / "nightcity" / "val" / "image",
             ]
         else:
             patterns = [
-                self.root / "nightcity" / self.split_str / "lq",
+                self.root / "nightcity" / self.split_str / "image",
             ]
         
-        # LQ images
-        lq_images: list[ImageAnnotation] = []
+        # Images
+        images: list[ImageAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
-                    sorted(list(pattern.rglob("*"))),
-                    description=f"Listing {self.__class__.__name__} "
-                                f"{self.split_str} lq images"
+                    sequence    = sorted(list(pattern.rglob("*"))),
+                    description = f"Listing {self.__class__.__name__} {self.split_str} images"
                 ):
                     if path.is_image_file():
-                        lq_images.append(ImageAnnotation(path=path))
+                        images.append(ImageAnnotation(path=path, root=pattern))
         
-        # LQ depth images
-        depth_maps: list[ImageAnnotation] = []
-        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
-            for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} lq depth maps"
-            ):
-                path = img.path.replace("/lq/", "/lq_dav2_vitb_g/")
-                depth_maps.append(ImageAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
-        
-        # LQ semantic segmentation maps
+        # Semantic segmentation maps
         semantic: list[SemanticSegmentationAnnotation] = []
         with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
-                lq_images,
-                description=f"Listing {self.__class__.__name__} "
-                            f"{self.split_str} lq semantic maps"
+                sequence    = images,
+                description = f"Listing {self.__class__.__name__} {self.split_str} semantic maps"
             ):
                 path = img.path.replace("/lq/", "/labelIds/")
                 semantic.append(SemanticSegmentationAnnotation(path=path.image_file(), flags=cv2.IMREAD_GRAYSCALE))
         
-        self.datapoints["image"]    = lq_images
-        self.datapoints["depth"]    = depth_maps
+        self.datapoints["image"]    = images
         self.datapoints["semantic"] = semantic
         
 # endregion
