@@ -9,11 +9,11 @@ This module implements base classes for all datasets.
 from __future__ import annotations
 
 __all__ = [
+    "MultimodalDataset",
     "ChainDataset",
     "ConcatDataset",
     "Dataset",
     "IterableDataset",
-    "MultimodalDataset",
     "Subset",
     "TensorDataset",
     "random_split",
@@ -39,7 +39,7 @@ DepthMapAnnotation  = annotation.DepthMapAnnotation
 ImageAnnotation     = annotation.ImageAnnotation
 
 
-# region Base
+# region Base Dataset
 
 class Dataset(dataset.Dataset, ABC):
     """The base class of all datasets.
@@ -325,7 +325,11 @@ class MultimodalDataset(Dataset, ABC):
             are the attribute names and the values are the attribute types.
             Must contain: {``'image'``: :obj:`ImageAnnotation`}. Note that to
             comply with :obj:`albumentations.Compose`, we will treat the first
-            key as the main image attribute.
+            key as the main image attribute. Here are some common attributes:
+                - ``'image'``    : :obj:`ImageAnnotation` (main attribute)
+                - ``'depth'``    : :obj:`DepthMapAnnotation`
+                - ``'ref_image'``: :obj:`ImageAnnotation`
+                - ``'ref_depth'``: :obj:`DepthMapAnnotation`
     
     Args:
         depth_source: The source of the depth data. Default: ``None``.
@@ -342,7 +346,9 @@ class MultimodalDataset(Dataset, ABC):
         self.depth_source = depth_source
         
         super().__init__(*args, **kwargs)
-        
+    
+    # region Magic Methods
+    
     def __getitem__(self, index: int) -> dict:
         """Returns a dictionary containing the datapoint and metadata at the
         given :obj:`index`.
@@ -369,6 +375,10 @@ class MultimodalDataset(Dataset, ABC):
     def __len__(self) -> int:
         """Return the total number of datapoints in the dataset."""
         return len(self.datapoints[self.main_attribute])
+    
+    # endregion
+    
+    # region Initialization
     
     def init_transform(self, transform: A.Compose | Any = None):
         super().init_transform(transform=transform)
@@ -401,11 +411,9 @@ class MultimodalDataset(Dataset, ABC):
             
     def get_multimodal_data(self):
         """Get multimodal data."""
-        print(self.datapoint_attrs.values())
-        print(DepthMapAnnotation)
-        if "ref_image" in self.datapoint_attrs.keys():
+        if "ref_image" in self.datapoint_attrs:
             self.get_reference_image()
-        if DepthMapAnnotation in self.datapoint_attrs.values() and self.depth_source is not None:
+        if "depth" in self.datapoint_attrs or "ref_depth" in self.datapoint_attrs:
             self.get_depth_map()
     
     def get_reference_image(self):
@@ -501,6 +509,10 @@ class MultimodalDataset(Dataset, ABC):
         """Stop and release."""
         pass
     
+    # endregion
+    
+    # region Retrieve Data
+    
     def get_datapoint(self, index: int) -> dict:
         """Get a datapoint at the given :obj:`index`."""
         datapoint = self.new_datapoint
@@ -515,4 +527,6 @@ class MultimodalDataset(Dataset, ABC):
         """
         return self.datapoints[self.main_attribute][index].meta
     
+    # endregion
+
 # endregion

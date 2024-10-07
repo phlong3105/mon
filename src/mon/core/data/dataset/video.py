@@ -8,7 +8,7 @@ This module implements the templates for video-only datasets."""
 from __future__ import annotations
 
 __all__ = [
-	"VideoDataset",
+	"VideoLoader",
 	"VideoLoaderCV",
 ]
 
@@ -30,10 +30,10 @@ FrameAnnotation     = annotation.FrameAnnotation
 ImageAnnotation     = annotation.ImageAnnotation
 
 
-# region Video Dataset
+# region Video Loader
 
-class VideoDataset(base.Dataset, ABC):
-	"""The base class for all video-based datasets.
+class VideoLoader(base.Dataset, ABC):
+	"""The base class for all video loaders.
 	
 	Attributes:
 		datapoint_attrs: A :obj:`dict` of datapoint attributes with the keys
@@ -79,6 +79,8 @@ class VideoDataset(base.Dataset, ABC):
 			*args, **kwargs
 		)
 	
+	# region Magic Methods
+	
 	def __getitem__(self, index: int) -> dict:
 		"""Returns a dictionary containing the datapoint and metadata at the
 		given :obj:`index`.
@@ -106,6 +108,8 @@ class VideoDataset(base.Dataset, ABC):
 		"""Return the total number of frames in the video."""
 		return self.num_frames
 	
+	# endregion
+	
 	def init_transform(self, transform: A.Compose | Any = None):
 		super().init_transform(transform=transform)
 		# Add additional targets
@@ -125,9 +129,13 @@ class VideoDataset(base.Dataset, ABC):
 			raise RuntimeError(f"No datapoints in the dataset.")
 		if self.verbose:
 			console.log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
-	
 
-class VideoLoaderCV(VideoDataset):
+# endregion
+
+
+# region Video Loader CV
+
+class VideoLoaderCV(VideoLoader):
 	"""A video loader that retrieves and loads frame(s) from a video or a stream
 	using :obj:`cv2`.
 	"""
@@ -152,6 +160,8 @@ class VideoLoaderCV(VideoDataset):
 			verbose    = verbose,
 			*args, **kwargs
 		)
+	
+	# region Properties
 	
 	@property
 	def is_stream(self) -> bool:
@@ -219,6 +229,10 @@ class VideoLoaderCV(VideoDataset):
 		"""Return the 0-based index of the frame to be decoded/captured next."""
 		return int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES))
 	
+	# endregion
+	
+	# region Initialization
+	
 	def get_data(self):
 		root = pathlib.Path(self.root)
 		if root.is_video_file():
@@ -243,6 +257,8 @@ class VideoLoaderCV(VideoDataset):
 		"""Stop and release the current attr:`_video_capture` object."""
 		if isinstance(self.video_capture, cv2.VideoCapture):
 			self.video_capture.release()
+	
+	# endregion
 	
 	def get_datapoint(self, index: int) -> dict:
 		"""Get a datapoint at the given :obj:`index`."""
@@ -295,5 +311,5 @@ class VideoLoaderCV(VideoDataset):
 			"split"        : self.split_str,
 			"stem"         : str(self.root.stem),
 		}
-	
+		
 # endregion

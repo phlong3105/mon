@@ -79,6 +79,7 @@ class ImageLoader(base.MultimodalDataset):
             ):
                 if path.is_image_file():
                     images.append(ImageAnnotation(path=path))
+        
         self.datapoints["image"] = images
 
 # endregion
