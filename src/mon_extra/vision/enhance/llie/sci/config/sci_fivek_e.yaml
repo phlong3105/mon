@@ -3,14 +3,14 @@ hostname    : ~
 config      : ~
 arch        : "sci"
 model       : "sci"
-data        : "mit"
+data        : "fivek_e"
 data_dir    : ~
 root        : ~
 project     : ~
 variant     : ~
-fullname    : "sci_mit"
+fullname    : "sci_fivek_e"
 save_dir    : ~
-weights     : "zoo/vision/enhance/llie/sci/sci/mit/sci_mit.pt"
+weights     : "zoo/vision/enhance/llie/sci/sci/fivek_e/sci_fivek_e.pt"
 device      : 0
 local_rank  : -1
 launcher    : ~

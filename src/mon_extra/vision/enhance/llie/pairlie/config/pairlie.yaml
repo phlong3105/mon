@@ -1,0 +1,34 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "pairlie"
+model       : "pairlie"
+data        : ~
+data_dir    : ~
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "pairlie"
+save_dir    : ~
+weights     : "zoo/vision/enhance/llie/pairlie/pairlie/pretrained/pairlie.pth"
+device      : 0
+local_rank  : -1
+launcher    : ~
+epochs      : 200
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+use_fullpath: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+lr          : 1e-4
+decay       : 100
+gamma       : 0.5
+seed        : 123456789
+rgb_range   : 1

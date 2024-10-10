@@ -11,7 +11,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "zero_mlie_11_rgbd_hsvd_zsn2n"
+model_name = "zero_mlie_12_rgbd_hsvd_zsn2n"
 data_name  = ""
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"

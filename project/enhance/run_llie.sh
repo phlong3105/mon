@@ -16,9 +16,11 @@ python -W ignore main.py \
     --root "${current_dir}" \
     --task "llie" \
     --mode "predict" \
-    --data "dicm, fusion, lime, mef, npe, vv, fivek_e, lol_v1, lol_v2_real, lol_v2_synthetic" \
+    --data "sice, sice_grad, sice_mix_v2" \
     --verbose \
     "$@"
+
+# --data "dicm, fusion, lime, mef, npe, vv, fivek_e, lol_v1, lol_v2_real, lol_v2_synthetic, sice, sice_grad, sice_mix_v2" \
 
 # Done
 cd "${current_dir}" || exit

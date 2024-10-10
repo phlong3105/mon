@@ -26,6 +26,9 @@ def measure_metric_pyiqa(
     input_dir  : mon.Path,
     target_dir : mon.Path | None,
     result_file: mon.Path | str,
+    arch       : str,
+    model      : str,
+    data       : str,
     imgsz      : int,
     device     : int | list[int] | str,
     resize     : bool,
@@ -46,7 +49,7 @@ def measure_metric_pyiqa(
     
     # Parse input and target directories
     input_dir  = mon.Path(input_dir)
-    target_dir = mon.Path(target_dir) if target_dir else input_dir.replace("lq", "hq")
+    target_dir = mon.Path(target_dir) if target_dir else input_dir.replace("image", "ref")
     
     # Parse result file
     result_file = mon.Path(result_file) if result_file else None
@@ -84,7 +87,7 @@ def measure_metric_pyiqa(
     need_target = any(_METRICS[m]["metric_mode"] == "FR" for m in metric)
     
     # Measuring
-    description = f"[bright_yellow] Measuring (GT Mean)" if use_gt_mean else f"[bright_yellow] Measuring"
+    description = f"[bright_yellow] Measuring {model} (GT Mean)" if use_gt_mean else f"[bright_yellow] Measuring {model}"
     with mon.get_progress_bar(transient=not verbose) as pbar:
         for image_file in pbar.track(
             sequence    = image_files,
@@ -195,6 +198,7 @@ def main(
     if not verbose:
         logger = logging.getLogger()
         logger.disabled = True
+    console.rule(f"[bold red] {model}")
     
     for b in backend:
         if b in ["pyiqa"]:
@@ -202,6 +206,9 @@ def main(
                 input_dir   = input_dir,
                 target_dir  = target_dir,
                 result_file = result_file,
+                arch        = arch,
+                model       = model,
+                data        = data,
                 device      = device,
                 imgsz       = imgsz,
                 resize      = resize,
@@ -216,6 +223,9 @@ def main(
                     input_dir   = input_dir,
                     target_dir  = target_dir,
                     result_file = result_file,
+                    arch        = arch,
+                    model       = model,
+                    data        = data,
                     device      = device,
                     imgsz       = imgsz,
                     resize      = resize,
@@ -229,7 +239,7 @@ def main(
             console.log(f"`{backend}` is not supported!")
     
     # Show results
-    console.rule(f"[bold red] {model}")
+    # console.rule(f"[bold red] {model}")
     console.log(f"[bold green]Model: {model}")
     console.log(f"[bold red]Data : {input_dir.name}")
     message = ""

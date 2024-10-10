@@ -1,0 +1,33 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "zero_ig"
+model       : "zero_ig"
+data        : "sice_grad"
+data_dir    : "data/enhance/llie/sice_grad"
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "zero_ig_sice_grad"
+save_dir    : ~
+weights     : "zoo/vision/enhance/llie/zero_ig/zero_ig/sice/zero_ig_sice_grad.pt"
+device      : 0
+local_rank  : ~
+launcher    : ~
+epochs      : 2001
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+use_fullpath: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+seed       : 2
+batch_size : 1
+num_workers: 0
+lr         : 0.0003

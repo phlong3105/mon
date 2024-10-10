@@ -12,19 +12,23 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="gcenet"
-model="gcenet_instance"
+arch="uretinexnet"
+model="uretinexnet"
 data=(
-    "dicm"
-    "lime"
-    "mef"
-    "npe"
-    "vv"
-    "fivek_e"
-    "lol_v1"
-    "lol_v2_real"
-    "lol_v2_synthetic"
+    # "dicm"
+    # "lime"
+    # "mef"
+    # "npe"
+    # "vv"
+    # "fivek_e"
+    # "lol_v1"
+    # "lol_v2_real"
+    # "lol_v2_synthetic"
+    "sice"
+    "sice_grad"
+    "sice_mix_v2"
 )
+device="cuda:0"
 
 # Run
 cd "${runml_dir}" || exit
@@ -33,9 +37,9 @@ for (( i=0; i<${#data[@]}; i++ )); do
     if ! [ -d "${input_dir}" ]; then
         input_dir="${current_dir}/run/predict/${arch}/${model}/${data[i]}"
     fi
-    target_dir="${data_dir}/enhance/${task}/${data[i]}/test/hq"
+    target_dir="${data_dir}/enhance/${task}/${data[i]}/test/ref"
     if ! [ -d "${target_dir}" ]; then
-        target_dir="${data_dir}/enhance/${task}/${data[i]}/val/hq"
+        target_dir="${data_dir}/enhance/${task}/${data[i]}/val/ref"
     fi
 
     if [ -d "${target_dir}" ]; then
@@ -46,7 +50,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --arch "${arch}" \
           --model "${model}" \
           --data "${data[i]}" \
-          --device "cuda:0" \
+          --device "${device}" \
           --imgsz 512 \
           --metric "psnr" \
           --metric "ssimc" \
@@ -54,6 +58,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --metric "ssim" \
           --metric "ms_ssim" \
           --metric "lpips" \
+          --metric "brisque" \
           --metric "niqe" \
           --metric "pi" \
           --backend "pyiqa" \
@@ -66,7 +71,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --arch "${arch}" \
           --model "${model}" \
           --data "${data[i]}" \
-          --device "cuda:0" \
+          --device "${device}" \
           --imgsz 512 \
           --metric "psnr" \
           --metric "ssimc" \
@@ -74,6 +79,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --metric "ssim" \
           --metric "ms_ssim" \
           --metric "lpips" \
+          --metric "brisque" \
           --metric "niqe" \
           --metric "pi" \
           --backend "pyiqa"

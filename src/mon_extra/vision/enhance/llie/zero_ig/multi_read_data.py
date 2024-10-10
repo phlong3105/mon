@@ -12,9 +12,9 @@ import mon
 class DataLoader(torch.utils.data.Dataset):
     
     def __init__(self, img_dir, task):
-        low_img_dir = mon.Path(img_dir) / task / "lq"
+        low_img_dir = mon.Path(img_dir) / task / "image"
         if not img_dir.exists():
-            low_img_dir = mon.Path(img_dir) / "test" / "lq"
+            low_img_dir = mon.Path(img_dir) / "test" / "ref"
         
         self.low_img_dir             = low_img_dir
         self.task                    = task

@@ -59,7 +59,7 @@ class CoLIE_HVI(base.ImageEnhancementModel):
     model_dir: core.Path    = current_dir
     arch     : str          = "colie"
     tasks    : list[Task]   = [Task.LLIE]
-    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
+    schemes  : list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_REFERENCE, Scheme.INSTANCE]
     zoo      : dict         = {}
     
     def __init__(

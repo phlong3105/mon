@@ -41,6 +41,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
         --metric "psnry" \
         --metric "ssim" \
         --metric "lpips" \
+        --metric "brisque" \
         --metric "niqe" \
         --metric "pi" \
         --backend "pyiqa" \
@@ -60,6 +61,7 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --metric "psnry" \
           --metric "ssim" \
           --metric "lpips" \
+          --metric "brisque" \
           --metric "niqe" \
           --metric "pi" \
           --backend "pyiqa" \

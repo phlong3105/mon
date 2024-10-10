@@ -230,7 +230,7 @@ class PSENet(base.ImageEnhancementModel):
     model_dir: core.Path    = current_dir
     arch     : str          = "psenet"
     tasks    : list[Task]   = [Task.LLIE]
-    schemes  : list[Scheme] = [Scheme.ZERO_REFERENCE]
+    schemes  : list[Scheme] = [Scheme.UNSUPERVISED, Scheme.ZERO_REFERENCE]
     zoo      : dict         = {}
     
     def __init__(
