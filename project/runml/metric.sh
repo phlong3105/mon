@@ -12,9 +12,12 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="gcenet"
-model="zerodce"
-data=()
+arch=""
+model=""
+data=(
+
+)
+device="cuda:0"
 
 # Run
 cd "${runml_dir}" || exit
@@ -23,31 +26,12 @@ for (( i=0; i<${#data[@]}; i++ )); do
     if ! [ -d "${input_dir}" ]; then
         input_dir="${current_dir}/run/predict/${arch}/${model}/${data[i]}"
     fi
-    target_dir="${data_dir}/enhance/${task}/${data[i]}/test/hq"
+    target_dir="${data_dir}/enhance/${task}/${data[i]}/test/ref"
     if ! [ -d "${target_dir}" ]; then
-        target_dir="${data_dir}/enhance/${task}/${data[i]}/val/hq"
+        target_dir="${data_dir}/enhance/${task}/${data[i]}/val/ref"
     fi
 
-    python -W ignore metric.py \
-        --input-dir "${input_dir}" \
-        --target-dir "${target_dir}" \
-        --result-file "${current_dir}" \
-        --arch "${arch}" \
-        --model "${model}" \
-        --data "${data[i]}" \
-        --device "cuda:0" \
-        --metric "psnr" \
-        --metric "ssimc" \
-        --metric "psnry" \
-        --metric "ssim" \
-        --metric "lpips" \
-        --metric "brisque" \
-        --metric "niqe" \
-        --metric "pi" \
-        --backend "pyiqa" \
-        --show-results
-
-    if ! [ -d "${target_dir}" ]; then
+    if [ -d "${target_dir}" ]; then
         python -W ignore metric.py \
           --input-dir "${input_dir}" \
           --target-dir "${target_dir}" \
@@ -55,18 +39,39 @@ for (( i=0; i<${#data[@]}; i++ )); do
           --arch "${arch}" \
           --model "${model}" \
           --data "${data[i]}" \
-          --device "cuda:0" \
+          --device "${device}" \
+          --imgsz 512 \
           --metric "psnr" \
           --metric "ssimc" \
           --metric "psnry" \
           --metric "ssim" \
+          --metric "ms_ssim" \
           --metric "lpips" \
           --metric "brisque" \
           --metric "niqe" \
           --metric "pi" \
           --backend "pyiqa" \
-          --use-gt-mean \
-          --show-results
+          --use-gt-mean
+    else
+        python -W ignore metric.py \
+          --input-dir "${input_dir}" \
+          --target-dir "${target_dir}" \
+          --result-file "${current_dir}" \
+          --arch "${arch}" \
+          --model "${model}" \
+          --data "${data[i]}" \
+          --device "${device}" \
+          --imgsz 512 \
+          --metric "psnr" \
+          --metric "ssimc" \
+          --metric "psnry" \
+          --metric "ssim" \
+          --metric "ms_ssim" \
+          --metric "lpips" \
+          --metric "brisque" \
+          --metric "niqe" \
+          --metric "pi" \
+          --backend "pyiqa"
     fi
 
 done

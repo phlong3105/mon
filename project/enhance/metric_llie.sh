@@ -12,10 +12,10 @@ data_dir="${mon_dir}/data"
 
 # Input
 task="llie"
-arch="uretinexnet"
-model="uretinexnet"
+arch="zero_mie"
+model="zero_mie"
 data=(
-    # "dicm"
+    "dicm"
     # "lime"
     # "mef"
     # "npe"
@@ -23,17 +23,18 @@ data=(
     # "fivek_e"
     # "lol_v1"
     # "lol_v2_real"
-    # "lol_v2_synthetic"
-    "sice"
-    "sice_grad"
-    "sice_mix_v2"
+    "lol_v2_synthetic"
+    # "sice"
+    # "sice_grad"
+    # "sice_mix_v2"
+    # "sid_sony"
 )
 device="cuda:0"
 
 # Run
 cd "${runml_dir}" || exit
 for (( i=0; i<${#data[@]}; i++ )); do
-    input_dir="${data_dir}/${task}/#predict/${arch}/${model}/${data[i]}"
+    input_dir="${data_dir}/enhance/${task}/#predict/${arch}/${model}/${data[i]}"
     if ! [ -d "${input_dir}" ]; then
         input_dir="${current_dir}/run/predict/${arch}/${model}/${data[i]}"
     fi

@@ -22,6 +22,7 @@ import mon.dataset.enhance.llie.mef
 import mon.dataset.enhance.llie.nightcity
 import mon.dataset.enhance.llie.npe
 import mon.dataset.enhance.llie.sice
+import mon.dataset.enhance.llie.sid
 import mon.dataset.enhance.llie.ulol
 import mon.dataset.enhance.llie.vv
 from mon.dataset.enhance.llie.darkface import *
@@ -37,5 +38,6 @@ from mon.dataset.enhance.llie.mef import *
 from mon.dataset.enhance.llie.nightcity import *
 from mon.dataset.enhance.llie.npe import *
 from mon.dataset.enhance.llie.sice import *
+from mon.dataset.enhance.llie.sid import *
 from mon.dataset.enhance.llie.ulol import *
 from mon.dataset.enhance.llie.vv import *

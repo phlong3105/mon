@@ -15,6 +15,8 @@ __all__ = [
     "ColorConstancyLoss",
     "ColorLoss",
     "ContradictChannelLoss",
+    "DepthConsistencyLoss",
+    "EdgeAwareDepthConsistencyLoss",
     "EdgeCharbonnierLoss",
     "EdgeConstancyLoss",
     "EdgeLoss",
@@ -24,6 +26,7 @@ __all__ = [
     "GradientLoss",
     "HistogramLoss",
     "MSSSIMLoss",
+    "MultiscaleDepthConsistencyLoss",
     "PSNRLoss",
     "PerceptualL1Loss",
     "PerceptualLoss",
@@ -52,6 +55,26 @@ from mon import core
 from mon.globals import LOSSES
 from mon.nn.loss import base
 from mon.nn.modules import prior
+
+
+# region Utils
+
+def apply_sobel_filter_to_rgb(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    sobel_kernel_x = torch.tensor([[1, 0, -1], [2, 0, -2], [1, 0, -1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+    sobel_kernel_y = torch.tensor([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+    sobel_kernel_x = sobel_kernel_x.to(image.device)
+    sobel_kernel_y = sobel_kernel_y.to(image.device)
+    # Split the image into R, G, B channels
+    channels = torch.chunk(image, chunks=3, dim=1)  # image shape [B, 3, H, W]
+    # Apply Sobel filter to each channel
+    grad_x_channels = [F.conv2d(channel, sobel_kernel_x, padding=1) for channel in channels]
+    grad_y_channels = [F.conv2d(channel, sobel_kernel_y, padding=1) for channel in channels]
+    # Stack the gradients back along the channel dimension
+    grad_x = torch.cat(grad_x_channels, dim=1)
+    grad_y = torch.cat(grad_y_channels, dim=1)
+    return grad_x, grad_y
+
+# endregion
 
 
 # region Loss
@@ -180,11 +203,7 @@ class ColorConstancyLoss(base.Loss):
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
     
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor = None
-    ) -> torch.Tensor:
+    def forward(self, input : torch.Tensor) -> torch.Tensor:
         mean_rgb   = torch.mean(input, [2, 3], keepdim=True)
         mr, mg, mb = torch.split(mean_rgb, 1, dim=1)
         d_rg       = torch.pow(mr - mg, 2)
@@ -266,6 +285,111 @@ class ContradictChannelLoss(base.Loss):
         return loss
 
 
+@LOSSES.register(name="depth_consistency_loss")
+class DepthConsistencyLoss(base.Loss):
+    
+    def __init__(
+        self,
+        alpha      : float = 0.5,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.alpha = alpha
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        depth : torch.Tensor,
+        target: torch.Tensor = None
+    ) -> torch.Tensor:
+        # Repeat depth map to match the number of channels of the predicted image
+        depth = depth.repeat(1, input.size(1), 1, 1)
+        # Compute spatial gradients of predicted image for each channel
+        grad_pred_x, grad_pred_y = apply_sobel_filter_to_rgb(input)
+        # Calculate depth-weighted consistency loss
+        depth_diff = torch.abs(depth - depth.transpose(2, 3))  # [B, H, W]
+        weight     = torch.exp(-self.alpha * depth_diff)
+        # Depth consistency loss between neighboring pixels
+        loss = (weight * (grad_pred_x ** 2 + grad_pred_y ** 2)).mean()
+        loss = self.loss_weight * loss
+        return loss
+
+
+@LOSSES.register(name="multiscale_depth_consistency_loss")
+class MultiscaleDepthConsistencyLoss(base.Loss):
+    
+    def __init__(
+        self,
+        scales     : list  = [1, 0.5, 0.25],
+        lambdas    : list  = [1, 0.5, 0.25],
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.scales  = scales
+        self.lambdas = lambdas
+        self.loss    = DepthConsistencyLoss()
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        depth : torch.Tensor,
+        target: torch.Tensor = None
+    ) -> torch.Tensor:
+        total_loss = 0.0
+        for i, scale in enumerate(self.scales):
+            # Downsample image and depth map to the corresponding scale
+            scaled_pred_image = F.interpolate(input, scale_factor=scale, mode="bilinear", align_corners=False)
+            scaled_depth_map  = F.interpolate(depth, scale_factor=scale, mode="bilinear", align_corners=False)
+            # Compute depth consistency loss at the current scale
+            loss        = self.loss(scaled_pred_image, scaled_depth_map)
+            total_loss += self.lambdas[i] * loss
+        total_loss = self.loss_weight * total_loss
+        return total_loss
+    
+
+@LOSSES.register(name="edge_aware_depth_consistency_loss")
+class EdgeAwareDepthConsistencyLoss(base.Loss):
+    
+    def __init__(
+        self,
+        tau        : float = 0.1,
+        loss_weight: float = 1.0,
+        reduction  : Literal["none", "mean", "sum"] = "mean"
+    ):
+        super().__init__(loss_weight=loss_weight, reduction=reduction)
+        self.tau = tau
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        depth : torch.Tensor,
+        target: torch.Tensor = None
+    ) -> torch.Tensor:
+        # Compute depth edges
+        depth_edges = self.compute_depth_edges(depth)
+        # Apply a threshold to get edge-aware mask
+        edge_mask   = (depth_edges > self.tau).float()  # Binary mask where edges are significant
+        # Compute image gradients
+        grad_pred_x, grad_pred_y = apply_sobel_filter_to_rgb(input)
+        # Depth consistency loss between neighboring pixels
+        loss = (edge_mask * (grad_pred_x ** 2 + grad_pred_y ** 2)).mean()
+        loss = self.loss_weight * loss
+        return loss
+    
+    def compute_depth_edges(self, depth_map):
+        sobel_kernel_x = torch.tensor([[1, 0, -1], [2, 0, -2], [ 1,  0, -1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        sobel_kernel_y = torch.tensor([[1, 2,  1], [0, 0,  0], [-1, -2, -1]], dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        sobel_kernel_x = sobel_kernel_x.to(depth_map.device)
+        sobel_kernel_y = sobel_kernel_y.to(depth_map.device)
+        grad_x         = F.conv2d(depth_map, sobel_kernel_x, padding=1)
+        grad_y         = F.conv2d(depth_map, sobel_kernel_y, padding=1)
+        # Compute magnitude of gradients
+        grad_magnitude = torch.sqrt(grad_x ** 2 + grad_y ** 2)
+        return grad_magnitude
+
+
 @LOSSES.register(name="edge_loss")
 class EdgeLoss(base.Loss):
     
@@ -334,11 +458,7 @@ class EdgeConstancyLoss(base.Loss):
         laplacian  = image - filtered
         return laplacian
     
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor = None
-    ) -> torch.Tensor:
+    def forward(self, input: torch.Tensor, target: torch.Tensor = None) -> torch.Tensor:
         if input.shape != target.shape:
             raise ValueError(f"`input` and `target` must have the same shape, "
                              f"but got: {input.shape} and {target.shape}")
@@ -429,11 +549,7 @@ class ExposureControlLoss(base.Loss):
         self.mean_val   = mean_val
         self.pool       = nn.AvgPool2d(self.patch_size)
     
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor = None
-    ) -> torch.Tensor:
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         x    = input
         x    = torch.mean(x, 1, keepdim=True)
         mean = self.pool(x)
@@ -470,11 +586,7 @@ class ExposureValueControlLoss(base.Loss):
         self.mean_val   = mean_val
         self.pool       = nn.AvgPool2d(self.patch_size)
     
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor = None
-    ) -> torch.Tensor:
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         x    = input
         x    = torch.mean(x, 1, keepdim=True)
         mean = self.pool(x) ** 0.5
@@ -1230,11 +1342,7 @@ class TotalVariationLoss(base.Loss):
     ):
         super().__init__(loss_weight=loss_weight, reduction=reduction)
     
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor = None
-    ) -> torch.Tensor:
+    def forward(self, input : torch.Tensor) -> torch.Tensor:
         x       = input
         b       = x.size()[0]
         h_x     = x.size()[2]

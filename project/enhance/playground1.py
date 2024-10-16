@@ -89,7 +89,7 @@ def run_rrdnet():
     image   = cv2.imread(str(path))
     #
     device  = torch.device("cuda:0")
-    net     = mon.RRDNet().to(device)
+    net     = mon.RRDNet_RE().to(device)
     zerodce = mon.ZeroDCE(
         num_iters = 4,
         weights   = current_dir / "run/train/zerodce_sice_mix/weights/last.pt"

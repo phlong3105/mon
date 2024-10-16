@@ -144,7 +144,7 @@ class Path(type(pathlib.Path())):
         """
         return (
             (self.is_file() if exist else True)
-            and self.suffix.lower() in ".dng"
+            and self.suffix.lower() in [".dng", ".arw"]
         )
     
     def is_stem(self) -> bool:

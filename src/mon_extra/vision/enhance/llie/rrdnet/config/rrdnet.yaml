@@ -1,0 +1,39 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "rrdnet"
+model       : "rrdnet"
+data        : ~
+data_dir    : !
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "rrdnet"
+save_dir    : ~
+weights     : ~
+device      : 0
+local_rank  : -1
+launcher    : ~
+epochs      : 1000
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : True
+save_image  : True
+save_debug  : False
+use_data_dir: False
+use_fullpath: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+lr            : 0.001
+illu_factor   : 1
+reflect_factor: 1
+noise_factor  : 5000
+reffac        : 1
+gamma         : 0.4
+# Gaussian Kernel Initialization
+g_kernel_size : 5
+g_padding     : 2
+sigma         : 3

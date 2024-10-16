@@ -11,7 +11,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "zero_mlie_05_hsvd"
+model_name = "rrdnet_re"
 data_name  = ""
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -33,17 +33,10 @@ model = {
 	"root"          : root,           # The root directory of the model.
 	"in_channels"   : 3,              # The first layer's input channel.
 	"out_channels"  : None,           # A number of classes, which is also the last layer's output channels.
-	"window_size"   : 7,              # Context window size.
-	"down_size"     : 256,            # Downsampling size.
-	"num_layers"    : 4,              # Number of layers.
-	"hidden_dim"    : 256,            # Hidden dimension.
-	"add_layer"     : 2,              # Additional layer.
-	"weight_decay"  : [0.1, 0.0001, 0.001],
-	"L"             : 0.3,            # L parameter.
-	"alpha"         : 1,              # Fidelity control.
-	"beta"          : 20,             # Illumination smoothness.
-	"gamma"         : 8,              # Exposure control.
-	"delta"         : 5,              # Sparsity level.
+	"gamma"         : 0.4,
+	"illu_factor"   : 1,
+	"reflect_factor": 1,
+	"noise_factor"  : 5000,
 	"weights"       : None,           # The model's weights.
 	"metrics"       : {
 	    "train": None,
@@ -111,7 +104,7 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 200,
+	"max_epochs"       : 1000,
 }
 
 # endregion
@@ -121,6 +114,7 @@ trainer = default.trainer | {
 
 predictor = default.predictor | {
 	"default_root_dir": root,  # Default path for saving results.
+	"save_debug"      : True,  # Save debug images.
 }
 
 # endregion

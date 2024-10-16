@@ -25,11 +25,13 @@ print("sam is working...")
 # subprocess.call(['python', 'sam.py', '--source_dir', args.test_dir])
 print("sam is done...")
 
+
 def save_images(tensor, path):
     image_numpy = tensor[0].cpu().float().numpy()
     image_numpy = (np.transpose(image_numpy, (1, 2, 0)))
     im = Image.fromarray(np.clip(image_numpy * 255.0, 0, 255.0).astype('uint8'))
     im.save(path, 'png')
+
 
 def model_init(model):
     weights_dict = torch.load(args.weights)
@@ -37,6 +39,7 @@ def model_init(model):
     weights_dict = {k: v for k, v in weights_dict.items() if k in model_dict}
     model_dict.update(weights_dict)
     model.load_state_dict(model_dict)
+
 
 def main():
     if not torch.cuda.is_available():

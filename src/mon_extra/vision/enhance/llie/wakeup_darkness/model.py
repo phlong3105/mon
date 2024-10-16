@@ -5,6 +5,7 @@ from fuse_block import TransformerBlock_1
 
 
 class GatedResidualBlock(nn.Module):
+    
     def __init__(self, channels):
         super(GatedResidualBlock, self).__init__()
         self.conv1 = nn.Conv2d(channels, channels, kernel_size=3, stride=1, padding=1)
@@ -30,6 +31,7 @@ class GatedResidualBlock(nn.Module):
 
 
 class EnhanceNetwork(nn.Module):
+    
     def __init__(self, layers, channels):
         super(EnhanceNetwork, self).__init__()
 
@@ -60,7 +62,6 @@ class EnhanceNetwork(nn.Module):
         )
         self.block = GatedResidualBlock(channels)
         
-
     def forward(self, input, sem, depth):
         fea = self.in_conv(input)
         
@@ -77,6 +78,7 @@ class EnhanceNetwork(nn.Module):
 
 
 class ColorCorrectionModule(nn.Module):
+    
     def __init__(self, correction_matrix=None, use_lut=False, lut_size=33):
         super(ColorCorrectionModule, self).__init__()
         
@@ -135,7 +137,6 @@ class Network_woCalibrate(nn.Module):
         
         return i, corrected_r, depth
 
-
     def _loss(self, input, sem, depth):
         i, r,d = self(input, sem,depth)
         loss_semantic = self._criterion(input, i)
@@ -163,4 +164,3 @@ class Network_woCalibrate(nn.Module):
 
 # flops, params = profile(model, inputs=(input_tensor,input_tensor,input_tensor))
 # print(f"FLOPs: {flops / 1e9} G FLOPs")  # Convert FLOPs to Giga FLOPs
-

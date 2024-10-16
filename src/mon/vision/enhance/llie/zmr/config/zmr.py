@@ -11,7 +11,7 @@ current_file = mon.Path(__file__).absolute()
 
 # region Basic
 
-model_name = "zero_mlie_03_rgbd_zsn2n"
+model_name = "zmr"
 data_name  = ""
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
@@ -38,12 +38,11 @@ model = {
 	"num_layers"    : 4,              # Number of layers.
 	"hidden_dim"    : 256,            # Hidden dimension.
 	"add_layer"     : 2,              # Additional layer.
+	"gamma"         : 0.5,
 	"weight_decay"  : [0.1, 0.0001, 0.001],
-	"L"             : 0.3,            # L parameter.
-	"alpha"         : 1,              # Fidelity control.
-	"beta"          : 20,             # Illumination smoothness.
-	"gamma"         : 8,              # Exposure control.
-	"delta"         : 5,              # Sparsity level.
+	"use_pse"       : False,	      # If ``True``, use PSE.
+	"number_refs"   : 1,			  # Number of references.
+	"tv_weight"     : 5,			  # TV weight.
 	"weights"       : None,           # The model's weights.
 	"metrics"       : {
 	    "train": None,
@@ -111,7 +110,7 @@ trainer = default.trainer | {
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
-	"max_epochs"       : 200,
+	"max_epochs"       : 1000,
 }
 
 # endregion
@@ -121,6 +120,7 @@ trainer = default.trainer | {
 
 predictor = default.predictor | {
 	"default_root_dir": root,  # Default path for saving results.
+	"save_debug"      : True,  # Save debug images.
 }
 
 # endregion
