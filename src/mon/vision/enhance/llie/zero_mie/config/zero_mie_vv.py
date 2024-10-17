@@ -12,7 +12,7 @@ current_file = mon.Path(__file__).absolute()
 # region Basic
 
 model_name = "zero_mie"
-data_name  = "fivek_e"
+data_name  = "vv"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
@@ -39,12 +39,12 @@ model = {
 	"down_size"     : 256,            # Downsampling size.
 	"hidden_dim"    : 256,            # Hidden dimension.
 	"weight_decay"  : [0.1, 0.0001, 0.001],
-	"color_space"   : "rgb_d",        # Color space.
-	"use_denoise"   : True,           # If ``True``, use denoising.
+	"color_space"   : "hsv_v_d",      # Color space. Best: hsv_v_d | View:
+	"use_denoise"   : False,          # If ``True``, use denoising. Best: True
 	"use_pse"       : False,          # If ``True``, use PSE.
 	"number_refs"   : 2,			  # Number of references.
 	"weight_enh"    : 5,
-	"exp_mean"      : 0.3,            # Best: 0.3
+	"exp_mean"      : 0.3,            # Best: 0.1 | View:
 	"weight_spa"	: 1,
 	"weight_exp"    : 10,
 	"weight_color"  : 5,

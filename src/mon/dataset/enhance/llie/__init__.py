@@ -18,6 +18,7 @@ import mon.dataset.enhance.llie.lime
 import mon.dataset.enhance.llie.lol_blur
 import mon.dataset.enhance.llie.lol_v1
 import mon.dataset.enhance.llie.lol_v2
+import mon.dataset.enhance.llie.loli_street
 import mon.dataset.enhance.llie.mef
 import mon.dataset.enhance.llie.nightcity
 import mon.dataset.enhance.llie.npe
@@ -34,6 +35,7 @@ from mon.dataset.enhance.llie.lime import *
 from mon.dataset.enhance.llie.lol_blur import *
 from mon.dataset.enhance.llie.lol_v1 import *
 from mon.dataset.enhance.llie.lol_v2 import *
+from mon.dataset.enhance.llie.loli_street import *
 from mon.dataset.enhance.llie.mef import *
 from mon.dataset.enhance.llie.nightcity import *
 from mon.dataset.enhance.llie.npe import *

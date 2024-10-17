@@ -44,7 +44,7 @@ model = {
 	"use_pse"       : False,          # If ``True``, use PSE.
 	"number_refs"   : 2,			  # Number of references.
 	"weight_enh"    : 5,
-	"exp_mean"      : 0.8,            # Best: 0.7
+	"exp_mean"      : 0.7,            # Best: 0.7
 	"weight_spa"	: 1,
 	"weight_exp"    : 10,
 	"weight_color"  : 5,

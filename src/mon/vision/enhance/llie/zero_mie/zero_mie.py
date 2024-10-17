@@ -43,61 +43,13 @@ class Loss(nn.Loss):
     
     def __init__(
         self,
-        L        : float = 0.1,
-        alpha    : float = 1,
-        beta     : float = 20,
-        gamma    : float = 8,
-        delta    : float = 5,
-        reduction: Literal["none", "mean", "sum"] = "mean",
-        *args, **kwargs
-    ):
-        super().__init__(reduction=reduction, *args, **kwargs)
-        self.alpha      = alpha
-        self.beta       = beta
-        self.gamma      = gamma
-        self.delta      = delta
-        self.loss_exp   = nn.ExposureValueControlLoss(patch_size=16, mean_val=L)
-        self.loss_tv    = nn.TotalVariationLoss(reduction=reduction)
-        self.loss_depth = nn.MultiscaleDepthConsistencyLoss(reduction=reduction)
-        self.loss_edge  = nn.EdgeAwareDepthConsistencyLoss(reduction=reduction)
-        self.loss_color = nn.ColorConstancyLoss(reduction=reduction)
-        
-    def forward(
-        self,
-        image_fixed_lr: torch.Tensor,
-        depth_lr      : torch.Tensor,
-        image_lr      : torch.Tensor,
-        illu_lr       : torch.Tensor,
-    ) -> torch.Tensor:
-        loss_spa   = torch.mean(torch.abs(torch.pow(illu_lr - image_lr, 2)))
-        loss_tv    = self.loss_tv(illu_lr)
-        loss_exp   = torch.mean(self.loss_exp(illu_lr))
-        loss_spar  = torch.mean(image_fixed_lr)
-        loss_depth = self.loss_depth(image_fixed_lr, depth_lr)
-        loss_edge  =  self.loss_edge(image_fixed_lr, depth_lr)
-        loss_color = self.loss_color(image_fixed_lr)
-        loss = (
-              loss_spa   * self.alpha
-            + loss_tv    * self.beta
-            + loss_exp   * self.gamma
-            + loss_spar  * self.delta
-            + loss_depth
-            + loss_edge
-            + loss_color
-        )
-        # print(f"Loss: {loss:.4f} = {loss_spa:.4f} + {loss_tv:.4f} + {loss_exp:.4f} + {loss_spar:.4f} + {loss_depth:.4f} + {loss_edge:.4f}")
-        return loss
-
-
-class Loss2(nn.Loss):
-    
-    def __init__(
-        self,
         exp_mean    : float = 0.9,
         weight_spa  : float = 1,
         weight_exp  : float = 10,
         weight_color: float = 5,
         weight_tv   : float = 1600,
+        weight_depth: float = 1,
+        weight_edge : float = 1,
         reduction   : Literal["none", "mean", "sum"] = "mean",
         *args, **kwargs
     ):
@@ -106,30 +58,105 @@ class Loss2(nn.Loss):
         self.weight_exp   = weight_exp
         self.weight_color = weight_color
         self.weight_tv    = weight_tv
+        self.weight_depth = weight_depth
+        self.weight_edge  = weight_edge
         
-        self.loss_spa     = nn.SpatialConsistencyLoss(8, reduction=reduction)
-        self.loss_exp     = nn.ExposureControlLoss(16, exp_mean, reduction=reduction)
-        self.loss_color   = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = nn.TotalVariationLoss(reduction=reduction)
+        self.loss_spa   = nn.SpatialConsistencyLoss(8, reduction=reduction)
+        self.loss_exp   = nn.ExposureControlLoss(16, exp_mean, reduction=reduction)
+        self.loss_color = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv    = nn.TotalVariationLoss(reduction=reduction)
+        self.loss_depth = nn.MultiscaleDepthConsistencyLoss(reduction=reduction)
+        self.loss_edge  = nn.EdgeAwareDepthConsistencyLoss(reduction=reduction)
         
     def forward(
         self,
-        enhanced: torch.Tensor,
-        image   : torch.Tensor,
-        illu_lr : torch.Tensor,
+        image          : torch.Tensor,
+        image_lr       : torch.Tensor,
+        illumination_lr: torch.Tensor,
+        enhanced       : torch.Tensor,
+        depth_lr       : torch.Tensor = None,
     ) -> torch.Tensor:
         loss_spa   = self.loss_spa(input=enhanced, target=image)
         loss_exp   = self.loss_exp(input=enhanced)
         loss_color = self.loss_color(input=enhanced)
-        loss_tv    = self.loss_tv(input=illu_lr)
-        loss     = (
+        loss_tv    = self.loss_tv(input=illumination_lr)
+        if depth_lr is not None:
+            loss_depth = self.loss_depth(image_lr, depth_lr)
+            loss_edge  = self.loss_edge(image_lr, depth_lr)
+        else:
+            loss_depth = 0
+            loss_edge  = 0
+        loss = (
               self.weight_spa   * loss_spa
             + self.weight_exp   * loss_exp
             + self.weight_color * loss_color
             + self.weight_tv    * loss_tv
+            + self.weight_depth * loss_depth
+            + self.weight_edge  * loss_edge
         )
         return loss
+
+
+class LossHSV(nn.Loss):
     
+    def __init__(
+        self,
+        exp_mean    : float = 0.1,
+        weight_spa  : float = 1,
+        weight_tv   : float = 20,
+        weight_exp  : float = 8,
+        weight_spar : float = 5,
+        weight_depth: float = 1,
+        weight_edge : float = 1,
+        weight_color: float = 1,
+        reduction: Literal["none", "mean", "sum"] = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(reduction=reduction, *args, **kwargs)
+        self.weight_spa   = weight_spa
+        self.weight_tv    = weight_tv
+        self.weight_exp   = weight_exp
+        self.weight_spar  = weight_spar
+        self.weight_depth = weight_depth
+        self.weight_edge  = weight_edge
+        self.weight_color = weight_color
+        
+        self.loss_exp   = nn.ExposureValueControlLoss(16, exp_mean, reduction=reduction)
+        self.loss_tv    = nn.TotalVariationLoss(reduction=reduction)
+        self.loss_depth = nn.MultiscaleDepthConsistencyLoss(reduction=reduction)
+        self.loss_edge  = nn.EdgeAwareDepthConsistencyLoss(reduction=reduction)
+        self.loss_color = nn.ColorConstancyLoss(reduction=reduction)
+        
+    def forward(
+        self,
+        image          : torch.Tensor,
+        image_lr       : torch.Tensor,
+        illumination_lr: torch.Tensor,
+        enhanced       : torch.Tensor,
+        depth_lr       : torch.Tensor = None,
+    ) -> torch.Tensor:
+        loss_spa   = torch.mean(torch.abs(torch.pow(illumination_lr - image_lr, 2)))
+        loss_tv    = self.loss_tv(illumination_lr)
+        loss_exp   = torch.mean(self.loss_exp(illumination_lr))
+        loss_spar  = torch.mean(enhanced)
+        loss_color = self.loss_color(enhanced)
+        if depth_lr is not None:
+            loss_depth = self.loss_depth(image_lr, depth_lr)
+            loss_edge  = self.loss_edge(image_lr, depth_lr)
+        else:
+            loss_depth = 0
+            loss_edge  = 0
+        loss = (
+              self.weight_spa   * loss_spa
+            + self.weight_tv    * loss_tv
+            + self.weight_exp   * loss_exp
+            + self.weight_spar  * loss_spar
+            + self.weight_depth * loss_depth
+            + self.weight_edge  * loss_edge
+            + self.weight_color * loss_color
+        )
+        return loss
+
 # endregion
 
 
@@ -259,16 +286,16 @@ class INF_RGB(INF):
         enhanced = enhanced / torch.max(enhanced)
         # Return
         return {
-            "image"         : image,
-            "depth"         : depth,
-            "edge"          : edge,
-            "image_lr"      : image_lr,
-            "depth_lr"      : depth_lr,
-            "edge_lr"       : edge_lr,
-            "illu_res_lr"   : illu_res_lr,
-            "illu_lr"       : illu_lr,
-            "image_fixed_lr": image_fixed_lr,
-            "enhanced"      : enhanced,
+            "image"      : image,
+            "image_lr"   : image_lr,
+            "depth"      : depth,
+            "depth_lr"   : depth_lr,
+            "edge"       : edge,
+            "edge_lr"    : edge_lr,
+            "illu_res_lr": illu_res_lr,
+            "illu_lr"    : illu_lr,
+            "enhanced_lr": image_fixed_lr,
+            "enhanced"   : enhanced,
         }
 
 
@@ -321,16 +348,16 @@ class INF_RGB_D(INF):
         enhanced = enhanced / torch.max(enhanced)
         # Return
         return {
-            "image"         : image,
-            "depth"         : depth,
-            "edge"          : edge,
-            "image_lr"      : image_lr,
-            "depth_lr"      : depth_lr,
-            "edge_lr"       : edge_lr,
-            "illu_res_lr"   : illu_res_lr,
-            "illu_lr"       : illu_lr,
-            "image_fixed_lr": image_fixed_lr,
-            "enhanced"      : enhanced,
+            "image"      : image,
+            "image_lr"   : image_lr,
+            "depth"      : depth,
+            "depth_lr"   : depth_lr,
+            "edge"       : edge,
+            "edge_lr"    : edge_lr,
+            "illu_res_lr": illu_res_lr,
+            "illu_lr"    : illu_lr,
+            "enhanced_lr": image_fixed_lr,
+            "enhanced"   : enhanced,
         }
 
 
@@ -399,16 +426,16 @@ class INF_R_G_B_D(INF):
         enhanced = enhanced / torch.max(enhanced)
         # Return
         return {
-            "image"         : image,
-            "depth"         : depth,
-            "edge"          : edge,
-            "image_lr"      : image_lr,
-            "depth_lr"      : depth_lr,
-            "edge_lr"       : edge_lr,
-            "illu_res_lr"   : illu_res_lr,
-            "illu_lr"       : illu_lr,
-            "image_fixed_lr": image_fixed_lr,
-            "enhanced"      : enhanced,
+            "image"      : image,
+            "image_lr"   : image_lr,
+            "depth"      : depth,
+            "depth_lr"   : depth_lr,
+            "edge"       : edge,
+            "edge_lr"    : edge_lr,
+            "illu_res_lr": illu_res_lr,
+            "illu_lr"    : illu_lr,
+            "enhanced_lr": image_fixed_lr,
+            "enhanced"   : enhanced,
         }
 
 
@@ -465,14 +492,16 @@ class INF_HSV_V(INF):
         enhanced         = enhanced / torch.max(enhanced)
         # Return
         return {
-            "image"         : image,
-            "depth"         : depth,
-            "edge"          : edge,
-            "illu_res_lr"   : illu_res_v_lr,
-            "illu_lr"       : illu_v_lr,
-            "image_lr"      : image_v_lr,
-            "image_fixed_lr": image_v_fixed_lr,
-            "enhanced"      : enhanced,
+            "image"      : image,
+            "image_lr"   : image_v_lr,
+            "depth"      : depth,
+            "depth_lr"   : depth_lr,
+            "edge"       : edge,
+            "edge_lr"    : edge_lr,
+            "illu_res_lr": illu_res_v_lr,
+            "illu_lr"    : illu_v_lr,
+            "enhance_lr" : image_v_fixed_lr,
+            "enhanced"   : enhanced,
         }
 
 
@@ -529,14 +558,16 @@ class INF_HSV_V_D(INF):
         enhanced         = enhanced / torch.max(enhanced)
         # Return
         return {
-            "image"         : image,
-            "depth"         : depth,
-            "edge"          : edge,
-            "illu_res_lr"   : illu_res_v_lr,
-            "illu_lr"       : illu_v_lr,
-            "image_lr"      : image_v_lr,
-            "image_fixed_lr": image_v_fixed_lr,
-            "enhanced"      : enhanced,
+            "image"      : image,
+            "image_lr"   : image_v_lr,
+            "depth"      : depth,
+            "depth_lr"   : depth_lr,
+            "edge"       : edge,
+            "edge_lr"    : edge_lr,
+            "illu_res_lr": illu_res_v_lr,
+            "illu_lr"    : illu_v_lr,
+            "enhance_lr" : image_v_fixed_lr,
+            "enhanced"   : enhanced,
         }
 
 # endregion
@@ -572,6 +603,8 @@ class ZeroMIE(base.ImageEnhancementModel):
         weight_exp  : float = 10,
         weight_color: float = 5,
         weight_tv   : float = 1600,
+        weight_depth: float = 1,
+        weight_edge : float = 1,
         weights     : Any   = None,
         *args, **kwargs
     ):
@@ -643,14 +676,18 @@ class ZeroMIE(base.ImageEnhancementModel):
         self.saved_pseudo_gt = None
         
         # Loss
-        # self.loss = Loss(L, alpha, beta, gamma, delta)
-        self.loss = Loss2(
-            exp_mean     = exp_mean,
-            weight_spa   = weight_spa,
-            weight_exp   = weight_exp,
-            weight_color = weight_color,
-            weight_tv    = weight_tv,
-        )
+        if color_space in ["hsv_v", "hsv_v_d"]:
+            self.loss = LossHSV(exp_mean=exp_mean)
+        else:
+            self.loss = Loss(
+                exp_mean     = exp_mean,
+                weight_spa   = weight_spa,
+                weight_exp   = weight_exp,
+                weight_color = weight_color,
+                weight_tv    = weight_tv,
+                weight_depth = weight_depth,
+                weight_edge  = weight_edge,
+            )
         self.loss_recon = nn.MSELoss()
         
         # Load weights
@@ -717,11 +754,13 @@ class ZeroMIE(base.ImageEnhancementModel):
                 # Getting (n - 1)th input and (n - 1)-th pseudo gt -> calculate loss -> update model weight (handled automatically by pytorch lightning)
                 outputs         = self.forward(datapoint=self.saved_input, *args, **kwargs)
                 image           = outputs["image"]
+                image_lr        = outputs["image_lr"]
                 illu_lr         = outputs["illu_lr"]
                 enhanced        = outputs["enhanced"]
+                depth_lr        = outputs["depth_lr"]
                 pseudo_gt       = self.saved_pseudo_gt
                 loss_recon      = self.loss_recon(enhanced, pseudo_gt)
-                loss_enh        = self.loss(enhanced, image, illu_lr)
+                loss_enh        = self.loss(image, image_lr, illu_lr, enhanced, depth_lr)
                 loss            = loss_recon + loss_enh * self.weight_enh
                 outputs["loss"] = loss
             else:  # Skip updating model's weight at the first batch
@@ -732,9 +771,11 @@ class ZeroMIE(base.ImageEnhancementModel):
         else:
             outputs         = self.forward(datapoint=datapoint, *args, **kwargs)
             image           = outputs["image"]
+            image_lr        = outputs["image_lr"]
             illu_lr         = outputs["illu_lr"]
             enhanced        = outputs["enhanced"]
-            outputs["loss"] = self.loss(enhanced, image, illu_lr)
+            depth_lr        = outputs["depth_lr"]
+            outputs["loss"] = self.loss(image, image_lr, illu_lr, enhanced, depth_lr)
         return outputs
         
     def forward(self, datapoint: dict, *args, **kwargs) -> dict:
