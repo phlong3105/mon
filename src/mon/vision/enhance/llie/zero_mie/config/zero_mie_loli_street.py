@@ -12,7 +12,7 @@ current_file = mon.Path(__file__).absolute()
 # region Basic
 
 model_name = "zero_mie"
-data_name  = "sice"
+data_name  = "loli_street"
 root       = current_file.parents[1] / "run"
 data_root  = mon.DATA_DIR / "enhance" / "llie"
 project    = None
@@ -41,17 +41,17 @@ model = {
 	"weight_decay"  : [0.1, 0.0001, 0.001],
 	"color_space"   : "rgb_d",        # Color space.
 	"use_denoise"   : True,           # If ``True``, use denoising. Best: True
-	"use_pse"       : False,          # If ``True``, use PSE. Best: False
+	"use_pse"       : False,          # If ``True``, use PSE.
 	"number_refs"   : 2,			  # Number of references.
 	"weight_enh"    : 5,
-	"loss_hsv"      : True,           # If ``True``, use HSV loss. Best: True
-	"exp_mean"      : 0.9,            # Best: 0.9
+	"loss_hsv"      : False,
+	"exp_mean"      : 0.6,            # Best:
 	"weight_spa"	: 1,
 	"weight_exp"    : 10,
 	"weight_color"  : 5,
 	"weight_tv"     : 1600,
-	"weight_depth"  : 1,
-	"weight_edge"   : 1,
+	"weight_depth"  : 0,
+	"weight_edge"   : 0,
 	"weights"       : None,           # The model's weights.
 	"metrics"       : {
 	    "train": None,

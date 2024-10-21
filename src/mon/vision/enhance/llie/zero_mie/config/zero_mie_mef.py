@@ -39,16 +39,19 @@ model = {
 	"down_size"     : 256,            # Downsampling size.
 	"hidden_dim"    : 256,            # Hidden dimension.
 	"weight_decay"  : [0.1, 0.0001, 0.001],
-	"color_space"   : "hsv_v_d",      # Color space. Best: hsv_v_d | View:
-	"use_denoise"   : False,          # If ``True``, use denoising. Best: True
-	"use_pse"       : False,          # If ``True``, use PSE.
+	"color_space"   : "hsv_v_d",      # Color space. Best: hsv_v_d
+	"use_denoise"   : True,           # If ``True``, use denoising. Best: True
+	"use_pse"       : False,          # If ``True``, use PSE. Best: False
 	"number_refs"   : 2,			  # Number of references.
 	"weight_enh"    : 5,
-	"exp_mean"      : 0.1,            # Best: 0.1 | View:
+	"loss_hsv"      : True,           # If ``True``, use HSV loss. Best: True
+	"exp_mean"      : 0.1,            # Best: 0.1
 	"weight_spa"	: 1,
 	"weight_exp"    : 10,
 	"weight_color"  : 5,
 	"weight_tv"     : 1600,           # Best: 1600
+	"weight_depth"  : 1,
+	"weight_edge"   : 1,
 	"weights"       : None,           # The model's weights.
 	"metrics"       : {
 	    "train": None,

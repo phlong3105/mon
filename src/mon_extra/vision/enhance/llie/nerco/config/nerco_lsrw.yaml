@@ -1,0 +1,75 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "nerco"
+model       : "nerco"
+data        : "lsrw"
+data_dir    : ~
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "nerco_lsrw"
+save_dir    : ~
+weights     : "zoo/vision/enhance/llie/nerco/nerco/lsrw"
+device      : 0
+local_rank  : -1
+launcher    : ~
+epochs      : 200
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : False
+save_image  : True
+save_debug  : False
+use_data_dir: False
+use_fullpath: False
+exist_ok    : False
+verbose     : True
+
+# Model Specific
+opt:
+    dataroot       : "data/enhance/llie"
+    name           : "nerco_lol_v1"
+    gpu_ids        : [0]
+    checkpoints_dir: "zoo/vision/enhance/llie/nerco/nerco/lol_v1"
+    #
+    model          : "NeRCo"
+    input_nc       : 3
+    output_nc      : 3
+    ngf            : 64
+    ndf            : 64
+    netD           : "basic"
+    netG           : "resnet_9blocks"
+    netH           : "resnet_9blocks"
+    n_layers_D     : 3
+    norm           : "instance"
+    init_type      : "normal"
+    init_gain      : 0.02
+    no_dropout     : False
+    #
+    direction      : "AtoB"
+    serial_batches : True
+    num_threads    : 0
+    batch_size     : 1
+    load_size      : 512
+    crop_size      : 512
+    preprocess     : "resize_and_crop"
+    no_flip        : True
+    display_winsize: 512
+    #
+    epoch          : "latest"
+    load_iter      : 0
+    verbose        : True
+    suffix         : ""
+    #
+    results_dir    : ""
+    aspect_ratio   : 1.0
+    phase          : "test"
+    eval           : False
+    dataset_mode   : "unaligned_test"
+    display_id     : -1
+    isTrain        : False
+    #
+    lambda_A       : 10.0
+    lambda_B       : 10.0
+    lambda_identity: 0.5

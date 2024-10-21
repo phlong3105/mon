@@ -598,6 +598,7 @@ class ZeroMIE(base.ImageEnhancementModel):
         use_pse     : bool  = False,
         number_refs : int   = 2,
         weight_enh  : float = 5,
+        loss_hsv    : bool  = True,
         exp_mean    : float = 0.6,
         weight_spa  : float = 1,
         weight_exp  : float = 10,
@@ -676,7 +677,7 @@ class ZeroMIE(base.ImageEnhancementModel):
         self.saved_pseudo_gt = None
         
         # Loss
-        if color_space in ["hsv_v", "hsv_v_d"]:
+        if loss_hsv and color_space in ["hsv_v", "hsv_v_d"]:
             self.loss = LossHSV(exp_mean=exp_mean)
         else:
             self.loss = Loss(

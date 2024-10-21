@@ -49,6 +49,8 @@ model = {
 	"weight_exp"    : 10,
 	"weight_color"  : 5,
 	"weight_tv"     : 1600,
+	"weight_depth"  : 1,
+	"weight_edge"   : 1,
 	"weights"       : None,           # The model's weights.
 	"metrics"       : {
 	    "train": None,

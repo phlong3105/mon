@@ -962,6 +962,14 @@ EXTRA_MODELS      = {  # architecture/model (+ variant)
             "torch_distributed_launch": True,
         },
     },
+    "nerco"        : {
+        "nerco": {
+            "tasks"    : [Task.LLIE],
+            "schemes"  : [Scheme.UNSUPERVISED],
+            "model_dir": MON_EXTRA_DIR / "vision" / "enhance" / "llie" / "nerco",
+            "torch_distributed_launch": False,
+        },
+    },
     "pairlie"      : {
         "pairlie": {
             "tasks"    : [Task.LLIE],

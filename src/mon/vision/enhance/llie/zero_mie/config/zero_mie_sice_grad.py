@@ -44,11 +44,14 @@ model = {
 	"use_pse"       : False,          # If ``True``, use PSE.
 	"number_refs"   : 2,			  # Number of references.
 	"weight_enh"    : 5,
-	"exp_mean"      : 0.5,            # Best: 0.7
+	"loss_hsv"      : True,           # If ``True``, use HSV loss. Best: True
+	"exp_mean"      : 0.7,            # Best: 0.7
 	"weight_spa"	: 1,
 	"weight_exp"    : 10,             # Best: 10
 	"weight_color"  : 5,
 	"weight_tv"     : 1600,
+	"weight_depth"  : 1,
+	"weight_edge"   : 1,
 	"weights"       : None,           # The model's weights.
 	"metrics"       : {
 	    "train": None,
