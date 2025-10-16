@@ -18,7 +18,7 @@
 
 [project]
 name            = "mon"
-version         = "2.8.1"
+version         = "2.9.0"
 authors         = [
     { name = "Long H. Pham", email = "longpham3105@gmail.com" },
 ]
@@ -73,7 +73,7 @@ dependencies    = [
     "spikingjelly",                     # SpikingJelly is an open-source deep learning framework for Spiking Neural Network (SNN) based on PyTorch.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
-    "torch>=2.8.0",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch>=2.9.0",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
     "torchmetrics>=1.8.2",              # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
     "transformers",                     # 🤗 Transformers: State-of-the-art Machine Learning for Pytorch, TensorFlow, and JAX.
@@ -88,6 +88,7 @@ dependencies    = [
     "faster-coco-eval",                 # Faster interpretation of the original COCOEval
     "ffmpeg-python",                    # Python bindings for FFmpeg—with complex filtering support.
     "kornia",                           # Kornia is a differentiable computer vision library for PyTorch.
+    "libcom",                           # Image composition toolbox: everything you want to know about image composition or object insertion.
     "opencv-contrib-python",            # Wrapper package for OpenCV python bindings.
     "opencv-python",                    # Computer vision and machine learning software library.
     "pillow_heif",                      # Python interface for libheif library.

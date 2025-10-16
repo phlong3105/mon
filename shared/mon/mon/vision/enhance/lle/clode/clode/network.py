@@ -146,8 +146,7 @@ class ODEBlock(nn.Module):
         
         self.odefunc.nfe = 0    
         x_aug = x
-                
-        out = odeint_adjoint(
+        out   = odeint_adjoint(
             self.odefunc,
             x_aug,
             integration_time,

@@ -17,33 +17,41 @@ run_dir      = root_dir / "run"
 
 models = [
     "zinf_siren",
-    "zinf_siren_asym",
-    "zinf_siren_sym",
+    #"zinf_siren_lbfgs",
+    #"zinf_siren_asym",
+    #"zinf_siren_sym",
+    "zinf_indi_siren",
 ]
 
 
 def compare(data: str) -> str:
+    if data == "sice":
+        input_dir = data_dir / data / "sice_lr" / "test" / "image_under"
+    else:
+        input_dir = data_dir / data / "test" / "image"
     colie_dir  =  run_dir / "predict" / "colie" / "colie" / data / "pred"
     model_dirs = [run_dir / "predict" / "zinf"  / m       / data / "pred" for m in models]
     
-    colie_files = sorted(list(colie_dir.glob("*")))
-    for colie_file in colie_files:
-        model_files = [md / colie_file.name for md in model_dirs]
+    input_files = sorted(list(input_dir.glob("*")))
+    for input_file in input_files:
+        colie_file   = colie_dir / input_file.name
+        model_files  = [colie_file] + [md / input_file.name for md in model_dirs]
         
-        colie_image  = cv2.imread(str(colie_file))
-        empty_image  = np.zeros((colie_image.shape[0], colie_image.shape[1], 3), np.uint8)
-        concat_image = cv2.vconcat([colie_image, empty_image])
+        input_image  = cv2.imread(str(input_file))
+        empty_image  = np.zeros((input_image.shape[0], input_image.shape[1], 3), np.uint8)
+        concat_image = cv2.vconcat([input_image, empty_image])
         for model_file in model_files:
             model_image  = cv2.imread(str(model_file))
-            diff_image   = cv2.absdiff(model_image, colie_image)
+            diff_image   = cv2.absdiff(model_image, input_image)
             gray_diff    = cv2.cvtColor(diff_image, cv2.COLOR_BGR2GRAY)
             norm_diff    = cv2.normalize(gray_diff, None, 0, 255, cv2.NORM_MINMAX)
             heatmap      = cv2.applyColorMap(norm_diff, cv2.COLORMAP_JET)
             concat_image = cv2.hconcat([concat_image, cv2.vconcat([model_image, heatmap])])
-            
+        
+        concat_image = cv2.resize(concat_image, None, fx=0.5, fy=0.5)
         cv2.imshow("Compare", concat_image)
         cv2.waitKey(0)
-        
+
 
 # ----- Main -----
 def main() -> str:

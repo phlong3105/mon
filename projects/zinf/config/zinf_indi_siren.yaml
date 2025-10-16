@@ -6,7 +6,7 @@ mode        : &mode "predict"                                                   
 arch        : &arch "zinf"                                                      # Model architecture or family (e.g., resnet).
 model       : &model "zinf"                                                     # Model name (e.g., resnet50).
 data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
-fullname    : &fullname "zinf_siren"                                            # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
+fullname    : &fullname "zinf_indi_siren"                                       # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
 weights     : &weights ~                                                        # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
@@ -15,7 +15,7 @@ imgsz       : &imgsz 256                                                        
 # Train
 resume      : &resume ~                                                         # Resume from interrupted training.
 tuning      : &tuning ~                                                         # Fine-tuning from a pretrained model.
-epochs      : &epochs 100                                                       # Training epochs. Default: ``100``.
+epochs      : &epochs 10                                                        # Training epochs. Default: ``100``.
 batch_size  : &batch_size 1                                                     # Batch size.
 torchrun    : False                                                             # If ``True``, use torch.distributed.run to run the training script.
 master_port : 7777                                                              # Master port for distributed training.
@@ -43,7 +43,7 @@ network:                                                                        
   hidden_dim : *imgsz                                                           # Input image size. Default: ``256``.
   num_layers : 4                                                                # Total layer's depth. Default: ``4``.
   add_layers : 2                                                                # Number of layers for output branch. Default: ``2``.
-  inr        : "siren"
+  inr        : "indi_siren"
   training   : "default"
   L          : 0.3
   iters      : *epochs

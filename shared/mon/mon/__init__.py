@@ -4,7 +4,7 @@
 """The MON framework."""
 
 __author__  = "Long H. Pham"
-__version__ = "2.8.1"
+__version__ = "2.9.0"
 
 
 # Import core packages
