@@ -88,7 +88,7 @@ dependencies    = [
     "faster-coco-eval",                 # Faster interpretation of the original COCOEval
     "ffmpeg-python",                    # Python bindings for FFmpeg—with complex filtering support.
     "kornia",                           # Kornia is a differentiable computer vision library for PyTorch.
-    "libcom",                           # Image composition toolbox: everything you want to know about image composition or object insertion.
+    # "libcom>=0.1.3",                    # Image composition toolbox: everything you want to know about image composition or object insertion.
     "opencv-contrib-python",            # Wrapper package for OpenCV python bindings.
     "opencv-python",                    # Computer vision and machine learning software library.
     "pillow_heif",                      # Python interface for libheif library.

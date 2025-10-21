@@ -87,22 +87,21 @@ def create_patches(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
     """Creates a tensor where the channel contains patch information.
 
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)` in
+        image: Image as a ``torch.Tensor`` of shape :math:`(1, C, H, W)` in
             range :math:`[0, 1]`.
-        kernel_size: Size of square patches. Default: ``1``.
+        kernel_size: Size of square patches. Default: ``7``.
 
     Returns:
-        A ``torch.Tensor`` with patches in channels of shape :math:`(B, H', W', K^2)`.
+        A ``torch.Tensor`` of patches in channels of shape :math:`(H, W, kernel_size^2)`.
     """
     if image.ndim != 4:
-        raise ValueError(f"``image`` must be a torch.Tensor of shape (B, C, H, W), got {image.shape}.")
+        raise ValueError(f"``image`` must be a torch.Tensor of shape (1, C, H, W), got {image.shape}.")
     
     b, c, h, w = image.shape
     kernel     = torch.zeros((kernel_size ** 2, c, kernel_size, kernel_size)).to(image.device)
     for i in range(kernel_size):
         for j in range(kernel_size):
-            # kernel[int(torch.sum(kernel).item()), 0, i, j] = 1
-            kernel[i + j * kernel_size, 0, i, j] = 1
+            kernel[i + j * kernel_size, :, i, j] = 1
 
     pad          = nn.ReflectionPad2d(kernel_size // 2)
     image_padded = pad(image)
@@ -114,7 +113,7 @@ def create_depth_aware_patches(
     image      : torch.Tensor,
     depth      : torch.Tensor,
     kernel_size: int   = 7,
-    alpha      : float = 0.1
+    alpha      : float = 8.3
 ) -> torch.Tensor:
     """Creates a tensor where the channel contains weighted patch information
     based on depth.
@@ -126,7 +125,7 @@ def create_depth_aware_patches(
             range :math:`[0, 1]`.
         kernel_size: Size of square patches. Default: ``1``.
         alpha: Controls depth similarity sensitivity (larger = stricter decay).
-            Default: ``0.1``.
+            Default: ``8.3``.
         
     Returns:
         A ``torch.Tensor`` with patches in channels of shape :math:`(B, H', W', K^2)`.

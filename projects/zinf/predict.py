@@ -7,6 +7,9 @@ References:
     - Paper: "Zero-Shot Implicit Neural Fusion Network for Multimodal Low-Light
       Image Enhancement," arXiv 2025.
     - Code: https://github.com/phlong3105/mon
+
+Usage:
+    python predict.py --p --data "dicm, lime, mef, npe, sice, vv" --save-debug
 """
 
 import copy
@@ -107,14 +110,13 @@ def predict(args: dict | box.Box) -> str:
             path  = mon.Path(meta["path"])
             image = datapoint["image"]
             image = image.to(device)
-            # depth = datapoint.get("depth", None)
-            # depth = depth.to(device) if depth is not None else None
+            depth = datapoint.get("depth", None)
+            depth = depth.to(device) if depth is not None else None
             timers.preprocess.tock()
 
             # Optimize
             timers.infer.tick()
-            # outputs = model(image, depth, save_debug=args.save_debug)
-            outputs = model(image, save_debug=args.save_debug)
+            outputs = model(image, depth, save_debug=args.save_debug)
             timers.infer.tock()
             
             # Postprocess
@@ -123,7 +125,12 @@ def predict(args: dict | box.Box) -> str:
             enhanced = mon.image.to_array(enhanced)
             if args.save_debug:
                 image       = mon.image.to_array(image)
-                debug_image = cv2.hconcat([image, enhanced])
+                depth       = depth.squeeze(0).detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy()
+                depth       = np.clip(depth * 255, 0, 255).astype("uint8")
+                depth       = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX)
+                depth       = cv2.applyColorMap(depth, cv2.COLORMAP_JET)
+                depth       = cv2.cvtColor(depth, cv2.COLOR_BGR2RGB)
+                debug_image = cv2.hconcat([image, depth, enhanced])
             timers.postprocess.tock()
             
             # Save
