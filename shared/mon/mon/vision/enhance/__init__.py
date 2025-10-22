@@ -9,7 +9,7 @@ from .derain import *
 from .exposure import *
 from .lle import *
 from .mef import *
-from .multitask import *
+from .restore import *
 from .retouch import *
 from .sr import *
 from .utils import *

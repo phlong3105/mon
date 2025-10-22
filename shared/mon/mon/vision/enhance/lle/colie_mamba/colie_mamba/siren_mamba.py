@@ -34,9 +34,9 @@ class SIRENLayer(nn.Module):
     def init_weights(self):
         with torch.no_grad():
             if self.is_first:
-                self.linear.weight.uniform_(-1 / self.in_f, 1 / self.in_f)
+                self.linear.weight.uniform_(-1 / self.in_features, 1 / self.in_features)
             else:
-                self.linear.weight.uniform_(-np.sqrt(6 / self.in_f) / self.w0, np.sqrt(6 / self.in_f) / self.w0)
+                self.linear.weight.uniform_(-np.sqrt(6 / self.in_features) / self.w0, np.sqrt(6 / self.in_features) / self.w0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.linear(x)
@@ -153,7 +153,6 @@ class CoLIEMambaNet(nn.Module):
         mamba_d_state: int = 16,
         mamba_d_conv : int = 4,
         mamba_expand : int = 2,
-        down_size    : int = 256,
     ):
         super().__init__()
         # patch_feat_dim = hidden_dim // 4
