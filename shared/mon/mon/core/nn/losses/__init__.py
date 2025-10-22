@@ -35,6 +35,7 @@ __all__ = [
     "SmoothL1Loss",
     "SoftMarginLoss",
     "SpatialConsistencyLoss",
+    "StructureTextureDecompositionLoss",
     "TotalVariationLoss",
     "TripletMarginLoss",
     "TripletMarginWithDistanceLoss",

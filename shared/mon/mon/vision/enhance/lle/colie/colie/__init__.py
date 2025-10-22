@@ -13,4 +13,4 @@ __all__ = [
     "CoLIE",
 ]
 
-from .model import CoLIE
+from .colie import CoLIE

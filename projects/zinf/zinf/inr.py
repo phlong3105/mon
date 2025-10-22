@@ -211,11 +211,11 @@ class DAMLayer(nn.Module):
     to the center pixel.
     
     Args:
-        patch_dim: The window size of the local context window. Default: ``49``
+        patch_dim: The window size of the local context window.
         alpha: Sensitivity parameter for depth similarity. Default: ``8.3``.
     """
     
-    def __init__(self, patch_dim: int = 49, alpha: float = 8.3):
+    def __init__(self, patch_dim: int, alpha: float = 8.3):
         super().__init__()
         # Total elements in the context window.
         self.context_elements = patch_dim
@@ -246,7 +246,7 @@ class DAMLayer(nn.Module):
         # pixels (high depth_diff, low F_D) are attenuated.
         patches = patches * F_D
         return patches
-  
+
 
 class DAM_SIREN(nn.Module):
     """Depth-Aware Modulated SIREN."""
@@ -305,10 +305,10 @@ class DAM_SIREN(nn.Module):
         patches: torch.Tensor,
         depth  : torch.Tensor = None,
     ) -> torch.Tensor:
-        center_idx   = self.patch_dim // 2
-        depth_center = depth[:, :, center_idx:center_idx + 1]
-        
+        center_idx        = self.patch_dim // 2
+        depth_center      = depth[:, :, center_idx:center_idx + 1]
         patches_modulated = self.dam_layer(patches, depth, depth_center)
+        
         coords_feat       = self.coords_net(self.pos_encode(coords))
         patches_feat      = self.patches_net(patches_modulated)
         backbone_feat     = torch.cat((coords_feat, patches_feat), -1)

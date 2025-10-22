@@ -81,8 +81,9 @@ def measure_metric_pyiqa(
         ):
             image  = datapoint["image"]
             target = datapoint.get("target", None)
-            
-            if image.shape != target.shape:
+            if target in [ [], [None], None ]:
+                target = None
+            elif image.shape != target.shape:
                 image = image.permute(0, 1, 3, 2)
             
             # Move to device

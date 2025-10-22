@@ -180,7 +180,7 @@ class ImageEvalDataset(EvalDataset):
         """
         datapoint = {}
         for k, v in self.datapoints.items():
-            if hasattr(v[index], "data"):
+            if v is not None and hasattr(v[index], "data"):
                 datapoint[k] = v[index].data
             else:
                 datapoint[k] = None

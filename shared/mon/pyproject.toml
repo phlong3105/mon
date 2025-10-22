@@ -65,6 +65,7 @@ dependencies    = [
     "einops",                           # A new flavor of deep learning operations.
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
     "lightning>=2.5.5",                 # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+    "mamba-ssm",                        # Mamba state-space model.
     "numpy==2.2.6",                     # The fundamental package for scientific computing with Python.
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "scikit-image",                     # Image processing in Python.

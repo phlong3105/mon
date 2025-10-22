@@ -15,7 +15,7 @@ imgsz       : &imgsz 256                                                        
 # Train
 resume      : &resume ~                                                         # Resume from interrupted training.
 tuning      : &tuning ~                                                         # Fine-tuning from a pretrained model.
-epochs      : &epochs 20                                                        # Training epochs. Default: ``100``.
+epochs      : &epochs 100                                                       # Training epochs. Default: ``100``.
 batch_size  : &batch_size 1                                                     # Batch size.
 torchrun    : False                                                             # If ``True``, use torch.distributed.run to run the training script.
 master_port : 7777                                                              # Master port for distributed training.

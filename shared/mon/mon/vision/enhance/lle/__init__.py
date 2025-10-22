@@ -5,6 +5,7 @@
 
 from .clode import *
 from .colie import *
+from .colie_mamba import *
 from .dccnet import *
 from .enlightengan import *
 from .fourllie import *

@@ -19,6 +19,7 @@ __all__ = [
     "ExposureValueControlLoss",
     "PSNRLoss",
     "SpatialConsistencyLoss",
+    "StructureTextureDecompositionLoss",
     "TotalVariationLoss",
 ]
 
@@ -27,6 +28,7 @@ from typing import Literal
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.transforms.functional import gaussian_blur
 
 from .base import BaseLoss
 from .core import CharbonnierLoss
@@ -656,3 +658,22 @@ class EdgeLoss(BaseLoss):
         loss  = torch.mean(torch.sqrt((diff * diff) + (self.eps * self.eps)))
         loss  = self.reduce(loss=loss)
         return loss
+
+
+class StructureTextureDecompositionLoss(nn.Module):
+    """Structure-Texture Decomposition Loss for denoising. It penalizes high-frequency
+    texture/noise in the reflectance map.
+    """
+    
+    def __init__(self, kernel_size: int = 3, sigma: float = 1.0):
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.sigma       = sigma
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        # Create a blurred version of the image to represent the "structure"
+        structure = gaussian_blur(input, kernel_size=self.kernel_size, sigma=self.sigma)
+        # The "texture" is the difference between the "input" and the "structure"
+        texture = input - structure
+        # Penalize the L1 norm of the texture component
+        return torch.mean(torch.abs(texture))

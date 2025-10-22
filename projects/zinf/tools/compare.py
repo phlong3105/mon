@@ -16,12 +16,14 @@ data_dir     = root_dir / "data"
 run_dir      = root_dir / "run"
 
 models = [
-    "zinf_siren",
-    "zinf_isiren",
+    # "zinf_siren",
     # "zinf_siren_lbfgs",
+    # "zinf_isiren",
+    # "zinf_isiren_lbfgs",
     # "zinf_dam_siren",
-    "zinf_dam_isiren",
     # "zinf_dam_siren_lbfgs",
+    "zinf_dam_isiren",
+    "zinf_dam_isiren_lbfgs",
 ]
 
 
@@ -61,7 +63,7 @@ def compare(data: str) -> str:
 def main() -> str:
     parser = argparse.ArgumentParser()
     # parser.add_argument("--model", type=str, default="zinf_siren_d")
-    parser.add_argument("--data",  type=str, default="darkface")
+    parser.add_argument("--data",  type=str, default="dicm")
     args = parser.parse_args()
     # compare(args.model, args.data)
     compare(args.data)

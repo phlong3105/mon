@@ -1,21 +1,21 @@
 # ----- Global Settings & Hyperparameters -----
 # These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
-task        : &task "lle"                                                       # Task name (e.g., detect, segment, classify).
-mode        : &mode "predict"                                                   # Mode name (e.g., train, val, test, predict, export).
-arch        : &arch "zinf"                                                      # Model architecture or family (e.g., resnet).
-model       : &model "zinf"                                                     # Model name (e.g., resnet50).
+task        : &task ~                                                           # Task name (e.g., detect, segment, classify).
+mode        : &mode "train"                                                     # Mode name (e.g., train, val, test, predict, export).
+arch        : &arch "fourierdiff"                                               # Model architecture or family (e.g., resnet).
+model       : &model "fourierdiff"                                              # Model name (e.g., resnet50).
 data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
-fullname    : &fullname "zinf_dam_isiren"                                       # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
+fullname    : &fullname "fourierdiff"                                           # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights ~                                                        # Path to the pretrained weights.
+weights     : &weights "zoo/vision/enhancerestorefourierdiff/fourierdiff/pretrained/256x256_diffusion_uncond.pt"  # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
-seed        : &seed 100                                                         # Random seed.
+seed        : &seed 1234                                                        # Random seed.
 imgsz       : &imgsz 256                                                        # Image size for the model.
 # Train
 resume      : &resume ~                                                         # Resume from interrupted training.
 tuning      : &tuning ~                                                         # Fine-tuning from a pretrained model.
-epochs      : &epochs 100                                                       # Training epochs. Default: ``100``.
+epochs      : &epochs -1                                                        # Training epochs.
 batch_size  : &batch_size 1                                                     # Batch size.
 torchrun    : False                                                             # If ``True``, use torch.distributed.run to run the training script.
 master_port : 7777                                                              # Master port for distributed training.
@@ -34,19 +34,15 @@ save_nearby : False                                                             
 exist_ok    : &exist_ok True                                                    # If ``False``, it will delete the saving directory if it already exists.
 verbose     : &verbose True                                                     # Verbosity.
 # Custom config.yaml
-cfg         : ~                                                                 # For overriding settings defined in this file.
+cfg         : "llve.yaml"                                                       # For overriding settings defined in this file.
 
 # ----- Model -----
-# Network
-network:                                                                        # Network architecture.
-  window_size: 7                                                                # Context window size. Default: ``9``.
-  hidden_dim : *imgsz                                                           # Input image size. Default: ``256``.
-  num_layers : 4                                                                # Total layer's depth. Default: ``4``.
-  add_layers : 2                                                                # Number of layers for output branch. Default: ``2``.
-  inr        : "dam_isiren"
-  training   : "default"
-  L          : 0.3
-  iters      : *epochs
+# Misc
+sigma_y     : 0.0
+eta         : 0.85
+subset_start: -1
+subset_end  : -1
+noise_type  : "gaussian"
 
 # Loss
 loss: ~                                                                         # Loss functions.

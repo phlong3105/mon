@@ -30,13 +30,14 @@ class SIRENLayer(nn.Module):
         self.linear      = nn.Linear(in_features, out_features)
         self.is_first    = is_first
         self.is_last     = is_last
-        if not self.is_last: 
-            self.init_weights()
+        self.init_weights()
     
     def init_weights(self):
-        b = 1 / self.in_features if self.is_first else np.sqrt(6 / self.in_features) / self.w0
         with torch.no_grad():
-            self.linear.weight.uniform_(-b, b)
+            if self.is_first:
+                self.linear.weight.uniform_(-1 / self.in_features, 1 / self.in_features)
+            else:
+                self.linear.weight.uniform_(-np.sqrt(6 / self.in_features) / self.w0, np.sqrt(6 / self.in_features) / self.w0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.linear(x)
