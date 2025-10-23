@@ -20,15 +20,17 @@ import torch
 from mon.constants import MODELS
 from mon.core import image as I, MLType, ModelMixin, nn, Path, Task
 from mon.core.nn.modules.inr.utils import *
-from .inr import InDi_SIREN_D, SIREN_D, InDi_SIREN, SIREN
+from .inr import InDi_SIREN_D, SIREN_D, InDi_SIREN, peSIREN, SIREN
+from .indi import indi_noise, indi_transform
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 INRS         = {
-    "indi_siren" : InDi_SIREN,
-    "indi_sirend": InDi_SIREN_D,
-    "siren"      : SIREN,
-    "sirend"     : SIREN_D,
+    "siren"     : SIREN,
+    "pesiren"   : peSIREN,
+    "isiren"    : InDi_SIREN,
+    "dam_siren" : SIREN_D,
+    "dam_isiren": InDi_SIREN_D,
 }
 
 
@@ -79,10 +81,12 @@ class ZINF(nn.Module, ModelMixin):
         image_i   = image_hvi[:, 2:3, :, :]
         
         # Optimize
-        if "indi" in self.inr:
+        if self.inr in ["isiren", "dam_isiren"]:
             self.optimize_indi(y_I=image_i, depth=depth)
             f_lr, y_I_lr, x_I_lr = self.infer_illu_indi(y_I=image_i, depth=depth)
         else:
+            # if self.training == "lbfgs":
+            #     self.optimize_lbfgs(y_I=image_i, depth=depth)
             if self.training == "asym":
                 self.optimize_asym(y_I=image_i, depth=depth)
             elif self.training == "sym":
@@ -92,14 +96,13 @@ class ZINF(nn.Module, ModelMixin):
             f_lr, y_I_lr, x_I_lr = self.infer_illu(y_I=image_i, depth=depth)
             
         # Inference
-        z_I_lr = y_I_lr / (x_I_lr + 1e-4)
+        z_I_lr = y_I_lr / (x_I_lr + 1e-6)
         z_I    = filter_up(y_I_lr, z_I_lr, image_i, kernel_size=self.window_size)
         
         # Convert to RGB
         image_hvi_fixed = torch.cat((image_hv, z_I), dim=1).to(image.device)
         # image_rgb_fixed = self.hvi_t.hvi_to_rgb(image_hvi_fixed)
         image_rgb_fixed = kornia.color.hsv_to_rgb(image_hvi_fixed)
-        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
         
         if save_debug:
             return {
@@ -117,11 +120,11 @@ class ZINF(nn.Module, ModelMixin):
         device = y_I.device
         
         # Preprocess
-        y_I_lr  = interpolate_image(y_I,   imgsz)
-        D_lr    = interpolate_image(depth, imgsz) if depth is not None else None
-        coords  = create_noisy_coords(imgsz).to(device)
-        patch_I = create_patches(y_I_lr, self.window_size)
-        patch_D = create_patches(D_lr,   self.window_size) if depth is not None else None
+        y_I_lr    = interpolate_image(y_I,   imgsz)
+        D_lr      = interpolate_image(depth, imgsz) if depth is not None else None
+        coords    = create_noisy_coords(imgsz).to(device)
+        patches_I = create_patches(y_I_lr, self.window_size)
+        patches_D = create_patches(D_lr,   self.window_size)
         
         # Optimize
         self.model.load_state_dict(self.state_dict)
@@ -129,25 +132,26 @@ class ZINF(nn.Module, ModelMixin):
         if self.training == "lbfgs":
             optimizer = nn.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
         else:
-            optimizer = nn.Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
-        L_exp = nn.ExposureValueControlLoss(16, self.L, channel_mean=True).to(device)
+            optimizer = nn.Adam(self.model.parameters(), lr=1e-4, betas=(0.9, 0.999), weight_decay=3e-4)
+        # optimizer = nn.Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
+        L_exp = nn.ExposureControlLoss(16, self.L, channel_mean=True).to(device)
         L_tv  = nn.TotalVariationLoss().to(device)
-        # L_tex = nn.StructureTextureDecompositionLoss().to(device)
-        
+        L_tex = nn.StructureTextureDecompositionLoss().to(device)
         for i in range(self.iters):
             
             def closure():
                 optimizer.zero_grad()  # Zero the gradients
-                f_lr   = self.model(coords=coords, patch_I=patch_I, patch_D=patch_D)
+                f_lr   = self.model(coords=coords, patches=patches_I, depth=patches_D)
+                f_lr   = f_lr.view(1, 1, imgsz, imgsz)
                 x_I_lr = f_lr + y_I_lr
-                z_I_lr = y_I_lr / (x_I_lr + 1e-4)
+                z_I_lr = y_I_lr / (x_I_lr + 1e-6)
                 # Loss
                 l_spa  = torch.mean(torch.abs(torch.pow(x_I_lr - y_I_lr, 2)))  # Spatial loss
                 l_tv   = L_tv(x_I_lr)               # TV loss
                 l_exp  = torch.mean(L_exp(x_I_lr))  # Exposure loss
                 l_spar = torch.mean(z_I_lr)         # Sparsity loss
-                # l_tex  = L_tex(z_I_lr)              # Denoise loss
-                loss   = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar) # + (18 * l_tex)
+                l_tex  = L_tex(z_I_lr)              # Denoise loss
+                loss   = 1 * l_spa + 20 * l_tv + 8 * l_exp + 5 * l_spar + 18 * l_tex
                 loss.backward()  # Compute gradients
                 return loss
             
@@ -158,18 +162,18 @@ class ZINF(nn.Module, ModelMixin):
                 optimizer.step()
     
     def infer_illu(self, y_I: torch.Tensor, depth: torch.Tensor = None) -> tuple[torch.Tensor, ...]:
-        imgsz   = self.hidden_dim
-        device  = y_I.device
+        imgsz  = self.hidden_dim
+        device = y_I.device
         
-        y_I_lr  = interpolate_image(y_I,   imgsz)
-        D_lr    = interpolate_image(depth, imgsz) if depth is not None else None
-        coords  = create_coords(imgsz).to(device)
-        patch_I = create_patches(y_I_lr, self.window_size)
-        patch_D = create_patches(D_lr,   self.window_size) if depth is not None else None
+        y_I_lr    = interpolate_image(y_I, imgsz)
+        D_lr      = interpolate_image(depth, imgsz) if depth is not None else None
+        coords    = create_coords(imgsz).to(device)
+        patches_I = create_patches(y_I_lr, self.window_size)
+        patches_D = create_patches(D_lr,   self.window_size)
         
-        self.model.eval()
-        f_lr    = self.model(coords=coords, patch_I=patch_I, patch_D=patch_D)
-        x_I_lr  = f_lr + y_I_lr
+        f_lr   = self.model(coords=coords, patches=patches_I, depth=patches_D)
+        f_lr   = f_lr.view(1, 1, imgsz, imgsz)
+        x_I_lr = f_lr + y_I_lr
         return f_lr, y_I_lr, x_I_lr
     
     # ----- Optimize: ZSN2N -----
@@ -196,6 +200,7 @@ class ZINF(nn.Module, ModelMixin):
             def closure():
                 optimizer.zero_grad()  # Zero the gradients
                 f_lr   = self.model(coords=coords, patches=patches_I, depth=patches_D)
+                f_lr   = f_lr.view(1, 1, imgsz, imgsz)
                 x_I_lr = f_lr + y_I_lr_noisy1
                 z_I_lr = y_I_lr_noisy1 / (x_I_lr + 1e-6)
                 #
@@ -203,7 +208,7 @@ class ZINF(nn.Module, ModelMixin):
                 l_tv   = L_tv(x_I_lr)               # TV loss
                 l_exp  = torch.mean(L_exp(x_I_lr))  # Exposure loss
                 l_spar = torch.mean(z_I_lr)         # Sparsity loss
-                loss   = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar)
+                loss   = 1 * l_spa + 20 * l_tv + 8 * l_exp + 5 * l_spar
                 loss.backward()  # Compute gradients
                 return loss
             
@@ -233,6 +238,7 @@ class ZINF(nn.Module, ModelMixin):
                 optimizer.zero_grad()  # Zero the gradients
                 # Direction 1: y_I_lr_noisy1 → y_I_lr_noisy2
                 f_lr1   = self.model(coords=coords, patches=patches_I, depth=patches_D)
+                f_lr1   = f_lr1.view(1, 1, imgsz, imgsz)
                 x_I_lr1 = f_lr1 + y_I_lr_noisy1
                 z_I_lr1 = y_I_lr_noisy1 / (x_I_lr1 + 1e-6)
                 #
@@ -242,6 +248,7 @@ class ZINF(nn.Module, ModelMixin):
                 l_spar1 = torch.mean(z_I_lr1)         # Sparsity loss
                 # Direction 1: y_I_lr_noisy2 → y_I_lr_noisy1
                 f_lr2   = self.model(coords=coords, patches=patches_I)
+                f_lr2   = f_lr2.view(1, 1, imgsz, imgsz)
                 x_I_lr2 = f_lr2 + y_I_lr_noisy2
                 z_I_lr2 = y_I_lr_noisy2 / (x_I_lr2 + 1e-6)
                 #
@@ -267,12 +274,12 @@ class ZINF(nn.Module, ModelMixin):
         
         # Preprocess
         # y_I_lr_noisy1, y_I_lr_noisy2 = pair_downsampler(interpolate_image(y_I, imgsz * 2))
-        y_I_lr  = interpolate_image(y_I,   imgsz)  # (1, 1, H, W)
-        D_lr    = interpolate_image(depth, imgsz) if depth is not None else None
-        Z       = torch.randn_like(y_I_lr)  # Gaussian noise
-        coords  = create_noisy_coords(imgsz).to(device)
-        patch_I = create_patches(y_I_lr, self.window_size)
-        patch_D = create_patches(D_lr,   self.window_size) if depth is not None else None
+        y_I_lr    = interpolate_image(y_I,   imgsz)  # (1, 1, H, W)
+        D_lr      = interpolate_image(depth, imgsz) if depth is not None else None
+        Z         = torch.randn_like(y_I_lr)  # Gaussian noise
+        coords    = create_noisy_coords(imgsz).to(device)
+        patches_I = create_patches(y_I_lr, self.window_size)
+        patches_D = create_patches(D_lr,   self.window_size)
         
         # Optimize
         self.model.load_state_dict(self.state_dict)
@@ -280,11 +287,10 @@ class ZINF(nn.Module, ModelMixin):
         if self.training == "lbfgs":
             optimizer = nn.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
         else:
-            optimizer = nn.Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
-        L_exp = nn.ExposureValueControlLoss(16, self.L, channel_mean=True).to(device)
+            optimizer = nn.Adam(self.model.parameters(), lr=1e-4, betas=(0.9, 0.999), weight_decay=3e-4)
+        L_exp = nn.ExposureControlLoss(16, self.L, channel_mean=True).to(device)
         L_tv  = nn.TotalVariationLoss().to(device)
-        # L_tex = nn.StructureTextureDecompositionLoss().to(device)
-        
+        L_tex = nn.StructureTextureDecompositionLoss().to(device)
         for i in range(self.iters):
             
             def closure():
@@ -295,16 +301,17 @@ class ZINF(nn.Module, ModelMixin):
                 g_t    = y_I_lr * (1 - t) + Z * t + e * n * t
                 prev_g = g_t.view(imgsz, imgsz, 1)
                 #
-                f_lr   = self.model(coords=coords, patch_I=patch_I, patch_D=patch_D, prev_g=prev_g, t=t)
+                f_lr   = self.model(coords=coords, patches=patches_I, depth=patches_D, prev_g=prev_g, t=t)
+                f_lr   = f_lr.view(1, 1, imgsz, imgsz)
                 x_I_lr = f_lr + y_I_lr
-                z_I_lr = y_I_lr / (x_I_lr + 1e-4)
+                z_I_lr = y_I_lr / (x_I_lr + 1e-6)
                 #
                 l_spa  = torch.mean(torch.abs(torch.pow(x_I_lr - y_I_lr, 2)))  # Spatial loss
                 l_tv   = L_tv(x_I_lr)               # TV loss
                 l_exp  = torch.mean(L_exp(x_I_lr))  # Exposure loss
                 l_spar = torch.mean(z_I_lr)         # Sparsity loss
-                # l_tex  = L_tex(z_I_lr)              # Denoise loss
-                loss   = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar) # + 18 * l_tex
+                l_tex  = L_tex(z_I_lr)              # Denoise loss
+                loss   = 1 * l_spa + 20 * l_tv + 8 * l_exp + 5 * l_spar + 18 * l_tex
                 loss.backward()
                 return loss
             
@@ -315,36 +322,25 @@ class ZINF(nn.Module, ModelMixin):
                 optimizer.step()
     
     def infer_illu_indi(self, y_I: torch.Tensor, depth: torch.Tensor = None) -> tuple[torch.Tensor, ...]:
-        steps   = 30
-        imgsz   = self.hidden_dim
-        device  = y_I.device
+        imgsz  = self.hidden_dim
+        device = y_I.device
         
-        y_I_lr  = interpolate_image(y_I,   imgsz)
-        D_lr    = interpolate_image(depth, imgsz) if depth is not None else None
-        Z       = torch.randn_like(y_I_lr)  # Gaussian noise
-        g_hat   = Z
-        coords  = create_noisy_coords(imgsz).to(device)
-        patch_I = create_patches(y_I_lr, self.window_size)
-        patch_D = create_patches(D_lr,   self.window_size) if depth is not None else None
+        y_I_lr    = interpolate_image(y_I,   imgsz)
+        D_lr      = interpolate_image(depth, imgsz) if depth is not None else None
+        Z         = torch.randn_like(y_I_lr)  # Gaussian noise
+        g_hat     = y_I_lr + Z
+        coords    = create_noisy_coords(imgsz).to(device)
+        patches_I = create_patches(y_I_lr, self.window_size)
+        patches_D = create_patches(D_lr,   self.window_size)
         
-        self.model.eval()
-        delta = 1.0 / steps
-        
-        # t = delta = 0.05
-        # while t <= 1.0:
-        #     prev_g  = g_hat.view(imgsz, imgsz, 1)
-        #     f_lr    = self.model(coords=coords, patch_I=patch_I, patch_D=patch_D, prev_g=prev_g, t=t)
-        #     f_lr    = f_lr.view(1, 1, imgsz, imgsz)
-        #     g_hat   = (delta / t) * f_lr + (1 - delta / t) * g_hat
-        #     t      += delta
-        
-        with torch.no_grad():
-            for t in torch.linspace(1,0, steps + 1, device=device)[:-1]:
-                time   = torch.tensor(t).unsqueeze(0).to(device)
-                prev_g = g_hat.view(imgsz, imgsz, 1)
-                f_lr   = self.model(coords=coords, patch_I=patch_I, patch_D=patch_D, prev_g=prev_g, t=time)
-                fct    = delta / t
-                g_hat  = fct * f_lr + (1 - fct) * g_hat
+        delta = 0.05
+        t     = delta
+        while t <= 1.0:
+            prev_g  = g_hat.view(imgsz, imgsz, 1)
+            f_lr    = self.model(coords=coords, patches=patches_I, depth=patches_D, prev_g=prev_g, t=t)
+            f_lr    = f_lr.view(1, 1, imgsz, imgsz)
+            g_hat   = (delta / t) * f_lr + (1 - delta / t) * g_hat
+            t      += delta
             
         f_lr   = g_hat
         x_I_lr = f_lr + y_I_lr

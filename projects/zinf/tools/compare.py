@@ -4,7 +4,6 @@
 import argparse
 
 import cv2
-import numpy as np
 
 import mon
 
@@ -16,14 +15,14 @@ data_dir     = root_dir / "data"
 run_dir      = root_dir / "run"
 
 models = [
-    # "zinf_siren",
+    "zinf_siren",
     # "zinf_siren_lbfgs",
-    # "zinf_isiren",
-    # "zinf_isiren_lbfgs",
-    # "zinf_dam_siren",
-    # "zinf_dam_siren_lbfgs",
-    "zinf_dam_isiren",
-    "zinf_dam_isiren_lbfgs",
+    "zinf_sirend",
+    # "zinf_sirend_lbfgs",
+    "zinf_indi_siren",
+    # "zinf_indi_siren_lbfgs",
+    "zinf_indi_sirend",
+    # "zinf_indi_sirend_lbfgs",
 ]
 
 
@@ -32,18 +31,22 @@ def compare(data: str) -> str:
         input_dir = data_dir / data / "sice_lr" / "test" / "image_under"
     else:
         input_dir = data_dir / data / "test" / "image"
+    depth_dir   = input_dir.replace_part("/image", "/depth_dav2_vitb")
     colie_dir   =  run_dir / "predict" / "colie" / "colie" / data / "pred"
     model_dirs  = [run_dir / "predict" / "zinf"  / m       / data / "pred" for m in models]
     model_names = ["colie"] + models
+    # model_names = [] + models
     
     input_files = sorted(list(input_dir.glob("*")))
     for input_file in input_files:
         colie_file   = colie_dir / input_file.name
         model_files  = [colie_file] + [md / input_file.name for md in model_dirs]
+        # model_files  = [] + [md / input_file.name for md in model_dirs]
         
         input_image  = cv2.imread(str(input_file))
-        empty_image  = np.zeros((input_image.shape[0], input_image.shape[1], 3), np.uint8)
-        concat_image = cv2.vconcat([input_image, empty_image])
+        depth_map    = cv2.imread(str(depth_dir / input_file.name))
+        # empty_image  = np.zeros((input_image.shape[0], input_image.shape[1], 3), np.uint8)
+        concat_image = cv2.vconcat([input_image, depth_map])
         cv2.putText(concat_image, "Input", (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
         for i, model_file in enumerate(model_files):
             model_image  = cv2.imread(str(model_file))

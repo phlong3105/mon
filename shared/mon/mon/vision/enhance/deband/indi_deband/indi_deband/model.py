@@ -57,9 +57,9 @@ class InDiDeband(nn.Module, ModelMixin):
         in_channels     : int  = 24,
         kernel_size     : int  = 3,
         layout          : int  = 3,     
-        channel_factor  : int  = 48,
+        channel_factor  : int  = 24,
         scale_factor    : int  = 2,
-        encoder_dilation: int  = 4,
+        encoder_dilation: int  = 1,
         decoder_dilation: int  = 1,
         neck            : bool = False,
         weights         : Any  = None

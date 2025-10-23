@@ -34,14 +34,14 @@ def get_v_component(img_hsv):
     """
     Assumes (1,3,H,W) HSV image.
     """
-    return img_hsv[:,-1].unsqueeze(0)
+    return img_hsv[:, -1].unsqueeze(0)
 
 
 def replace_v_component(img_hsv, v_new):
     """
     Replaces the V component of a HSV image (1,3,H,W).
     """
-    img_hsv[:,-1] = v_new
+    img_hsv[:, -1] = v_new
     return img_hsv
 
 

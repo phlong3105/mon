@@ -43,9 +43,9 @@ network:                                                                        
   in_channels     : 24
   kernel_size     : 3
   layout          : 3
-  channel_factor  : 48
+  channel_factor  : 24
   scale_factor    : 2
-  encoder_dilation: 4
+  encoder_dilation: 1
   decoder_dilation: 1
   neck            : False
 

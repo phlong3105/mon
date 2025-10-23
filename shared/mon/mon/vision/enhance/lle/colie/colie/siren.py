@@ -35,9 +35,11 @@ class SIRENLayer(nn.Module):
     def init_weights(self):
         with torch.no_grad():
             if self.is_first:
-                self.linear.weight.uniform_(-1 / self.in_features, 1 / self.in_features)
+                self.linear.weight.uniform_(-1.0 / self.in_features,
+                                             1.0 / self.in_features)
             else:
-                self.linear.weight.uniform_(-np.sqrt(6 / self.in_features) / self.w0, np.sqrt(6 / self.in_features) / self.w0)
+                self.linear.weight.uniform_(-np.sqrt(6.0 / self.in_features) / self.w0,
+                                             np.sqrt(6.0 / self.in_features) / self.w0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.linear(x)
@@ -56,7 +58,7 @@ class SIREN(nn.Module):
     ):
         super().__init__()
 
-        patch_layers   = [SIRENLayer(patch_dim, hidden_dim, is_first=True)]
+        patch_layers   = [SIRENLayer(patch_dim,   hidden_dim, is_first=True)]
         spatial_layers = [SIRENLayer(2, hidden_dim, is_first=True)]
         output_layers  = []
         
