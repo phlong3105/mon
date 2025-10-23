@@ -3,6 +3,7 @@
 
 """Implements image enhancement algorithms and models."""
 
+from .deband import *
 from .dehaze import *
 from .denoise import *
 from .derain import *

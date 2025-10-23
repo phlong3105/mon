@@ -487,6 +487,7 @@ class Task(Enum):
     """Task types."""
     
     # Enhancement
+    DEBAND     = "deband"               # debanding
     DEBLUR     = "deblur"               # deblurring
     DEHAZE     = "dehaze"               # dehazing
     DENOISE    = "denoise"              # denoising

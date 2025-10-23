@@ -13,7 +13,7 @@ from mon import Task
 
 # List all tasks that are performed in this project.
 TASKS = [
-    Task.LLE,
+    # Task.LLE,
 ]
 
 # List all models that are used in this project.

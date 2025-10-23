@@ -143,7 +143,7 @@ class MambaDecoderBlock(nn.Module):
         return x
 
 
-# --- Final Three-Branch Network ---
+# ----- Final Three-Branch Network -----
 class CoLIEMambaNet(nn.Module):
     
     def __init__(
@@ -212,21 +212,21 @@ class CoLIEMambaNet(nn.Module):
     def forward(self, image: torch.Tensor, coords: torch.Tensor) -> torch.Tensor:
         # Flatten coordinates for the spatial_net (MLP)
         coords_flat = coords.view(-1, 2)
-        H, W        = image.shape[-2], image.shape[-1]
+        h, w        = image.shape[-2], image.shape[-1]
         
         # Branch 1: Local Features
         # patch_feat_map = self.patch_net(image)
         
         # Branch 2: Spatial Features
         spatial_feat_flat = self.spatial_net(coords_flat)
-        spatial_feat_map  = spatial_feat_flat.view(H, W, -1).permute(2, 0, 1).unsqueeze(0)
+        spatial_feat_map  = spatial_feat_flat.view(h, w, -1).permute(2, 0, 1).unsqueeze(0)
         
         # Branch 3: Global Features
         s0 = self.mamba_entry(image)
         s1 = self.encoder1(s0)
         s2 = self.encoder2(s1)
-        bottleneck_out  = self.bottleneck(s2) + s2
-        d1 = self.decoder1(bottleneck_out, s1)
+        bottleneck = self.bottleneck(s2) + s2
+        d1 = self.decoder1(bottleneck, s1)
         d2 = self.decoder2(d1, s0)
         global_feat_map = self.mamba_exit(d2)
         

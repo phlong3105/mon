@@ -66,7 +66,7 @@ class ModelMixin:
         
         # Path to weights file
         if path and Path(path).is_weights_file(exist=True):
-            weights = torch.load(str(path))
+            weights = torch.load(str(path), weights_only=False)
         
         # State dict
         if isinstance(weights, dict):
