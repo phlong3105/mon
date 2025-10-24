@@ -4,6 +4,7 @@
 import argparse
 
 import cv2
+import numpy as np
 
 import mon
 
@@ -15,18 +16,18 @@ data_dir     = root_dir / "data"
 run_dir      = root_dir / "run"
 
 models = [
-    "zinf_siren",
-    # "zinf_siren_lbfgs",
-    # "zinf_sirend",
-    # "zinf_sirend_lbfgs",
-    # "zinf_sirenda",
-    # "zinf_sirenda_lbfgs",
     "zinf_indi_siren",
-    "zinf_indi_siren_lbfgs",
     "zinf_indi_sirend",
-    "zinf_indi_sirend_lbfgs",
-    # "zinf_indi_sirenda",
-    # "zinf_indi_sirenda_lbfgs",
+    "zinf_indi_sirenda",
+    # "zinf_lbfgs_indi_siren",
+    # "zinf_lbfgs_indi_sirend",
+    # "zinf_lbfgs_indi_sirenda",
+    # "zinf_lbfgs_siren",
+    # "zinf_lbfgs_sirend",
+    # "zinf_lbfgs_sirenda",
+    # "zinf_siren",
+    # "zinf_sirend",
+    # "zinf_sirenda",
 ]
 
 
@@ -49,14 +50,23 @@ def compare(data: str) -> str:
         
         input_image  = cv2.imread(str(input_file))
         depth_map    = cv2.imread(str(depth_dir / input_file.name))
+        depth_map    = np.clip(depth_map * 255, 0, 255).astype("uint8")
+        depth_map    = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
+        depth_map    = cv2.applyColorMap(depth_map, cv2.COLORMAP_JET)
+        cv2.putText(depth_map, "Depth", (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
         # empty_image  = np.zeros((input_image.shape[0], input_image.shape[1], 3), np.uint8)
         concat_image = cv2.vconcat([input_image, depth_map])
         cv2.putText(concat_image, "Input", (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
         for i, model_file in enumerate(model_files):
             model_image  = cv2.imread(str(model_file))
-            diff_image   = cv2.absdiff(model_image, input_image)
-            gray_diff    = cv2.cvtColor(diff_image, cv2.COLOR_BGR2GRAY)
-            norm_diff    = cv2.normalize(gray_diff, None, 0, 255, cv2.NORM_MINMAX)
+            input_hsv    = cv2.cvtColor(input_image, cv2.COLOR_BGR2HSV)
+            model_hsv    = cv2.cvtColor(model_image, cv2.COLOR_BGR2HSV)
+            input_v      = input_hsv[:, :, 2]
+            model_v      = model_hsv[:, :, 2]
+            diff_image       = cv2.absdiff(model_v, input_v)
+            # diff_image   = cv2.absdiff(model_image, input_image)
+            # diff_image   = cv2.cvtColor(diff_image, cv2.COLOR_BGR2GRAY)
+            norm_diff    = cv2.normalize(diff_image, None, 0, 255, cv2.NORM_MINMAX)
             heatmap      = cv2.applyColorMap(norm_diff, cv2.COLORMAP_JET)
             cv2.putText(model_image, model_names[i], (0, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
             concat_image = cv2.hconcat([concat_image, cv2.vconcat([model_image, heatmap])])
@@ -70,7 +80,7 @@ def compare(data: str) -> str:
 def main() -> str:
     parser = argparse.ArgumentParser()
     # parser.add_argument("--model", type=str, default="zinf_siren_d")
-    parser.add_argument("--data",  type=str, default="dicm")
+    parser.add_argument("--data",  type=str, default="fivek")
     args = parser.parse_args()
     # compare(args.model, args.data)
     compare(args.data)

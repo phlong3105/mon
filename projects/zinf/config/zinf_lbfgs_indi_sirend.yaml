@@ -6,7 +6,7 @@ mode        : &mode "predict"                                                   
 arch        : &arch "zinf"                                                      # Model architecture or family (e.g., resnet).
 model       : &model "zinf"                                                     # Model name (e.g., resnet50).
 data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
-fullname    : &fullname "zinf_sirenda_lbfgs"                                    # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
+fullname    : &fullname "zinf_lbfgs_indi_sirend"                                # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
 weights     : &weights ~                                                        # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
@@ -43,7 +43,7 @@ network:                                                                        
   hidden_dim : *imgsz                                                           # Input image size. Default: ``256``.
   num_layers : 4                                                                # Total layer's depth. Default: ``4``.
   add_layers : 2                                                                # Number of layers for output branch. Default: ``2``.
-  inr        : "sirenda"
+  inr        : "indi_sirend"
   training   : "lbfgs"
   L          : 0.3
   iters      : *epochs
