@@ -5,5 +5,3 @@
 
 # noinspection PyUnusedImports
 from math import *
-
-from .solvers import *

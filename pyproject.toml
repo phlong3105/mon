@@ -84,10 +84,12 @@ include  = [
 exclude  = []
 
 [tool.poetry.dependencies]
-mon             = { path = "shared/mon"         , develop = true }
-open-clip-torch = { path = "shared/open_clip"   , develop = true }
-spikingjelly    = { path = "shared/spikingjelly", develop = true }
-ultralytics     = { path = "shared/ultralytics" , develop = true }
+mon             = { path = "shared/mon"          , develop = true }
+flow_matching   = { path = "shared/flow_matching", develop = true }
+open-clip-torch = { path = "shared/open_clip"    , develop = true }
+spikingjelly    = { path = "shared/spikingjelly" , develop = true }
+torchdiffeq     = { path = "shared/torchdiffeq"  , develop = true }
+ultralytics     = { path = "shared/ultralytics"  , develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.0.0"]

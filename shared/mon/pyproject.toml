@@ -64,8 +64,9 @@ dependencies    = [
     "diffusers",                        # 🤗 Diffusers: State-of-the-art diffusion models for image, video, and audio generation in PyTorch.
     "einops",                           # A new flavor of deep learning operations.
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
-    "lightning>=2.5.5",                 # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
-    "mamba-ssm",                        # Mamba state-space model.
+    "flow_matching",                    # A PyTorch library for implementing flow matching algorithms.
+    "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+    # "mamba-ssm",                        # Mamba state-space model.
     "numpy==2.2.6",                     # The fundamental package for scientific computing with Python.
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "scikit-image",                     # Image processing in Python.
@@ -75,7 +76,8 @@ dependencies    = [
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
     "torch>=2.9.0",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
-    "torchmetrics>=1.8.2",              # Collection of PyTorch native metrics for easy evaluating machine learning models.
+    "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
+    "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
     "transformers",                     # 🤗 Transformers: State-of-the-art Machine Learning for Pytorch, TensorFlow, and JAX.
     "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
@@ -132,9 +134,11 @@ include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-open-clip-torch = { path = "../open_clip"   , develop = true }
-spikingjelly    = { path = "../spikingjelly", develop = true }
-ultralytics     = { path = "../ultralytics" , develop = true }
+flow_matching   = { path = "../flow_matching", develop = true }
+open-clip-torch = { path = "../open_clip"    , develop = true }
+spikingjelly    = { path = "../spikingjelly" , develop = true }
+torchdiffeq     = { path = "../torchdiffeq"  , develop = true }
+ultralytics     = { path = "../ultralytics"  , develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.0.0"]

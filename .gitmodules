@@ -1,9 +1,15 @@
+[submodule "shared/flow_matching"]
+	path = shared/flow_matching
+	url  = https://github.com/phlong3105/flow_matching
 [submodule "shared/open_clip"]
 	path = shared/open_clip
 	url  = https://github.com/phlong3105/open_clip
 [submodule "shared/spikingjelly"]
 	path = shared/spikingjelly
 	url  = https://github.com/phlong3105/spikingjelly
+[submodule "shared/torchdiffeq"]
+	path = shared/torchdiffeq
+	url  = https://github.com/phlong3105/torchdiffeq
 [submodule "shared/ultralytics"]
 	path = shared/ultralytics
 	url  = https://github.com/phlong3105/ultralytics
