@@ -17,12 +17,16 @@ run_dir      = root_dir / "run"
 models = [
     "zinf_siren",
     # "zinf_siren_lbfgs",
-    "zinf_sirend",
+    # "zinf_sirend",
     # "zinf_sirend_lbfgs",
+    # "zinf_sirenda",
+    # "zinf_sirenda_lbfgs",
     "zinf_indi_siren",
-    # "zinf_indi_siren_lbfgs",
+    "zinf_indi_siren_lbfgs",
     "zinf_indi_sirend",
-    # "zinf_indi_sirend_lbfgs",
+    "zinf_indi_sirend_lbfgs",
+    # "zinf_indi_sirenda",
+    # "zinf_indi_sirenda_lbfgs",
 ]
 
 

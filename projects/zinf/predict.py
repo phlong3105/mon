@@ -9,7 +9,7 @@ References:
     - Code: https://github.com/phlong3105/mon
 
 Usage:
-    python predict.py --p --data "dicm, lime, fusion, mef, npe, vv, sice, fivek, darkface" --save-debug
+    python predict.py --p --data "dicm, lime, mef, npe, vv, sice, fivek, darkface" --save-debug
 """
 
 import copy
