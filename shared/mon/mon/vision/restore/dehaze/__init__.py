@@ -3,4 +3,5 @@
 
 """Implements dehazing algorithms."""
 
+from .zerorestore import *
 from .zid import *

@@ -4,3 +4,4 @@
 """Implements deblurring algorithms."""
 
 from .darkir import *
+from .fourierdiff import *

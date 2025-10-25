@@ -8,7 +8,7 @@ model       : &model "fourierdiff"                                              
 data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
 fullname    : &fullname "fourierdiff"                                           # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "zoo/vision/restore/fourierdiff/fourierdiff/pretrained/256x256_diffusion_uncond.pt"  # Path to the pretrained weights.
+weights     : &weights "zoo/vision/restore/deblur/fourierdiff/fourierdiff/pretrained/256x256_diffusion_uncond.pt"  # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
 seed        : &seed 1234                                                        # Random seed.
 imgsz       : &imgsz 256                                                        # Image size for the model.
