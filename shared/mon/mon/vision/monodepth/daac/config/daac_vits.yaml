@@ -8,13 +8,13 @@ model       : &model "daac_vits"                                                
 data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
 fullname    : &fullname "daac_vits"                                             # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "zoo/vision/depth/daac/daac_vits/pretrained/daac_vits.pth"  # Path to the pretrained weights.
+weights     : &weights "zoo/vision/monodepth/daac/daac_vits/pretrained/daac_vits.pth"  # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
 seed        : &seed 2                                                           # Random seed.
 imgsz       : &imgsz 518                                                        # Image size for the model.
 # Train
 resume      : &resume ~                                                         # Resume from interrupted training.
-tuning      : &tuning  "zoo/vision/depth/daac/daac_vits/pretrained/daac_vits.pth"  # Fine-tuning from a pretrained model.
+tuning      : &tuning  "zoo/vision/monodepth/daac/daac_vits/pretrained/daac_vits.pth"  # Fine-tuning from a pretrained model.
 epochs      : &epochs -1                                                        # Training epochs.
 batch_size  : &batch_size 1                                                     # Batch size.
 torchrun    : False                                                             # If ``True``, use torch.distributed.run to run the training script.
@@ -42,7 +42,7 @@ network:                                                                        
   encoder        : "vits"
   features       : 64
   out_channels   : [48, 96, 192, 384]
-  dino_pretrained: "zoo/vision/depth/daac/daac_vits/pretrained/dinov2_vits14_pretrain.pth"
+  dino_pretrained: "zoo/vision/monodepth/daac/daac_vits/pretrained/dinov2_vits14_pretrain.pth"
   version        : "v2"
   pred_only      : True
   format         : 2  # 0: grayscale, 1: color, 2: both

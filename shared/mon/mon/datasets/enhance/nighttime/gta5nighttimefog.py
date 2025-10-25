@@ -21,7 +21,7 @@ class GTA5NighttimeFog(VisionDataset):
     """GTA5NighttimeFog dataset."""
     
     name      : str         = "gta5nighttimefog"
-    tasks     : list[Task]  = [Task.NIGHTTIME, Task.LLE, Task.DEHAZE]
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DEHAZE]
     splits    : list[Split] = [Split.TRAIN, Split.TEST]
     modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image,           train=True, test=True, primary=True),

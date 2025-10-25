@@ -1,17 +1,17 @@
 # ----- Global Settings & Hyperparameters -----
 # These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
-task        : &task "depth"                                                     # Task name (e.g., detect, segment, classify).
+task        : &task "lle"                                                       # Task name (e.g., detect, segment, classify).
 mode        : &mode "train"                                                     # Mode name (e.g., train, val, test, predict, export).
-arch        : &arch "dav2"                                                      # Model architecture or family (e.g., resnet).
-model       : &model "dav2_vitl"                                                # Model name (e.g., resnet50).
-data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
-fullname    : &fullname "dav2_vitl"                                             # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
+arch        : &arch "darkir"                                                    # Model architecture or family (e.g., resnet).
+model       : &model "darkir_l"                                                 # Model name (e.g., resnet50).
+data        : &data "lolblur"                                                   # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
+fullname    : &fullname "darkir_l_lolblur"                                      # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "zoo/vision/monodepth/dav2/dav2_vitl/pretrained/dav2_vitl.pth"  # Path to the pretrained weights.
+weights     : &weights "zoo/vision/restore/deblur/darkir/darkir_l/lolblur/darkir_l_lolblur.pt"  # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
-seed        : &seed 2                                                           # Random seed.
-imgsz       : &imgsz 518                                                        # Image size for the model.
+seed        : &seed 0                                                           # Random seed.
+imgsz       : &imgsz 512                                                        # Image size for the model.
 # Train
 resume      : &resume ~                                                         # Resume from interrupted training.
 tuning      : &tuning ~                                                         # Fine-tuning from a pretrained model.
@@ -39,21 +39,62 @@ cfg         : ~                                                                 
 # ----- Model -----
 # Network
 network:                                                                        # Network architecture.
-  encoder     : "vitl"
-  features    : 256
-  out_channels: [256, 512, 1024, 1024]
-  pred_only   : True
-  format      : 2  # 0: grayscale, 1: color, 2: both
+  name              : DarkIR
+  img_channels      : 3
+  width             : 64
+  middle_blk_num_enc: 2
+  middle_blk_num_dec: 2
+  enc_blk_nums      : [1, 2, 3]
+  dec_blk_nums      : [3, 1, 1]
+  dilations         : [1, 4, 9]
+  extra_depth_wise  : True
+
+# Loss
+loss: ~                                                                         # Loss functions.
 
 # Optimizer
 optimizer: ~                                                                    # Optimizer.
 
 # ----- Data -----
 # Train
-train_dataloader: ~                                                             # Train dataloader.
+train_dataloader:                                                               # Train dataloader.
+  dataset:
+    name      : *data                                                           # Data module name (e.g., cifar10).
+    root      : "data/lolblur"                                                  # Root directory of the dataset.
+    split     : "train"                                                         # Dataset split (e.g., train, val, test).
+    transform :
+      transforms:
+        - {name: "Resize", height: *imgsz, width : *imgsz}
+        - {name: "Normalize", normalization: "min_max"}
+        - {name: "ToTensorV2", transpose_mask: True}
+      bbox_params    : ~
+      keypoint_params: ~
+      seed           : ~
+    verbose   : *verbose                                                        # Verbosity.
+  batch_size : *batch_size                                                      # Batch size.
+  shuffle    : True                                                             # If ``True``, shuffle the data.
+  num_workers: 4                                                                # Number of workers for data loading.
+  drop_last  : False                                                            # If ``True``, drop the last incomplete batch.
 
 # Val
-val_dataloader: ~                                                               # Val dataloader.
+val_dataloader:                                                                 # Val dataloader.
+  dataset:
+    name      : *data                                                           # Data module name (e.g., cifar10).
+    root      : "data/lolblur"                                                  # Root directory of the dataset.
+    split     : "test"                                                          # Dataset split (e.g., train, val, test).
+    transform :
+      transforms:
+        - {name: "Resize", height: *imgsz, width : *imgsz}
+        - {name: "Normalize", normalization: "min_max"}
+        - {name: "ToTensorV2", transpose_mask: True}
+      bbox_params    : ~
+      keypoint_params: ~
+      seed           : ~
+    verbose   : *verbose                                                        # Verbosity.
+  batch_size : *batch_size                                                      # Batch size.
+  shuffle    : False                                                            # If ``True``, shuffle the data.
+  num_workers: 1                                                                # Number of workers for data loading.
+  drop_last  : False                                                            # If ``True``, drop the last incomplete batch.
 
 # ----- Deploy -----
 # Export

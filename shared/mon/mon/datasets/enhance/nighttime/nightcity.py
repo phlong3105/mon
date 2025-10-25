@@ -21,7 +21,7 @@ class NightCity(VisionDataset):
     """NightCity dataset."""
     
     root_name : str         = "nightcity"
-    tasks     : list[Task]  = [Task.NIGHTTIME, Task.LLE, Task.SEGMENT]
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.SEGMENT]
     splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: Modalities  = {
         "image": Modality(name="image",    type="image", module=Image,           train=True, test=True, primary=True),

@@ -487,34 +487,35 @@ class Task(Enum):
     """Task types."""
     
     # Enhancement
-    DEBAND     = "deband"               # debanding
-    DEBLUR     = "deblur"               # deblurring
-    DEHAZE     = "dehaze"               # dehazing
-    DENOISE    = "denoise"              # denoising
-    DERAIN     = "derain"               # deraining
-    DESNOW     = "desnow"               # desnowing
-    EXPOSURE   = "exposure"             # exposure correction
-    FLARE      = "flare"                # flare removal
-    INPAINT    = "inpaint"              # inpainting
-    LLE        = "lle"                  # low-light enhancement
-    MEF        = "mef"                  # multi-exposure fusion
-    NIGHTTIME  = "nighttime"            # nighttime enhancement
-    REFLECT    = "reflection"           # reflection removal
+    EXPOSURE   = "exposure"             # Exposure Correction + Automatic Exposure
+    LLE        = "lle"                  # Low-Light Enhancement
+    MEF        = "mef"                  # Multi-Exposure Fusion
+    NTE        = "nte"                  # Night-Time Enhancement
     RETOUCH    = "retouch"              # Retouching
-    SR         = "sr"                   # super-resolution
-    UNDERWATER = "underwater"           # underwater enhancement
+    UWE        = "underwater"           # UnderWater Enhancement
+    
+    # Restoration
+    DEBAND     = "deband"               # Debanding
+    DEBLUR     = "deblur"               # Deblurring
+    DEFLARE    = "deflare"              # Deflaring
+    DEHAZE     = "dehaze"               # Dehazing
+    DENOISE    = "denoise"              # Denoising
+    DERAIN     = "derain"               # Deraining
+    DEREFLECT  = "dereflect"            # De-reflection
+    DESNOW     = "desnow"               # Desnowing
+    INPAINT    = "inpaint"              # Inpainting
+    SR         = "sr"                   # Super-Resolution
     
     # High-Level Vision
-    BGSUBTRACT = "bgsubtract"           # background subtraction
-    CLASSIFY   = "classify"             # classification
-    MONODEPTH  = "mono_depth"           # monocular depth estimation
-    DETECT     = "detect"               # object detection
-    OBB        = "obb"                  # oriented bounding box detection
-    POSE       = "pose"                 # pose estimation
-    RGB2TIR    = "rgb2tir"              # RGB-to-TIR translation
-    SEGMENT    = "segment"              # semantic segmentation
-    TRACK      = "track"                # object tracking
-    VIDEO      = "video"                # video processing
+    BGSUBTRACT = "bgsubtract"           # Background Subtraction
+    CLASSIFY   = "classify"             # Classification
+    DETECT     = "detect"               # Object Detection
+    MONODEPTH  = "mono_depth"           # Monocular-Depth Estimation
+    OBB        = "obb"                  # Oriented-Bounding Box Detection
+    POSE       = "pose"                 # Pose Estimation
+    SEGMENT    = "segment"              # Semantic Segmentation
+    TRACK      = "track"                # Tracking
+    VIDEO      = "video"                # Video Processing
 
 
 # ----- Vision -----

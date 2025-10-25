@@ -16,7 +16,7 @@ class FlareReal800(VisionDataset):
     """FlareReal800 dataset."""
     
     root_name : str         = "flarereal800"
-    tasks     : list[Task]  = [Task.FLARE]
+    tasks     : list[Task]  = [Task.DEFLARE]
     splits    : list[Split] = [Split.TRAIN, Split.VAL]
     modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),

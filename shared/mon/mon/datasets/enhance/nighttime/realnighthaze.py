@@ -16,7 +16,7 @@ class RealNightHaze(VisionDataset):
     """RealNightHaze dataset."""
 
     root_name : str         = "realnighthaze"
-    tasks     : list[Task]  = [Task.NIGHTTIME, Task.LLE, Task.DEHAZE]
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DEHAZE]
     splits    : list[Split] = [Split.TEST]
     modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),

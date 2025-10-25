@@ -1,22 +1,22 @@
 # ----- Global Settings & Hyperparameters -----
 # These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
-task        : &task "depth"                                                     # Task name (e.g., detect, segment, classify).
+task        : &task "sr"                                                        # Task name (e.g., detect, segment, classify).
 mode        : &mode "train"                                                     # Mode name (e.g., train, val, test, predict, export).
-arch        : &arch "dav2"                                                      # Model architecture or family (e.g., resnet).
-model       : &model "dav2_vitl"                                                # Model name (e.g., resnet50).
-data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
-fullname    : &fullname "dav2_vitl"                                             # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
+arch        : &arch "srno"                                                      # Model architecture or family (e.g., resnet).
+model       : &model "srno_edsr_baseline"                                       # Model name (e.g., resnet50).
+data        : &data "div2k"                                                     # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
+fullname    : &fullname "srno_edsr_baseline_div2k"                              # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "zoo/vision/monodepth/dav2/dav2_vitl/pretrained/dav2_vitl.pth"  # Path to the pretrained weights.
+weights     : &weights "zoo/vision/restore/sr/srno/srno_edsr_baseline/div2k/srno_edsr_baseline_div2k.pth"  # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
-seed        : &seed 2                                                           # Random seed.
-imgsz       : &imgsz 518                                                        # Image size for the model.
+seed        : &seed 100                                                         # Random seed.
+imgsz       : &imgsz 128                                                        # Image size for the model.
 # Train
 resume      : &resume ~                                                         # Resume from interrupted training.
 tuning      : &tuning ~                                                         # Fine-tuning from a pretrained model.
-epochs      : &epochs -1                                                        # Training epochs.
-batch_size  : &batch_size 1                                                     # Batch size.
+epochs      : &epochs 1050                                                      # Training epochs.
+batch_size  : &batch_size 64                                                    # Batch size.
 torchrun    : False                                                             # If ``True``, use torch.distributed.run to run the training script.
 master_port : 7777                                                              # Master port for distributed training.
 master_addr : "localhost"                                                       # Master address for distributed training.
@@ -38,15 +38,18 @@ cfg         : ~                                                                 
 
 # ----- Model -----
 # Network
-network:                                                                        # Network architecture.
-  encoder     : "vitl"
-  features    : 256
-  out_channels: [256, 512, 1024, 1024]
-  pred_only   : True
-  format      : 2  # 0: grayscale, 1: color, 2: both
+network: ~                                                                      # Network architecture.
+
+# Loss
+loss: ~                                                                         # Loss functions.
 
 # Optimizer
-optimizer: ~                                                                    # Optimizer.
+optimizer:                                                                      # Optimizer.
+  lr  : 0.00004
+
+# Misc
+scale    : 3
+scale_max: 4
 
 # ----- Data -----
 # Train

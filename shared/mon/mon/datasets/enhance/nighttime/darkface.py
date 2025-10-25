@@ -16,7 +16,7 @@ class DarkFace(VisionDataset):
     """DarkFace dataset."""
 
     root_name : str         = "darkface"
-    tasks     : list[Task]  = [Task.NIGHTTIME, Task.LLE, Task.DETECT]
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
     splits    : list[Split] = [Split.TEST]
     modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),

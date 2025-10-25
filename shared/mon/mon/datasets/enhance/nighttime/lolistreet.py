@@ -21,7 +21,7 @@ class LoLIStreet(VisionDataset):
     """LoLI-Street dataset."""
     
     root_name : str         = "lolistreet"
-    tasks     : list[Task]  = [Task.NIGHTTIME, Task.LLE]
+    tasks     : list[Task]  = [Task.NTE, Task.LLE]
     splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),

@@ -51,7 +51,7 @@ class DAV2_ViTS(DAV2):
     name: str  = "dav2_vits"
     zoo : dict = {
         "pretrained": {
-            "path": ROOT_DIR / "zoo/vision/depth/dav2/dav2_vits/pretrained/dav2_vits.pth",
+            "path": ROOT_DIR / "zoo/vision/monodepth/dav2/dav2_vits/pretrained/dav2_vits.pth",
         },
     }
     
@@ -70,7 +70,7 @@ class DAV2_ViTB(DAV2):
     name: str = "dav2_vitb"
     zoo : dict = {
         "pretrained": {
-            "path": ROOT_DIR / "zoo/vision/depth/dav2/dav2_vitb/pretrained/dav2_vitb.pth",
+            "path": ROOT_DIR / "zoo/vision/monodepth/dav2/dav2_vitb/pretrained/dav2_vitb.pth",
         },
     }
 
@@ -89,7 +89,7 @@ class DAV2_ViTL(DAV2):
     name: str = "dav2_vitl"
     zoo : dict = {
         "pretrained": {
-            "path": ROOT_DIR / "zoo/vision/depth/dav2/dav2_vitl/pretrained/dav2_vitl.pth",
+            "path": ROOT_DIR / "zoo/vision/monodepth/dav2/dav2_vitl/pretrained/dav2_vitl.pth",
         },
     }
 
