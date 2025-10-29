@@ -2,6 +2,14 @@
 
 ---
 
+## Setup
+
+- Install: 
+    ```commandline
+    sudo chmod +x install.sh
+    ./install.sh
+    ```
+
 ## GitHub
 
 - Add sub-module: `git submodule add <repository_url> <path>`
