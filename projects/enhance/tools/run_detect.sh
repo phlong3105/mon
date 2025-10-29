@@ -34,7 +34,7 @@ resize=$(echo "--resize")
 current_dir=$(pwd)
 project_dir=$(dirname "${current_dir}")
 root_dir=$(get_root_dir "$(pwd)")
-run_dir="${root_dir}/shared/mon_run"
+run_dir="${root_dir}/shared/mon/mon_run"
 
 # ----- Main -----
 cd "${run_dir}" || exit

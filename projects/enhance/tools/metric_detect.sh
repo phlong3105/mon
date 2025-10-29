@@ -35,7 +35,7 @@ exist_ok=$(echo "--exist-ok")
 current_dir=$(pwd)
 project_dir=$(dirname "${current_dir}")
 root_dir=$(get_root_dir "$(pwd)")
-run_dir="${root_dir}/shared/mon_run"
+run_dir="${root_dir}/shared/mon/mon_run"
 
 declare -A target_jsons=(
     ["darkface"]="darkface/test/test.json"

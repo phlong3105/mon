@@ -66,7 +66,6 @@ dependencies    = [
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
     "flow_matching",                    # A PyTorch library for implementing flow matching algorithms.
     "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
-    # "mamba-ssm",                        # Mamba state-space model.
     "numpy==2.2.6",                     # The fundamental package for scientific computing with Python.
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "scikit-image",                     # Image processing in Python.
@@ -134,11 +133,16 @@ include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-flow_matching   = { path = "../flow_matching", develop = true }
-open-clip-torch = { path = "../open_clip"    , develop = true }
-spikingjelly    = { path = "../spikingjelly" , develop = true }
-torchdiffeq     = { path = "../torchdiffeq"  , develop = true }
-ultralytics     = { path = "../ultralytics"  , develop = true }
+torchdiffeq     = { path = "../math/torchdiffeq"  , develop = true }
+diffusers       = { path = "../nn/diffusers"      , develop = true }
+flow_matching   = { path = "../nn/flow_matching"  , develop = true }
+snntorch        = { path = "../nn/snntorch"       , develop = true }
+spikingjelly    = { path = "../nn/spikingjelly"   , develop = true }
+transformers    = { path = "../nn/transformers"   , develop = true }
+clip            = { path = "../vision/clip"       , develop = true }
+mobileclip      = { path = "../vision/mobileclip" , develop = true }
+open-clip-torch = { path = "../vision/open_clip"  , develop = true }
+ultralytics     = { path = "../vision/ultralytics", develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.0.0"]
