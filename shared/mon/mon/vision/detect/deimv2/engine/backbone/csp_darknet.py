@@ -3,12 +3,12 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
+import math
+import warnings
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import math
-import warnings
 
 from .common import get_activation
 from ..core import register

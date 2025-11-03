@@ -6,8 +6,8 @@ Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 import torch
 import torchvision
 
-from ..core import register
 from .utils import IntermediateLayerGetter
+from ..core import register
 
 __all__ = ['TorchVisionModel']
 

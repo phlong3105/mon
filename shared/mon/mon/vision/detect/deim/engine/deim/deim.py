@@ -3,8 +3,8 @@ Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
 """
 
 import torch.nn as nn
-from ..core import register
 
+from ..core import register
 
 __all__ = ["DEIM", ]
 

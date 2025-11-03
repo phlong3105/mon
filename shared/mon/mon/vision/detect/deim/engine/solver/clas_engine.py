@@ -6,7 +6,7 @@ Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 import torch
 import torch.nn as nn
 
-from ..misc import (MetricLogger, SmoothedValue, reduce_dict)
+from ..misc import (MetricLogger, reduce_dict, SmoothedValue)
 
 
 def train_one_epoch(model: nn.Module, criterion: nn.Module, dataloader, optimizer, ema, epoch, device):

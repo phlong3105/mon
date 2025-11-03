@@ -3,17 +3,24 @@
 # This software may be used and distributed in accordance with
 # the terms of the DINOv3 License Agreement.
 
-import os
 import logging
 from enum import Enum
 from functools import partial
-from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import torch
 import torch.nn.init
-from torch import Tensor, nn
+from torch import nn, Tensor
 
-from .layers import LayerScale, Mlp, PatchEmbed, RMSNorm, RopePositionEmbedding, SelfAttentionBlock, SwiGLUFFN
+from .layers import (
+    LayerScale,
+    Mlp,
+    PatchEmbed,
+    RMSNorm,
+    RopePositionEmbedding,
+    SelfAttentionBlock,
+    SwiGLUFFN,
+)
 from .utils import named_apply
 
 

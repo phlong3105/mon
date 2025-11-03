@@ -3,10 +3,11 @@ DEIM: DETR with Improved Matching for Fast Convergence
 Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
 """
 
+import random
+
 import torch
 import torchvision.transforms.v2 as T
 import torchvision.transforms.v2.functional as F
-import random
 from PIL import Image
 
 from .._misc import convert_to_tv_tensor

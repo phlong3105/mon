@@ -6,7 +6,7 @@
 from typing import Union
 
 import torch
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 
 class LayerScale(nn.Module):

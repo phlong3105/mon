@@ -4,14 +4,14 @@ Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
 from pathlib import Path
-from typing import Callable, Any
+from typing import Any, Callable
 
 import torch
 import torch.nn as nn
 from torch.cuda.amp.grad_scaler import GradScaler
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 
 __all__ = ['BaseConfig', ]

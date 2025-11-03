@@ -6,22 +6,19 @@ reference
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import os
-import time
-import random
-import numpy as np
 import atexit
+import os
+import random
+import time
 
+import numpy as np
 import torch
-import torch.nn as nn
-import torch.distributed
 import torch.backends.cudnn
-
-from torch.nn.parallel import DataParallel as DP
-from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-
+import torch.distributed
+import torch.nn as nn
+from torch.nn.parallel import DataParallel as DP, DistributedDataParallel as DDP
 from torch.utils.data import DistributedSampler
+
 # from torch.utils.data.dataloader import DataLoader
 from ..data import DataLoader
 

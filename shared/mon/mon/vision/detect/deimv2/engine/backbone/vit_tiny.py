@@ -9,12 +9,10 @@ Modified from https://huggingface.co/spaces/Hila/RobustViT/blob/main/ViT/ViT_new
 import math
 import warnings
 from functools import partial
-from typing import List, Literal, Tuple
+from typing import Literal, Tuple
 
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch import nn
 
 

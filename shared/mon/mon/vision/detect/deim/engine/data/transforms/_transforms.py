@@ -3,21 +3,27 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-from typing import Any, Dict, List, Optional, Union, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Union
 
-import PIL.Image
 import cv2
 import numpy as np
+import PIL.Image
 import torch
 import torchvision
 import torchvision.transforms.v2 as T
 import torchvision.transforms.v2.functional as F
 from torchvision import transforms as _transforms
 
-from .._misc import Image, Video, Mask, BoundingBoxes
-from .._misc import SanitizeBoundingBoxes
-from .._misc import convert_to_tv_tensor, _boxes_keys
-from ...core import register, GLOBAL_DTYPE
+from .._misc import (
+    _boxes_keys,
+    BoundingBoxes,
+    convert_to_tv_tensor,
+    Image,
+    Mask,
+    SanitizeBoundingBoxes,
+    Video,
+)
+from ...core import GLOBAL_DTYPE, register
 
 cv2.setNumThreads(0)
 torchvision.disable_beta_transforms_warning()
@@ -30,7 +36,7 @@ Resize                   = register()(T.Resize)
 # ToImageTensor = register()(T.ToImageTensor)
 # ConvertDtype = register()(T.ConvertDtype)
 # PILToTensor = register()(T.PILToTensor)
-SanitizeBoundingBoxes    = register(name='SanitizeBoundingBoxes')(SanitizeBoundingBoxes)
+SanitizeBoundingBoxes    = register(name="SanitizeBoundingBoxes")(SanitizeBoundingBoxes)
 RandomCrop               = register()(T.RandomCrop)
 Normalize                = register()(T.Normalize)
 

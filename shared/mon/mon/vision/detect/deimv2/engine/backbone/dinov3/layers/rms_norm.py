@@ -4,7 +4,7 @@
 # the terms of the DINOv3 License Agreement.
 
 import torch
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 
 class RMSNorm(nn.Module):

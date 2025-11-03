@@ -3,13 +3,15 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import inspect
-import importlib
 import functools
+import importlib
+import inspect
 from collections import defaultdict
-from typing import Any, Dict, Optional, List
+from typing import Any
 
+import torch
 
+GLOBAL_DTYPE  = torch.float32
 GLOBAL_CONFIG = defaultdict(dict)
 
 
@@ -52,7 +54,6 @@ def register(dct :Any=GLOBAL_CONFIG, name=None, force=False):
         return foo
 
     return decorator
-
 
 
 def extract_schema(module: type):

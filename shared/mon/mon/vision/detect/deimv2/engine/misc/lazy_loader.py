@@ -3,8 +3,9 @@ https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/util/lazy
 """
 
 
-import types
 import importlib
+import types
+
 
 class LazyLoader(types.ModuleType):
   """Lazily import a module, mainly to avoid pulling in large dependencies.

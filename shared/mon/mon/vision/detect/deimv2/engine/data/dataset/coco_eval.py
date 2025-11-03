@@ -5,21 +5,24 @@ Mostly copy-paste from https://github.com/pytorch/vision/blob/edfd5a7/references
 The difference is that there is less copy-pasting from pycocotools
 in the end of the file, as python3 can suppress prints with contextlib
 """
-import os
 import contextlib
 import copy
+import os
+
+import faster_coco_eval.core.mask as mask_util
 import numpy as np
 import torch
-
 from faster_coco_eval import COCO, COCOeval_faster
-import faster_coco_eval.core.mask as mask_util
+
 from ...core import register
 from ...misc import dist_utils
+
 __all__ = ['CocoEvaluator',]
 
 
 @register()
 class CocoEvaluator(object):
+    
     def __init__(self, coco_gt, iou_types):
         assert isinstance(iou_types, (list, tuple))
         coco_gt = copy.deepcopy(coco_gt)
@@ -39,7 +42,6 @@ class CocoEvaluator(object):
             self.coco_eval[iou_type] = COCOeval_faster(self.coco_gt, iouType=iou_type, print_function=print, separate_eval=True)
         self.img_ids = []
         self.eval_imgs = {k: [] for k in self.iou_types}
-
 
     def update(self, predictions):
         img_ids = list(np.unique(list(predictions.keys())))

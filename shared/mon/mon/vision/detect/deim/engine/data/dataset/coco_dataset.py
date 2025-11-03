@@ -6,18 +6,16 @@ Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 import os
 
-import torch
-import torch.utils.data
-
-import torchvision
-
-from PIL import Image
 import faster_coco_eval
 import faster_coco_eval.core.mask as coco_mask
+import torch
+import torch.utils.data
+import torchvision
+from PIL import Image
+
 from ._dataset import DetDataset
 from .._misc import convert_to_tv_tensor
-from ...core import register, GLOBAL_DTYPE
-
+from ...core import GLOBAL_DTYPE, register
 
 torchvision.disable_beta_transforms_warning()
 faster_coco_eval.init_as_pycocotools()

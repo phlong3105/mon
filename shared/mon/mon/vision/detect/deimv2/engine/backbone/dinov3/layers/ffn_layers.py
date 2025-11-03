@@ -6,7 +6,7 @@
 from typing import Callable, List, Optional
 
 import torch.nn.functional as F
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 from ..utils import cat_keep_shapes, uncat_with_shapes
 

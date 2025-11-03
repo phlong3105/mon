@@ -6,25 +6,20 @@ Modified from D-FINE (https://github.com/Peterande/D-FINE)
 Copyright (c) 2024 D-FINE authors. All Rights Reserved.
 """
 
-import torch
-import torch.utils.data as data
-import torch.nn.functional as F
-from torch.utils.data import default_collate
-
-import torchvision
-import torchvision.transforms.v2 as VT
-from torchvision.transforms.v2 import functional as VF, InterpolationMode
-
 import random
-from functools import partial
+
+import torch
+import torch.nn.functional as F
+import torch.utils.data as data
+import torchvision
 
 from ..core import register
+
 torchvision.disable_beta_transforms_warning()
 from copy import deepcopy
 from PIL import Image, ImageDraw
 import os
-from collections import defaultdict, deque
-
+from collections import defaultdict
 
 __all__ = [
     'DataLoader',
@@ -73,6 +68,7 @@ def batch_image_collate_fn(items):
 
 
 class BaseCollateFunction(object):
+    
     def set_epoch(self, epoch):
         self._epoch = epoch
 
@@ -94,6 +90,7 @@ def generate_scales(base_size, base_size_repeat):
 
 @register() 
 class BatchImageCollateFunction(BaseCollateFunction):
+    
     def __init__(
         self, 
         stop_epoch=None, 

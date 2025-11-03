@@ -3,25 +3,46 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
+import copy
+import re
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-import re
-import copy
-
 from ._config import BaseConfig
 from .workspace import create
 from .yaml_utils import load_config, merge_config, merge_dict
 
+
 class YAMLConfig(BaseConfig):
-    def __init__(self, cfg_path: str, **kwargs) -> None:
+    
+    def __init__(self, cfg_path: str, root: str = None, **kwargs) -> None:
         super().__init__()
-
-        cfg = load_config(cfg_path)
+        root      = str(root) if root not in [None, "None", ""] else None
+        self.root = root
+        
+        # cfg = load_config(cfg_path)
+        # cfg = merge_dict(cfg, kwargs)
+        
+        # My Modification 01: Update '__include__' in yaml
+        updated_include = kwargs.pop("__include__", None)
+        cfg = load_config(cfg_path, updated_include=updated_include)
         cfg = merge_dict(cfg, kwargs)
+        
+        # My Modification 02: Update dataset's img_folder and ann_file paths
+        if root:
+            cfg["train_dataloader"]["dataset"]["img_folder"] = root + cfg["train_dataloader"]["dataset"]["img_folder"]
+            cfg["train_dataloader"]["dataset"]["ann_file"]   = root + cfg["train_dataloader"]["dataset"]["ann_file"]
+            cfg["val_dataloader"]["dataset"]["img_folder"]   = root + cfg["val_dataloader"]["dataset"]["img_folder"]
+            cfg["val_dataloader"]["dataset"]["ann_file"]     = root + cfg["val_dataloader"]["dataset"]["ann_file"]
 
+        total_batch_size = cfg.get("total_batch_size", None)
+        if total_batch_size:
+            cfg["train_dataloader"]["total_batch_size"] = total_batch_size
+            cfg["val_dataloader"]["total_batch_size"]   = total_batch_size
+            
         self.yaml_cfg = copy.deepcopy(cfg)
 
         for k in super().__dict__:

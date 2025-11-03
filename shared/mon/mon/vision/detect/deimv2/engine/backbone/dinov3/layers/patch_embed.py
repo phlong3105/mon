@@ -6,7 +6,7 @@
 import math
 from typing import Callable, Tuple, Union
 
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 
 def make_2tuple(x):

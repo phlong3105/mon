@@ -6,13 +6,12 @@
 from typing import Callable, List, Optional
 
 import torch
-from torch import Tensor, nn
-
-from ..utils import cat_keep_shapes, uncat_with_shapes
+from torch import nn, Tensor
 
 from .attention import CausalSelfAttention, SelfAttention
 from .ffn_layers import Mlp
 from .layer_scale import LayerScale  # , DropPath
+from ..utils import cat_keep_shapes, uncat_with_shapes
 
 torch._dynamo.config.automatic_dynamic_shapes = False
 torch._dynamo.config.accumulated_cache_size_limit = 1024

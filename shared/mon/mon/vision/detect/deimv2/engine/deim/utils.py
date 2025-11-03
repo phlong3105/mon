@@ -69,15 +69,14 @@ def deformable_attention_core_func(value, value_spatial_shapes, sampling_locatio
     return output.permute(0, 2, 1)
 
 
-
-def deformable_attention_core_func_v2(\
-    value: torch.Tensor,
-    value_spatial_shapes,
-    sampling_locations: torch.Tensor,
-    attention_weights: torch.Tensor,
-    num_points_list: List[int],
-    method='default',
-    value_shape='default',
+def deformable_attention_core_func_v2(
+        value               : torch.Tensor,
+        value_spatial_shapes,
+        sampling_locations  : torch.Tensor,
+        attention_weights   : torch.Tensor,
+        num_points_list     : List[int],
+        method               = 'default',
+        value_shape          = 'default',
     ):
     """
     Args:

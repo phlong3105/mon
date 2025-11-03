@@ -4,6 +4,7 @@ Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
 import importlib.metadata
+
 from torch import Tensor
 
 if '0.15.2' in importlib.metadata.version('torchvision'):
@@ -18,17 +19,14 @@ if '0.15.2' in importlib.metadata.version('torchvision'):
 elif '0.17' > importlib.metadata.version('torchvision') >= '0.16':
     import torchvision
     torchvision.disable_beta_transforms_warning()
-
-    from torchvision.transforms.v2 import SanitizeBoundingBoxes
-    from torchvision.tv_tensors import (
-        BoundingBoxes, BoundingBoxFormat, Mask, Image, Video)
+    
     _boxes_keys = ['format', 'canvas_size']
 
 elif importlib.metadata.version('torchvision') >= '0.17':
     import torchvision
-    from torchvision.transforms.v2 import SanitizeBoundingBoxes
     from torchvision.tv_tensors import (
-        BoundingBoxes, BoundingBoxFormat, Mask, Image, Video)
+        BoundingBoxes, BoundingBoxFormat, Mask
+    )
     _boxes_keys = ['format', 'canvas_size']
 
 else:

@@ -3,10 +3,11 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import os
 import copy
+import os
+from typing import Any, Dict, List
+
 import yaml
-from typing import Any, Dict, Optional, List
 
 from .workspace import GLOBAL_CONFIG
 

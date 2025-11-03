@@ -4,7 +4,7 @@ Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
 import os
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import torch
 import torchvision

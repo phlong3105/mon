@@ -5,14 +5,13 @@ Mostly copy-paste from https://github.com/pytorch/vision/blob/13b35ff/references
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import torch
-import torch.utils.data
-
-import torchvision
-
-from PIL import Image
 import faster_coco_eval
 import faster_coco_eval.core.mask as coco_mask
+import torch
+import torch.utils.data
+import torchvision
+from PIL import Image
+
 from ._dataset import DetDataset
 from .._misc import convert_to_tv_tensor
 from ...core import register
@@ -108,6 +107,7 @@ def convert_coco_poly_to_mask(segmentations, height, width):
 
 
 class ConvertCocoPolysToMask(object):
+    
     def __init__(self, return_masks=False):
         self.return_masks = return_masks
 

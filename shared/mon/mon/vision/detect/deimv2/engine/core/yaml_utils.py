@@ -3,10 +3,11 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import os
 import copy
+import os
+from typing import Any, Dict, List
+
 import yaml
-from typing import Any, Dict, Optional, List
 
 from .workspace import GLOBAL_CONFIG
 
@@ -18,12 +19,11 @@ __all__ = [
 ]
 
 
-INCLUDE_KEY = '__include__'
+INCLUDE_KEY = "__include__"
 
 
-def load_config(file_path, cfg=dict()):
-    """load config
-    """
+def load_config(file_path, cfg=dict(), updated_include: list = None):
+    """load config"""
     _, ext = os.path.splitext(file_path)
     assert ext in ['.yml', '.yaml'], "only support yaml files"
 
@@ -31,7 +31,8 @@ def load_config(file_path, cfg=dict()):
         file_cfg = yaml.load(f, Loader=yaml.Loader)
         if file_cfg is None:
             return {}
-
+    
+    '''
     if INCLUDE_KEY in file_cfg:
         base_yamls = list(file_cfg[INCLUDE_KEY])
         for base_yaml in base_yamls:
@@ -44,6 +45,22 @@ def load_config(file_path, cfg=dict()):
             with open(base_yaml) as f:
                 base_cfg = load_config(base_yaml, cfg)
                 merge_dict(cfg, base_cfg)
+    '''
+    
+    # My Modification 01: Update '__include__' in yaml
+    base_yamls = []
+    if updated_include not in [None, "None", ""]:
+        base_yamls = list(updated_include)
+    elif INCLUDE_KEY in file_cfg:
+        base_yamls = list(file_cfg[INCLUDE_KEY])
+    for base_yaml in base_yamls:
+        if base_yaml.startswith("~"):
+            base_yaml = os.path.expanduser(base_yaml)
+        if not base_yaml.startswith("/"):
+            base_yaml = os.path.join(os.path.dirname(file_path), base_yaml)
+        with open(base_yaml) as f:
+            base_cfg = load_config(base_yaml, cfg)
+            merge_dict(cfg, base_cfg)
 
     return merge_dict(cfg, file_cfg)
 
@@ -53,7 +70,7 @@ def merge_dict(dct, another_dct, inplace=True) -> Dict:
     """
     def _merge(dct, another) -> Dict:
         for k in another:
-            if (k in dct and isinstance(dct[k], dict) and isinstance(another[k], dict)):
+            if k in dct and isinstance(dct[k], dict) and isinstance(another[k], dict):
                 _merge(dct[k], another[k])
             else:
                 dct[k] = another[k]
@@ -83,13 +100,12 @@ def parse_cli(nargs: List[str]) -> Dict:
         return cfg
 
     for s in nargs:
-        s = s.strip()
+        s    = s.strip()
         k, v = s.split('=', 1)
-        d = dictify(k, yaml.load(v, Loader=yaml.Loader))
-        cfg = merge_dict(cfg, d)
+        d    = dictify(k, yaml.load(v, Loader=yaml.Loader))
+        cfg  = merge_dict(cfg, d)
 
     return cfg
-
 
 
 def merge_config(cfg, another_cfg=GLOBAL_CONFIG, inplace: bool=False, overwrite: bool=False):

@@ -6,18 +6,18 @@ Modified from D-FINE (https://github.com/Peterande/D-FINE/)
 Copyright (c) 2024 D-FINE Authors. All Rights Reserved.
 """
 
+import copy
+
 import torch
-import torch.nn as nn
 import torch.distributed
+import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
-import copy
-
-from .dfine_utils import bbox2distance
 from .box_ops import box_cxcywh_to_xyxy, box_iou, generalized_box_iou
+from .dfine_utils import bbox2distance
+from ..core import GLOBAL_DTYPE, register
 from ..misc.dist_utils import get_world_size, is_dist_available_and_initialized
-from ..core import register, GLOBAL_DTYPE
 
 
 @register()

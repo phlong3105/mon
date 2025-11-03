@@ -4,16 +4,16 @@ https://github.com/facebookresearch/detr/blob/main/util/misc.py
 Mostly copy-paste from torchvision references.
 """
 
-import time
-import pickle
 import datetime
+import pickle
+import time
 from collections import defaultdict, deque
 from typing import Dict
 
 import torch
 import torch.distributed as tdist
 
-from .dist_utils import is_dist_available_and_initialized, get_world_size
+from .dist_utils import get_world_size, is_dist_available_and_initialized
 
 
 class SmoothedValue(object):

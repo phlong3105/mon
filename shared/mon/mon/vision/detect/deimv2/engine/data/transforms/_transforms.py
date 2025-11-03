@@ -3,38 +3,83 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import torch
-import torch.nn as nn
+from typing import Any, Dict, List, Optional, Sequence, Union
 
+import cv2
+import numpy as np
+import PIL.Image
+import torch
 import torchvision
 import torchvision.transforms.v2 as T
 import torchvision.transforms.v2.functional as F
+from torchvision import transforms as _transforms
 
-import PIL
-import PIL.Image
+from .._misc import (
+    _boxes_keys,
+    BoundingBoxes,
+    convert_to_tv_tensor,
+    Image,
+    Mask,
+    SanitizeBoundingBoxes,
+    Video,
+)
+from ...core import GLOBAL_DTYPE, register
 
-from typing import Any, Dict, List, Optional
-
-from .._misc import convert_to_tv_tensor, _boxes_keys
-from .._misc import Image, Video, Mask, BoundingBoxes
-from .._misc import SanitizeBoundingBoxes
-
-from ...core import register
 torchvision.disable_beta_transforms_warning()
 
 
 RandomPhotometricDistort = register()(T.RandomPhotometricDistort)
-RandomZoomOut = register()(T.RandomZoomOut)
-RandomHorizontalFlip = register()(T.RandomHorizontalFlip)
-Resize = register()(T.Resize)
+RandomZoomOut            = register()(T.RandomZoomOut)
+RandomHorizontalFlip     = register()(T.RandomHorizontalFlip)
+Resize                   = register()(T.Resize)
 # ToImageTensor = register()(T.ToImageTensor)
 # ConvertDtype = register()(T.ConvertDtype)
 # PILToTensor = register()(T.PILToTensor)
-SanitizeBoundingBoxes = register(name='SanitizeBoundingBoxes')(SanitizeBoundingBoxes)
-RandomCrop = register()(T.RandomCrop)
-Normalize = register()(T.Normalize)
+SanitizeBoundingBoxes    = register(name="SanitizeBoundingBoxes")(SanitizeBoundingBoxes)
+RandomCrop               = register()(T.RandomCrop)
+Normalize                = register()(T.Normalize)
 
 
+@register()
+class ResizeCV(T.Transform):
+    """Resize the input to the given size using cv2."""
+
+    _v1_transform_cls = _transforms.Resize
+
+    def __init__(
+        self,
+        size         : Union[int, Sequence[int], None],
+        interpolation: int            = cv2.INTER_AREA,
+        max_size     : Optional[int]  = None,
+        antialias    : Optional[bool] = True,
+    ) -> None:
+        super().__init__()
+
+        if isinstance(size, int):
+            size = [size]
+        elif isinstance(size, Sequence) and len(size) in {1, 2}:
+            size = list(size)
+        elif size is None:
+            if not isinstance(max_size, int):
+                raise ValueError(f"max_size must be an integer when size is None, but got {max_size} instead.")
+        else:
+            raise ValueError(f"size can be an integer, a sequence of one or two integers, or None, but got {size} instead.")
+        self.size          = size
+        self.interpolation = interpolation
+        self.max_size      = max_size
+        self.antialias     = antialias
+        cv2.setNumThreads(0)  # Disable multithreading in OpenCV to avoid potential issues with parallel processing
+
+    def transform(self, inpt: Any, params: Dict[str, Any]) -> Any:
+        if isinstance(inpt, PIL.Image.Image):
+            inpt = np.array(inpt)
+            inpt = cv2.resize(inpt, self.size, interpolation=self.interpolation)
+            # print(inpt.shape)
+            return inpt
+        else:
+            return inpt
+        
+        
 @register()
 class EmptyTransform(T.Transform):
     def __init__(self, ) -> None:
@@ -128,6 +173,36 @@ class ConvertPILImage(T.Transform):
         inpt = F.pil_to_tensor(inpt)
         if self.dtype == 'float32':
             inpt = inpt.float()
+
+        if self.scale:
+            inpt = inpt / 255.
+
+        inpt = Image(inpt)
+
+        return inpt
+
+
+@register()
+class ConvertNumpyImage(T.Transform):
+
+    _transformed_types = (
+        np.ndarray,
+    )
+
+    def __init__(self, dtype="float32", scale=True) -> None:
+        super().__init__()
+        self.dtype = dtype
+        self.scale = scale
+
+    def transform(self, inpt: Any, params: Dict[str, Any]) -> Any:
+        return self._transform(inpt, params)
+
+    def _transform(self, inpt: Any, params: Dict[str, Any]) -> Any:
+        inpt = torch.from_numpy(inpt).contiguous()
+        inpt = inpt.permute(2, 0, 1)
+
+        if self.dtype == ["float16", "float32", "float64"]:
+            inpt = inpt.to(GLOBAL_DTYPE)
 
         if self.scale:
             inpt = inpt / 255.

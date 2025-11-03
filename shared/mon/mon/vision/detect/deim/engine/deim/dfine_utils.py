@@ -3,6 +3,7 @@ Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 """
 
 import torch
+
 from .box_ops import box_xyxy_to_cxcywh
 from ..core import GLOBAL_DTYPE
 

@@ -6,16 +6,15 @@ Modified from D-FINE (https://github.com/Peterande/D-FINE)
 Copyright (c) 2024 D-FINE authors. All Rights Reserved.
 """
 
-import torch
-import torch.nn as nn
+from typing import Any
 
+import torch.nn as nn
 import torchvision
 import torchvision.transforms.v2 as T
 
-from typing import Any, Dict, List, Optional
-
 from ._transforms import EmptyTransform
-from ...core import register, GLOBAL_CONFIG
+from ...core import GLOBAL_CONFIG, register
+
 torchvision.disable_beta_transforms_warning()
 import random
 

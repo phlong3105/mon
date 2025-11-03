@@ -9,16 +9,12 @@ Copyright (c) 2024 D-FINE Authors. All Rights Reserved.
 import copy
 from collections import OrderedDict
 
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from functools import partial
 
+from .hybrid_encoder import ConvNormLayer_fuse, RepNCSPELAN4
 from .utils import get_activation
-
 from ..core import register
-from .hybrid_encoder import ConvNormLayer_fuse
-from .hybrid_encoder import RepNCSPELAN4
 
 __all__ = ['LiteEncoder']
 

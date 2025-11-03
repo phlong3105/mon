@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 
 from ._solver import BaseSolver
-from .clas_engine import train_one_epoch, evaluate
+from .clas_engine import evaluate, train_one_epoch
 from ..misc import dist_utils
 
 

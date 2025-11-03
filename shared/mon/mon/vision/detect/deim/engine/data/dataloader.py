@@ -13,7 +13,7 @@ import torch.nn.functional as F
 import torch.utils.data as data
 import torchvision
 
-from ..core import register, GLOBAL_DTYPE
+from ..core import GLOBAL_DTYPE, register
 
 torchvision.disable_beta_transforms_warning()
 from copy import deepcopy

@@ -8,8 +8,9 @@ from typing import List, Tuple
 
 import torch
 import torch.nn.functional as F
+from torch import nn, Tensor
+
 from ..utils import cat_keep_shapes, uncat_with_shapes
-from torch import Tensor, nn
 
 
 # RoPE-related functions:

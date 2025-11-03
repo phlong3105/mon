@@ -3,8 +3,10 @@ Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 """
 
 import copy
-from calflops import calculate_flops
 from typing import Tuple
+
+from calflops import calculate_flops
+
 
 def stats(
     cfg,

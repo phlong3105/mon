@@ -1,13 +1,13 @@
-import torch
-import torch.nn as nn
-
+import atexit
 from datetime import datetime
 from pathlib import Path
 from typing import Dict
-import atexit
 
-from ..misc import dist_utils
+import torch
+import torch.nn as nn
+
 from ..core import BaseConfig
+from ..misc import dist_utils
 
 
 def to(m: nn.Module, device: str):

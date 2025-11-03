@@ -10,14 +10,15 @@ reference
 Copyright (c) 2024 The D-FINE Authors. All Rights Reserved.
 """
 
+import logging
+import os
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import os
-from .common import FrozenBatchNorm2d
+
+from .common import FrozenBatchNorm2d, get_activation
 from ..core import register
-import logging
-from .common import get_activation
 
 # Constants for initialization
 kaiming_normal_ = nn.init.kaiming_normal_

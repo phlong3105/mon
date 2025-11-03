@@ -6,6 +6,7 @@ https://github.com/facebookresearch/detr/blob/main/util/box_ops.py
 import torch
 from torch import Tensor
 from torchvision.ops.boxes import box_area
+
 from ..core import GLOBAL_DTYPE
 
 

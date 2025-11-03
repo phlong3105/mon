@@ -4,13 +4,13 @@ https://github.com/PaddlePaddle/PaddleDetection/blob/release/2.6/ppdet/modeling/
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from collections import OrderedDict
 
 from .common import get_activation
-
 from ..core import register
 
 __all__ = ['CSPResNet']

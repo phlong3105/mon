@@ -14,9 +14,13 @@ import torch.nn.functional as F
 import torch.nn.init as init
 
 from .denoising import get_contrastive_denoising_training_group
-from .utils import bias_init_with_prob, get_activation, inverse_sigmoid
-from .utils import deformable_attention_core_func_v2
-from ..core import register, GLOBAL_DTYPE
+from .utils import (
+    bias_init_with_prob,
+    deformable_attention_core_func_v2,
+    get_activation,
+    inverse_sigmoid,
+)
+from ..core import GLOBAL_DTYPE, register
 
 __all__ = ['RTDETRTransformerv2']
 

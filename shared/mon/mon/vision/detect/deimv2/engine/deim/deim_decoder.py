@@ -6,24 +6,21 @@ Modified from D-FINE (https://github.com/Peterande/D-FINE/)
 Copyright (c) 2024 D-FINE Authors. All Rights Reserved.
 """
 
-import math
 import copy
-import functools
 from collections import OrderedDict
+from typing import List
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
-from typing import List
 
-from ..core import register
+from .deim_utils import Gate, MLP, RMSNorm, SwiGLUFFN
 from .denoising import get_contrastive_denoising_training_group
-from .utils import deformable_attention_core_func_v2, get_activation, inverse_sigmoid, bias_init_with_prob
-
-from .dfine_decoder import MSDeformableAttention, LQE, Integral
-from .dfine_utils import weighting_function, distance2bbox
-from .deim_utils import RMSNorm, SwiGLUFFN, Gate, MLP
+from .dfine_decoder import Integral, LQE, MSDeformableAttention
+from .dfine_utils import distance2bbox, weighting_function
+from .utils import bias_init_with_prob, inverse_sigmoid
+from ..core import register
 
 __all__ = ['DEIMTransformer']
 

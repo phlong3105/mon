@@ -2,17 +2,15 @@
 Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
+import os
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from collections import OrderedDict
-
-from .common import get_activation, FrozenBatchNorm2d
-
+from .common import FrozenBatchNorm2d, get_activation
 from ..core import register
-import os
-
 
 __all__ = ['PResNet']
 

@@ -2,17 +2,15 @@
 Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
+import os
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from collections import OrderedDict
-
-from .common import get_activation, FrozenBatchNorm2d
-
+from .common import FrozenBatchNorm2d, get_activation
 from ..core import register
-import os
-
 
 __all__ = ['PResNet']
 
@@ -24,7 +22,6 @@ ResNet_cfg = {
     101: [3, 4, 23, 3],
     # 152: [3, 8, 36, 3],
 }
-
 
 donwload_url = {
     18: 'https://github.com/lyuwenyu/storage/releases/download/v0.1/ResNet18_vd_pretrained_from_paddle.pth',
@@ -40,7 +37,9 @@ local_weights = {
     101: "ResNet101_vd_ssld_pretrained_from_paddle.pth"
 }
 
+
 class ConvNormLayer(nn.Module):
+    
     def __init__(self, ch_in, ch_out, kernel_size, stride, padding=None, bias=False, act=None):
         super().__init__()
         self.conv = nn.Conv2d(

@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .utils import get_activation
-from ..core import register, GLOBAL_DTYPE
+from ..core import GLOBAL_DTYPE, register
 
 __all__ = ['HybridEncoder']
 

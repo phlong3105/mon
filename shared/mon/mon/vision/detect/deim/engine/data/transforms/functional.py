@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 import torch
 # needed due to empty tensor bug in pytorch and torchvision 0.5
@@ -6,6 +6,7 @@ import torchvision
 import torchvision.transforms.functional as F
 from packaging import version
 from torch import Tensor
+
 from ...core import GLOBAL_DTYPE
 
 if version.parse(torchvision.__version__) < version.parse('0.7'):

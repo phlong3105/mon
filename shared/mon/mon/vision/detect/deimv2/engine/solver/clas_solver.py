@@ -3,17 +3,14 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
-import time
-import json
 import datetime
+import json
+import time
 from pathlib import Path
 
-import torch
-import torch.nn as nn
-
-from ..misc import dist_utils
 from ._solver import BaseSolver
-from .clas_engine import train_one_epoch, evaluate
+from .clas_engine import evaluate, train_one_epoch
+from ..misc import dist_utils
 
 
 class ClasSolver(BaseSolver):

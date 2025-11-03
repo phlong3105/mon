@@ -10,10 +10,10 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.autograd import Function
-# from torch.amp import custom_fwd, custom_bwd
-
 from torch.autograd.function import once_differentiable
 from torch.nn.init import constant_, xavier_uniform_
+
+# from torch.amp import custom_fwd, custom_bwd
 
 try:
     import MultiScaleDeformableAttention as MSDA

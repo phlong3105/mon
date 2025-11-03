@@ -6,16 +6,15 @@ Modified from D-FINE (https://github.com/Peterande/D-FINE)
 Copyright (c) 2024 D-FINE authors. All Rights Reserved.
 """
 
-import time
-import json
 import datetime
+import json
+import time
 
 import torch
 
-from ..misc import dist_utils, stats
-
 from ._solver import BaseSolver
-from .det_engine import train_one_epoch, evaluate
+from .det_engine import evaluate, train_one_epoch
+from ..misc import dist_utils, stats
 from ..optim.lr_scheduler import FlatCosineLRScheduler
 
 

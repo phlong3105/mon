@@ -5,17 +5,16 @@ Modules to compute the matching cost and solve the corresponding LSAP.
 Copyright (c) 2024 The D-FINE Authors All Rights Reserved.
 """
 
+from typing import Dict
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from scipy.optimize import linear_sum_assignment
-from typing import Dict
 
 from .box_ops import box_cxcywh_to_xyxy, generalized_box_iou
-
 from ..core import register
-import numpy as np
 
 
 @register()

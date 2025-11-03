@@ -6,22 +6,26 @@ Modified from D-FINE (https://github.com/Peterande/D-FINE/)
 Copyright (c) 2024 D-FINE Authors. All Rights Reserved.
 """
 
-import math
 import copy
 import functools
+import math
 from collections import OrderedDict
+from typing import List
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
-from typing import List
 
-from .dfine_utils import weighting_function, distance2bbox
 from .denoising import get_contrastive_denoising_training_group
-from .utils import deformable_attention_core_func_v2, get_activation, inverse_sigmoid
-from .utils import bias_init_with_prob
-from ..core import register, GLOBAL_DTYPE
+from .dfine_utils import distance2bbox, weighting_function
+from .utils import (
+    bias_init_with_prob,
+    deformable_attention_core_func_v2,
+    get_activation,
+    inverse_sigmoid,
+)
+from ..core import GLOBAL_DTYPE, register
 
 __all__ = ['DFINETransformer']
 

@@ -38,7 +38,7 @@ def train_one_epoch(
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
 
-    print_freq = kwargs.get('print_freq', 10)
+    print_freq            = kwargs.get('print_freq', 10)
     writer: SummaryWriter = kwargs.get('writer', None)
 
     ema   : ModelEMA   = kwargs.get('ema',    None)
@@ -59,7 +59,7 @@ def train_one_epoch(
 
             if torch.isnan(outputs['pred_boxes']).any() or torch.isinf(outputs['pred_boxes']).any():
                 print(outputs['pred_boxes'])
-                state = model.state_dict()
+                state     = model.state_dict()
                 new_state = {}
                 for key, value in model.state_dict().items():
                     # Replace 'module' with 'model' in each key

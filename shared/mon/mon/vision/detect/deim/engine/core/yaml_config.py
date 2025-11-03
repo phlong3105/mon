@@ -3,13 +3,13 @@ Copied from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright(c) 2023 lyuwenyu. All Rights Reserved.
 """
 
+import copy
+import re
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-
-import re
-import copy
 
 from ._config import BaseConfig
 from .workspace import create

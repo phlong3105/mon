@@ -1,87 +1,121 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Implements DEIMv2 model training pipeline for object detection.
+
+References:
+    - Paper: "Real-Time Object Detection Meets DINOv3," arXiv 2025.
+    - Code: https://github.com/Intellindust-AI-Lab/DEIMv2
 """
-DEIMv2: Real-Time Object Detection Meets DINOv3
-Copyright (c) 2025 The DEIMv2 Authors. All Rights Reserved.
----------------------------------------------------------------------------------
-DEIM: DETR with Improved Matching for Fast Convergence
-Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
----------------------------------------------------------------------------------
-Modified from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
-Copyright (c) 2023 lyuwenyu. All Rights Reserved.
-"""
 
-import os
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+# import os
+# import sys
+from pprint import pprint
 
-import argparse
+import box
+import torch
 
+# noinspection PyUnusedImports
+import engine as deim
+import mon
+# sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from engine.core import YAMLConfig
 from engine.misc import dist_utils
-from engine.core import YAMLConfig, yaml_utils
 from engine.solver import TASKS
 
-debug=False
+mon.dev()
+
+current_file = mon.Path(__file__).absolute()
+root_dir     = current_file.parents[0]
+
+
+# ----- Train -----
+debug = False
 
 if debug:
-    import torch
     def custom_repr(self):
-        return f'{{Tensor:{tuple(self.shape)}}} {original_repr(self)}'
-    original_repr = torch.Tensor.__repr__
+        return f"{{Tensor:{tuple(self.shape)}}} {original_repr(self)}"
+
+    original_repr         = torch.Tensor.__repr__
     torch.Tensor.__repr__ = custom_repr
 
-def main(args, ) -> None:
-    """main
-    """
+
+def safe_get_rank():
+    if torch.distributed.is_available() and torch.distributed.is_initialized():
+        return torch.distributed.get_rank()
+    else:
+        return 0
+
+
+def train(args: dict | box.Box) -> str:
+    # Start
+    if safe_get_rank() == 0:
+        mon.rt.print_run_summary(args)
+    
+    # Device
+    device = mon.create_device(args.device)
+    
+    # Seed
+    mon.set_random_seed(args.seed)
+    
+    # Pretrained
+    if args.weights and args.weights.is_weights_file(exist=True):
+        resume = args.weights
+        tuning = None
+    elif args.resume and args.resume.is_weights_file(exist=True):
+        resume = args.resume
+        tuning = None
+    else:
+        resume = None
+        tuning = args.tuning
+    assert not all([tuning, resume]), "Only support from scratch or resume or tuning at one time."
+
+    # Trainer
     dist_utils.setup_distributed(args.print_rank, args.print_method, seed=args.seed)
 
-    assert not all([args.tuning, args.resume]), \
-        'Only support from_scrach or resume or tuning at one time'
+    cfg_path     = root_dir / "option" / args.cfg
+    updated_cfg  = args.updated_cfg
+    updated_cfg |= {"tuning": str(tuning)} if tuning else {}
+    updated_cfg |= {"resume": str(resume)} if resume else {}
+    updated_cfg |= {"device": device}      if not args.torchrun else {}
+    updated_cfg |= {
+        "seed"            : args.seed,
+        "output_dir"      : str(args.save_dir),
+        "summary_dir"     : str(args.save_dir),
+        "test_only"       : args.test_only,
+        "print_method"    : args.print_method,
+        "print_rank"      : args.print_rank,
+        "epochs"          : args.epochs,
+        "total_batch_size": args.batch_size,
+    }
+    cfg = YAMLConfig(cfg_path=str(cfg_path), root=str(args.root), **updated_cfg)
 
+    if resume or tuning:
+        if "HGNetv2" in cfg.yaml_cfg:
+            cfg.yaml_cfg["HGNetv2"]["pretrained"] = False
 
-    update_dict = yaml_utils.parse_cli(args.update)
-    update_dict.update({k: v for k, v in args.__dict__.items() \
-        if k not in ['update', ] and v is not None})
+    if safe_get_rank() == 0:
+        print("cfg: ")
+        pprint(cfg.__dict__)
 
-    cfg = YAMLConfig(args.config, **update_dict)
+    solver = TASKS[cfg.yaml_cfg["task"]](cfg)
 
-    if args.resume or args.tuning:
-        if 'HGNetv2' in cfg.yaml_cfg:
-            cfg.yaml_cfg['HGNetv2']['pretrained'] = False
-
-    print('cfg: ', cfg.__dict__)
-
-    solver = TASKS[cfg.yaml_cfg['task']](cfg)
-
+    # Train
     if args.test_only:
         solver.val()
     else:
         solver.fit()
 
+    # Finish
     dist_utils.cleanup()
+    return str(args.save_dir)
 
 
-if __name__ == '__main__':
+# ----- Main -----
+def main() -> str:
+    args = mon.rt.parse_train_args(root=root_dir, model_root=root_dir)
+    train(args)
 
-    parser = argparse.ArgumentParser()
 
-    # priority 0
-    parser.add_argument('-c', '--config', type=str, default='')
-    parser.add_argument('-r', '--resume', type=str, help='resume from checkpoint')
-    parser.add_argument('-t', '--tuning', type=str, help='tuning from checkpoint')
-    parser.add_argument('-d', '--device', type=str, help='device',)
-    parser.add_argument('--seed', type=int, default=0, help='exp reproducibility')
-    parser.add_argument('--use-amp', action='store_true', help='auto mixed precision training')
-    parser.add_argument('--output-dir', type=str, help='output directoy')
-    parser.add_argument('--summary-dir', type=str, help='tensorboard summry')
-    parser.add_argument('--test-only', action='store_true', default=False,)
-
-    # priority 1
-    parser.add_argument('-u', '--update', nargs='+', help='update yaml config')
-
-    # env
-    parser.add_argument('--print-method', type=str, default='builtin', help='print method')
-    parser.add_argument('--print-rank', type=int, default=0, help='print rank id')
-
-    parser.add_argument('--local-rank', type=int, help='local rank id')
-    args = parser.parse_args()
-
-    main(args)
+if __name__ == "__main__":
+    main()
