@@ -22,6 +22,7 @@ from ..core import register
 
 
 class SpatialPriorModulev2(nn.Module):
+    
     def __init__(self, inplanes=16):
         super().__init__()
 
@@ -69,18 +70,19 @@ class SpatialPriorModulev2(nn.Module):
 
 @register()
 class DINOv3STAs(nn.Module):
+    
     def __init__(
         self,
-        name=None,
-        weights_path=None,
-        interaction_indexes=[],
-        finetune=True,
-        embed_dim=192,
-        num_heads=3,
-        patch_size=16,
-        use_sta=True,
-        conv_inplane=16,
-        hidden_dim=None,
+        name                = None,
+        weights_path        = None,
+        interaction_indexes = [],
+        finetune            = True,
+        embed_dim           = 192,
+        num_heads           = 3,
+        patch_size          = 16,
+        use_sta             = True,
+        conv_inplane        = 16,
+        hidden_dim          = None,
     ):
         super(DINOv3STAs, self).__init__()
         if 'dinov3' in name:

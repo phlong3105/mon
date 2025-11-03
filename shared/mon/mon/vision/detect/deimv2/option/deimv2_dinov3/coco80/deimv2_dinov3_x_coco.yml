@@ -13,7 +13,7 @@ DEIM:
 
 DINOv3STAs:
   name               : dinov3_vits16plus
-  weights_path       : "zoo/vision/detect/deimv2/backbone/dinov3_vits16plus.pth"  # ./ckpts/dinov3_vits16plus_pretrain_lvd1689m-4057cbaa.pth
+  weights_path       : "./backbone/dinov3_vits16plus.pth"  # ./ckpts/dinov3_vits16plus_pretrain_lvd1689m-4057cbaa.pth
   interaction_indexes: [5, 8, 11]   # only need the [1/8, 1/16, 1/32]
   finetune           : True
   conv_inplane       : 64

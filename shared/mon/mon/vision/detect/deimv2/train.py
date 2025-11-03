@@ -72,7 +72,7 @@ def train(args: dict | box.Box) -> str:
 
     # Trainer
     dist_utils.setup_distributed(args.print_rank, args.print_method, seed=args.seed)
-
+    
     cfg_path     = root_dir / "option" / args.cfg
     updated_cfg  = args.updated_cfg
     updated_cfg |= {"tuning": str(tuning)} if tuning else {}
