@@ -2,12 +2,6 @@
 	path = shared/math/torchdiffeq
 	url  = https://github.com/phlong3105/torchdiffeq
 
-[submodule "shared/nn/diffusers"]
-	path = shared/nn/diffusers
-	url  = https://github.com/phlong3105/diffusers
-[submodule "shared/nn/flow_matching"]
-	path = shared/nn/flow_matching
-	url  = https://github.com/phlong3105/flow_matching
 [submodule "shared/nn/snntorch"]
 	path = shared/nn/snntorch
 	url  = https://github.com/phlong3105/snntorch
@@ -18,21 +12,28 @@
 	path = shared/nn/transformers
 	url  = https://github.com/phlong3105/transformers
 
-[submodule "shared/vision/clip"]
-	path = shared/vision/clip
+[submodule "shared/genai/diffusers"]
+	path = shared/genai/diffusers
+	url  = https://github.com/phlong3105/diffusers
+[submodule "shared/genai/flow_matching"]
+	path = shared/genai/flow_matching
+	url  = https://github.com/phlong3105/flow_matching
+
+[submodule "shared/cv/clip"]
+	path = shared/cv/clip
 	url  = https://github.com/phlong3105/clip
-[submodule "shared/vision/libcom"]
-	path = shared/vision/libcom
+[submodule "shared/cv/libcom"]
+	path = shared/cv/libcom
 	url  = https://github.com/phlong3105/libcom
-[submodule "shared/vision/mobileclip"]
-	path = shared/vision/mobileclip
+[submodule "shared/cv/mobileclip"]
+	path = shared/cv/mobileclip
 	url  = https://github.com/phlong3105/mobileclip
-[submodule "shared/vision/open_clip"]
-	path = shared/vision/open_clip
+[submodule "shared/cv/open_clip"]
+	path = shared/cv/open_clip
 	url  = https://github.com/phlong3105/open_clip
-[submodule "shared/vision/trackers"]
-	path = shared/vision/trackers
+[submodule "shared/cv/trackers"]
+	path = shared/cv/trackers
 	url  = https://github.com/phlong3105/trackers
-[submodule "shared/vision/ultralytics"]
-	path = shared/vision/ultralytics
+[submodule "shared/cv/ultralytics"]
+	path = shared/cv/ultralytics
 	url  = https://github.com/phlong3105/ultralytics

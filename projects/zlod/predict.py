@@ -13,7 +13,7 @@ from pycocotools.cocoeval import COCOeval
 
 import mon
 from mon import albumentations as A
-from mon.vision import DEIM
+from mon.cv import DEIM
 from zlod import GCENet
 
 

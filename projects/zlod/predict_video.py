@@ -11,7 +11,7 @@ import torch
 
 import mon
 from mon import albumentations as A
-from mon.vision import DEIM
+from mon.cv import DEIM
 from zlod import GCENet, GCENet_Baseline
 
 current_file   = mon.Path(__file__).absolute()

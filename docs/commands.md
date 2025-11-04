@@ -14,7 +14,7 @@
 
 - Add sub-module: `git submodule add <repository_url> <path>`
     ```commandline
-    git submodule add 
+    git submodule add https://github.com/phlong3105/
     ```
 
 - Remove sub-module: ` git submodule deinit -f <path/to/submodule>`

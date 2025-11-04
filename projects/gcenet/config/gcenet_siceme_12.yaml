@@ -8,7 +8,7 @@ model       : &model "gcenet"                                                   
 data        : &data "siceme"                                                    # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
 fullname    : &fullname "gcenet_siceme_12"                                      # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "zoo/vision/enhance/lle/gcenet/gcenet/siceme/gcenet_siceme_12.pth"  # Path to the pretrained weights.
+weights     : &weights "zoo/cv/enhance/lle/gcenet/gcenet/siceme/gcenet_siceme_12.pth"  # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
 seed        : &seed 100                                                         # Random seed.
 imgsz       : &imgsz 256  # 512                                                 # Image size for the model.

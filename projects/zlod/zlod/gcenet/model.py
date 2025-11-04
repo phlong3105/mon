@@ -17,7 +17,7 @@ import torch
 from mon.constants import MODELS
 from mon.core import image as I, MLType, ModelMixin, nn, Path, Task
 from mon.core.nn import functional as F
-from mon.vision.enhance.mef import mertens_cv2
+from mon.cv.enhance.mef import mertens_cv2
 from .network import *
 
 current_file = Path(__file__).absolute()

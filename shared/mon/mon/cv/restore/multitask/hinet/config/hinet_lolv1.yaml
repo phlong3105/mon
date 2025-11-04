@@ -1,0 +1,62 @@
+# Basic
+hostname    : ~
+config      : ~
+arch        : "hinet"
+model       : "hinet"
+data        : "lol_v1"
+data_dir    : "data/lol_v1"
+root        : ~
+project     : ~
+variant     : ~
+fullname    : "hinet_lol_v1"
+save_dir    : ~
+weights     : "zoo/cv/enhancerestorehinet/hinet/lol_v1/hinet_lol_v1.pth"
+device      : 0
+local_rank  : ~
+launcher    : ~
+epochs      : 1000
+steps       : ~
+imgsz       : 512
+resize      : ~
+benchmark   : False
+save_image  : True
+save_debug  : True
+use_data_dir: False
+keep_subdirs: False
+use_fullname: True
+exist_ok    : True
+verbose     : True
+
+# Misc
+name       : hinet_lol_v1
+model_type : ImageRestorationModel
+scale      : 1
+num_gpu    : 1 # set num_gpu: 0 for cpu mode
+manual_seed: 10
+
+datasets:
+  train:
+    name         : lol_v1
+    type         : PairedImageDataset
+    dataroot_gt  : data/enhance/lol_v1/train/ref
+    dataroot_lq  : data/enhance/lol_v1/train/image
+    filename_tmpl: "{}"
+    io_backend   :
+      type: lmdb
+    gt_size : 256
+    use_flip: true
+    use_rot : true
+    # data loader
+    use_shuffle          : true
+    num_worker_per_gpu   : 8
+    batch_size_per_gpu   : 8
+    dataset_enlarge_ratio: 1
+    prefetch_mode        : ~
+
+  val:
+    name       : gopro-test
+    type       : PairedImageDataset
+    dataroot_gt: ./datasets/GoPro/test/target.lmdb
+    dataroot_lq: ./datasets/GoPro/test/input.lmdb
+    io_backend:
+      type: lmdb
