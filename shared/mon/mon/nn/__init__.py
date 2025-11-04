@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements neural network modules and models.
+"""Implements Neural Networks (NN).
+
+A neural network is a machine learning model that stacks simple "neurons" in
+layers and learns pattern-recognizing weights and biases from data to map inputs
+to outputs.
 
 Notes:
     - In this package, we follow the same coding conventions as PyTorch to

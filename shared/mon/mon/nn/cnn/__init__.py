@@ -1,7 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements convolutional neural networks."""
+"""Implements Convolutional Neural Networks (CNNs).
+
+Convolutional neural networks use three-dimensional data for image classification
+and object recognition tasks.
+
+References:
+    - https://www.ibm.com/think/topics/convolutional-neural-networks#763338459
+"""
 
 __all__ = [
     "AdaptiveAvgPool1d",

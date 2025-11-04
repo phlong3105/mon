@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements multilayer perceptron (mlp)."""
+"""Implements MultiLayer Perceptron (MLP)."""
 
 __all__ = [
     "Bilinear",

@@ -1,7 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements loss functions."""
+"""Implements loss functions.
+
+In machine learning (ML), a loss function is used to measure model performance
+by calculating the deviation of a model’s predictions from the correct,
+“ground truth” predictions. Optimizing a model entails adjusting model parameters
+to minimize the output of some loss function.
+
+References:
+    - https://www.ibm.com/think/topics/loss-function#1580786328
+"""
 
 __all__ = [
     "BCELoss",

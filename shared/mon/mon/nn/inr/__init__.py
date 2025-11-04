@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Implicit Neural Representations MLPs."""
+"""Implements Implicit Neural Representations (INRs) MLPs."""
 
 __all__ = [
     # Layer

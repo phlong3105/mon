@@ -25,7 +25,8 @@ console.log(f"`mon` loaded in: {__end - __start:.4f} seconds.")
 def dev(verbose: bool = True):
     start = time.time()
     
-    import mon.cv  # Register vision models
+    import mon.cv     # Register vision models
+    import mon.genai
     
     end = time.time()
     if verbose:
