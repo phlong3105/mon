@@ -11,9 +11,9 @@ __all__ = [
 
 import abc
 
+import albumentations as A
 import cv2
 
-import mon.core.albumentations as A
 from mon.constants import SAVE_IMAGE_EXT
 from mon.core.console import log
 from mon.core.dtypes.video import Frame

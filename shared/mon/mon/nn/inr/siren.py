@@ -18,7 +18,8 @@ __all__ = [
 import numpy as np
 import torch
 import torch.nn as nn
-from mon.core.nn.modules.linear import DepthAwareLinear
+
+from mon.nn.mlp.linear import DepthAwareLinear
 
 
 # ----- Layer -----

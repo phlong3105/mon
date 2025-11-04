@@ -15,7 +15,6 @@ import box
 import numpy as np
 import torch
 
-import mon.core.albumentations as A
 from mon.core.dtypes.image import Image
 from mon.core.enum import Split
 from mon.core.pathlib import Path
