@@ -7,10 +7,10 @@ __all__ = [
 
 import torch
 
-from mon.core import nn
+from mon.training import losses
 
 
-class PiecewiseNonReferenceLoss(nn.BaseLoss):
+class PiecewiseNonReferenceLoss(losses.BaseLoss):
     
     def __init__(
         self,

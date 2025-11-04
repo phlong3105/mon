@@ -13,11 +13,12 @@ __all__ = [
 import torch
 from torchvision.models.vgg import vgg16
 
-from mon.core import nn
-from mon.core.nn import functional as F
+import mon.nn as nn
+from mon.nn import functional as F
+from mon.training import losses
 
 
-class L_col(nn.BaseLoss):
+class L_col(losses.BaseLoss):
 
     def __init__(self):
         super().__init__()
@@ -32,7 +33,7 @@ class L_col(nn.BaseLoss):
         return k
 
 			
-class L_spa(nn.BaseLoss):
+class L_spa(losses.BaseLoss):
 
     def __init__(self):
         super().__init__()
@@ -73,7 +74,7 @@ class L_spa(nn.BaseLoss):
         return E
     
     
-class L_exp(nn.BaseLoss):
+class L_exp(losses.BaseLoss):
 
     def __init__(self, patch_size: int, mean_val: float):
         super().__init__()
@@ -87,7 +88,7 @@ class L_exp(nn.BaseLoss):
         return d
       
         
-class L_tv(nn.BaseLoss):
+class L_tv(losses.BaseLoss):
     
     def __init__(self):
         super().__init__()
@@ -101,7 +102,7 @@ class L_tv(nn.BaseLoss):
         return 2 * (h_tv / count_h + w_tv / count_w) / b
     
     
-class L_sa(nn.BaseLoss):
+class L_sa(losses.BaseLoss):
     
     def __init__(self):
         super().__init__()
@@ -121,7 +122,7 @@ class L_sa(nn.BaseLoss):
         return k
 
 
-class L_per(nn.BaseLoss):
+class L_per(losses.BaseLoss):
     
     def __init__(self):
         super().__init__()

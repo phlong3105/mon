@@ -20,7 +20,7 @@ import yaml
 import lightendiffusion
 import mon
 from mon import albumentations as A
-from mon.core.nn import functional as F
+from mon.nn import functional as F
 
 mon.dev()
 
@@ -78,7 +78,7 @@ def predict(args: dict | box.Box) -> str:
 
     # Benchmark
     if args.benchmark:
-        mon.nn.benchmark(diffusion.model)
+        mon.metrics.benchmark(diffusion.model)
     
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)

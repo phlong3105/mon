@@ -49,7 +49,7 @@ def predict(args: dict | box.Box) -> str:
     
     # Benchmark
     if args.benchmark:
-        mon.nn.benchmark(model)
+        mon.metrics.benchmark(model)
     
     # Optimizer
     optimizer = mon.nn.AdamW(model.parameters(), **args.optimizer)

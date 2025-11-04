@@ -23,9 +23,11 @@ import torch
 from PIL import Image
 from torch.autograd import Variable
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import get_model_device, log, MLType, nn, Path, Task
-from mon.core.nn import functional as F
+from mon.core import get_model_device, log, MLType, Path, Task
+from mon.nn import functional as F
+from mon.training import optims
 from .module import (
     calculate_efficiency_score_decomnet,
     calculate_efficiency_score_enhancenet,
@@ -212,8 +214,8 @@ class RetinexNet(nn.Module):
         numBatch = len(train_low_data_names) // int(batch_size)
 
         # Create the optimizers
-        self.train_op_Decom   = nn.Adam(self.DecomNet.parameters(), lr=lr[0], betas=(0.9, 0.999))
-        self.train_op_Relight = nn.Adam(self.RelightNet.parameters(), lr=lr[0], betas=(0.9, 0.999))
+        self.train_op_Decom   = optims.Adam(self.DecomNet.parameters(),   lr=lr[0], betas=(0.9, 0.999))
+        self.train_op_Relight = optims.Adam(self.RelightNet.parameters(), lr=lr[0], betas=(0.9, 0.999))
 
         # Initialize a network if its checkpoint is available
         self.train_phase = train_phase

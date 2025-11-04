@@ -14,8 +14,8 @@ from typing import Any
 
 import torch
 
-from mon.core import nn
-from mon.core.nn.modules.inr.utils import *
+import mon.nn as nn
+from mon.nn.inr.utils import *
 
 
 # ----- Utils -----

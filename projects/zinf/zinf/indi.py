@@ -10,8 +10,9 @@ __all__ = [
 import random
 
 import torch
-import torch.nn as nn
 from tqdm import tqdm
+
+import mon.nn as nn
 
 
 def indi_noise(

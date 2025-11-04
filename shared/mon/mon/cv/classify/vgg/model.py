@@ -25,14 +25,16 @@ import box
 from torchvision import models as tvm
 from torchvision.models.vgg import cfgs, make_layers
 
+import mon.nn as nn
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-class VGG(tvm.VGG, ModelMixin, abc.ABC):
+class VGG(tvm.VGG, nn.ModelMixin, abc.ABC):
     """VGG model for image classification.
 
     References:

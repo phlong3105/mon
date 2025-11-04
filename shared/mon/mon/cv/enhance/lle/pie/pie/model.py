@@ -17,8 +17,9 @@ import box
 import cv2
 import numpy as np
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
 from .module import *
 
 current_file = Path(__file__).absolute()
@@ -46,7 +47,7 @@ def PIE(src):
 
 
 @MODELS.register(name="pie", arch="pie")
-class PIE(nn.Module, ModelMixin):
+class PIE(nn.Module, nn.ModelMixin):
     """PIE model for low-light image enhancement.
     
     References:

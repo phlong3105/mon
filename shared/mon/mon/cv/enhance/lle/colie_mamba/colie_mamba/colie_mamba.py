@@ -16,8 +16,10 @@ import box
 import kornia
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
+from mon.training import optims
 from . import loss as L
 from .siren_mamba import *
 from .utils import *
@@ -27,7 +29,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="colie_mamba", arch="colie_mamba")
-class CoLIEMamba(nn.Module, ModelMixin):
+class CoLIEMamba(nn.Module, nn.ModelMixin):
     """CoLIE-Mamba model for low-light image enhancement.
 
     References:
@@ -79,8 +81,8 @@ class CoLIEMamba(nn.Module, ModelMixin):
         # Optimize
         self.model.load_state_dict(self.state_dict)
         self.model.train()
-        optimizer = nn.Adam(self.model.parameters(), lr=2e-4, betas=(0.9, 0.999), weight_decay=3e-4)
-        scheduler = nn.CosineAnnealingLR(optimizer, T_max=self.iters, eta_min=1e-6)
+        optimizer = optims.Adam(self.model.parameters(), lr=2e-4, betas=(0.9, 0.999), weight_decay=3e-4)
+        scheduler = optims.CosineAnnealingLR(optimizer, T_max=self.iters, eta_min=1e-6)
         L_exp     = L.L_exp(16, self.L).to(device)
         L_tv      = L.L_tv().to(device)
         L_tex     = L.L_texture().to(device)

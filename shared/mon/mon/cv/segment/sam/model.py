@@ -21,17 +21,18 @@ __all__ = [
 from typing import Any
 
 import box
-
-from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
 from ultralytics import SAM as SAM_
+
+import mon.nn as nn
+from mon.constants import MODELS, ROOT_DIR
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
 # ----- SAM -----
-class SAM(SAM_, ModelMixin):
+class SAM(SAM_, nn.ModelMixin):
     """Ultralytics SAM model for segmentation.
     
     References:
@@ -51,7 +52,7 @@ class SAM(SAM_, ModelMixin):
 
 
 @MODELS.register(name="sam_b", arch="sam")
-class SAM_B(SAM, ModelMixin):
+class SAM_B(SAM):
     
     arch: str  = "sam"
     name: str  = "sam_b"
@@ -65,7 +66,7 @@ class SAM_B(SAM, ModelMixin):
 
 
 @MODELS.register(name="sam_l", arch="sam")
-class SAM_L(SAM, ModelMixin):
+class SAM_L(SAM):
     
     arch: str  = "sam"
     name: str  = "sam_l"
@@ -79,7 +80,7 @@ class SAM_L(SAM, ModelMixin):
 
 
 # ----- SAM2 -----
-class SAM2(SAM_, ModelMixin):
+class SAM2(SAM_, nn.ModelMixin):
     
     arch: str  = "sam2"
     name: str  = "sam2"
@@ -91,7 +92,7 @@ class SAM2(SAM_, ModelMixin):
 
 
 @MODELS.register(name="sam2_t", arch="sam2")
-class SAM2_T(SAM, ModelMixin):
+class SAM2_T(SAM):
     
     arch: str  = "sam2"
     name: str  = "sam2_t"
@@ -105,7 +106,7 @@ class SAM2_T(SAM, ModelMixin):
     
 
 @MODELS.register(name="sam2_s", arch="sam2")
-class SAM2_S(SAM, ModelMixin):
+class SAM2_S(SAM):
     
     arch: str  = "sam2"
     name: str  = "sam2_s"
@@ -119,7 +120,7 @@ class SAM2_S(SAM, ModelMixin):
     
     
 @MODELS.register(name="sam2_b", arch="sam2")
-class SAM2_B(SAM, ModelMixin):
+class SAM2_B(SAM):
     
     arch: str  = "sam2"
     name: str  = "sam2_b"
@@ -133,7 +134,7 @@ class SAM2_B(SAM, ModelMixin):
 
 
 @MODELS.register(name="sam2_l", arch="sam2")
-class SAM2_L(SAM, ModelMixin):
+class SAM2_L(SAM):
     
     arch: str  = "sam2"
     name: str  = "sam2_l"

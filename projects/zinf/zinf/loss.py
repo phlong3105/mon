@@ -9,10 +9,11 @@ from typing import Literal
 
 import torch
 
-from mon.core import log, nn
+from mon.core import log
+from mon.training import losses
 
 
-class Loss(nn.BaseLoss):
+class Loss(losses.BaseLoss):
     
     def __init__(
         self,
@@ -34,14 +35,14 @@ class Loss(nn.BaseLoss):
         self.loss_w_de  = loss_w_de
         self.verbose    = verbose
 
-        self.loss_e     = nn.ExposureValueControlLoss(
+        self.loss_e     = losses.ExposureValueControlLoss(
             patch_size    = 16,
             mean_val      = loss_e_mean,
             required_grad = required_grad,
             reduction     = reduction
         )
-        self.loss_tv    = nn.TotalVariationLoss(reduction=reduction)
-        self.loss_depth = nn.DepthAwareIlluminationLoss(reduction=reduction)
+        self.loss_tv    = losses.TotalVariationLoss(reduction=reduction)
+        self.loss_depth = losses.DepthAwareIlluminationLoss(reduction=reduction)
 
     def forward(
         self,

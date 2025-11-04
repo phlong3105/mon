@@ -19,8 +19,9 @@ import box
 import numpy as np
 from onnxruntime import InferenceSession
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, Path, Task, nn
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]

@@ -49,7 +49,7 @@ def train(args: dict | box.Box) -> str:
     model.train()
     
     # Optimizer
-    optimizer = mon.nn.Adam(model.parameters(), **args.optimizer)
+    optimizer = mon.optims.Adam(model.parameters(), **args.optimizer)
     
     # Loss
     L_piece = zerodidce.PiecewiseNonReferenceLoss().to(device)

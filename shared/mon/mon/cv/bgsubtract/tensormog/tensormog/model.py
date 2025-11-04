@@ -14,8 +14,10 @@ __all__ = [
 
 import torch
 
+import mon.nn as nn
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import Enum, MLType, ModelMixin, nn, Path, Task
+from mon.core import Enum, MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
@@ -349,7 +351,7 @@ class HVR:
 
 # ----- Model -----
 @MODELS.register(name="tensormog", arch="tensormog")
-class TensorMOG(nn.Module, ModelMixin):
+class TensorMOG(nn.Module, nn.ModelMixin):
     """TensorMoG model for background subtraction.
 
     Args:

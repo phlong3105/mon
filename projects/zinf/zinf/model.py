@@ -17,9 +17,11 @@ import box
 import kornia.color
 import torch
 
+import mon.nn as nn
+from mon.training import optims, losses
 from mon.constants import MODELS
-from mon.core import image as I, MLType, ModelMixin, nn, Path, Task
-from mon.core.nn.modules.inr.utils import *
+from mon.core import image as I, MLType, Path, Task
+from mon.nn.inr.utils import *
 from .inr import (
     InDi_SIREN,
     InDi_SIREN_D,
@@ -42,7 +44,7 @@ INRS         = {
 
 
 @MODELS.register(name="zinf", arch="zinf")
-class ZINF(nn.Module, ModelMixin):
+class ZINF(nn.Module, nn.ModelMixin):
     """ZINF model for low-light image enhancement."""
     
     arch     : str          = "zinf"
@@ -137,11 +139,11 @@ class ZINF(nn.Module, ModelMixin):
         self.model.load_state_dict(self.state_dict)
         self.model.train()
         if self.training == "lbfgs":
-            optimizer = nn.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
+            optimizer = optims.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
         else:
-            optimizer = nn.Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
-        L_exp = nn.ExposureValueControlLoss(16, self.L, channel_mean=True).to(device)
-        L_tv  = nn.TotalVariationLoss().to(device)
+            optimizer = optims.Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
+        L_exp = losses.ExposureValueControlLoss(16, self.L, channel_mean=True).to(device)
+        L_tv  = losses.TotalVariationLoss().to(device)
         # L_tex = nn.StructureTextureDecompositionLoss().to(device)
         
         for i in range(self.iters):
@@ -194,9 +196,9 @@ class ZINF(nn.Module, ModelMixin):
         # Optimize
         self.model.load_state_dict(self.state_dict)
         self.model.train()
-        optimizer = nn.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
-        L_exp     = nn.ExposureControlLoss(16, self.L, channel_mean=True).to(device)
-        L_tv      = nn.TotalVariationLoss().to(device)
+        optimizer = optims.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
+        L_exp     = losses.ExposureControlLoss(16, self.L, channel_mean=True).to(device)
+        L_tv      = losses.TotalVariationLoss().to(device)
         for i in range(self.iters):
             
             def closure():
@@ -228,9 +230,9 @@ class ZINF(nn.Module, ModelMixin):
         # Optimize
         self.model.load_state_dict(self.state_dict)
         self.model.train()
-        optimizer = nn.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
-        L_exp     = nn.ExposureControlLoss(16, self.L, channel_mean=True).to(device)
-        L_tv      = nn.TotalVariationLoss().to(device)
+        optimizer = optims.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
+        L_exp     = losses.ExposureControlLoss(16, self.L, channel_mean=True).to(device)
+        L_tv      = losses.TotalVariationLoss().to(device)
         for i in range(self.iters):
             
             def closure():
@@ -280,11 +282,11 @@ class ZINF(nn.Module, ModelMixin):
         self.model.load_state_dict(self.state_dict)
         self.model.train()
         if self.training == "lbfgs":
-            optimizer = nn.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
+            optimizer = optims.LBFGS(self.model.parameters(), lr=1, max_iter=4, history_size=10, line_search_fn="strong_wolfe")
         else:
-            optimizer = nn.Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
-        L_exp = nn.ExposureValueControlLoss(16, self.L, channel_mean=True).to(device)
-        L_tv  = nn.TotalVariationLoss().to(device)
+            optimizer = optims.Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
+        L_exp = losses.ExposureValueControlLoss(16, self.L, channel_mean=True).to(device)
+        L_tv  = losses.TotalVariationLoss().to(device)
         # L_tex = nn.StructureTextureDecompositionLoss().to(device)
         
         for i in range(self.iters):

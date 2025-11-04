@@ -115,7 +115,7 @@ def predict(args: dict | box.Box) -> str:
             model.enhance.out_conv.apply(model.enhance_weights_init)
             model = model.to(device)
             model.train()
-            optimizer = mon.nn.Adam(model.parameters(), **args.optimizer)
+            optimizer = mon.optims.Adam(model.parameters(), **args.optimizer)
             input     = Variable(image, requires_grad=False).to(device)
             for _ in range(args.epochs):
                 optimizer.zero_grad()

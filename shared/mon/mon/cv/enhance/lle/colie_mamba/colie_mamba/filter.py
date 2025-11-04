@@ -4,8 +4,8 @@
 import torch
 from torch.autograd import Variable
 
-from mon.core import nn
-from mon.core.nn import functional as F
+import mon.nn as nn
+from mon.nn import functional as F
 
 
 def diff_x(input, r):

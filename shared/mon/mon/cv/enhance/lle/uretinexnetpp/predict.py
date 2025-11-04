@@ -66,7 +66,7 @@ def predict(args: dict | box.Box) -> str:
     
     # Benchmark
     if args.benchmark:
-        mon.nn.benchmark(model)
+        mon.metrics.benchmark(model)
     
     # Data I/O
     data_name, dataset = mon.data.build_dataset(args.data, args.root)

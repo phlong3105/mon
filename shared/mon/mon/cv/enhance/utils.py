@@ -9,7 +9,7 @@ __all__ = [
 
 import torch
 
-from mon.core import nn
+from mon.training import metrics
 
 
 # ----- Pseudo-GT Image Generator -----
@@ -33,7 +33,7 @@ class PseudoGTGenerator:
         self.number_refs = number_refs
         self.gamma_upper = gamma_upper
         self.gamma_lower = gamma_lower
-        self.iqa         = nn.ImageQualityAssessment(exposed_level=exposed_level, pool_size=pool_size)
+        self.iqa         = metrics.ImageQualityAssessment(exposed_level=exposed_level, pool_size=pool_size)
     
     def __call__(self, image: torch.Tensor, prev_output: torch.Tensor = None) -> torch.Tensor:
         b, c, h, w          = image.shape

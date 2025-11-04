@@ -3,9 +3,8 @@
 
 """Implements image restoration algorithms and models.
 
-Image restoration, on the other hand, is the process of recovering or restoring
-an image that has been degraded or damaged due to various factors such as noise,
-blur, or compression.
+Image restoration is the process of recovering or restoring an image that has
+been degraded or damaged due to various factors such as noise, blur, or compression.
 
 The goal of image restoration is to recover the original image as closely as
 possible, by removing or minimizing the effects of degradation.

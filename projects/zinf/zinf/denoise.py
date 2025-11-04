@@ -7,7 +7,7 @@ __all__ = [
 
 import torch
 
-from mon.core import nn
+import mon.nn as nn
 
 
 class Denoise(nn.Module):

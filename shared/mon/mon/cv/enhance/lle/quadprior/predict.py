@@ -21,7 +21,7 @@ import torch.utils
 from pytorch_lightning import seed_everything
 
 import mon
-from mon.core import nn
+import mon.nn as nn
 from quadprior import (
     create_model, DPMSolverSampler, HWC3, load_state_dict, resize_image,
 )
@@ -34,7 +34,7 @@ root_dir     = current_file.parents[0]
 
 # ----- Utils -----
 def benchmark(model: nn.Module):
-    params, macs, flops = mon.nn.compute_model_stats(model=model)
+    params, macs, flops = mon.metrics.compute_model_stats(model=model)
     mon.log(f"Params    : {params:.4f}")
     mon.log(f"MACs      : {macs:.4f}")
     mon.log(f"FLOPs     : {flops:.4f}")

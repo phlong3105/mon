@@ -20,8 +20,9 @@ import box
 import torch
 from thop import profile
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import image as I, MLType, ModelMixin, Path, Task
+from mon.core import image as I, MLType, Path, Task
 from .data.util import read_img
 from .models.enhancement_model import enhancement_model
 from .option import options as option
@@ -32,7 +33,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="fourllie", arch="fourllie")
-class FourLLIE(enhancement_model, ModelMixin):
+class FourLLIE(enhancement_model, nn.ModelMixin):
     """FourLLIE model for low-light image enhancement.
     
     References:

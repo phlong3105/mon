@@ -16,8 +16,9 @@ __all__ = [
 import box
 import numpy as np
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .module import (
     correct_underexposure,
     create_spacial_affinity_kernel,
@@ -29,7 +30,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="lime", arch="lime")
-class LIME(ModelMixin):
+class LIME(nn.ModelMixin):
     """LIME model for low-light image enhancement.
 
     Args:

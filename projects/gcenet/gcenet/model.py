@@ -14,10 +14,11 @@ from typing import Any
 import box
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import image as I, MLType, ModelMixin, nn, Path, Task
-from mon.core.nn import functional as F
+from mon.core import image as I, MLType, Path, Task
 from mon.cv.enhance.mef import mertens_cv2
+from mon.nn import functional as F
 from .network import *
 
 current_file = Path(__file__).absolute()
@@ -26,7 +27,7 @@ current_dir  = current_file.parents[0]
 
 # ----- Baseline -----
 @MODELS.register(name="gcenet_baseline", arch="gcenet")
-class GCENet_Baseline(nn.Module, ModelMixin):
+class GCENet_Baseline(nn.Module, nn.ModelMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
     arch     : str          = "gcenet"

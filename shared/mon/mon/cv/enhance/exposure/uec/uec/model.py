@@ -17,8 +17,9 @@ from typing import Any
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .models.uec_model import UECModel
 
 current_file = Path(__file__).absolute()
@@ -26,7 +27,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="uec", arch="uec")
-class UEC(UECModel, ModelMixin):
+class UEC(UECModel, nn.ModelMixin):
     """UEC model for unsupervised exposure correction.
     
     References:

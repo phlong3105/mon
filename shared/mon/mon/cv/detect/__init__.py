@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements object detection algorithms."""
+"""Implements object detection (detect) algorithms."""
 
 from .deim import *
 from .dfine import *

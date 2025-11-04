@@ -17,8 +17,9 @@ from typing import Any
 import box
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
 from .module import c_net, g_net, r_net
 
 current_file = Path(__file__).absolute()
@@ -27,7 +28,7 @@ root_dir     = current_file.parents[1]
 
 # ----- Model -----
 @MODELS.register(name="dccnet", arch="dccnet")
-class DCCNet(nn.Module, ModelMixin):
+class DCCNet(nn.Module, nn.ModelMixin):
     """DCC-Net model for low-light image enhancement.
 
     References:

@@ -18,9 +18,10 @@ from typing import Any
 import box
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, nn, Path, Task
-from mon.core.nn import functional as F
+from mon.core import MLType, Path, Task
+from mon.nn import functional as F
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
@@ -66,7 +67,7 @@ class DSConv(nn.Module):
 
 # ----- Model -----
 @MODELS.register(name="zerodce++", arch="zerodce++")
-class ZeroDCEpp(nn.Module, ModelMixin):
+class ZeroDCEpp(nn.Module, nn.ModelMixin):
     """Zero-DCE++ model for low-light image enhancement.
     
     References:

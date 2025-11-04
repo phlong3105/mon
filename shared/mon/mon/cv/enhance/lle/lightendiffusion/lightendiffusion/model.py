@@ -15,8 +15,9 @@ __all__ = [
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .models import DenoisingDiffusion
 
 current_file = Path(__file__).absolute()
@@ -24,7 +25,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="lightendiffusion", arch="lightendiffusion")
-class LightenDiffusion(DenoisingDiffusion, ModelMixin):
+class LightenDiffusion(DenoisingDiffusion, nn.ModelMixin):
     """LightenDiffusion model for low-light image enhancement.
     
     References:

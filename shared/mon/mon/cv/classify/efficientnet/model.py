@@ -29,14 +29,16 @@ import box
 from torchvision import models as tvm
 from torchvision.models.efficientnet import _efficientnet_conf
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
+import mon.nn as nn
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-class EfficientNet(tvm.EfficientNet, ModelMixin, abc.ABC):
+class EfficientNet(tvm.EfficientNet, nn.ModelMixin, abc.ABC):
     """EfficientNet model for image classification.
 
     References:

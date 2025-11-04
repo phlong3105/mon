@@ -14,9 +14,10 @@ from typing import Any
 import box
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import image as I, MLType, ModelMixin, nn, Path, Task
-from mon.core.nn import functional as F
+from mon.core import image as I, MLType,Path, Task
+from mon.nn import functional as F
 from mon.cv.enhance.mef import mertens_cv2
 from .network import *
 
@@ -26,7 +27,7 @@ current_dir  = current_file.parents[0]
 
 # ----- Baseline -----
 @MODELS.register(name="gcenet_baseline", arch="gcenet")
-class GCENet_Baseline(nn.Module, ModelMixin):
+class GCENet_Baseline(nn.Module, nn.ModelMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
     arch     : str          = "gcenet"
@@ -101,7 +102,7 @@ class GCENet_Baseline(nn.Module, ModelMixin):
 
 # ----- Main Model -----
 @MODELS.register(name="gcenet", arch="gcenet")
-class GCENet(nn.Module, ModelMixin):
+class GCENet(nn.Module, nn.ModelMixin):
     
     arch     : str          = "gcenet"
     name     : str          = "gcenet"
@@ -218,7 +219,7 @@ class GCENet(nn.Module, ModelMixin):
 
 # ----- Variants -----
 #@MODELS.register(name="gcenet_pono", arch="gcenet")
-class GCENet_PONO(nn.Module, ModelMixin):
+class GCENet_PONO(nn.Module, nn.ModelMixin):
     """GCE-Net with Positional Normalization (PONO) and Moment Shortcut (MS)."""
     
     arch     : str          = "gcenet"
@@ -306,7 +307,7 @@ class GCENet_PONO(nn.Module, ModelMixin):
 
 
 #@MODELS.register(name="gcenet_bam", arch="gcenet")
-class GCENet_BAM(nn.Module, ModelMixin):
+class GCENet_BAM(nn.Module, nn.ModelMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
     arch     : str          = "gcenet"
@@ -380,7 +381,7 @@ class GCENet_BAM(nn.Module, ModelMixin):
 
 
 #@MODELS.register(name="gcenet_pono_bam", arch="gcenet")
-class GCENet_PONO_BAM(nn.Module, ModelMixin):
+class GCENet_PONO_BAM(nn.Module, nn.ModelMixin):
     """GCE-Net with Positional Normalization (PONO) and Moment Shortcut (MS)."""
     
     arch     : str          = "gcenet"
@@ -470,7 +471,7 @@ class GCENet_PONO_BAM(nn.Module, ModelMixin):
 
 
 #@MODELS.register(name="gcenet_depth", arch="gcenet")
-class GCENet_Depth(nn.Module, ModelMixin):
+class GCENet_Depth(nn.Module, nn.ModelMixin):
     """GCE-Net model for low-light image enhancement."""
     
     arch     : str          = "gcenet"

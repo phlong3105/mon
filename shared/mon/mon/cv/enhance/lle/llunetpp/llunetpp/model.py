@@ -17,8 +17,9 @@ from typing import Any
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .module import NestedUNet
 
 current_file = Path(__file__).absolute()
@@ -26,7 +27,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="llunet++", arch="llunet++")
-class LLUnetPP(NestedUNet, ModelMixin):
+class LLUnetPP(NestedUNet, nn.ModelMixin):
     """LL-UNet++ model for low-light image enhancement.
     
     References:

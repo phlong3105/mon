@@ -16,8 +16,9 @@ __all__ = [
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .network import Finetunemodel, Network
 
 current_file = Path(__file__).absolute()
@@ -25,7 +26,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="zeroig", arch="zeroig")
-class ZERO_IG(Network, ModelMixin):
+class ZERO_IG(Network, nn.ModelMixin):
     """ZERO-IG model for low-light image enhancement.
     
     References:

@@ -31,7 +31,7 @@ root_dir     = current_file.parents[0]
 
 # ----- Utils -----
 def benchmark(model: torch.nn.Module, imgsz: tuple[int, int]):
-    params, macs, flops = mon.nn.compute_model_stats(model=model, imgsz=imgsz)
+    params, macs, flops = mon.metrics.compute_model_stats(model=model, imgsz=imgsz)
     mon.log(f"Params    : {params:.4f}")
     mon.log(f"MACs      : {macs:.4f}")
     mon.log(f"FLOPs     : {flops:.4f}")

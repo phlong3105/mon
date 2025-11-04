@@ -4,7 +4,6 @@
 """This script visualizes bounding boxes on images."""
 
 import cv2
-import numpy as np
 
 import mon
 

@@ -46,17 +46,19 @@ __all__ = [
 from typing import Any
 
 import box
-
-from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
 from ultralytics import YOLO
+
+import mon.nn as nn
+import mon.nn as nn
+from mon.constants import MODELS, ROOT_DIR
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
 # ----- YOLOv11 -----
-class YOLOv11(YOLO, ModelMixin):
+class YOLOv11(YOLO, nn.ModelMixin):
     """Ultralytics YOLOs model for object detection.
     
     References:
@@ -76,7 +78,7 @@ class YOLOv11(YOLO, ModelMixin):
         
 
 @MODELS.register(name="yolov11n", arch="yolov11")
-class YOLOv11n(YOLOv11, ModelMixin):
+class YOLOv11n(YOLOv11):
     
     name: str  = "yolov11n"
     zoo : dict = box.Box({
@@ -94,7 +96,7 @@ class YOLOv11n(YOLOv11, ModelMixin):
     
 
 @MODELS.register(name="yolov11s", arch="yolov11")
-class YOLOv11s(YOLOv11, ModelMixin):
+class YOLOv11s(YOLOv11):
     
     name: str  = "yolov11s"
     zoo : dict = box.Box({
@@ -112,7 +114,7 @@ class YOLOv11s(YOLOv11, ModelMixin):
 
 
 @MODELS.register(name="yolov11m", arch="yolov11")
-class YOLOv11m(YOLOv11, ModelMixin):
+class YOLOv11m(YOLOv11):
     
     name: str  = "yolov11m"
     zoo : dict = box.Box({
@@ -125,7 +127,7 @@ class YOLOv11m(YOLOv11, ModelMixin):
 
 
 @MODELS.register(name="yolov11l", arch="yolov11")
-class YOLOv11l(YOLOv11, ModelMixin):
+class YOLOv11l(YOLOv11):
     
     name: str  = "yolov11l"
     zoo : dict = box.Box({
@@ -138,7 +140,7 @@ class YOLOv11l(YOLOv11, ModelMixin):
 
 
 @MODELS.register(name="yolov11x", arch="yolov11")
-class YOLOv11x(YOLOv11, ModelMixin):
+class YOLOv11x(YOLOv11):
     
     name: str  = "yolov11x"
     zoo : dict = box.Box({
@@ -151,7 +153,7 @@ class YOLOv11x(YOLOv11, ModelMixin):
 
 
 # ----- YOLOv11-OBB -----
-class YOLOv11_OBB(YOLO, ModelMixin):
+class YOLOv11_OBB(YOLO, nn.ModelMixin):
     """Ultralytics YOLOs model for orientation bounding box detection.
     
     References:
@@ -171,7 +173,7 @@ class YOLOv11_OBB(YOLO, ModelMixin):
         
         
 @MODELS.register(name="yolov11n_obb", arch="yolov11_obb")
-class YOLOv11n_OBB(YOLOv11_OBB, ModelMixin):
+class YOLOv11n_OBB(YOLOv11_OBB):
     
     name: str  = "yolov11n_obb"
     zoo : dict = box.Box({
@@ -184,7 +186,7 @@ class YOLOv11n_OBB(YOLOv11_OBB, ModelMixin):
 
 
 @MODELS.register(name="yolov11s_obb", arch="yolov11_obb")
-class YOLOv11s_OBB(YOLOv11_OBB, ModelMixin):
+class YOLOv11s_OBB(YOLOv11_OBB):
     
     name: str  = "yolov11s_obb"
     zoo : dict = box.Box({
@@ -197,7 +199,7 @@ class YOLOv11s_OBB(YOLOv11_OBB, ModelMixin):
 
 
 @MODELS.register(name="yolov11m_obb", arch="yolov11_obb")
-class YOLOv11m_OBB(YOLOv11_OBB, ModelMixin):
+class YOLOv11m_OBB(YOLOv11_OBB):
     
     name: str  = "yolov11m_obb"
     zoo : dict = box.Box({
@@ -210,7 +212,7 @@ class YOLOv11m_OBB(YOLOv11_OBB, ModelMixin):
 
 
 @MODELS.register(name="yolov11l_obb", arch="yolov11_obb")
-class YOLOv11l_OBB(YOLOv11_OBB, ModelMixin):
+class YOLOv11l_OBB(YOLOv11_OBB):
     
     name: str  = "yolov11l_obb"
     zoo : dict = box.Box({
@@ -223,7 +225,7 @@ class YOLOv11l_OBB(YOLOv11_OBB, ModelMixin):
 
 
 @MODELS.register(name="yolov11x_obb", arch="yolov11_obb")
-class YOLOv11x_OBB(YOLOv11_OBB, ModelMixin):
+class YOLOv11x_OBB(YOLOv11_OBB):
     
     name: str  = "yolov11x_obb"
     zoo : dict = box.Box({
@@ -236,7 +238,7 @@ class YOLOv11x_OBB(YOLOv11_OBB, ModelMixin):
 
 
 # ----- YOLOv11-SEG -----
-class YOLOv11_SEG(YOLO, ModelMixin):
+class YOLOv11_SEG(YOLO, nn.ModelMixin):
     """Ultralytics YOLOs model for segmentation.
     
     References:
@@ -256,7 +258,7 @@ class YOLOv11_SEG(YOLO, ModelMixin):
         
         
 @MODELS.register(name="yolov11n_seg", arch="yolov11_seg")
-class YOLOv11n_SEG(YOLOv11_SEG, ModelMixin):
+class YOLOv11n_SEG(YOLOv11_SEG):
     
     name: str  = "yolov11n_seg"
     zoo : dict = box.Box({
@@ -269,7 +271,7 @@ class YOLOv11n_SEG(YOLOv11_SEG, ModelMixin):
 
 
 @MODELS.register(name="yolov11s_seg", arch="yolov11_seg")
-class YOLOv11s_SEG(YOLOv11_SEG, ModelMixin):
+class YOLOv11s_SEG(YOLOv11_SEG):
     
     name: str  = "yolov11s_seg"
     zoo : dict = box.Box({
@@ -282,7 +284,7 @@ class YOLOv11s_SEG(YOLOv11_SEG, ModelMixin):
     
     
 @MODELS.register(name="yolov11m_seg", arch="yolov11_seg")
-class YOLOv11m_SEG(YOLOv11_SEG, ModelMixin):
+class YOLOv11m_SEG(YOLOv11_SEG):
     
     name: str  = "yolov11m_seg"
     zoo : dict = box.Box({
@@ -295,7 +297,7 @@ class YOLOv11m_SEG(YOLOv11_SEG, ModelMixin):
 
 
 @MODELS.register(name="yolov11l_seg", arch="yolov11_seg")
-class YOLOv11l_SEG(YOLOv11_SEG, ModelMixin):
+class YOLOv11l_SEG(YOLOv11_SEG):
     
     name: str  = "yolov11l_seg"
     zoo : dict = box.Box({
@@ -308,7 +310,7 @@ class YOLOv11l_SEG(YOLOv11_SEG, ModelMixin):
 
 
 @MODELS.register(name="yolov11x_seg", arch="yolov11_seg")
-class YOLOv11x_SEG(YOLOv11_SEG, ModelMixin):
+class YOLOv11x_SEG(YOLOv11_SEG):
     
     name: str  = "yolov11l_seg"
     zoo : dict = box.Box({
@@ -321,7 +323,7 @@ class YOLOv11x_SEG(YOLOv11_SEG, ModelMixin):
 
 
 # ----- YOLOv11-CLS -----
-class YOLOv11_CLS(YOLO, ModelMixin):
+class YOLOv11_CLS(YOLO, nn.ModelMixin):
     """Ultralytics YOLOs model for classification.
     
     References:
@@ -341,7 +343,7 @@ class YOLOv11_CLS(YOLO, ModelMixin):
         
         
 @MODELS.register(name="yolov11n_cls", arch="yolov11_cls")
-class YOLOv11n_CLS(YOLOv11_CLS, ModelMixin):
+class YOLOv11n_CLS(YOLOv11_CLS):
     
     name: str  = "yolov11n_cls"
     zoo : dict = box.Box({
@@ -354,7 +356,7 @@ class YOLOv11n_CLS(YOLOv11_CLS, ModelMixin):
 
 
 @MODELS.register(name="yolov11s_cls", arch="yolov11_cls")
-class YOLOv11s_CLS(YOLOv11_CLS, ModelMixin):
+class YOLOv11s_CLS(YOLOv11_CLS):
     
     name: str  = "yolov11s_cls"
     zoo : dict = box.Box({
@@ -367,7 +369,7 @@ class YOLOv11s_CLS(YOLOv11_CLS, ModelMixin):
 
 
 @MODELS.register(name="yolov11m_cls", arch="yolov11_cls")
-class YOLOv11m_CLS(YOLOv11_CLS, ModelMixin):
+class YOLOv11m_CLS(YOLOv11_CLS):
     
     name: str  = "yolov11m_cls"
     zoo : dict = box.Box({
@@ -380,7 +382,7 @@ class YOLOv11m_CLS(YOLOv11_CLS, ModelMixin):
 
 
 @MODELS.register(name="yolov11l_cls", arch="yolov11_cls")
-class YOLOv11l_CLS(YOLOv11_CLS, ModelMixin):
+class YOLOv11l_CLS(YOLOv11_CLS):
     
     name: str  = "yolov11l_cls"
     zoo : dict = box.Box({
@@ -393,7 +395,7 @@ class YOLOv11l_CLS(YOLOv11_CLS, ModelMixin):
 
 
 @MODELS.register(name="yolov11x_cls", arch="yolov11_cls")
-class YOLOv11x_CLS(YOLOv11_CLS, ModelMixin):
+class YOLOv11x_CLS(YOLOv11_CLS):
     
     name: str  = "yolov11x_cls"
     zoo : dict = box.Box({
@@ -406,7 +408,7 @@ class YOLOv11x_CLS(YOLOv11_CLS, ModelMixin):
 
 
 # ----- YOLOv11-POSE -----
-class YOLOv11_POSE(YOLO, ModelMixin):
+class YOLOv11_POSE(YOLO, nn.ModelMixin):
     """Ultralytics YOLOs model for pose estimation.
     
     References:
@@ -426,7 +428,7 @@ class YOLOv11_POSE(YOLO, ModelMixin):
         
         
 @MODELS.register(name="yolov11n_pose", arch="yolov11_pose")
-class YOLOv11n_POSE(YOLOv11_POSE, ModelMixin):
+class YOLOv11n_POSE(YOLOv11_POSE):
     
     name: str  = "yolov11n_pose"
     zoo : dict = box.Box({
@@ -439,7 +441,7 @@ class YOLOv11n_POSE(YOLOv11_POSE, ModelMixin):
 
 
 @MODELS.register(name="yolov11s_pose", arch="yolov11_pose")
-class YOLOv11s_POSE(YOLOv11_POSE, ModelMixin):
+class YOLOv11s_POSE(YOLOv11_POSE):
     
     name: str  = "yolov11s_pose"
     zoo : dict = box.Box({
@@ -452,7 +454,7 @@ class YOLOv11s_POSE(YOLOv11_POSE, ModelMixin):
 
 
 @MODELS.register(name="yolov11m_pose", arch="yolov11_pose")
-class YOLOv11m_POSE(YOLOv11_POSE, ModelMixin):
+class YOLOv11m_POSE(YOLOv11_POSE):
     
     name: str  = "yolov11m_pose"
     zoo : dict = box.Box({
@@ -465,7 +467,7 @@ class YOLOv11m_POSE(YOLOv11_POSE, ModelMixin):
 
 
 @MODELS.register(name="yolov11l_pose", arch="yolov11_pose")
-class YOLOv11l_POSE(YOLOv11_POSE, ModelMixin):
+class YOLOv11l_POSE(YOLOv11_POSE):
     
     name: str  = "yolov11l_pose"
     zoo : dict = box.Box({
@@ -478,7 +480,7 @@ class YOLOv11l_POSE(YOLOv11_POSE, ModelMixin):
     
 
 @MODELS.register(name="yolov11x_pose", arch="yolov11_pose")
-class YOLOv11x_POSE(YOLOv11_POSE, ModelMixin):
+class YOLOv11x_POSE(YOLOv11_POSE):
     
     name: str  = "yolov11x_pose"
     zoo : dict = box.Box({
@@ -491,7 +493,7 @@ class YOLOv11x_POSE(YOLOv11_POSE, ModelMixin):
 
 
 # ----- YOLOv12 -----
-class YOLOv12(YOLO, ModelMixin):
+class YOLOv12(YOLO, nn.ModelMixin):
     """Ultralytics YOLOs model for object detection.
     
     References:
@@ -511,7 +513,7 @@ class YOLOv12(YOLO, ModelMixin):
         
 
 @MODELS.register(name="yolov12n", arch="yolov12")
-class YOLOv12n(YOLOv12, ModelMixin):
+class YOLOv12n(YOLOv12):
     
     name: str  = "yolov12n"
     zoo : dict = box.Box({
@@ -524,7 +526,7 @@ class YOLOv12n(YOLOv12, ModelMixin):
     
 
 @MODELS.register(name="yolov12s", arch="yolov12")
-class YOLOv12s(YOLOv12, ModelMixin):
+class YOLOv12s(YOLOv12):
     
     name: str  = "yolov12s"
     zoo : dict = box.Box({
@@ -537,7 +539,7 @@ class YOLOv12s(YOLOv12, ModelMixin):
 
 
 @MODELS.register(name="yolov12m", arch="yolov12")
-class YOLOv12m(YOLOv12, ModelMixin):
+class YOLOv12m(YOLOv12):
     
     name: str  = "yolov12m"
     zoo : dict = box.Box({
@@ -550,7 +552,7 @@ class YOLOv12m(YOLOv12, ModelMixin):
 
 
 @MODELS.register(name="yolov12l", arch="yolov12")
-class YOLOv12l(YOLOv12, ModelMixin):
+class YOLOv12l(YOLOv12):
     
     name: str  = "yolov12l"
     zoo : dict = box.Box({
@@ -563,7 +565,7 @@ class YOLOv12l(YOLOv12, ModelMixin):
 
 
 @MODELS.register(name="yolov12x", arch="yolov12")
-class YOLOv12x(YOLOv12, ModelMixin):
+class YOLOv12x(YOLOv12):
     
     name: str  = "yolov12x"
     zoo : dict = box.Box({

@@ -21,14 +21,16 @@ import box
 from torchvision import models as tvm
 from torchvision.models.convnext import CNBlockConfig
 
+import mon.nn as nn
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-class ConvNeXt(tvm.ConvNeXt, ModelMixin, abc.ABC):
+class ConvNeXt(tvm.ConvNeXt, nn.ModelMixin, abc.ABC):
     """ConvNeXt models for image classification.
     
     References:

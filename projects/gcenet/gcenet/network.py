@@ -15,7 +15,7 @@ import copy
 
 import torch
 
-from mon.core import nn
+import mon.nn as nn
 
 
 # ----- Utils -----

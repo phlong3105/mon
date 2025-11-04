@@ -8,8 +8,8 @@ __all__ = [
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchdiffeq import odeint_adjoint
 
-from mon.core.math import odeint_adjoint
 from . import loss as loss_func
 
 MAX_NUM_STEPS = 1000  # 30  # 50  # 100

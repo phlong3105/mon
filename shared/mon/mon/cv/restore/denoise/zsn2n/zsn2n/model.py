@@ -14,8 +14,10 @@ __all__ = [
 
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import image as I, MLType, ModelMixin, nn, Path, Task
+from mon.core import image as I, MLType, Path, Task
+from mon.training import losses, optims
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
@@ -39,7 +41,7 @@ class Network(nn.Module):
     
 
 @MODELS.register(name="zsn2n", arch="zsn2n")
-class ZSN2N(nn.Module, ModelMixin):
+class ZSN2N(nn.Module, nn.ModelMixin):
     """ZS-N2N model for zero-shot image denoising.
     
     Args:
@@ -71,9 +73,9 @@ class ZSN2N(nn.Module, ModelMixin):
         # Optimize
         self.model.load_state_dict(self.state_dict)
         self.model.train()
-        optimizer = nn.Adam(self.model.parameters(), lr=0.001)
-        scheduler = nn.StepLR(optimizer, step_size=1000, gamma=0.5)
-        mse       = nn.MSELoss().to(device)
+        optimizer = optims.Adam(self.model.parameters(), lr=0.001)
+        scheduler = optims.StepLR(optimizer, step_size=1000, gamma=0.5)
+        mse       = losses.MSELoss().to(device)
         
         for i in range(self.iters):
             noisy1, noisy2       = I.pair_downsample(noisy)

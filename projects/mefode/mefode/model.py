@@ -17,8 +17,9 @@ from typing import Any
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .network import NODE
 
 current_file = Path(__file__).absolute()
@@ -26,7 +27,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="mefode", arch="mefode")
-class MEFODE(NODE, ModelMixin):
+class MEFODE(NODE, nn.ModelMixin):
     """MEFODE model for multi-exposure fusion.
 
     References:

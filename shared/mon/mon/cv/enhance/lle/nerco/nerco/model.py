@@ -18,8 +18,9 @@ from typing import Any
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .models.nerco_model import NeRComodel
 
 current_file = Path(__file__).absolute()
@@ -27,7 +28,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="nerco", arch="nerco")
-class NeRCo(NeRComodel, ModelMixin):
+class NeRCo(NeRComodel, nn.ModelMixin):
     """NeRCo model for low-light image enhancement.
     
     References:

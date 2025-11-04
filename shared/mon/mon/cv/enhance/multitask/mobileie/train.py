@@ -50,8 +50,8 @@ def train(args: dict | box.Box) -> str:
     model.train()
     
     # Optimizer
-    optimizer    = mon.nn.Adam(model.parameters(), **args.optimizer)
-    lr_scheduler = mon.nn.CosineAnnealingWarmRestarts(optimizer, 50, 2, 1e-7)
+    optimizer    = mon.optims.Adam(model.parameters(), **args.optimizer)
+    lr_scheduler = mon.optims.CosineAnnealingWarmRestarts(optimizer, 50, 2, 1e-7)
     
     # Loss
     lle_loss = mobileie.LLELoss(reduction="mean")
@@ -66,8 +66,8 @@ def train(args: dict | box.Box) -> str:
     if args.trainer.warmup:
         warmup_epochs = args.trainer.warmup_epoch
         warmup_lr     = args.trainer.warmup_lr
-        warmup_optim  = mon.nn.Adam(model.parameters(), lr=warmup_lr, weight_decay=0)
-        warmup_loss   = L.WarmupLoss()
+        warmup_optim  = mon.optims.Adam(model.parameters(), lr=warmup_lr, weight_decay=0)
+        warmup_loss   = mobileie.WarmupLoss()
         mon.log(f"Warming-up for {warmup_epochs} epochs.")
         with (mon.create_progress_bar() as pbar):
             for i in pbar.track(

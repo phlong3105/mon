@@ -14,8 +14,9 @@ __all__ = [
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .net.CIDNet import CIDNet
 
 current_file = Path(__file__).absolute()
@@ -23,7 +24,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="hvi_cidnet", arch="hvi_cidnet")
-class HVI_CIDNet(CIDNet, ModelMixin):
+class HVI_CIDNet(CIDNet, nn.ModelMixin):
     """HVI-CIDNet model for low-light image enhancement.
     
     References:

@@ -18,8 +18,10 @@ from collections import namedtuple
 import box
 from cv2.ximgproc import guidedFilter
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import log, MLType, ModelMixin, nn, Path, Task
+from mon.core import log, MLType, Path, Task
+from mon.training import optims
 from .net import *
 from .net.losses import StdLoss
 from .net.vae_model import VAE
@@ -33,7 +35,7 @@ DehazeResult = namedtuple("DehazeResult", ["learned", "t", "a"])
 
 
 @MODELS.register(name="zid", arch="zid")
-class ZID(ModelMixin):
+class ZID(nn.ModelMixin):
     """ZID model for image dehazing.
     
     References:
@@ -148,7 +150,7 @@ class ZID(ModelMixin):
     def optimize(self):
         torch.backends.cudnn.enabled   = True
         torch.backends.cudnn.benchmark = True
-        optimizer = nn.Adam(self.parameters, lr=self.learning_rate)
+        optimizer = optims.Adam(self.parameters, lr=self.learning_rate)
         for j in range(self.num_iter):
             optimizer.zero_grad()
             self._optimization_closure()

@@ -21,16 +21,21 @@ from typing import Any
 
 import box
 from torchvision import models as tvm
-from torchvision.models.swin_transformer import PatchMergingV2, SwinTransformerBlockV2
+from torchvision.models.swin_transformer import (
+    PatchMergingV2,
+    SwinTransformerBlockV2,
+)
 
+import mon.nn as nn
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-class SwinTransformer(tvm.SwinTransformer, ModelMixin, abc.ABC):
+class SwinTransformer(tvm.SwinTransformer, nn.ModelMixin, abc.ABC):
     """Swin Transformer model for image classification.
 
     References:

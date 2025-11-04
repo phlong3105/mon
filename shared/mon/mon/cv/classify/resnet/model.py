@@ -31,14 +31,16 @@ from torchvision.models.resnet import (
     Bottleneck,
 )
 
+import mon.nn as nn
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-class ResNet(tvm.ResNet, ModelMixin, abc.ABC):
+class ResNet(tvm.ResNet, nn.ModelMixin, abc.ABC):
     """ResNet model for image classification.
 
     References:

@@ -16,10 +16,10 @@ from typing import Any
 
 import box
 import torch
-import torch.nn as nn
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .module import (
     AttnBlock,
     EncoderFFTime2d,
@@ -33,7 +33,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="indi_deband", arch="indi_deband")
-class InDiDeband(nn.Module, ModelMixin):
+class InDiDeband(nn.Module, nn.ModelMixin):
     """Implements InDi-Deband model for image/video debanding.
     
     A 2D Unet that takes in a timestep T in encoder and decoder blocks.

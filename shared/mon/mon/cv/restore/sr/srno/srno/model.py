@@ -14,8 +14,9 @@ __all__ = [
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .models import sronet
 
 current_file = Path(__file__).absolute()
@@ -23,7 +24,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="srno", arch="srno")
-class SRNO(sronet.SRNO, ModelMixin):
+class SRNO(sronet.SRNO, nn.ModelMixin):
     """SRNO model for super-resolution.
     
     References:

@@ -7,6 +7,9 @@ Notes:
     - In this package, we follow the same coding conventions as PyTorch to
       maintain consistency.
     - If you don't know what to do, just look at the PyTorch source code.
+
+References:
+    - https://www.ibm.com/think/topics/deep-learning#763338456
 """
 
 __all__ = [
@@ -35,7 +38,7 @@ from mon.nn.mlp import *
 from mon.nn.mlp import (
     linear as linear,
 )
-from mon.nn.model import *
+from mon.nn.model import ModelMixin
 from mon.nn.rnn import *
 from mon.nn.transformer import *
 from mon.nn.transformer import (

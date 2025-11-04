@@ -18,8 +18,9 @@ from typing import Any
 import box
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
 from .network.utils import DropBlock, FST, FSTS, MBRConv1, MBRConv3, MBRConv5
 
 current_file = Path(__file__).absolute()
@@ -27,7 +28,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="mobileie_lle", arch="mobileie")
-class MobileIELLE(nn.Module, ModelMixin):
+class MobileIELLE(nn.Module, nn.ModelMixin):
     """MobileIE model for real-time low-light image enhancement.
     
     References:

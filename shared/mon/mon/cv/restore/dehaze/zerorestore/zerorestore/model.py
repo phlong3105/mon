@@ -21,8 +21,10 @@ import random
 import box
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
+from mon.training import losses, optims
 from .module import Estimation, EstimationLLIE
 
 current_file = Path(__file__).absolute()
@@ -50,7 +52,7 @@ class ZeroRestore(nn.Module, abc.ABC):
         # Optimize
         self.model.load_state_dict(self.state_dict)
         self.model.train()
-        optimizer = nn.Adam(self.parameters(), lr=1e-3, weight_decay=1e-2)
+        optimizer = optims.Adam(self.parameters(), lr=1e-3, weight_decay=1e-2)
         
         for i in range(self.iters):
             optimizer.zero_grad()
@@ -71,8 +73,8 @@ class ZeroRestore(nn.Module, abc.ABC):
             loss_a   = torch.sum((atm1 - atm_x) ** 2)
             loss_mx  =   torch.sum(torch.max(enhanced1, o_tensor)) + torch.sum(torch.max(enhanced_x, o_tensor)) - 2 * torch.sum(o_tensor)
             loss_mn  = - torch.sum(torch.min(enhanced1, z_tensor)) - torch.sum(torch.min(enhanced_x, z_tensor))
-            loss_col = nn.ColorConstancyLoss()(enhanced1)
-            loss_tv  = nn.TotalVariationLoss()(enhanced1)
+            loss_col = losses.ColorConstancyLoss()(enhanced1)
+            loss_tv  = losses.TotalVariationLoss()(enhanced1)
             loss     = 0.001 * loss_tv + loss_t + loss_a + 0.001 * loss_mx + 0.001 * loss_mn + 1000 * loss_col
             
             loss.backward()
@@ -103,7 +105,7 @@ class ZeroRestore(nn.Module, abc.ABC):
     
 
 @MODELS.register(name="zerorestore_dehaze", arch="zerorestore")
-class ZeroRestoreDehaze(ZeroRestore, ModelMixin):
+class ZeroRestoreDehaze(ZeroRestore, nn.ModelMixin):
     """Zero-Restore model for image dehazing.
     
     References:
@@ -127,7 +129,7 @@ class ZeroRestoreDehaze(ZeroRestore, ModelMixin):
 
 
 @MODELS.register(name="zerorestore_lle", arch="zerorestore")
-class ZeroRestoreLLE(ZeroRestore, ModelMixin):
+class ZeroRestoreLLE(ZeroRestore, nn.ModelMixin):
     """Zero-Restore model for low-light image enhancement.
     
     References:
@@ -151,7 +153,7 @@ class ZeroRestoreLLE(ZeroRestore, ModelMixin):
 
 
 @MODELS.register(name="zerorestore_uie", arch="zerorestore")
-class ZeroRestoreUE(ZeroRestore, ModelMixin):
+class ZeroRestoreUE(ZeroRestore, nn.ModelMixin):
     """Zero-Restore model for underwater image enhancement.
     
     References:

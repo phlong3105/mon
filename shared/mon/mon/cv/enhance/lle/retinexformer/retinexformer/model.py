@@ -15,8 +15,9 @@ __all__ = [
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .basicsr.models.image_restoration_model import ImageCleanModel
 
 current_file = Path(__file__).absolute()
@@ -24,7 +25,7 @@ root_dir     = current_file.parents[0]
 
 
 @MODELS.register(name="retinexformer", arch="retinexformer")
-class Retinexformer(ImageCleanModel, ModelMixin):
+class Retinexformer(ImageCleanModel, nn.ModelMixin):
     """Retinexformer model for low-light image enhancement.
     
     References:

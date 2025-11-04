@@ -20,8 +20,9 @@ import torch
 import torchvision.transforms as transforms
 from PIL import Image
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
 from .network.decom import Decom
 from .network.Math_Module import P, Q
 from .utils import load_adjustment, load_initialize, load_unfolding
@@ -31,7 +32,7 @@ root_dir     = current_file.parents[0]
 
 
 @MODELS.register(name="uretinexnet", arch="uretinexnet")
-class URetinexNet(nn.Module, ModelMixin):
+class URetinexNet(nn.Module, nn.ModelMixin):
     """URetinex-Net model for low-light image enhancement.
     
     References:

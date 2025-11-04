@@ -15,8 +15,9 @@ __all__ = [
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .cldm.cldm import ControlLDM
 
 current_file = Path(__file__).absolute()
@@ -24,7 +25,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="quadprior", arch="quadprior")
-class QuadPrior(ControlLDM, ModelMixin):
+class QuadPrior(ControlLDM, nn.ModelMixin):
     """QuadPrior model for low-light image enhancement.
     
     References:

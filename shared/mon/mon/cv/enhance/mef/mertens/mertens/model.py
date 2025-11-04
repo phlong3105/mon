@@ -22,8 +22,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, nn, Path, Task, image as I
+from mon.core import MLType, Path, Task, image as I
 from .pyramid import (
     collapse_pyramid,
     compute_gaussian_pyramid,
@@ -131,7 +132,7 @@ def compute_well_exposedness(images: torch.Tensor) -> torch.Tensor:
 
 # ----- Model -----
 @MODELS.register(name="mertens", arch="mertens")
-class Mertens(nn.Module, ModelMixin):
+class Mertens(nn.Module, nn.ModelMixin):
     """Mertens et. al Exposure Fusion method.
     
     References:

@@ -13,7 +13,6 @@ import torch
 import gcenet
 import mon
 from mon import albumentations as A
-
 mon.dev()
 
 current_file = mon.Path(__file__).absolute()

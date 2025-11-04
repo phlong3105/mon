@@ -17,15 +17,16 @@ from typing import Any
 
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .depth_anything.dpt import DepthAnything_AC
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-class DAAC(DepthAnything_AC, ModelMixin):
+class DAAC(DepthAnything_AC, nn.ModelMixin):
     """DAAC model for depth estimation.
     
     References:

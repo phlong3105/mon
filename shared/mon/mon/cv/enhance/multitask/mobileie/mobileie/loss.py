@@ -1,10 +1,10 @@
 import torch
-import torch.nn as nn
 
-from mon.core import nn
+import mon.nn as nn
+from mon.training import losses, metrics
 
 
-class CharbonnierLoss(nn.BaseLoss):
+class CharbonnierLoss(losses.BaseLoss):
     
     def __init__(self, eps: float = 1e-6):
         super().__init__()
@@ -15,7 +15,7 @@ class CharbonnierLoss(nn.BaseLoss):
     
     
 #####################################################################################################
-class OutlierAwareLoss(nn.BaseLoss):
+class OutlierAwareLoss(losses.BaseLoss):
     
     def __init__(self, reduction: str = "mean"):
         super().__init__(reduction=reduction)
@@ -31,12 +31,12 @@ class OutlierAwareLoss(nn.BaseLoss):
     
     
 #####################################################################################################
-class WarmupLoss(nn.BaseLoss):
+class WarmupLoss(losses.BaseLoss):
     
     def __init__(self, reduction: str = "mean"):
         super().__init__(reduction=reduction)
-        self.loss_cb = nn.CharbonnierLoss(1e-8, reduction=reduction)
-        self.loss_cs = nn.CosineSimilarity(reduction=reduction)
+        self.loss_cb = losses.CharbonnierLoss(1e-8, reduction=reduction)
+        self.loss_cs = metrics.CosineSimilarity(reduction=reduction)
 
     def forward(self, input, target, warmup1, warmup2):
         loss = (self.loss_cb(warmup2, input) +
@@ -46,13 +46,13 @@ class WarmupLoss(nn.BaseLoss):
         return loss 
 
 
-class LLELoss(nn.BaseLoss):
+class LLELoss(losses.BaseLoss):
     
     def __init__(self, reduction: str = "mean"):
         super().__init__(reduction=reduction)
-        self.loss_cs = nn.CosineSimilarity(reduction=reduction)
+        self.loss_cs = metrics.CosineSimilarity(reduction=reduction)
         self.loss_oa = OutlierAwareLoss(reduction=reduction)
-        self.psnr    = nn.PSNRLoss(reduction=reduction)
+        self.psnr    = losses.PSNRLoss(reduction=reduction)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         loss = ((self.loss_oa(input, target)
@@ -62,13 +62,13 @@ class LLELoss(nn.BaseLoss):
         return loss
         
         
-class ISPLoss(nn.BaseLoss):
+class ISPLoss(losses.BaseLoss):
     
     def __init__(self, reduction: str = "mean"):
         super().__init__(reduction=reduction)
-        self.loss_cs = nn.CosineSimilarity(reduction=reduction)
+        self.loss_cs = metrics.CosineSimilarity(reduction=reduction)
         self.loss_oa = OutlierAwareLoss(reduction=reduction)
-        self.psnr    = nn.PSNRLoss(reduction=reduction)
+        self.psnr    = losses.PSNRLoss(reduction=reduction)
 
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         loss = ((self.loss_oa(input, target)

@@ -5,11 +5,12 @@ import torch
 from torchvision import transforms
 from torchvision.models import vgg
 
-from mon.core import nn
-from mon.core.nn import functional as F
+import mon.nn as nn
+from mon.nn import functional as F
+from mon.training import losses
 
 
-class Loss(nn.BaseLoss):
+class Loss(losses.BaseLoss):
     
     def __init__(
         self,
@@ -26,8 +27,8 @@ class Loss(nn.BaseLoss):
         
         # self.msssim     = mon.CustomMSSSIM(data_range=1.0)
         # self.ssim       = mon.CustomSSIM(data_range=1.0, non_negative_ssim=True)
-        self.ssim       = nn.StructuralSimilarityIndexMeasure()
-        self.msssim     = nn.MultiScaleStructuralSimilarityIndexMeasure()
+        self.ssim       = losses.StructuralSimilarityIndexMeasure()
+        self.msssim     = losses.MultiScaleStructuralSimilarityIndexMeasure()
         self.perceptual = PerceptualLoss()
         self.tvloss     = TVLoss()
 
@@ -53,7 +54,7 @@ class Loss(nn.BaseLoss):
         return loss
 
 
-class PerceptualLoss(nn.BaseLoss):
+class PerceptualLoss(losses.BaseLoss):
     
     def __init__(self,):
         super().__init__()
@@ -82,7 +83,7 @@ class PerceptualLoss(nn.BaseLoss):
         return F.l1_loss(feat_a, feat_b)
 
 
-class TVLoss(nn.Module):
+class TVLoss(losses.BaseLoss):
     
     def __init__(self, TVLoss_weight=1):
         super().__init__()

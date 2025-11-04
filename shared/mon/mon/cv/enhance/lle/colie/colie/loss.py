@@ -10,7 +10,7 @@ __all__ = [
 import torch
 from torchvision.transforms.functional import gaussian_blur
 
-from mon.core import nn
+import mon.nn as nn
 
 
 class L_exp(nn.Module):

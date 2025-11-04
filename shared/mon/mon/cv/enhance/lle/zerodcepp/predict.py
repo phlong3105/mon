@@ -56,7 +56,7 @@ def predict(args: dict | box.Box) -> str:
     if args.benchmark:
         h = int((512 // scale) * scale)
         w = int((512 // scale) * scale)
-        mon.nn.benchmark(model, imgsz=(h, w))
+        mon.metrics.benchmark(model, imgsz=(h, w))
    
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)

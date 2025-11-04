@@ -17,8 +17,9 @@ from typing import Any
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .module import UnetTMO
 
 current_file = Path(__file__).absolute()
@@ -36,7 +37,7 @@ def read_pytorch_lightning_state_dict(ckpt):
 
 
 @MODELS.register(name="psenet", arch="psenet")
-class PSENet(UnetTMO, ModelMixin):
+class PSENet(UnetTMO, nn.ModelMixin):
     """PSENet model for low-light image enhancement.
     
     References:

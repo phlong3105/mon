@@ -353,7 +353,7 @@ class HVR:
 
 # ----- Model -----
 @MODELS.register(name="tensormog_cupy", arch="tensormog")
-class TensorMOGCuPy(nn.Module, ModelMixin):
+class TensorMOGCuPy(nn.Module, nn.ModelMixin):
     """TensorMoG model for background subtraction.
 
     Args:

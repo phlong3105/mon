@@ -20,15 +20,16 @@ from typing import Any
 
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .dpt import DepthAnythingV2
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-class DAV2(DepthAnythingV2, ModelMixin):
+class DAV2(DepthAnythingV2, nn.ModelMixin):
     """DAV2 model for monocular depth estimation.
 
     References:

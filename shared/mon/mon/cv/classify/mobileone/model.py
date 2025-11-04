@@ -24,8 +24,10 @@ from typing import Any
 import box
 import torch
 
+import mon.nn as nn
+import mon.nn as nn
 from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -133,7 +135,7 @@ class MobileOne(nn.Module, nn.ModelMixin, abc.ABC):
     
         
 @MODELS.register(name="mobileone_s0", arch="mobileone")
-class MobileOneS0(MobileOne, ModelMixin):
+class MobileOneS0(MobileOne):
     
     name: str  = "mobileone_s0",
     zoo : dict = box.Box({
@@ -162,7 +164,7 @@ class MobileOneS0(MobileOne, ModelMixin):
 
 
 @MODELS.register(name="mobileone_s1", arch="mobileone")
-class MobileOneS1(MobileOne, ModelMixin):
+class MobileOneS1(MobileOne):
     
     name: str  = "mobileone_s1",
     zoo : dict = box.Box({
@@ -190,7 +192,7 @@ class MobileOneS1(MobileOne, ModelMixin):
 
 
 @MODELS.register(name="mobileone_s2", arch="mobileone")
-class MobileOneS2(MobileOne, ModelMixin):
+class MobileOneS2(MobileOne):
     
     name: str  = "mobileone_s2",
     zoo : dict = box.Box({
@@ -218,7 +220,7 @@ class MobileOneS2(MobileOne, ModelMixin):
 
 
 @MODELS.register(name="mobileone_s3", arch="mobileone")
-class MobileOneS3(MobileOne, ModelMixin):
+class MobileOneS3(MobileOne):
     
     name: str  = "mobileone_s3",
     zoo : dict = box.Box({
@@ -246,7 +248,7 @@ class MobileOneS3(MobileOne, ModelMixin):
 
 
 @MODELS.register(name="mobileone_s4", arch="mobileone")
-class MobileOneS4(MobileOne, ModelMixin):
+class MobileOneS4(MobileOne):
     
     name: str  = "mobileone_s4",
     zoo : dict = box.Box({

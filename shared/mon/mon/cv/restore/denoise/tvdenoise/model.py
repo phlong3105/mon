@@ -11,15 +11,16 @@ import box
 import kornia
 import torch
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
 @MODELS.register(name="tvdenoise", arch="tvdenoise")
-class TVDenoise(nn.Module, ModelMixin):
+class TVDenoise(nn.Module, nn.ModelMixin):
     
     arch     : str          = "tvdenoise"
     name     : str          = "tvdenoise"

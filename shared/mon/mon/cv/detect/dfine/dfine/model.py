@@ -18,8 +18,10 @@ from typing import Any
 import box
 import torch
 
+import mon.nn as nn
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, nn, Path, Task
+from mon.core import MLType, Path, Task
 # sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from .core import YAMLConfig
 
@@ -30,7 +32,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-class DFINE(nn.Module, ModelMixin):
+class DFINE(nn.Module, nn.ModelMixin):
     """D-FINE model for object detection.
     
     References:

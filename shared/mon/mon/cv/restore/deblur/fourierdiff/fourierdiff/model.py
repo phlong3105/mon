@@ -15,8 +15,9 @@ __all__ = [
 
 import box
 
+import mon.nn as nn
 from mon.constants import MODELS
-from mon.core import MLType, ModelMixin, Path, Task
+from mon.core import MLType, Path, Task
 from .guided_diffusion.diffusion_llie_modified import Diffusion
 
 current_file = Path(__file__).absolute()
@@ -24,7 +25,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="fourierdiff", arch="fourierdiff")
-class FourierDiff(Diffusion, ModelMixin):
+class FourierDiff(Diffusion, nn.ModelMixin):
     """FourierDiff model for zero-shot joint low-light enhancement and deblurring.
     
     References:

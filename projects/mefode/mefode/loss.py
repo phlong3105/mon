@@ -282,6 +282,7 @@ class Perceptual_loss(nn.Module):
         target_fea = self.vgg(target_vgg)
         return torch.mean((self.instancenorm(img_fea) - self.instancenorm(target_fea)) ** 2)
 
+
 def vgg_preprocess(batch):
     tensor_type = type(batch.data)
     (r, g, b)   = torch.chunk(batch, 3, dim=1)

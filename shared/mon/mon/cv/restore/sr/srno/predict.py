@@ -49,7 +49,7 @@ def predict(args: dict | box.Box) -> str:
 
     # Benchmark
     if args.benchmark:
-        mon.nn.benchmark(model)
+        mon.metrics.benchmark(model)
     
     # Data I/O
     transform = A.Compose([
