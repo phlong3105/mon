@@ -133,16 +133,16 @@ include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-torchdiffeq     = { path = "../math/torchdiffeq"   , develop = true }
-snntorch        = { path = "../nn/snntorch"        , develop = true }
-spikingjelly    = { path = "../nn/spikingjelly"    , develop = true }
-transformers    = { path = "../nn/transformers"    , develop = true }
-diffusers       = { path = "../genai/diffusers"    , develop = true }
-flow_matching   = { path = "../genai/flow_matching", develop = true }
-clip            = { path = "../cv/clip"            , develop = true }
-mobileclip      = { path = "../cv/mobileclip"      , develop = true }
-open-clip-torch = { path = "../cv/open_clip"       , develop = true }
-ultralytics     = { path = "../cv/ultralytics"     , develop = true }
+torchdiffeq     = { path = "../math/torchdiffeq"       , develop = true }
+snntorch        = { path = "../ext/nn/snntorch"        , develop = true }
+spikingjelly    = { path = "../ext/nn/spikingjelly"    , develop = true }
+transformers    = { path = "../ext/nn/transformers"    , develop = true }
+clip            = { path = "../ext/genai/clip"         , develop = true }
+diffusers       = { path = "../ext/genai/diffusers"    , develop = true }
+flow_matching   = { path = "../ext/genai/flow_matching", develop = true }
+mobileclip      = { path = "../ext/genai/mobileclip"   , develop = true }
+open-clip-torch = { path = "../ext/genai/open_clip"    , develop = true }
+ultralytics     = { path = "../ext/cv/ultralytics"     , develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.0.0"]

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements low-light image enhancement algorithms."""
+"""Implements Low-Light image/video Enhancement (LLE) algorithms."""
 
 from .clode import *
 from .colie import *

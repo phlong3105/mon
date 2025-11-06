@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements background substraction algorithms."""
+"""Background Subtraction.
+
+This package provides tools and algorithms for performing background subtraction
+in images and videos.
+"""
 
 from .tensormog import *

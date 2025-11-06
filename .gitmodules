@@ -1,39 +1,39 @@
-[submodule "shared/math/torchdiffeq"]
-	path = shared/math/torchdiffeq
+[submodule "shared/ext/math/torchdiffeq"]
+	path = shared/ext/math/torchdiffeq
 	url  = https://github.com/phlong3105/torchdiffeq
 
-[submodule "shared/nn/snntorch"]
-	path = shared/nn/snntorch
+[submodule "shared/ext/nn/snntorch"]
+	path = shared/ext/nn/snntorch
 	url  = https://github.com/phlong3105/snntorch
-[submodule "shared/nn/spikingjelly"]
-	path = shared/nn/spikingjelly
+[submodule "shared/ext/nn/spikingjelly"]
+	path = shared/ext/nn/spikingjelly
 	url  = https://github.com/phlong3105/spikingjelly
-[submodule "shared/nn/transformers"]
-	path = shared/nn/transformers
+[submodule "shared/ext/nn/transformers"]
+	path = shared/ext/nn/transformers
 	url  = https://github.com/phlong3105/transformers
 
-[submodule "shared/genai/diffusers"]
-	path = shared/genai/diffusers
-	url  = https://github.com/phlong3105/diffusers
-[submodule "shared/genai/flow_matching"]
-	path = shared/genai/flow_matching
-	url  = https://github.com/phlong3105/flow_matching
-
-[submodule "shared/cv/clip"]
-	path = shared/cv/clip
-	url  = https://github.com/phlong3105/clip
-[submodule "shared/cv/libcom"]
-	path = shared/cv/libcom
+[submodule "shared/ext/cv/libcom"]
+	path = shared/ext/cv/libcom
 	url  = https://github.com/phlong3105/libcom
-[submodule "shared/cv/mobileclip"]
-	path = shared/cv/mobileclip
-	url  = https://github.com/phlong3105/mobileclip
-[submodule "shared/cv/open_clip"]
-	path = shared/cv/open_clip
-	url  = https://github.com/phlong3105/open_clip
-[submodule "shared/cv/trackers"]
-	path = shared/cv/trackers
+[submodule "shared/ext/cv/trackers"]
+	path = shared/ext/cv/trackers
 	url  = https://github.com/phlong3105/trackers
-[submodule "shared/cv/ultralytics"]
-	path = shared/cv/ultralytics
+[submodule "shared/ext/cv/ultralytics"]
+	path = shared/ext/cv/ultralytics
 	url  = https://github.com/phlong3105/ultralytics
+
+[submodule "shared/ext/genai/clip"]
+	path = shared/ext/genai/clip
+	url  = https://github.com/phlong3105/clip
+[submodule "shared/ext/genai/mobileclip"]
+	path = shared/ext/genai/mobileclip
+	url  = https://github.com/phlong3105/mobileclip
+[submodule "shared/ext/genai/open_clip"]
+	path = shared/ext/genai/open_clip
+	url  = https://github.com/phlong3105/open_clip
+[submodule "shared/ext/genai/diffusers"]
+	path = shared/ext/genai/diffusers
+	url  = https://github.com/phlong3105/diffusers
+[submodule "shared/ext/genai/flow_matching"]
+	path = shared/ext/genai/flow_matching
+	url  = https://github.com/phlong3105/flow_matching

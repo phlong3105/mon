@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Handles various data types.
+"""Data Types.
 
-This package contains similar function names but applied to different data types.
-So we do not expose all the functions into the namespace to avoid confusion.
+This package defines various data types. It includes classes for handling data
+structures and utilities functions related to these data types.
 """
 
 __all__ = [

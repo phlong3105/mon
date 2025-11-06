@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements basic utilities."""
+"""Utilities.
+
+This package is a collection of utility functions for various common tasks.
+"""
 
 __all__ = [
     "camelize",

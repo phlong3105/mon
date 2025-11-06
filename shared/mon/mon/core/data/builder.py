@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements builders for datasets and dataloaders.
+"""Data builder functions.
 
-Common Tasks:
-    - Parse data directory inside a project.
-    - Build dataset and dataloader.
+This module provides functions to build datasets and dataloaders from various
+data sources. It supports parsing data directories and creating appropriate
+dataset and dataloader objects based on the input source type.
 """
 
 __all__ = [

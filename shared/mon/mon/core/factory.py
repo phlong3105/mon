@@ -35,7 +35,7 @@ class Factory(dict):
     
     def __init__(self, name: str, mapping: dict = None, decamelize: bool = False):
         if not name:
-            raise ValueError("[name] must not be empty.")
+            raise ValueError("``name`` must not be empty.")
         self.name       = name
         self.decamelize = decamelize
         super().__init__(mapping or {})

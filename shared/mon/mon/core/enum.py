@@ -486,36 +486,41 @@ class TRTPrecision(Enum):
 class Task(Enum):
     """Task types."""
     
+    # ----- Generative AI -----
+    # Image Generation
+    IMG2IMG     = "img2img"             # Image-to-Image Translation
+    
+    # ----- Computer Vision -----
     # Enhancement
-    EXPOSURE   = "exposure"             # Exposure Correction + Automatic Exposure
-    LLE        = "lle"                  # Low-Light Enhancement
-    MEF        = "mef"                  # Multi-Exposure Fusion
-    NTE        = "nte"                  # Night-Time Enhancement
-    RETOUCH    = "retouch"              # Retouching
-    UWE        = "underwater"           # UnderWater Enhancement
-    
+    AWB         = "awb"                 # Auto White Balance
+    COLORIZE    = "colorize"            # Image Colorization
+    EXPOSURE    = "exposure"            # Exposure Correction + Automatic Exposure
+    ISP         = "isp"                 # Image Signal Processing
+    LLE         = "lle"                 # Low-Light Enhancement
+    MEF         = "mef"                 # Multi-Exposure Fusion
+    NTE         = "nte"                 # Night-Time Enhancement
+    RETOUCH     = "retouch"             # Retouching
+    UWE         = "underwater"          # UnderWater Enhancement
     # Restoration
-    DEBAND     = "deband"               # Debanding
-    DEBLUR     = "deblur"               # Deblurring
-    DEFLARE    = "deflare"              # Deflaring
-    DEHAZE     = "dehaze"               # Dehazing
-    DENOISE    = "denoise"              # Denoising
-    DERAIN     = "derain"               # Deraining
-    DEREFLECT  = "dereflect"            # De-reflection
-    DESNOW     = "desnow"               # Desnowing
-    INPAINT    = "inpaint"              # Inpainting
-    SR         = "sr"                   # Super-Resolution
-    
+    DEBAND      = "deband"              # Debanding
+    DEBLUR      = "deblur"              # Deblurring
+    DEFLARE     = "deflare"             # Deflaring
+    DEHAZE      = "dehaze"              # Dehazing
+    DENOISE     = "denoise"             # Denoising
+    DERAIN      = "derain"              # Deraining
+    DESNOW      = "desnow"              # Desnowing
+    INPAINT     = "inpaint"             # Inpainting
+    SR          = "sr"                  # Super-Resolution
     # High-Level Vision
-    BGSUBTRACT = "bgsubtract"           # Background Subtraction
-    CLASSIFY   = "classify"             # Classification
-    DETECT     = "detect"               # Object Detection
-    MONODEPTH  = "mono_depth"           # Monocular-Depth Estimation
-    OBB        = "obb"                  # Oriented-Bounding Box Detection
-    POSE       = "pose"                 # Pose Estimation
-    SEGMENT    = "segment"              # Semantic Segmentation
-    TRACK      = "track"                # Tracking
-    VIDEO      = "video"                # Video Processing
+    BGSUBTRACT  = "bgsubtract"          # Background Subtraction
+    CLASSIFY    = "classify"            # Classification
+    DETECT      = "detect"              # Object Detection
+    MONODEPTH   = "mono_depth"          # Monocular-Depth Estimation
+    OBB         = "obb"                 # Oriented-Bounding Box Detection
+    POSE        = "pose"                # Pose Estimation
+    SEGMENT     = "segment"             # Semantic Segmentation
+    TRACK       = "track"               # Tracking
+    VIDEO       = "video"               # Video Processing
 
 
 # ----- Vision -----

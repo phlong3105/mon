@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements templates for video-only datasets."""
+"""Video-based Datasets.
+
+This module implements dataset classes where video data (i.e., frames) is the
+primary modality.
+"""
 
 __all__ = [
     "VideoLoader",

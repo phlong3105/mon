@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements image-based datasets."""
+"""Image-based Datasets.
+
+This module implements dataset classes where image data is the primary modality.
+"""
 
 __all__ = [
     "ImageEvalDataset",
@@ -120,8 +123,10 @@ class ImageEvalDataset(EvalDataset):
         Args:
             transform: Transformations to apply. Default: ``None``.
         """
+        from mon.training import albumentations as A_
+        
         if isinstance(transform, dict | box.Box):
-            transform = A.build_compose(**transform)
+            transform = A_.build_compose(**transform)
         if transform is None or isinstance(transform, A.Compose):
             self.transform = transform
         else:

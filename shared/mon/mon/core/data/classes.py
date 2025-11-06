@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements an object to encapsulate all classes in datasets."""
+"""Class-Labels for datasets.
+
+This module defines the `Classes` class, which represents a list of class labels
+defined in a dataset. It provides properties and methods to access various aspects
+of the class labels, such as trainable classes, names, IDs, and color mappings.
+"""
 
 __all__ = [
     "Classes",

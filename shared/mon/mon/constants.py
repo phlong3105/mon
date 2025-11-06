@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Defines global constants used across the package."""
+"""This module defines global constants used across ``mon`` framework."""
 
 __all__ = [
     "ALBUMENTATIONS",

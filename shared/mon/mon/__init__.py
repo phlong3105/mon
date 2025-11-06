@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""The MON framework."""
+"""``mon`` framework.
+
+The organization structure of this framework is inspired by the taxonomy
+defined in https://www.ibm.com/think/machine-learning#605511093
+"""
 
 __author__  = "Long H. Pham"
 __version__ = "2.9.0"

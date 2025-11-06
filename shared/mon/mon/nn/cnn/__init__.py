@@ -3,7 +3,7 @@
 
 """Implements Convolutional Neural Networks (CNNs).
 
-Convolutional neural networks use three-dimensional data for image classification
+Convolutional Neural Networks use three-dimensional data for image classification
 and object recognition tasks.
 
 References:

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements the basic functionalities."""
+"""This package is a collection of core functionalities for the ``mon`` framework.
+"""
 
 from mon.core import (
     data as data,

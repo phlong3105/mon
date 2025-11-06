@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements data containers and processing pipelines."""
+"""Data.
+
+This module provides base and template classes for defining datasets, data loaders.
+It also includes utilities functions for building datasets and data loaders.
+"""
 
 __all__ = [
     "BaseDataset",
     "Classes",
     "DataLoader",
+    "DualDomainDataset",
     "EvalDataset",
     "ImageEvalDataset",
     "ImageLoader",
@@ -15,6 +20,7 @@ __all__ = [
     "VideoLoader",
     "VideoLoaderCV",
     "VisionDataset",
+    "VisionDualDomainDataset",
     "build_dataloader",
     "build_dataset",
     "is_video_dataset",

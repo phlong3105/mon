@@ -7,7 +7,7 @@ clear
 echo "${HOSTNAME}"
 
 # ----- Input -----
-declare -a options=("mon" "update" "cuda" "docker" "tensorrt" "rlsync" "xanylabeling")
+declare -a options=("mon" "update" "cuda" "docker" "tensorrt" "ssh" "rlsync" "xanylabeling")
 option="${1:-0}"
 
 echo -e "\nAvailable options:"
@@ -289,6 +289,15 @@ install_tensorrt() {
     sudo cp /usr/src/tensorrt/bin/trtexec /usr/local/bin/
 }
 
+install_ssh() {
+    echo -e "\nInstall ssh"
+
+    # Install ssh
+    sudo apt update
+    sudo apt install openssh-server
+    sudo systemctl status ssh
+}
+
 setup_rlsync() {
     echo -e "\nSetting up Resilio Sync (rlsync)"
     rsync_dir="${root_dir}/.sync"
@@ -300,6 +309,7 @@ setup_system() {
     install_ffmpeg
     install_imagemagick
     install_turbojpeg
+    install_ssh
     setup_rlsync
 }
 

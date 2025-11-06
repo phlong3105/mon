@@ -3,4 +3,4 @@
 
 """Implements AI image generation."""
 
-from .gan import *
+from .cyclegan import *

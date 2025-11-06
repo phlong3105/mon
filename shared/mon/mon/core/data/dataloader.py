@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extends PyTorch DataLoader."""
+"""DataLoader.
+
+This module defines a custom DataLoader class that extends PyTorch's DataLoader
+with additional convenience features for initializing datasets. It supports
+dataset configuration through dictionaries objects and automatically handles
+collate functions and pin memory settings.
+"""
 
 __all__ = [
     "DataLoader",

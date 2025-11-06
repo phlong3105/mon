@@ -41,7 +41,7 @@ class MIPI2024Flare(VisionDataset):
         elif self.split in [Split.TEST]:
             patterns = [self.root / "test"  / "image"]
         else:
-            raise ValueError(f"[split] invalid: [{self.split}]")
+            raise ValueError(f"``split`` invalid: [{self.split}]")
 
         images: list[Image] = []
         with rich.create_progress_bar(disable=self.disable_pbar) as pbar:

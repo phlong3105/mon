@@ -4,11 +4,20 @@
 
 ## Setup
 
-- Install: 
+- Install `mon`: 
     ```commandline
     sudo chmod +x install.sh
     ./install.sh
     ```
+
+- Install `ssh`:
+    ```commandline
+    sudo apt update
+    sudo apt install openssh-server
+    sudo systemctl status ssh
+    ```
+
+---
 
 ## GitHub
 
