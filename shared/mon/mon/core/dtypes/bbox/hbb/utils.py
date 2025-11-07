@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements general-purpose utilities for HBBs.
+"""This module contains utility functions for HBB data type.
 
 Common Tasks:
     - Property accessors

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Defines custom enumerations for various constants used in the project."""
+"""This module contains various enumeration classes ."""
 
 __all__ = [
     "AppleRGB",

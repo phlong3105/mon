@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements normalization (norm) layers."""
+"""This package implements various normalization layers."""
 
 __all__ = [
     "AdaptiveBatchNorm2d",

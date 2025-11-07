@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements WIRE.
+"""This module implements the WIRE MLP architecture using Gabor wavelet activations.
 
 References:
     - Paper: "WIRE: Wavelet Implicit Neural Representations," CVPR 2023.

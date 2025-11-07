@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements contour data types."""
+"""This module implements data types and processing functions for contour data."""
 
 from .processing import *

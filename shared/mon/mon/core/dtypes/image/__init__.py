@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements image data types."""
+"""This module implements data types and processing functions for image data."""
 
 from .color import *
 from .core import *

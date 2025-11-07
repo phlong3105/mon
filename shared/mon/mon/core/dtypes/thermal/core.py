@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements InfraredMap class and its core properties.
+"""This module defines the InfraredMap class for handling infrared thermal images.
 
 Common Tasks:
     - Define the InfraredMap class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).

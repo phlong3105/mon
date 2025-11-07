@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extends basic Python data types: ``list``, ``dict``, ``tuple``, ``set``, and
-``collections``.
+"""This module implements utility functions for type manipulation and conversion,
+including creating combinations, merging dictionaries, sorting collections,
+and converting values to specific types or tuples of specified lengths.
 """
 
 __all__ = [

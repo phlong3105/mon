@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements label map manipulation and preprocessing functions.
+"""This module implements utilities for processing mask data type.
 
 Common Tasks:
     - Format conversions.

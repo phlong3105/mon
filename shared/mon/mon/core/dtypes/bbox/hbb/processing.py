@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements HBBs manipulation and preprocessing functions.
+"""This module implements processing functions for HBB data type.
 
 Common Tasks:
     - Format conversions.

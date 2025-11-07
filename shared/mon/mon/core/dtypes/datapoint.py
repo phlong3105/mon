@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements a base data-point class for handling both dataset annotations/labels
-and inference/prediction results.
+"""This module defines base classes and data types for handling tensor-like objects
+with device management capabilities.
 """
 
 __all__ = [

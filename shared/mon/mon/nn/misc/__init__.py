@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements miscellaneous layers."""
+"""This module implements various miscellaneous neural network (NN) components."""
 
 __all__ = [
     "AFF",

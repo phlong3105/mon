@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements optimizers and learning rate schedulers."""
+"""This package provides optimization algorithms for training."""
 
 from .core import *

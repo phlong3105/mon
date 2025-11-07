@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements core image-based classes and properties."""
+"""This module implements the Image class for image data handling."""
 
 __all__ = [
     "Image",

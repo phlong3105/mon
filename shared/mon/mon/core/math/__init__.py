@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Maths.
-
-This package is a collection of mathematical functions and constants.
-"""
+"""This module re-exports all functions and constants from the math module."""
 
 # noinspection PyUnusedImports
 from math import *

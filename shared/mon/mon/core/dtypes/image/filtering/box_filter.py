@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements box filters."""
+"""This module implements box filters."""
 
 __all__ = [
     "BoxFilter",

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements base class for neural network models."""
+"""This module implements the ``ModelMixin`` class for managing model attributes
+and methods."""
 
 __all__ = [
     "ModelMixin",

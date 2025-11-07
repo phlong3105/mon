@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements video manipulation and preprocessing functions.
+"""This module implements processing function for video data type.
 
 Common Tasks:
     - Format conversions.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Mask class and core properties.
+"""This module defines the SemanticMask class for handling segmentation masks.
 
 Common Tasks:
     - Define the Mask class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).

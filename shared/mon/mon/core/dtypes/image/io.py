@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements input/output operations for images.
+"""This module implements image I/O operations.
 
 Common Tasks:
     - Load images from disk.

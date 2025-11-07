@@ -3,11 +3,8 @@
 
 """Implements Convolutional Neural Networks (CNNs).
 
-Convolutional Neural Networks use three-dimensional data for image classification
-and object recognition tasks.
-
 References:
-    - https://www.ibm.com/think/topics/convolutional-neural-networks#763338459
+    - Definition: https://www.ibm.com/think/topics/convolutional-neural-networks#763338459
 """
 
 __all__ = [

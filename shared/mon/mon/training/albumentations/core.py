@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extends ``albumentations.Compose`` class with extended functionalities."""
+"""This module registers all Albumentations transforms into the ALBUMENTATIONS
+registry.
+"""
 
 import importlib
 import inspect
@@ -10,7 +12,7 @@ import pkgutil
 import albumentations as A
 from albumentations import *
 
-from mon.core.factory import ALBUMENTATIONS
+from mon.core import ALBUMENTATIONS
 
 
 # ----- Registry -----

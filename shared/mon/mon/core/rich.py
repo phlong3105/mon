@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extends ``rich`` for text formatting in terminal, console, and ``mon`` logging."""
+"""This module implements utilities for creating rich progress bars and prompts
+using the ``rich`` library.
+
+It includes functions to create download and general progress bars with customized
+columns, as well as a prompt class that allows users to select from a list of
+choices or input custom values.
+"""
 
 __all__ = [
     "create_download_bar",

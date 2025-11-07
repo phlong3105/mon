@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements SIREN.
+"""This module implements the SIREN (Sinusoidal Representation Networks) for
+Implicit Neural Representations (INRs).
 
 References:
     - Paper: "Implicit Neural Representations with Periodic Activation Functions," NeurIPS 2020.

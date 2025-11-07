@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extends Python ``pathlib`` module."""
+"""This module extends the standard ``pathlib.Path`` class with additional
+functionalities.
+"""
 
 __all__ = [
     "Path",

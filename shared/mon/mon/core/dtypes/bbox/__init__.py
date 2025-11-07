@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements bounding box data types (i.e., HBB and OBB)."""
+"""This module implements data types and processing functions for bounding box."""
 
 from .hbb import *
 from .obb import *

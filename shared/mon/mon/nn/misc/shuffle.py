@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements flatten layers."""
+"""This module implements various shuffle operations."""
 
 __all__ = [
     "ChannelShuffle",

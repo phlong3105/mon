@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements utilities functions."""
+"""This module implements utility functions for Implicit Neural Representations (INR).
+"""
 
 __all__ = [
     "create_coords",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements base loss."""
+"""This module implements the base class for all loss functions."""
 
 __all__ = [
     "BaseLoss",

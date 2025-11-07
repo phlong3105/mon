@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Utilities.
-
-This package is a collection of utility functions for various common tasks.
-"""
+"""This module implements various utility functions."""
 
 __all__ = [
     "camelize",

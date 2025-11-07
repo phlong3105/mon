@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implementation of a simple timer class."""
+"""This module implements a simple timer and time profiler classes for measuring
+execution time of code segments.
+"""
 
 __all__ = [
     "Timer",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements HVI color space."""
+"""This module implements RGB-HVI color space conversion."""
 
 __all__ = [
     "RGBToHVI",

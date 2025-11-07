@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements folding layers."""
+"""This module implements fold and unfold operations for tensors."""
 
 __all__ = [
     "Fold",

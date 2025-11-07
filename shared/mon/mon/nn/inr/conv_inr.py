@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Conv-INR architecture.
+"""This module implements the Convolutional Implicit Neural Representation (Conv-INR)
+architecture for multimodal visual signals.
 
 References:
     - Paper: "Conv-INR: Convolutional Implicit Neural Representation for

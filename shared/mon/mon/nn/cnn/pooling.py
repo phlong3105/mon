@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements padding layers."""
+"""This module implements various pooling layers."""
 
 __all__ = [
     "AdaptiveAvgPool1d",

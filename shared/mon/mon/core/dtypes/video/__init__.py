@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements video data types."""
+"""This module implements data types and processing functions for video data."""
 
 from .core import *
 from .io import *

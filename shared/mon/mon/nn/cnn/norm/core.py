@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements core normalization layers."""
+"""This module implements various normalization layers."""
 
 __all__ = [
     "CrossMapLRN2d",

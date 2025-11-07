@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements general-purpose utilities for depth tasks.
+"""This module implements processing function for depth data type.
 
 Common Tasks:
     - Format conversions.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements image quality assessment metrics."""
+"""This module implements image quality assessment metrics."""
 
 __all__ = [
     "ImageQualityAssessment",

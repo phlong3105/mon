@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements activation layers."""
+"""This module implements various activation functions."""
 
 __all__ = [
     "CELU",

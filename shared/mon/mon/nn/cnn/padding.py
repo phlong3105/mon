@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements padding layers."""
+"""This module implements various padding layers for convolutional neural networks."""
 
 __all__ = [
     "CircularPad1d",

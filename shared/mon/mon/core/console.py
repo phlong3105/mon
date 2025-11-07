@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements global consoles for logging and printing messages."""
+"""This module implements utilities for enhanced console logging and pretty-printing
+using the `rich` library.
+
+It includes functions to log messages, print dictionaries, and display lists of
+dictionaries in a tabular format.
+"""
 
 __all__ = [
     "console",

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Wraps and extends ``albumentations`` package for image augmentations and
-transformations on ``numpy.ndarray``.
+"""This package provides albumentations-based data augmentation and transformation
+functionalities.
 """
 
 __all__ = []

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements the Fourier Feature Network (FFN) MLP.
+"""This module implements Fourier-Feature Networks (FFN) for Implicit Neural
+Representation (INR).
 
 References:
     - Code: https://xeonqq.github.io/machine%20learning/fourier-feature-siren/

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements loss functions for images.
+"""This module implements various image loss functions for training deep learning models.
 
 The categories align with common loss function roles in computer vision:
     - color     : color/illumination consistency (photometric accuracy).

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Re-implements ``humps`` module."""
+"""This module implements functions for converting strings between different case
+styles, including camel-case, pascal-case, kebab-case, and snake-case. It also
+includes functions to validate if a string is in a specific case style.
+"""
 
 __all__ = [
     "camelize",

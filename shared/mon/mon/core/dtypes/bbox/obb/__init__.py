@@ -1,4 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements oriented bounding box (OBB) data types."""
+"""This module implements data types and processing functions for oriented
+bounding box (OBB).
+"""

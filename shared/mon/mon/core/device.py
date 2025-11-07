@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Handles device management and memory usage."""
+"""This module implements utility functions for managing and querying computational
+devices, including CPU and GPU (CUDA) devices.
+
+It includes functions to list available devices, retrieve memory usage statistics,
+determine the device of a model, and create device instances for PyTorch operations.
+"""
 
 __all__ = [
     "create_device",

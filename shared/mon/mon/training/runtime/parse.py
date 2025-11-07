@@ -15,10 +15,9 @@ import socket
 
 import box
 
-from mon.core.device import parse_device
-from mon.core.dtypes import image as I
-from mon.core.pathlib import Path
+from mon.core import image as I, parse_device, Path
 from mon.core.utils import merge_dicts
+from .menu_rich import RunCLI
 from .options import CLI_OPTIONS
 from .utils import (
     load_config,
@@ -26,7 +25,6 @@ from .utils import (
     parse_save_dir,
     parse_weights_file,
 )
-from .menu_rich import RunCLI
 
 
 # ----- Parser -----

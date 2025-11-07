@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements CLI options."""
+"""This module implements default CLI options and argument parsing utilities."""
 
 __all__ = [
     "CLI_OPTIONS",
@@ -12,8 +12,7 @@ from typing import Any
 
 import box
 
-from mon.core.device import list_devices
-from mon.core.enum import Task, TRTPrecision
+from mon.core import list_devices, Task, TRTPrecision
 
 
 # ----- Utils -----

@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements FINER.
+"""This module implements the FINER and FINER++ MLP architectures for Implicit
+Neural Representation (INR) using variable-periodic activation functions.
 
 References:
     - Paper: "FINER: Flexible spectral-bias tuning in Implicit NEural

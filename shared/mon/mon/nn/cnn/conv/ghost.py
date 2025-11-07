@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Ghost modules.
+"""This module implements GhostNet modules.
 
 References:
     - Paper-V1: "GhostNet: More Features from Cheap Operations," CVPR 2020.

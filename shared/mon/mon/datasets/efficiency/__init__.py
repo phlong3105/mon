@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements efficiency benchmark datasets."""
+"""This package provides efficiency benchmarking datasets."""
 
-from .speed10 import *
-from .speed1k import *
+from .speed import *

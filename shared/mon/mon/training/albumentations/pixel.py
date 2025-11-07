@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements resizing augmentations."""
+"""This module implements normalization transforms with mask support for image
+preprocessing.
+"""
 
 __all__ = [
     "NormalizeWithMask",
@@ -10,7 +12,7 @@ __all__ = [
 from typing import Any, Callable, Literal, Self
 
 import numpy as np
-from albucore import batch_transform, normalize, normalize_per_image
+from albucore import normalize, normalize_per_image
 from albumentations.core.transforms_interface import (
     BaseTransformInitSchema,
     BasicTransform,
@@ -18,7 +20,7 @@ from albumentations.core.transforms_interface import (
 from albumentations.core.type_definitions import Targets
 from pydantic import model_validator
 
-from mon.core.factory import ALBUMENTATIONS
+from mon.core import ALBUMENTATIONS
 
 
 @ALBUMENTATIONS.register()

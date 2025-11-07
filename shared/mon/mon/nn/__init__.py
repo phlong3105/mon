@@ -1,19 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Neural Networks (NN).
+"""This package implements various neural network (NN) components and architectures.
 
-A neural network is a machine learning model that stacks simple "neurons" in
-layers and learns pattern-recognizing weights and biases from data to map inputs
-to outputs.
-
-Notes:
-    - In this package, we follow the same coding conventions as PyTorch to
-      maintain consistency.
-    - If you don't know what to do, just look at the PyTorch source code.
+Notes: In this package, we follow the same coding conventions as PyTorch to
+maintain consistency. If you don't know what to do, just look at the PyTorch
+source code.
 
 References:
-    - https://www.ibm.com/think/topics/deep-learning#763338456
+    - Definition: https://www.ibm.com/think/topics/deep-learning#763338456
 """
 
 __all__ = [

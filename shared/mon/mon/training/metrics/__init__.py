@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements metrics for training and evaluation."""
+"""This package provides training metrics."""
 
 from .complexity import *
 from .core import *

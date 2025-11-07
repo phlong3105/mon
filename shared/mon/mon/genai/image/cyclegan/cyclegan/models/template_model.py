@@ -1,6 +1,6 @@
 """Model class template
 
-This module provides a template for users to implement custom models.
+This module implements a template for users to implement custom models.
 You can specify '--model template' to use this model.
 The class name should be consistent with both the filename and its model option.
 The filename should be <model>_dataset.py

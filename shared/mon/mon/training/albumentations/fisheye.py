@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements fisheye transformation for image and segmentation polygon --> bbox.
+"""This module implements fisheye transformation using Albumentations.
+
+It applies fisheye distortion to images and masks, with options for customizing
+focal length, image size, background color/label, and transformation parameters.
 
 References:
     - Code: https://github.com/Zane-Gu/AirEyeSeg
@@ -24,10 +27,7 @@ from albumentations.core.transforms_interface import (
 from albumentations.core.type_definitions import Targets
 from pydantic import Field
 
-from mon.core.console import log
-from mon.core.dtypes import hbb, image as I
-from mon.core.enum import BBoxFormat
-from mon.core.factory import ALBUMENTATIONS
+from mon.core import ALBUMENTATIONS, BBoxFormat, hbb, image as I, log
 
 
 # ----- Augmentation -----

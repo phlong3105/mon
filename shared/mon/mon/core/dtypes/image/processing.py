@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements image manipulation and preprocessing functions.
+"""This module implements processing function for image data type.
 
 Common Tasks:
     - Format conversions.

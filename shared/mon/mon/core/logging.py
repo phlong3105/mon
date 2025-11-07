@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extends Python's ``logging`` module."""
+"""This module implements logging utilities with rich formatting and context management
+to enable or disable logging and printing.
+"""
 
 __all__ = [
     "disable_print",

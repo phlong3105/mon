@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements upsampling layers."""
+"""This module implements various upsampling layers."""
 
 __all__ = [
     "Upsample",

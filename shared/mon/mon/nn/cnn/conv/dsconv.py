@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements depthwise separable convolutional (dsconv) layers."""
+"""This module implements depthwise-separable convolutional layers."""
 
 __all__ = [
     "DSConv2d",

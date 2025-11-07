@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements the NTIRE 2025 LLIE dataset.
+
+References:
+	- Data: https://codalab.lisn.upsaclay.fr/competitions/21636
+"""
+
+__all__ = [
+	"NTIRE2025LLIE",
+]
+
+from mon.core import rich
+from ...core import *
+
+
+@DATASETS.register(name="ntire2025llie")
+class NTIRE2025LLIE(VisionDataset):
+    """NTIRE 2025 LLIE dataset."""
+    
+    root_name : str         = "ntire2025llie"
+    tasks     : list[Task]  = [Task.LLE]
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
+        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+    }
+    classes   : Classes     = None
+
+    def list_primary_data(self) -> list:
+        """Lists ``datapoints`` with image annotations for split."""
+        if self.split in [Split.TRAIN]:
+            patterns = [self.root / "train" / "image"]
+        elif self.split in [Split.VAL]:
+            patterns = [self.root / "val"   / "image"]
+        elif self.split in [Split.TEST]:
+            patterns = [self.root / "test"  / "image"]
+        else:
+            raise ValueError(f"``split`` invalid: [{self.split}]")
+
+        images: list[Image] = []
+        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                paths = sorted(pattern.rglob("*"))
+                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+                for path in pbar.track(sequence=paths, description=desc):
+                    if path.is_image_file():
+                        images.append(Image(path=path, root=pattern))
+
+        return images

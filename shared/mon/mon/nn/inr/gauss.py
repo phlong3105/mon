@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""This module implements the Gaussian MLP and its corresponding layer for Implicit
+Neural Representation (INR).
+"""
+
 __all__ = [
     "GAUSS",
     "GaussLayer",

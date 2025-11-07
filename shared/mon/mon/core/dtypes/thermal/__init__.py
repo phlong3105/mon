@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements thermal data types."""
+"""This module implements data types and processing functions for thermal data."""
 
 from .core import *

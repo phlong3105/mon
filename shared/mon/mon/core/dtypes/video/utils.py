@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements general-purpose utilities for video processing tasks.
+"""This module contains utility functions for video data type.
 
 Common Tasks:
     - Property accessors

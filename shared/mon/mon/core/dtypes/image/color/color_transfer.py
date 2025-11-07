@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Transfers color from source image to target image
+"""This module implements color transfer between images.
 
 References:
     - Paper: "Color Transfer between Images".

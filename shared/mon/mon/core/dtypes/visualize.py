@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements drawing functionalities for images."""
+"""This module implements visualization functions."""
 
 __all__ = [
     "draw_bbox",

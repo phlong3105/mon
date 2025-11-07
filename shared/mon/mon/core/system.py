@@ -1,22 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Handles system-wise utilities."""
+"""This module implements system-related utilities such as clearing the terminal
+and setting random seeds for reproducibility.
+"""
 
 __all__ = [
     "clear_terminal",
     "set_random_seed",
 ]
 
-import fcntl
 import os
 import platform
 import random
-import shutil
-import struct
-import subprocess
-import sys
-import termios
 from typing import Sequence
 
 import numpy as np

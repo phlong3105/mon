@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements attention layers."""
+"""This module implements various attention mechanisms for neural networks."""
 
 __all__ = [
     "SEBlock",

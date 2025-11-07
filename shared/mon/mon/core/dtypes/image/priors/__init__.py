@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements various image priors."""
+"""This module contains prior functions for image data type."""
 
 from .attention import *
 from .descriptive import *

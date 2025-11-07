@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements dropout layers."""
+"""This module implements various dropout layers."""
 
 __all__ = [
     "AlphaDropout",

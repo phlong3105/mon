@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements linear/non-linear filtering for 2D images."""
+"""This package contains filtering functions for image data type."""
 
 from .box_filter import *
 from .guided_filter import *

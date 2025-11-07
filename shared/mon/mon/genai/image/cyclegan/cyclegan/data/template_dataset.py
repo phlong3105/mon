@@ -1,6 +1,6 @@
 """Dataset class template
 
-This module provides a template for users to implement custom datasets.
+This module implements a template for users to implement custom datasets.
 You can specify '--dataset_mode template' to use this dataset.
 The class name should be consistent with both the filename and its dataset_mode option.
 The filename should be <dataset_mode>_dataset.py

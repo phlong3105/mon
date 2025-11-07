@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements MobileOne layers.
+"""This module implements MobileOne building block.
 
 References:
     - Paper: "MobileOne: An Improved One millisecond Mobile Backbone," CVPR 2023.

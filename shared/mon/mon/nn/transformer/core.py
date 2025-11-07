@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements core transformer layers."""
+"""This module implements core Transformer components."""
 
 __all__ = [
     "Transformer",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements runtime interfaces."""
+"""This package provides runtime functionalities for training and prediction CLIs."""
 
 __all__ = [
     "CLI_OPTIONS",

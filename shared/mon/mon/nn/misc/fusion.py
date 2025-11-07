@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements attentional feature fusion layers.
+"""This module implements various feature fusion layers.
 
 References:
     - Paper: "Attentional Feature Fusion," WACV 2021.

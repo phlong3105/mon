@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements a rich-text CLI menu using ``rich`` package."""
+"""This module implements an interactive CLI for configuring and running model tasks."""
 
 __all__ = [
     "RunCLI",
@@ -12,8 +12,7 @@ from typing import Any, Collection, Sequence
 import box
 from rich import prompt
 
-from mon.core.console import console, rprint_dict
-from mon.core.pathlib import Path
+from mon.core import console, Path, rprint_dict
 from mon.core.rich import SelectionOrInputPrompt
 from mon.core.utils import is_int, to_int, to_list, to_str
 from .options import CLI_OPTIONS, DEFAULT_ARGS

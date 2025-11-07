@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements container."""
+"""This module implements various container modules for neural networks."""
 
 __all__ = [
     "Container",

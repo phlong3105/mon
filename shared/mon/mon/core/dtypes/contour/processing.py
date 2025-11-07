@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements geometry functions for contours/segments.
+"""This module implements processing function for contour data type.
 
 Common Tasks:
     - Format conversions.

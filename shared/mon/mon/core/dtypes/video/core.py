@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Frame class and its core properties.
+"""This module implements the Frame class for video data handling.
 
 Common Tasks:
     - Define the Frame class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).

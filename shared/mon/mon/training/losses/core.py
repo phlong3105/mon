@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Registers ``torch``'s losses and implements basic loss functions."""
+"""This module implements various loss functions for training deep learning models."""
 
 __all__ = [
     "BCELoss",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements sparsing layers."""
+"""This module implements sparse neural network components."""
 
 __all__ = [
     "Embedding",

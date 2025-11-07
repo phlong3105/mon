@@ -15,7 +15,7 @@ from typing import Any
 
 import numpy as np
 from mon.nn import _size_2_t
-from mon.cv.geometry.transforms.albumentation import (
+from mon.training.albumentation import (
     BaseModel,
     DualTransform,
     Field,

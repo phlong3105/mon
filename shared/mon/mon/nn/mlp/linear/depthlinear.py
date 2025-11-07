@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements depth-similarity linear layers."""
+"""This module implements a depth-aware linear layer that incorporates depth
+information into the linear transformation process.
+"""
 
 __all__ = [
     "DepthAwareLinear",

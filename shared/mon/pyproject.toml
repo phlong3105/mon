@@ -133,7 +133,7 @@ include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-torchdiffeq     = { path = "../math/torchdiffeq"       , develop = true }
+torchdiffeq     = { path = "../ext/math/torchdiffeq"   , develop = true }
 snntorch        = { path = "../ext/nn/snntorch"        , develop = true }
 spikingjelly    = { path = "../ext/nn/spikingjelly"    , develop = true }
 transformers    = { path = "../ext/nn/transformers"    , develop = true }

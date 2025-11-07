@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements HBBs class and its core properties.
+"""This module implements the HBBs class for handling horizontal bounding boxes.
 
 Common Tasks:
     - Define the HBBs class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).

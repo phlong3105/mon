@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Positional Normalization (PONO) and Moment Shortcut (MS).
+"""This module implements Positional Normalization (PONO) and Moment Shortcut (MS)
+layers.
 
 References:
     - Paper: "Positional Normalization," NeurIPS 2019.

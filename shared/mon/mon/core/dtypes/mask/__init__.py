@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements segmentation masks data types."""
+"""This module implements data types and processing functions for mask data."""
 
 from .core import *
 from .processing import *

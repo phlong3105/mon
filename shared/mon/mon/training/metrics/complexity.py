@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements efficiency score metrics."""
+"""This module implements model complexity benchmarking functionalities."""
 
 __all__ = [
     "benchmark",
@@ -14,9 +14,7 @@ import thop
 import torch
 import torch.nn as nn
 
-from mon.core.console import log
-from mon.core.device import get_model_device
-from mon.core.dtypes import image as I
+from mon.core import get_model_device, image as I, log
 
 
 def compute_model_stats(

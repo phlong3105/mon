@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements factory classes for registering and building objects at runtime."""
+"""This module implements factory classes for registering and building objects.
+"""
 
 __all__ = [
     "Factory",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements batch normalization (batchnorm) layers."""
+"""This module implements various Batch Normalization layers."""
 
 __all__ = [
     "AdaptiveBatchNorm2d",

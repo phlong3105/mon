@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements MultiLayer Perceptron (MLP), the first type of neural network."""
+"""This package implements various multi-layer perceptron (MLP) components."""
 
 __all__ = [
     "Bilinear",

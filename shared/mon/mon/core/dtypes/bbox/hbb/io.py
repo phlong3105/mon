@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements input/output operations for bbox label file.
+"""This module implements HBB I/O operations.
 
 Common Tasks:
     - Load bboxes from disk.

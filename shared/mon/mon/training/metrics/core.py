@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Registers ``torchmetrics``'s metrics for neural network training and evaluation."""
+"""This package provides core metrics for model evaluation."""
 
 __all__ = [
     "AUROC",

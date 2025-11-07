@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements horizontal bounding box (HBB) data types."""
+"""This module implements data types and processing functions for horizontal
+bounding boxes (HBBs).
+"""
 
 __all__ = [
     "HBBs",

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Sobel filter/operator."""
+"""This module implements sobel filters."""
 
 __all__ = [
     "sobel_filter",

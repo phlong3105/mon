@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements DepthMap class and its core properties.
+"""This module implements the DepthMap class for depth map data handling.
 
 Common Tasks:
     - Define the DepthMap class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).

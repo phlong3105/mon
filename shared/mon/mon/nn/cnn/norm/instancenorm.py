@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements instance normalization (intancenorm) layers."""
+"""This module implements various Instance Normalization layers."""
 
 __all__ = [
     "AdaptiveInstanceNorm2d",

@@ -40,17 +40,6 @@ __all__ = [
 from functools import partial
 
 from mon.constants import DATASETS, DEPTH_SOURCE, INFRARED_SOURCE
-from mon.core.data import (
-    BaseDataset,
-    Classes,
-    DataLoader,
-    ImageLoader,
-    Modalities,
-    Modality,
-    VideoLoader,
-    VideoLoaderCV,
-    VisionDataset,
-)
 from mon.core.dtypes import (
     BaseTensorOrArray,
     DepthMap,
@@ -60,11 +49,23 @@ from mon.core.dtypes import (
     InfraredMap,
     Probs,
     SemanticMask,
+
+)
+from mon.core.enum import DepthSource, InfraredSource, Split, Task
+from mon.training.data import (
+    BaseDataset,
+    Classes,
+    DataLoader,
+    ImageLoader,
+    Modalities,
+    Modality,
+    VideoLoader,
+    VideoLoaderCV,
     VideoWriter,
     VideoWriterCV,
     VideoWriterFFmpeg,
+    VisionDataset,
 )
-from mon.core.enum import DepthSource, InfraredSource, Split, Task
 
 # Constants for convenience
 DepthName          = f"{DEPTH_SOURCE.value}"

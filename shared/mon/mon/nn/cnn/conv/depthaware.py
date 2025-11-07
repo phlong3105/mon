@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Depth-Aware Convolution and Depth-Aware Pooling layers.
+"""This module implements Depth-Aware Convolution and Depth-Aware Average Pooling layers.
 
 References:
     - Paper: "Depth-aware CNN for RGB-D Segmentation," ECCV 2018.

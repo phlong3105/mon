@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Registers ``torch``'s optimizers and learning rate schedulers."""
+"""This module exposes core optimizers and learning rate schedulers from
+``torch.optim`` and ``torch.optim.lr_scheduler``.
+"""
 
 __all__ = [
     "ASGD",

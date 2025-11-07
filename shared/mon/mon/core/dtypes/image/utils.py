@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements general-purpose utilities for image processing tasks.
+"""This module contains utility functions for image data type.
 
 Common Tasks:
     - Property accessors

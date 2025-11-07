@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Positional Encoding (PE) MLP.
+"""This module implements various Positional Encoding (PE) techniques for Implicit
+Neural Representations (INRs).
 
 References:
     - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py

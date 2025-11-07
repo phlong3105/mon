@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements resizing augmentations."""
+"""This module implements resizing transformation."""
 
 __all__ = [
     "ResizeDivisibleBy",
@@ -19,8 +19,7 @@ from albumentations.core.transforms_interface import (
 from albumentations.core.type_definitions import ALL_TARGETS
 from pydantic import Field
 
-from mon.core.dtypes import image as I
-from mon.core.factory import ALBUMENTATIONS
+from mon.core import ALBUMENTATIONS, image as I
 
 
 @ALBUMENTATIONS.register()

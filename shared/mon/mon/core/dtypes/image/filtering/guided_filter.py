@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements guided filter."""
+"""This module implements several guided filters."""
 
 __all__ = [
     "ConvGuidedFilter",
