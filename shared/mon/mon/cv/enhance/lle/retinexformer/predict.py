@@ -20,7 +20,7 @@ from mon import albumentations as A
 from mon.nn import functional as F
 from retinexformer import create_model, parse
 
-mon.dev()
+mon.init()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]

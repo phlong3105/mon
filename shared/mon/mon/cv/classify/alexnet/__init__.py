@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements AlexNet models."""
+"""This package implements AlexNet model for image classification."""
 
 __all__ = [
     "AlexNet",

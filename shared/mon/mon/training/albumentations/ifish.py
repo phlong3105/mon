@@ -14,7 +14,6 @@ __all__ = [
 from typing import Any
 
 import numpy as np
-from mon.nn import _size_2_t
 from mon.training.albumentation import (
     BaseModel,
     DualTransform,
@@ -22,8 +21,9 @@ from mon.training.albumentation import (
     Targets,
 )
 
-from mon.constants import TRANSFORMS
+from mon.core import TRANSFORMS
 from mon.cv import types
+from mon.nn import _size_2_t
 
 
 # ----- Utils -----

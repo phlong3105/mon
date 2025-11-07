@@ -23,9 +23,8 @@ from typing import Any
 
 import box
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, Task
 from .models.cycle_gan_model import CycleGANModel
 from .models.pix2pix_model import Pix2PixModel
 

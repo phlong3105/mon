@@ -5,7 +5,6 @@ import torch
 from torchvision import transforms
 from torchvision.models import vgg
 
-import mon.nn as nn
 from mon.nn import functional as F
 from mon.training import losses
 

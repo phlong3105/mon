@@ -21,12 +21,12 @@ import torch.utils
 from pytorch_lightning import seed_everything
 
 import mon
-import mon.nn as nn
+from mon import nn
 from quadprior import (
     create_model, DPMSolverSampler, HWC3, load_state_dict, resize_image,
 )
 
-mon.dev()
+mon.init()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]

@@ -16,21 +16,17 @@ import time
 __start = time.time()
 
 from mon.core import *
-from mon.constants import *
-from mon.nn import *
-from mon.training import *
-from mon.datasets import *
 
 __end = time.time()
 console.log(f"`mon` loaded in: {__end - __start:.4f} seconds.")
 
 
-# Import development packages
-def dev(verbose: bool = True):
+def init(verbose: bool = True):
     start = time.time()
     
     import mon.cv
     import mon.genai
+    import mon.datasets
     
     end = time.time()
     if verbose:

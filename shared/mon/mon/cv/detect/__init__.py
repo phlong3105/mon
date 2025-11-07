@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Object Detection.
-
-This package provides object detection models and utilities.
-"""
+"""This package implements various object detection models."""
 
 from .deim import *
 from .dfine import *

@@ -22,9 +22,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import MLType, Path, Task, image as I
+from mon import nn
+from mon.core import image as I, MLType, MODELS, Path, Task
 from .pyramid import (
     collapse_pyramid,
     compute_gaussian_pyramid,

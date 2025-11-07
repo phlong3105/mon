@@ -25,10 +25,8 @@ import box
 from torchvision import models as tvm
 from torchvision.models.vgg import cfgs, make_layers
 
-import mon.nn as nn
-import mon.nn as nn
-from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, ROOT_DIR, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]

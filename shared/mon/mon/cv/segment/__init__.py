@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements segmentation algorithms."""
+"""This module implements various image segmentation methods."""
 
 from .sam import *

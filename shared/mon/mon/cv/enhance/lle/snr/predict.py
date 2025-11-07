@@ -19,7 +19,7 @@ import mon
 from mon import albumentations as A
 from snr import create_model, option
 
-mon.dev()
+mon.init()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]

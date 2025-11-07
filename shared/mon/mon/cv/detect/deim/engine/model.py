@@ -16,10 +16,9 @@ from typing import Any
 
 import box
 import torch
+from mon.core import MODELS
 
-import mon.nn as nn
-import mon.nn as nn
-from mon.constants import MODELS
+from mon import nn
 from mon.core import MLType, Path, Task
 # sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from .core import YAMLConfig

@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Image/Video Classification.
-
-This package provides image and video classification models and utilities.
-"""
+"""This package implements various image/video classification methods."""
 
 from .alexnet import *
 from .convnext import *

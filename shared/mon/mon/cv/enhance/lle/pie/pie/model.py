@@ -17,9 +17,8 @@ import box
 import cv2
 import numpy as np
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, Task
 from .module import *
 
 current_file = Path(__file__).absolute()

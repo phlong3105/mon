@@ -20,7 +20,7 @@ from PIL import Image
 import mon
 import nerco
 
-mon.dev()
+mon.init()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]

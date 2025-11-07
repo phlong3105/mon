@@ -15,9 +15,8 @@ __all__ = [
 
 import box
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, Task
 from .models.model import FinetuneModel, InitModel
 
 current_file = Path(__file__).absolute()

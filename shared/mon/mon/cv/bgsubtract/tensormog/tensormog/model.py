@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements TensorMoG model for background subtraction.
+"""This module implements the TensorMoG for background subtraction.
 
 References:
     - Paper: "TensorMoG: A Tensor-Driven Gaussian Mixture Model with Dynamic Scene
@@ -14,10 +14,8 @@ __all__ = [
 
 import torch
 
-import mon.nn as nn
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import Enum, MLType, Path, Task
+from mon import nn
+from mon.core import Enum, MLType, MODELS, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]

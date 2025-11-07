@@ -5,7 +5,7 @@ import imageio
 import torch
 from torch.utils.data import Dataset
 
-from mon.constants import ROOT_DIR
+from mon.core import ROOT_DIR
 from ..utils import *
 
 

@@ -13,7 +13,7 @@ __all__ = [
 import torch
 from torchvision.models.vgg import vgg16
 
-import mon.nn as nn
+from mon import nn
 from mon.nn import functional as F
 from mon.training import losses
 

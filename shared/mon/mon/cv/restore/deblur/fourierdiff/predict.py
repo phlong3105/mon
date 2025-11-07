@@ -20,7 +20,7 @@ import fourierdiff
 import mon
 from mon import albumentations as A
 
-mon.dev()
+mon.init()
 torch.set_printoptions(sci_mode=False)
 
 current_file = mon.Path(__file__).absolute()

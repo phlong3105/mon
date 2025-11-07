@@ -16,8 +16,7 @@ __all__ = [
 
 from typing import Any
 
-from mon.constants import ROOT_DIR
-from mon.core import DATASETS, Path, Split
+from mon.core import DATASETS, Path, ROOT_DIR, Split
 from .dataloader import DataLoader
 from .dataset import BaseDataset, ImageLoader, VideoLoaderCV
 

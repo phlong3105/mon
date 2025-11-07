@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Computer Vision (CV).
-
-Computer vision is a subfield of artificial intelligence (AI) that equips machines
-with the ability to process, analyze and interpret visual inputs such as
-images and videos. It uses machine learning to help computers and other systems
-derive meaningful information from visual data.
+"""This package implements computer vision (CV).
 
 References:
-    - https://www.ibm.com/think/topics/computer-vision#691946467
+    - Definition: https://www.ibm.com/think/topics/computer-vision#691946467
 """
+
+__all__ = []  # Do not populate ``mon`` namespace.
 
 from mon.cv.bgsubtract import *
 from mon.cv.classify import *

@@ -20,9 +20,8 @@ from typing import Any
 
 import torch
 
-import mon.nn as nn
-from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, ROOT_DIR, Task
 from .dpt import DepthAnythingV2
 
 current_file = Path(__file__).absolute()

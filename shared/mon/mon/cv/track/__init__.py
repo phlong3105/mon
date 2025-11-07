@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements tracking algorithms."""
+"""This package implements multiple object tracking algorithms."""
 
 from .base import *
 from .sort import *

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements TensorMoG model prediction pipeline for background subtraction.
+"""This module implements TensorMoG prediction pipeline.
 
 References:
     - Paper: "TensorMoG: A Tensor-Driven Gaussian Mixture Model with Dynamic Scene
@@ -14,12 +14,12 @@ import box
 import cv2
 
 import mon
-import tensormog
-from mon import albumentations as A
+from mon import Path, training as mt
+from tensormog import TensorMOG
 
-mon.dev()
+mon.init()
 
-current_file = mon.Path(__file__).absolute()
+current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
@@ -37,8 +37,8 @@ def predict(args: dict | box.Box) -> str:
     tau_updating_rate = args.network.tau_updating_rate
     
     # Start
-    mon.rt.print_run_summary(args)
-
+    mt.print_run_summary(args)
+    
     # Device
     device = mon.create_device(args.device)
     
@@ -46,7 +46,7 @@ def predict(args: dict | box.Box) -> str:
     mon.set_random_seed(args.seed)
     
     # Model
-    model = tensormog.TensorMOG(
+    model = TensorMOG(
         height            = height,
         width             = width,
         num_gaussians     = num_gaussians,
@@ -61,15 +61,15 @@ def predict(args: dict | box.Box) -> str:
     
     # Benchmark
     if args.benchmark:
-        mon.metrics.benchmark(model.model)
+        mt.benchmark(model.model)
     
     # Data I/O
-    transform = A.Compose([
-        A.ResizeDivisibleBy(height=height, width=width, divisor=32),
-        A.Normalize(normalization="min_max"),
-        A.ToTensorV2(transpose_mask=True),
+    transform = mt.A.Compose([
+        mt.A.ResizeDivisibleBy(height=height, width=width, divisor=32),
+        mt.A.Normalize(normalization="min_max"),
+        mt.A.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataloader = mon.data.build_dataloader(args.data, args.root, transform)
+    data_name, dataloader = mt.build_dataloader(args.data, args.root, transform)
     
     # Predict
     timers = mon.TimeProfiler()
@@ -105,13 +105,13 @@ def predict(args: dict | box.Box) -> str:
             
             # Save
             if args.save_image:
-                out_dir  = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mt.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.save_image(background, out_path)
             
             # Save Debug
             if args.save_debug:
-                debug_dir  = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                debug_dir  = mt.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 debug_path = debug_dir / f"{path.stem}_foreground{mon.SAVE_IMAGE_EXT}"
                 mon.image.save_image(foreground, debug_path)
     timers.total.tock()
@@ -123,12 +123,12 @@ def predict(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    cli  = mon.rt.parse_cli_args(root=root_dir)
+    cli  = mt.parse_cli_args(root=root_dir)
     data = mon.utils.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.rt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
+        args = mt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
         predict(args)
 
 

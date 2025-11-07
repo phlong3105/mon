@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 
 import torch
-from mypy.state import state
 
 from mon import nn
 from . import networks

@@ -17,9 +17,8 @@ from typing import Any
 
 import box
 
-import mon.nn as nn
-from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, ROOT_DIR, Task
 from .modeling.model import enhance_net_nopool
 
 current_file = Path(__file__).absolute()

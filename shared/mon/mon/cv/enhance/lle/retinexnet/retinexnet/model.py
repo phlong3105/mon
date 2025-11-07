@@ -23,9 +23,8 @@ import torch
 from PIL import Image
 from torch.autograd import Variable
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import get_model_device, log, MLType, Path, Task
+from mon import nn
+from mon.core import get_model_device, log, MLType, MODELS, Path, Task
 from mon.nn import functional as F
 from mon.training import optims
 from .module import (

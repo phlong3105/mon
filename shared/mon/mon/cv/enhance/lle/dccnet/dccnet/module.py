@@ -9,7 +9,7 @@ __all__ = [
 
 import torch
 
-import mon.nn as nn
+from mon import nn
 
 
 # ----- Module -----

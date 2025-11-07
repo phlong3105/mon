@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Ultralytics SAM model for segmentation.
+"""This module implements the Segment Anything Model (SAM) for image segmentation.
 
 References:
     - Code: https://github.com/ultralytics/ultralytics

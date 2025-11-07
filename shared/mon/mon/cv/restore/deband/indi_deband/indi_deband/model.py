@@ -17,9 +17,8 @@ from typing import Any
 import box
 import torch
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, Task
 from .module import (
     AttnBlock,
     EncoderFFTime2d,

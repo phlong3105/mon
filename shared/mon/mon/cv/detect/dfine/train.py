@@ -24,7 +24,7 @@ from dfine.core import YAMLConfig
 from dfine.misc import dist_utils
 from dfine.solver import TASKS
 
-mon.dev()
+mon.init()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]

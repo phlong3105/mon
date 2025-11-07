@@ -18,9 +18,8 @@ from collections import namedtuple
 import box
 from cv2.ximgproc import guidedFilter
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import log, MLType, Path, Task
+from mon import nn
+from mon.core import log, MLType, MODELS, Path, Task
 from mon.training import optims
 from .net import *
 from .net.losses import StdLoss

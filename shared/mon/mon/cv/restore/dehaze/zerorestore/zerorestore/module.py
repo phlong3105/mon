@@ -3,7 +3,7 @@
 
 import torch
 
-import mon.nn as nn
+from mon import nn
 
 
 class DoubleConv(nn.Module):

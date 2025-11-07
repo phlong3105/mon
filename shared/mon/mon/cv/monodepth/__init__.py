@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements monocular depth estimation algorithms."""
+"""This package implements various monocular depth estimation methods."""
 
 from .daac import *
 from .dav2 import *

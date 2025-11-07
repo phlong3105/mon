@@ -22,7 +22,7 @@ import mon
 import ruas
 from mon import albumentations as A
 
-mon.dev()
+mon.init()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]

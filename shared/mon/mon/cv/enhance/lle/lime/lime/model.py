@@ -16,9 +16,8 @@ __all__ = [
 import box
 import numpy as np
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, Task
 from .module import (
     correct_underexposure,
     create_spacial_affinity_kernel,

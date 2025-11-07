@@ -21,7 +21,7 @@ from quadprior import (
     load_state_dict,
 )
 
-mon.dev()
+mon.init()
 disable_verbosity()
 
 current_file = mon.Path(__file__).absolute()

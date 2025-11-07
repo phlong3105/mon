@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from PIL import Image
 
-import mon.nn as nn
+from mon import nn
 from mon.nn import functional as F
 from .filter import FastGuidedFilter
 

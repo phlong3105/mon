@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import torch
 
-import mon.nn as nn
+from mon import nn
 
 
 # ----- SIREN -----

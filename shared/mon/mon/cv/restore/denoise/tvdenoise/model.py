@@ -11,9 +11,8 @@ import box
 import kornia
 import torch
 
-import mon.nn as nn
-from mon.constants import MODELS
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, Task
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]

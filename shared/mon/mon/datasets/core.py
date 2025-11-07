@@ -39,7 +39,15 @@ __all__ = [
 
 from functools import partial
 
-from mon.constants import DATASETS, DEPTH_SOURCE, INFRARED_SOURCE
+from mon.core import (
+    DATASETS,
+    DEPTH_SOURCE,
+    DepthSource,
+    INFRARED_SOURCE,
+    InfraredSource,
+    Split,
+    Task,
+)
 from mon.core.dtypes import (
     BaseTensorOrArray,
     DepthMap,
@@ -49,9 +57,7 @@ from mon.core.dtypes import (
     InfraredMap,
     Probs,
     SemanticMask,
-
 )
-from mon.core.enum import DepthSource, InfraredSource, Split, Task
 from mon.training.data import (
     BaseDataset,
     Classes,

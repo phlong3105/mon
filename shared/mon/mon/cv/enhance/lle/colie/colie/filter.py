@@ -4,7 +4,7 @@
 import torch
 from torch.autograd import Variable
 
-import mon.nn as nn
+from mon import nn
 from mon.nn import functional as F
 
 

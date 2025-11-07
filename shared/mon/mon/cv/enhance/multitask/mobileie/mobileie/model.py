@@ -18,9 +18,8 @@ from typing import Any
 import box
 import torch
 
-import mon.nn as nn
-from mon.constants import MODELS, ROOT_DIR
-from mon.core import MLType, Path, Task
+from mon import nn
+from mon.core import MLType, MODELS, Path, ROOT_DIR, Task
 from .network.utils import DropBlock, FST, FSTS, MBRConv1, MBRConv3, MBRConv5
 
 current_file = Path(__file__).absolute()

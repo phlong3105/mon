@@ -20,7 +20,7 @@ from copy import deepcopy
 import thop
 import torch
 
-import mon.nn as nn
+from mon import nn
 from mon.core import get_model_device, image as I
 from mon.nn import functional as F
 

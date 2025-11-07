@@ -13,10 +13,7 @@ from typing import Any, Union
 import box
 import torch
 
-from mon.constants import VERBOSE
-from mon.core.console import log
-from mon.core.enum import MLType, Task
-from mon.core.pathlib import download_url_to_file, Path
+from mon.core import download_url_to_file, log, MLType, Path, Task, VERBOSE
 
 
 # ----- Model -----
