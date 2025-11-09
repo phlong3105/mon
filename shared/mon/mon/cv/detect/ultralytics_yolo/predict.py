@@ -19,7 +19,7 @@ import mon
 from ultralytics import settings, YOLO
 from ultralytics.engine import results
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -33,7 +33,7 @@ Results      = results.Results
 @torch.no_grad()
 def predict(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device = [args.device] if isinstance(args.device, str | int) else args.device
@@ -60,7 +60,7 @@ def predict(args: dict | box.Box) -> str:
     model = YOLO(cfg.model)
     
     # Data I/O
-    data_name, dataset = mon.data.build_dataset(args.data, args.root)
+    data_name, dataset = mon.build_dataset(args.data, args.root)
     # References: https://docs.ultralytics.com/quickstart/#modifying-settings
     settings.update({"datasets_dir": str(args.root)})
 
@@ -118,7 +118,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_result:
-                out_dir   = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir   = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
                 json_path = out_dir.parent / f"{data_name}.json"
 
                 # Append image
@@ -175,12 +175,12 @@ def predict(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    cli  = mon.rt.parse_cli_args(root=root_dir)
-    data = mon.utils.to_list(cli.data)
+    cli  = mon.parse_cli_args(root=root_dir)
+    data = mon.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.rt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
+        args = mon.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
         predict(args)
 
 

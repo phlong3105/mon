@@ -386,7 +386,7 @@ def train(args: argparse.Namespace):
 # ----- Main -----
 
 def main() -> str:
-    args = mon.rt.parse_train_args(root=root_dir, model_root=root_dir)
+    args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)
 
 

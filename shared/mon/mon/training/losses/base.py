@@ -13,7 +13,7 @@ from typing import Literal
 import torch
 from torch.nn.modules.loss import _Loss
 
-from mon.core.utils import depascalize
+from mon.core import depascalize
 
 
 # ----- Base Loss -----

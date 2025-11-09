@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 import llunetpp
 import mon
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -72,7 +72,7 @@ def val_epoch(val_dataloader, model, criterion, device):
 
 def train(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
     
     # Device
     device = mon.create_device(args.device)
@@ -176,7 +176,7 @@ def train(args: dict | box.Box) -> str:
     
 # ----- Main -----
 def main() -> str:
-    args = mon.rt.parse_train_args(root=root_dir, model_root=root_dir)
+    args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)
 
 

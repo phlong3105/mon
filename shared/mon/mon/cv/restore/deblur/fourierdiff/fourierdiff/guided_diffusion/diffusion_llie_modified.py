@@ -331,7 +331,7 @@ class Diffusion(object):
 
             # tvu.save_image(x[0], os.path.join(self.args.image_folder, f"{name}"))
             if save_image:
-                output_dir  = mon.rt.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, path, keep_subdirs, save_nearby)
+                output_dir  = mon.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, path, keep_subdirs, save_nearby)
                 output_path = output_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 tvu.save_image(x, str(output_path))

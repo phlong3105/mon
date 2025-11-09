@@ -12,7 +12,8 @@ from typing import Any
 
 import box
 
-from mon.core import list_devices, Task, TRTPrecision
+from mon.core.device import list_devices
+from mon.core.enum import Task, TRTPrecision
 
 
 # ----- Utils -----

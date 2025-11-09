@@ -4,11 +4,8 @@
 """This module defines global constants used across ``mon`` framework."""
 
 __all__ = [
-    "ALBUMENTATIONS",
-    "DATASETS",
     "DEPTH_SOURCE",
     "INFRARED_SOURCE",
-    "MODELS",
     "ROOT_DIR",
     "SAVE_CKPT_EXT",
     "SAVE_DEBUG_DIR",
@@ -26,11 +23,6 @@ from mon.core.enum import (
     ImageExtension,
     InfraredSource,
     WeightExtension,
-)
-from mon.core.factory import (
-    ALBUMENTATIONS,
-    DATASETS,
-    MODELS,
 )
 from mon.core.pathlib import Path
 

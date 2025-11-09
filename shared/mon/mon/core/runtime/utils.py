@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements runtime utilities functions."""
+"""This module implements CLI utilities for configuration management and parsing."""
 
 _all__ = [
     "list_archs",
@@ -12,6 +12,7 @@ _all__ = [
     "load_config",
     "load_project_defaults",
     "parse_config_file",
+    "parse_data_dir",
     "parse_model_dir",
     "parse_model_fullname",
     "parse_output_dir",
@@ -29,20 +30,11 @@ from typing import Any, Sequence
 import box
 import yaml
 
-from mon.core import (
-    console,
-    DATASETS,
-    log,
-    log_error,
-    MLType,
-    MODELS,
-    Path,
-    pprint_dict,
-    ROOT_DIR,
-    Split,
-    Task,
-    ZOO_DIR,
-)
+from mon.core.console import console, log, log_error, pprint_dict
+from mon.core.constants import ROOT_DIR, ZOO_DIR
+from mon.core.enum import MLType, Split, Task
+from mon.core.factory import DATASETS, MODELS
+from mon.core.pathlib import Path
 from mon.core.utils import depascalize, to_list, unique
 
 
@@ -539,6 +531,39 @@ def parse_output_dir(
             return root / subdir_name
         else:
             return root
+
+
+def parse_data_dir(root: Path, data_dir: Path = "") -> Path:
+    """Parses the absolute data directory path from given components.
+
+    Args:
+        root: Root directory.
+        data_dir: Data directory.
+
+    Returns:
+        Parsed the absolute path of the data directory.
+    """
+    root_      = Path(root)     if root     not in [None, "None", ""] else ROOT_DIR
+    data_dir_  = Path(data_dir) if data_dir not in [None, "None", ""] else None
+
+    candidates = []
+    if data_dir_:
+        candidates.extend([
+            data_dir_,
+            root_    / data_dir_,
+            root_    / "data" / data_dir_,
+            ROOT_DIR / data_dir_,
+            ROOT_DIR / "data" / data_dir_
+        ])
+    candidates.extend([
+        root_    / "data",
+        ROOT_DIR / "data"
+    ])
+
+    for d in candidates:
+        if d.is_dir():
+            return d
+    raise FileNotFoundError(f"``data_dir`` not found: {data_dir}.")
 
 
 # ----- Print -----

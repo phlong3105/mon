@@ -12,12 +12,6 @@ __all__ = [
     "is_int",
     "merge_dicts",
     "sort",
-    "to_1tuple",
-    "to_2tuple",
-    "to_3tuple",
-    "to_4tuple",
-    "to_5tuple",
-    "to_6tuple",
     "to_float",
     "to_float_list",
     "to_int",
@@ -228,14 +222,6 @@ def to_ntuple(n: int) -> Callable[[Any], tuple]:
             return tuple(items * (n // len(items) + 1))[:n] if len(items) == 1 else items[:n]
         return tuple(itertools.repeat(x, n))
     return parse
-
-
-to_1tuple = to_ntuple(1)
-to_2tuple = to_ntuple(2)
-to_3tuple = to_ntuple(3)
-to_4tuple = to_ntuple(4)
-to_5tuple = to_ntuple(5)
-to_6tuple = to_ntuple(6)
 
 
 # ----- Validation -----

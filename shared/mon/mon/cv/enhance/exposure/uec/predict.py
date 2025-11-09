@@ -15,10 +15,10 @@ import cv2
 import torch
 
 import mon
+import mon.training.albumentations as A
 import uec
-from mon import albumentations as A
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -36,7 +36,7 @@ def predict(args: dict | box.Box) -> str:
     cfgs.display_id     = -1            # no visdom display; the test code saves the results to a HTML file.
     
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device      = mon.create_device(args.device)
@@ -46,7 +46,7 @@ def predict(args: dict | box.Box) -> str:
     mon.set_random_seed(args.seed)
 
     # Pretrained
-    pretrained = mon.rt.parse_weights_dir(args.root, args.weights)
+    pretrained = mon.parse_weights_dir(args.root, args.weights)
     if pretrained and pretrained.is_dir():
         mon.log(f"Pretrained: {pretrained}.")
     else:
@@ -70,7 +70,7 @@ def predict(args: dict | box.Box) -> str:
         A.Normalize(normalization="min_max"),
         A.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataloader = mon.data.build_dataloader(args.data, args.root, transform)
+    data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
     
     ref_image = root_dir / "uec" / "dataset" / "testB" / "a0001-jmac_DSC1459.jpg"
     ref_image = mon.image.load_image(ref_image)
@@ -128,12 +128,12 @@ def predict(args: dict | box.Box) -> str:
             
             # Save
             if args.save_image:
-                out_dir  = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.save_image(enhanced, out_path)
             # Save Debug
             if args.save_debug:
-                debug_dir  = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                debug_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 debug_path = debug_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 debug_path.parent.mkdir(parents=True, exist_ok=True)
                 mon.image.save_image(debug_image, debug_path)
@@ -146,12 +146,12 @@ def predict(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    cli  = mon.rt.parse_cli_args(root=root_dir)
-    data = mon.utils.to_list(cli.data)
+    cli  = mon.parse_cli_args(root=root_dir)
+    data = mon.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.rt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
+        args = mon.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
         predict(args)
 
 

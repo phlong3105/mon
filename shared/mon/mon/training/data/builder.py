@@ -11,12 +11,12 @@ objects based on the input source type.
 __all__ = [
     "build_dataloader",
     "build_dataset",
-    "parse_data_dir",
+    "parse_data_dir",  # Re-exported for convenience
 ]
 
 from typing import Any
 
-from mon.core import DATASETS, Path, ROOT_DIR, Split
+from mon.core import DATASETS, parse_data_dir, Path, Split
 from .dataloader import DataLoader
 from .dataset import BaseDataset, ImageLoader, VideoLoaderCV
 
@@ -97,37 +97,3 @@ def build_dataloader(
     data_name, dataset = build_dataset(src, data_root, transform, verbose)
     dataloader         = DataLoader(dataset, batch_size=batch_size, **kwargs)
     return data_name, dataloader
-
-
-# ----- Parsing -----
-def parse_data_dir(root: Path, data_dir: Path = "") -> Path:
-    """Parses the absolute data directory path from given components.
-
-    Args:
-        root: Root directory.
-        data_dir: Data directory.
-
-    Returns:
-        Parsed the absolute path of the data directory.
-    """
-    root_      = Path(root)     if root     not in [None, "None", ""] else ROOT_DIR
-    data_dir_  = Path(data_dir) if data_dir not in [None, "None", ""] else None
-
-    candidates = []
-    if data_dir_:
-        candidates.extend([
-            data_dir_,
-            root_    / data_dir_,
-            root_    / "data" / data_dir_,
-            ROOT_DIR / data_dir_,
-            ROOT_DIR / "data" / data_dir_
-        ])
-    candidates.extend([
-        root_    / "data",
-        ROOT_DIR / "data"
-    ])
-
-    for d in candidates:
-        if d.is_dir():
-            return d
-    raise FileNotFoundError(f"``data_dir`` not found: {data_dir}.")

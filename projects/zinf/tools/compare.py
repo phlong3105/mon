@@ -8,7 +8,7 @@ import numpy as np
 
 import mon
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[1]

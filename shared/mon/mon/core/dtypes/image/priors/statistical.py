@@ -22,8 +22,6 @@ import kornia
 import numpy as np
 import torch
 
-from mon.core.utils import to_2tuple
-
 
 def blur_spot_prior(image: np.ndarray, threshold: int = 250) -> bool:
     """Detects blur in an image based on Laplacian variance and bright spot thresholding.
@@ -93,14 +91,13 @@ def bright_channel_prior(image: Union[torch.Tensor, np.ndarray], ksize: int) -> 
     Returns:
         Bright channel prior with similar type and format as the input ``image``.
     """
-    ksize = to_2tuple(ksize)
     if isinstance(image, torch.Tensor):
         bright_channel = torch.max(image, dim=1)[0]
-        kernel         = torch.ones(ksize[0], ksize[0])
+        kernel         = torch.ones(ksize, ksize)
         bcp            = kornia.morphology.erosion(bright_channel, kernel)
     elif isinstance(image, np.ndarray):
         bright_channel = np.max(image, axis=2)
-        kernel         = cv2.getStructuringElement(cv2.MORPH_RECT, ksize)
+        kernel         = cv2.getStructuringElement(cv2.MORPH_RECT, (ksize, ksize))
         bcp            = cv2.erode(bright_channel, kernel)
     else:
         raise ValueError(f"``image`` must be torch.Tensor or numpy.ndarray, got {type(image)}.")
@@ -119,14 +116,13 @@ def dark_channel_prior(image: Union[torch.Tensor, np.ndarray], ksize: int) ->  U
     Returns:
         Dark channel prior with similar type and format as the input ``image``.
     """
-    ksize = to_2tuple(ksize)
     if isinstance(image, torch.Tensor):
         dark_channel = torch.min(image, dim=1)[0]
-        kernel       = torch.ones(ksize[0], ksize[1])
+        kernel       = torch.ones(ksize, ksize)
         dcp          = kornia.morphology.erosion(dark_channel, kernel)
     elif isinstance(image, np.ndarray):
         dark_channel = np.min(image, axis=2)
-        kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, ksize)
+        kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, (ksize, ksize))
         dcp          = cv2.erode(dark_channel, kernel)
     else:
         raise ValueError(f"``image`` must be torch.Tensor or numpy.ndarray, got {type(image)}.")

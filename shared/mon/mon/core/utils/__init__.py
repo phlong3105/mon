@@ -20,12 +20,6 @@ __all__ = [
     "pascalize",
     "snakecase",
     "sort",
-    "to_1tuple",
-    "to_2tuple",
-    "to_3tuple",
-    "to_4tuple",
-    "to_5tuple",
-    "to_6tuple",
     "to_float",
     "to_float_list",
     "to_int",
@@ -36,5 +30,31 @@ __all__ = [
     "unique",
 ]
 
-from .humps import *
-from .types_extension import *
+from .humps import (
+    camelize,
+    decamelize,
+    dekebabize,
+    depascalize,
+    is_camelcase,
+    is_kebabcase,
+    is_pascalcase,
+    is_snakecase,
+    kebabize,
+    pascalize,
+    snakecase,
+)
+from .types_extension import (
+    create_combinations,
+    is_float,
+    is_int,
+    merge_dicts,
+    sort,
+    to_float,
+    to_float_list,
+    to_int,
+    to_int_list,
+    to_list,
+    to_ntuple,
+    to_str,
+    unique,
+)

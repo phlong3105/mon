@@ -9,7 +9,7 @@ import torch
 import gcenet
 import mon
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]

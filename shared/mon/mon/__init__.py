@@ -5,23 +5,35 @@
 
 The organization structure of this framework is inspired by the taxonomy
 defined in https://www.ibm.com/think/machine-learning#605511093
+
+2025.11.08: I am still wondering what is the best way to expose the sub-packages.
 """
 
 __author__  = "Long H. Pham"
 __version__ = "2.9.0"
 
-
-# Import core packages
 import time
 __start = time.time()
 
-from mon.core import *
+# Flat exposed APIs (core, high-frequency used functions)
+from .core import *
+from .training import build_dataloader, build_dataset
+
+# Hierarchical exposed APIs (sub-packages)
+from . import (
+    nn,
+    training as trn  # Alias for convenience
+)
+
+from .training import albumentations, data, losses, metrics, optims
 
 __end = time.time()
 console.log(f"`mon` loaded in: {__end - __start:.4f} seconds.")
 
 
-def init(verbose: bool = True):
+# Keep specialized sub-packages lazy-loaded
+def preload(verbose: bool = True):
+    """Preload the specialized sub-packages of ``mon`` framework."""
     start = time.time()
     
     import mon.cv

@@ -12,7 +12,8 @@ from typing import Any, Collection, Sequence
 import box
 from rich import prompt
 
-from mon.core import console, Path, rprint_dict
+from mon.core.console import console, rprint_dict
+from mon.core.pathlib import Path
 from mon.core.rich import SelectionOrInputPrompt
 from mon.core.utils import is_int, to_int, to_list, to_str
 from .options import CLI_OPTIONS, DEFAULT_ARGS

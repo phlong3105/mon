@@ -1,30 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements DEIM model exporting pipeline for object detection.
-
-References:
-    - Paper: "DEIM: DETR with Improved Matching for Fast convergence," CVPR 2025.
-    - Code: https://github.com/ShihuaHuang95/DEIM
-"""
-
 import box
 import tensorrt as trt
 import torch
+import torch.nn as nn
 
 import mon
 from engine import DEIM
-from mon import nn, Path, training as mt
 
-mon.init()
+mon.preload()
 
-current_file = Path(__file__).absolute()
+current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
 # ----- Export -----
 @torch.no_grad()
-def export_onnx(model: nn.Module, path: Path, args: dict | box.Box) -> Path:
+def export_onnx(model: nn.Module, path: mon.Path, args: dict | box.Box) -> mon.Path:
     opset    = args.opset
     simplify = args.simplify
     imgsz    = args.imgsz[0] if isinstance(args.imgsz, list | tuple) else args.imgsz
@@ -72,9 +65,9 @@ def export_onnx(model: nn.Module, path: Path, args: dict | box.Box) -> Path:
 
 
 @torch.no_grad()
-def export_trt(onnx_path: Path, engine_path: Path, args: dict | box.Box) -> Path:
-    onnx_path   = Path(onnx_path)
-    engine_path = Path(engine_path)
+def export_trt(onnx_path: mon.Path, engine_path: mon.Path, args: dict | box.Box) -> mon.Path:
+    onnx_path   = mon.Path(onnx_path)
+    engine_path = mon.Path(engine_path)
     imgsz       = args.imgsz[0] if isinstance(args.imgsz, list | tuple) else args.imgsz
     opset       = args.opset
     trt_p       = args.trt_precision
@@ -163,7 +156,7 @@ def export_trt(onnx_path: Path, engine_path: Path, args: dict | box.Box) -> Path
 @torch.no_grad()
 def export(args: dict | box.Box) -> str:
     # Start
-    mt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device = mon.create_device(args.device)
@@ -212,7 +205,7 @@ def export(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    args = mt.parse_predict_args(root=root_dir, model_root=root_dir)
+    args = mon.parse_predict_args(root=root_dir, model_root=root_dir)
     export(args)
 
 

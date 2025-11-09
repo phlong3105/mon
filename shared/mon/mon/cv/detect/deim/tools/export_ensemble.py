@@ -191,7 +191,7 @@ def export_trt(onnx_path: Path, path: Path, args: dict | box.Box) -> Path:
 @torch.no_grad()
 def export(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device = mon.create_device(args.device)
@@ -259,7 +259,7 @@ def export(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    args = mon.rt.parse_predict_args(model_root=root_dir)
+    args = mon.parse_predict_args(model_root=root_dir)
     export(args)
 
 

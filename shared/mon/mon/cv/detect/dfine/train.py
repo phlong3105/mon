@@ -24,7 +24,7 @@ from dfine.core import YAMLConfig
 from dfine.misc import dist_utils
 from dfine.solver import TASKS
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -51,7 +51,7 @@ def safe_get_rank():
 def train(args: dict | box.Box) -> str:
     # Start
     if safe_get_rank() == 0:
-        mon.rt.print_run_summary(args)
+        mon.print_run_summary(args)
 
      # Device
     device = mon.create_device(args.device)
@@ -113,7 +113,7 @@ def train(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    args = mon.rt.parse_train_args(root=root_dir, model_root=root_dir)
+    args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)
 
 

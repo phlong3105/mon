@@ -15,7 +15,7 @@ import box
 import mon
 import retinexnet
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -24,7 +24,7 @@ root_dir     = current_file.parents[0]
 # ----- Predict -----
 def predict(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device = mon.create_device(args.device)
@@ -37,7 +37,7 @@ def predict(args: dict | box.Box) -> str:
     model = model.to(device)
     
     # Data I/O
-    data_name, dataloader = mon.data.build_dataloader(args.data, args.root)
+    data_name, dataloader = mon.build_dataloader(args.data, args.root)
 
     # Predict
     timers = mon.TimeProfiler()
@@ -54,7 +54,7 @@ def predict(args: dict | box.Box) -> str:
             path   = mon.Path(meta["path"])
             timers.preprocess.tock()
 
-            out_dir = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+            out_dir = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
             # out_dir = out_dir / mon.SAVE_IMAGE_DIR
             out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -77,12 +77,12 @@ def predict(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    cli  = mon.rt.parse_cli_args(root=root_dir)
-    data = mon.utils.to_list(cli.data)
+    cli  = mon.parse_cli_args(root=root_dir)
+    data = mon.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.rt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
+        args = mon.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
         predict(args)
 
 

@@ -24,7 +24,7 @@ from PIL import Image
 import mon
 import cyclegan
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -160,7 +160,7 @@ def predict(args: dict | box.Box) -> str:
 # ----- Main -----
 def main() -> str:
     cli  = mon.rt.parse_cli_args(root=root_dir)
-    data = mon.utils.to_list(cli.data)
+    data = mon.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d

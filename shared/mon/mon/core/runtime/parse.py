@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements interactive CLI."""
+"""This module implements command-line interface (CLI) argument parsing utilities."""
 
 __all__ = [
     "parse_cli_args",
@@ -15,7 +15,9 @@ import socket
 
 import box
 
-from mon.core import image as I, parse_device, Path
+from mon.core.device import parse_device
+from mon.core.dtypes import image as I
+from mon.core.pathlib import Path
 from mon.core.utils import merge_dicts
 from .menu_rich import RunCLI
 from .options import CLI_OPTIONS

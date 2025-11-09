@@ -11,11 +11,12 @@ References:
 import box
 import tensorrt as trt
 import torch
+import torch.nn as nn
 
 import engine as deim
 import mon
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -23,7 +24,7 @@ root_dir     = current_file.parents[0]
 
 # ----- Export -----
 @torch.no_grad()
-def export_onnx(model: mon.nn.Module, path: mon.Path, args: dict | box.Box) -> mon.Path:
+def export_onnx(model: nn.Module, path: mon.Path, args: dict | box.Box) -> mon.Path:
     opset    = args.opset
     simplify = args.simplify
     imgsz    = args.imgsz[0] if isinstance(args.imgsz, list | tuple) else args.imgsz
@@ -162,7 +163,7 @@ def export_trt(onnx_path: mon.Path, engine_path: mon.Path, args: dict | box.Box)
 @torch.no_grad()
 def export(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device = mon.create_device(args.device)
@@ -211,7 +212,7 @@ def export(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    args = mon.rt.parse_predict_args(root=root_dir, model_root=root_dir)
+    args = mon.parse_predict_args(root=root_dir, model_root=root_dir)
     export(args)
 
 

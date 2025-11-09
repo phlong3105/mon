@@ -187,7 +187,7 @@ def predict(args: argparse.Namespace):
                 
                 # Save
                 if save_image:
-                    output_dir  = mon.rt.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
+                    output_dir  = mon.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
                     output_path = output_dir / f"{image_path.stem}{mon.SAVE_IMAGE_EXT}"
                     output_path.parent.mkdir(parents=True, exist_ok=True)
                     if opt["image_color"] == "RGB":
@@ -204,12 +204,12 @@ def predict(args: argparse.Namespace):
 # ----- Main -----
 
 def main() -> str:
-    cli  = mon.rt.parse_cli_args(root=root_dir)
-    data = mon.utils.to_list(cli.data)
+    cli  = mon.parse_cli_args(root=root_dir)
+    data = mon.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.rt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
+        args = mon.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
         predict(args)
 
 

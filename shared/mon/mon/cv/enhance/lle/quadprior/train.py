@@ -21,7 +21,7 @@ from quadprior import (
     load_state_dict,
 )
 
-mon.init()
+mon.preload()
 disable_verbosity()
 
 current_file = mon.Path(__file__).absolute()
@@ -31,11 +31,11 @@ root_dir     = current_file.parents[0]
 # ----- Train -----
 def train(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device = mon.parse_device(args.device)
-    device = mon.utils.to_int_list(device) if "auto" not in device else device
+    device = mon.to_int_list(device) if "auto" not in device else device
 
     # Seed
     mon.set_random_seed(args.seed)
@@ -118,7 +118,7 @@ def train(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    args = mon.rt.parse_train_args(root=root_dir, model_root=root_dir)
+    args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)
 
 

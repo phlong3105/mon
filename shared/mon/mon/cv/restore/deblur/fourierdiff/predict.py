@@ -18,9 +18,9 @@ import yaml
 
 import fourierdiff
 import mon
-from mon import albumentations as A
+import mon.training.albumentations as A
 
-mon.init()
+mon.preload()
 torch.set_printoptions(sci_mode=False)
 
 current_file = mon.Path(__file__).absolute()
@@ -48,7 +48,7 @@ def predict(args: dict | box.Box) -> str:
     cfg = dict2namespace(cfg)
 
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
     
     # Device
     device     = mon.create_device(args.device)
@@ -80,7 +80,7 @@ def predict(args: dict | box.Box) -> str:
         A.Normalize(normalization="min_max"),
         A.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataloader = mon.data.build_dataloader(args.data, args.root, transform)
+    data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
     
     # Predict
     timers = mon.TimeProfiler()
@@ -106,12 +106,12 @@ def predict(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    cli  = mon.rt.parse_cli_args(root=root_dir)
-    data = mon.utils.to_list(cli.data)
+    cli  = mon.parse_cli_args(root=root_dir)
+    data = mon.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.rt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
+        args = mon.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
         predict(args)
 
 

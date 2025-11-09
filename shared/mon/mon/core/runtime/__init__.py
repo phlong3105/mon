@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides runtime functionalities for training and prediction CLIs."""
+"""This package provides runtime utilities and CLI for training and prediction."""
 
 __all__ = [
     "CLI_OPTIONS",
@@ -16,6 +16,7 @@ __all__ = [
     "load_project_defaults",
     "parse_cli_args",
     "parse_config_file",
+    "parse_data_dir",
     "parse_default_args",
     "parse_model_dir",
     "parse_model_fullname",
@@ -46,6 +47,7 @@ from .utils import (
     load_config,
     load_project_defaults,
     parse_config_file,
+    parse_data_dir,
     parse_model_dir,
     parse_model_fullname,
     parse_output_dir,

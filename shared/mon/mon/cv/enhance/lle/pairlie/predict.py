@@ -17,9 +17,9 @@ import torch
 
 import mon
 import pairlie
-from mon import albumentations as A
+import mon.training.albumentations as A
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -29,7 +29,7 @@ root_dir     = current_file.parents[0]
 @torch.no_grad()
 def predict(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Device
     device = mon.create_device(args.device)
@@ -62,7 +62,7 @@ def predict(args: dict | box.Box) -> str:
         A.Normalize(normalization="min_max"),
         A.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataloader = mon.data.build_dataloader(args.data, args.root, transform)
+    data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
 
     # Predict
     timers = mon.TimeProfiler()
@@ -110,12 +110,12 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.save_image(I, out_path)
 
             if args.save_debug:
-                debug_dir = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                debug_dir = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 mon.image.save_image(L, debug_dir / f"{path.stem}_L{mon.SAVE_IMAGE_EXT}")
                 mon.image.save_image(R, debug_dir / f"{path.stem}_R{mon.SAVE_IMAGE_EXT}")
                 mon.image.save_image(D, debug_dir / f"{path.stem}_D{mon.SAVE_IMAGE_EXT}")
@@ -128,12 +128,12 @@ def predict(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    cli  = mon.rt.parse_cli_args(root=root_dir)
-    data = mon.utils.to_list(cli.data)
+    cli  = mon.parse_cli_args(root=root_dir)
+    data = mon.to_list(cli.data)
     for d in data:
         cli_ = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.rt.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
+        args = mon.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
         predict(args)
 
 

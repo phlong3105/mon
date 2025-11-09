@@ -11,7 +11,7 @@ import box
 import mon
 from mon import Path
 
-mon.init()
+mon.preload()
 
 current_file = Path(__file__).absolute()
 current_dir  = current_file.parents[0]

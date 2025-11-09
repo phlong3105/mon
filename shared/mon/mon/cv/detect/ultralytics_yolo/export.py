@@ -13,7 +13,7 @@ import box
 import mon
 from ultralytics import YOLO
 
-mon.init()
+mon.preload()
 
 current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
@@ -22,7 +22,7 @@ root_dir     = current_file.parents[0]
 # ----- Export -----
 def export(args: dict | box.Box) -> str:
     # Start
-    mon.rt.print_run_summary(args)
+    mon.print_run_summary(args)
 
     # Pretrained
     pretrained = None
@@ -44,7 +44,7 @@ def export(args: dict | box.Box) -> str:
 
 # ----- Main -----
 def main() -> str:
-    args = mon.rt.parse_predict_args(root=root_dir, model_root=root_dir)
+    args = mon.parse_predict_args(root=root_dir, model_root=root_dir)
     export(args)
 
 
