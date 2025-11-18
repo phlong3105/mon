@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements:
+"""This package implements:
     - CycleGAN model for image-to-image translation.
     - Pix2Pix model for image-to-image translation.
     - Colorization model for image colorization (black & white image -> colorful images).

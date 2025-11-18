@@ -4,6 +4,7 @@
 """Implements core components for datasets."""
 
 __all__ = [
+    "ALBUMENTATIONS_TARGETS",
     "BaseDataset",
     "BaseTensorOrArray",
     "Classes",
@@ -15,6 +16,7 @@ __all__ = [
     "DepthMap",
     "DepthName",
     "DepthSource",
+    "DualDomainDataset",
     "Frame",
     "HBBs",
     "INFRARED_SOURCE",
@@ -35,6 +37,7 @@ __all__ = [
     "VideoWriterCV",
     "VideoWriterFFmpeg",
     "VisionDataset",
+    "VisionDualDomainDataset",
 ]
 
 from functools import partial
@@ -59,9 +62,11 @@ from mon.core.dtypes import (
     SemanticMask,
 )
 from mon.training.data import (
+    ALBUMENTATIONS_TARGETS,
     BaseDataset,
     Classes,
     DataLoader,
+    DualDomainDataset,
     ImageLoader,
     Modalities,
     Modality,
@@ -71,6 +76,7 @@ from mon.training.data import (
     VideoWriterCV,
     VideoWriterFFmpeg,
     VisionDataset,
+    VisionDualDomainDataset,
 )
 
 # Constants for convenience

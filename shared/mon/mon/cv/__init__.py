@@ -9,10 +9,10 @@ References:
 
 __all__ = []  # Do not populate ``mon`` namespace.
 
-from mon.cv.bgsubtract import *
-from mon.cv.classify import *
-from mon.cv.detect import *
-from mon.cv.enhance import *
-from mon.cv.monodepth import *
-from mon.cv.restore import *
-from mon.cv.segment import *
+from bgsubtract import *
+from classify import *
+from detect import *
+from enhance import *
+from monodepth import *
+from restore import *
+from segment import *

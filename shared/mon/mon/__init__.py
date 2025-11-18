@@ -24,8 +24,13 @@ from . import (
     nn,
     training as trn  # Alias for convenience
 )
-
-from .training import albumentations, data, losses, metrics, optims
+from .training import (
+    albumentations,
+    data,
+    losses,
+    metrics,
+    optims,
+)
 
 __end = time.time()
 console.log(f"`mon` loaded in: {__end - __start:.4f} seconds.")

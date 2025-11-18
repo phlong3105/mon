@@ -74,11 +74,11 @@ class CycleGANModel(BaseModel):
             self.model_names = ["G_A", "G_B", "D_A", "D_B"]
         else:  # during test time, only load Gs
             self.model_names = ["G_A", "G_B"]
-
+        
         # define networks (both Generators and discriminators)
         # The naming is different from those used in the paper.
         # Code (vs. paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
-        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm, not opt.no_dropout, opt.init_type, opt.init_gain)
+        self.netG_A = networks.define_G(opt.input_nc,  opt.output_nc, opt.ngf, opt.netG, opt.norm, not opt.no_dropout, opt.init_type, opt.init_gain)
         self.netG_B = networks.define_G(opt.output_nc, opt.input_nc, opt.ngf, opt.netG, opt.norm, not opt.no_dropout, opt.init_type, opt.init_gain)
 
         if self.isTrain:  # define discriminators

@@ -15,7 +15,7 @@
 #   - poetry        : https://python-poetry.org/docs/
 
 [project]
-name            = "gcenet"
+name            = "fisheye"
 version         = "1.0"
 authors         = [
     { name = "Long H. Pham", email = "longpham3105@gmail.com" },
@@ -23,7 +23,7 @@ authors         = [
 maintainers     = [
     { name = "Long H. Pham", email = "longpham3105@gmail.com" },
 ]
-description     = "GCENet: Zero-Shot Implicit Neural Fusion Network for Multimodal Low-Light"
+description     = "Fisheye Surveilance System"
 readme          = "README.md"
 license         = "MIT"
 license-files   = ["LICENSE.*"]
@@ -50,12 +50,10 @@ Repository    = ""
 Issues        = ""
 
 [tool.poetry]
-# package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
-packages = [ { include = "zinf", from = "." } ]
-include  = [
-    { path = "config" },
-]
-exclude  = []
+package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
+packages     = [ { include = "fisheye", from = "." } ]
+include      = []
+exclude      = []
 
 [tool.poetry.dependencies]
 mon = { path = "../../shared/mon", develop = true }

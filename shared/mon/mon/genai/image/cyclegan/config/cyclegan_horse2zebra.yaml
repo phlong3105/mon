@@ -51,25 +51,28 @@ network:                                                                        
   init_type : "normal"                                                          # Network initialization (e.g., normal, xavier, kaiming, orthogonal).
   init_gain : 0.02                                                              # Scaling factor for normal, xavier and orth
   no_dropout: False                                                             # If ``True``, do not use dropout for the generator.
+  direction : "AtoB"                                                            # Direction of translation: AtoB or BtoA.
 
 # Loss
 loss: ~                                                                         # Loss functions.
 
 # Optimizer
 optimizer:                                                                      # Optimizer.
-  lr          : 0.0001
-  weight_decay: 0.0001
+  lr   : 0.0002
+  beta1: 0.5
 
 # ----- Data -----
 # Train
 train_dataloader:                                                               # Train dataloader.
   dataset:
     name      : *data                                                           # Data module name (e.g., cifar10).
-    root      : "data/sice"                                                     # Root directory of the dataset.
+    root      : "data/cyclegan"                                                 # Root directory of the dataset.
     split     : "train"                                                         # Dataset split (e.g., train, val, test).
     transform :
       transforms:
-        - {name: "Resize", height: *imgsz, width : *imgsz}
+        - {name: "Resize", height: 286, width: 286}
+        - {name: "RandomCrop", height: *imgsz, width: *imgsz}
+        - {name: "HorizontalFlip", p: 0.5}
         - {name: "Normalize", normalization: "min_max"}
         - {name: "ToTensorV2", transpose_mask: True}
       bbox_params    : ~
@@ -85,11 +88,13 @@ train_dataloader:                                                               
 val_dataloader:                                                                 # Val dataloader.
   dataset:
     name      : *data                                                           # Data module name (e.g., cifar10).
-    root      : "data/sice"                                                     # Root directory of the dataset.
+    root      : "data/cyclegan"                                                 # Root directory of the dataset.
     split     : "test"                                                          # Dataset split (e.g., train, val, test).
     transform :
       transforms:
-        - {name: "Resize", height: *imgsz, width : *imgsz}
+        - {name: "Resize", height: 286, width: 286}
+        - {name: "RandomCrop", height: *imgsz, width: *imgsz}
+        - {name: "HorizontalFlip", p: 0.5}
         - {name: "Normalize", normalization: "min_max"}
         - {name: "ToTensorV2", transpose_mask: True}
       bbox_params    : ~
@@ -104,7 +109,11 @@ val_dataloader:                                                                 
 # ----- Trainer -----
 # Trainer
 trainer:
-  grad_clip_norm : 0.1
+  n_epochs_decay: 100                                                           # Number of epochs to linearly decay learning rate to zero.
+  gan_mode      : "lsgan"                                                       # GAN objective (e.g., vanilla, lsgan, wgangp). vanilla GAN loss is the cross-entropy objective used in the original GAN paper.
+  pool_size     : 50                                                            # The size of image buffer that stores previously generated images.
+  lr_policy     : "linear"                                                      # Learning rate policy (e.g., linear, step, plateau, cosine).
+  lr_decay_iters: 50                                                            # Multiply by a gamma every lr_decay_iters iterations.
 
 # ----- Deploy -----
 # Export

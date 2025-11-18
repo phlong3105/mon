@@ -5,7 +5,7 @@
 
 __all__ = []  # Do not populate ``mon`` namespace.
 
-from mon.datasets.challenges import *
-from mon.datasets.cv import *
-from mon.datasets.cv_system import *
-from mon.datasets.efficiency import *
+from .challenges import *
+from .cv import *
+from .cv_system import *
+from .efficiency import *

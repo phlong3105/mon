@@ -503,8 +503,8 @@ class DualDomainDataset(dataset.Dataset, abc.ABC):
     root_name   : str         = None
     tasks       : list[Task]  = []
     splits      : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
-    modalities_A: Modalities = {}
-    modalities_B: Modalities = {}
+    modalities_A: Modalities  = {}
+    modalities_B: Modalities  = {}
     classes     : Classes     = None
     
     def __init__(

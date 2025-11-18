@@ -7,6 +7,6 @@ References:
     - Definition: https://www.ibm.com/think/topics/generative-ai#257779831
 """
 
-__all__ = []  # Do not populate ``mon`` namespace.
+__all__ = []  # Public APIs
 
-from mon.genai.image import *
+from .image import *

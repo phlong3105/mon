@@ -8,6 +8,7 @@ Note: we use the ``albumentations`` library for transformations and augmentation
 """
 
 __all__ = [
+    "ALBUMENTATIONS_TARGETS",
     "VisionDataset",
     "VisionDualDomainDataset",
 ]
@@ -188,10 +189,10 @@ class VisionDualDomainDataset(DualDomainDataset, abc.ABC):
     """
     
     modalities_A: Modalities = {
-        "image_a": Modality(name="image_a", type="image", module=Image, train=True, test=True, primary=True),
+        "image_A": Modality(name="image_A", type="image", module=Image, train=True, test=True, primary=True),
     }
     modalities_B: Modalities = {
-        "image_b": Modality(name="image_b", type="image", module=Image, train=True, test=True, primary=True),
+        "image_B": Modality(name="image_B", type="image", module=Image, train=True, test=True, primary=True),
     }
     
     def __init__(
@@ -217,18 +218,17 @@ class VisionDualDomainDataset(DualDomainDataset, abc.ABC):
         """Retrieves a datapoint and metadata at given ``index`` as a ``dict``.
         Here, we assume domain A is the primary.
         """
-        index_A = index % self.size(domain="a")
+        index_A = index % self.size(domain="A")
         if self.serial:
-            index_B = index % self.size(domain="b")
+            index_B = index % self.size(domain="B")
         else:
-            index_B = random.randint(0, self.size(domain="b") - 1)
+            index_B = random.randint(0, self.size(domain="B") - 1)
         
-        datapoint_A = self.get_datapoint(domain="a", index=index_A)
-        datapoint_B = self.get_datapoint(domain="b", index=index_B)
+        datapoint_A = self.get_datapoint(domain="A", index=index_A)
+        datapoint_B = self.get_datapoint(domain="B", index=index_B)
         datapoint   = datapoint_A | datapoint_B
-        meta_A      = self.get_meta(domain="a", index=index_A)
-        meta_B      = self.get_meta(domain="b", index=index_B)
-        meta        = meta_A | meta_B
+        meta_A      = self.get_meta(domain="A", index=index_A)
+        meta_B      = self.get_meta(domain="B", index=index_B)
         
         if self.transform:
             pk, _          = self.primary_modality(domain="A")
@@ -244,7 +244,10 @@ class VisionDualDomainDataset(DualDomainDataset, abc.ABC):
                 elif isinstance(v, np.ndarray) and v.dtype != np.float32:
                     datapoint[k] = v.astype(np.float32)
                     
-        return datapoint | {"meta": meta}
+        return datapoint | {
+            "meta_A": meta_A,
+            "meta_B": meta_B,
+        }
     
     def __len__(self) -> int:
         """Retrieves the total number of datapoints.
