@@ -73,7 +73,7 @@ def predict(args: dict | box.Box) -> str:
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
     
     ref_image = root_dir / "uec" / "dataset" / "testB" / "a0001-jmac_DSC1459.jpg"
-    ref_image = mon.image.load_image(ref_image)
+    ref_image = mon.image.load(ref_image)
     ref_image = transform(image=ref_image)["image"]
     ref_image = ref_image.unsqueeze(0).to(device)
     
@@ -130,13 +130,13 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save_image(enhanced, out_path)
+                mon.image.save(enhanced, out_path)
             # Save Debug
             if args.save_debug:
                 debug_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 debug_path = debug_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 debug_path.parent.mkdir(parents=True, exist_ok=True)
-                mon.image.save_image(debug_image, debug_path)
+                mon.image.save(debug_image, debug_path)
     timers.total.tock()
 
     # Finish

@@ -103,8 +103,8 @@ class Image(BaseTensorOrArray):
             return self._data
 
         # Load the image
-        from mon.core.dtypes.image.io import load_image
-        image = load_image(self.path, self.flags)
+        from mon.core.dtypes.image.io import load
+        image = load(self.path, self.flags)
 
         # Update the original shape of the image
         if self._orig_shape != image.shape:

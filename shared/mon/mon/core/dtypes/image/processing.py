@@ -10,6 +10,7 @@ Common Tasks:
 """
 
 __all__ = [
+    "pad_square",
     "pair_downsample",
     "split",
     "to_array",
@@ -28,7 +29,35 @@ import torch.nn.functional as F
 from .utils import imgsz, is_channel_first, is_channel_last
 
 
-# ----- Splitting -----
+# ----- Resizing -----
+def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
+    """Pads an image to make it square.
+
+    Args:
+        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`
+            in :math:`[0, 255]`.
+        pad_value: Pixel value for padding areas. Default: ``0``.
+
+    Returns:
+        Padded square image as a ``numpy.ndarray`` of shape :math:`(S, S, C)`
+        in :math:`[0, 255]`, where :math:`S = max(H, W)`.
+
+    Raises:
+        ValueError: If ``image`` is not a 3D array.
+    """
+    if not isinstance(image, np.ndarray) or len(image.shape) != 3:
+        raise ValueError(f"``image`` must be a numpy.ndarray of shape (H, W, C), "
+                         f"got {image.shape} with {len(image.shape)} dimensions.")
+    
+    h, w, c = image.shape
+    size     = max(h, w)
+    padded   = np.full((size, size, c), pad_value, dtype=image.dtype)
+    y_offset = (size - h) // 2
+    x_offset = (size - w) // 2
+    padded[y_offset:y_offset + h, x_offset:x_offset + w] = image
+    return padded
+
+
 def split(image: Union[torch.Tensor, np.ndarray], n: int = 2) -> list[np.ndarray]:
     """Split an image into ``n`` equal parts.
 

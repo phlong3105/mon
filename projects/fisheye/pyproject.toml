@@ -26,7 +26,7 @@ maintainers     = [
 description     = "Fisheye Surveilance System"
 readme          = "README.md"
 license         = "MIT"
-license-files   = ["LICENSE.*"]
+# license-files   = ["LICENSE.*"]
 keywords        = [
     "computer vision",
     "image processing",
@@ -43,14 +43,14 @@ dependencies    = [
     "mon",
 ]
 
-[project.urls]
-Homepage      = ""
-Documentation = ""
-Repository    = ""
-Issues        = ""
+# [project.urls]
+# Homepage      = ""
+# Documentation = ""
+# Repository    = ""
+# Issues        = ""
 
 [tool.poetry]
-package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
+# package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
 packages     = [ { include = "fisheye", from = "." } ]
 include      = []
 exclude      = []

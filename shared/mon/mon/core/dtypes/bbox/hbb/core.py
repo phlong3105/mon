@@ -179,8 +179,8 @@ class HBBs(BaseTensorOrArray):
             return self._data
 
         # Load the image
-        from .io import load_hbb
-        bbox = load_hbb(path=self.path, fmt=self._cvt_fmt, imgsz=self.orig_shape)
+        from .io import load
+        bbox = load(path=self.path, fmt=self._cvt_fmt, imgsz=self.orig_shape)
 
         # Cache
         self._data = bbox

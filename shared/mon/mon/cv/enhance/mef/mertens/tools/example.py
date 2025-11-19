@@ -50,7 +50,7 @@ def run(args: dict | box.Box):
     timers.postprocess.tock()
     
     # Save
-    mon.image.save_image(fused, out_path)
+    mon.image.save(fused, out_path)
     timers.total.tock()
 
     # Finish

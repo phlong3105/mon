@@ -98,7 +98,7 @@ def convert_label_to_coco(
             if not label_file.is_txt_file():
                 continue
 
-            bs = mon.hbb.load_hbb(path=label_file, fmt=code, imgsz=(h, w))
+            bs = mon.hbb.load(path=label_file, fmt=code, imgsz=(h, w))
             if len(bs) == 0:
                 continue
 

@@ -133,11 +133,11 @@ def predict(args: dict | box.Box) -> str:
                 # A
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path_A, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / "fake_A" / f"{path_A.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save_image(fake_A, out_path)
+                mon.image.save(fake_A, out_path)
                 # B
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path_B, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / "fake_B" / f"{path_A.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save_image(fake_B, out_path)
+                mon.image.save(fake_B, out_path)
     timers.total.tock()
 
     # Finish

@@ -148,11 +148,11 @@ def train(args: dict | box.Box) -> str:
                 curve_map = normalize_minmax(saved_outputs["curve_map"])
                 noise_map = normalize_minmax(saved_outputs["noise_map"])
                 alls      = saved_outputs["all"]
-                mon.image.save_image(enhanced,  args.save_dir / "debug" / f"epoch_{i}" / f"enhanced{mon.SAVE_IMAGE_EXT}")
-                mon.image.save_image(curve_map, args.save_dir / "debug" / f"epoch_{i}" / f"curve_map{mon.SAVE_IMAGE_EXT}")
-                mon.image.save_image(noise_map, args.save_dir / "debug" / f"epoch_{i}" / f"noise_map{mon.SAVE_IMAGE_EXT}")
+                mon.image.save(enhanced, args.save_dir / "debug" / f"epoch_{i}" / f"enhanced{mon.SAVE_IMAGE_EXT}")
+                mon.image.save(curve_map, args.save_dir / "debug" / f"epoch_{i}" / f"curve_map{mon.SAVE_IMAGE_EXT}")
+                mon.image.save(noise_map, args.save_dir / "debug" / f"epoch_{i}" / f"noise_map{mon.SAVE_IMAGE_EXT}")
                 for k, img in enumerate(alls):
-                    mon.image.save_image(img, args.save_dir / "debug" / f"epoch_{i}" / f"all_{k}{mon.SAVE_IMAGE_EXT}")
+                    mon.image.save(img, args.save_dir / "debug" / f"epoch_{i}" / f"all_{k}{mon.SAVE_IMAGE_EXT}")
             
     # Save last model
     # if args.model == "gcenet_mobileone":

@@ -140,7 +140,7 @@ def measure_depth_metrics(
             description = description
         ):
             # Image
-            image  = mon.image.load_image(path=image_file, flags=cv2.IMREAD_COLOR)
+            image  = mon.image.load(path=image_file, flags=cv2.IMREAD_COLOR)
             h0, w0 = mon.image.imgsz(image)
             h2, w2 = h, w
             if use_color:
@@ -155,7 +155,7 @@ def measure_depth_metrics(
                 if temp.exists():
                     target_file = temp
             if target_file and target_file.exists():  # Has target file
-                target = mon.image.load_image(path=target_file, flags=cv2.IMREAD_COLOR)
+                target = mon.image.load(path=target_file, flags=cv2.IMREAD_COLOR)
                 h1, w1 = mon.image.imgsz(target)
                 if h1 != h0 or w1 != w0:  # Mismatch size between image and target
                     h2, w2      = h1, w1

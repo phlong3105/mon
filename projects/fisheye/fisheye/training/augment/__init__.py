@@ -5,4 +5,4 @@ __all__ = [
     "FisheyeTomographyTransform",
 ]
 
-from .training import FisheyeTomographyTransform
+from .ftt import FisheyeTomographyTransform

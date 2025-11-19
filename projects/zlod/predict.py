@@ -281,7 +281,7 @@ def predict(args: dict | box.Box) -> str:
             
             pred_image_path = pred_image_dir / image_file.name
             pred_image_path.parent.mkdir(parents=True, exist_ok=True)
-            mon.image.save_image(output_image, str(pred_image_path))
+            mon.image.save(output_image, str(pred_image_path))
             if args.save_video:
                 if video_out is None:
                     video_file = pred_dir / f"{data_dir.stem}_pred.mp4"

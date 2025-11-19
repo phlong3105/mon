@@ -11,7 +11,7 @@ Common Tasks:
 """
 
 __all__ = [
-    "load_hbb",
+    "load",
 ]
 
 import json
@@ -27,7 +27,7 @@ from .processing import convert
 
 
 # ----- Reading -----
-def load_hbb_coco(
+def load_coco(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
@@ -59,7 +59,7 @@ def load_hbb_coco(
             error_console.print(f"No annotations found in {path}.")
 
 
-def load_hbb_voc(
+def load_voc(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
@@ -130,7 +130,7 @@ def load_hbb_voc(
     return np.stack([x1, y1, x2, y2, c] + rest, axis=-1)
 
 
-def load_hbb_yolo(
+def load_yolo(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
@@ -178,7 +178,7 @@ def load_hbb_yolo(
     return np.stack([cx_n, cy_n, w_n, h_n, c] + rest, axis=-1)
 
 
-def load_hbb(
+def load(
     path   : Path,
     fmt    : BBoxFormat,
     imgsz  : tuple[int, int],
@@ -210,11 +210,11 @@ def load_hbb(
 
     match src_fmt:
         case BBoxFormat.COCO | BBoxFormat.XYWH:
-            bbox = load_hbb_coco(path, remap, verbose)
+            bbox = load_coco(path, remap, verbose)
         case BBoxFormat.VOC  | BBoxFormat.XYXY:
-            bbox = load_hbb_voc(path, remap, verbose)
+            bbox = load_voc(path, remap, verbose)
         case BBoxFormat.YOLO | BBoxFormat.CXCYWHN:
-            bbox = load_hbb_yolo(path, remap, verbose)
+            bbox = load_yolo(path, remap, verbose)
         case _:
             raise ValueError(f"``src_fmt`` must be one of {BBoxFormat.formats()}, got {src_fmt}.")
 

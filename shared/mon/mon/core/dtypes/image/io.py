@@ -11,9 +11,9 @@ Common Tasks:
 """
 
 __all__ = [
-    "load_image",
+    "load",
     "read_shape",
-    "save_image",
+    "save",
 ]
 
 from typing import Union
@@ -30,7 +30,7 @@ from .utils import is_color
 
 
 # ----- Reading -----
-def load_image(path: Path, flags: int = cv2.IMREAD_COLOR) -> np.ndarray:
+def load(path: Path, flags: int = cv2.IMREAD_COLOR) -> np.ndarray:
     """Loads an image from a file path using OpenCV. Also add support for raw images.
 
     Args:
@@ -87,7 +87,7 @@ def read_shape(path: Path) -> tuple[int, int, int]:
 
 
 # ----- Writing -----
-def save_image(image: Union[torch.Tensor, np.ndarray], path: Path):
+def save(image: Union[torch.Tensor, np.ndarray], path: Path):
     """Save an image to a file.
 
     Args:

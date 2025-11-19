@@ -137,12 +137,12 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save_image(enhanced, out_path)
+                mon.image.save(enhanced, out_path)
             # Save Debug
             if args.save_debug:
                 out_dir  = mon.rt.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}_debug{mon.SAVE_IMAGE_EXT}"
-                mon.image.save_image(debug_image, out_path)
+                mon.image.save(debug_image, out_path)
                 for k, v in outputs.items():
                     # if k == "residual":
                     #     v = v.squeeze(0).detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy()
@@ -154,7 +154,7 @@ def predict(args: dict | box.Box) -> str:
                     #     mon.image.save_image(v, out_path)
                     if mon.image.is_image(v):
                         out_path = out_dir / f"{path.stem}_{k}{mon.SAVE_IMAGE_EXT}"
-                        mon.image.save_image(v, out_path)
+                        mon.image.save(v, out_path)
     timers.total.tock()
 
     # Finish

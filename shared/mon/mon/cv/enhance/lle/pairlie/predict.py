@@ -112,13 +112,13 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save_image(I, out_path)
+                mon.image.save(I, out_path)
 
             if args.save_debug:
                 debug_dir = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
-                mon.image.save_image(L, debug_dir / f"{path.stem}_L{mon.SAVE_IMAGE_EXT}")
-                mon.image.save_image(R, debug_dir / f"{path.stem}_R{mon.SAVE_IMAGE_EXT}")
-                mon.image.save_image(D, debug_dir / f"{path.stem}_D{mon.SAVE_IMAGE_EXT}")
+                mon.image.save(L, debug_dir / f"{path.stem}_L{mon.SAVE_IMAGE_EXT}")
+                mon.image.save(R, debug_dir / f"{path.stem}_R{mon.SAVE_IMAGE_EXT}")
+                mon.image.save(D, debug_dir / f"{path.stem}_D{mon.SAVE_IMAGE_EXT}")
     timers.total.tock()
 
     # Finish

@@ -24,8 +24,8 @@ depth_file = data_dir / f"{filename}_depth.jpg"
 
 
 # ----- Load data -----
-image = mon.image.load_image(image_file, cv2.IMREAD_COLOR)
-depth = mon.image.load_image(depth_file, cv2.IMREAD_GRAYSCALE)
+image = mon.image.load(image_file, cv2.IMREAD_COLOR)
+depth = mon.image.load(depth_file, cv2.IMREAD_GRAYSCALE)
 
 transform = A.Compose([
     A.Normalize(normalization="min_max"),

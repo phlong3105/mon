@@ -11,7 +11,6 @@ Common Tasks:
 __all__ = [
     "area",
     "center",
-    "center_crop_image_and_hbbs",
     "center_distance",
     "ciou",
     "coco_to_voc",
@@ -19,6 +18,7 @@ __all__ = [
     "convert",
     "corners",
     "corners_pts",
+    "crop_center",
     "cxcywhn_to_xywh",
     "cxcywhn_to_xyxy",
     "denormalize",
@@ -29,7 +29,8 @@ __all__ = [
     "iou",
     "iou_matrix",
     "normalize",
-    "split_image_and_hbbs",
+    "pad_square",
+    "split",
     "to_2d",
     "voc_to_coco",
     "voc_to_yolo",
@@ -44,6 +45,7 @@ __all__ = [
 import math
 from typing import Union
 
+import cv2
 import numpy as np
 
 from mon.core.dtypes import image as I
@@ -559,8 +561,99 @@ def enclosing(bbox: np.ndarray) -> np.ndarray:
     return np.hstack((x1, y1, x2, y2, bbox[:, 8:]))
 
 
-# ----- Splitting -----
-def split_image_and_hbbs(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndarray], list[np.ndarray]]:
+# ----- Resizing -----
+def crop_center(image: np.ndarray, bbox: np.ndarray, imgsz: int) -> tuple[np.ndarray, np.ndarray]:
+    """Center crop an image with HBBs.
+
+    Args:
+        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
+        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
+        imgsz: Target size as a tuple of :math:`(H, W)` or a single ``int`` for square crops.
+    """
+    h0, w0 = I.imgsz(image)
+    h1, w1 = I.imgsz(imgsz)
+    if h1 > h0 or w1 > w0:
+        raise ValueError(f"Target size {imgsz} exceeds original image size {image.shape[:2]}.")
+    
+    # Calculate crop region (center of image)
+    x_start = max(0, (w0 - w1) // 2)
+    y_start = max(0, (h0 - h1) // 2)
+    x_end   = x_start + w1
+    y_end   = y_start + h1
+
+    # Crop the image
+    cropped_image = image[y_start:y_end, x_start:x_end].copy()
+
+    # Adjust bounding box
+    bbox = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
+    adjusted_bbox = []
+    for b in bbox:
+        x1, y1, x2, y2 = b[0:4]
+        # Shift coordinates relative to crop top-left
+        x1 = x1 - x_start
+        y1 = y1 - y_start
+        x2 = x2 - x_start
+        y2 = y2 - y_start
+        # Check if bbox is within crop (allow partial overlap)
+        if x2 <= 0 or y2 <= 0 or x1 >= w1 or y1 >= h1:
+            continue  # Bbox is completely outside crop
+        # Clip coordinates to crop boundaries
+        x1 = max(0, min(x1, w1))
+        y1 = max(0, min(y1, h1))
+        x2 = max(0, min(x2, w1))
+        y2 = max(0, min(y2, h1))
+        # Skip if bbox is invalid (zero or negative size)
+        if x1 >= x2 or y1 >= y2:
+            continue
+        adjusted_bbox.append(np.concatenate(([x1, y1, x2, y2], b[4:])))
+    adjusted_bbox = np.array(adjusted_bbox, np.float32)
+    adjusted_bbox = convert(adjusted_bbox, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(h1, w1))
+    return cropped_image, adjusted_bbox
+
+
+def pad_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    """Pad an image with HBBs to make it square.
+    
+    Args:
+        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
+        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
+        pad_value: Padding value. Default: ``0``.
+
+    Returns:
+        Padded image and adjusted HBBs.
+    """
+    h0, w0 = I.imgsz(image)
+    dim    = max(h0, w0)
+    pad_h  = (dim - h0) // 2
+    pad_w  = (dim - w0) // 2
+
+    # Pad image
+    padded_image = cv2.copyMakeBorder(
+        src        = image,
+        top        = pad_h,
+        bottom     = dim - h0 - pad_h,
+        left       = pad_w,
+        right      = dim - w0 - pad_w,
+        borderType = cv2.BORDER_CONSTANT,
+        value      = [pad_value, pad_value, pad_value],
+    )
+    
+    # Adjust bounding boxes
+    bbox = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
+    adjusted_bbox = []
+    for b in bbox:
+        x1, y1, x2, y2 = b[0:4]
+        x1 += pad_w
+        x2 += pad_w
+        y1 += pad_h
+        y2 += pad_h
+        adjusted_bbox.append(np.concatenate(([x1, y1, x2, y2], b[4:])))
+    adjusted_bbox = np.array(adjusted_bbox, np.float32)
+    adjusted_bbox = convert(adjusted_bbox, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(dim, dim))
+    return padded_image, adjusted_bbox
+
+
+def split(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """Split an image with HBBs into ``n`` equal parts.
 
     Args:
@@ -666,64 +759,6 @@ def split_image_and_hbbs(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tup
         sub_bboxes.append(np.zeros((0, bbox.shape[1]), dtype=np.float32))
 
     return sub_images, sub_bboxes
-
-
-def center_crop_image_and_hbbs(image: np.ndarray, bbox: np.ndarray, imgsz: int) -> tuple[np.ndarray, np.ndarray]:
-    """Center crop an image with HBBs.
-
-    Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
-        imgsz: Target size as a tuple of :math:`(H, W)` or a single ``int`` for square crops.
-    """
-    h0, w0 = I.imgsz(image)
-    h1, w1 = I.imgsz(imgsz)
-
-    if h1 > h0 or w1 > w0:
-        raise ValueError(f"Target size {imgsz} exceeds original image size {image.shape[:2]}.")
-
-    # Convert bbox to XYXY format
-    bbox = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
-
-    # Calculate crop region (center of image)
-    x_start = max(0, (w0 - w1) // 2)
-    y_start = max(0, (h0 - h1) // 2)
-    x_end   = x_start + w1
-    y_end   = y_start + h1
-
-    # Crop the image
-    cropped_image = image[y_start:y_end, x_start:x_end].copy()
-
-    # Adjust bounding box
-    adjusted_bbox = []
-    for b in bbox:
-        x1, y1, x2, y2 = b[0:4]
-
-        # Shift coordinates relative to crop top-left
-        x1 = x1 - x_start
-        y1 = y1 - y_start
-        x2 = x2 - x_start
-        y2 = y2 - y_start
-
-        # Check if bbox is within crop (allow partial overlap)
-        if x2 <= 0 or y2 <= 0 or x1 >= w1 or y1 >= h1:
-            continue  # Bbox is completely outside crop
-
-        # Clip coordinates to crop boundaries
-        x1 = max(0, min(x1, w1))
-        y1 = max(0, min(y1, h1))
-        x2 = max(0, min(x2, w1))
-        y2 = max(0, min(y2, h1))
-
-        # Skip if bbox is invalid (zero or negative size)
-        if x1 >= x2 or y1 >= y2:
-            continue
-
-        adjusted_bbox.append(np.concatenate(([x1, y1, x2, y2], b[4:])))
-
-    adjusted_bbox = np.array(adjusted_bbox, np.float32)
-    adjusted_bbox = convert(adjusted_bbox, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(h1, w1))
-    return cropped_image, adjusted_bbox
 
 
 # ----- Normalization -----
