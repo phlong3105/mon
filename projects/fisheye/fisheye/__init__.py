@@ -3,6 +3,7 @@
 
 __all__ = [
     "FisheyeTomographyTransform",
+    "iFishTransform",
 ]
 
-from .training import FisheyeTomographyTransform
+from .training import FisheyeTomographyTransform, iFishTransform

@@ -19,6 +19,7 @@ __all__ = [
     "corners",
     "corners_pts",
     "crop_center",
+    "crop_fit_square",
     "cxcywhn_to_xywh",
     "cxcywhn_to_xyxy",
     "denormalize",
@@ -611,6 +612,76 @@ def crop_center(image: np.ndarray, bbox: np.ndarray, imgsz: int) -> tuple[np.nda
     return cropped_image, adjusted_bbox
 
 
+def crop_fit_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    """Crops the black (or specified border color) background from the image to
+    fit the colored content, then pads the cropped image with the border color
+    to make it square if necessary, centering it.
+    
+    Args:
+        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
+        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
+        pad_value: Padding value. Default: ``0``.
+
+    Returns:
+        Cropped image and adjusted HBBs.
+    """
+    h0, w0 = I.imgsz(image)
+    
+    # Find non-border pixels
+    if len(image.shape) == 3 and image.shape[2] == 3:
+        mask = np.any(image != pad_value, axis=2)
+    else:
+        mask = image != pad_value
+    
+    coords = np.argwhere(mask)
+    if coords.size == 0:
+        # If the entire image is border color, return a square of pad_value
+        dim = max(h0, w0)
+        padded_image = np.full((dim, dim, image.shape[2]), pad_value, dtype=image.dtype)
+        return padded_image, np.array([], np.float32).reshape(0, bbox.shape[1])
+    
+    y_min, x_min = coords.min(axis=0)
+    y_max, x_max = coords.max(axis=0) + 1  # Add 1 to include the max pixel
+    
+    # Crop the image
+    cropped_image = image[y_min:y_max, x_min:x_max].copy()
+    h1, w1        = I.imgsz(cropped_image)
+    
+    # Pad to make square
+    dim   = max(h1, w1)
+    pad_h = (dim - h1) // 2
+    pad_w = (dim - w1) // 2
+    
+    padded_image = cv2.copyMakeBorder(
+        src        = cropped_image,
+        top        = pad_h,
+        bottom     = dim - h1 - pad_h,
+        left       = pad_w,
+        right      = dim - w1 - pad_w,
+        borderType = cv2.BORDER_CONSTANT,
+        value      = [pad_value, pad_value, pad_value],
+    )
+    
+    # Adjust bounding boxes
+    bbox = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
+    adjusted_bbox = []
+    for b in bbox:
+        x1, y1, x2, y2 = b[0:4]
+        x1 -= x_min
+        x2 -= x_min
+        y1 -= y_min
+        y2 -= y_min
+        x1 += pad_w
+        x2 += pad_w
+        y1 += pad_h
+        y2 += pad_h
+        adjusted_bbox.append(np.concatenate(([x1, y1, x2, y2], b[4:])))
+    
+    adjusted_bbox = np.array(adjusted_bbox, np.float32)
+    adjusted_bbox = convert(adjusted_bbox, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(dim, dim))
+    return padded_image, adjusted_bbox
+    
+    
 def pad_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> tuple[np.ndarray, np.ndarray]:
     """Pad an image with HBBs to make it square.
     

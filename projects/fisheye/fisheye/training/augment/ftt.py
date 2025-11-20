@@ -44,9 +44,9 @@ class FisheyeTomographyTransform(DualTransform):
     References:
         - Code: https://github.com/Zane-Gu/AirEyeSeg
     """
-
+    
     _targets = (Targets.IMAGE, Targets.MASK)
-
+    
     class InitSchema(BaseTransformInitSchema):
         f        : int   = Field(ge=0)
         imgsz    : int   = Field(ge=0)
@@ -54,7 +54,7 @@ class FisheyeTomographyTransform(DualTransform):
         bg_label : int   = 20
         reuse    : bool  = False
         p        : float = 1.0
-
+    
     def __init__(
         self,
         f        : int   = 150,
@@ -97,7 +97,7 @@ class FisheyeTomographyTransform(DualTransform):
         self.x_trans       = 0
         self.y_trans       = 0
         self.z_trans       = 0
-
+    
     # ----- Init -----
     def set_ext_params_range(self, ext_params_range: list[int]):
         """Set the range for external parameters."""
@@ -107,7 +107,7 @@ class FisheyeTomographyTransform(DualTransform):
         self.x_trans_range = [-self.imgsz[1] * ext_params_range[3], self.imgsz[1] * ext_params_range[3]]
         self.y_trans_range = [-self.imgsz[0] * ext_params_range[4], self.imgsz[0] * ext_params_range[4]]
         self.z_trans_range = [-ext_params_range[5] * self.param   , ext_params_range[5] * self.param]
-
+    
     def set_ext_params(self, ext_params: list[int]):
         """Set the external parameters for fisheye transformation."""
         self.alpha   = ext_params[0] * math.pi / 180
@@ -116,12 +116,12 @@ class FisheyeTomographyTransform(DualTransform):
         self.x_trans = ext_params[3] * self.imgsz[1]
         self.y_trans = ext_params[4] * self.imgsz[0]
         self.z_trans = ext_params[5] * self.param
-
+    
     def random_focal_len(self, focal_len_range: tuple[int, int] = (200, 400)):
         """Randomly set the focal length within a specified range."""
         tmp    = random.random()
         self.f = focal_len_range[0] * (1 - tmp) + focal_len_range[1] * tmp
-
+    
     def random_ext_params(self):
         """Randomly set the external parameters."""
         tmp1         = random.random()
@@ -136,7 +136,7 @@ class FisheyeTomographyTransform(DualTransform):
         self.y_trans = self.y_trans_range[0] * (1 - tmp5) + self.y_trans_range[1] * tmp5
         tmp6         = random.random()
         self.z_trans = self.z_trans_range[0] * (1 - tmp6) + self.z_trans_range[1] * tmp6
-
+    
     def print_ext_param(self):
         log(f"alpha:         {self.alpha * 180 / math.pi}.")
         log(f"beta:          { self.beta * 180 / math.pi}.")
@@ -207,7 +207,7 @@ class FisheyeTomographyTransform(DualTransform):
         bad_index = bad_index | self.bad_index
         self.map_cols[bad_index] = image.shape[1]
         self.map_rows[bad_index] = 0
-
+    
     def _init_ext_matrix(self):
         self.rotate_trans_matrix = \
             np.array([
@@ -231,7 +231,7 @@ class FisheyeTomographyTransform(DualTransform):
                 ],
                 [0, 0, 0, 1]
             ])
-
+    
     def _init_pin_matrix(self, shape: tuple[int, int, int]):
         rows = shape[0]
         cols = shape[1]
@@ -252,7 +252,7 @@ class FisheyeTomographyTransform(DualTransform):
         fisheye = np.array(fisheye[(self.map_rows, self.map_cols)])
         fisheye = fisheye.reshape(self.imgsz[0], self.imgsz[1], 3)
         return fisheye
-
+    
     def _transform_mask(self, image: np.ndarray) -> np.ndarray:
         if not self.reuse:
             self._calculate_coord_map(image)
@@ -262,7 +262,7 @@ class FisheyeTomographyTransform(DualTransform):
         fisheye = np.array(fisheye[(self.map_rows, self.map_cols)])
         fisheye = fisheye.reshape(self.imgsz[0], self.imgsz[1], 3)
         return fisheye
-
+    
     def _transform_bbox(self, bbox: np.ndarray, old_size: tuple[int, int]) -> np.ndarray:
         imgsz  = self.imgsz
         h0, w0 = I.imgsz(old_size)
@@ -308,17 +308,17 @@ class FisheyeTomographyTransform(DualTransform):
         t_bbox = np.array(t_bbox, dtype=np.float32)
         t_bbox = hbb.convert(t_bbox, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=imgsz)
         return t_bbox
-
+    
     # ----- Apply -----
     def apply(self, img: np.ndarray, *args: Any, **params: Any) -> np.ndarray:
         return self._transform_image(img)
     
     def apply_to_mask(self, mask: np.ndarray, *args: Any, **params: Any) -> np.ndarray:
         return self._transform_mask(mask)
-
+    
     def apply_to_bboxes(self, bboxes: np.ndarray, *args: Any, **params: Any) -> np.ndarray:
         return self._transform_bbox(bboxes, old_size=params["old_size"])
-
+    
     def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
         """Returns parameters dependent on input."""
         image  = data["image"]
