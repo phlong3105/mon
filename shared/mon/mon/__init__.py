@@ -10,7 +10,7 @@ defined in https://www.ibm.com/think/machine-learning#605511093
 """
 
 __author__  = "Long H. Pham"
-__version__ = "2.9.0"
+__version__ = "2.9.1"
 
 import time
 __start = time.time()
