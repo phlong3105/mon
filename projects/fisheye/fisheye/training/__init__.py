@@ -3,7 +3,8 @@
 
 __all__ = [
     "FisheyeTomographyTransform",
+    "ICPAugmentation",
     "iFishTransform",
 ]
 
-from .augment import FisheyeTomographyTransform, iFishTransform
+from .augment import FisheyeTomographyTransform, ICPAugmentation, iFishTransform

@@ -470,7 +470,7 @@ class iFishTransform(DualTransform):
         new_size     : tuple[int, int],
         *args: Any, **params: Any
     ) -> np.ndarray:
-        return transform_bbox(bboxes, old_size, new_size, self.distortion, self.area_thres, self.aspect_thres)
+        return transform_bbox0(bboxes, old_size, new_size, self.distortion, self.area_thres, self.aspect_thres)
 
     def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
         """Returns parameters dependent on input."""

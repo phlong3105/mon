@@ -3,8 +3,10 @@
 
 __all__ = [
     "FisheyeTomographyTransform",
+    "ICPAugmentation",
     "iFishTransform",
 ]
 
 from .ftt import FisheyeTomographyTransform
+from .icp import ICPAugmentation
 from .ifish import iFishTransform
