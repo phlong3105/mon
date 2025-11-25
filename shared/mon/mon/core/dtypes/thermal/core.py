@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module defines the InfraredMap class for handling infrared thermal images.
-
-Common Tasks:
-    - Define the InfraredMap class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).
-    - Access core properties.
-"""
+"""This package implements data structure for thermal maps."""
 
 __all__ = [
     "InfraredMap",
@@ -18,9 +13,9 @@ import cv2
 import numpy as np
 import torch
 
-from mon.core.dtypes import image as I
 from mon.core.enum import InfraredSource
 from mon.core.pathlib import Path
+from .. import image as I
 
 
 class InfraredMap(I.Image):

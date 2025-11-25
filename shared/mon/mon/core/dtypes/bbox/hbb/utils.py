@@ -1,22 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains utility functions for HBB data type.
-
-Common Tasks:
-    - Property accessors
-    - Validation checks
-    - Miscellaneous
+"""This module implements utility functions for horizontal bounding boxes (HBBs).
 """
 
 __all__ = [
-    "is_coco",
     "is_cxcywhn",
     "is_normalized",
-    "is_voc",
     "is_xywh",
     "is_xyxy",
-    "is_yolo",
 ]
 
 import numpy as np
@@ -103,8 +95,3 @@ def is_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> bool:
         return True  # COCO: w=width, h=height
     else:
         return False
-
-
-is_coco = is_xywh
-is_voc  = is_xyxy
-is_yolo = is_cxcywhn

@@ -13,7 +13,7 @@ from ....core import *
 
 
 @DATASETS.register(name="realblurtelej")
-class RealBlurTeleJ(VisionDataset):
+class RealBlurTeleJ(ImageDataset):
     """RealBlurTele-J dataset."""
     
     root_name : str         = "realblurtele"
@@ -42,7 +42,7 @@ class RealBlurTeleJ(VisionDataset):
 
 
 @DATASETS.register(name="realblurteler")
-class RealBlurTeleR(VisionDataset):
+class RealBlurTeleR(ImageDataset):
     """RealBlurTele-R dataset."""
 
     root_name : str         = "realblurtele"

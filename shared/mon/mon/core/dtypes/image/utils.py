@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains utility functions for image data type.
-
-Common Tasks:
-    - Property accessors
-    - Validation checks
-    - Miscellaneous
-"""
+"""This module implements utility functions for images."""
 
 __all__ = [
     "center",

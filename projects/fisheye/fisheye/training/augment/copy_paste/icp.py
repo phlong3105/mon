@@ -68,7 +68,7 @@ def group_image_and_label_files(data_dir: str | Path):
             label_file     = label_dir / f"{stem}.txt"
             new_label_file = subdir / "label" / label_file.name
             label_file.copy_file(label_file, new_label_file)
-            
+
 
 def concat_image_and_label_files(data_dir: str | Path):
     """Concatenate image and label files from subdirectories into a single one.
@@ -143,8 +143,7 @@ class Label:
     def save_patch(self):
         """Save the object patch (i.e., RGB pixels) as an image file."""
         pass
-        
-    
+
 
 # noinspection PyMethodMayBeStatic
 class ICPAugmentation:
@@ -337,9 +336,9 @@ class ICPAugmentation:
                     if m is None:  # Skip if no mask is found
                         continue
                     candidates.append(Label(b, m, image_file))
-
+        
         return labels, candidates
-
+    
     def _gen_fg_masks(self, image: np.ndarray, bbox: np.ndarray) -> list[np.ndarray]:
         """Generate foreground masks for the given bounding boxes using SAM."""
         sam_results = self._sam_model(image, bboxes=bbox[:, 0:4], device=torch.device("cuda"), verbose=False)
@@ -369,7 +368,7 @@ class ICPAugmentation:
                 masks.append(m)
         
         return masks
-
+    
     # ----- Sampling -----
     def process(self):
         # Copy and paste objects from candidate to each image
@@ -407,7 +406,7 @@ class ICPAugmentation:
                         f.write(f"{int(b[4])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
 
         self._run += 1
-
+    
     def _get_new_samples(self, image_file: Path) -> tuple[list[Label], list[Label]]:
         """Get new samples for the given image file."""
         # Get all Labels for this image
@@ -456,7 +455,7 @@ class ICPAugmentation:
                 tries = 0
 
         return labels, new_labels
-
+    
     def _copy_paste_labels(self, image: np.ndarray, new_labels: list[Label]) -> np.ndarray:
         # Group labels by image_file
         grouped_labels = {}
@@ -476,7 +475,7 @@ class ICPAugmentation:
                 dst = self._copy_paste_single_label(src=source, dst=dst, label=l)
 
         return dst
-
+    
     def _copy_paste_single_label(self, src: np.ndarray, dst: np.ndarray, label: Label) -> np.ndarray:
         """Copy and paste a single ``label`` from ``src`` to ``dst`` image."""
         x1, y1, x2, y2    = label.bbox[:4].astype(int)
@@ -522,7 +521,7 @@ class ICPAugmentation:
             dst = self._shadow_gen_model("comp_image.jpg", "comp_mask.jpg")
         
         return dst
-
+    
     # ----- Utils -----
     def _group_obj_per_class(self, data: list[Label]) -> dict[int, list[Label]]:
         """Group objects per class."""
@@ -533,7 +532,7 @@ class ICPAugmentation:
                 groups[c] = []
             groups[c].append(b)
         return groups
-
+    
     def _count_obj_per_class(self, data: list[Label]) -> dict[int, int]:
         """Count objects per class."""
         counts = {c: 0 for c in range(self._num_classes)}
@@ -543,7 +542,7 @@ class ICPAugmentation:
                 counts[c] = 0
             counts[c] += 1
         return counts
-
+    
     def _count_obj_per_image(self, data: list[Label], image_file: Path) -> dict[int, int]:
         """Count objects per image."""
         counts = {}

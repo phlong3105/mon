@@ -6,7 +6,6 @@ mixin interfaces.
 """
 
 __all__ = [
-    "BaseDataPoolMixin",
     "BaseDataset",
     "BaseDualDomainDataset",
     "BaseEvalDataset",
@@ -27,20 +26,28 @@ from mon.core import create_progress_bar, log, Path, Split, Task
 from ..classes import Classes
 
 Modality = namedtuple("Modality", [
-    "name",     # The containing directory name in file system.
-    "type",     # Albumentations target type, e.g. "image", "mask", etc.
-    "module",   # Dataclass module that performs I/O operations.
+    "name",     # The name of the directory that contains the modality data.
+    "type",     # Albumentations target type (e.g. "image", "mask", ...) for augmentations.
+    "module",   # The tensor class that performs I/O operations.
     "train",    # If ``True``, this modality is included in train/val set.
     "test",     # If ``True``, this modality is included in test set.
     "primary"   # If ``True``, this is the primary modality.
 ], defaults=[None, None, True, False, False])
+
 Modalities: TypeAlias = Dict[str, Modality]
 
 
 # ----- Dataset -----
 class BaseDataset(dataset.Dataset, abc.ABC):
-    """Base class for all datasets.
-
+    """A base class for general datasets.
+    
+    This class defines the protocol for loading all types of datasets from disks.
+    Most methods are left abstract and must be implemented by subclasses for
+    specific types (e.g., image, text, audio, …).
+    
+    The primary use case for this is in training pipelines (train, val, test)
+    and dataset workflows that require full access to all properties of the dataset.
+    
     Attributes:
         root_name: Dataset's root directory name.
         tasks: List of supported tasks.
@@ -327,171 +334,23 @@ class BaseDataset(dataset.Dataset, abc.ABC):
         return zipped
 
 
-class BaseEvalDataset(dataset.Dataset, abc.ABC):
-    """Base class for all evaluation datasets.
-
-    Args:
-        input_dir: Absolute path to the input/predict data directory.
-        target_dir: Absolute path to the target data directory. Default: ``None``.
-        transform: Transformations for input/target. Default: ``None``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
-    """
-    
-    def __init__(
-        self,
-        input_dir : Path,
-        target_dir: Path = None,
-        transform : Any  = None,
-        verbose   : bool = True,
-        *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        self.input_dir  = input_dir
-        self.target_dir = target_dir
-        self.transform  = None
-        self.verbose    = verbose
-        self.index      = 0  # Used with `__iter__` and `__next__`
-        self.datapoints: dict[str, list[Any]] = {}
-        # Order-specific, DO NOT CHANGE
-        self.init_transform(transform)
-        self.init_data()
-        
-    # ----- Magic Methods -----
-    def __del__(self):
-        """Closes the dataset."""
-        self.close()
-    
-    @abc.abstractmethod
-    def __getitem__(self, index: int) -> dict:
-        """Retrieves a datapoint and metadata at given ``index`` as a ``dict``."""
-        pass
-    
-    def __iter__(self):
-        """Initializes the dataset iterator."""
-        self.reset()
-        return self
-    
-    @abc.abstractmethod
-    def __len__(self) -> int:
-        """Retrieves the total number of datapoints."""
-        pass
-    
-    def __next__(self) -> dict:
-        """Retrieves the next datapoint and metadata as a ``dict``.
-
-        Raises:
-            StopIteration: If index exceeds the dataset length.
-        """
-        if self.index >= self.__len__():
-            raise StopIteration
-        result = self.__getitem__(self.index)
-        self.index += 1
-        return result
-    
-    # ----- Properties -----
-    @property
-    def has_target(self) -> bool:
-        return self.target_dir is not None and self.target_dir.is_dir()
-    
-    @property
-    def disable_pbar(self) -> bool:
-        """Returns ``True`` if progress bar disabled, ``False`` otherwise."""
-        return not self.verbose
-
-    # ----- Initialize -----
-    @abc.abstractmethod
-    def init_transform(self, transform: Any = None):
-        """Initializes transformation operations.
-
-        Args:
-            transform: Transformations to apply. Default: ``None``.
-        """
-        pass
-    
-    @abc.abstractmethod
-    def init_data(self):
-        """Initializes all datapoints in the dataset."""
-        pass
-    
-    @abc.abstractmethod
-    def reset(self):
-        """Resets the dataset."""
-        pass
-    
-    @abc.abstractmethod
-    def close(self):
-        """Closes and releases the dataset."""
-        pass
-    
-    # ----- Data Retrieval -----
-    @abc.abstractmethod
-    def get_datapoint(self, index: int) -> dict:
-        """Gets a datapoint at the specified ``index``.
-
-        Args:
-            index: Index of datapoint.
-
-        Returns:
-            A ``dict`` containing the datapoint.
-        """
-        pass
-    
-    @abc.abstractmethod
-    def get_meta(self, index: int) -> dict:
-        """Gets metadata at the specified ``index``.
-
-        Args:
-            index: Index of metadata.
-
-        Returns:
-            A ``dict`` containing the metadata.
-        """
-        pass
-    
-    def collate_fn(self, batch: list[dict]) -> dict:
-        """Collates a batch of input items for ``torch.utils.data.dataset.DataLoader``.
-        
-        By default, ``batch`` is a ``list`` of dicts, where each ``dict``
-        is a datapoint. We need to collate these into a single ``dict``
-        where each key corresponds to a modality and the values are stacked
-        tensors or arrays.
-
-        Args:
-            batch: List of dicts, each ``dict`` is a datapoint.
-
-        Returns:
-            Collated ``dict`` for ``torch.utils.data.dataset.DataLoader``.
-        """
-        zipped = {
-            k: list(v)
-            for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))
-        }
-
-        for k, v in zipped.items():
-            if v is None:
-                zipped[k] = None
-            elif isinstance(v[0], torch.Tensor):
-                zipped[k] = torch.stack(v, dim=0)
-            elif isinstance(v[0], np.ndarray):
-                zipped[k] = np.stack(v, axis=0)
-
-        return zipped
-
-
 # noinspection PyPep8Naming
 class BaseDualDomainDataset(dataset.Dataset, abc.ABC):
-    """Base class for all dual-domain datasets.
+    """A base class for all dual-domain datasets.
     
-    It is mainly used in Image-to-Image translation tasks. It requires two directories
-    to host data from two domains A and B. The number of items in each directory
-    can be the same (paired) or different (unpaired/unaligned).
+    This has the same protocol with ``BaseDataset`` but with two separate
+    domains A and B.
+    
+    The primary use case is in Image-to-Image translation tasks. It requires two
+    directories to host data from two domains A and B. The number of items in
+    each directory can be the same (paired) or different (unpaired/unaligned).
     
     Attributes:
         root_name: Dataset's root directory name.
         tasks: List of supported tasks.
         splits: List of supported splits.
-        modalities_A: Dictionary of datapoint modalities in domain A.
-        modalities_B: Dictionary of datapoint modalities in domain B.
+        modalities_A: Dictionary of datapoint modalities in the domain A.
+        modalities_B: Dictionary of datapoint modalities in the domain B.
         classes: List of class-labels. Default: ``None``.
     
     Args:
@@ -830,25 +689,157 @@ class BaseDualDomainDataset(dataset.Dataset, abc.ABC):
         return zipped
 
 
-# ----- Dataset Mixin -----
-class BaseDataPoolMixin(abc.ABC):
-    """A mixin that adds data pool attributes and methods to any of the "based"
-    dataset classes (e.g., ``BaseDataset``, ``BaseEvalDataset``, ``BaseDualDomainDataset``,
-    etc.).
+# ----- Eval Dataset -----
+class BaseEvalDataset(dataset.Dataset, abc.ABC):
+    """A base class for evaluation datasets, which only contains the input and
+    target data (i.e., leaving out the rest).
     
-    A data pool is a reservoir of data that is used for some part of active learning.
-    It provides an interface for appending datapoints to the pool and store them
-    to persistent storage (e.g., filesystem).
+    This is primarily used for evaluation pipelines to calculate performance
+    metrics outside the training loop.
+    
+    Args:
+        input_dir: Absolute path to the input/predict data directory.
+        target_dir: Absolute path to the target data directory. Default: ``None``.
+        transform: Transformations for input/target. Default: ``None``.
+        verbose: If ``True``, enables verbose output. Default: ``False``.
     """
     
+    def __init__(
+        self,
+        input_dir : Path,
+        target_dir: Path = None,
+        transform : Any  = None,
+        verbose   : bool = True,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.input_dir  = input_dir
+        self.target_dir = target_dir
+        self.transform  = None
+        self.verbose    = verbose
+        self.index      = 0  # Used with `__iter__` and `__next__`
+        self.datapoints: dict[str, list[Any]] = {}
+        # Order-specific, DO NOT CHANGE
+        self.init_transform(transform)
+        self.init_data()
+        
+    # ----- Magic Methods -----
+    def __del__(self):
+        """Closes the dataset."""
+        self.close()
+    
     @abc.abstractmethod
-    def append(self, datapoint: Any):
-        """Append a datapoint to the data pool.
-        
-        For persistent storage pools, this will actually mean that the ``datapoint``
-        is serialized to a filesystem (i.e., save to disk).
-        
+    def __getitem__(self, index: int) -> dict:
+        """Retrieves a datapoint and metadata at given ``index`` as a ``dict``."""
+        pass
+    
+    def __iter__(self):
+        """Initializes the dataset iterator."""
+        self.reset()
+        return self
+    
+    @abc.abstractmethod
+    def __len__(self) -> int:
+        """Retrieves the total number of datapoints."""
+        pass
+    
+    def __next__(self) -> dict:
+        """Retrieves the next datapoint and metadata as a ``dict``.
+
+        Raises:
+            StopIteration: If index exceeds the dataset length.
+        """
+        if self.index >= self.__len__():
+            raise StopIteration
+        result = self.__getitem__(self.index)
+        self.index += 1
+        return result
+    
+    # ----- Properties -----
+    @property
+    def has_target(self) -> bool:
+        return self.target_dir is not None and self.target_dir.is_dir()
+    
+    @property
+    def disable_pbar(self) -> bool:
+        """Returns ``True`` if progress bar disabled, ``False`` otherwise."""
+        return not self.verbose
+
+    # ----- Initialize -----
+    @abc.abstractmethod
+    def init_transform(self, transform: Any = None):
+        """Initializes transformation operations.
+
         Args:
-            datapoint: The data structure to append to the data pool.
+            transform: Transformations to apply. Default: ``None``.
         """
         pass
+    
+    @abc.abstractmethod
+    def init_data(self):
+        """Initializes all datapoints in the dataset."""
+        pass
+    
+    @abc.abstractmethod
+    def reset(self):
+        """Resets the dataset."""
+        pass
+    
+    @abc.abstractmethod
+    def close(self):
+        """Closes and releases the dataset."""
+        pass
+    
+    # ----- Data Retrieval -----
+    @abc.abstractmethod
+    def get_datapoint(self, index: int) -> dict:
+        """Gets a datapoint at the specified ``index``.
+
+        Args:
+            index: Index of datapoint.
+
+        Returns:
+            A ``dict`` containing the datapoint.
+        """
+        pass
+    
+    @abc.abstractmethod
+    def get_meta(self, index: int) -> dict:
+        """Gets metadata at the specified ``index``.
+
+        Args:
+            index: Index of metadata.
+
+        Returns:
+            A ``dict`` containing the metadata.
+        """
+        pass
+    
+    def collate_fn(self, batch: list[dict]) -> dict:
+        """Collates a batch of input items for ``torch.utils.data.dataset.DataLoader``.
+        
+        By default, ``batch`` is a ``list`` of dicts, where each ``dict``
+        is a datapoint. We need to collate these into a single ``dict``
+        where each key corresponds to a modality and the values are stacked
+        tensors or arrays.
+
+        Args:
+            batch: List of dicts, each ``dict`` is a datapoint.
+
+        Returns:
+            Collated ``dict`` for ``torch.utils.data.dataset.DataLoader``.
+        """
+        zipped = {
+            k: list(v)
+            for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))
+        }
+
+        for k, v in zipped.items():
+            if v is None:
+                zipped[k] = None
+            elif isinstance(v[0], torch.Tensor):
+                zipped[k] = torch.stack(v, dim=0)
+            elif isinstance(v[0], np.ndarray):
+                zipped[k] = np.stack(v, axis=0)
+
+        return zipped

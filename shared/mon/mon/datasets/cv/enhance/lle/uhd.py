@@ -13,7 +13,7 @@ from ....core import *
 
 
 # @DATASETS.register(name="uhd4k")
-class UHD4K(VisionDataset):
+class UHD4K(ImageDataset):
     """UHD-4K dataset."""
     
     root_name : str         = "uhd"
@@ -43,7 +43,7 @@ class UHD4K(VisionDataset):
 
 
 # @DATASETS.register(name="uhd8k")
-class UHD8K(VisionDataset):
+class UHD8K(ImageDataset):
     """UHD-8K dataset."""
     
     root_name : str         = "uhd"

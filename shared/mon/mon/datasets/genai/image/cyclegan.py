@@ -15,7 +15,7 @@ from ...core import *
 
 
 @DATASETS.register(name="cyclegan_dataset")
-class CycleGANDataset(VisionDualDomainDataset):
+class CycleGANDataset(ImageDualDomainDataset):
     """Cycle-GAN dataset."""
     
     root_name   : str         = "cyclegan"

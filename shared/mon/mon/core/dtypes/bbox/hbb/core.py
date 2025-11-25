@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the HBBs class for handling horizontal bounding boxes.
-
-Common Tasks:
-    - Define the HBBs class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).
-    - Access core properties.
+"""This module implements the data structure for horizontal bounding boxes (HBBs).
 """
 
 __all__ = [
@@ -17,12 +13,11 @@ from typing import Union
 import numpy as np
 import torch
 
-from mon.core.dtypes.datapoint import BaseTensorOrArray
 from mon.core.enum import BBoxFormat
 from mon.core.pathlib import Path
+from ...base import BaseTensorOrArray
 
 
-# ----- Base -----
 class HBBs(BaseTensorOrArray):
     """HBBs object.
 

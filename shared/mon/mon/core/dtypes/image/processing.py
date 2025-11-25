@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements processing function for image data type.
-
-Common Tasks:
-    - Format conversions.
-    - Image transformations.
-    - Pixel operations.
-"""
+"""This module implements processing function for image."""
 
 __all__ = [
     "pad_square",

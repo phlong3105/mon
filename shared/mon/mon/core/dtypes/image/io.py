@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements image I/O operations.
-
-Common Tasks:
-    - Load images from disk.
-    - Save images to disk.
-    - Batch I/O.
-    - Metadata handling.
-"""
+"""This module implements I/O functions for images."""
 
 __all__ = [
     "load",

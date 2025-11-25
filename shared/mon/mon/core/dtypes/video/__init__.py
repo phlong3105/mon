@@ -1,9 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements data types and processing functions for video data."""
+"""This package implements data structure and processing functions for videos."""
 
-from .core import *
-from .io import *
-from .processing import *
-from .utils import *
+__all__ = [
+    "Frame",
+    "VideoWriter",
+    "VideoWriterCV",
+    "VideoWriterFFmpeg",
+    "load_video_ffmpeg",
+    "write_video_ffmpeg",
+]
+
+from .core import Frame
+from .io import (
+    VideoWriter,
+    VideoWriterCV,
+    VideoWriterFFmpeg,
+    load_video_ffmpeg,
+    write_video_ffmpeg,
+)

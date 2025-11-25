@@ -16,7 +16,7 @@ from ...core import *
 
 
 @DATASETS.register(name="ntire2025llie")
-class NTIRE2025LLIE(VisionDataset):
+class NTIRE2025LLIE(ImageDataset):
     """NTIRE 2025 LLIE dataset."""
     
     root_name : str         = "ntire2025llie"

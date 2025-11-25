@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements processing function for depth data type.
-
-Common Tasks:
-    - Format conversions.
-"""
+"""This module implements processing function for depth map."""
 
 __all__ = [
     "to_color",
@@ -14,7 +10,7 @@ __all__ = [
 import cv2
 import numpy as np
 
-from mon.core.dtypes import image as I
+from .. import image as I
 
 
 # ----- Conversion -----

@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements HBB I/O operations.
-
-Common Tasks:
-    - Load bboxes from disk.
-    - Save bboxes to disk.
-    - Batch I/O.
-    - Metadata handling.
+"""This module implements I/O functions for horizontal bounding boxes (HBBs).
 """
 
 __all__ = [
@@ -27,7 +21,7 @@ from .processing import convert
 
 
 # ----- Reading -----
-def load_coco(
+def _load_coco(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
@@ -59,7 +53,7 @@ def load_coco(
             error_console.print(f"No annotations found in {path}.")
 
 
-def load_voc(
+def _load_voc(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
@@ -130,7 +124,7 @@ def load_voc(
     return np.stack([x1, y1, x2, y2, c] + rest, axis=-1)
 
 
-def load_yolo(
+def _load_yolo(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
@@ -210,11 +204,11 @@ def load(
 
     match src_fmt:
         case BBoxFormat.COCO | BBoxFormat.XYWH:
-            bbox = load_coco(path, remap, verbose)
+            bbox = _load_coco(path, remap, verbose)
         case BBoxFormat.VOC  | BBoxFormat.XYXY:
-            bbox = load_voc(path, remap, verbose)
+            bbox = _load_voc(path, remap, verbose)
         case BBoxFormat.YOLO | BBoxFormat.CXCYWHN:
-            bbox = load_yolo(path, remap, verbose)
+            bbox = _load_yolo(path, remap, verbose)
         case _:
             raise ValueError(f"``src_fmt`` must be one of {BBoxFormat.formats()}, got {src_fmt}.")
 

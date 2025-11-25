@@ -6,7 +6,6 @@ different types of data.
 """
 
 __all__ = [
-    "ALBUMENTATIONS_TARGETS",
     "BaseDataset",
     "BaseDualDomainDataset",
     "BaseEvalDataset",
@@ -16,11 +15,8 @@ __all__ = [
     "Modality",
     "VideoLoader",
     "VideoLoaderCV",
-    "VideoWriter",
-    "VideoWriterCV",
-    "VideoWriterFFmpeg",
-    "VisionDataset",
-    "VisionDualDomainDataset",
+    "ImageDataset",
+    "ImageDualDomainDataset",
     "is_video_dataset",
 ]
 
@@ -32,19 +28,9 @@ from .base import (
     Modality,
 )
 from .image import (
+    ImageDataset,
+    ImageDualDomainDataset,
     ImageEvalDataset,
     ImageLoader,
 )
-from .video import (
-    is_video_dataset,
-    VideoLoader,
-    VideoLoaderCV,
-    VideoWriter,
-    VideoWriterCV,
-    VideoWriterFFmpeg,
-)
-from .vision import (
-    ALBUMENTATIONS_TARGETS,
-    VisionDataset,
-    VisionDualDomainDataset,
-)
+from .video import is_video_dataset, VideoLoader, VideoLoaderCV

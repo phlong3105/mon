@@ -19,7 +19,7 @@ from ....core import *
 
 
 @DATASETS.register(name="reside_hstsreal")
-class RESIDE_HSTSReal(VisionDataset):
+class RESIDE_HSTSReal(ImageDataset):
     """RESIDE-HSTS-Real dataset."""
 
     root_name : str         = "reside"
@@ -48,7 +48,7 @@ class RESIDE_HSTSReal(VisionDataset):
         
         
 @DATASETS.register(name="reside_hstssyn")
-class RESIDE_HSTSSyn(VisionDataset):
+class RESIDE_HSTSSyn(ImageDataset):
     """RESIDE-HSTS-Synthetic dataset."""
 
     root_name : str         = "reside"
@@ -78,7 +78,7 @@ class RESIDE_HSTSSyn(VisionDataset):
         
 
 @DATASETS.register(name="reside_its")
-class RESIDE_ITS(VisionDataset):
+class RESIDE_ITS(ImageDataset):
     """RESIDE-ITS dataset."""
 
     root_name : str         = "reside"
@@ -108,7 +108,7 @@ class RESIDE_ITS(VisionDataset):
 
 
 @DATASETS.register(name="reside_ots")
-class RESIDE_OTS(VisionDataset):
+class RESIDE_OTS(ImageDataset):
     """RESIDE-OTS dataset."""
 
     root_name : str         = "reside"
@@ -138,7 +138,7 @@ class RESIDE_OTS(VisionDataset):
 
 
 @DATASETS.register(name="reside_rtts")
-class RESIDE_RTTS(VisionDataset):
+class RESIDE_RTTS(ImageDataset):
     """RESIDE-RTTS dataset."""
 
     root_name : str         = "reside"
@@ -167,7 +167,7 @@ class RESIDE_RTTS(VisionDataset):
         
 
 @DATASETS.register(name="reside_sotsindoor")
-class RESIDE_SOTSIndoor(VisionDataset):
+class RESIDE_SOTSIndoor(ImageDataset):
     """RESIDE-SOTS-Indoor dataset."""
 
     root_name : str         = "reside"
@@ -197,7 +197,7 @@ class RESIDE_SOTSIndoor(VisionDataset):
 
 
 @DATASETS.register(name="reside_sotsoutdoor")
-class RESIDE_SOTSOutdoor(VisionDataset):
+class RESIDE_SOTSOutdoor(ImageDataset):
     """RESIDE-SOTS-Outdoor dataset."""
 
     root_name : str         = "reside"
@@ -227,7 +227,7 @@ class RESIDE_SOTSOutdoor(VisionDataset):
 
 
 @DATASETS.register(name="reside_urhi")
-class RESIDE_URHI(VisionDataset):
+class RESIDE_URHI(ImageDataset):
     """RESIDE-URHI dataset."""
 
     root_name : str         = "reside"

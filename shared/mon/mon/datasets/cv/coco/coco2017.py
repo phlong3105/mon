@@ -8,12 +8,11 @@ __all__ = [
     "COCO91",
 ]
 
-from mon.core import rich
 from ...core import *
 
 
 @DATASETS.register(name="coco80")
-class COCO80(VisionDataset):
+class COCO80(ImageDataset):
     """COCO-80-classes dataset."""
     
     root_name : str         = "coco2017"
@@ -106,23 +105,10 @@ class COCO80(VisionDataset):
         {"name": "toothbrush"    , "id": 80, "supercategory": "indoor"    , "color": ( 58, 228, 226)},
     ])
     
-    def list_primary_data(self) -> list:
-        patterns = [self.root / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
-        
-        return images
 
 
 @DATASETS.register(name="coco91")
-class COCO91(VisionDataset):
+class COCO91(ImageDataset):
     """COCO-91-classes dataset."""
     
     root_name : str         = "coco2017"
@@ -225,17 +211,3 @@ class COCO91(VisionDataset):
         {"name": "toothbrush"    , "id": 90, "supercategory": "indoor"    , "color": [ 58, 228, 226]},
         {"name": "hair brush"    , "id": 91, "supercategory": "indoor"    , "color": [149, 108,  73]}
     ])
-    
-    def list_primary_data(self) -> list:
-        patterns = [self.root / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
-        
-        return images

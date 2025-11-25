@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Frame class for video data handling.
-
-Common Tasks:
-    - Define the Frame class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).
-    - Access core properties.
-"""
+"""This module implements the data structure for video frames."""
 
 __all__ = [
     "Frame",
@@ -17,8 +12,9 @@ from typing import Union
 import numpy as np
 import torch
 
-from mon.core.dtypes.datapoint import BaseTensorOrArray
+from mon.core.constants import SAVE_IMAGE_EXT
 from mon.core.pathlib import Path
+from ..base import BaseTensorOrArray
 
 
 class Frame(BaseTensorOrArray):

@@ -569,12 +569,12 @@ class BBoxFormat(Enum):
     """
 
     # Format
-    XYWH       = "xywh"                 # COCO format: [ x,  y,  w,  h]
-    XYXY       = "xyxy"                 # VOC  format: [x1, y1, x2, y2]
-    CXCYWHN    = "cxcywhn"              # YOLO format: [cx, cy,  w,  h] normalized
-    COCO       = "coco"
-    VOC        = "voc"
-    YOLO       = "yolo"
+    XYWH         = "xywh"               # COCO format: [ x,  y,  w,  h]
+    XYXY         = "xyxy"               # VOC  format: [x1, y1, x2, y2]
+    CXCYWHN      = "cxcywhn"            # YOLO format: [cx, cy,  w,  h] normalized
+    COCO         = "coco"
+    VOC          = "voc"
+    YOLO         = "yolo"
     # Format conversion
     XYWH2XYXY    = "xywh_to_xyxy"       # Convert from COCO to VOC
     XYWH2CXCYWHN = "xywh_to_cxcywhn"    # Convert from COCO to YOLO

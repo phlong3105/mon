@@ -20,7 +20,7 @@ from mon.core import rich
 from ....core import *
 
 
-class LOLBlur(VisionDataset, abc.ABC):
+class LOLBlur(ImageDataset, abc.ABC):
     """LOL-Blur dataset."""
     
     name      : str         = "lolblur"

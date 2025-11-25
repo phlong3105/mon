@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the DepthMap class for depth map data handling.
-
-Common Tasks:
-    - Define the DepthMap class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).
-    - Access core properties.
-"""
+"""This module implements data structure for depth map."""
 
 __all__ = [
     "DepthMap",
@@ -18,9 +13,9 @@ import cv2
 import numpy as np
 import torch
 
-from mon.core.dtypes import image as I
 from mon.core.enum import DepthSource
 from mon.core.pathlib import Path
+from .. import image as I
 
 
 class DepthMap(I.Image):

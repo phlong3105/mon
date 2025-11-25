@@ -37,7 +37,7 @@ from ....core import *
 
 
 @DATASETS.register(name="sice")
-class SICE(VisionDataset):
+class SICE(ImageDataset):
     """SICE dataset. We use the under-exposure images as the primary input modality.
     
     Args:
@@ -79,7 +79,7 @@ class SICE(VisionDataset):
 
 
 @DATASETS.register(name="siceme")
-class SICEME(VisionDataset):
+class SICEME(ImageDataset):
     """SICE-ME dataset includes multi-exposure training images. This dataset is
     used in unsupervised curve-estimation methods for low-light enhancement
     (e.g., Zero-DCE, Zero-DCE++, etc.).

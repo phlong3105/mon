@@ -13,7 +13,7 @@ from ....core import *
 
 
 @DATASETS.register(name="lolv2real")
-class LOLv2Real(VisionDataset):
+class LOLv2Real(ImageDataset):
     """LOL-v2 Real dataset."""
     
     root_name : str         = "lolv2"
@@ -43,7 +43,7 @@ class LOLv2Real(VisionDataset):
 
 
 @DATASETS.register(name="lolv2syn")
-class LOLv2Syn(VisionDataset):
+class LOLv2Syn(ImageDataset):
     """LOL-v2 Synthetic dataset."""
     
     root_name : str         = "lolv2"

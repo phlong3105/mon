@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements data types and processing functions for bounding box."""
+"""This package implements data structure and processing functions for bounding box.
+"""
 
-from .hbb import *
-from .obb import *
+__all__ = [
+    "HBBs",
+    "hbb",
+    "obb",
+]
+
+from .hbb import HBBs

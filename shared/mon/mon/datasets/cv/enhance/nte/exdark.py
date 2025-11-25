@@ -11,12 +11,11 @@ __all__ = [
     "ExDark",
 ]
 
-from mon.core import rich
 from ....core import *
 
 
 @DATASETS.register(name="exdark")
-class ExDark(VisionDataset):
+class ExDark(ImageDataset):
     """ExDark dataset."""
     
     root_name : str         = "exdark"
@@ -40,18 +39,3 @@ class ExDark(VisionDataset):
         {"name": "People"   , "id": 11, "coco80_id":  1, "color": [ 81, 120, 228]},
         {"name": "Table"    , "id": 12, "coco80_id": 61, "color": [216, 147, 179]},
     ])
-
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
-        patterns = [self.root / self.split_str / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
-
-        return images

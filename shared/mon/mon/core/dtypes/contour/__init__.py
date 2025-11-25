@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements data types and processing functions for contour data."""
+"""This package implements data structure and processing functions for contour."""
 
-from .processing import *
+__all__ = [
+    "convert",
+    "denormalize",
+    "normalize",
+]
+
+from .processing import convert, denormalize, normalize

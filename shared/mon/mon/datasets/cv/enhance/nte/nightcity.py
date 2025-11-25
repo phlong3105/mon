@@ -17,7 +17,7 @@ from ....core import *
 
 
 @DATASETS.register(name="nightcity")
-class NightCity(VisionDataset):
+class NightCity(ImageDataset):
     """NightCity dataset."""
     
     root_name : str         = "nightcity"

@@ -12,7 +12,7 @@ from ....core import *
 
 
 @DATASETS.register(name="snow100k")
-class Snow100K(VisionDataset):
+class Snow100K(ImageDataset):
     """Snow100K dataset."""
 
     root_name : str         = "snow100k"

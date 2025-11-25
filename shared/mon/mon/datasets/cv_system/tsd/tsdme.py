@@ -12,7 +12,7 @@ from ...core import *
 
 
 @DATASETS.register(name="tsdme")
-class TSDME(VisionDataset):
+class TSDME(ImageDataset):
     """TSD-ME dataset."""
     
     root_name : str         = "tsd"

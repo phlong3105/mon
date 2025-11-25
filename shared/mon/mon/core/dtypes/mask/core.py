@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module defines the SemanticMask class for handling segmentation masks.
-
-Common Tasks:
-    - Define the Mask class (e.g., wrapper for ``numpy.ndarray`` or ``torch.Tensor``).
-    - Access core properties.
-"""
+"""This module implements data structure for segmentation masks."""
 
 __all__ = [
     "SemanticMask",
@@ -18,8 +13,8 @@ import cv2
 import numpy as np
 import torch
 
-from mon.core.dtypes import image as I
 from mon.core.pathlib import Path
+from .. import image as I
 
 
 class SemanticMask(I.Image):

@@ -18,7 +18,7 @@ from ...core import *
 
 
 @DATASETS.register(name="cityscapes")
-class Cityscapes(VisionDataset):
+class Cityscapes(ImageDataset):
     """Cityscapes main dataset.
 
     Args:

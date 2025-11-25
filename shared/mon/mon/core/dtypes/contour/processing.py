@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements processing function for contour data type.
-
-Common Tasks:
-    - Format conversions.
-"""
+"""This module implements processing functions for contour."""
 
 __all__ = [
     "convert",
@@ -15,8 +11,8 @@ __all__ = [
 
 import numpy as np
 
-from mon.core.dtypes import image as I
 from mon.core.enum import BBoxFormat
+from .. import image as I
 
 
 # ----- Normalization -----

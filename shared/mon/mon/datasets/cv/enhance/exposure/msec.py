@@ -18,7 +18,7 @@ from ....core import *
 
 
 @DATASETS.register(name="msec")
-class MSEC(VisionDataset):
+class MSEC(ImageDataset):
     """MSEC dataset."""
     
     root_name : str         = "msec"

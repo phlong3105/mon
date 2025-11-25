@@ -17,7 +17,6 @@ from .resize import ResizeDivisibleBy
 
 
 # ----- Extended Compose -----
-'''
 class Compose(A.Compose):
     """An extension of ``albumentations.Compose`` with convenience methods for
     building transformations.
@@ -33,7 +32,6 @@ class Compose(A.Compose):
     def __init__(self, transforms: list[Any], **kwargs):
         transforms = build_transforms(transforms)
         super().__init__(transforms, **kwargs)
-'''
 
 
 # ----- Builder -----

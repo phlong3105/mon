@@ -60,7 +60,7 @@ def build_dataset(
         dataset   = DATASETS.build(**config)
     elif src.is_dir():
         data_name = src.name
-        dataset = ImageLoader(root=src, transform=transform, verbose=verbose, **kwargs)
+        dataset   = ImageLoader(root=src, transform=transform, verbose=verbose, **kwargs)
     elif src.is_video_file():
         data_name = src.name
         dataset = VideoLoaderCV(root=src, transform=transform, verbose=verbose, **kwargs)

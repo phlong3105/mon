@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements data types and processing functions for mask data."""
+"""This package implements data structure and processing functions for segmentation
+mask.
+"""
 
-from .core import *
-from .processing import *
+__all__ = [
+    "SemanticMask",
+]
+
+from .core import SemanticMask

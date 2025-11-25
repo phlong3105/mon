@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Image class for image data handling."""
+"""This module implements data structure for image."""
 
 __all__ = [
     "Image",
@@ -13,8 +13,8 @@ import cv2
 import numpy as np
 import torch
 
-from mon.core.dtypes.datapoint import BaseTensorOrArray
 from mon.core.pathlib import Path
+from ..base import BaseTensorOrArray
 
 
 class Image(BaseTensorOrArray):

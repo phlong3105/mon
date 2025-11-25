@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements processing functions for HBB data type.
-
-Common Tasks:
-    - Format conversions.
-    - Transformations.
+"""This module implements processing functions for horizontal bounding boxes (HBBs).
 """
 
 __all__ = [
@@ -13,8 +9,6 @@ __all__ = [
     "center",
     "center_distance",
     "ciou",
-    "coco_to_voc",
-    "coco_to_yolo",
     "convert",
     "corners",
     "corners_pts",
@@ -33,14 +27,10 @@ __all__ = [
     "pad_square",
     "split",
     "to_2d",
-    "voc_to_coco",
-    "voc_to_yolo",
     "xywh_to_cxcywhn",
     "xywh_to_xyxy",
     "xyxy_to_cxcywhn",
     "xyxy_to_xywh",
-    "yolo_to_coco",
-    "yolo_to_voc",
 ]
 
 import math
@@ -49,9 +39,9 @@ from typing import Union
 import cv2
 import numpy as np
 
-from mon.core.dtypes import image as I
 from mon.core.enum import BBoxFormat
 from .utils import is_normalized
+from ... import image as I
 
 
 # ----- IoU -----
@@ -1034,14 +1024,6 @@ def cxcywhn_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     return np.stack((x1, y1, x2, y2, *rest), axis=-1)
 
 
-coco_to_voc  = xywh_to_xyxy
-coco_to_yolo = xywh_to_cxcywhn
-voc_to_coco  = xyxy_to_xywh
-voc_to_yolo  = xyxy_to_cxcywhn
-yolo_to_coco = cxcywhn_to_xywh
-yolo_to_voc  = cxcywhn_to_xyxy
-
-
 def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert HBBs between formats.
 
@@ -1065,16 +1047,16 @@ def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.nda
         return bbox
     match fmt:
         case BBoxFormat.COCO2VOC  | BBoxFormat.XYWH2XYXY:
-            return coco_to_voc(bbox, imgsz)
+            return xywh_to_xyxy(bbox, imgsz)
         case BBoxFormat.COCO2YOLO | BBoxFormat.XYWH2CXCYWHN:
-            return coco_to_yolo(bbox, imgsz)
+            return xywh_to_cxcywhn(bbox, imgsz)
         case BBoxFormat.VOC2COCO  | BBoxFormat.XYXY2XYWH:
-            return voc_to_coco(bbox, imgsz)
+            return xyxy_to_xywh(bbox, imgsz)
         case BBoxFormat.VOC2YOLO  | BBoxFormat.XYXY2CXCYWHN:
-            return voc_to_yolo(bbox, imgsz)
+            return xyxy_to_cxcywhn(bbox, imgsz)
         case BBoxFormat.YOLO2VOC  | BBoxFormat.CXCYWHN2XYXY:
-            return yolo_to_voc(bbox, imgsz)
+            return cxcywhn_to_xyxy(bbox, imgsz)
         case BBoxFormat.YOLO2COCO | BBoxFormat.CXCYWHN2XYXY:
-            return yolo_to_coco(bbox, imgsz)
+            return cxcywhn_to_xywh(bbox, imgsz)
         case _:
             raise ValueError(f"``fmt`` must be one of {BBoxFormat.conversion_codes()}, got {fmt}.")

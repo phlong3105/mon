@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements color processing functions for image data type."""
+"""This package implements color processing functions."""
 
-from .color_transfer import *
-from .hvi import *
+__all__ = [
+    "RGBToHVI",
+    "color_transfer",
+]
+
+from .color_transfer import color_transfer
+from .hvi import RGBToHVI

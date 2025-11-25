@@ -16,7 +16,7 @@ from ...core import *
 
 
 @DATASETS.register(name="mipi2024flare")
-class MIPI2024Flare(VisionDataset):
+class MIPI2024Flare(ImageDataset):
     """MIPI 2024 Flare dataset."""
     
     root_name : str         = "mipi2024flare"

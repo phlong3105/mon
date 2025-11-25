@@ -10,7 +10,7 @@ __all__ = [
 import cv2
 import numpy as np
 
-from mon.core.dtypes.image.utils import is_color
+from ..utils import is_color
 
 
 # ----- Sobel Filter -----
