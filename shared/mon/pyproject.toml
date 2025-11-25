@@ -74,7 +74,7 @@ dependencies    = [
     "spikingjelly",                     # SpikingJelly is an open-source deep learning framework for Spiking Neural Network (SNN) based on PyTorch.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
-    "torch>=2.9.0",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch>=2.9.1",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
@@ -101,7 +101,7 @@ dependencies    = [
     # VLM
     "open-clip-torch",                  # OpenCLIP: Open and Reproducible CLIP Models.
     # Temporary Fix
-    "bitsandbytes==0.42.0"              # Fix for macOS: 0.45.5 error
+    # "bitsandbytes==0.42.0"              # Fix for macOS: 0.45.5 error
 ]
 # dynamic         = ["dependencies"]
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements fisheye transformation for image and horizontal bounding boxes.
+"""Implements fisheye transformation for an image and horizontal bounding boxes.
 
 References:
     - Code: https://github.com/Gil-Mor/iFish
@@ -14,16 +14,14 @@ __all__ = [
 from typing import Any
 
 import numpy as np
-from mon.training.albumentation import (
-    BaseModel,
+from albumentations.core.transforms_interface import (
+    BaseTransformInitSchema,
     DualTransform,
-    Field,
-    Targets,
 )
+from albumentations.core.type_definitions import Targets
+from pydantic import Field
 
-from mon.core import TRANSFORMS
-from mon.cv import types
-from mon.nn import _size_2_t
+from mon.core import ALBUMENTATIONS, image as I
 
 
 # ----- Utils -----
@@ -100,7 +98,7 @@ def transform_image(image: np.ndarray, distortion: float) -> np.ndarray:
         np.ndarray: Transformed image.
     """
     def transform(img: np.ndarray) -> np.ndarray:
-        w, h = types.image_size(img)  # Note: we must reverse the order of w and h
+        w, h = I.imgsz(img)  # Note: we must reverse the order of w and h
         if len(img.shape) == 2:
             img = np.dstack((img, img, img))
         if len(img.shape) == 3 and img.shape[2] == 3:
@@ -126,7 +124,7 @@ def transform_image(image: np.ndarray, distortion: float) -> np.ndarray:
         return distort_img.astype(np.uint8)
 
     def crop(img: np.ndarray) -> np.ndarray:
-        h, w = types.image_size(img)
+        h, w = I.imgsz(img)
         # Calculate the coordinates of the furthest point to the left and up
         left = (0.0, float(h / 2))
         top  = (float(w / 2), 0.0)
@@ -146,8 +144,8 @@ def transform_image(image: np.ndarray, distortion: float) -> np.ndarray:
 
 def transform_bbox0(
     bbox        : np.ndarray,
-    old_size    : _size_2_t,
-    new_size    : _size_2_t,
+    old_size    : tuple[int, int],
+    new_size    : tuple[int, int],
     distortion  : float,
     area_thres  : int   = 0,
     aspect_thres: float = 0.0,
@@ -162,7 +160,6 @@ def transform_bbox0(
         area_thres: Minimum area threshold for HBBs. Default: ``0``.
         aspect_thres: Minimum height-to-width ratio threshold for HBBs. Default: ``0.0``.
     """
-    bbox        = types.hbb_to_2d(bbox)
     w0, h0      = old_size
     w1, h1      = new_size
     left_margin = int((w0 - w1) // 2)
@@ -231,8 +228,8 @@ def transform_bbox0(
 
 def transform_bbox1(
     bbox        : np.ndarray,
-    old_size    : _size_2_t,
-    new_size    : _size_2_t,
+    old_size    : tuple[int, int],
+    new_size    : tuple[int, int],
     distortion  : float,
     area_thres  : int   = 0,
     aspect_thres: float = 0.0,
@@ -247,7 +244,6 @@ def transform_bbox1(
         area_thres: Minimum area threshold for HBBs. Default: ``0``.
         aspect_thres: Minimum height-to-width ratio threshold for HBBs. Default: ``0.0``.
     """
-    bbox        = types.hbb_to_2d(bbox)
     w0, h0      = old_size
     w1, h1      = new_size
     left_margin = int((w0 - w1) // 2)
@@ -322,8 +318,8 @@ def transform_bbox1(
 
 def transform_bbox(
     bbox        : np.ndarray,
-    old_size    : _size_2_t,
-    new_size    : _size_2_t,
+    old_size    : tuple[int, int],
+    new_size    : tuple[int, int],
     distortion  : float,
     area_thres  : int   = 0,
     aspect_thres: float = 0.0,
@@ -340,7 +336,6 @@ def transform_bbox(
         aspect_thres: Minimum height-to-width ratio threshold for HBBs. Default: ``0.0``.
         grid_points: Number of points per axis for sampling within each box. Default: ``5``.
     """
-    bbox        = types.hbb_to_2d(bbox)
     w0, h0      = old_size
     w1, h1      = new_size
     left_margin = int((w0 - w1) // 2)
@@ -415,7 +410,7 @@ def transform_bbox(
 
 
 # ----- Augmentation -----
-@TRANSFORMS.register(name="ifish_transform")
+@ALBUMENTATIONS.register()
 class iFishTransform(DualTransform):
     """Apply fisheye transformation to inputs.
 
@@ -429,10 +424,10 @@ class iFishTransform(DualTransform):
 
     _targets = (Targets.IMAGE, Targets.MASK, Targets.BBOXES)
 
-    class InitSchema(BaseModel):
-        distortion  : float = Field(ge=0.0, description="Distortion factor.")
-        area_thres  : int   = Field(ge=0,   description="Minimum area threshold.")
-        aspect_thres: float = Field(ge=0.0, description="Minimum aspect ratio threshold.")
+    class InitSchema(BaseTransformInitSchema):
+        distortion  : float = Field(ge=0.0)
+        area_thres  : int   = Field(ge=0)
+        aspect_thres: float = Field(ge=0.0)
         p           : float = 1.0
 
     def __init__(
@@ -451,8 +446,8 @@ class iFishTransform(DualTransform):
         self,
         img          : np.ndarray,
         fisheye_image: np.ndarray,
-        old_size     : _size_2_t,
-        new_size     : _size_2_t,
+        old_size     : tuple[int, int],
+        new_size     : tuple[int, int],
         *args: Any, **params: Any
     ) -> np.ndarray:
         return fisheye_image
@@ -461,8 +456,8 @@ class iFishTransform(DualTransform):
         self,
         img          : np.ndarray,
         fisheye_image: np.ndarray,
-        old_size     : _size_2_t,
-        new_size     : _size_2_t,
+        old_size     : tuple[int, int],
+        new_size     : tuple[int, int],
         *args: Any, **params: Any
     ) -> np.ndarray:
         return transform_image(img, self.distortion)
@@ -471,18 +466,18 @@ class iFishTransform(DualTransform):
         self,
         bboxes       : np.ndarray,
         fisheye_image: np.ndarray,
-        old_size     : _size_2_t,
-        new_size     : _size_2_t,
+        old_size     : tuple[int, int],
+        new_size     : tuple[int, int],
         *args: Any, **params: Any
     ) -> np.ndarray:
-        return transform_bbox(bboxes, old_size, new_size, self.distortion, self.area_thres, self.aspect_thres)
+        return transform_bbox0(bboxes, old_size, new_size, self.distortion, self.area_thres, self.aspect_thres)
 
     def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
         """Returns parameters dependent on input."""
         image         = data["image"]
         fisheye_image = transform_image(image, self.distortion)
-        h0, w0        = types.image_size(image)
-        h1, w1        = types.image_size(fisheye_image)
+        h0, w0        = I.imgsz(image)
+        h1, w1        = I.imgsz(fisheye_image)
         return params | {
             "fisheye_image": fisheye_image,
             "old_size"     : (w0, h0),

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements DEIM model for object detection.
+"""This package implements DEIM model for object detection.
 
 References:
     - Paper: "DEIM: DETR with Improved Matching for Fast convergence," CVPR 2025.

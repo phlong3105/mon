@@ -10,10 +10,10 @@ It also includes utilities functions for building datasets and data loaders.
 __all__ = [
     "ALBUMENTATIONS_TARGETS",
     "BaseDataset",
+    "BaseDualDomainDataset",
+    "BaseEvalDataset",
     "Classes",
     "DataLoader",
-    "DualDomainDataset",
-    "EvalDataset",
     "ImageEvalDataset",
     "ImageLoader",
     "Modalities",
@@ -37,8 +37,8 @@ from .dataloader import DataLoader
 from .dataset import (
     ALBUMENTATIONS_TARGETS,
     BaseDataset,
-    DualDomainDataset,
-    EvalDataset,
+    BaseDualDomainDataset,
+    BaseEvalDataset,
     ImageEvalDataset,
     ImageLoader,
     is_video_dataset,

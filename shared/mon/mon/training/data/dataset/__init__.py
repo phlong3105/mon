@@ -8,8 +8,8 @@ different types of data.
 __all__ = [
     "ALBUMENTATIONS_TARGETS",
     "BaseDataset",
-    "DualDomainDataset",
-    "EvalDataset",
+    "BaseDualDomainDataset",
+    "BaseEvalDataset",
     "ImageEvalDataset",
     "ImageLoader",
     "Modalities",
@@ -26,8 +26,8 @@ __all__ = [
 
 from .base import (
     BaseDataset,
-    DualDomainDataset,
-    EvalDataset,
+    BaseDualDomainDataset,
+    BaseEvalDataset,
     Modalities,
     Modality,
 )

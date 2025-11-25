@@ -12,4 +12,4 @@ from .training import (
     ICPAugmentation,
     iFishTransform,
 )
-from .training.augment import icp
+from .training.augment.copy_paste import icp

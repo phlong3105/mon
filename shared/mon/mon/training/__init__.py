@@ -13,10 +13,12 @@ __all__ = [
     "build_dataset",
     # Hierarchical exposed APIs
     "albumentations",
+    "augment",
     "data",
     "losses",
     "metrics",
     "optims",
 ]  # Public APIs
 
+from .augment import albumentations
 from .data import build_dataloader, build_dataset

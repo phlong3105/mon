@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module contains various enumeration classes ."""
+"""This module defines various enumerations."""
 
 __all__ = [
+    "ActiveLearningPhase",
     "AppleRGB",
     "BBoxFormat",
-    "BasicRGB",
     "ConfigExtension",
     "DepthSource",
     "Enum",
@@ -14,6 +14,8 @@ __all__ = [
     "InfraredSource",
     "MLType",
     "MemoryUnit",
+    "RGB",
+    "RGB12",
     "RunMode",
     "Split",
     "TRTPrecision",
@@ -130,7 +132,7 @@ class Enum(enum.Enum):
 
 # ----- Color -----
 class RGB(Enum):
-    """138 RGB colors."""
+    """An enumeration of 138 common RGB colors."""
     
     ALICE_BLUE              = (240, 248, 255)
     ANTIQUE_WHITE           = (250, 235, 215)
@@ -273,8 +275,29 @@ class RGB(Enum):
     YELLOW_GREEN            = (154, 205,  50)
 
 
+class RGB12(Enum):
+    """An enumeration of 12 basic RGB colors."""
+    
+    BLACK   = (  0,   0,   0)
+    WHITE   = (255, 255, 255)
+    RED     = (255,   0,   0)
+    LIME    = (  0, 255,   0)
+    BLUE    = (  0,   0, 255)
+    YELLOW  = (255, 255,   0)
+    CYAN    = (  0, 255, 255)
+    MAGENTA = (255,   0, 255)
+    SILVER  = (192, 192, 192)
+    GRAY    = (128, 128, 128)
+    MAROON  = (128,   0,   0)
+    OLIVE   = (128, 128,   0)
+    GREEN   = (  0, 128,   0)
+    PURPLE  = (128,   0, 128)
+    TEAL    = (  0, 128, 128)
+    NAVY    = (  0,   0, 128)
+
+
 class AppleRGB(Enum):
-    """Apple's RGB colors."""
+    """An enumeration of Apple RGB colors."""
     
     BLACK       = (  0,   0,   0)
     BLUE        = (  0, 122, 255)
@@ -315,30 +338,9 @@ class AppleRGB(Enum):
     DARK_YELLOW = (178,  80,   0)
 
 
-class BasicRGB(Enum):
-    """12 basic RGB colors."""
-    
-    BLACK   = (  0,   0,   0)
-    WHITE   = (255, 255, 255)
-    RED     = (255,   0,   0)
-    LIME    = (  0, 255,   0)
-    BLUE    = (  0,   0, 255)
-    YELLOW  = (255, 255,   0)
-    CYAN    = (  0, 255, 255)
-    MAGENTA = (255,   0, 255)
-    SILVER  = (192, 192, 192)
-    GRAY    = (128, 128, 128)
-    MAROON  = (128,   0,   0)
-    OLIVE   = (128, 128,   0)
-    GREEN   = (  0, 128,   0)
-    PURPLE  = (128,   0, 128)
-    TEAL    = (  0, 128, 128)
-    NAVY    = (  0,   0, 128)
-
-
 # ----- Device -----
 class MemoryUnit(Enum):
-    """Memory units."""
+    """An enumeration of memory units."""
     
     B  = "B"
     KB = "KB"
@@ -387,7 +389,7 @@ class MemoryUnit(Enum):
 
 # ----- File -----
 class ConfigExtension(Enum):
-    """Configuration file extensions."""
+    """An enumeration of configuration file extensions."""
     
     CFG    = ".cfg"
     CONFIG = ".config"
@@ -400,7 +402,7 @@ class ConfigExtension(Enum):
 
 
 class ImageExtension(Enum):
-    """Image file extensions."""
+    """An enumeration of image file extensions."""
     
     ARW  = ".arw"
     BMP  = ".bmp"
@@ -415,7 +417,7 @@ class ImageExtension(Enum):
 
 
 class VideoExtension(Enum):
-    """Video file extensions."""
+    """An enumeration of video file extensions."""
     
     AVI  = ".avi"
     M4V  = ".m4v"
@@ -428,7 +430,7 @@ class VideoExtension(Enum):
 
 
 class WeightExtension(Enum):
-    """Weight file extensions."""
+    """An enumeration of model weight file extensions."""
 
     CKPT    = ".ckpt"
     ONNX    = ".onnx"
@@ -438,53 +440,13 @@ class WeightExtension(Enum):
     WEIGHTS = ".weights"
 
 
-# ----- ML/DL -----
-class MLType(Enum):
-    """Machine learning types."""
-    
-    INFERENCE       = "inference"        # Inference Only: we don't have training code.
-    TRADITIONAL     = "traditional"      # Traditional Method (non-learning).
-    SUPERVISED      = "supervised"       # Supervised learning with labeled data.
-    UNSUPERVISED    = "unsupervised"     # Unsupervised learning with unlabeled data.
-    SELF_SUPERVISED = "self_supervised"  # Self-Supervised learning with self-generated supervision.
-    ZERO_SHOT       = "zero_shot"        # Zero-Shot learning without any training data.
-    
-    @classmethod
-    def trainable(cls) -> list:
-        """Returns a ``list`` of conventional training machine learning types."""
-        return [cls.SELF_SUPERVISED, cls.SUPERVISED, cls.UNSUPERVISED]
-
-
-class RunMode(Enum):
-    """Run modes."""
-    
-    TRAIN   = "train"
-    PREDICT = "predict"
-    METRIC  = "metric"
-
-
-class Split(Enum):
-    """Dataset's split types."""
-    
-    TRAIN   = "train"
-    VAL     = "val"
-    TEST    = "test"
-    PREDICT = "predict"
-
-
-class TRTPrecision(Enum):
-    """TensorRT precision modes."""
-    
-    FP32    = "fp32"                    # 32-bit floating point
-    FP16    = "fp16"                    # 16-bit floating point
-    FP16N32 = "fp16n32"                 # 16-bit floating point with 32-bit normalization
-    FP8     = "fp8"                     # 8-bit floating point
-    INT8    = "int8"                    # 8-bit integer
-
-
 # ----- Task -----
 class Task(Enum):
-    """Task types."""
+    """An enumeration of various tasks.
+    
+    This is primarily used in the metadata of a model to indicate the task
+    that the model is designed to perform.
+    """
     
     # ----- Generative AI -----
     # Image Generation
@@ -523,9 +485,88 @@ class Task(Enum):
     VIDEO       = "video"               # Video Processing
 
 
-# ----- Vision -----
+# ----- Training -----
+class ActiveLearningPhase(Enum):
+    """An enumeration of the different phases of the active learning workflow.
+
+    This is primarily used in the metadata for restarting an ongoing active
+    learning experiment.
+    """
+    
+    TRAINING         = "training"
+    METROLOGY        = "metrology"
+    QUERY            = "query"
+    LABELING         = "labeling"
+    DATA_INTEGRATION = "data_integration"
+
+
+class MLType(Enum):
+    """An enumeration of the different machine learning types.
+    
+    This is primarily used in the metadata of a model to indicate the type of
+    machine learning approach used during its development.
+    """
+    
+    INFERENCE       = "inference"        # Inference Only: we don't have training code.
+    TRADITIONAL     = "traditional"      # Traditional Method (non-learning).
+    SUPERVISED      = "supervised"       # Supervised learning with labeled data.
+    UNSUPERVISED    = "unsupervised"     # Unsupervised learning with unlabeled data.
+    SELF_SUPERVISED = "self_supervised"  # Self-Supervised (or Semi-Supervised) learning with self-generated supervision.
+    ZERO_SHOT       = "zero_shot"        # Zero-Shot learning without any training data.
+    
+    @classmethod
+    def trainable(cls) -> list:
+        """Returns a ``list`` of conventional training machine learning types."""
+        return [cls.SELF_SUPERVISED, cls.SUPERVISED, cls.UNSUPERVISED]
+
+
+class RunMode(Enum):
+    """An enumeration of the different run modes during training or evaluation.
+    
+    This is primarily used to specify the current mode of operation for a
+    machine learning model or training pipeline.
+    """
+    
+    TRAIN   = "train"
+    PREDICT = "predict"
+    METRIC  = "metric"
+
+
+class Split(Enum):
+    """An enumeration of dataset splits.
+    
+    This is primarily used to specify which subset of the dataset is being
+    utilized during training, validation, testing, or prediction.
+    """
+    
+    TRAIN   = "train"
+    VAL     = "val"
+    TEST    = "test"
+    PREDICT = "predict"
+
+
+class TRTPrecision(Enum):
+    """An enumeration of TensorRT precision modes.
+    
+    This is primarily used to specify the precision mode for TensorRT
+    optimizations during model deployment.
+    """
+    
+    FP32    = "fp32"     # 32-bit floating point
+    FP16    = "fp16"     # 16-bit floating point
+    FP16N32 = "fp16n32"  # 16-bit floating point with 32-bit normalization
+    FP8     = "fp8"      # 8-bit floating point
+    INT8    = "int8"     # 8-bit integer
+
+
+# ----- Computer Vision -----
 class BBoxFormat(Enum):
-    """Bounding box formats."""
+    """An enumeration of bounding box formats and conversion codes.
+    
+    This is primarily used to specify the format of bounding boxes in object
+    detection tasks, as well as to facilitate conversions between different
+    bounding box formats.
+    """
 
     # Format
     XYWH       = "xywh"                 # COCO format: [ x,  y,  w,  h]
@@ -580,7 +621,10 @@ class BBoxFormat(Enum):
 
 
 class DepthSource(Enum):
-    """Depth data input sources."""
+    """An enumeration of depth data input sources.
+    
+    This is primarily used to specify the source of depth data.
+    """
 
     DAAC_ViTS = "depth_daac_vits"       # Depth Anything at Any Condition with ViT-S encoder
     DAv2_ViTB = "depth_dav2_vitb"       # Depth Anything v2 with ViT-B encoder
@@ -591,7 +635,7 @@ class DepthSource(Enum):
 
 
 class InfraredSource(Enum):
-    """Infrared data input sources."""
+    """An enumeration of infrared data input sources."""
     
     INFRARED = "infrared"
 

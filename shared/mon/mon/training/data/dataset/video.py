@@ -32,7 +32,7 @@ from mon.core import (
     video as V,
 )
 from mon.core.dtypes import Frame
-from mon.training import albumentations as A
+from mon.training.augment import albumentations as A
 from .base import BaseDataset, Modalities, Modality
 from .vision import VisionDataset
 

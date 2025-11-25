@@ -31,6 +31,7 @@ def apply_icp_all(data: str, runs: int = 1):
             iou_thres      = 0.00001,
             max_tries      = 100,
             style_transfer = False,
+            harmonization  = True,
         )
         for _ in range(runs):
             augment.process()
@@ -39,7 +40,7 @@ def apply_icp_all(data: str, runs: int = 1):
 def apply_icp_one(data: str, subdir: str, runs: int = 1):
     image_dir = data_dir / data / subdir / "image"
     label_dir = data_dir / data / subdir / "label"
-
+    
     augment   = icp.ICPAugmentation(
         image_dir      = image_dir,
         label_dir      = label_dir,
@@ -49,6 +50,8 @@ def apply_icp_one(data: str, subdir: str, runs: int = 1):
         iou_thres      = 0.00001,
         max_tries      = 100,
         style_transfer = False,
+        harmonization  = False,
+        shadow         = False,
     )
     for _ in range(runs):
         augment.process()
@@ -63,5 +66,4 @@ if __name__ == "__main__":
     # Augment
     # apply_icp_all("fisheye8k/train/groups", 1)
     # apply_icp_one("fisheye8k/train/groups", "camera1_A", 1)
-    
     apply_icp_one("aicp", "camera17_A", 1)

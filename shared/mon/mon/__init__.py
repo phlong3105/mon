@@ -26,6 +26,7 @@ from . import (
 )
 from .training import (
     albumentations,
+    augment,
     data,
     losses,
     metrics,

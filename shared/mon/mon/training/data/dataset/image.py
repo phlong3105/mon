@@ -16,8 +16,8 @@ import torch
 
 from mon.core import create_progress_bar, Path, Split
 from mon.core.dtypes import Image
-from mon.training import albumentations as A
-from .base import EvalDataset, Modalities, Modality
+from mon.training.augment import albumentations as A
+from .base import BaseEvalDataset, Modalities, Modality
 from .vision import VisionDataset
 
 
@@ -84,7 +84,7 @@ class ImageLoader(VisionDataset):
 
 
 # ----- Evaluation Dataset -----
-class ImageEvalDataset(EvalDataset):
+class ImageEvalDataset(BaseEvalDataset):
     
     # ----- Magic Methods -----
     def __getitem__(self, index: int) -> dict:

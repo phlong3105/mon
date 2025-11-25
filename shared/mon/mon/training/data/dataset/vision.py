@@ -22,8 +22,8 @@ import torch
 
 from mon.core import Path, Split
 from mon.core.dtypes import Image
-from mon.training import albumentations as A
-from .base import BaseDataset, DualDomainDataset, Modalities, Modality
+from mon.training.augment import albumentations as A
+from .base import BaseDataset, BaseDualDomainDataset, Modalities, Modality
 
 ALBUMENTATIONS_TARGETS = [
     "image",      # The primary input image(s) (e.g., [H, W, C]). Receives geometric, color, and intensity transforms. Uses standard interpolation for geometric transforms.
@@ -167,7 +167,7 @@ class VisionDataset(BaseDataset, abc.ABC):
 
 
 # ----- Unaligned Vision Dataset -----
-class VisionDualDomainDataset(DualDomainDataset, abc.ABC):
+class VisionDualDomainDataset(BaseDualDomainDataset, abc.ABC):
     """Base class for multimodal dual-domain vision datasets.
     
     It is mainly used in Image-to-Image translation tasks. It requires two directories

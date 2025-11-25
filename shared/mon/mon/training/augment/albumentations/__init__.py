@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides albumentations-based data augmentation and transformation
+"""This package implements albumentations-based data augmentation and transformation
 functionalities.
 """
 
@@ -10,9 +10,10 @@ __all__ = []
 from typing import Any
 
 from .core import *
-from .fisheye import *
-from .pixel import *
-from .resize import *
+from .ftt import FisheyeTomographyTransform
+from .ifish import iFishTransform
+from .pixel import NormalizeWithMask
+from .resize import ResizeDivisibleBy
 
 
 # ----- Extended Compose -----

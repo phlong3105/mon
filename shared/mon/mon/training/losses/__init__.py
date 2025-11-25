@@ -45,6 +45,42 @@ __all__ = [
     "TripletMarginWithDistanceLoss",
 ]
 
-from .base import *
-from .core import *
-from .image import *
+from .base import BaseLoss
+from .core import (
+    BCELoss,
+    BCEWithLogitsLoss,
+    CharbonnierLoss,
+    CosineEmbeddingLoss,
+    CosineSimilarityLoss,
+    CrossEntropyLoss,
+    CTCLoss,
+    ExtendedL1Loss,
+    GaussianNLLLoss,
+    HingeEmbeddingLoss,
+    HuberLoss,
+    KLDivLoss,
+    L1Loss,
+    MarginRankingLoss,
+    MSELoss,
+    MultiLabelMarginLoss,
+    MultiLabelSoftMarginLoss,
+    MultiMarginLoss,
+    NLLLoss,
+    NLLLoss2d,
+    PoissonNLLLoss,
+    SmoothL1Loss,
+    SoftMarginLoss,
+    TripletMarginLoss,
+    TripletMarginWithDistanceLoss,
+)
+from .image import (
+    ColorConstancyLoss,
+    DepthAwareIlluminationLoss,
+    EdgeLoss,
+    ExposureControlLoss,
+    ExposureValueControlLoss,
+    PSNRLoss,
+    SpatialConsistencyLoss,
+    StructureTextureDecompositionLoss,
+    TotalVariationLoss,
+)

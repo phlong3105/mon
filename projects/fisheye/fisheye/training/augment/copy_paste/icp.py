@@ -18,7 +18,7 @@ import cv2
 import numpy as np
 import torch
 import ultralytics
-
+import libcom
 from mon.core import (
     BBoxFormat,
     console,
@@ -32,7 +32,7 @@ from mon.core import (
 _SUFFIX = "icp"  # Suffix for the new image and label files
 
 
-# ----- Utils -----
+# ----- Dataset Utils -----
 def group_image_and_label_files(data_dir: str | Path):
     """Group image and label files to subdirectories by their file names.
     
@@ -139,7 +139,12 @@ class Label:
         self.image_path = image_path
         self.class_id   = int(bbox[4])
         self.used       = 0
-
+    
+    def save_patch(self):
+        """Save the object patch (i.e., RGB pixels) as an image file."""
+        pass
+        
+    
 
 # noinspection PyMethodMayBeStatic
 class ICPAugmentation:
@@ -175,6 +180,8 @@ class ICPAugmentation:
         iou_thres     : float        = 0.0,
         max_tries     : int          = 10,
         style_transfer: bool         = False,
+        harmonization : bool         = False,
+        shadow        : bool         = False,
         device        : torch.device = torch.device("cuda"),
         verbose       : bool         = True
     ):
@@ -192,11 +199,23 @@ class ICPAugmentation:
         self._iou_thres      = iou_thres
         self._max_tries      = max_tries
         self._style_transfer = style_transfer
+        self._harmonization  = harmonization
+        self._shadow         = shadow
         self.device          = device
         self.verbose         = verbose
         self._run            = 0  # Number of times this augmentation has been run (for naming output files)
-        self._sam_model      = None
+        
+        # SAM model to generate instance masks
+        self._sam_model = None
         self._init_sam_model(sam_model)
+        # Image harmonization model
+        self._harmonization_model = None
+        if self._harmonization:
+            self._harmonization_model = libcom.ImageHarmonizationModel(device=0, model_type="PCTNet")
+        # Shadow generation model
+        self._shadow_gen_model = None
+        if self._shadow:
+            self._shadow_gen_model = libcom.ShadowGenerationModel(device=0)
         
         # Initialize
         labels, candidates = self._load_data()
@@ -325,15 +344,11 @@ class ICPAugmentation:
         """Generate foreground masks for the given bounding boxes using SAM."""
         sam_results = self._sam_model(image, bboxes=bbox[:, 0:4], device=torch.device("cuda"), verbose=False)
         sam_results = sam_results[0]
-
+        
         semantic_mask = np.zeros(image.shape, dtype=np.uint8)
         if sam_results.masks is not None:
             for m in sam_results.masks.xy:
                 semantic_mask = cv2.fillPoly(semantic_mask, [np.array(m, dtype=np.int32)], (1, 1, 1))
-        
-        # Dilate the mask to ensure it covers the object
-        # kernel        = np.ones((3, 3), np.uint8)
-        # semantic_mask = cv2.dilate(semantic_mask, kernel, iterations=1)
         
         masks = []
         for b in bbox:
@@ -344,8 +359,15 @@ class ICPAugmentation:
             if count < float(area * 0.6):      # Skip if the mask is too small
                 masks.append(None)
             else:
+                # Dilate the mask to ensure it covers the background below the object (e.g., wheels)
+                kernel = np.array([
+                    [1, 1, 1],
+                    [1, 1, 1],
+                    [1, 1, 1]
+                ], dtype=np.uint8)
+                m = cv2.dilate(m, kernel, iterations=1)
                 masks.append(m)
-
+        
         return masks
 
     # ----- Sampling -----
@@ -448,8 +470,8 @@ class ICPAugmentation:
         dst = image.copy()
         for image_file, labels in grouped_labels.items():
             source = cv2.imread(str(image_file))
-            if self._style_transfer:
-                source = I.color_transfer(source=source, target=image)
+            # if self._style_transfer:
+            #     source = I.color_transfer(source=source, target=image)
             for l in labels:
                 dst = self._copy_paste_single_label(src=source, dst=dst, label=l)
 
@@ -461,7 +483,44 @@ class ICPAugmentation:
         mask              = label.mask
         roi_src           = src[y1:y2, x1:x2]
         roi_dst           = dst[y1:y2, x1:x2]
-        dst[y1:y2, x1:x2] = roi_src * mask + roi_dst * (1.0 - mask)
+        dst[y1:y2, x1:x2] = roi_src * mask + roi_dst * (1 - mask)
+        
+        # Style Transfer
+        if self._style_transfer:
+            # Make a white mask for the pasted area in dst
+            dst_mask = np.zeros(dst.shape, dtype=np.uint8)
+            dst_mask[y1:y2, x1:x2] = mask * 255
+            dst_mask = cv2.cvtColor(dst_mask, cv2.COLOR_BGR2GRAY)
+            # Apply style transfer
+            cv2.imwrite("comp_mask.jpg",  dst_mask)
+            cv2.imwrite("comp_image.jpg", dst)
+            # dst = libcom.color_transfer(dst, dst_mask)
+            dst = libcom.color_transfer("comp_image.jpg", "comp_mask.jpg")
+        
+        # Image Harmonization
+        if self._harmonization:
+            # Make a white mask for the pasted area in dst
+            dst_mask = np.zeros(dst.shape, dtype=np.uint8)
+            dst_mask[y1:y2, x1:x2] = mask * 255
+            dst_mask = cv2.cvtColor(dst_mask, cv2.COLOR_BGR2GRAY)
+            # Apply harmonization
+            cv2.imwrite("comp_mask.jpg",  dst_mask)
+            cv2.imwrite("comp_image.jpg", dst)
+            # dst = self._harmonization_model(dst, dst_mask)
+            dst = self._harmonization_model("comp_image.jpg", "comp_mask.jpg")
+        
+        # Shadow Generation
+        if self._shadow:
+            # Make a white mask for the pasted area in dst
+            dst_mask = np.zeros(dst.shape, dtype=np.uint8)
+            dst_mask[y1:y2, x1:x2] = mask * 255
+            dst_mask = cv2.cvtColor(dst_mask, cv2.COLOR_BGR2GRAY)
+            # Apply shadow generation
+            cv2.imwrite("comp_mask.jpg",  dst_mask)
+            cv2.imwrite("comp_image.jpg", dst)
+            # dst = self._shadow_gen_model(dst, dst_mask)
+            dst = self._shadow_gen_model("comp_image.jpg", "comp_mask.jpg")
+        
         return dst
 
     # ----- Utils -----

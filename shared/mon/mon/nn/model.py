@@ -16,9 +16,14 @@ import torch
 from mon.core import download_url_to_file, log, MLType, Path, Task, VERBOSE
 
 
-# ----- Model -----
+# ----- Mixin -----
 class ModelMixin:
-    """Mixin for model attributes and methods."""
+    """A mixin that adds metadata (i.e., attributes) and helper methods to a model.
+    
+    This is intended to be used with PyTorch ``nn.Module`` classes to provide
+    additional functionality for managing model attributes and loading pretrained
+    weights.
+    """
 
     arch     : str          = ""         # The model's architecture.
     name     : str          = ""         # The model's name.
@@ -90,6 +95,9 @@ class ModelMixin:
         """
         weights, path, _ = self.parse_weights(weights, None)
         if weights:
-            self.load_state_dict(weights, strict=strict)
-            if verbose:
-                log(f"Loaded weights successfully from: {path}.")
+            if hasattr(self, "load_state_dict"):  # Optional runtime check
+                self.load_state_dict(weights, strict=strict)
+                if verbose:
+                    log(f"Loaded weights successfully from: {path}.")
+            else:
+                raise NotImplementedError("The class using ModelMixin must implement ``load_state_dict()``.")

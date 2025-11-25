@@ -7,6 +7,5 @@ __all__ = [
     "iFishTransform",
 ]
 
-from .ftt import FisheyeTomographyTransform
-from .icp import ICPAugmentation
-from .ifish import iFishTransform
+from .albumentations import FisheyeTomographyTransform, iFishTransform
+from .copy_paste import ICPAugmentation

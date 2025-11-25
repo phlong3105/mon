@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base classes for various types of datasets."""
+"""This module implements the base classes for various types of datasets and their
+mixin interfaces.
+"""
 
 __all__ = [
+    "BaseDataPoolMixin",
     "BaseDataset",
-    "DualDomainDataset",
-    "EvalDataset",
+    "BaseDualDomainDataset",
+    "BaseEvalDataset",
     "Modalities",
     "Modality",
 ]
@@ -34,7 +37,7 @@ Modality = namedtuple("Modality", [
 Modalities: TypeAlias = Dict[str, Modality]
 
 
-# ----- Base Dataset -----
+# ----- Dataset -----
 class BaseDataset(dataset.Dataset, abc.ABC):
     """Base class for all datasets.
 
@@ -72,12 +75,12 @@ class BaseDataset(dataset.Dataset, abc.ABC):
             raise ValueError("``modalities`` has no defined attributes.")
         
         # Set attributes
-        self.root       = root
-        self.split      = split
-        self.transform  = None
-        self.verbose    = verbose
-        self.index      = 0  # Used with `__iter__` and `__next__`
-        self.datapoints = {}
+        self.root      = root
+        self.split     = split
+        self.transform = None
+        self.verbose   = verbose
+        self.index     = 0  # Used with `__iter__` and `__next__`
+        self.datapoints: dict[str, list[Any]] = {}
         # Order-specific, DO NOT CHANGE
         self.init_transform(transform)
         self.init_data()
@@ -324,8 +327,7 @@ class BaseDataset(dataset.Dataset, abc.ABC):
         return zipped
 
 
-# ----- Eval Dataset -----
-class EvalDataset(dataset.Dataset, abc.ABC):
+class BaseEvalDataset(dataset.Dataset, abc.ABC):
     """Base class for all evaluation datasets.
 
     Args:
@@ -349,7 +351,7 @@ class EvalDataset(dataset.Dataset, abc.ABC):
         self.transform  = None
         self.verbose    = verbose
         self.index      = 0  # Used with `__iter__` and `__next__`
-        self.datapoints = {}
+        self.datapoints: dict[str, list[Any]] = {}
         # Order-specific, DO NOT CHANGE
         self.init_transform(transform)
         self.init_data()
@@ -476,8 +478,8 @@ class EvalDataset(dataset.Dataset, abc.ABC):
         return zipped
 
 
-# ----- Dual-Domain Dataset -----
-class DualDomainDataset(dataset.Dataset, abc.ABC):
+# noinspection PyPep8Naming
+class BaseDualDomainDataset(dataset.Dataset, abc.ABC):
     """Base class for all dual-domain datasets.
     
     It is mainly used in Image-to-Image translation tasks. It requires two directories
@@ -522,13 +524,13 @@ class DualDomainDataset(dataset.Dataset, abc.ABC):
             raise ValueError("``modalities_B`` has no defined attributes.")
         
         # Set attributes
-        self.root         = root
-        self.split        = split
-        self.transform    = None
-        self.verbose      = verbose
-        self.index        = 0  # Used with `__iter__` and `__next__`
-        self.datapoints_A = {}
-        self.datapoints_B = {}
+        self.root      = root
+        self.split     = split
+        self.transform = None
+        self.verbose   = verbose
+        self.index     = 0  # Used with `__iter__` and `__next__`
+        self.datapoints_A: dict[str, list[Any]] = {}
+        self.datapoints_B: dict[str, list[Any]] = {}
         # Order-specific, DO NOT CHANGE
         self.init_transform(transform)
         self.init_data()
@@ -826,3 +828,27 @@ class DualDomainDataset(dataset.Dataset, abc.ABC):
                 zipped[k] = np.stack(v, axis=0)
 
         return zipped
+
+
+# ----- Dataset Mixin -----
+class BaseDataPoolMixin(abc.ABC):
+    """A mixin that adds data pool attributes and methods to any of the "based"
+    dataset classes (e.g., ``BaseDataset``, ``BaseEvalDataset``, ``BaseDualDomainDataset``,
+    etc.).
+    
+    A data pool is a reservoir of data that is used for some part of active learning.
+    It provides an interface for appending datapoints to the pool and store them
+    to persistent storage (e.g., filesystem).
+    """
+    
+    @abc.abstractmethod
+    def append(self, datapoint: Any):
+        """Append a datapoint to the data pool.
+        
+        For persistent storage pools, this will actually mean that the ``datapoint``
+        is serialized to a filesystem (i.e., save to disk).
+        
+        Args:
+            datapoint: The data structure to append to the data pool.
+        """
+        pass
