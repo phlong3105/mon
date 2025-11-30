@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements image descriptive statistics priors.
+"""A module for descriptive image priors.
 
-This category includes methods that compute statistical properties (e.g., mean,
-variance, standard deviation) over local regions of an image.
+This module implements descriptive image priors such as local mean, local
+standard deviation, and local variance. These priors are useful in various
+image processing and computer vision tasks to capture local statistical
+properties of images.
 """
 
 __all__ = [
@@ -22,15 +24,15 @@ import torch.nn.functional as F
 
 
 def image_local_mean(image: torch.Tensor, patch_size: int = 5) -> torch.Tensor:
-    """Calculate the local mean of an image using a sliding window.
-
+    """Calculates the local mean of an image using a sliding window.
+    
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)`
-            in :math:`[0.0, 1.0]`.
-        patch_size: Size of the sliding window. Default: ``5``.
-
+        image (torch.Tensor): Image as a torch.Tensor of shape (B, C, H, W)
+            in [0.0, 1.0].
+        patch_size (int): Size of the sliding window. Defaults to 5.
+        
     Returns:
-        Local mean with similar type and format as the input ``image``.
+        torch.Tensor: Local mean with similar type and format as the input image.
     """
     padding = patch_size // 2
     image   = F.pad(image, (padding, padding, padding, padding), mode="reflect")
@@ -39,15 +41,16 @@ def image_local_mean(image: torch.Tensor, patch_size: int = 5) -> torch.Tensor:
 
 
 def image_local_variance(image: torch.Tensor, patch_size: int = 5) -> torch.Tensor:
-    """Calculate the local variance of an image using a sliding window.
+    """Calculates the local variance of an image using a sliding window.
 
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)`
-            in :math:`[0.0, 1.0]`.
-        patch_size: Size of the sliding window. Default: ``5``.
+        image (torch.Tensor): Image as a torch.Tensor of shape (B, C, H, W)
+            in [0.0, 1.0].
+        patch_size (int): Size of the sliding window. Defaults to 5.
 
     Returns:
-        Local variance with similar type and format as the input ``image``.
+        torch.Tensor: Local variance with similar type and format as the input
+            image.
     """
     padding = patch_size // 2
     image   = F.pad(image, (padding, padding, padding, padding), mode="reflect")
@@ -61,16 +64,18 @@ def image_local_stddev(
     patch_size: int   = 5,
     eps       : float = 1e-9,
 ) -> torch.Tensor:
-    """Calculate the local standard deviation of an image using a sliding window.
+    """Calculates the local standard deviation of an image using a sliding
+    window.
 
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)`
-            in :math:`[0.0, 1.0]`.
-        patch_size: Size of the sliding window. Default: ``5``.
-        eps: Small value to avoid division by zero in sqrt. Default: ``1e-9``.
+        image (torch.Tensor): Image as a torch.Tensor of shape (B, C, H, W)
+            in [0.0, 1.0].
+        patch_size (int): Size of the sliding window. Defaults to 5.
+        eps (float): Small value to avoid division by zero. Defaults to 1e-9.
 
     Returns:
-        Local standard deviation with similar type and format as the input ``image``.
+        torch.Tensor: Local standard deviation with similar type and format as
+            the input image.
     """
     padding        = patch_size // 2
     image          = F.pad(image, (padding, padding, padding, padding), mode="reflect")
@@ -83,47 +88,94 @@ def image_local_stddev(
 
 
 class ImageLocalMean(nn.Module):
-    """Calculate the local mean of an image using a sliding window.
-
-    Args:
-        patch_size: Size of the sliding window. Default: ``5``.
+    """A class to calculate the local mean of an image using a sliding window.
+    
+    Attributes:
+        patch_size (int): Size of the sliding window. Defaults to 5.
     """
     
     def __init__(self, patch_size: int = 5):
+        """Initializes the ImageLocalMean module.
+        
+        Args:
+            patch_size (int): Size of the sliding window. Defaults to 5.
+        """
         super().__init__()
         self.patch_size = patch_size
     
-    def forward(self, image):
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        """Calculate the local mean of the input image.
+        
+        Args:
+            image (torch.Tensor): Input image as a torch.Tensor of shape
+                (B, C, H, W) in [0.0, 1.0].
+                
+        Returns:
+            torch.Tensor: Local mean with similar type and format as the input
+                image.
+        """
         return image_local_mean(image, self.patch_size)
 
 
 class ImageLocalVariance(nn.Module):
-    """Calculate the local variance of an image using a sliding window.
-
-    Args:
-        patch_size: Size of the sliding window. Default: ``5``.
+    """A class to calculate the local variance of an image using a sliding window.
+    
+    Attributes:
+        patch_size (int): Size of the sliding window. Defaults to 5.
     """
     
     def __init__(self, patch_size: int = 5):
+        """Initializes the ImageLocalVariance module.
+        
+        Args:
+            patch_size (int): Size of the sliding window. Defaults to 5.
+        """
         super().__init__()
         self.patch_size = patch_size
     
-    def forward(self, image):
+    def forward(self, image: torch.Tensor) -> torch.Tensor:
+        """Calculate the local variance of the input image.
+        
+        Args:
+            image (torch.Tensor): Input image as a torch.Tensor of shape
+                (B, C, H, W) in [0.0, 1.0].
+                
+        Returns:
+            torch.Tensor: Local variance with similar type and format as the
+                input image.
+        """
         return image_local_variance(image, self.patch_size)
 
 
 class ImageLocalStdDev(nn.Module):
-    """Calculate the local standard deviation of an image using a sliding window.
-
-    Args:
-        patch_size: Size of the sliding window. Default: ``5``.
-        eps: Small value to avoid division by zero in sqrt. Default: ``1e-9``.
+    """A class to calculate the local standard deviation of an image using a
+    sliding window.
+    
+    Attributes:
+        patch_size (int): Size of the sliding window. Defaults to 5.
+        eps (float): Small value to avoid division by zero. Defaults to 1e-9.
     """
     
     def __init__(self, patch_size: int = 5, eps: float = 1e-9):
+        """Initializes the ImageLocalStdDev module.
+        
+        Args:
+            patch_size (int): Size of the sliding window. Defaults to 5.
+            eps (float): Small value to avoid division by zero. Defaults to 1e-9.
+        """
         super().__init__()
         self.patch_size = patch_size
         self.eps        = eps
     
     def forward(self, image):
+        """Calculate the local standard deviation of the input image.
+        
+        Args:
+            image (torch.Tensor): Input image as a torch.Tensor of shape
+                (B, C, H, W) in [0.0, 1.0].
+                
+        Returns:
+            torch.Tensor: Local standard deviation with similar type and format
+                as the input image.
+        """
         return image_local_stddev(image, self.patch_size, self.eps)

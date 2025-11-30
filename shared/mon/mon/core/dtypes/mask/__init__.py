@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data structure and processing functions for segmentation
-mask.
+"""A package for segmentation mask data type.
+
+This package provides a data structure for handling segmentation masks,
+which are used to represent pixel-wise class labels in images.
 """
 
 __all__ = [

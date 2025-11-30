@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Measures image quality assessment metrics for a given model and dataset."""
+"""A script to evaluate image quality assessment (IQA) results using PyIQA.
+
+This script computes various IQA metrics using the PyIQA library, supporting both
+full-reference (FR) and no-reference (NR) metrics.
+"""
 
 import argparse
 import logging

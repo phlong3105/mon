@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various recurrent neural network (RNN) components."""
+"""A module for recurrent neural networks (RNNs).
+
+This module implements various recurrent neural network (RNN) components and
+architectures.
+"""
 
 __all__ = [
     "GRU",

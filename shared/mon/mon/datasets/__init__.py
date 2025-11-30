@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides various datasets."""
+"""A package for datasets.
+
+This package includes various datasets, challenges, computer vision tasks,
+and efficiency benchmarks.
+"""
 
 __all__ = []  # Do not populate ``mon`` namespace.
 

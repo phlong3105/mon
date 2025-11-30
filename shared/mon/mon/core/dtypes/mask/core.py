@@ -1,42 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements data structure for segmentation masks."""
+"""A module for segmentation mask data type.
+
+This module provides a base class for handling semantic segmentation masks,
+extending the image data type with specific attributes and methods for mask
+information.
+"""
 
 __all__ = [
     "SemanticMask",
 ]
 
-from typing import Union
-
 import cv2
-import numpy as np
-import torch
 
-from mon.core.pathlib import Path
-from .. import image as I
+from ..image import Image
 
 
-class SemanticMask(I.Image):
-    """Segmentation mask.
-
-    Args:
-        data: Input data as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-            Default: ``None``.
-        path: Semantic mask file path. Default: ``None``.
-        root: Root directory for the semantic mask. Default: ``None``.
-        flags: OpenCV flag to read image. Default: ``cv2.IMREAD_COLOR_BGR``.
-        cache: If ``True``, caches image in memory. Default: ``False``.
+class SemanticMask(Image):
+    """A base class for a single semantic segmentation mask (i.e., must have a
+    valid file path).
+    
+    This class extends Image to handle a single semantic segmentation mask, which
+    can be provided either as an in-memory array/tensor or as a file path. It
+    includes methods specific to segmentation masks.
     """
-
-    def __init__(
-        self,
-        data : Union[torch.Tensor, np.ndarray] = None,
-        path : Path = None,
-        root : Path = None,
-        flags: int  = cv2.IMREAD_COLOR_BGR,
-        cache: bool = False,
-    ):
-        super().__init__(data=data, path=path, root=root, flags=flags, cache=cache)
+    
+    def __init__(self, flags: int = cv2.IMREAD_GRAYSCALE, *args, **kwargs):
+        """Initializes the SemanticMask instance.
+        
+        Args:
+            flags (int): OpenCV flag to read segmentation mask. Defaults to
+                cv2.IMREAD_GRAYSCALE.
+        """
+        super().__init__(flags=flags, *args, **kwargs)

@@ -35,12 +35,12 @@ class ConvNeXt(tvm.ConvNeXt, nn.ModelMixin, abc.ABC):
         - Paper: https://arxiv.org/abs/2201.03545
     """
     
-    arch     : str          = "convnext"
-    name     : str          = "convnext"
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "convnext"
+    _name     : str          = "convnext"
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, weights: Any = "imagenet1k_v1", num_classes: int = 1000, *args, **kwargs):
         weights, path, num_classes = self.parse_weights(weights, num_classes)
@@ -52,8 +52,8 @@ class ConvNeXt(tvm.ConvNeXt, nn.ModelMixin, abc.ABC):
 @MODELS.register(name="convnext_base", arch="convnext")
 class ConvNeXtBase(ConvNeXt):
 
-    name: str  = "convnext_base"
-    zoo : dict = box.Box({
+    _name: str  = "convnext_base"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
@@ -81,8 +81,8 @@ class ConvNeXtBase(ConvNeXt):
 @MODELS.register(name="convnext_tiny", arch="convnext")
 class ConvNeXtTiny(ConvNeXt):
     
-    name: str  = "convnext_tiny"
-    zoo : dict = box.Box({
+    _name: str  = "convnext_tiny"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
@@ -115,8 +115,8 @@ class ConvNeXtSmall(ConvNeXt):
         num_classes: Number of output classes. Default: ``1000``.
     """
     
-    name: str  = "convnext_small"
-    zoo : dict = box.Box({
+    _name: str  = "convnext_small"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_small-0c510722.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
@@ -149,8 +149,8 @@ class ConvNeXtLarge(ConvNeXt):
         num_classes: Number of output classes. Default: ``1000``.
     """
     
-    name: str  = "convnext_large"
-    zoo : dict = box.Box({
+    _name: str  = "convnext_large"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",

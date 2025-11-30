@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Fourier-Feature Networks (FFN) for Implicit Neural
+"""A module for Fourier-Feature Networks (FFN).
+
+This module implements Fourier-Feature Networks (FFN) for Implicit Neural
 Representation (INR).
 
 References:
@@ -20,8 +22,17 @@ import torch.nn as nn
 
 # ----- Layer -----
 class FFEncoding(nn.Module):
+    """An implementation of Fourier Feature Encoding layer."""
     
     def __init__(self, in_features: int, B: float = 20.0):
+        """Initializes the Fourier Feature Encoding layer.
+        
+        Args:
+            in_features (int): Size of each input sample.
+            B (float): Standard deviation of the Gaussian distribution used to
+                sample the projection matrix. If set to None, no projection is
+                applied. Defaults to 20.0.
+        """
         super().__init__()
         self.in_features  = in_features
         self.out_features = in_features * 2
@@ -31,6 +42,14 @@ class FFEncoding(nn.Module):
             self.register_buffer("B", torch.randn((in_features, 2)) * B)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the Fourier Feature Encoding layer.
+        
+        Args:
+            x (torch.Tensor): Input tensor of shape (..., in_features).
+        
+        Returns:
+            torch.Tensor: Encoded tensor of shape (..., out_features).
+        """
         if self.B is None:
             return x
         else:
@@ -41,16 +60,8 @@ class FFEncoding(nn.Module):
 
 # ----- MLP -----
 class FFEncodingMLP(nn.Module):
-    """Implements the Positional Encoding (PE) MLP.
+    """An implementation of Fourier Feature Encoding MLP.
 
-    Args:
-        in_features: Size of each input sample.
-        out_features: Size of each output sample.
-        hidden_dim: Hidden channel dimensions.
-        hidden_layers: Number of hidden layers.
-        bias: If set to ``False``, the layer will not learn an additive bias.
-            Default: ``True``.
-    
     References:
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
     """
@@ -64,6 +75,19 @@ class FFEncodingMLP(nn.Module):
         B            : float = 20.0,
         bias         : bool  = True,
     ):
+        """Initializes the Fourier Feature Encoding MLP.
+        
+        Args:
+            in_features (int): Size of each input sample.
+            out_features (int): Size of each output sample.
+            hidden_dim (int): Number of hidden units in each hidden layer.
+            hidden_layers (int): Number of hidden layers.
+            B (float): Standard deviation of the Gaussian distribution used to
+                sample the projection matrix. If set to None, no projection is
+                applied. Defaults to 20.0.
+            bias (bool): If True, adds a learnable bias to the linear layers.
+                Defaults to True.
+        """
         super().__init__()
         self.encoding = FFEncoding(in_features=in_features, B=B)
         
@@ -82,4 +106,12 @@ class FFEncodingMLP(nn.Module):
         self.net = nn.Sequential(*self.net)
         
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the Fourier Feature Encoding MLP.
+        
+        Args:
+            coords (torch.Tensor): Input tensor of shape (..., in_features).
+            
+        Returns:
+            torch.Tensor: Output tensor of shape (..., out_features).
+        """
         return self.net(self.encoding(coords))

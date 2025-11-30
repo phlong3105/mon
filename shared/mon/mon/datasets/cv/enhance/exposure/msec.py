@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Multi-Scale Exposure Correction (MSEC) dataset for
+"""A module for the MSEC dataset.
+
+This module implements the Multi-Scale Exposure Correction (MSEC) dataset for
 exposure correction tasks.
 
 References:
@@ -21,10 +23,10 @@ from ....core import *
 class MSEC(ImageDataset):
     """MSEC dataset."""
     
-    root_name : str         = "msec"
-    tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "msec"
+    _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image"        : Modality(name="image_ev_0",    type="image", module=Image, train=True, test=True, primary=True),
         "image_ev_n1.5": Modality(name="image_ev_n1.5", type="image", module=Image, train=True, test=True),
         "image_ev_n1"  : Modality(name="image_ev_n1",   type="image", module=Image, train=True, test=True),
@@ -33,13 +35,24 @@ class MSEC(ImageDataset):
         "image_ev_p1.5": Modality(name="image_ev_p1.5", type="image", module=Image, train=True, test=True),
         "ref"          : Modality(name="ref_c",         type="image", module=Image, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
     def __init__(self, lr: bool = True, *args, **kwargs):
+        """Initializes the MSEC dataset.
+        
+        Args:
+            lr (bool): If True, use low-resolution versions of the images.
+                Default is True.
+        """
         self.lr = lr
         super().__init__(*args, **kwargs)
     
-    def list_primary_data(self) -> list:
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         if self.lr:
             patterns = [self.root / "msec_lr" / self.split_str / "image_ev_0"]
         else:
@@ -52,6 +65,6 @@ class MSEC(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
         
         return images

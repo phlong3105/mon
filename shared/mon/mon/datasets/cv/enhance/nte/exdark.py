@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the ExDark dataset for nighttime object enhancement and detection.
+"""A module for ExDark dataset.
+
+This module implements the ExDark dataset for nighttime object enhancement and
+detection.
 
 References:
     - Data: https://github.com/cs-chan/Exclusively-Dark-Image-Dataset
@@ -18,14 +21,14 @@ from ....core import *
 class ExDark(ImageDataset):
     """ExDark dataset."""
     
-    root_name : str         = "exdark"
-    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "exdark"
+    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = Classes([
+    _classes   : Classes     = Classes([
         {"name": "Bicycle"  , "id":  1, "coco80_id":  2, "color": [138, 183,  33]},
         {"name": "Boat"     , "id":  2, "coco80_id":  9, "color": [ 19,  64,  83]},
         {"name": "Bottle"   , "id":  3, "coco80_id": 40, "color": [139, 160,   1]},

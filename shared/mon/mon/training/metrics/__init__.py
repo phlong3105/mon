@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides training metrics."""
+"""A package for training and evaluating metrics.
+
+This package provides various metrics used for assessing the performance of
+machine learning models, particularly in image processing tasks.
+"""
 
 __all__ = [
     "ImageQualityAssessment",
@@ -10,12 +14,6 @@ __all__ = [
     "scale_gt_mean",
 ]
 
-from .complexity import (
-    benchmark,
-    compute_model_stats,
-)
+from .complexity import benchmark, compute_model_stats
 # from .core import *
-from .image import (
-    ImageQualityAssessment,
-    scale_gt_mean,
-)
+from .image import ImageQualityAssessment, scale_gt_mean

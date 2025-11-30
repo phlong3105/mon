@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the NightCity dataset for nighttime scene parsing.
+"""A module for NightCity dataset.
+
+This module implements the NightCity dataset for nighttime scene parsing.
 
 References:
     - Paper: "Night-time Scene Parsing with a Large Real Dataset".
@@ -20,15 +22,15 @@ from ....core import *
 class NightCity(ImageDataset):
     """NightCity dataset."""
     
-    root_name : str         = "nightcity"
-    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.SEGMENT]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "nightcity"
+    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.SEGMENT]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",    type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName,  type="image", module=DefaultDepthMap, train=True, test=True),
         "mask" : Modality(name="labelIds", type="image", module=SemanticMask,    train=True, test=False),
     }
-    classes   : Classes     = Classes([
+    _classes   : Classes     = Classes([
         {"name": "unlabeled"           , "id": 0 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
         {"name": "ego vehicle"         , "id": 1 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
         {"name": "rectification border", "id": 2 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
@@ -66,8 +68,12 @@ class NightCity(ImageDataset):
         {"name": "license plate"       , "id": -1, "train_id": -1 , "category": "vehicle"     , "category_id": 7, "ignore_in_eval": True , "color": [0  , 0  , 142]},
     ])
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image and semantic annotations."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         if self.split == Split.TEST:
             patterns = [self.root / "val" / "image"]
         else:
@@ -80,6 +86,6 @@ class NightCity(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images

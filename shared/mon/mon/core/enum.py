@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module defines various enumerations."""
+"""A module for enumerations.
+
+This module extends the standard enum.Enum class with additional utilities for
+creating and managing enumerations. It also includes several predefined enums
+for common use cases such as colors, file extensions, tasks, and device settings.
+"""
 
 __all__ = [
     "ActiveLearningPhase",
@@ -31,12 +36,38 @@ from typing import Any
 
 
 # ----- Base -----
-class Enum(enum.Enum):
-    """An extension of ``enum.Enum`` with additional utilities."""
+class CustomEnumMeta(enum.EnumMeta):
+    """A custom metaclass for Enum to add additional functionality."""
+    
+    def __call__(cls, value: Any, *args, **kwargs):
+        """Overrides the class constructor call to dispatch based on value type.
+
+        Args:
+            value (Any): The value to convert to an enum member.
+        
+        Returns:
+            Enum member corresponding to the provided value.
+            
+        Raises:
+            TypeError: If the value type is unsupported.
+        """
+        if args or kwargs:
+            # Fallback for other unexpected calls
+            return super().__call__(value, *args, **kwargs)
+        
+        return cls.from_value(value)
+    
+    
+class Enum(enum.Enum, metaclass=CustomEnumMeta):
+    """An extended enumeration class with additional utilities.
+    
+    This class extends the standard enum.Enum class to provide extra methods for
+    random selection, value mapping, and initialization from different types.
+    """
     
     @classmethod
     def __init_subclass__(cls):
-        """Initialize the set of values when the subclass is created."""
+        """Initializes subclass attributes for enhanced functionality."""
         cls._names         = list(cls)
         cls._values        = [member.value for member in cls]
         cls._int_to_enum   = {i: member for i, member in enumerate(cls)}
@@ -48,57 +79,89 @@ class Enum(enum.Enum):
         """Checks if the current enum class contains a specific value.
 
         Args:
-            value: Value to check.
-
+            value (Any): The value to check for membership.
+            
         Returns:
-            ``True`` if ``value`` is in the enum, ``False`` otherwise.
-        
-        Notes:
-            Usage: ``if value in EnumClass: ...``
+            bool: True if the value is in the enum, False otherwise.
         """
         return value in cls or value in cls._values
     
     @classmethod
     def random(cls):
-        """Returns a random enum member."""
+        """Returns a random enum member.
+        
+        Returns:
+            Enum member selected randomly from the enum.
+        """
         return random.choice(list(cls))
     
     @classmethod
     def random_value(cls):
-        """Returns a random enum value."""
+        """Returns a random enum value.
+        
+        Returns:
+            Value of a randomly selected enum member.
+        """
         return cls.random().value
     
     @classmethod
     def names(cls) -> list:
-        """Returns a ``list`` of all enum members."""
+        """Returns all enum members.
+        
+        Returns:
+            list: A list of all enum members.
+        """
         return cls._names
     
     @classmethod
     def values(cls) -> list[Any]:
-        """Returns a ``list`` of all enum values."""
+        """Returns all enum values.
+        
+        Returns:
+            list[Any]: A list of all enum values.
+        """
         return cls._values
     
     @classmethod
     def int_to_enum(cls) -> dict:
-        """Creates a ``dict`` mapping Enum indexes to Enum members."""
+        """Returns a dictionary mapping integer indices to enum members.
+        
+        Returns:
+            dict: A dictionary where keys are integer indices and values are
+                enum members.
+        """
         return cls._int_to_enum
     
     @classmethod
     def value_to_enum(cls) -> dict:
-        """Create a ``dict`` mapping Enum values to Enum members."""
+        """Returns a dictionary mapping enum values to enum members.
+        
+        Returns:
+            dict: A dictionary where keys are enum values and values are
+                enum members.
+        """
         return cls._value_to_enum
     
     @classmethod
     def str_to_enum(cls) -> dict:
-        """Create a ``dict`` mapping Enum names (lowercase) to Enum members."""
+        """Returns a dictionary mapping strings to enum members.
+        
+        Returns:
+            dict: A dictionary where keys are string representations of enum
+                member names (in lowercase) and values are enum members.
+        """
         return cls._str_to_enum
     
+    # ----- Initialize -----
     @classmethod
     def from_str(cls, a_str: str):
-        """Create an Enum member from a ``str``.
-         
-         Raises:
-            ValueError: If ``a_str`` is not a valid Enum name.
+        """Creates an Enum member from a string.
+        
+        Args:
+            a_str (str): The string representation of the enum member.
+            
+        Raises:
+            ValueError: If ``a_str`` is not a valid Enum string.
         """
         str_to_enum = cls.str_to_enum()
         value_lower = a_str.lower()
@@ -108,10 +171,13 @@ class Enum(enum.Enum):
     
     @classmethod
     def from_int(cls, an_int: int):
-        """Create an Enum member from an ``int`` index.
-    
+        """Creates an Enum member from an integer.
+        
+        Args:
+            an_int (int): The integer index of the enum member.
+            
         Raises:
-            ValueError: If ``an_int`` is not a valid Enum index.
+            ValueError: If ``an_int`` is not a valid Enum integer index.
         """
         int_to_enum = cls.int_to_enum()
         if an_int not in int_to_enum:
@@ -120,7 +186,11 @@ class Enum(enum.Enum):
     
     @classmethod
     def from_value(cls, value: Any):
-        """Create an Enum member from an arbitrary ``value``."""
+        """Creates an Enum member from a value.
+        
+        Args:
+            value (Any): The value to convert to an enum member.
+        """
         if isinstance(value, cls):
             return value
         if isinstance(value, str):
@@ -129,10 +199,10 @@ class Enum(enum.Enum):
             return cls.from_int(value)
         raise TypeError(f"``value`` must be a str or int, got {type(value)}.")
 
-
+    
 # ----- Color -----
 class RGB(Enum):
-    """An enumeration of 138 common RGB colors."""
+    """An enumeration of 147 standard RGB colors."""
     
     ALICE_BLUE              = (240, 248, 255)
     ANTIQUE_WHITE           = (250, 235, 215)
@@ -373,9 +443,12 @@ class MemoryUnit(Enum):
     '''
     
     @classmethod
-    def name_to_byte(cls):
-        """Create a ``dict`` mapping memory units to their corresponding number
-        of bytes.
+    def name_to_byte(cls) -> dict:
+        """Returns a dictionary mapping memory unit names to their byte equivalents.
+        
+        Returns:
+            dict: A dictionary where keys are memory unit names and values are
+                their corresponding sizes in bytes.
         """
         return {
             cls.B : 1024 ** 0,
@@ -516,7 +589,11 @@ class MLType(Enum):
     
     @classmethod
     def trainable(cls) -> list:
-        """Returns a ``list`` of conventional training machine learning types."""
+        """Returns a list of all trainable ML types.
+        
+        Returns:
+            list: A list of all trainable ML types.
+        """
         return [cls.SELF_SUPERVISED, cls.SUPERVISED, cls.UNSUPERVISED]
 
 
@@ -535,7 +612,7 @@ class RunMode(Enum):
 class Split(Enum):
     """An enumeration of dataset splits.
     
-    This is primarily used to specify which subset of the dataset is being
+    This is primarily used to specify, which subset of the dataset is being
     utilized during training, validation, testing, or prediction.
     """
     
@@ -591,7 +668,11 @@ class BBoxFormat(Enum):
 
     @classmethod
     def formats(cls) -> list:
-        """Returns a ``list`` of all bounding box formats."""
+        """Returns a list of all bounding box formats.
+        
+        Returns:
+            list: A list of all bounding box formats.
+        """
         return [
             cls.XYXY,
             cls.XYWH,
@@ -603,7 +684,11 @@ class BBoxFormat(Enum):
 
     @classmethod
     def conversion_codes(cls) -> list:
-        """Returns a ``list`` of all bounding box format conversion codes."""
+        """Returns a list of all bounding box conversion codes.
+        
+        Returns:
+            list: A list of all bounding box conversion codes.
+        """
         return [
             cls.XYXY2XYWH,
             cls.XYXY2CXCYWHN,
@@ -641,7 +726,7 @@ class InfraredSource(Enum):
 
 
 class TrackState(Enum):
-    """Enumeration type for a single target track state.
+    """An enumeration of track states in object tracking.
     
     Newly created tracks are classified as ``NEW`` until enough evidence has been
     collected. Then, the track state is changed to ``TRACKED``. Tracks that are no

@@ -52,11 +52,11 @@ def visualize_bbox(arch: str, method: str, data: str):
             # Draw bounding boxes on the image
             for j, b in enumerate(bs):
                 #if len(b) >= 6:
-                #    l = f"{j} {int(b[4])}: {b[5]:.4f}"
+                #    l = f"{j} {int(b[5])}: {b[6]:.4f}"
                 #else:
-                #    l = f"{j} {int(b[4])}"
+                #    l = f"{j} {int(b[5])}"
                 l = f""
-                c = int(b[4])
+                c = int(b[5])
                 if c >= len(classes):
                     continue
                 image = mon.draw_bbox(

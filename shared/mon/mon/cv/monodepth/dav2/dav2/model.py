@@ -37,19 +37,19 @@ class DAV2(DepthAnythingV2, nn.ModelMixin):
         - https://github.com/DepthAnything/Depth-Anything-V2
     """
     
-    arch     : str          = "dav2"
-    name     : str          = "dav2"
-    tasks    : list[Task]   = [Task.MONODEPTH]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = {}
+    _arch     : str          = "dav2"
+    _name     : str          = "dav2"
+    _tasks    : list[Task]   = [Task.MONODEPTH]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = {}
     
 
 @MODELS.register(name="dav2_vits", arch="dav2")
 class DAV2_ViTS(DAV2):
     
-    name: str  = "dav2_vits"
-    zoo : dict = {
+    _name: str  = "dav2_vits"
+    _zoo : dict = {
         "pretrained": {
             "path": ROOT_DIR / "zoo/cv/monodepth/dav2/dav2_vits/pretrained/dav2_vits.pth",
         },
@@ -67,8 +67,8 @@ class DAV2_ViTS(DAV2):
 @MODELS.register(name="dav2_vitb", arch="dav2")
 class DAV2_ViTB(DAV2):
     
-    name: str = "dav2_vitb"
-    zoo : dict = {
+    _name: str = "dav2_vitb"
+    _zoo : dict = {
         "pretrained": {
             "path": ROOT_DIR / "zoo/cv/monodepth/dav2/dav2_vitb/pretrained/dav2_vitb.pth",
         },
@@ -86,8 +86,8 @@ class DAV2_ViTB(DAV2):
 @MODELS.register(name="dav2_vitl", arch="dav2")
 class DAV2_ViTL(DAV2):
     
-    name: str = "dav2_vitl"
-    zoo : dict = {
+    _name: str = "dav2_vitl"
+    _zoo : dict = {
         "pretrained": {
             "path": ROOT_DIR / "zoo/cv/monodepth/dav2/dav2_vitl/pretrained/dav2_vitl.pth",
         },

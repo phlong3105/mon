@@ -48,7 +48,7 @@ def apply_fft(data: str, focal_len: int = 150):
             label_file = label_dir / f"{image_file.stem}.txt"
             if not label_file.is_txt_file(exist=True):
                 continue
-            bs = mon.hbb.load(path=label_file, fmt=mon.BBoxFormat.YOLO, imgsz=(h, w))
+            bs = mon.bbox.load(path=label_file, fmt=mon.BBoxFormat.YOLO, imgsz=(h, w))
 
             # Transform
             FFT = FisheyeTomographyTransform(f=focal_len, imgsz=cropsz)
@@ -59,7 +59,7 @@ def apply_fft(data: str, focal_len: int = 150):
             fft_bboxes  = transformed["bboxes"]
 
             # Postprocessing
-            fft_image, fft_bboxes = mon.hbb.crop_fit_square(fft_image, fft_bboxes)
+            fft_image, fft_bboxes = mon.bbox.crop_fit_square(fft_image, fft_bboxes)
             
             # Save
             fft_image_file = fft_image_dir / f"{image_file.stem}_ftt_{f}.jpg"
@@ -70,7 +70,7 @@ def apply_fft(data: str, focal_len: int = 150):
             label_fisheye_file.parent.mkdir(parents=True, exist_ok=True)
             with open(label_fisheye_file, "w") as f:
                 for b in fft_bboxes:
-                    f.write(f"{int(b[4])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
+                    f.write(f"{int(b[5])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
 
 
 # ----- Main -----

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Multimodal AI.
+"""A package for Multimodal AI functionalities.
 
-Multimodal AI refers to machine learning models capable of processing and integrating
-information from multiple modalities or types of data. These modalities can include
-text, images, audio, video and other forms of sensory input.
+This package provides modules and classes related to Multimodal AI. Multimodal
+AI refers to machine learning models capable of processing and integrating
+information from multiple modalities or types of data. These modalities can
+include text, images, audio, video and other forms of sensory input.
 
 References:
     - https://www.ibm.com/think/topics/multimodal-ai#318643377

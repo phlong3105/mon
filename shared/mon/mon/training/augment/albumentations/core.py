@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements core components and integrates ``albumentations`` to
-the ``mon`` framework by registering all available transforms.
+"""A module for integrating albumentations with the mon framework.
+
+This module dynamically registers all transformation classes from the
+``albumentations`` library into the mon framework's ALBUMENTATIONS registry.
+It inspects the ``albumentations`` package and its submodules to find all
+transformation classes that inherit from ``albumentations.BasicTransform``,
+excluding abstract classes and private classes (those starting with an underscore).
 """
 
 import importlib
@@ -31,12 +36,12 @@ TARGET_TYPES = [
 
 # ----- Registry -----
 def __register_transforms(module, prefix: str = ""):
-    """Recursively inspect a module and its submodules to find transform classes,
-    adding them to __all__ and TRANSFORMS registry.
+    """Recursively registers all transformation classes from the given module
+    and its submodules into the ALBUMENTATIONS registry.
     
     Args:
-        module: Module to inspect (e.g., albumentations.augmentations or its submodules).
-        prefix: Prefix for module path to track nested module names.
+        module: The module to inspect for transformation classes.
+        prefix (str): The prefix for submodule names. Defaults to "".
     """
     def is_transform_class(obj):
         return (

@@ -47,12 +47,12 @@ class ZeroDCE(nn.Module, nn.ModelMixin):
         - Code: https://github.com/Li-Chongyi/Zero-DCE
     """
     
-    arch     : str          = "zerodce"
-    name     : str          = "zerodce"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "zerodce"
+    _name     : str          = "zerodce"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "siceme": {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/zerodce/zerodce/siceme/zerodce_siceme.pth",

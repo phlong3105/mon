@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data augmentation and transformation functionalities.
+"""A package for data augmentation and transformation.
+
+This package provides various data augmentation techniques to enhance the
+diversity of training datasets. These augmentations can help improve the
+robustness and generalization of machine learning models.
 """
 
 __all__ = [

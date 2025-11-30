@@ -37,12 +37,12 @@ class MobileNetV2(tvm.MobileNetV2, nn.ModelMixin):
         - Paper: https://arxiv.org/abs/1801.04381
     """
     
-    arch     : str          = "mobilenet"
-    name     : str          = "mobilenet_v2"
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "mobilenet"
+    _name     : str          = "mobilenet_v2"
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pth",

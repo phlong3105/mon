@@ -195,7 +195,7 @@ def predict(args: argparse.Namespace):
                     else:
                         save_gray_img(output_path, restored)
         
-        avg_time = float(timer.avg_time)
+        avg_time = float(timer.avg)
         mon.log(f"Average time: {avg_time}")
     
 

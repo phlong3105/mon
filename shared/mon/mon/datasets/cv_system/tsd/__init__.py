@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements ours custom TSD (Traffic Surveillance Dataset) datasets."""
+"""A package for TSD datasets."""
 
 from .tsdme import *

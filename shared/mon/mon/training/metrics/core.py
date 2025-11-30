@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides core metrics for model evaluation."""
+"""A module for training and evaluating metrics.
+
+This module provides various metrics used for assessing the performance of
+machine learning models, particularly in image processing tasks.
+"""
 
 __all__ = [
     "AUROC",

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Rain1200 dataset for image deraining tasks."""
+"""A module for the Rain1200 dataset.
+
+This module implements the Rain1200 dataset for image deraining tasks.
+"""
 
 __all__ = [
     "Rain1200",
@@ -15,17 +18,21 @@ from ....core import *
 class Rain1200(ImageDataset):
     """Rain1200 dataset."""
 
-    root_name : str         = "rain1200"
-    tasks     : list[Task]  = [Task.DERAIN]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "rain1200"
+    _tasks     : list[Task]  = [Task.DERAIN]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         if self.split in [Split.TRAIN]:
             patterns = [
                 self.root / self.split_str / "light"  / "image",
@@ -44,6 +51,6 @@ class Rain1200(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
       
         return images

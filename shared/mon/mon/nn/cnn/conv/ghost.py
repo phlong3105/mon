@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements GhostNet modules.
+"""A module for GhostNet modules.
+
+This module implements Ghost modules and Ghost bottlenecks as described in the
+GhostNet and GhostNetV2 papers.
 
 References:
     - Paper-V1: "GhostNet: More Features from Cheap Operations," CVPR 2020.
@@ -110,6 +113,7 @@ class GhostModule(nn.Module):
         - Paper: "GhostNet: More Features from Cheap Operations," CVPR 2020.
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnet_pytorch
     """
+    
     def __init__(
         self,
         in_channels : int,
@@ -311,6 +315,7 @@ class GhostBottleneckV2(nn.Module):
         - Paper: "GhostNetV2: Enhance Cheap Operation with Long-Range Attention," NeurIPS 2022.
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
     """
+    
     def __init__(
         self,
         in_channels   : int,

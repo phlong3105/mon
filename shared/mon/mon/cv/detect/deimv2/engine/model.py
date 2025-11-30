@@ -37,12 +37,12 @@ class DEIMv2(nn.Module, nn.ModelMixin):
         - Code: https://github.com/Intellindust-AI-Lab/DEIMv2
     """
     
-    arch     : str          = "deimv2"
-    name     : str          = "deimv2"
-    tasks    : list[Task]   = [Task.DETECT]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "deimv2"
+    _name     : str          = "deimv2"
+    _tasks    : list[Task]   = [Task.DETECT]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

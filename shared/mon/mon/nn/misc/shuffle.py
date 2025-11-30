@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various shuffle operations."""
+"""A module for shuffle operations.
+
+This module provides classes for channel shuffling and pixel shuffling in neural
+networks.
+"""
 
 __all__ = [
     "ChannelShuffle",

@@ -1,4 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides datasets for computer vision-assisted systems."""
+"""A package for computer vision-assisted systems datasets.
+
+This package contains datasets used in computer vision-assisted systems tasks,
+such as autonomous driving, robotics, and surveillance.
+"""

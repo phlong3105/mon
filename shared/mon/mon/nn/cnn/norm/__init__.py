@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements various normalization layers."""
+"""A package for normalization layers.
+
+This package implements various normalization layers commonly used in
+convolutional neural networks (CNNs) and deep learning models.
+"""
 
 __all__ = [
     "AdaptiveBatchNorm2d",

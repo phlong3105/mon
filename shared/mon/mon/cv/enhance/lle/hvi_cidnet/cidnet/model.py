@@ -31,12 +31,12 @@ class HVI_CIDNet(CIDNet, nn.ModelMixin):
         - Code: https://github.com/Fediory/HVI-CIDNet
     """
     
-    arch     : str          = "hvi_cidnet"
-    name     : str          = "hvi_cidnet"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "hvi_cidnet"
+    _name     : str          = "hvi_cidnet"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "lolblur"  : {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/hvi_cidnet/hvi_cidnet/lolblur/hvi_cidnet_lolblur.pth",

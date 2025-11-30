@@ -45,12 +45,12 @@ class PSENet(UnetTMO, nn.ModelMixin):
         - Code: https://github.com/VinAIResearch/PSENet-Image-Enhancement
     """
     
-    arch     : str          = "psenet"
-    name     : str          = "psenet"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "psenet"
+    _name     : str          = "psenet"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, weights: Any = None):
         super().__init__()

@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements albumentations-based data augmentation and transformation
-functionalities.
+"""A package for albumentations-based data augmentation and transformation.
+
+This package provides various data augmentation and transformation techniques
+using the albumentations library. It includes custom transformations and
+utilities to build and compose complex augmentation pipelines for image data.
 """
 
 __all__ = []
@@ -18,33 +21,38 @@ from .resize import ResizeDivisibleBy
 
 # ----- Extended Compose -----
 class Compose(A.Compose):
-    """An extension of ``albumentations.Compose`` with convenience methods for
-    building transformations.
-    
-    Args:
-        transforms: List of transformations to compose. If any element in
-            ``transforms`` is a ``dict``, it will be used to build the
-            corresponding transformation operation.
-        kwargs: Additional arguments to pass to the ``albumentations.Compose``
-            constructor.
+    """An extended version of ``albumentations.Compose`` that builds transformations
+    from configuration dictionaries.
     """
     
     def __init__(self, transforms: list[Any], **kwargs):
+        """Initializes the Compose instance.
+        
+        Args:
+            transforms (list[Any]): List of transformations. If any element in
+                ``transforms`` is a dict, it will be used to build the corresponding
+                transformation operation.
+            **kwargs: Additional keyword arguments passed to the base
+                ``albumentations.Compose``.
+        """
         transforms = build_transforms(transforms)
         super().__init__(transforms, **kwargs)
 
 
 # ----- Builder -----
 def build_transforms(transforms: list[Any]) -> list[A.BasicTransform]:
-    """Builds a ``list`` of transformations.
+    """Builds a list of albumentations transformation operations.
     
     Args:
-        transforms: List of transformations to compose. If any element in
-            ``transforms`` is a ``dict``, it will be used to build the
+        transforms (list[Any]): A list of transformation operations. If any
+            element in ``transforms`` is a dict, it will be used to build the
             corresponding transformation operation.
             
     Returns:
-        A ``list`` of ``albumentations.BasicTransform`` instances.
+        list[A.BasicTransform]: A list of albumentations transformation operations.
+        
+    Raises:
+        ValueError: If no valid transformation operations are found in ``transforms``.
     """
     transform_ops = []
     for i, t in enumerate(transforms):
@@ -60,17 +68,16 @@ def build_transforms(transforms: list[Any]) -> list[A.BasicTransform]:
 
 
 def build_compose(transforms: list[Any], **kwargs) -> A.Compose:
-    """Builds an instance of ``albumentations.Compose``.
+    """Builds an ``albumentations.Compose`` instance from a list of transformations.
     
     Args:
-        transforms: List of transformations to compose. If any element in
-            ``transforms`` is a ``dict``, it will be used to build the
-            corresponding transformation operation.
-        kwargs: Additional arguments to pass to the ``albumentations.Compose``
-            constructor.
+        transforms (list[Any]): A list of transformations. If any element in
+            ``transforms`` is a dict, it will be used to build the corresponding
+            transformation operation.
+        **kwargs: Additional keyword arguments passed to the ``albumentations.Compose``.
     
     Returns:
-        An instance of ``albumentations.Compose`` containing the specified transformations.
+        A.Compose: An ``albumentations.Compose`` instance.
     """
     transform_ops = build_transforms(transforms)
     transform     = A.Compose(transforms=transform_ops, **kwargs)

@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Measures COCO metrics for a given model and dataset."""
+"""A script to evaluate object detection results using COCO metrics.
+
+This script can convert bounding box labels to COCO format and compute various
+COCO evaluation metrics such as AP, AP50, AP75, and AR at different thresholds.
+"""
 
 import argparse
 import json
@@ -71,12 +75,12 @@ def convert_label_to_coco(
     input_json.parent.mkdir(parents=True, exist_ok=True)
 
     if remap and remap.is_file():
-        remap = mon.rt.load_config(config=remap)["remap"]
+        remap = mon.load_config(config=remap)["remap"]
     else:
         remap = None
 
     if bbox_format != "coco":
-        code = mon.BBoxFormat.from_value(value=f"{bbox_format}2coco")
+        code = mon.BBoxFormat(value=f"{bbox_format}2coco")
     else:
         code = None
     
@@ -98,12 +102,12 @@ def convert_label_to_coco(
             if not label_file.is_txt_file():
                 continue
 
-            bs = mon.hbb.load(path=label_file, fmt=code, imgsz=(h, w))
+            bs = mon.bbox.load(path=label_file, fmt=code, imgsz=(h, w))
             if len(bs) == 0:
                 continue
 
             for b in bs:
-                c = int(b[4])  # Class ID
+                c = int(b[5])  # Class ID
                 if remap:
                     if c in remap:
                         c = int(remap[c])

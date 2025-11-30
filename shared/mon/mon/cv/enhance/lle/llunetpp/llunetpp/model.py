@@ -35,12 +35,12 @@ class LLUnetPP(NestedUNet, nn.ModelMixin):
         - Code: https://github.com/xiwang-online/LLUnetPlusPlus
     """
     
-    arch     : str          = "llunet++"
-    name     : str          = "llunet++"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "llunet++"
+    _name     : str          = "llunet++"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "lolv1"    : {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/llunet++/llunet++/lolv1/llunet++_lolv1.pt",

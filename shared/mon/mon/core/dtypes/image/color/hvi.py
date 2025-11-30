@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements RGB-HVI color space conversion."""
+"""A module for HVI color space conversion.
+
+This module implements a class to convert RGB images to HVI (Hue, Value, Intensity)
+and vice versa.
+"""
 
 __all__ = [
     "RGBToHVI",
@@ -12,16 +16,29 @@ import torch.nn as nn
 
 
 class RGBToHVI(nn.Module):
-    """Convert an RGB image to HVI.
+    """A class to convert RGB images to HVI color space and back.
     
-    Args:
-        eps: Epsilon value to avoid division by zero. Defaults: ``1e-8``.
+    Attributes:
+        eps (float): Epsilon value to avoid division by zero.
+        density_k (nn.Parameter): Learnable parameter for color sensitivity.
+        gated (bool): If True, applies gating to saturation during HVI to RGB conversion.
+        gated2 (bool): If True, applies gating to RGB values during HVI to RGB conversion.
+        alpha (float): Scaling factor for RGB values if ``gated2`` is True.
+        alpha_s (float): Scaling factor for saturation if ``gated`` is True.
+        this_k (float): Current value of ``density_k`` used in conversions.
     
     References:
         - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/net/HVI_transform.py
     """
     
-    def __init__(self, requires_grad: bool = False, eps: float = 1e-8):
+    def __init__(self, eps: float = 1e-8, requires_grad: bool = False):
+        """Initializes the RGBToHVI instance.
+        
+        Args:
+            eps (float): Epsilon value to avoid division by zero. Defaults to 1e-8.
+            requires_grad (bool): If True, allows gradient computation for ``density_k``.
+                Defaults to False.
+        """
         super().__init__()
         self.eps       = eps
         self.density_k = nn.Parameter(torch.full([1], 0.1), requires_grad=requires_grad)  # k is reciprocal to the paper mentioned
@@ -33,6 +50,15 @@ class RGBToHVI(nn.Module):
         self.this_k    = 0
     
     def rgb_to_hvi(self, image: torch.Tensor) -> torch.Tensor:
+        """Converts an RGB image to HVI color space.
+        
+        Args:
+            image (torch.Tensor): Input RGB image tensor of shape (B, 3, H, W)
+                with pixel values in the range [0, 1].
+                
+        Returns:
+            torch.Tensor: HVI image tensor of shape (B, 3, H, W).
+        """
         pi      = 3.141592653589793
         device  = image.device
         dtypes  = image.dtype
@@ -66,6 +92,16 @@ class RGBToHVI(nn.Module):
         return hvi
     
     def hvi_to_rgb(self, image: torch.Tensor) -> torch.Tensor:
+        """Converts an HVI image to RGB color space.
+        
+        Args:
+            image (torch.Tensor): Input HVI image tensor of shape (B, 3, H, W)
+                with H and V in range [-1, 1] and I in range [0, 1].
+                
+        Returns:
+            torch.Tensor: RGB image tensor of shape (B, 3, H, W) with pixel
+                values in the range [0, 1].
+        """
         pi      = 3.141592653589793
         H, V, I = image[:, 0, :, :], image[:, 1, :, :], image[:, 2, :, :]
         

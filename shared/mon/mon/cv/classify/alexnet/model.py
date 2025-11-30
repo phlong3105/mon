@@ -28,12 +28,12 @@ class AlexNet(tvm.AlexNet, nn.ModelMixin):
         dropout: Dropout rate for the model. Default: ``0.5``.
     """
     
-    arch     : str          = "alexnet"
-    name     : str          = "alexnet",
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "alexnet"
+    _name     : str          = "alexnet",
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",

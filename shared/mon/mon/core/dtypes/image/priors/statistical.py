@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements image statistical priors.
+"""A module for statistical image priors.
 
-This category encompasses assumptions about image properties based on statistical data
-(data-driven).
+This module provides functions to compute various statistical priors for images,
+including blur spot prior, bright channel prior, bright spot prior, and dark
+channel prior.
 """
 
 __all__ = [
@@ -24,16 +25,20 @@ import torch
 
 
 def blur_spot_prior(image: np.ndarray, threshold: int = 250) -> bool:
-    """Detects blur in an image based on Laplacian variance and bright spot thresholding.
-
+    """Detects blur spots in an image based on variance of Laplacian filtered
+    grayscale image.
+    
     Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`
-            in :math:`[0, 255]`.
-        threshold: Variance threshold for blur detection. Default: ``250``.
-
+        image: Image as a numpy.ndarray in BGR format with shape (H, W, 3) with
+            pixel values in the range [0, 255].
+        threshold: Variance threshold to determine blur. Defaults to 250.
+        
     Returns:
-        ``True`` if the image is blurry (Laplacian variance < ``threshold``),
-        ``False`` otherwise.
+        bool: True if blur spots are detected (variance < threshold), False
+            otherwise.
+    
+    Raises:
+        TypeError: If image is not a numpy.ndarray.
     """
     if not isinstance(image, np.ndarray):
         raise TypeError(f"``image`` must be numpy.ndarray, got {type(image)}.")
@@ -52,18 +57,19 @@ def blur_spot_prior(image: np.ndarray, threshold: int = 250) -> bool:
 
 
 def bright_spot_prior(image: np.ndarray) -> bool:
-    """Detects bright spots in an image based on variance of a binary thresholded
+    """Detects bright spots in an image based on variance of binary thresholded
     grayscale image.
-
+    
     Args:
-        image: Image as a ``numpy.ndarray`` in BGR format with shape [H, W, 3].
-
+        image: Image as a numpy.ndarray in BGR format with shape (H, W, 3) with
+            pixel values in the range [0, 255].
+    
     Returns:
-        ``True`` if bright spots are detected (variance between 5000 and 8500),
-        ``False`` otherwise.
-
+        bool: True if bright spots are detected (5000 < variance < 8500), False
+            otherwise.
+    
     Raises:
-        TypeError: If ``image`` is not a ``numpy.ndarray``.
+        TypeError: If image is not a numpy.ndarray.
     """
     if not isinstance(image, np.ndarray):
         raise TypeError(f"``image`` must be numpy.ndarray, got {type(image)}.")
@@ -79,17 +85,22 @@ def bright_spot_prior(image: np.ndarray) -> bool:
     return is_bright
 
 
-def bright_channel_prior(image: Union[torch.Tensor, np.ndarray], ksize: int) ->  Union[torch.Tensor, np.ndarray]:
+def bright_channel_prior(
+    image: torch.Tensor | np.ndarray,
+    ksize: int
+) -> torch.Tensor | np.ndarray:
     """Gets bright channel prior from an RGB image.
-
+    
     Args:
-        image: An RGB image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-        ksize: Window size.
-
+        image (torch.Tensor or numpy.ndarray): An RGB image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in the range [0.0, 1.0])
+            or numpy.ndarray (i.e., of shape (H, W, C) with pixel values in the
+            range [0, 255]).
+        ksize (int): Window size.
+        
     Returns:
-        Bright channel prior with similar type and format as the input ``image``.
+        torch.Tensor or numpy.ndarray: Bright channel prior with similar type
+            and format as the input image.
     """
     if isinstance(image, torch.Tensor):
         bright_channel = torch.max(image, dim=1)[0]
@@ -104,17 +115,25 @@ def bright_channel_prior(image: Union[torch.Tensor, np.ndarray], ksize: int) -> 
     return bcp
 
 
-def dark_channel_prior(image: Union[torch.Tensor, np.ndarray], ksize: int) ->  Union[torch.Tensor, np.ndarray]:
+def dark_channel_prior(
+    image: torch.Tensor | np.ndarray,
+    ksize: int
+) ->  torch.Tensor | np.ndarray:
     """Gets dark channel prior from an RGB image.
-
+    
     Args:
-        image: An RGB image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-        ksize: Window size.
-
+        image (torch.Tensor or numpy.ndarray): An RGB image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in the range [0.0, 1.0])
+            or numpy.ndarray (i.e., of shape (H, W, C) with pixel values in the
+            range [0, 255]).
+        ksize (int): Window size.
+        
     Returns:
-        Dark channel prior with similar type and format as the input ``image``.
+        torch.Tensor or numpy.ndarray: Dark channel prior with similar type
+            and format as the input image.
+            
+    Raises:
+        ValueError: If ``image`` is neither a torch.Tensor nor a numpy.ndarray.
     """
     if isinstance(image, torch.Tensor):
         dark_channel = torch.min(image, dim=1)[0]
@@ -129,17 +148,22 @@ def dark_channel_prior(image: Union[torch.Tensor, np.ndarray], ksize: int) ->  U
     return dcp
 
 
-def dark_channel_prior_paper(image: Union[torch.Tensor, np.ndarray], ksize: int) ->  Union[torch.Tensor, np.ndarray]:
-    """Gets dark channel prior from an RGB image (from paper).
-
+def dark_channel_prior_paper(
+    image: torch.Tensor | np.ndarray,
+    ksize: int
+) ->  torch.Tensor | np.ndarray:
+    """Gets dark channel prior from an RGB image as per the original paper.
+    
     Args:
-        image: An RGB image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-        ksize: Window size.
-
+        image (torch.Tensor or numpy.ndarray): An RGB image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in the range [0.0, 1.0])
+            or numpy.ndarray (i.e., of shape (H, W, C) with pixel values in the
+            range [0, 255]).
+        ksize (int): Window size.
+        
     Returns:
-        Dark channel prior with similar type and format as the input ``image``.
+        torch.Tensor or numpy.ndarray: Dark channel prior with similar type
+            and format as the input image.
     """
     m, n, _ = image.shape
     w       = ksize

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements functions for converting strings between different case
+"""A module for converting string case styles.
+
+This module implements functions for converting strings between different case
 styles, including camel-case, pascal-case, kebab-case, and snake-case. It also
 includes functions to validate if a string is in a specific case style.
 """
@@ -33,7 +35,15 @@ UNDERSCORE_RE = re.compile(r"(?<=[^\-_])[\-_]+[^\-_]")
 
 # ----- Convert -----
 def pascalize(str_or_iter):
-    """Convert a ``str``, ``dict``, or ``list`` of dicts to pascal-case."""
+    """Converts a string, dict, or list of dicts to pascal-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+    
+    Returns:
+        str, dict, or list: The input converted to pascal-case.
+    """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, pascalize)
 
@@ -49,7 +59,15 @@ def pascalize(str_or_iter):
 
 
 def camelize(str_or_iter):
-    """Convert a ``str``, ``dict``, or ``list`` of dicts to camel-case."""
+    """Converts a string, dict, or list of dicts to camel-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+            
+    Returns:
+        str, dict, or list: The input converted to camel-case.
+    """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, camelize)
 
@@ -66,7 +84,15 @@ def camelize(str_or_iter):
 
 
 def kebabize(str_or_iter):
-    """Convert a ``str``, ``dict``, or ``list`` of dicts to kebab-case."""
+    """Converts a string, dict, or list of dicts to kebab-case.
+   
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+            
+    Returns:
+        str, dict, or list: The input converted to kebab-case.
+    """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, kebabize)
 
@@ -86,7 +112,15 @@ def kebabize(str_or_iter):
 
 
 def decamelize(str_or_iter):
-    """Convert a ``str``, ``dict``, or ``list`` of dicts to snake-case."""
+    """Converts a string, dict, or list of dicts to snake-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+            
+    Returns:
+        str, dict, or list: The input converted to snake-case.
+    """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, decamelize)
 
@@ -98,12 +132,28 @@ def decamelize(str_or_iter):
 
 
 def depascalize(str_or_iter):
-    """Convert a ``str``, ``dict``, or ``list`` of dicts to snake-case."""
+    """Converts a string, dict, or list of dicts to snake-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+    
+    Returns:
+        str, dict, or list: The input converted to snake-case.
+    """
     return decamelize(str_or_iter)
 
 
 def dekebabize(str_or_iter):
-    """Convert a ``str``, ``dict``, or ``list`` of dicts to snake-case."""
+    """Converts a string, dict, or list of dicts to snake-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+    
+    Returns:
+        str, dict, or list: The input converted to snake-case.
+    """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, dekebabize)
 
@@ -119,22 +169,54 @@ snakecase = depascalize
 
 # ----- Validation -----
 def is_camelcase(str_or_iter) -> bool:
-    """Determine if a ``str``, ``dict``, or ``list`` of dicts is camel-case."""
+    """Checks if a string, dict, or list of dicts is camel-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+            
+    Returns:
+        bool: True if the input is camel-case, False otherwise.
+    """
     return str_or_iter == camelize(str_or_iter)
 
 
 def is_pascalcase(str_or_iter) -> bool:
-    """Determine if a ``str``, ``dict``, or ``list`` of dicts is pascal-case."""
+    """Checks if a string, dict, or list of dicts is pascal-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+    
+    Returns:
+        bool: True if the input is pascal-case, False otherwise.
+    """
     return str_or_iter == pascalize(str_or_iter)
 
 
 def is_kebabcase(str_or_iter) -> bool:
-    """Determine if a ``str``, ``dict``, or ``list`` of dicts is camel-case."""
+    """Checks if a string, dict, or list of dicts is kebab-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+    
+    Returns:
+        bool: True if the input is kebab-case, False otherwise.
+    """
     return str_or_iter == kebabize(str_or_iter)
 
 
 def is_snakecase(str_or_iter) -> bool:
-    """Determine if a ``str``, ``dict``, or ``list`` of dicts is snake-case."""
+    """Checks if a string, dict, or list of dicts is snake-case.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+    
+    Returns:
+        bool: True if the input is snake-case, False otherwise.
+    """
     if is_kebabcase(str_or_iter) and not is_camelcase(str_or_iter):
         return False
 
@@ -142,18 +224,27 @@ def is_snakecase(str_or_iter) -> bool:
 
 
 def _is_none(_in) -> str:
-    """Determine if the input is ``None`` and returns a ``str`` with white-space
-    removed.
+    """Determines if the input is None, returning an empty string if so.
     
     Returns:
-        An empty sting if ``_in`` is ``None``, else the input is returned with
-        white-space removed.
+        str: An empty string if the input is None; otherwise, the input
+            converted to a string with all whitespace removed.
     """
     return "" if _in is None else re.sub(r"\s+", "", str(_in))
 
 
 # ----- Utils -----
 def _process_keys(str_or_iter, fn):
+    """Recursively process keys in a dict or list using a specified function.
+    
+    Args:
+        str_or_iter (str, dict, or list): Input string, dictionary, or list of
+            dictionaries.
+        fn (callable): Function to apply to each key.
+    
+    Returns:
+        str, dict, or list: The input with keys processed by the specified function.
+    """
     if isinstance(str_or_iter, list):
         return [_process_keys(k, fn) for k in str_or_iter]
     if isinstance(str_or_iter, Mapping):
@@ -162,28 +253,28 @@ def _process_keys(str_or_iter, fn):
 
 
 def _fix_abbreviations(string: str) -> str:
-    """Rewrite incorrectly cased acronyms, initialisms, and abbreviations,
+    """Rewrites incorrectly cased acronyms, initialisms, and abbreviations,
     allowing them to be decamelized correctly. For example, given the string
     "APIResponse", this function is responsible for ensuring the output is
     "api_response" instead of "a_p_i_response".
     
     Args:
-        string: A string that may contain an incorrectly cased abbreviation.
+        string (str): A string that may contain an incorrectly cased abbreviation.
     
     Returns:
-        A rewritten ``str`` that is safe for decamelization.
+        str: A rewritten string with properly cased abbreviations.
     """
     return ACRONYM_RE.sub(lambda m: m.group(0).title(), string)
 
 
 def _separate_words(string: str, separator: str = "_") -> str:
-    """Split words that are separated by case differentiation.
+    """Splits words that are separated by case differentiation.
     
     Args:
-        string: Original string to be split.
-        separator: String by which the individual words will be put back together.
+        string (str): A string that may contain an incorrectly cased abbreviation.
+        separator (str): A string used to separate the words. Defaults to "_".
     
     Returns:
-        A ``str`` with words separated by the specified separator.
+        str: A string with words separated by the specified separator.
     """
     return separator.join(s for s in SPLIT_RE.split(string) if s)

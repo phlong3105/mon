@@ -110,7 +110,7 @@ def predict(args: argparse.Namespace):
                     cv2.imwrite(str(output_path), enhanced_image)
                     # torchvision.utils.save_image(enhanced_image, str(output_path))
         
-        avg_time = float(timer.avg_time)
+        avg_time = float(timer.avg)
         mon.log(f"Average time: {avg_time}")
     
 

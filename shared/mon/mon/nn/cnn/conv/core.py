@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements core convolutional layers."""
+"""A module for core convolutional layers.
+
+This module provides standard convolutional layers and their lazy initialization
+variants.
+"""
 
 __all__ = [
     "Conv1d",

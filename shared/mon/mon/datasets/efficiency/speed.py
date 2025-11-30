@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Speed datasets for efficiency benchmarking."""
+"""A module for Speed datasets.
+
+This module implements the Speed10 and Speed1K datasets for efficiency
+benchmarking in low-light image enhancement tasks.
+"""
 
 __all__ = [
     "Speed1K",
@@ -14,25 +18,25 @@ from ..core import *
 class Speed10(ImageDataset):
     """Speed10 dataset."""
 
-    root_name : str         = "speed10"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "speed10"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
 
 @DATASETS.register(name="speed1k")
 class Speed1K(ImageDataset):
     """Speed1K dataset."""
 
-    root_name : str         = "speed1k"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "speed1k"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

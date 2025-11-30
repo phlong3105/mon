@@ -36,12 +36,12 @@ class NeRCo(NeRComodel, nn.ModelMixin):
         - Code: https://github.com/Ysz2022/NeRCo
     """
     
-    arch     : str          = "nerco"
-    name     : str          = "nerco"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "nerco"
+    _name     : str          = "nerco"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, opt: argparse.Namespace, weights: Any = None):
         super().__init__(opt)

@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements fold and unfold operations for tensors."""
+"""A module for fold and unfold operations.
+
+This module provides classes for folding and unfolding tensors in neural
+networks.
+"""
 
 __all__ = [
     "Fold",

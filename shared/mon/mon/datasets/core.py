@@ -1,38 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements core components for datasets."""
+"""A module for core dataset classes and types.
+
+This module provides core dataset classes and types for handling various data
+modalities, including images, depth maps, and infrared maps. It includes base
+dataset classes, data loaders, and utilities for managing different data sources
+and tasks.
+"""
 
 __all__ = [
+    "BBoxes",
     "BaseDataset",
-    "BaseDualDomainDataset",
     "BaseTensorOrArray",
     "Classes",
     "DATASETS",
     "DEPTH_SOURCE",
     "DataLoader",
+    "Dataset",
     "DefaultDepthMap",
     "DefaultInfraredMap",
     "DepthMap",
     "DepthName",
     "DepthSource",
     "Frame",
-    "HBBs",
     "INFRARED_SOURCE",
     "Image",
     "ImageDataset",
-    "ImageDualDomainDataset",
+    "ImageEvalDataset",
     "ImageLoader",
     "InfraredMap",
     "InfraredName",
     "InfraredSource",
+    "Instance",
     "Modalities",
     "Modality",
     "Probs",
     "SemanticMask",
     "Split",
     "Task",
-    "VideoLoader",
     "VideoLoaderCV",
     "VideoWriter",
     "VideoWriterCV",
@@ -52,11 +58,12 @@ from mon.core import (
 )
 from mon.core.dtypes import (
     BaseTensorOrArray,
+    BBoxes,
     DepthMap,
     Frame,
-    HBBs,
     Image,
     InfraredMap,
+    Instance,
     Probs,
     SemanticMask,
 )
@@ -67,15 +74,14 @@ from mon.core.dtypes.video import (
 )
 from mon.training.data import (
     BaseDataset,
-    BaseDualDomainDataset,
     Classes,
     DataLoader,
+    Dataset,
     ImageDataset,
-    ImageDualDomainDataset,
+    ImageEvalDataset,
     ImageLoader,
     Modalities,
     Modality,
-    VideoLoader,
     VideoLoaderCV,
 )
 

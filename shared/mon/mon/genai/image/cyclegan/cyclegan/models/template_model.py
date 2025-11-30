@@ -42,7 +42,7 @@ class TemplateModel(BaseModel):
         return parser
 
     def __init__(self, opt):
-        """Initialize this model class.
+        """Initializes this model class.
 
         Parameters:
             opt -- training/test options

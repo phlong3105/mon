@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various pooling layers."""
+"""A module for pooling layers.
+
+This module provides various pooling layers commonly used in convolutional neural
+networks (CNNs) for downsampling feature maps.
+"""
 
 __all__ = [
     "AdaptiveAvgPool1d",

@@ -30,12 +30,12 @@ current_dir  = current_file.parents[0]
 class GCENet_Baseline(nn.Module, nn.ModelMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
-    arch     : str          = "gcenet"
-    name     : str          = "gcenet_baseline"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = current_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "gcenet"
+    _name     : str          = "gcenet_baseline"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = current_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,
@@ -104,12 +104,12 @@ class GCENet_Baseline(nn.Module, nn.ModelMixin):
 @MODELS.register(name="gcenet", arch="gcenet")
 class GCENet(nn.Module, nn.ModelMixin):
     
-    arch     : str          = "gcenet"
-    name     : str          = "gcenet"
-    tasks    : list[Task]   = [Task.LLE, Task.MEF]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = current_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "gcenet"
+    _name     : str          = "gcenet"
+    _tasks    : list[Task]   = [Task.LLE, Task.MEF]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = current_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, iters: int = 8, scale: int = 1, weights: Any = None, *args, **kwargs):
         super().__init__()
@@ -222,12 +222,12 @@ class GCENet(nn.Module, nn.ModelMixin):
 class GCENet_PONO(nn.Module, nn.ModelMixin):
     """GCE-Net with Positional Normalization (PONO) and Moment Shortcut (MS)."""
     
-    arch     : str          = "gcenet"
-    name     : str          = "gcenet_pono"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = current_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "gcenet"
+    _name     : str          = "gcenet_pono"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = current_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,
@@ -310,12 +310,12 @@ class GCENet_PONO(nn.Module, nn.ModelMixin):
 class GCENet_BAM(nn.Module, nn.ModelMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
-    arch     : str          = "gcenet"
-    name     : str          = "gcenet_bam"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = current_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "gcenet"
+    _name     : str          = "gcenet_bam"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = current_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,
@@ -384,12 +384,12 @@ class GCENet_BAM(nn.Module, nn.ModelMixin):
 class GCENet_PONO_BAM(nn.Module, nn.ModelMixin):
     """GCE-Net with Positional Normalization (PONO) and Moment Shortcut (MS)."""
     
-    arch     : str          = "gcenet"
-    name     : str          = "gcenet_pono_bam"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = current_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "gcenet"
+    _name     : str          = "gcenet_pono_bam"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = current_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,
@@ -474,12 +474,12 @@ class GCENet_PONO_BAM(nn.Module, nn.ModelMixin):
 class GCENet_Depth(nn.Module, nn.ModelMixin):
     """GCE-Net model for low-light image enhancement."""
     
-    arch     : str          = "gcenet"
-    name     : str          = "gcenet_depth"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = current_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "gcenet"
+    _name     : str          = "gcenet_depth"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = current_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

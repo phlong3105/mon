@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides datasets and utilities for image/video enhancement tasks."""
+"""A package for image and video enhancement datasets.
+
+This package includes various datasets for tasks such as exposure correction,
+low-light image enhancement (LLE), and image retouching.
+"""
 
 from .exposure import *
 from .lle import *

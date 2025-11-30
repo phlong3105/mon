@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the DICM dataset for low-light image enhancement tasks."""
+"""A module for DICM dataset.
+
+This module implements the DICM dataset for low-light image enhancement tasks.
+"""
 
 __all__ = [
     "DICM",
@@ -14,12 +17,11 @@ from ....core import *
 class DICM(ImageDataset):
     """DICM dataset."""
     
-    root_name : str         = "dicm"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "dicm"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
-    num_classes: int        = 0
+    _classes   : Classes     = None

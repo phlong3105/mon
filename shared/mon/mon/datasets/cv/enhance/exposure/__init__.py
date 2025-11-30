@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides datasets for exposure enhancement tasks."""
+"""A package for exposure enhancement datasets.
+
+This package includes various datasets used for exposure correction and
+enhancement tasks in computer vision.
+"""
 
 from .msec import *
 from .rcd import *

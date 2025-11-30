@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides optimization algorithms for training."""
+"""A package for optimization algorithms and learning rate schedulers.
+
+This package provides various optimization algorithms and learning rate schedulers
+commonly used in training machine learning models.
+"""
 
 __all__ = [
     "ASGD",

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides datasets for image/video deflaring tasks."""
+"""A package for deflaring datasets.
+
+This package includes various datasets used for image deflaring tasks.
+"""
 
 from .flarereal800 import *
 from .ledlight import *

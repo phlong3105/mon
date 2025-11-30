@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements sobel filters."""
+"""A module for sobel filters.
+
+This module implements the Sobel filter for edge detection in images.
+"""
 
 __all__ = [
     "sobel_filter",
@@ -18,12 +21,18 @@ def sobel_filter(image: np.ndarray, kernel_size: int = 3) -> np.ndarray:
     """Applies Sobel filter to detect edges in an image.
 
     Args:
-        image: RGB image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`
-            in :math:`[0, 255]`.
-        kernel_size: Size of the Sobel kernel. Default: ``3``.
-    
+        image (numpy.ndarray): Input image as a numpy.ndarray of shape (H, W)
+            for grayscale or (H, W, C) for color images with pixel values in
+            [0, 255].
+        kernel_size (int): Size of the Sobel kernel. Must be odd and greater
+            than 1. Defaults to 3.
+            
     Returns:
-        Grayscale image with edge magnitudes.
+        numpy.ndarray: Image after applying Sobel filter, of the same shape
+            as the input image.
+    
+    Raises:
+        TypeError: If ``image`` is not a numpy.ndarray with 2 or 3 dimensions.
     """
     if not isinstance(image, np.ndarray) or image.ndim not in [2, 3]:
         raise TypeError(f"``image`` must be a numpy.ndarray with 2 or 3 dimensions, "

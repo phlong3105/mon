@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various miscellaneous neural network (NN) components."""
+"""A package for miscellaneous neural network (NN) components.
+
+This package provides various miscellaneous modules and classes for building and
+training neural networks (NNs) in deep learning applications.
+"""
 
 __all__ = [
     "AFF",

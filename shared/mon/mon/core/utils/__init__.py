@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various utility functions."""
+"""A package for utility functions.
+
+This package provides various utility functions for string manipulation,
+type checking and conversion, dictionary merging, sorting, and generating
+combinations.
+"""
 
 __all__ = [
     "camelize",

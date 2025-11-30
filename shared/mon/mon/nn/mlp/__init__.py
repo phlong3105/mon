@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements various multi-layer perceptron (MLP) components."""
+"""A package for multi-layer perceptrons (MLPs).
+
+This package implements various multi-layer perceptron (MLP) components and
+architectures.
+"""
 
 __all__ = [
     "Bilinear",

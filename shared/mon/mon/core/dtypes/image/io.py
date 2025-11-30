@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements I/O functions for images."""
+"""A module for image I/O operations.
+
+This module provides functions to load and save images using OpenCV, PIL, and
+rawpy. It supports various image formats, including raw images, and provides
+utilities to read image shape and size.
+"""
 
 __all__ = [
     "load",
     "read_shape",
+    "read_size",
     "save",
 ]
-
-from typing import Union
 
 import cv2
 import numpy as np
@@ -24,18 +28,16 @@ from .utils import is_color
 
 # ----- Reading -----
 def load(path: Path, flags: int = cv2.IMREAD_COLOR) -> np.ndarray:
-    """Loads an image from a file path using OpenCV. Also add support for raw images.
+    """Loads an image from a file path using OpenCV. Also add support for raw
+    images.
 
     Args:
-        path: Absolute path to the image file.
-        flags: OpenCV flag to read image. One of: ``cv2.IMREAD_UNCHANGED``,
-            ``cv2.IMREAD_GRAYSCALE``, ``cv2.IMREAD_COLOR_BGR``, ``cv2.IMREAD_COLOR``,
-            ``cv2.IMREAD_ANYDEPTH``, ``cv2.IMREAD_ANYCOLOR``, ``cv2.IMREAD_COLOR_RGB``.
-            Default: ``cv2.IMREAD_COLOR``.
+        path (Path): Absolute path to the image file.
+        flags (int): OpenCV flag to read image. Defaults to cv2.IMREAD_COLOR.
     
     Returns:
-        An RGB or grayscale image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`
-        in :math:`[0, 255]`.
+        np.ndarray: An RGB image as a numpy.ndarray of shape (H, W, C) with pixel
+            values in the range [0, 255].
     """
     path = Path(path)
     if path.is_raw_image_file():  # Read raw image
@@ -55,11 +57,11 @@ def read_shape(path: Path) -> tuple[int, int, int]:
     """Reads an image shape from a file path using PIL or rawpy.
 
     Args:
-        path: Absolute path to the image file.
-
+        path (Path): Absolute path to the image file.
+        
     Returns:
-        A tuple of :math:`(height, width, channels)`.
-
+        tuple[int, int, int]: A tuple of (H, W, C).
+        
     Raises:
         ValueError: If image mode is unsupported for non-RAW images.
     """
@@ -75,23 +77,34 @@ def read_shape(path: Path) -> tuple[int, int, int]:
             c = {"RGB": 3, "RGBA": 4, "L": 1}.get(mode, None)
             if c is None:
                 raise ValueError(f"Unsupported image mode {mode}.")
-    
     return h, w, c
 
 
-# ----- Writing -----
-def save(image: Union[torch.Tensor, np.ndarray], path: Path):
-    """Save an image to a file.
+def read_size(path: Path) -> tuple[int, int]:
+    """Reads an image size from a file path using PIL or rawpy.
 
     Args:
-        image: An RBG image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-            Prioritize ``numpy.ndarray``.
-        path: Absolute path to save the image file.
+        path (Path): Absolute path to the image file.
+    
+    Returns:
+        tuple[int, int]: A tuple of (H, W).
+    """
+    return read_shape(path=path)[:2]
+
+
+# ----- Writing -----
+def save(image: torch.Tensor | np.ndarray, path: Path):
+    """Saves an image to a file.
+
+    Args:
+        image (torch.Tensor or numpy.ndarray): An RGB image as a torch.Tensor or
+            numpy.ndarray of shape (C, H, W) or (H, W, C) with pixel values in
+            the range [0, 1] for torch.Tensor or [0, 255] for numpy.ndarray.
+        path (Path): Absolute path to save the image. The parent directories
+            will be created if they do not exist.
 
     Raises:
-        TypeError: If ``image`` is not a ``torch.Tensor`` or ``numpy.ndarray``.
+        TypeError: If ``image`` is not a torch.Tensor or numpy.ndarray.
     """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

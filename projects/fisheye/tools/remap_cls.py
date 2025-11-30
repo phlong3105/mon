@@ -48,14 +48,14 @@ def remap_classes(data: str, split: str):
             label_old_file = label_old_dir / f"{image_file.stem}.txt"
             if not label_old_file.is_txt_file(exist=True):
                 continue
-            bs = mon.hbb.load(path=label_old_file, fmt=mon.BBoxFormat.YOLO, imgsz=(h, w))
+            bs = mon.bbox.load(path=label_old_file, fmt=mon.BBoxFormat.YOLO, imgsz=(h, w))
 
             # Open the new label file
             label_file = label_dir / f"{image_file.stem}.txt"
             label_file.parent.mkdir(parents=True, exist_ok=True)
             with open(label_file, "w") as f:
                 for b in bs:
-                    c = map_classes[f"{int(b[4])}"]
+                    c = map_classes[f"{int(b[5])}"]
                     if c == -1:  # Ignored classes
                         continue
                     f.write(f"{c} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")

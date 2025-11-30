@@ -35,12 +35,12 @@ class DCCNet(nn.Module, nn.ModelMixin):
         - Code: https://github.com/Ian0926/DCC-Net
     """
     
-    arch     : str          = "dccnet"
-    name     : str          = "dccnet"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "dccnet"
+    _name     : str          = "dccnet"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "lolv1": {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/dccnet/dccnet/lolv1/dccnet_lolv1.pth",

@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements system-related utilities such as clearing the terminal
+"""A module for system utilities.
+
+This module implements system-related utilities such as clearing the terminal
 and setting random seeds for reproducibility.
 """
 
@@ -20,11 +22,12 @@ import torch
 
 
 # ----- Seed -----
-def set_random_seed(seed: int | tuple[int, int]) -> None:
+def set_random_seed(seed: int | tuple[int, int]):
     """Sets random seeds for various libraries.
 
     Args:
-        seed: An ``int``, or a ``tuple`` of :math:`(min, max)` for random selection.
+        seed (int or tuple of int): The seed value or a range (min, max) to
+            sample from.
     """
     if isinstance(seed, Sequence):
         seed = random.randint(seed[0], seed[1]) if len(seed) == 2 else seed[-1]

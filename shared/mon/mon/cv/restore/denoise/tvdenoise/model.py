@@ -21,12 +21,12 @@ root_dir     = current_file.parents[0]
 @MODELS.register(name="tvdenoise", arch="tvdenoise")
 class TVDenoise(nn.Module, nn.ModelMixin):
     
-    arch     : str          = "tvdenoise"
-    name     : str          = "tvdenoise"
-    tasks    : list[Task]   = [Task.DENOISE]
-    mltypes  : list[MLType] = [MLType.ZERO_SHOT]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "tvdenoise"
+    _name     : str          = "tvdenoise"
+    _tasks    : list[Task]   = [Task.DENOISE]
+    _mltypes  : list[MLType] = [MLType.ZERO_SHOT]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self):
         super().__init__()

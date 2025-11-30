@@ -33,9 +33,9 @@ class Retinexformer(ImageCleanModel, nn.ModelMixin):
         - Code: https://github.com/caiyuanhao1998/Retinexformer
     """
     
-    arch     : str          = "retinexformer"
-    name     : str          = "retinexformer"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "retinexformer"
+    _name     : str          = "retinexformer"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()

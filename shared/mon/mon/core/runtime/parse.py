@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements command-line interface (CLI) argument parsing utilities."""
+"""A module for CLI argument parsing.
+
+This module implements command-line interface (CLI) argument parsing utilities.
+"""
 
 __all__ = [
     "parse_cli_args",
@@ -31,7 +34,14 @@ from .utils import (
 
 # ----- Parser -----
 def parse_default_args(name: str = "main") -> dict | box.Box:
-    """Parse direct CLI."""
+    """Parses default CLI arguments based on predefined options.
+    
+    Args:
+        name (str): The name of the CLI option. Defaults to "main".
+        
+    Returns:
+        dict | box.Box: Parsed CLI arguments as a dictionary or Box object.
+    """
     parser = argparse.ArgumentParser(description=name)
     
     for opt_name, opt_params in CLI_OPTIONS.items():
@@ -74,19 +84,22 @@ def parse_default_args(name: str = "main") -> dict | box.Box:
     return box.Box(vars(parser.parse_args()))
 
 
-def parse_cli_args(cli: box.Box = None, root: Path = None, name: str= "main") -> dict | box.Box:
-    """Parse arguments from either direct CLI call or interactive prompt.
+def parse_cli_args(cli: box.Box = None, root: Path = None, name: str = "main") -> dict | box.Box:
+    """Parses CLI arguments, with support for interactive prompts.
     
     Args:
-        cli: Either a dict/Box of arguments or None to parse from CLI.
-        root: Project root directory to use if not specified in CLI. Default: ``None``.
-        name: Name of the program to display in the interactive prompt. Default: ``"main"``.
+        cli (box.Box, optional): Predefined CLI arguments. Defaults to None.
+        root (Path, optional): Root directory path. Defaults to None.
+        name (str, optional): Name of the CLI option set. Defaults to "main".
+    
+    Returns:
+        dict | box.Box: Parsed CLI arguments as a dictionary or Box object.
     """
     cli      = cli      or parse_default_args(name)  # Direct CLI
     cli.root = cli.root or root
     cli.root = Path(cli.root) if cli.root else None
     if cli.p:  # Interactive CLI
-        cli   = RunCLI(cli).prompt_args()
+        cli   = RunCLI(cli).prompt()
         cli.p = False  # Disable prompt flag after use
     return cli
 
@@ -98,7 +111,17 @@ def parse_train_args(
     model_root: Path    = None,
     verbose   : bool    = False
 ) -> dict | box.Box:
-    """Parse arguments for training."""
+    """Parse arguments from either CLI or config file for training.
+    
+    Args:
+        cli (box.Box, optional): Predefined CLI arguments. Defaults to None.
+        root (Path, optional): Root directory path. Defaults to None.
+        model_root (Path, optional): Model root directory path. Defaults to None.
+        verbose (bool, optional): If True, enables verbose output. Defaults to False.
+    
+    Returns:
+        dict | box.Box: Parsed arguments as a dictionary or Box object.
+    """
     # CLI
     cli        = parse_cli_args(cli, root=root)
     cli.config = parse_config_file(cli.config, cli.root, model_root=model_root)
@@ -145,7 +168,17 @@ def parse_predict_args(
     model_root: Path    = None,
     verbose   : bool    = False
 ) -> dict | box.Box:
-    """Parse arguments from either CLI or config file for predicting."""
+    """Parses arguments from either CLI or config file for prediction.
+    
+    Args:
+        cli (box.Box, optional): Predefined CLI arguments. Defaults to None.
+        root (Path, optional): Root directory path. Defaults to None.
+        model_root (Path, optional): Model root directory path. Defaults to None.
+        verbose (bool, optional): If True, enables verbose output. Defaults to False.
+    
+    Returns:
+        dict | box.Box: Parsed arguments as a dictionary or Box object.
+    """
     # CLI
     cli        = parse_cli_args(cli, root=root)
     cli.config = parse_config_file(cli.config, cli.root, model_root=model_root)

@@ -39,12 +39,12 @@ class EnlightenOnnxModel(nn.ModelMixin):
         - Code: https://github.com/arsenyinfo/EnlightenGAN-inference
     """
     
-    arch     : str          = "enlightengan"
-    name     : str          = "enlightengan"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "enlightengan"
+    _name     : str          = "enlightengan"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "custom": {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/enlightengan/enlightengan/custom/enlightengan.onnx",

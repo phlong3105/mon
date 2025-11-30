@@ -40,12 +40,12 @@ class URetinexNet(nn.Module, nn.ModelMixin):
         - Code: https://github.com/AndersonYong/URetinex-Net
     """
     
-    arch     : str          = "uretinexnet"
-    name     : str          = "uretinexnet"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "uretinexnet"
+    _name     : str          = "uretinexnet"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, opts):
         super().__init__()

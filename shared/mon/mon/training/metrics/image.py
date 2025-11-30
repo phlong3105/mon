@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements image quality assessment metrics."""
+"""A module for image quality assessment metrics.
+
+This module provides functions and classes to evaluate the quality of images
+based on various criteria such as exposedness, contrast, and saturation.
+"""
 
 __all__ = [
     "ImageQualityAssessment",
     "scale_gt_mean",
 ]
-
-from typing import Union
 
 import cv2
 import kornia
@@ -18,24 +20,22 @@ import torch.nn as nn
 
 
 def scale_gt_mean(
-    image : Union[torch.Tensor, np.ndarray],
-    target: Union[torch.Tensor, np.ndarray],
-) -> Union[torch.Tensor, np.ndarray]:
+    image : torch.Tensor | np.ndarray,
+    target: torch.Tensor | np.ndarray,
+) -> torch.Tensor | np.ndarray:
     """Scales image to match target's mean intensity.
-
-    Args:
-        image: RGB image as a ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in range :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in range :math:`[0, 255]`).
-        target: Target image of same type as ``image``.
-    
-    Returns:
-        Scaled image matching target's mean.
-    
-    Raises:
-        TypeError: If ``image`` and ``target`` types differ.
     
     References:
         - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/measure.py
+        
+    Args:
+        image (torch.Tensor or np.ndarray): Input image to be scaled.
+        target (torch.Tensor or np.ndarray): Target image for mean intensity
+            reference.
+    
+    Returns:
+        torch.Tensor or np.ndarray: Scaled image with mean intensity matching
+            the target.
     """
     if isinstance(image, torch.Tensor) and isinstance(target, torch.Tensor):
         mean_image  = kornia.color.rgb_to_grayscale(image).mean()
@@ -52,17 +52,24 @@ def scale_gt_mean(
 
 
 class ImageQualityAssessment(nn.Module):
-    """Assesses image quality based on exposedness, contrast, and saturation.
-
-    Args:
-        exposed_level: Target exposure level. Default: ``0.5``.
-        pool_size: Size of pooling window. Default: ``25``.
+    """A class for Image Quality Assessment (IQA) metric.
 
     References:
         - Code: https://github.com/VinAIResearch/PSENet-Image-Enhancement/blob/main/source/iqa.py
+    
+    Attributes:
+        exposed_level (float): Ideal exposure level.
+        pool_size (int): Size of the pooling kernel.
+        mean_pool (torch.nn.Sequential): Mean pooling layer.
     """
 
     def __init__(self, exposed_level: float = 0.5, pool_size: int = 25):
+        """Initializes the ImageQualityAssessment instance.
+        
+        Args:
+            exposed_level (float): Ideal exposure level. Defaults to 0.5.
+            pool_size (int): Size of the pooling kernel. Defaults to 25.
+        """
         super().__init__()
         self.exposed_level = exposed_level
         self.pool_size     = pool_size
@@ -72,6 +79,15 @@ class ImageQualityAssessment(nn.Module):
         )
 
     def forward(self, images: torch.Tensor) -> torch.Tensor:
+        """Computes the IQA score for input images.
+        
+        Args:
+            images (torch.Tensor): Input images of shape (B, C, H, W) with pixel
+                values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: IQA scores of shape (B, 1, 1, 1).
+        """
         max_rgb     = torch.max(images, dim=1, keepdim=True)[0]
         min_rgb     = torch.min(images, dim=1, keepdim=True)[0]
         saturation  = (max_rgb - min_rgb + 1 / 255.0) / (max_rgb + 1 / 255.0)

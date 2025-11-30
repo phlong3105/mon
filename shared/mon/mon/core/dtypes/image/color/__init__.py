@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements color processing functions."""
+"""A package for color processing.
+
+This package provides modules and functions for color space conversions
+and color transfer techniques.
+"""
 
 __all__ = [
     "RGBToHVI",

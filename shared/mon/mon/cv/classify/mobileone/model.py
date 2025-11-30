@@ -48,12 +48,12 @@ class MobileOne(nn.Module, nn.ModelMixin, abc.ABC):
         - Code: https://github.com/apple/ml-mobileone/tree/main
     """
     
-    arch     : str          = "mobileone"
-    name     : str          = "mobileone",
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "mobileone"
+    _name     : str          = "mobileone",
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,
@@ -135,8 +135,8 @@ class MobileOne(nn.Module, nn.ModelMixin, abc.ABC):
 @MODELS.register(name="mobileone_s0", arch="mobileone")
 class MobileOneS0(MobileOne):
     
-    name: str  = "mobileone_s0",
-    zoo : dict = box.Box({
+    _name: str  = "mobileone_s0",
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobileone/mobileone_s0/imagenet1k_v1/mobileone_s0_imagenet1k_v1.pth.tar",
@@ -164,8 +164,8 @@ class MobileOneS0(MobileOne):
 @MODELS.register(name="mobileone_s1", arch="mobileone")
 class MobileOneS1(MobileOne):
     
-    name: str  = "mobileone_s1",
-    zoo : dict = box.Box({
+    _name: str  = "mobileone_s1",
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobileone/mobileone_s1/imagenet1k_v1/mobileone_s1_imagenet1k_v1.pth.tar",
@@ -192,8 +192,8 @@ class MobileOneS1(MobileOne):
 @MODELS.register(name="mobileone_s2", arch="mobileone")
 class MobileOneS2(MobileOne):
     
-    name: str  = "mobileone_s2",
-    zoo : dict = box.Box({
+    _name: str  = "mobileone_s2",
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobileone/mobileone_s2/imagenet1k_v1/mobileone_s2_imagenet1k_v1.pth.tar",
@@ -220,8 +220,8 @@ class MobileOneS2(MobileOne):
 @MODELS.register(name="mobileone_s3", arch="mobileone")
 class MobileOneS3(MobileOne):
     
-    name: str  = "mobileone_s3",
-    zoo : dict = box.Box({
+    _name: str  = "mobileone_s3",
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobileone/mobileone_s3/imagenet1k_v1/mobileone_s3_imagenet1k_v1.pth.tar",
@@ -248,8 +248,8 @@ class MobileOneS3(MobileOne):
 @MODELS.register(name="mobileone_s4", arch="mobileone")
 class MobileOneS4(MobileOne):
     
-    name: str  = "mobileone_s4",
-    zoo : dict = box.Box({
+    _name: str  = "mobileone_s4",
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobileone/mobileone_s4/imagenet1k_v1/mobileone_s4_imagenet1k_v1.pth.tar",

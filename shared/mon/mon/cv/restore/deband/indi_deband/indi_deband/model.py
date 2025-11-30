@@ -43,12 +43,12 @@ class InDiDeband(nn.Module, nn.ModelMixin):
         - Code: https://github.com/ksasso1028/indi-debanding
     """
     
-    arch     : str          = "indi_deband"
-    name     : str          = "indi_deband"
-    tasks    : list[Task]   = [Task.DEBAND]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "indi_deband"
+    _name     : str          = "indi_deband"
+    _tasks    : list[Task]   = [Task.DEBAND]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements functions to build datasets and dataloaders from various
-data sources.
+"""A module for building datasets and dataloaders.
 
-It supports parsing data directories and creating appropriate dataset and dataloader
-objects based on the input source type.
+This module provides functions to build datasets and dataloaders from various
+data sources. It supports parsing data sources to create appropriate dataset
+and dataloader instances, handling different input types such as dataset names,
+directories, and video files.
 """
 
 __all__ = [
@@ -30,19 +31,16 @@ def build_dataset(
     **kwargs
 ) -> tuple[str, BaseDataset]:
     """Parses given ``src`` to a corresponding dataset.
-
+    
     Args:
         src: An input data source
-        data_root: Dataset root dir. Default: ``None``.
-        transform: Transforms to apply to the dataset. Default: ``None``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
-        **kwargs: Additional keyword arguments for the ``BaseDataset``.
-
+        data_root: Dataset root dir. Defaults to None.
+        transform: Transforms to apply to the dataset. Defaults to None.
+        verbose: If True, enables verbose output. Defaults to False.
+        **kwargs: Additional keyword arguments for the dataset.
+        
     Returns:
-        A ``tuple`` of data name and ``BaseDataset``.
-
-    Raises:
-        ValueError: If ``src`` is invalid.
+        tuple[str, BaseDataset]: Dataset name and dataset.
     """
     src = Path(src)
 
@@ -82,14 +80,14 @@ def build_dataloader(
 
     Args:
         src: An input data source
-        data_root: Dataset root dir. Default: ``None``.
-        transform: Transforms to apply to the dataset. Default: ``None``.
-        batch_size: Batch size for the dataloader. Default: ``1``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
-        **kwargs: Additional keyword arguments for the ``DataLoader``.
+        data_root: Dataset root dir. Defaults to None.
+        transform: Transforms to apply to the dataset. Defaults to None.
+        batch_size: Number of samples per batch. Defaults to 1.
+        verbose: If True, enables verbose output. Defaults to False.
+        **kwargs: Additional keyword arguments for the dataset.
 
     Returns:
-        A ``tuple`` of data name and ``Dataloader``.
+        tuple[str, DataLoader]: Dataset name and dataloader.
 
     Raises:
         ValueError: If ``src`` is invalid.

@@ -122,7 +122,7 @@ def predict(args: dict | box.Box) -> str:
                         bs =  boxes[j][ss >= args.conf_thres]
                         if len(bs) == 0:
                             continue
-                        bs = mon.hbb.convert(bbox=bs, fmt=mon.BBoxFormat.VOC2YOLO, imgsz=(h0, w0))
+                        bs = mon.bbox.convert(bbox=bs, fmt=mon.BBoxFormat.VOC2YOLO, imgsz=(h0, w0))
                         for c, b, s in zip(cs, bs, ss):
                             f.write(f"{c} {b[0]} {b[1]} {b[2]} {b[3]} {s}\n")
 

@@ -34,12 +34,12 @@ class UEC(UECModel, nn.ModelMixin):
         - Code: https://github.com/BeyondHeaven/uec_code
     """
     
-    arch     : str          = "uec"
-    name     : str          = "uec"
-    tasks    : list[Task]   = [Task.EXPOSURE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "uec"
+    _name     : str          = "uec"
+    _tasks    : list[Task]   = [Task.EXPOSURE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, opt: argparse.Namespace, weights: Any = None):
         super().__init__(opt)

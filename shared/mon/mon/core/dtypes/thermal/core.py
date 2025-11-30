@@ -1,51 +1,60 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data structure for thermal maps."""
+"""A module for thermal map data type.
+
+This module provides a base class for handling infrared map data, extending the
+image data type with specific attributes and methods for infrared information.
+"""
 
 __all__ = [
     "InfraredMap",
 ]
 
-from typing import Union
-
 import cv2
-import numpy as np
-import torch
 
 from mon.core.enum import InfraredSource
-from mon.core.pathlib import Path
-from .. import image as I
+from ..image import Image
 
 
-class InfraredMap(I.Image):
-    """Infrared map.
-
-    Args:
-        data: Input data as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-            Default: ``None``.
-        path: Infrared map file path. Default: ``None``.
-        root: Root directory for the infrared map. Default: ``None``.
-        source: Source of infrared data. One of ``InfraredSource``.
-            Default: ``InfraredSource.INFRARED``.
-        flags: OpenCV flag to read image. Default: ``cv2.IMREAD_GRAYSCALE``.
-        cache: If ``True``, caches image in memory. Default: ``False``.
+class InfraredMap(Image):
+    """A base class for a single infrared map (i.e., must have a valid file path).
+    
+    This class extends Image to handle a single infrared map, which can be
+    provided either as an in-memory array/tensor or as a file path. It includes
+    an attribute to specify the source of the infrared data.
     """
-
+    
     def __init__(
         self,
-        data  : Union[torch.Tensor, np.ndarray] = None,
-        path  : Path           = None,
-        root  : Path           = None,
         source: InfraredSource = InfraredSource.INFRARED,
         flags : int            = cv2.IMREAD_GRAYSCALE,
-        cache : bool           = False,
+        *args, **kwargs
     ):
-        source = InfraredSource.from_value(source)
+        """Initializes the InfraredMap instance.
+        
+        Args:
+            source (InfraredSource): The source of the infrared data. Defaults
+                to InfraredSource.INFRARED.
+            flags (int): OpenCV flag to read infrared map. Defaults to
+                cv2.IMREAD_GRAYSCALE.
+        """
+        super().__init__(flags=flags, *args, **kwargs)
+        
+        # Validate inputs
+        source = InfraredSource(source)
         if source not in InfraredSource:
             raise ValueError(f"``source`` must be one of {InfraredSource}, got {source}.")
-
-        super().__init__(data=data, path=path, root=root, flags=flags, cache=cache)
-        self.source = source
+        
+        # Assign attributes
+        self._source = source
+     
+    # ---- Properties -----
+    @property
+    def source(self) -> InfraredSource:
+        """Getter for the source of the infrared data.
+        
+        Returns:
+            InfraredSource: The source of the infrared data.
+        """
+        return self._source

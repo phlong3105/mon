@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data structure and processing functions for videos."""
+"""A package for video data type.
+
+This package provides data structures and utilities for handling video data,
+including frame representation and video writing capabilities using different
+backends.
+"""
 
 __all__ = [
     "Frame",

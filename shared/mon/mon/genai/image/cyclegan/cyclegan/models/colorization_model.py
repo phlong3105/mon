@@ -32,7 +32,7 @@ class ColorizationModel(Pix2PixModel):
         return parser
 
     def __init__(self, opt):
-        """Initialize the class.
+        """Initializes the class.
 
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions

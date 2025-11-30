@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements RESIDE datasets for image dehazing tasks."""
+"""A module for the RESIDE datasets.
+
+This module implements RESIDE datasets for image dehazing tasks.
+"""
 
 __all__ = [
     "RESIDE_HSTSReal",
@@ -22,17 +25,21 @@ from ....core import *
 class RESIDE_HSTSReal(ImageDataset):
     """RESIDE-HSTS-Real dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "hsts" / "real" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -42,7 +49,7 @@ class RESIDE_HSTSReal(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
         
         return images
         
@@ -51,18 +58,22 @@ class RESIDE_HSTSReal(ImageDataset):
 class RESIDE_HSTSSyn(ImageDataset):
     """RESIDE-HSTS-Synthetic dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "hsts" / "synthetic" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -72,7 +83,7 @@ class RESIDE_HSTSSyn(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
         
         return images
         
@@ -81,18 +92,22 @@ class RESIDE_HSTSSyn(ImageDataset):
 class RESIDE_ITS(ImageDataset):
     """RESIDE-ITS dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE]
-    splits    : list[Split] = [Split.TRAIN]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE]
+    _splits    : list[Split] = [Split.TRAIN]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image and ref annotations."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "its" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -102,7 +117,7 @@ class RESIDE_ITS(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
 
@@ -111,18 +126,22 @@ class RESIDE_ITS(ImageDataset):
 class RESIDE_OTS(ImageDataset):
     """RESIDE-OTS dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE]
-    splits    : list[Split] = [Split.TRAIN]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE]
+    _splits    : list[Split] = [Split.TRAIN]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image and ref annotations."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "ots" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -132,7 +151,7 @@ class RESIDE_OTS(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
 
@@ -141,17 +160,21 @@ class RESIDE_OTS(ImageDataset):
 class RESIDE_RTTS(ImageDataset):
     """RESIDE-RTTS dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE, Task.DETECT]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE, Task.DETECT]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "rtts" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -161,7 +184,7 @@ class RESIDE_RTTS(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
         
         return images
         
@@ -170,18 +193,22 @@ class RESIDE_RTTS(ImageDataset):
 class RESIDE_SOTSIndoor(ImageDataset):
     """RESIDE-SOTS-Indoor dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image and ref annotations."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "sots" / "indoor" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -191,7 +218,7 @@ class RESIDE_SOTSIndoor(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
 
@@ -200,18 +227,22 @@ class RESIDE_SOTSIndoor(ImageDataset):
 class RESIDE_SOTSOutdoor(ImageDataset):
     """RESIDE-SOTS-Outdoor dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image and ref annotations."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "sots" / "outdoor" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -221,7 +252,7 @@ class RESIDE_SOTSOutdoor(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
 
@@ -230,17 +261,21 @@ class RESIDE_SOTSOutdoor(ImageDataset):
 class RESIDE_URHI(ImageDataset):
     """RESIDE-URHI dataset."""
 
-    root_name : str         = "reside"
-    tasks     : list[Task]  = [Task.DEHAZE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "reside"
+    _tasks     : list[Task]  = [Task.DEHAZE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "urhi" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -250,6 +285,6 @@ class RESIDE_URHI(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
         
         return images

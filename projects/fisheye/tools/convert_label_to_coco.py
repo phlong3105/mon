@@ -152,7 +152,7 @@ def convert_label_to_coco(data: str, split: str):
                 continue
             
             # Read the YOLO label file and convert bbox format
-            bs = mon.hbb.load(path=label_file, fmt=mon.BBoxFormat.YOLO2COCO, imgsz=(h, w))
+            bs = mon.bbox.load(path=label_file, fmt=mon.BBoxFormat.YOLO2COCO, imgsz=(h, w))
             if len(bs) == 0:
                 continue
 
@@ -161,7 +161,7 @@ def convert_label_to_coco(data: str, split: str):
                 annotations.append({
                     "id"         : ann_id,
                     "image_id"   : image_id,
-                    "category_id": int(b[4]),
+                    "category_id": int(b[5]),
                     "bbox"       : b[0:4].tolist(),
                     "area"       : float(b[2] * b[3]),
                     "iscrowd"    : 0,

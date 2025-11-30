@@ -35,12 +35,12 @@ class SGZ(enhance_net_nopool, nn.ModelMixin):
         - Code: https://github.com/ShenZheng2000/Semantic-Guided-Low-Light-Image-Enhancement
     """
     
-    arch     : str          = "sgz"
-    name     : str          = "sgz"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "sgz"
+    _name     : str          = "sgz"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "lolv1": {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/sgz/sgz/lolv1/sgz_lolv1.pt",

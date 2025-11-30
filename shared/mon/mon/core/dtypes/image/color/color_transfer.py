@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements color transfer between images.
+"""A module for color transfer between images.
+
+This module provides a function to transfer the color characteristics from a
+source image to a target image using statistical methods in the LAB color space.
 
 References:
     - Paper: "Color Transfer between Images".
@@ -20,32 +23,34 @@ import numpy as np
 
 
 def color_transfer(source: np.ndarray, target: np.ndarray) -> np.ndarray:
-    """Transfer color from source image to target image.
+    """Transfers the color distribution from the target image to the source
+    image using the mean and standard deviation of the LAB color space.
 
     Args:
-        source: Source image as a ``numpy.ndarray`` of shape :math:`(H, W, 3)`
-            in range :math:`[0, 255]` and RGB format.
-        target: Same as type and format as `source`.
+        source (numpy.ndarray): The source image as a numpy.ndarray of shape
+            (H, W, 3) in range [0, 255] and RGB format.
+        target (numpy.ndarray): The target image as a numpy.ndarray of shape
+            (H, W, 3) in range [0, 255] and RGB format.
 
     Returns:
-        The color transferred image as a ``numpy.ndarray`` of shape :math:`(H, W, 3)`
-        in range :math:`[0, 255]` and RGB format.
+        numpy.ndarray: The color transferred image as a numpy.ndarray of shape
+            (H, W, 3) in range [0, 255] and RGB format.
     """
     # Convert to LAB color space
     s = cv2.cvtColor(source, cv2.COLOR_RGB2LAB).astype(np.float32)
     t = cv2.cvtColor(target, cv2.COLOR_RGB2LAB).astype(np.float32)
-
+    
     # Compute mean and std for each channel
     s_mean = np.mean(s, axis=(0, 1))
     s_std  = np.std(s,  axis=(0, 1))
     t_mean = np.mean(t, axis=(0, 1))
     t_std  = np.std(t,  axis=(0, 1))
-
+    
     # Apply color transfer using vectorized operations
     s = (s - s_mean) * (t_std / np.maximum(s_std, 1e-10)) + t_mean
-
+    
     # Clip values to valid range and convert to uint8
     s = np.clip(np.round(s), 0, 255).astype("uint8")
-
+    
     # Convert back to RGB
     return cv2.cvtColor(s, cv2.COLOR_LAB2RGB)

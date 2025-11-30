@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Measures depth metrics for a given model and dataset."""
+"""A script to evaluate depth estimation results using common metrics.
+
+This script computes various depth estimation metrics such as Absolute Relative
+Error, Squared Relative Error, RMSE, RMSE log, MAE, and threshold accuracies
+(delta1, delta2, delta3).
+"""
 
 import argparse
 import logging

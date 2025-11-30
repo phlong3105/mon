@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements utility functions for type manipulation and conversion,
+"""A module for extending built-in types.
+
+This module implements utility functions for type manipulation and conversion,
 including creating combinations, merging dictionaries, sorting collections,
 and converting values to specific types or tuples of specified lengths.
 """
@@ -32,14 +34,15 @@ import box
 
 # ----- Create -----
 def create_combinations(seq: Sequence) -> list:
-    """Create all combinations of elements in a sequence.
+    """Generates all possible non-empty combinations of elements from the input
+    sequence.
 
     Args:
-        seq: Input sequence (e.g., :math:`[1,2,3]`).
+        seq (Sequence): Input sequence (e.g., [1,2,3]).
 
     Returns:
-        A ``list`` of all combinations of elements
-        (e.g., :math:`[1], [2], [3], [1,2], [1,3], [2,3], [1,2,3]`).
+        list: A list of lists, each containing a unique combination of elements
+        from the input sequence (e.g., [1], [2], [3], [1,2], [1,3], [2,3], [1,2,3]).
     """
     x = copy.deepcopy(seq)
     x = list(x)
@@ -48,12 +51,15 @@ def create_combinations(seq: Sequence) -> list:
 
 
 # ----- Manipulation -----
-def merge_dicts(*dicts: dict) -> dict | box.Box:
-    """Merges multiple ``dict``, prioritizing later ``dict`` will overwrite
-    earlier ones.
+def merge_dicts(*dicts: dict) -> box.Box:
+    """Merges multiple dictionaries into one, ignoring keys with values of None
+    or "None" or empty string in the later dictionaries.
     
     Args:
         *dicts: Dictionaries to merge. The first dictionary is the base.
+        
+    Returns:
+        box.Box: A Box object containing the merged key-value pairs.
     """
     merged = dicts[0]
     for i in range(1, len(dicts)):
@@ -64,7 +70,15 @@ def merge_dicts(*dicts: dict) -> dict | box.Box:
 
 
 def sort(col: Collection, reverse: bool = False) -> Any:
-    """Sorts a collection (``list``, ``tuple``, or ``dict``) in ascending order by default."""
+    """Sorts an iterable or dictionary by keys.
+    
+    Args:
+        col (Collection): Iterable or dictionary to sort.
+        reverse (bool): If True, sorts in descending order. Default is False.
+        
+    Returns:
+        Sorted collection matching the type of ``col``.
+    """
     if isinstance(col, list | tuple):
         return type(col)(sorted(col, reverse=reverse))
     if isinstance(col, dict):
@@ -77,13 +91,13 @@ def unique(seq: Sequence) -> Sequence:
     """Returns unique items from a sequence, preserving order.
 
     Args:
-        seq: Input sequence (``list`` or ``tuple``) that may contain duplicates.
+        seq (Sequence): Input sequence (list or tuple).
 
     Returns:
-        Unique sequence matching type of ``seq``.
+        Sequence: A sequence of the same type as ``seq`` with unique items.
 
     Raises:
-        TypeError: If ``seq`` is not a ``list`` or ``tuple``.
+        TypeError: If ``seq`` is not a list or tuple.
     """
     if not isinstance(seq, list | tuple):
         raise TypeError(f"``seq`` must be a list or tuple, got {type(seq).__name__}.")
@@ -95,10 +109,10 @@ def to_int(int_or_str: Any) -> int | None:
     """Converts a value to an integer.
 
     Args:
-        int_or_str: Value to convert.
+        int_or_str (Any): Value to convert.
 
     Returns:
-        A converted ``int`` or ``None`` if ``value`` is ``None``.
+        int: Converted value.
 
     Raises:
         ValueError: If ``int_or_str`` cannot be converted to an integer.
@@ -116,10 +130,10 @@ def to_float(float_or_str: Any) -> float | None:
     """Converts a value to a float.
 
     Args:
-        float_or_str: Value to convert.
+        float_or_str (Any): Value to convert.
 
     Returns:
-        A converted ``float`` or ``None`` if ``value`` is ``None``.
+        float: Converted value.
 
     Raises:
         ValueError: If ``value`` cannot be converted to a float.
@@ -137,12 +151,11 @@ def to_str(value: Any, sep: str = ",") -> str:
     """Converts a value to a ``str``, joining iterable elements with a delimiter.
 
     Args:
-        value: Value to convert.
-        sep: Delimiter for separating elements. Default: ``","``.
+        value (Any): Value to convert.
+        sep (str): Delimiter for separating elements. Defaults to ",".
 
     Returns:
-        A ``str`` representation of ``value``, with elements joined by ``sep``
-        if iterable.
+        str: A string representation of ``value``.
     """
     if isinstance(value, dict):
         items = [str(item) for item in value.values()]
@@ -155,15 +168,14 @@ def to_str(value: Any, sep: str = ",") -> str:
 
 
 def to_list(value: Any, sep = (",", ";", ":")) -> list:
-    """Converts a ``tuple``, ``dict``, or ``str`` to ``list``, splitting strings
-    by delimiters if needed.
+    """Converts a value to a list, splitting strings by delimiters.
 
     Args:
-        value: Value to convert.
-        sep: Delimiters for splitting. Default: ``(",", ";", ":")``.
+        value (Any): Value to convert.
+        sep (tuple): Delimiters for splitting. Defaults to (",", ";", ":").
 
     Returns:
-        A ``list`` representation of ``value``.
+        list: A list representation of ``value``.
     """
     if isinstance(value, list):
         return value
@@ -181,14 +193,14 @@ def to_list(value: Any, sep = (",", ";", ":")) -> list:
 
 
 def to_int_list(value: Any, sep = (",", ";", ":")) -> list[int]:
-    """Converts a value to a ``list`` of integers, splitting strings by delimiters.
+    """Converts a value to a list of integers, splitting strings by delimiters.
 
     Args:
-        value: Value to convert.
-        sep: Delimiters for splitting. Default: ``(",", ";", ":")``.
-
+        value (Any): Value to convert.
+        sep (tuple): Delimiters for splitting. Defaults to (",", ";", ":").
+        
     Returns:
-        A ``list`` of integers.
+        list[int]: A list of integers.
     """
     return [int(item) for item in to_list(value, sep=sep)]
 
@@ -229,10 +241,10 @@ def is_int(int_or_str: Any) -> bool:
     """Checks if a value can be converted to an integer.
 
     Args:
-        int_or_str: Value to check.
+        int_or_str (Any): Value to check.
 
     Returns:
-        ``True`` if convertible to ``int``, ``False`` otherwise.
+        bool: True if convertible to int, False otherwise.
     """
     try:
         int(int_or_str)
@@ -245,10 +257,10 @@ def is_float(float_or_str: Any) -> bool:
     """Checks if a value can be converted to a float.
 
     Args:
-        float_or_str: Value to check.
+        float_or_str (Any): Value to check.
 
     Returns:
-        ``True`` if convertible to ``float``, ``False`` otherwise.
+        bool: True if convertible to float, False otherwise.
     """
     try:
         float(float_or_str)

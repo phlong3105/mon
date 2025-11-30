@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various activation functions."""
+"""A module for activation functions.
+
+This module provides various activation functions commonly used in neural networks
+to introduce non-linearity into the model.
+"""
 
 __all__ = [
     "CELU",
@@ -43,38 +47,51 @@ from torch.nn.modules.activation import *
 
 
 class SimpleGate(nn.Module):
-    """Applies simple-gate activation unit by chunking the input tensor into two
-    halves and multiplying them element-wise.
+    """An activation unit applies simple-gate activation unit by chunking the
+    input tensor into two halves and multiplying them element-wise.
     
-    Shape:
-        - Input: :math:`(B, C, H, W)`.
-        - Output: :math:`(B, C/2, H, W)`.
-        
     References:
         - Paper: https://arxiv.org/pdf/2204.04676.pdf
     """
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the SimpleGate activation unit.
+        
+        Args:
+            input (torch.Tensor): The input tensor of shape (B, 2*C, ...).
+            
+        Returns:
+            torch.Tensor: The output tensor after applying the SimpleGate activation
+                unit, of shape (B, C, ...).
+        """
         x1, x2 = input.chunk(chunks=2, dim=1)
         return x1 * x2
 
 
 class Sine(nn.Module):
-    """Applies the sine activation unit function element-wise.
-
-    Args:
-        w0: The frequency scaling factor. Default: ``1.0``.
+    """A Sine activation function as described in the SIREN paper.
 
     References:
         - Code: https://github.com/lucidrains/siren-pytorch/blob/master/siren_pytorch/siren_pytorch.py
     """
 
     def __init__(self, w0: float = 1.0):
+        """Initializes the Sine activation function.
+        
+        Args:
+            w0 (float): The frequency scaling factor. Default is 1.0.
+        """
         super().__init__()
         self.w0 = w0
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the Sine activation function.
+        
+        Args:
+            input (torch.Tensor): The input tensor of shape (B, C, ...).
+            
+        Returns:
+            torch.Tensor: The output tensor after applying the Sine activation
+                function.
+        """
         return torch.sin(self.w0 * input)
-    
-    def extra_repr(self) -> str:
-        return f"w0={self.w0}"

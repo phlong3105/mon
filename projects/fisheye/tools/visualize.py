@@ -50,20 +50,20 @@ def visualize_bbox(data: str, split: str, label: str):
             label_file = label_dir / f"{image_file.stem}.txt"
             if not label_file.is_txt_file(exist=True):
                 continue
-            bs = mon.hbb.load(path=label_file, fmt=mon.BBoxFormat.YOLO2VOC, imgsz=(h, w))
+            bs = mon.bbox.load(path=label_file, fmt=mon.BBoxFormat.YOLO2VOC, imgsz=(h, w))
             
             # Draw bounding boxes on the image
             for j, b in enumerate(bs):
                 if len(b) >= 6:
-                    l = f"{j} {int(b[4])}: {b[5]:.4f}"
+                    l = f"{j} {int(b[5])}: {b[6]:.4f}"
                 else:
-                    l = f"{j} {int(b[4])}"
+                    l = f"{j} {int(b[5])}"
                 l = ""
                 image = mon.dtypes.draw_bbox(
                     image     = image,
                     bbox      = b,
                     label     = l,
-                    color     = classes[int(b[4])]["color"],
+                    color     = classes[int(b[5])]["color"],
                     thickness = 2,
                     fill      = False,
                 )

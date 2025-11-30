@@ -42,12 +42,12 @@ class ZID(nn.ModelMixin):
         - Code: https://github.com/XLearning-SCU/2020-TIP-ZID
     """
     
-    arch     : str          = "zid"
-    name     : str          = "zid"
-    tasks    : list[Task]   = [Task.DEHAZE]
-    mltypes  : list[MLType] = [MLType.ZERO_SHOT]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "zid"
+    _name     : str          = "zid"
+    _tasks    : list[Task]   = [Task.DEHAZE]
+    _mltypes  : list[MLType] = [MLType.ZERO_SHOT]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, image_name, image, num_iter=500, clip=True, output_path="output"):
         super().__init__()

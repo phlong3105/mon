@@ -27,7 +27,7 @@ def _init_dist_pytorch(backend, **kwargs):
 
 
 def _init_dist_slurm(backend, port=None):
-    """Initialize slurm distributed training environment.
+    """Initializes slurm distributed training environment.
 
     If argument ``port`` is not specified, then the master port will be system
     environment variable ``MASTER_PORT``. If ``MASTER_PORT`` is not in system

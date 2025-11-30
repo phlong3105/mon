@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the LightEffect dataset for deflaring tasks."""
+"""A module for the LightEffect dataset.
+
+This module implements the LightEffect dataset for deflaring tasks.
+"""
 
 __all__ = [
     "LightEffect",
@@ -14,10 +17,10 @@ from ....core import *
 class LightEffect(ImageDataset):
     """LightEffect dataset."""
     
-    root_name : str         = "lighteffect"
-    tasks     : list[Task]  = [Task.DEFLARE]
-    splits    : list[Split] = [Split.TRAIN]
-    modalities: Modalities  = {
+    _root_name : str         = "lighteffect"
+    _tasks     : list[Task]  = [Task.DEFLARE]
+    _splits    : list[Split] = [Split.TRAIN]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

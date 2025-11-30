@@ -39,12 +39,12 @@ class VGG(tvm.VGG, nn.ModelMixin, abc.ABC):
         - Paper: https://arxiv.org/abs/1409.1556
     """
     
-    arch     : str          = "vgg"
-    name     : str          = "vgg"
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "vgg"
+    _name     : str          = "vgg"
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, weights: Any = "imagenet1k_v1", num_classes: int = 1000, *args, **kwargs):
         weights, path, num_classes = self.parse_weights(weights, num_classes)
@@ -56,8 +56,8 @@ class VGG(tvm.VGG, nn.ModelMixin, abc.ABC):
 @MODELS.register(name="vgg11", arch="vgg")
 class VGG11(VGG):
 
-    name: str  = "vgg11"
-    zoo : dict = box.Box({
+    _name: str  = "vgg11"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg11-8a719046.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
@@ -77,8 +77,8 @@ class VGG11(VGG):
 @MODELS.register(name="vgg13", arch="vgg")
 class VGG13(VGG):
     
-    name: str  = "vgg13"
-    zoo : dict = box.Box({
+    _name: str  = "vgg13"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13-19584684.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
@@ -98,8 +98,8 @@ class VGG13(VGG):
 @MODELS.register(name="vgg16", arch="vgg")
 class VGG16(VGG):
 
-    name: str  = "vgg16"
-    zoo : dict = box.Box({
+    _name: str  = "vgg16"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16-397923af.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
@@ -119,8 +119,8 @@ class VGG16(VGG):
 @MODELS.register(name="vgg19", arch="vgg")
 class VGG19(VGG):
     
-    name: str  = "vgg19"
-    zoo : dict = box.Box({
+    _name: str  = "vgg19"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
@@ -140,8 +140,8 @@ class VGG19(VGG):
 @MODELS.register(name="vgg11_bn", arch="vgg")
 class VGG11_BN(VGG):
     
-    name: str  = "vgg11_bn"
-    zoo : dict = box.Box({
+    _name: str  = "vgg11_bn"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
@@ -161,8 +161,8 @@ class VGG11_BN(VGG):
 @MODELS.register(name="vgg13_bn", arch="vgg")
 class VGG13_BN(VGG):
     
-    name: str  = "vgg13_bn"
-    zoo : dict = box.Box({
+    _name: str  = "vgg13_bn"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
@@ -182,8 +182,8 @@ class VGG13_BN(VGG):
 @MODELS.register(name="vgg16_bn", arch="vgg")
 class VGG16_BN(VGG):
   
-    name: str  = "vgg16_bn"
-    zoo : dict = box.Box({
+    _name: str  = "vgg16_bn"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
@@ -203,8 +203,8 @@ class VGG16_BN(VGG):
 @MODELS.register(name="vgg19_bn", arch="vgg")
 class VGG19_BN(VGG):
   
-    name: str  = "vgg19_bn"
-    zoo : dict = box.Box({
+    _name: str  = "vgg19_bn"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",

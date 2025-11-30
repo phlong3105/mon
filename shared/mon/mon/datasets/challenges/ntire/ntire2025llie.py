@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the NTIRE 2025 LLIE dataset.
+"""A module for the NTIRE 2025 LLIE dataset.
+
+This module implements the NTIRE 2025 LLIE dataset for low-light image
+enhancement tasks.
 
 References:
 	- Data: https://codalab.lisn.upsaclay.fr/competitions/21636
@@ -19,17 +22,24 @@ from ...core import *
 class NTIRE2025LLIE(ImageDataset):
     """NTIRE 2025 LLIE dataset."""
     
-    root_name : str         = "ntire2025llie"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "ntire2025llie"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+            
+        Raises:
+            ValueError: If the specified split is invalid.
+        """
         if self.split in [Split.TRAIN]:
             patterns = [self.root / "train" / "image"]
         elif self.split in [Split.VAL]:
@@ -46,6 +56,6 @@ class NTIRE2025LLIE(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images

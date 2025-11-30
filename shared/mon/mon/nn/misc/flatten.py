@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements flattening and unflattening layers."""
+"""A module for flattening layers.
+
+This module provides classes for flattening and unflattening tensors in neural
+networks.
+"""
 
 __all__ = [
     "Flatten",

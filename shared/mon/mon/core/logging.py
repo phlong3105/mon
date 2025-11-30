@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements logging utilities with rich formatting and context management
-to enable or disable logging and printing.
+"""A module for logging utilities.
+
+This module implements logging utilities with rich formatting and context
+management to enable or disable logging and printing.
 """
 
 __all__ = [
@@ -38,10 +40,11 @@ def get_logger(path: Path = None) -> logging.Logger:
     """Retrieves or creates a global logger with ``rich`` support.
 
     Args:
-        path: Absolute path for log file, adds file handler if given. Default: ``None``.
+        path (Path, optional): If provided, adds a file handler to log messages
+            to the specified file path. Defaults to None.
 
     Returns:
-        Global logger instance.
+        logging.Logger: The configured global logger instance.
     """
     logger = logging.getLogger("global_logger")
     if path:
@@ -99,7 +102,8 @@ def _enable_stdout():
     """Restores printing to stdout by resetting it to the original stream.
 
     Notes:
-        Use this to undo manual redirection of ``sys.stdout`` (e.g., to ``os.devnull``).
+        Use this to undo manual redirection of ``sys.stdout`` (e.g., to
+        ``os.devnull``).
     """
     sys.stdout = sys.__stdout__
 

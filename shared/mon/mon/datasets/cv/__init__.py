@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides datasets for computer vision tasks."""
+"""A package for computer vision datasets.
+
+This package includes various datasets for tasks such as object detection,
+image enhancement, and image restoration.
+"""
 
 from .coco import *
 from .enhance import *

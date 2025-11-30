@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements various recurrent neural network (RNN) components
-and architectures.
+"""A package for recurrent neural networks (RNNs).
+
+This package implements various recurrent neural network (RNN) components and
+architectures.
 
 References:
     - Definition: https://www.ibm.com/think/topics/recurrent-neural-networks#763338458

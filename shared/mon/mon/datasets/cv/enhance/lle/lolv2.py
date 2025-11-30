@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the LOL-v2 dataset for low-light image enhancement tasks."""
+"""A module for LOL-v2 dataset.
+
+This module implements the LOL-v2 dataset for low-light image enhancement tasks.
+"""
 
 __all__ = [
     "LOLv2Real",
@@ -16,18 +19,22 @@ from ....core import *
 class LOLv2Real(ImageDataset):
     """LOL-v2 Real dataset."""
     
-    root_name : str         = "lolv2"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "lolv2"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "real" / self.split_str / "image"]
 
         images: list[Image] = []
@@ -37,7 +44,7 @@ class LOLv2Real(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
 
@@ -46,18 +53,22 @@ class LOLv2Real(ImageDataset):
 class LOLv2Syn(ImageDataset):
     """LOL-v2 Synthetic dataset."""
     
-    root_name : str         = "lolv2"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "lolv2"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "syn" / self.split_str / "image"]
 
         images: list[Image] = []
@@ -67,6 +78,6 @@ class LOLv2Syn(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images

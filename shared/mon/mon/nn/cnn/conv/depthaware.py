@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Depth-Aware Convolution and Depth-Aware Average Pooling layers.
+"""A module for depth-aware convolutional layers.
+
+This module provides depth-aware convolutional and average pooling layers
+that incorporate depth information into the convolution and pooling operations.
 
 References:
     - Paper: "Depth-aware CNN for RGB-D Segmentation," ECCV 2018.
@@ -19,15 +22,7 @@ import torch.nn.functional as F
 
 
 class DepthAwareConv2d(nn.Module):
-    """Depth-Aware Convolution Layer.
-    
-    Args:
-        in_channels: Number of input channels.
-        out_channels: Number of output channels.
-        kernel_size: Size of the convolution kernel.
-        alpha: Scaling factor for depth similarity. Default: ``8.3`` (from paper).
-        padding: Padding size for the convolution. Default: ``0``.
-    """
+    """A depth-aware 2D convolutional layer."""
     
     def __init__(
         self,
@@ -37,6 +32,16 @@ class DepthAwareConv2d(nn.Module):
         alpha       : float = 8.3,
         padding     : int   = 0,
     ):
+        """Initializes the DepthAwareConv2d layer.
+        
+        Args:
+            in_channels (int): Number of channels in the input image.
+            out_channels (int): Number of channels produced by the convolution.
+            kernel_size (int): Size of the convolving kernel.
+            alpha (float): Scaling factor for depth similarity.
+                Defaults to 8.3 (from paper).
+            padding (int): Padding size for the convolution. Defaults to 0.
+        """
         super().__init__()
         self.conv        = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
         self.alpha       = alpha
@@ -44,6 +49,15 @@ class DepthAwareConv2d(nn.Module):
         self.padding     = padding
 
     def forward(self, x: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the DepthAwareConv2d layer.
+        
+        Args:
+            x (torch.Tensor): Input tensor of shape (N, C_in, H, W).
+            depth (torch.Tensor): Depth tensor of shape (N, 1, H, W).
+            
+        Returns:
+            torch.Tensor: Output tensor of shape (N, C_out, H_out, W_out).
+        """
         # x    : [b, channels, h, w]
         # depth: [b, 1,        h, w]
         b, _, h, w = x.size()
@@ -72,16 +86,24 @@ class DepthAwareConv2d(nn.Module):
 
 
 class DepthAwareAvgPool2d(nn.Module):
-    """Depth-Aware Average Pooling Layer.
+    """A depth-aware 2D average pooling layer."""
     
-    Args:
-        kernel_size: Size of the pooling kernel.
-        alpha: Scaling factor for depth similarity. Default: ``8.3`` (from paper).
-        stride: Stride for the pooling operation. Default: ``1``.
-        padding: Padding size for the pooling. Default: ``0``.
-    """
-    
-    def __init__(self, kernel_size: int, alpha: float = 8.3, stride: int = 1, padding: int = 0):
+    def __init__(
+        self,
+        kernel_size: int,
+        alpha      : float = 8.3,
+        stride     : int   = 1,
+        padding    : int   = 0
+    ):
+        """Initializes the DepthAwareAvgPool2d layer.
+        
+        Args:
+            kernel_size (int): Size of the pooling kernel.
+            alpha (float): Scaling factor for depth similarity.
+                Defaults to 8.3 (from paper).
+            stride (int): Stride of the pooling operation. Defaults to 1.
+            padding (int): Padding size for the pooling operation. Defaults to 0.
+        """
         super().__init__()
         self.kernel_size = kernel_size
         self.stride      = stride
@@ -89,6 +111,15 @@ class DepthAwareAvgPool2d(nn.Module):
         self.alpha       = alpha
 
     def forward(self, x: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the DepthAwareAvgPool2d layer.
+        
+        Args:
+            x (torch.Tensor): Input tensor of shape (N, C, H, W).
+            depth (torch.Tensor): Depth tensor of shape (N, 1, H, W).
+            
+        Returns:
+            torch.Tensor: Output tensor of shape (N, C, H_out, W_out).
+        """
         # x    : [b, c, h, w]
         # depth: [b, 1, h, w]
         b, c, h, w = x.size()

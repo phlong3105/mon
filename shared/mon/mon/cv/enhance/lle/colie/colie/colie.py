@@ -38,12 +38,12 @@ class CoLIE(nn.Module, nn.ModelMixin):
         - Code: https://github.com/ctom2/colie
     """
     
-    arch     : str          = "colie"
-    name     : str          = "colie"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.ZERO_SHOT]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "colie"
+    _name     : str          = "colie"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.ZERO_SHOT]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

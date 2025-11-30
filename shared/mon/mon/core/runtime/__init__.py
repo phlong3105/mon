@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides runtime utilities and CLI for training and prediction."""
+"""A package for runtime utilities and CLI.
+
+This package provides various utilities for command-line interface (CLI) handling,
+configuration loading, argument parsing, and runtime summaries.
+"""
 
 __all__ = [
     "CLI_OPTIONS",

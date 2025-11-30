@@ -368,12 +368,12 @@ class TensorMOG(nn.Module, nn.ModelMixin):
           Scene Adaptation for Background Modeling," Sensors 2020.
     """
 
-    arch     : str          = "tensormog"
-    name     : str          = "tensormog"
-    tasks    : list[Task]   = [Task.BGSUBTRACT, Task.VIDEO]
-    mltypes  : list[MLType] = [MLType.INFERENCE]
-    model_dir: Path         = root_dir
-    zoo      : dict         = {}
+    _arch     : str          = "tensormog"
+    _name     : str          = "tensormog"
+    _tasks    : list[Task]   = [Task.BGSUBTRACT, Task.VIDEO]
+    _mltypes  : list[MLType] = [MLType.INFERENCE]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = {}
     
     def __init__(
         self,

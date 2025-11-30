@@ -39,12 +39,12 @@ class DFINE(nn.Module, nn.ModelMixin):
         - Code: https://github.com/Peterande/D-FINE
     """
     
-    arch     : str          = "dfine"
-    name     : str          = "dfine"
-    tasks    : list[Task]   = [Task.DETECT]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "dfine"
+    _name     : str          = "dfine"
+    _tasks    : list[Task]   = [Task.DETECT]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

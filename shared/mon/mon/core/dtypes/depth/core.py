@@ -1,50 +1,60 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements data structure for depth map."""
+"""A module for depth map data type.
+
+This module provides a base class for handling depth map data.
+"""
 
 __all__ = [
     "DepthMap",
 ]
 
-from typing import Union
-
 import cv2
-import numpy as np
-import torch
 
 from mon.core.enum import DepthSource
-from mon.core.pathlib import Path
-from .. import image as I
+from ..image import Image
 
 
-class DepthMap(I.Image):
-    """Depth map object.
-
-    Args:
-        data: Input data as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-            Default: ``None``.
-        path: Depth map file path. Default: ``None``.
-        root: Root directory for the depth map. Default: ``None``.
-        source: Source of depth data. One of ``DepthSource``. Default: ``DepthSource.DAv2_ViTB``.
-        flags: OpenCV flag to read image. Default: ``cv2.IMREAD_GRAYSCALE``.
-        cache: If ``True``, caches image in memory. Default: ``False``.
+class DepthMap(Image):
+    """A base class for depth map data type.
+    
+    This class extends Image to handle depth map data. It includes properties
+    to access the source of depth data.
     """
-
+    
     def __init__(
         self,
-        data  : Union[torch.Tensor, np.ndarray] = None,
-        path  : Path        = None,
-        root  : Path        = None,
         source: DepthSource = DepthSource.DAv2_ViTB,
         flags : int         = cv2.IMREAD_GRAYSCALE,
-        cache : bool        = False,
+        *args, **kwargs
     ):
-        source = DepthSource.from_value(source)
+        """Initializes the DepthMap instance.
+        
+        Args:
+            source (DepthSource): The source of depth data. Defaults to
+                DepthSource.DAv2_ViTB.
+            flags (int): Flags for image loading. Defaults to cv2.IMREAD_GRAYSCALE.
+        
+        Raises:
+            ValueError: If ``source`` is not a valid DepthSource.
+        """
+        super().__init__(flags=flags, *args, **kwargs)
+        
+        # Validate inputs
+        source = DepthSource(source)
         if source not in DepthSource:
             raise ValueError(f"``source`` must be one of {DepthSource}, got {source}.")
-
-        super().__init__(data=data, path=path, root=root, flags=flags, cache=cache)
-        self.source = source
+        
+        # Assign attributes
+        self._source = source
+        
+    # ---- Properties -----
+    @property
+    def source(self) -> DepthSource:
+        """Getter for the source of depth data.
+        
+        Returns:
+            DepthSource: The source of depth data.
+        """
+        return self._source

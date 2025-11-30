@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module exposes core optimizers and learning rate schedulers from
-``torch.optim`` and ``torch.optim.lr_scheduler``.
+"""A module for optimization algorithms and learning rate schedulers.
+
+This module provides various optimization algorithms and learning rate schedulers
+commonly used in training machine learning models.
 """
 
 __all__ = [

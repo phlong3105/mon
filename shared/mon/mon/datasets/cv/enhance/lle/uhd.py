@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements UHD datasets for low-light enhancement tasks."""
+"""A module for UHD datasets.
+
+This module implements UHD datasets for low-light enhancement tasks.
+"""
 
 __all__ = [
     "UHD4K",
@@ -16,18 +19,22 @@ from ....core import *
 class UHD4K(ImageDataset):
     """UHD-4K dataset."""
     
-    root_name : str         = "uhd"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "uhd"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "4k" / self.split_str / "image"]
 
         images: list[Image] = []
@@ -37,7 +44,7 @@ class UHD4K(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
 
@@ -46,18 +53,22 @@ class UHD4K(ImageDataset):
 class UHD8K(ImageDataset):
     """UHD-8K dataset."""
     
-    root_name : str         = "uhd"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "uhd"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "8k" / self.split_str / "image"]
 
         images: list[Image] = []

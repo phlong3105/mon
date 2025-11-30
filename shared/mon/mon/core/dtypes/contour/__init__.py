@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data structure and processing functions for contour."""
+"""A package for contour data type.
+
+This package provides functionalities for handling contour data, including
+normalization, denormalization, and conversion between different formats.
+"""
 
 __all__ = [
     "convert",

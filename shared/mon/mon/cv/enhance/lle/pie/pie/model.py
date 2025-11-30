@@ -55,12 +55,12 @@ class PIE(nn.Module, nn.ModelMixin):
         - Code: https://github.com/DavidQiuChao/PIE
     """
     
-    arch     : str          = "pie"
-    name     : str          = "pie"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.TRADITIONAL]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "pie"
+    _name     : str          = "pie"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.TRADITIONAL]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
 
     def __init__(self):
         super().__init__()

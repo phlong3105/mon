@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various padding layers for convolutional neural networks."""
+"""A module for padding layers.
+
+This module provides various padding layers commonly used in convolutional neural
+networks (CNNs) to adjust the spatial dimensions of input feature maps.
+"""
 
 __all__ = [
     "CircularPad1d",

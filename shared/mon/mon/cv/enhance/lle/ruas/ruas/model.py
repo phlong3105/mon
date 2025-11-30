@@ -35,12 +35,12 @@ class RUAS(Network, nn.ModelMixin):
         - Code: https://github.com/KarelZhang/RUAS
     """
     
-    arch     : str          = "ruas"
-    name     : str          = "ruas"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "ruas"
+    _name     : str          = "ruas"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "darkface": {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/ruas/ruas/darkface/ruas_darkface.pt",

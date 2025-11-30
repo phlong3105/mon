@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements utility functions for Implicit Neural Representations (INR).
+"""A module for INR utility functions.
+
+This module implements various utility functions for Implicit Neural
+Representation (INR) tasks.
 """
 
 __all__ = [
@@ -25,14 +28,14 @@ from mon.core.dtypes import image as I
 
 # ----- Coordinate -----
 def create_coords(size: int) -> torch.Tensor:
-    """Creates a coordinate grid for INF.
-
+    """Creates a normalized coordinates grid.
+    
     Args:
-        size: Size of the square coordinates grid.
-
+        size (int): The size of the grid.
+    
     Returns:
-        A ``torch.Tensor`` of shape :math:`(size, size, 2)` with normalized
-        coords.
+        torch.Tensor: A tensor of shape (size, size, 2) containing normalized
+            coordinates in the range [0, 1].
     """
     h, w   = size, size
     coords = np.dstack(np.meshgrid(np.linspace(0, 1, h), np.linspace(0, 1, w)))
@@ -43,9 +46,13 @@ def create_noisy_coords(size: int, sigma: float = 0.5, lamda: float = 1.0) -> to
     """Creates a coordinates grid with Gaussian noise added.
 
     Args:
-        size: The size of the coordinates grid.
-        sigma: Standard deviation of the Gaussian noise. Default: ``0.5``.
-        lamda: Lambda parameter for Poisson noise. Default: ``1.0``.
+        size (int): The size of the grid.
+        sigma (float): Standard deviation of the Gaussian noise. Defaults to 0.5.
+        lamda (float): Lambda parameter for Poisson noise. Defaults to 1.0
+        
+    Returns:
+        torch.Tensor: A tensor of shape (size, size, 2) containing noisy
+            coordinates in the range [0, 1].
     """
     h, w   = size, size
     coords = np.dstack(np.meshgrid(np.linspace(0, 1, h), np.linspace(0, 1, w)))
@@ -69,11 +76,13 @@ def ff_embedding(p: torch.Tensor, B: torch.Tensor = None) -> torch.Tensor:
     """Applies Fourier feature embedding to input tensor.
 
     Args:
-        p: Input tensor to embed.
-        B: Projection matrix as a ``torch.Tensor``. Default: ``None``.
+        p (torch.Tensor): Input tensor of shape (..., D).
+        B (torch.Tensor, optional): Frequency matrix of shape (F, D). If None,
+            no embedding is applied. Default is None.
 
     Returns:
-        An embedded ``torch.Tensor`` with sine and cosine features.
+        torch.Tensor: Embedded tensor of shape (..., 2 * F) if B is provided,
+            otherwise returns the original tensor p.
     """
     if B is None:
         return p
@@ -88,12 +97,16 @@ def create_patches(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
     """Creates a tensor where the channel contains patch information.
 
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(1, C, H, W)` in
-            range :math:`[0, 1]`.
-        kernel_size: Size of square patches. Default: ``7``.
+        image (torch.Tensor): Image as a torch.Tensor of shape (1, C, H, W)
+            in range [0, 1].
+        kernel_size (int): Size of square patches. Defaults to 7.
 
     Returns:
-        A ``torch.Tensor`` of patches in channels of shape :math:`(H, W, kernel_size^2)`.
+        torch.Tensor: A torch.Tensor with patches in channels of shape
+            (1, H', W', K^2).
+        
+    Raises:
+        ValueError: If the input image does not have 4 dimensions.
     """
     if image.ndim != 4:
         raise ValueError(f"``image`` must be a torch.Tensor of shape (1, C, H, W), got {image.shape}.")
@@ -116,20 +129,18 @@ def create_depth_aware_patches(
     kernel_size: int   = 7,
     alpha      : float = 8.3
 ) -> torch.Tensor:
-    """Creates a tensor where the channel contains weighted patch information
-    based on depth.
+    """Creates depth-aware patches for the given image and depth map.
     
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)` in
-            range :math:`[0, 1]`.
-        depth: Depth map as a ``torch.Tensor`` of shape :math:`(B, 1, H, W)` in
-            range :math:`[0, 1]`.
-        kernel_size: Size of square patches. Default: ``1``.
-        alpha: Controls depth similarity sensitivity (larger = stricter decay).
-            Default: ``8.3``.
+        image (torch.Tensor): Image as a torch.Tensor of shape (1, C, H, W)
+            in range [0, 1].
+        depth (torch.Tensor): Depth map as a torch.Tensor of shape (1, 1, H, W).
+        kernel_size (int): Size of square patches. Defaults to 7.
+        alpha (float): Depth sensitivity parameter. Defaults to 8.3.
         
     Returns:
-        A ``torch.Tensor`` with patches in channels of shape :math:`(B, H', W', K^2)`.
+        torch.Tensor: A torch.Tensor with depth-aware patches in channels of
+            shape (1, H', W', K^2).
     """
     b, c, h, w = image.shape
     kernel = torch.zeros((kernel_size ** 2, c, kernel_size, kernel_size)).to(image.device)
@@ -161,6 +172,16 @@ def create_depth_aware_patches(
 
 # ----- Scale -----
 def pair_downsampler(image: torch.Tensor) -> torch.Tensor:
+    """Downsamples the image into two sub-images using learned filters.
+    
+    Args:
+        image (torch.Tensor): Image as a torch.Tensor of shape (B, C, H, W)
+            in range [0, 1].
+            
+    Returns:
+        torch.Tensor: Two downsampled images as torch.Tensors of shape
+            (B, C, H/2, W/2).
+    """
     c       = image.shape[1]
     filter1 = torch.FloatTensor([[[[0, 0.5],[0.5, 0]]]]).to(image.device)
     filter1 = filter1.repeat(c,1, 1, 1)
@@ -172,7 +193,16 @@ def pair_downsampler(image: torch.Tensor) -> torch.Tensor:
 
 
 def interpolate_image(image: torch.Tensor, size: int) -> torch.Tensor:
-    """Reshapes the image based on new resolution."""
+    """Resizes the image to the specified size.
+    
+    Args:
+        image (torch.Tensor): Image as a torch.Tensor of shape (B, C, H, W)
+            in range [0, 1].
+        size (int): The target size for both height and width.
+    
+    Returns:
+        torch.Tensor: Resized image as a torch.Tensor of shape (B, C, size, size).
+    """
     # return F.interpolate(image, size=(down_size, down_size), mode="bicubic")
     return F.interpolate(image, size=(size, size), mode="area")
 
@@ -183,7 +213,17 @@ def filter_up(
     x_hr       : torch.Tensor,
     kernel_size: int = 7
 ) -> torch.Tensor:
-    """Applies the guided filter to upscale the predicted image. """
+    """Upsamples the low-resolution image using a fast guided filter.
+    
+    Args:
+        x_lr (torch.Tensor): Low-resolution guidance image of shape (B, C, H, W).
+        y_lr (torch.Tensor): Low-resolution input image of shape (B, C, H, W).
+        x_hr (torch.Tensor): High-resolution guidance image of shape (B, C, H', W').
+        kernel_size (int): Size of the guided filter kernel. Defaults to 7.
+        
+    Returns:
+        torch.Tensor: High-resolution output image of shape (B, C, H', W').
+    """
     gf   = I.FastGuidedFilter(kernel_size)
     y_hr = gf(x_lr, y_lr, x_hr)
     y_hr = torch.clip(y_hr, 0, 1)

@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements default CLI options and argument parsing utilities."""
+"""A module for default CLI options and argument parsing.
+
+This module defines default command-line interface (CLI) options and provides
+utilities for parsing and handling these options.
+"""
 
 __all__ = [
     "CLI_OPTIONS",
@@ -18,37 +22,37 @@ from mon.core.enum import Task, TRTPrecision
 
 # ----- Utils -----
 def _str_or_none(a_str: Any) -> str | None:
-    """Converts a value to a ``str`` or ``None`` if value is ``"None"``.
+    """Converts a value to a string.
 
     Args:
-        a_str: Value to convert.
+        a_str (Any): Value to convert.
 
     Returns:
-        A ``str`` or ``None``.
+        str: A string. If the input is "None" or empty, returns None.
     """
     return None if a_str in [None, "None", ""] else str(a_str)
 
 
 def _int_or_none(int_or_str: Any) -> int | None:
-    """Converts a value to an ``int`` or ``None`` if value is ``"None"``.
+    """Converts a value to an integer
 
     Args:
-        int_or_str: Value to convert.
+        int_or_str (Any): Value to convert.
 
     Returns:
-        An ``int`` or ``None``.
+        int: An integer. If the input is "None" or empty, returns None.
     """
     return None if int_or_str in [None, "None", ""] else int(int_or_str)
 
 
 def _float_or_none(float_or_str: Any) -> float | None:
-    """Converts a value to a float or ``None`` if value is ``"None"``.
+    """Converts a value to a float.
 
     Args:
-        float_or_str: Value to convert.
+        float_or_str (Any): Value to convert.
 
     Returns:
-        A float or ``"None"``.
+        int: A float. If the input is "None" or empty, returns None.
     """
     return None if float_or_str in [None, "None", ""] else float(float_or_str)
 

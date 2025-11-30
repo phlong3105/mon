@@ -224,7 +224,7 @@ def predict(args: dict | box.Box) -> str:
             timers.postprocess.tock()
             
             # Save predictions to JSON file
-            boxes_ = mon.hbb.convert(bbox=boxes, fmt=mon.BBoxFormat.VOC2COCO, imgsz=(h0, w0))
+            boxes_ = mon.bbox.convert(bbox=boxes, fmt=mon.BBoxFormat.VOC2COCO, imgsz=(h0, w0))
             for c, b, s in zip(labels, boxes_, scores):
                 predictions.append({
                     "image_id"   : i,
@@ -248,7 +248,7 @@ def predict(args: dict | box.Box) -> str:
             if args.debug:
                 d_labels, d_boxes, d_scores = postprocess_outputs(debug_outputs)
                 # Save predictions to JSON file
-                d_boxes_ = mon.hbb.convert(bbox=d_boxes, fmt=mon.BBoxFormat.VOC2COCO, imgsz=(h0, w0))
+                d_boxes_ = mon.bbox.convert(bbox=d_boxes, fmt=mon.BBoxFormat.VOC2COCO, imgsz=(h0, w0))
                 for c, b, s in zip(d_labels, d_boxes_, d_scores):
                     debug_predictions.append({
                         "image_id"   : i,

@@ -13,7 +13,7 @@ class HTML:
     """
 
     def __init__(self, web_dir, title, refresh=0):
-        """Initialize the HTML classes
+        """Initializes the HTML classes
 
         Parameters:
             web_dir (str) -- a directory that stores the webpage. HTML file will be created at <web_dir>/index.html; images will be saved at <web_dir/images/

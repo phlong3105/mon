@@ -33,7 +33,7 @@ class ColorizationDataset(BaseDataset):
         return parser
 
     def __init__(self, opt):
-        """Initialize this dataset class.
+        """Initializes this dataset class.
 
         Parameters:
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions

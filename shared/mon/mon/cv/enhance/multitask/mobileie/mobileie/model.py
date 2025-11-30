@@ -36,12 +36,12 @@ class MobileIELLE(nn.Module, nn.ModelMixin):
         - Code: https://github.com/AVC2-UESTC/MobileIE
     """
     
-    arch     : str          = "mobileie"
-    name     : str          = "mobileie_lle"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "mobileie"
+    _name     : str          = "mobileie_lle"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "lolv1"    : {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/multitask/mobileie/mobileie_lle/lolv1/mobileie_lle_lolv1_slim.pkl",

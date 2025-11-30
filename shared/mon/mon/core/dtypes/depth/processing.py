@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements processing function for depth map."""
+"""A module for depth map processing functions.
+
+This module provides utility functions for processing depth maps, including
+conversion to color-coded images.
+"""
 
 __all__ = [
     "to_color",
@@ -15,18 +19,18 @@ from .. import image as I
 
 # ----- Conversion -----
 def to_color(depth: np.ndarray, color_map: int = cv2.COLORMAP_JET) -> np.ndarray:
-    """Converts a depth map to a color-coded image.
-
-    Args:
-        depth: Depth map as a ``numpy.ndarray`` of shape :math:`(H, W, 1)`.
-        color_map: Color map for the depth map. Default: ``cv2.COLORMAP_JET``.
-        use_rgb: Convert to RGB format if ``True``. Default: ``False``.
+    """Converts a depth map to a color-coded image using a specified colormap.
     
+    Args:
+        depth (numpy.ndarray): The input depth map as a 2D array.
+        color_map (int): The OpenCV colormap to use for conversion. Defaults to
+            cv2.COLORMAP_JET.
+            
     Returns:
-        Color-coded depth map as a ``numpy.ndarray`` of shape :math:`(H, W, 3)`.
+        numpy.ndarray: The color-coded depth image.
     
     Raises:
-        TypeError: If ``depth`` is not a ``numpy.ndarray``.
+        TypeError: If ``depth`` is not a numpy.ndarray.
     """
     if not isinstance(depth, np.ndarray):
         raise TypeError(f"``depth`` must be a numpy.ndarray, got {type(depth)}.")

@@ -139,12 +139,12 @@ class Mertens(nn.Module, nn.ModelMixin):
         - Code: https://github.com/Jamy-L/Pytorch-Exposure-Fusion
     """
 
-    arch     : str          = "mertens"
-    name     : str          = "mertens"
-    tasks    : list[Task]   = [Task.MEF]
-    mltypes  : list[MLType] = [MLType.TRADITIONAL]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "mertens"
+    _name     : str          = "mertens"
+    _tasks    : list[Task]   = [Task.MEF]
+    _mltypes  : list[MLType] = [MLType.TRADITIONAL]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

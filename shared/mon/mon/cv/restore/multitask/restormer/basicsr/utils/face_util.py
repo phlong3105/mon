@@ -39,7 +39,7 @@ class FaceRestorationHelper(object):
         self.save_png = True
 
     def init_dlib(self, detection_path, landmark5_path, landmark68_path):
-        """Initialize the dlib detectors and predictors."""
+        """Initializes the dlib detectors and predictors."""
         self.face_detector = dlib.cnn_face_detection_model_v1(detection_path)
         self.shape_predictor_5 = dlib.shape_predictor(landmark5_path)
         self.shape_predictor_68 = dlib.shape_predictor(landmark68_path)

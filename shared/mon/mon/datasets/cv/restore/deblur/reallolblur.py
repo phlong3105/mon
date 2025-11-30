@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Real-LOL-Blur dataset for deblurring and
-low-light enhancement.
+"""A module for the Real-LOL-Blur dataset.
+
+This module implements the Real-LOL-Blur dataset for deblurring and low-light
+enhancement.
 """
 
 __all__ = [
@@ -16,10 +18,10 @@ from ....core import *
 class RealLOLBlur(ImageDataset):
     """Real-LOL-Blur dataset."""
     
-    root_name : str         = "reallolblur"
-    tasks     : list[Task]  = [Task.DEBLUR, Task.LLE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "reallolblur"
+    _tasks     : list[Task]  = [Task.DEBLUR, Task.LLE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

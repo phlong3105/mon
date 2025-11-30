@@ -48,12 +48,12 @@ class LIME(nn.ModelMixin):
         - Code: https://github.com/pvnieo/Low-light-Image-Enhancement
     """
     
-    arch     : str          = "lime"
-    name     : str          = "lime"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.TRADITIONAL]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "lime"
+    _name     : str          = "lime"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.TRADITIONAL]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
 
     def __init__(
         self,

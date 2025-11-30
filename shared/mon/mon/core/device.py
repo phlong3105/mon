@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements utility functions for managing and querying computational
-devices, including CPU and GPU (CUDA) devices.
+"""A module for device management.
 
-It includes functions to list available devices, retrieve memory usage statistics,
-determine the device of a model, and create device instances for PyTorch operations.
+This module provides utility functions for managing and querying computational
+devices, including CPU and GPU (CUDA) devices.
 """
 
 __all__ = [
@@ -39,11 +38,12 @@ CUDA_PREFIX = "cuda:"
 
 # ----- Retrieve -----
 def list_devices() -> list[str]:
-    """Lists all available devices on the current machine.
-
+    """Lists available devices for computation.
+    
     Returns:
-        A ``list`` of device strings including ``auto``, ``cpu``, and CUDA
-        devices if available.
+        list[str]: A list of device strings, including "auto", "cpu", and
+        available CUDA device combinations (e.g., "cuda:0", "cuda:1",
+        "cuda:0,1", etc.).
     """
     devices = ["auto", "cpu"]
     if torch.cuda.is_available():
@@ -58,19 +58,18 @@ def list_devices() -> list[str]:
 
 
 def get_cuda_memory_usages(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> tuple[int, int, int]:
-    """Retrieves GPU memory status as a ``tuple`` of :math:`(total, used, free)`
-    memory.
-
+    """Retrieves CUDA memory status as a tuple of (total, used, free) memory.
+    
     Args:
-        device: GPU device index. Default: ``0``.
-        unit: Memory unit (e.g., ``GB``). Default: ``MemoryUnit.GB``.
-
+        device (int): CUDA device index. Defaults to 0.
+        unit (MemoryUnit): Memory unit. Defaults to MemoryUnit.GB.
+        
     Returns:
-        A ``tuple`` of :math:`(total, used, free)` memory values in the
-        specified ``unit``.
+        tuple[int, int, int]: A tuple of (total, used, free) memory values in
+            the specified unit.
     """
     pynvml.nvmlInit()
-    unit  = MemoryUnit.from_value(unit)
+    unit  = MemoryUnit(unit)
     info  = pynvml.nvmlDeviceGetMemoryInfo(pynvml.nvmlDeviceGetHandleByIndex(device))
     ratio = MemoryUnit.name_to_byte()[unit]
     return (
@@ -81,17 +80,17 @@ def get_cuda_memory_usages(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) ->
 
 
 def get_memory_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[int, int, int]:
-    """Retrieves RAM status as a list of :math:`(total, used, free)` memory.
-
+    """Retrieves system memory status as a tuple of (total, used, free) memory.
+    
     Args:
-        unit: Memory unit (e.g., ``GB``). Default: ``MemoryUnit.GB``.
-
+        unit (MemoryUnit): Memory unit. Defaults to MemoryUnit.GB.
+        
     Returns:
-        A ``tuple`` of :math:`(total, used, free)` memory values in the
-        specified ``unit``.
+        tuple[int, int, int]: A tuple of (total, used, free) memory values in
+            the specified unit.
     """
     memory = psutil.virtual_memory()
-    ratio  = MemoryUnit.name_to_byte()[MemoryUnit.from_value(unit)]
+    ratio  = MemoryUnit.name_to_byte()[MemoryUnit(unit)]
     return (
         memory.total     / ratio,  # total
         memory.used      / ratio,  # used
@@ -100,26 +99,29 @@ def get_memory_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[int, int, int]:
 
 
 def get_model_device(model: nn.Module) -> torch.device:
-    """Gets the current device of a model.
-
+    """Retrieves the allocated device of a PyTorch model.
+    
     Args:
-        model: The model to check.
-
+        model (nn.Module): A PyTorch model.
+        
     Returns:
-        A ``torch.device`` instance where model parameters reside.
+        torch.device: The device where the model's parameters are allocated.
     """
     return next(model.parameters()).device
 
 
 # ----- Update -----
-def create_device(device: Any) -> Union[torch.device, str]:
-    """Create a device for the current process.
+def create_device(device: Any) -> torch.device | str:
+    """Creates a torch.device instance from the given device input.
     
     Args:
-        device: Device to set (e.g., CUDA device index(es) or string).
-    
+        device (Any): Device input to create a torch.device from.
+        
     Returns:
-        A ``torch.device`` instance, defaults to ``torch.device("cpu")``.
+        A torch.device instance, or a device string (e.g., "auto", "cpu", or "cuda").
+    
+    Raises:
+        ValueError: If the device input is unknown.
     """
     if isinstance(device, torch.device):
         return device
@@ -140,16 +142,19 @@ def create_device(device: Any) -> Union[torch.device, str]:
 
 
 # ----- Convert -----
-def parse_device(device: Any) -> torch.device | str | list[str]:
-    """Parses device(s) into appropriate formats.
+def parse_device(device: Any) -> Union[torch.device, str, list[str]]:
+    """Parses the device input into a standardized format.
 
     Args:
-        device: Device to parse.
-         
+        device (Any): Device input to create a torch.device from.
+        
     Returns:
-        - A ``torch.device`` instance.
-        - A device ``str``: ``auto``, ``cpu``, or ``cuda`` for ``torch.device()``.
-        - A ``list`` of CUDA device index strings (e.g., ``['0', '1']``) for distributed training.
+        Union[torch.device, str, list[str]]: Parsed device representation. It
+            can be:
+            
+            - A torch.device instance.
+            - A device string (e.g., "auto", "cpu", or "cuda") for torch.device().
+            - A list of CUDA device index strings (e.g., ['0', '1']) for distributed training.
     """
     if isinstance(device, torch.device):
         return device

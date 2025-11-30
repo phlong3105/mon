@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the NPE dataset for low-light image enhancement tasks."""
+"""A module for NPE dataset.
+
+This module implements the NPE dataset for low-light image enhancement tasks.
+"""
 
 __all__ = [
     "NPE",
@@ -14,11 +17,11 @@ from ....core import *
 class NPE(ImageDataset):
     """NPE dataset."""
 
-    root_name : str         = "npe"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "npe"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

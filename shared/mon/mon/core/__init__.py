@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides core data and functionalities."""
+"""A package for core data and functionalities.
+
+This package contains modules that provide core data types, utilities, and
+functionalities used throughout the project. It serves as a foundational layer
+for handling various data types, device management, logging, configuration
+parsing, and other essential operations.
+"""
 
 __all__ = [
     # Flat exposed APIs
@@ -120,13 +126,14 @@ __all__ = [
     "to_str",
     "unique",
     # Hierarchical exposed APIs
+    "bbox",
     "contour",
     "depth",
     "dtypes",
-    "hbb",
     "image",
+    "instance",
     "mask",
-    "obb",
+    "probs",
     "thermal",
     "video",
 ]  # Public API
@@ -163,7 +170,17 @@ from .device import (
     parse_device,
     pynvml_available,
 )
-from .dtypes import contour, depth, hbb, image, mask, obb, thermal, video
+from .dtypes import (
+    bbox,
+    contour,
+    depth,
+    image,
+    instance,
+    mask,
+    probs,
+    thermal,
+    video,
+)
 from .enum import (
     ActiveLearningPhase,
     AppleRGB,

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements processing functions for horizontal bounding boxes (HBBs).
-"""
+"""This module implements processing functions for bounding boxes."""
 
 __all__ = [
     "area",
@@ -41,24 +40,24 @@ import numpy as np
 
 from mon.core.enum import BBoxFormat
 from .utils import is_normalized
-from ... import image as I
+from .. import image as I
 
 
 # ----- IoU -----
 def iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
-    """Compute IoU between two sets of HBBs.
-
+    """Computes intersection over union (IoU) between two sets of bounding boxes.
+    
     Args:
-        bbox1: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
-        bbox2: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`[M, 4+]`
-            in ``XYXY`` format.
-
+        bbox1 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYXY format.
+        bbox2 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (M, 5+) in XYXY format.
+            
     Returns:
-        Pairwise IoU values as a ``numpy.ndarray`` of shape :math:`[N, M]`.
-
-    Raises:
-        ValueError: If ``bbox1`` or ``bbox2`` is not 1D or 2D.
+        numpy.ndarray: Pairwise IoU values as a numpy.ndarray of shape (N, M).
+        
+    References:
+        - Paper: https://arxiv.org/pdf/1902.09630.pdf
     """
     # Ensure 2D arrays
     bbox1 = to_2d(bbox1)
@@ -75,8 +74,8 @@ def iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     yy2 = np.minimum(bbox1[..., 3], bbox2[..., 3])
     
     # Intersection area
-    w = np.maximum(0.0, xx2 - xx1)
-    h = np.maximum(0.0, yy2 - yy1)
+    w  = np.maximum(0.0, xx2 - xx1)
+    h  = np.maximum(0.0, yy2 - yy1)
     wh = w * h
     
     # Union area
@@ -86,20 +85,17 @@ def iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
 
 
 def giou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
-    """Compute generalized IoU between two sets of boxes.
-
+    """Computes generalized IoU between two sets of bounding boxes.
+    
     Args:
-        bbox1: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
-        bbox2: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`[M, 4+]`
-            in ``XYXY`` format.
-
+        bbox1 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYXY format.
+        bbox2 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (M, 5+) in XYXY format.
+    
     Returns:
-        Pairwise GIoU values as a ``numpy.ndarray`` of shape :math:`[N, M]`.
-
-    Raises:
-        ValueError: If ``bbox1`` or ``bbox2`` is not 1D or 2D.
-
+        numpy.ndarray: Pairwise GIoU values as a numpy.ndarray of shape (N, M).
+        
     References:
         - Paper: https://arxiv.org/pdf/1902.09630.pdf
     """
@@ -149,20 +145,17 @@ def giou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
 
 
 def diou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
-    """Compute distance IoU between two sets of boxes.
+    """Computes distance IoU between two sets of bounding boxes.
 
     Args:
-        bbox1: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
-        bbox2: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`[M, 4+]`
-            in ``XYXY`` format.
-
+        bbox1 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYXY format.
+        bbox2 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (M, 5+) in XYXY format.
+    
     Returns:
-        Pairwise DIoU values as a ``numpy.ndarray`` of shape :math:`[N, M]`.
-
-    Raises:
-        ValueError: If ``bbox1`` or ``bbox2`` is not 1D or 2D.
-
+        numpy.ndarray: Pairwise DIoU values as a numpy.ndarray of shape (N, M).
+        
     References:
         - Paper: https://arxiv.org/pdf/1902.09630.pdf
     """
@@ -215,20 +208,17 @@ def diou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
 
 
 def ciou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
-    """Compute complete IoU between two sets of boxes.
+    """Computes complete IoU between two sets of bounding boxes.
 
     Args:
-        bbox1: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
-        bbox2: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`[M, 4+]`
-            in ``XYXY`` format.
+        bbox1 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYXY format.
+        bbox2 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (M, 5+) in XYXY format.
 
     Returns:
-        Pairwise CIoU values as a ``numpy.ndarray`` of shape :math:`[N, M]`.
-
-    Raises:
-        ValueError: If ``bbox1`` or ``bbox2`` is not 1D or 2D.
-
+        numpy.ndarray: Pairwise CIoU values as a numpy.ndarray of shape (N, M).
+    
     References:
         - Paper: https://arxiv.org/pdf/1902.09630.pdf
     """
@@ -293,14 +283,14 @@ def ciou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
 
 
 def iou_matrix(bbox: np.ndarray) -> np.ndarray:
-    """Calculate pairwise IoU for all pairs of HBBs using matrix operations.
+    """Calculates pairwise IoU matrix for a set of bounding boxes.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``XYXY`` format.
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 5+)
+            in XYXY format.
 
     Returns:
-        Pairwise IoU matrix as a ``numpy.ndarray`` of shape :math:`[N, N]` where
-        the element :math:`(i, j)` is IoU between boxes :math:`i` and :math:`j`.
+        numpy.ndarray: Pairwise IoU matrix of shape (N, N).
     """
     # Ensure 2D arrays
     bbox = to_2d(bbox)
@@ -335,23 +325,24 @@ def iou_matrix(bbox: np.ndarray) -> np.ndarray:
 
 
 def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
-    """Filter HBBs that <= IoU threshold.
+    """Filters bounding boxes based on IoU threshold.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``XYXY`` format.
-        iou_thres: IoU threshold for filtering. Default: ``0.5``.
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 5+)
+            in XYXY format.
+        iou_thres (float): IoU threshold for filtering. Default is 0.5.
 
     Returns:
-        Filtered HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``XYXY`` format.
+        numpy.ndarray: Filtered bounding boxes based on IoU threshold.
     """
     # Calculate IoU matrix
     matrix = iou_matrix(bbox)
 
     # Initialize keep mask
-    N     = len(bbox)
-    keep  = np.ones(N, dtype=bool)
-    areas = (bbox[:, 2] - bbox[:, 0]) * (bbox[:, 3] - bbox[:, 1])
-
+    N      = len(bbox)
+    keep   = np.ones(N, dtype=bool)
+    areas  = (bbox[:, 2] - bbox[:, 0]) * (bbox[:, 3] - bbox[:, 1])
+    
     # Filter boxes based on IoU
     for i in range(N):
         if not keep[i]:
@@ -371,20 +362,19 @@ def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
 
 # ----- Properties -----
 def center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
-    """Measure center distance(s) between two sets of boxes.
+    """Measures center distance(s) between two sets of bounding boxes.
 
     Args:
-        bbox1: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
-        bbox2: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`[M, 4+]`
-            in ``XYXY`` format.
-
+        bbox1 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYXY format.
+        bbox2 (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (M, 5+) in XYXY format.
+        
     Returns:
-        Pairwise center distances as a ``numpy.ndarray`` of shape :math:`[N, M]`.
-
-    Raises:
-        ValueError: If ``bbox1`` or ``bbox2`` is not 1D or 2D.
-
+        numpy.ndarray: Pairwise center distance values as a numpy.ndarray of
+            shape (N, M), normalized and inverted to [0, 1] (smaller distance
+            = higher value).
+    
     Notes:
         Coarse implementation, not recommended alone for association due to instability.
     """
@@ -397,16 +387,16 @@ def center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     bbox2 = np.expand_dims(bbox2, 0)
 
     # Center coordinates
-    cx1 = (bbox1[..., 0] + bbox1[..., 2]) / 2.0  # Fixed: Use bbox1 only
-    cy1 = (bbox1[..., 1] + bbox1[..., 3]) / 2.0  # Fixed: Use bbox1 only
-    cx2 = (bbox2[..., 0] + bbox2[..., 2]) / 2.0  # Fixed: Use bbox2 only
-    cy2 = (bbox2[..., 1] + bbox2[..., 3]) / 2.0  # Fixed: Use bbox2 only
+    cx1   = (bbox1[..., 0] + bbox1[..., 2]) / 2.0  # Fixed: Use bbox1 only
+    cy1   = (bbox1[..., 1] + bbox1[..., 3]) / 2.0  # Fixed: Use bbox1 only
+    cx2   = (bbox2[..., 0] + bbox2[..., 2]) / 2.0  # Fixed: Use bbox2 only
+    cy2   = (bbox2[..., 1] + bbox2[..., 3]) / 2.0  # Fixed: Use bbox2 only
 
     # Squared Euclidean distance
     ct_dist2 = (cx1 - cx2) ** 2 + (cy1 - cy2) ** 2
 
     # Euclidean distance
-    ct_dist = np.sqrt(ct_dist2)
+    ct_dist  = np.sqrt(ct_dist2)
 
     # Normalize and invert to [0, 1] (smaller distance = higher value)
     ct_dist_max = np.max(ct_dist)
@@ -420,17 +410,14 @@ def center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
 
 
 def area(bbox: np.ndarray) -> np.ndarray:
-    """Compute area of HBBs.
+    """Computes area(s) of bounding boxes.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+) or
+            (N, 5+) in XYXY format.
 
     Returns:
-        Area(s) as a ``numpy.ndarray`` of shape :math:`[1]` or :math:`[N]` shape.
-
-    Raises:
-        ValueError: If ``bbox`` is not 1D or 2D.
+        numpy.ndarray: Area(s) as a numpy.ndarray of shape (1,) or (N,).
     """
     bbox = to_2d(bbox)
     x1   = bbox[..., 0]
@@ -441,18 +428,15 @@ def area(bbox: np.ndarray) -> np.ndarray:
 
 
 def center(bbox: np.ndarray) -> np.ndarray:
-    """Compute center(s) of HBBs.
+    """Computes center(s) of bounding boxes.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (5+) or
+            (N, 5+) in XYXY format.
 
     Returns:
-        Center(s) as a ``numpy.ndarray`` of shape :math:`[1, 2]` or :math:`[N, 2]`,
-        :math:`[cx, cy]` format.
-
-    Raises:
-        ValueError: If ``bbox`` is not 1D or 2D.
+        numpy.ndarray: Center(s) as a numpy.ndarray of shape (N, 2) where each
+            element is of shape (cx, cy).
     """
     bbox = to_2d(bbox)
     x1   = bbox[..., 0]
@@ -465,18 +449,15 @@ def center(bbox: np.ndarray) -> np.ndarray:
 
 
 def corners(bbox: np.ndarray) -> np.ndarray:
-    """Get corner(s) of HBBs.
+    """Gets corner(s) of bounding boxes.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray in (5+) or
+            (N, 5+) in XYXY format.
 
     Returns:
-        Corners as a ``numpy.ndarray`` of shape :math:`[N, 8]` each element is of
-        shape :math:`[x1, y1, x2, y2, x3, y3, x4, y4]`.
-
-    Raises:
-        ValueError: If ``bbox`` is not 1D or 2D.
+        numpy.ndarray: Corners as a numpy.ndarray of shape (N, 8) where each
+            element is of shape (x1, y1, x2, y2, x3, y3, x4, y4).
     """
     bbox = to_2d(bbox)
     x1   = bbox[..., 0]
@@ -497,18 +478,15 @@ def corners(bbox: np.ndarray) -> np.ndarray:
 
 
 def corners_pts(bbox: np.ndarray) -> np.ndarray:
-    """Get corner(s) of HBBs as points.
+    """Gets corner(s) of bounding boxes as points.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` in :math:`(4+)` or :math:`(N, 4+)` in
-            ``XYXY`` format.
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray in (5+) or
+            (N, 5+) in XYXY format.
 
     Returns:
-        Corners as a ``numpy.ndarray`` of shape :math:`[N, 4, 2]` where each element
-        is of shape :math:`[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]`.
-
-    Raises:
-        ValueError: If ``bbox`` is not 1D or 2D.
+        numpy.ndarray: Corners as a numpy.ndarray of shape (N, 4, 2) where
+            each element is of shape [[x1, y1], [x2, y2], [x3, y3], [x4, y4]].
     """
     bbox = to_2d(bbox)
     x1   = bbox[..., 0]
@@ -525,21 +503,27 @@ def corners_pts(bbox: np.ndarray) -> np.ndarray:
     c_y3 = y2
     c_x4 = x1
     c_y4 = y1 + h
-    return np.array([[c_x1, c_y1], [c_x2, c_y2], [c_x3, c_y3], [c_x4, c_y4]], np.int32)
+    return np.array([
+        [c_x1, c_y1],
+        [c_x2, c_y2],
+        [c_x3, c_y3],
+        [c_x4, c_y4]
+    ], np.int32)
 
 
 def enclosing(bbox: np.ndarray) -> np.ndarray:
-    """Get enclosing box(es) for rotated corners.
+    """Gets enclosing bounding box(es) for rotated corners.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape
-            :math:`[..., 8], [x1, y1, x2, y2, x3, y3, x4, y4]` format.
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (..., 8)
+            in corner format.
 
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`[..., 4]` in XYXY format.
+        numpy.ndarray: Enclosing bounding boxes as a numpy.ndarray of shape
+            (..., 4) in XYXY format.
 
     Raises:
-        ValueError: If ``bbox`` last dimension is not ``8``.
+        ValueError: If the last dimension of ``bbox`` is less than 8.
     """
     if bbox.shape[-1] < 8:
         raise ValueError(f"``bbox`` last dimension must be 8, got {bbox.shape[-1]}.")
@@ -553,13 +537,25 @@ def enclosing(bbox: np.ndarray) -> np.ndarray:
 
 
 # ----- Resizing -----
-def crop_center(image: np.ndarray, bbox: np.ndarray, imgsz: int) -> tuple[np.ndarray, np.ndarray]:
-    """Center crop an image with HBBs.
+def crop_center(
+    image: np.ndarray,
+    bbox : np.ndarray,
+    imgsz: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """Centers crop an image with bounding boxes.
 
     Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
-        imgsz: Target size as a tuple of :math:`(H, W)` or a single ``int`` for square crops.
+        image (numpy.ndarray): Image to be cropped as a numpy.ndarray of shape
+            (H, W, C) with pixel values in the range [0, 255].
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 5+)
+            in CXCYWHN format.
+        imgsz (int): Target image size of shape (H, W).
+        
+    Returns:
+        tuple[numpy.ndarray, numpy.ndarray]: Cropped image and bounding boxes.
+        
+    Raises:
+        ValueError: If target size exceeds original image size.
     """
     h0, w0 = I.imgsz(image)
     h1, w1 = I.imgsz(imgsz)
@@ -602,18 +598,25 @@ def crop_center(image: np.ndarray, bbox: np.ndarray, imgsz: int) -> tuple[np.nda
     return cropped_image, adjusted_bbox
 
 
-def crop_fit_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> tuple[np.ndarray, np.ndarray]:
+def crop_fit_square(
+    image    : np.ndarray,
+    bbox     : np.ndarray,
+    pad_value: int = 0
+) -> tuple[np.ndarray, np.ndarray]:
     """Crops the black (or specified border color) background from the image to
     fit the colored content, then pads the cropped image with the border color
     to make it square if necessary, centering it.
     
     Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
-        pad_value: Padding value. Default: ``0``.
+        image (numpy.ndarray): Image to be cropped as a numpy.ndarray of shape
+            (H, W, C) with pixel values in the range [0, 255].
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 5+)
+            in CXCYWHN format.
+        pad_value (int): Padding value. Defaults to 0.
 
     Returns:
-        Cropped image and adjusted HBBs.
+        tuple[numpy.ndarray, numpy.ndarray]: Padded image and adjusted bounding
+            boxes.
     """
     h0, w0 = I.imgsz(image)
     
@@ -672,16 +675,24 @@ def crop_fit_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> 
     return padded_image, adjusted_bbox
     
     
-def pad_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> tuple[np.ndarray, np.ndarray]:
-    """Pad an image with HBBs to make it square.
+def pad_square(
+    image    : np.ndarray,
+    bbox     : np.ndarray,
+    pad_value: int = 0
+) -> tuple[np.ndarray, np.ndarray]:
+    """Pads an image with bounding boxes to make it square, centering the
+    original content.
     
     Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
-        pad_value: Padding value. Default: ``0``.
+        image (numpy.ndarray): Image to be padded as a numpy.ndarray of shape
+            (H, W, C) with pixel values in the range [0, 255].
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 5+)
+            in CXCYWHN format.
+        pad_value (int): Padding value. Defaults to 0.
 
     Returns:
-        Padded image and adjusted HBBs.
+        tuple[numpy.ndarray, numpy.ndarray]: Padded image and adjusted bounding
+            boxes.
     """
     h0, w0 = I.imgsz(image)
     dim    = max(h0, w0)
@@ -714,16 +725,27 @@ def pad_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> tuple
     return padded_image, adjusted_bbox
 
 
-def split(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndarray], list[np.ndarray]]:
-    """Split an image with HBBs into ``n`` equal parts.
+def split(
+    image: np.ndarray,
+    bbox : np.ndarray,
+    n    : int = 2
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """Splits an image with bounding boxes into N parts, adjusting bounding boxes
+    accordingly.
 
     Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`.
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
-        n: Number of parts to split into (positive integer). Default: ``2``.
+        image (numpy.ndarray): Image to be split as a numpy.ndarray of shape
+            (H, W, C) with pixel values in the range [0, 255].
+        bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 5+)
+            in CXCYWHN format.
+        n (int): Number of parts to split the image into. Default is 2.
+
+    Returns:
+        tuple[list[numpy.ndarray], list[numpy.ndarray]]: List of sub-images and
+            list of corresponding bounding boxes.
 
     Raises:
-        ValueError: If inputs are invalid (e.g., image shape, bboxes, n).
+        ValueError: If inputs are invalid.
     """
     if not isinstance(image, np.ndarray) or len(image.shape) != 3:
         raise ValueError(f"``image`` must be a numpy.ndarray of shape (H, W, C), got {image.shape}.")
@@ -732,12 +754,12 @@ def split(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndar
     if n < 1:
         raise ValueError(f"``n`` must be a positive integer, got {n}.")
 
-    h, w = I.imgsz(image)
-    if n > h * w:
-        raise ValueError(f"``n`` ({n}) exceeds image pixel count ({h * w}).")
+    h0, w0 = I.imgsz(image)
+    if n > h0 * w0:
+        raise ValueError(f"``n`` ({n}) exceeds image pixel count ({h0 * w0}).")
 
     # Determine orientation
-    is_portrait = h > w
+    is_portrait = h0 > w0
 
     # Determine rows and cols
     if n == 1:
@@ -767,8 +789,8 @@ def split(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndar
             rows, cols = max(candidates, key=lambda x: x[1] / x[0])
 
     # Compute sub-images and adjust bboxes
-    sub_h      = h // rows
-    sub_w      = w // cols
+    sub_h      = h0 // rows
+    sub_w      = w0 // cols
     sub_images = []
     sub_bboxes = []
 
@@ -778,9 +800,9 @@ def split(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndar
                 break
             # Compute sub-image boundaries
             y_start   = i * sub_h
-            y_end     = min((i + 1) * sub_h, h)
+            y_end     = min((i + 1) * sub_h, h0)
             x_start   = j * sub_w
-            x_end     = min((j + 1) * sub_w, w)
+            x_end     = min((j + 1) * sub_w, w0)
             sub_image = image[y_start:y_end, x_start:x_end]
             if sub_image.size == 0:
                 continue
@@ -791,12 +813,12 @@ def split(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndar
             sub_h_i, sub_w_i = sub_image.shape[:2]
             for b in bbox:
                 cx_n, cy_n, w_n, h_n = b[:4]
-                cx = cx_n * w
-                cy = cy_n * h
-                x1 = cx - w_n * w / 2
-                x2 = cx + w_n * w / 2
-                y1 = cy - h_n * h / 2
-                y2 = cy + h_n * h / 2
+                cx = cx_n * w0
+                cy = cy_n * h0
+                x1 = cx - w_n * w0 / 2
+                x2 = cx + w_n * w0 / 2
+                y1 = cy - h_n * h0 / 2
+                y2 = cy + h_n * h0 / 2
 
                 # Check if bbox intersects sub-image
                 if x2 > x_start and x1 < x_end and y2 > y_start and y1 < y_end:
@@ -824,67 +846,80 @@ def split(image: np.ndarray, bbox: np.ndarray, n: int = 2) -> tuple[list[np.ndar
 
 # ----- Normalization -----
 def normalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Normalize HBBs according to image dimensions.
+    """Normalizes bounding boxes according to image dimensions.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+).
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
+        
+    Returns:
+        np.ndarray: Normalized bounding boxes as a numpy.ndarray of shape
+            (N, 5+).
     """
-    height, width = I.imgsz(imgsz)
-    bbox = to_2d(bbox)
+    h0, w0 = I.imgsz(imgsz)
+    bbox   = to_2d(bbox)
     if is_normalized(bbox):
         return bbox
 
     b1, b2, b3, b4, *rest = bbox.T
-    b1 = b1 / width
-    b2 = b2 / height
-    b3 = b3 / width
-    b4 = b4 / height
+    b1 = b1 / w0
+    b2 = b2 / h0
+    b3 = b3 / w0
+    b4 = b4 / h0
     return np.stack((b1, b2, b3, b4, *rest), axis=-1)
 
 
 def denormalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Denormalize HBBs according to image dimensions.
+    """Denormalizes bounding boxes according to image dimensions.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+).
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
+        
+    Returns:
+        np.ndarray: Denormalized bounding boxes as a numpy.ndarray of shape
+            (N, 5+).
     """
-    height, width = I.imgsz(imgsz)
-    bbox = to_2d(bbox)
+    h0, w0 = I.imgsz(imgsz)
+    bbox   = to_2d(bbox)
     if not is_normalized(bbox):
         return bbox
 
     b1, b2, b3, b4, *rest = bbox.T
-    b1 = b1 * width
-    b2 = b2 * height
-    b3 = b3 * width
-    b4 = b4 * height
+    b1 = b1 * w0
+    b2 = b2 * h0
+    b3 = b3 * w0
+    b4 = b4 * h0
     return np.stack((b1, b2, b3, b4, *rest), axis=-1)
 
 
 # ----- Shape Conversion -----
 def to_2d(bbox: Union[np.ndarray, list, tuple]) -> np.ndarray:
-    """Convert a 1D, 2D, or 3D box(es) to 2D.
+    """Converts bounding boxes to 2D numpy.ndarray format.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray``, ``list``, or ``tuple`` of shape
-            :math:`(4+)` or :math:`(N, 4+)`.
+        bbox (Union[np.ndarray, list, tuple]): Bounding boxes as a numpy.ndarray
+            of shape (5+) or (N, 5+), or as a list/tuple of numpy.ndarray.
 
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)`.
+        np.ndarray: Bounding boxes as a numpy.ndarray of shape (N, 5+).
+        
+    Raises:
+        ValueError: If input type is invalid.
     """
     if isinstance(bbox, np.ndarray):
-        if bbox.ndim == 1:                                                      # [4+]
-            bbox = np.expand_dims(bbox, axis=0)                                 # [4+]       -> [1, 4+]
-        elif bbox.ndim == 3 and bbox.shape[0] == 1:                             # [1, N, 4+]
-            bbox = np.squeeze(bbox, axis=0)                                     # [1, N, 4+] -> [N, 4+]
+        if bbox.ndim == 1:                                                      # [5+]
+            bbox = np.expand_dims(bbox, axis=0)                                 # [5+]       -> [1, 5+]
+        elif bbox.ndim == 3 and bbox.shape[0] == 1:                             # [1, N, 5+]
+            bbox = np.squeeze(bbox, axis=0)                                     # [1, N, 5+] -> [N, 5+]
     elif isinstance(bbox, list | tuple):
         bbox = np.array(bbox, dtype=np.float32)
-        if bbox[0].ndim == 1:                                                   # [[4+], ...]
-            bbox = np.stack(bbox, axis=0)                                       # [[4+], ...]    -> [N, 4+]
-        elif bbox[0].ndim == 2:                                                 # [[N, 4+], ...]
-            bbox = np.concatenate(bbox, axis=0)                                 # [[N, 4+], ...] -> [N*, 4+]
+        if bbox[0].ndim == 1:                                                   # [[5+], ...]
+            bbox = np.stack(bbox, axis=0)                                       # [[5+], ...]    -> [N, 5+]
+        elif bbox[0].ndim == 2:                                                 # [[N, 5+], ...]
+            bbox = np.concatenate(bbox, axis=0)                                 # [[N, 5+], ...] -> [N*, 5+]
         else:
             raise TypeError(f"``bbox`` list/tuple must contain consistent 1D or 2D "
                             f"numpy.ndarray, got mixed types or dimensions: "
@@ -898,38 +933,40 @@ def to_2d(bbox: Union[np.ndarray, list, tuple]) -> np.ndarray:
 
 # ----- Format Conversion -----
 def xywh_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert boxes from ``XYWH`` to ``CXCYWHN`` format.
-
+    """Converts bounding boxes from XYWH to CXCYWHN format.
+    
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYWH`` format.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYWH format.
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
 
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
+        np.ndarray: Bounding boxes as a numpy.ndarray of shape (N, 5+) in
+            CXCYWHN format.
     """
-    height, width = I.imgsz(imgsz)
-    bbox = to_2d(bbox)
+    h0, w0 = I.imgsz(imgsz)
+    bbox   = to_2d(bbox)
     x, y, w, h, *rest = bbox.T
     cx   = x + (w / 2.0)
     cy   = y + (h / 2.0)
-    cx_n = cx / width
-    cy_n = cy / height
-    w_n  = w  / width
-    h_n  = h  / height
+    cx_n = cx / w0
+    cy_n = cy / h0
+    w_n  = w  / w0
+    h_n  = h  / h0
     return np.stack((cx_n, cy_n, w_n, h_n, *rest), axis=-1)
 
 
 def xywh_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert boxes from ``XYWH`` to ``XYXY`` format.
-
+    """Converts bounding boxes from XYWH to XYXY format.
+    
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYWH`` format.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
-
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYWH format.
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
+        
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``XYXY`` format.
+        np.ndarray: Bounding boxes as a numpy.ndarray of shape (N, 5+) in
+            XYXY format.
     """
     bbox = to_2d(bbox)
     x, y, w, h, *rest = bbox.T
@@ -939,40 +976,42 @@ def xywh_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
 
 
 def xyxy_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert boxes from ``XYXY`` to ``CXCYWHN`` format.
+    """Converts bounding boxes from XYXY to CXCYWHN format.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
-
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYXY format.
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
+        
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``CXCYWHN`` format.
+        np.ndarray: Bounding boxes as a numpy.ndarray of shape (N, 5+) in
+            CXCYWHN format.
     """
-    height, width = I.imgsz(imgsz)
-    bbox = to_2d(bbox)
+    h0, w0 = I.imgsz(imgsz)
+    bbox   = to_2d(bbox)
     x1, y1, x2, y2, *rest = bbox.T
     w    = x2 - x1
     h    = y2 - y1
     cx   = x1 + (w / 2.0)
     cy   = y1 + (h / 2.0)
-    cx_n = cx / width
-    cy_n = cy / height
-    w_n  = w  / width
-    h_n  = h  / height
+    cx_n = cx / w0
+    cy_n = cy / h0
+    w_n  = w  / w0
+    h_n  = h  / h0
     return np.stack((cx_n, cy_n, w_n, h_n, *rest), axis=-1)
 
 
 def xyxy_to_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert boxes from ``XYXY`` to ``XYWH`` format.
+    """Converts bounding boxes from XYXY to XYWH format.
 
-   Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``XYXY`` format.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
+    Args:
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in XYXY format.
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
 
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``XYWH`` format.
+        np.ndarray: Bounding boxes as a numpy.ndarray of shape (N, 5+) in
+            XYWH format.
     """
     bbox = to_2d(bbox)
     x1, y1, x2, y2, *rest = bbox.T
@@ -982,59 +1021,62 @@ def xyxy_to_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
 
 
 def cxcywhn_to_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert boxes from ``CXCYWHN`` to ``XYWH`` format.
+    """Converts bounding boxes from CXCYWHN to XYWH format.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``CXCYWHN`` format.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in CXCYWHN format.
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
 
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``XYWH`` format.
+        np.ndarray: Bounding boxes as a numpy.ndarray of shape (N, 5+) in
+            XYWH format.
     """
-    height, width = I.imgsz(imgsz)
-    bbox = to_2d(bbox)
+    h0, w0 = I.imgsz(imgsz)
+    bbox   = to_2d(bbox)
     cx_n, cy_n, w_n, h_n, *rest = bbox.T
-    w = w_n * width
-    h = h_n * height
-    x = (cx_n * width)  - (w / 2.0)
-    y = (cy_n * height) - (h / 2.0)
+    w = w_n * w0
+    h = h_n * h0
+    x = (cx_n * w0) - (w / 2.0)
+    y = (cy_n * h0) - (h / 2.0)
     # Combine processed columns with rest
     return np.stack((x, y, w, h, *rest), axis=-1)
 
 
 def cxcywhn_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert boxes from ``CXCYWHN`` to ``XYXY`` format.
+    """Converts bounding boxes from CXCYWHN to XYXY format.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(4+)` or :math:`(N, 4+)`
-            in ``CXCYWHN`` format.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+) in CXCYWHN format.
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
 
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)` in ``XYXY`` format.
+        np.ndarray: Bounding boxes as a numpy.ndarray of shape (N, 5+) in
+            XYXY format.
     """
-    height, width = I.imgsz(imgsz)
-    bbox = to_2d(bbox)
+    h0, w0 = I.imgsz(imgsz)
+    bbox   = to_2d(bbox)
     cx_n, cy_n, w_n, h_n, *rest = bbox.T
-    x1 = width  * (cx_n - w_n / 2)
-    y1 = height * (cy_n - h_n / 2)
-    x2 = width  * (cx_n + w_n / 2)
-    y2 = height * (cy_n + h_n / 2)
+    x1 = w0 * (cx_n - w_n / 2)
+    y1 = h0 * (cy_n - h_n / 2)
+    x2 = w0 * (cx_n + w_n / 2)
+    y2 = h0 * (cy_n + h_n / 2)
     return np.stack((x1, y1, x2, y2, *rest), axis=-1)
 
 
 def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert HBBs between formats.
+    """Converts bounding boxes between formats.
 
     Args:
-        bbox: HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)`.
-        fmt: Conversion code as ``BBoxFormat`` or ``int``.
-        imgsz: Image size as a ``tuple`` of :math:`(H, W)`.
+        bbox (np.ndarray): Bounding boxes as a numpy.ndarray of shape (5+)
+            or (N, 5+).
+        fmt (BBoxFormat): Target bounding box format or conversion code.
+        imgsz (tuple[int, int]): Image size as a tuple of (H, W).
 
     Returns:
-        HBBs as a ``numpy.ndarray`` of shape :math:`(N, 4+)`, output format varied
-        by ``fmt``.
+        np.ndarray: Converted bounding boxes as a numpy.ndarray of shape
+            (N, 5+).
 
     Raises:
         ValueError: If ``fmt`` is invalid.
@@ -1042,7 +1084,7 @@ def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.nda
     if len(bbox) == 0:
         return bbox
 
-    fmt = BBoxFormat.from_value(value=fmt)
+    fmt = BBoxFormat(value=fmt)
     if fmt in BBoxFormat.formats():
         return bbox
     match fmt:

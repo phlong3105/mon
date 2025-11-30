@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all loss functions."""
+"""A module for base loss functions.
+
+This module provides the base class for all loss functions used in training
+machine learning models. It defines the common interface and functionality that
+all loss functions should implement.
+"""
 
 __all__ = [
     "BaseLoss",
@@ -18,25 +23,33 @@ from mon.core import depascalize
 
 # ----- Base Loss -----
 class BaseLoss(_Loss, abc.ABC):
-    """The base class for all loss functions.
+    """A base class for all loss functions.
     
-    Args:
-        reduction: Specifies the reduction to apply to the output. One of:
-            - ``'none'``: No reduction will be applied.
-            - ``'mean'``: The sum of the output will be divided by the number of
-                elements in the output.
-            - ``'sum'``: The output will be summed.
-            - Default: ``'mean'``.
+    Attributes:
+        reductions (List[str]): List of supported reduction methods.
+        reduction (str): Reduction method to apply to the loss. Can be one of
+            "none", "mean", or "sum".
     """
     
     reductions = ["none", "mean", "sum"]
     
     def __init__(self, reduction: Literal["none", "mean", "sum"] = "mean"):
+        """Initializes the BaseLoss instance.
+        
+        Args:
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+                
+        Raises:
+            ValueError: If the provided reduction method is not supported.
+        """
         super().__init__(reduction=reduction)
         if self.reduction not in self.reductions:
             raise ValueError(f"``reduction`` must be one of: {self.reductions}, got {reduction}.")
-        
+    
+    # ----- Magic Methods -----
     def __str__(self):
+        """Returns the string representation of the loss class."""
         return depascalize(self.__class__.__name__).lower()
     
     @abc.abstractmethod
@@ -44,11 +57,13 @@ class BaseLoss(_Loss, abc.ABC):
         """Calculate the loss between input and target.
     
         Args:
-            input: Input data as a ``torch.Tensor`` of shape :math:`(B, C, H, W)` in range :math:`[0.0, 1.0]`.
-            target: Target data as a ``torch.Tensor`` of shape :math:`(B, C, H, W)` in range :math:`[0.0, 1.0]`.
-    
+            input (torch.Tensor): Input tensor (predictions) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+            target (torch.Tensor): Target tensor (ground truth) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+                
         Returns:
-            Loss value as a ``torch.Tensor``.
+            torch.Tensor: Calculated loss
         """
         pass
     
@@ -56,9 +71,13 @@ class BaseLoss(_Loss, abc.ABC):
         """Reduces the loss tensor.
     
         Args:
-            loss: Elementwise loss tensor as a ``torch.Tensor``.
-    
+            loss (torch.Tensor): Loss tensor to be reduced.
+            
         Returns:
-            Reduced loss valued as a ``torch.Tensor``.
+            torch.Tensor: Reduced loss tensor.
         """
-        return {"mean": torch.mean, "sum": torch.sum, "none": lambda x: x}[self.reduction](loss)
+        return {
+            "mean": torch.mean,
+            "sum" : torch.sum,
+            "none": lambda x: x
+        }[self.reduction](loss)

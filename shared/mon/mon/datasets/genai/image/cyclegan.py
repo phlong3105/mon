@@ -15,24 +15,24 @@ from ...core import *
 
 
 @DATASETS.register(name="cyclegan_dataset")
-class CycleGANDataset(ImageDualDomainDataset):
+class CycleGANDataset(DualDomainImageDataset):
     """Cycle-GAN dataset."""
     
-    root_name   : str         = "cyclegan"
+    _root_name   : str         = "cyclegan"
     subsets     : list[str]   = [
         "ae_photos", "apple2orange", "cezanne2photo", "facades", "grumpifycat",
         "horse2zebra", "iphone2dslr_flower", "maps", "mini", "monet2photo",
         "summer2winter_yosemite", "ukiyoe2photo", "vangogh2photo"
     ]
-    tasks       : list[Task]  = [Task.IMG2IMG]
-    splits      : list[Split] = [Split.TEST]
-    modalities_A: Modalities  = {
+    _tasks       : list[Task]  = [Task.IMG2IMG]
+    _splits      : list[Split] = [Split.TEST]
+    _modalities_A: Modalities  = {
         "image_A": Modality(name="image_A", type="image", module=Image, train=True, test=True, primary=True),
     }
-    modalities_B: Modalities  = {
+    _modalities_B: Modalities  = {
         "image_B": Modality(name="image_B", type="image", module=Image, train=True, test=True, primary=True),
     }
-    classes     : Classes     = None
+    _classes     : Classes     = None
     
     def __init__(
         self,
@@ -57,7 +57,7 @@ class CycleGANDataset(ImageDualDomainDataset):
             *args, **kwargs
         )
     
-    def list_primary_data_A(self) -> list:
+    def _list_primary_data_A(self) -> list:
         patterns = [self.root / self.subset / self.split_str / "image_A"]
         
         images: list[Image] = []
@@ -71,7 +71,7 @@ class CycleGANDataset(ImageDualDomainDataset):
 
         return images
     
-    def list_primary_data_B(self) -> list:
+    def _list_primary_data_B(self) -> list:
         patterns = [self.root / self.subset / self.split_str / "image_B"]
         
         images: list[Image] = []

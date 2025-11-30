@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data structure and processing functions for images."""
+"""A package for image data type.
+
+This package provides various classes and functions for handling image data,
+including priors, filters, color transformations, and utility functions.
+"""
 
 __all__ = [
     "BoundaryAwarePrior",
@@ -43,6 +47,7 @@ __all__ = [
     "pad_square",
     "pair_downsample",
     "read_shape",
+    "read_size",
     "save",
     "shape",
     "sobel_filter",
@@ -64,7 +69,7 @@ from .filtering import (
     GuidedFilter,
     sobel_filter,
 )
-from .io import load, read_shape, save
+from .io import load, read_shape, read_size, save
 from .priors import (
     atmospheric_point_spread_function,
     atmospheric_prior,

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the WiderFace dataset for face detection."""
+"""A module for WiderFace dataset.
+
+This module implements the WiderFace dataset for face detection tasks.
+"""
 
 __all__ = [
     "WiderFace",
@@ -16,24 +19,27 @@ from ...core import *
 class WiderFace(ImageDataset):
     """WiderFace dataset."""
     
-    root_name : str         = "widerface"
-    tasks     : list[Task]  = [Task.DETECT]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "widerface"
+    _tasks     : list[Task]  = [Task.DETECT]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    classes   : Classes     = Classes([
+    _classes   : Classes     = Classes([
         {"name": "face", "id": 0, "color": [ 81, 120, 228]},
     ])
-
 
 
 @DATASETS.register(name="widerfaceval")
 class WiderFaceVal(WiderFace):
     """WiderFace-Val subset."""
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "val" / "image"]
 
         images: list[Image] = []
@@ -43,6 +49,6 @@ class WiderFaceVal(WiderFace):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images

@@ -31,9 +31,9 @@ class SRNO(sronet.SRNO, nn.ModelMixin):
         - Code: https://github.com/2y7c3/Super-Resolution-Neural-Operator
     """
     
-    arch     : str          = "srno"
-    name     : str          = "srno"
-    tasks    : list[Task]   = [Task.SR]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "srno"
+    _name     : str          = "srno"
+    _tasks    : list[Task]   = [Task.SR]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()

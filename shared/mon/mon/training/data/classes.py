@@ -1,87 +1,108 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module defines the ``Classes`` class, which represents a list of class-labels
-defined in a dataset.
+"""A module for class labels.
 
-It provides properties and methods to access various aspects of the class labels,
-such as trainable classes, names, IDs, and color mappings.
+This module provides the Classes class, which manages a list of class labels
+defined in a dataset. It supports loading from a YAML file, accessing class
+properties, and filtering trainable classes.
 """
 
 __all__ = [
     "Classes",
 ]
 
-from mon.core import log, rprint_list_dicts
+from mon.core import log, Path, rprint_list_dicts, load_config
 
 
 class Classes(list[dict]):
-    """List of class labels defined in a dataset.
+    """A class for managing class labels.
     
-    Notes:
-        Inherits from Python ``list`` for built-in functionality.
+    This class extends the built-in list to handle a list of class label
+    dictionaries. It supports loading class definitions from a YAML file,
+    accessing various properties, and filtering trainable classes.
     """
     
+    def __init__(self, seq: list[dict] | Path = ()):
+        """Initializes the Classes instance.
+        
+        Args:
+            seq (list[dict] or Path, optional): Either a list of class label
+                dictionaries, or a Path to a YAML file defining the classes.
+                Defaults to an empty tuple. Defaults to ().
+        """
+        if isinstance(seq, Path | str):
+            classes = load_config(config=seq, verbose=False)
+            classes = classes.get("classes", [])
+        elif seq in [None, ()]:
+            classes = []
+        else:
+            classes = seq
+            
+        super().__init__(classes)
+    
+    # ----- Properties -----
     @property
     def trainable_classes(self) -> "Classes":
-        """Returns all trainable classes.
+        """Getter for trainable classes (IDs in [0, 254]).
         
         Returns:
-            New ``Classes`` with classes where ``id`` is in [0, 254].
+            A Classes instance containing only trainable class labels.
         """
         return Classes([item for item in self if 0 <= item["id"] < 255])
     
     @property
     def keys(self) -> list[str]:
-        """Returns all keys in the class labels.
-
+        """Getter for keys in the class labels.
+        
         Returns:
-            List of keys from the first class label.
+            list[str]: List of keys from class label dictionaries.
         """
         return list(self[0].keys()) if self else []
     
     @property
     def names(self) -> list[str]:
-        """Returns all names in the class labels.
-
+        """Getter for class names.
+        
         Returns:
-            List of ``name`` values from class labels.
+            list[str]: List of ``name`` values from class labels.
         """
         return [item["name"] for item in self]
     
     @property
     def ids(self) -> list[int]:
-        """Returns all IDs in the class labels.
-
+        """Getter for class IDs.
+        
         Returns:
-            List of ``id`` values from class labels.
+            list[int]: List of ``id`` values from class labels.
         """
         return [item["id"] for item in self]
     
     @property
     def id_to_class(self) -> dict[int, dict]:
-        """Maps IDs to class label dictionaries.
-
+        """Getter for mapping IDs to class label dictionaries.
+        
         Returns:
-            Dict mapping ``id`` to class label items.
+            dict[int, dict]: Dict mapping ``id`` to the entire class label
+                dictionary.
         """
         return {item["id"]: item for item in self}
     
     @property
     def id_to_name(self) -> dict[int, str]:
-        """Maps IDs to class names.
-
+        """Getter for mapping IDs to class names.
+        
         Returns:
-            Dict mapping ``id`` to ``name``.
+            dict[int, str]: Dict mapping ``id`` to ``name``.
         """
         return {item["id"]: item["name"] for item in self}
     
     @property
     def id_to_train_id(self) -> dict[int, int]:
-        """Maps IDs to trainable IDs.
-
+        """Getter for mapping IDs to train IDs.
+        
         Returns:
-            Dict mapping ``id`` to ``train_id`` for IDs in [0, 254].
+            dict[int, int]: Dict mapping ``id`` to ``train_id``.
         """
         return {
             item["id"]: item["train_id"]
@@ -91,31 +112,33 @@ class Classes(list[dict]):
     
     @property
     def id_color(self) -> dict[int, list[int] | tuple[int, int, int]]:
-        """Maps IDs to RGB colors.
-
+        """Getter for mapping IDs to colors.
+        
         Returns:
-            Dict mapping ``id`` to ``color`` values.
+            dict[int, list[int] | tuple[int, int, int]]: Dict mapping ``id`` to
+                ``color``.
         """
         return {item["id"]: item["color"] for item in self}
     
     @property
     def num_classes(self) -> int:
-        """Returns the total number of classes.
-
+        """Getter for the number of classes.
+        
         Returns:
-            Integer count of class labels.
+            int: Number of classes.
         """
         return len(self)
     
     @property
     def num_trainable_classes(self) -> int:
-        """Returns the number of trainable classes.
-
+        """Getter for the number of trainable classes.
+        
         Returns:
-            Integer count of trainable class labels.
+            int: Number of trainable classes.
         """
         return len(self.trainable_classes)
     
+    # ----- Utils -----
     def print(self):
         """Prints class labels in a formatted table."""
         if not self:

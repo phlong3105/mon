@@ -23,7 +23,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 
 @torch.no_grad()
 def default_init_weights(module_list, scale=1, bias_fill=0, **kwargs):
-    """Initialize network weights.
+    """Initializes network weights.
 
     Args:
         module_list (list[nn.Module] | nn.Module): Modules to be initialized.

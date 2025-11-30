@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements data structure and processing functions for thermal
-maps.
+"""A package for thermal map data type.
+
+This package provides a data structure for handling thermal (infrared) maps,
+which represent temperature distributions in images.
 """
 
 __all__ = [

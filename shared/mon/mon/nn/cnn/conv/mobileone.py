@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements MobileOne building block.
+"""A module for MobileOne building block.
+
+This module implements the MobileOneBlock class, which is a building block
+for the MobileOne architecture. The block features a multi-branched structure
+during training and a re-parameterized single-branch structure for inference.
 
 References:
     - Paper: "MobileOne: An Improved One millisecond Mobile Backbone," CVPR 2023.
@@ -21,14 +25,13 @@ from ...transformer.attention import SEBlock
 
 
 def reparameterize_model(model: nn.Module) -> nn.Module:
-    """Method returns a model where a multi-branched structure used in training
-    is re-parameterized into a single branch for inference.
-
-    Args:
-        model: Model to re-parameterize.
+    """Re-parameterizes all re-parameterizable modules in the model for inference.
     
+    Args:
+        model (nn.Module): The model containing re-parameterizable modules.
+        
     Returns:
-        Re-parameterized model.
+        nn.Module: The re-parameterized model ready for inference.
     """
     # Avoid editing original graph
     model = copy.deepcopy(model)
@@ -39,22 +42,10 @@ def reparameterize_model(model: nn.Module) -> nn.Module:
 
 
 class MobileOneBlock(nn.Module):
-    """MobileOne building block.
+    """A MobileOne building block.
 
     This block has a multi-branched architecture at train-time and plain-CNN
     style architecture at inference time.
-    
-    Args:
-        in_channels: Number of channels in the input.
-        out_channels: Number of channels produced by the block.
-        kernel_size: Size of the convolution kernel.
-        stride: Stride size.
-        padding: Zero-padding size.
-        dilation: Kernel dilation factor.
-        groups: Group number.
-        inference: If True, instantiates model in inference mode.
-        use_se: Whether to use SE-ReLU activations.
-        num_conv_branches: Number of linear conv branches.
     """
     
     def __init__(
@@ -71,6 +62,23 @@ class MobileOneBlock(nn.Module):
         use_act          : bool = True,
         num_conv_branches: int  = 1
     ):
+        """Initializes the MobileOneBlock.
+        
+        Args:
+            in_channels (int): Number of input channels.
+            out_channels (int): Number of output channels.
+            kernel_size (int): Size of the convolutional kernel.
+            stride (int): Stride of the convolution. Defaults to 1.
+            padding (int): Padding for the convolution. Defaults to 0.
+            dilation (int): Dilation for the convolution. Defaults to 1.
+            groups (int): Number of groups for grouped convolution. Defaults to 1.
+            inference (bool): If True, initializes in inference mode.
+                Defaults to False.
+            use_se (bool): If True, includes SE block. Defaults to False.
+            use_act (bool): If True, includes ReLU activation. Defaults to True.
+            num_conv_branches (int): Number of convolutional branches during
+                training. Defaults to 1.
+        """
         super().__init__()
         self.inference         = inference
         self.groups            = groups
@@ -119,6 +127,14 @@ class MobileOneBlock(nn.Module):
                 self.rbr_scale = self._conv_bn(kernel_size=1, padding=0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the MobileOneBlock.
+        
+        Args:
+            x (torch.Tensor): Input tensor of shape (N, C_in, H, W).
+            
+        Returns:
+            torch.Tensor: Output tensor of shape (N, C_out, H_out, W_out).
+        """
         # Inference mode forward pass.
         if self.inference:
             return self.activation(self.se(self.reparam_conv(x)))
@@ -174,13 +190,14 @@ class MobileOneBlock(nn.Module):
         self.inference = True
 
     def _get_kernel_bias(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """Method to obtain re-parameterized kernel and bias.
+        """Fuses all branches to obtain equivalent kernel and bias for
+        re-parameterized conv layer.
         
         References:
             - Code: https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L83
 
         Returns:
-             Tuple of :math:`(kernel, bias)` after fusing branches.
+             tuple[torch.Tensor, torch.Tensor]: Tuple of kernel and bias tensors.
         """
         # get weights and bias of scale branch
         kernel_scale = 0
@@ -210,13 +227,13 @@ class MobileOneBlock(nn.Module):
         return kernel_final, bias_final
 
     def _fuse_bn_tensor(self, branch) -> tuple[torch.Tensor, torch.Tensor]:
-        """Method to fuse batchnorm layer with preceeding conv layer.
+        """Fuses batchnorm parameters into convolutional kernel and bias.
         
         References:
             -Code: https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L95
     
         Returns:
-            Tuple of :math:`(kernel, bias)` after fusing batchnorm.
+            tuple[torch.Tensor, torch.Tensor]: Tuple of kernel and bias tensors.
         """
         if isinstance(branch, nn.Sequential):
             kernel       = branch.conv.weight
@@ -250,7 +267,15 @@ class MobileOneBlock(nn.Module):
         return kernel * t, beta - running_mean * gamma / std
 
     def _conv_bn(self, kernel_size: int, padding: int) -> nn.Sequential:
-        """Helper method to construct conv-batchnorm layers."""
+        """Creates a convolutional layer followed by batch normalization.
+        
+        Args:
+            kernel_size (int): Size of the convolutional kernel.
+            padding (int): Padding for the convolution.
+            
+        Returns:
+            nn.Sequential: A sequential container with conv and batchnorm layers.
+        """
         mod_list = nn.Sequential()
         mod_list.add_module(
             "conv",

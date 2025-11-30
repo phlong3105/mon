@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various image loss functions for training deep learning models.
+"""A package for image loss functions.
+
+This package provides various loss functions commonly used in training machine
+learning models, particularly in computer vision tasks. Each loss function is
+implemented as a class that can be instantiated and used to compute the loss
+between predicted outputs and target values.
 
 The categories align with common loss function roles in computer vision:
     - color     : color/illumination consistency (photometric accuracy).
@@ -36,24 +41,38 @@ from .core import CharbonnierLoss
 
 # ----- Pixel-wise Loss -----
 class ColorConstancyLoss(BaseLoss):
-    """Color Constancy Loss corrects potential color deviations in the enhanced image
-    and builds relations among the three adjusted channels.
-
-    Args:
-        eps: Small constant to avoid sqrt by zero. Default: ``1e-6``.
-        reduction: Reduction method: ``"none"``, ``"mean"``, or ``"sum"``.
-            Default: ``"mean"``.
-
+    """A Color Constancy Loss to ensure the color consistency of the enhanced
+    image by penalizing the variance of the mean of R, G, and B channels.
+    
     References:
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L9
+    
+    Attributes:
+        eps (float): Small constant for numerical stability.
     """
     
     def __init__(self, eps: float = 1e-6, reduction: str = "mean"):
+        """Initializes the ColorConstancyLoss instance.
+        
+        Args:
+            eps (float): Small constant for numerical stability. Defaults to 1e-6.
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
         self.eps = eps
     
     # noinspection PyMethodOverriding
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Calculate the Color Constancy Loss.
+        
+        Args:
+            input (torch.Tensor): Input tensor of shape (B, 3, H, W) with pixel
+                values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Calculated Color Constancy Loss.
+        """
         mean_rgb   = torch.mean(input, [2, 3], keepdim=True)
         mr, mg, mb = torch.split(mean_rgb, 1, dim=1)
         d_rg       = torch.pow(torch.abs(mr - mg), 2)
@@ -69,21 +88,20 @@ class ColorConstancyLoss(BaseLoss):
 
 
 class ExposureControlLoss(BaseLoss):
-    """Exposure Control Loss measures the distance between the average intensity
-    value of a local region and the well-exposedness level E (i.e., ``mean_val``).
-
-    Args:
-        patch_size: Kernel size for pooling layer. Default: ``16``.
-        mean_val: Well-exposedness level E; lower values produce, brighter
-            images. Default: ``0.6``.
-        required_grad: If ``True``, ``mean_val`` is learnable. Default: ``True``.
-        channel_mean: If ``True``, compute the mean across channels before
-            pooling. Default: ``True``.
-        reduction: Reduction method: ``"none"``, ``"mean"``, or ``"sum"``.
-            Default: ``"mean"``.
+    """A Exposure Control Loss to ensure the exposure level of the enhanced
+    image by penalizing the deviation of the average intensity from a
+    well-exposedness level.
 
     References:
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
+    
+    Attributes:
+        channel_mean (bool): If True, compute the mean across channels before
+            pooling.
+        mean_val (torch.nn.Parameter): Learnable parameter representing the
+            well-exposedness level.
+        pool (torch.nn.AvgPool2d): Average pooling layer for patch-wise mean
+            calculation.
     """
     
     def __init__(
@@ -94,12 +112,34 @@ class ExposureControlLoss(BaseLoss):
         channel_mean : bool  = True,
         reduction    : str   = "mean",
     ):
+        """Initializes the ExposureControlLoss instance.
+        
+        Args:
+            patch_size (int): Kernel size for pooling layer. Defaults to 16.
+            mean_val (float): Well-exposedness level E; lower values produce,
+                brighter images. Defaults to 0.6.
+            required_grad (bool): If True, ``mean_val`` is learnable. Defaults
+                to True.
+            channel_mean (bool): If True, compute the mean across channels
+                before pooling. Defaults to True.
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
         self.channel_mean = channel_mean
         self.mean_val     = nn.Parameter(torch.full([1], mean_val), requires_grad=required_grad)
         self.pool         = nn.AvgPool2d(patch_size)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Calculate the Exposure Control Loss.
+        
+        Args:
+            input (torch.Tensor): Input tensor of shape (B, C, H, W) with pixel
+                values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Calculated Exposure Control Loss.
+        """
         x = input
         if self.channel_mean:
             x = torch.mean(input, 1, keepdim=True)
@@ -110,20 +150,20 @@ class ExposureControlLoss(BaseLoss):
 
 
 class ExposureValueControlLoss(BaseLoss):
-    """Exposure Value Control Loss measures the absolute value of the ``ExposureControlLoss``.
-
-    Args:
-        patch_size: Kernel size for pooling layer. Default: ``16``.
-        mean_val: Well-exposedness level E; lower values produce, brighter
-            images. Default: ``0.6``.
-        required_grad: If ``True``, ``mean_val`` is learnable. Default: ``True``.
-        channel_mean: If ``True``, compute the mean across channels before
-            pooling. Default: ``True``.
-        reduction: Reduction method: ``"none"``, ``"mean"``, or ``"sum"``.
-            Default: ``"mean"``.
-
+    """An Exposure Value Control Loss to ensure the exposure level of the
+    enhanced image by penalizing the deviation of the average intensity from
+    a well-exposedness level.
+    
     References:
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
+        
+    Attributes:
+        channel_mean (bool): If True, compute the mean across channels before
+            pooling.
+        mean_val (torch.nn.Parameter): Learnable parameter representing the
+            well-exposedness level.
+        pool (torch.nn.AvgPool2d): Average pooling layer for patch-wise mean
+            calculation.
     """
     
     def __init__(
@@ -134,12 +174,34 @@ class ExposureValueControlLoss(BaseLoss):
         channel_mean : bool  = True,
         reduction    : str   = "mean",
     ):
+        """Initializes the ExposureValueControlLoss instance.
+        
+        Args:
+            patch_size (int): Kernel size for pooling layer. Defaults to 16.
+            mean_val (float): Well-exposedness level E; lower values produce,
+                brighter images. Defaults to 0.6.
+            required_grad (bool): If True, ``mean_val`` is learnable. Defaults
+                to True.
+            channel_mean (bool): If True, compute the mean across channels
+                before pooling. Defaults to True.
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
         self.channel_mean = channel_mean
         self.mean_val     = nn.Parameter(torch.full([1], mean_val), requires_grad=required_grad)
         self.pool         = nn.AvgPool2d(patch_size)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Calculate the Exposure Value Control Loss.
+        
+        Args:
+            input (torch.Tensor): Input tensor of shape (B, C, H, W) with pixel
+                values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Calculated Exposure Value Control Loss.
+        """
         x = input
         if self.channel_mean:
             x = torch.mean(x, 1, keepdim=True)  # Channel-wise mean: [B, 1, H, W]
@@ -150,22 +212,32 @@ class ExposureValueControlLoss(BaseLoss):
 
 
 class TotalVariationLoss(BaseLoss):
-    """Total Variation Loss on the Illumination (Illumination Smoothness Loss)
-    preserves monotonicity relations between neighboring pixels to avoid
-    aggressive and sharp changes.
-
-    Args:
-        reduction: Reduction method: ``"none"``, ``"mean"``, or ``"sum"``.
-            Default: ``"mean"``.
+    """A Total Variation Loss to encourage spatial smoothness in the enhanced
+    image by penalizing large intensity variations between neighboring pixels.
 
     References:
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
     """
     
     def __init__(self, reduction: str = "mean"):
+        """Initializes the TotalVariationLoss instance.
+        
+        Args:
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Calculate the Total Variation Loss.
+        
+        Args:
+            input (torch.Tensor): Input tensor of shape (B, C, H, W) with pixel
+                values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Calculated Total Variation Loss.
+        """
         x = input
         b, c, h, w = x.size()
         count_h    = (x.size()[2]-1) * x.size()[3]
@@ -178,19 +250,36 @@ class TotalVariationLoss(BaseLoss):
 
 # ----- Geometry Loss -----
 class DepthAwareIlluminationLoss(BaseLoss):
-    """Calculate the depth-weighted smoothness loss for 4D tensors.
-
-    Args:
-        alpha: Weighting factor for depth influence. Default: ``1.0``.
-        reduction: Reduction method: ``"none"``, ``"mean"``, or ``"sum"``.
-            Default: ``"mean"``.
+    """A Depth-Aware Illumination Loss to encourage smoothness in the illumination
+    map while preserving depth discontinuities.
+    
+    Attributes:
+        alpha (float): Weighting factor for depth influence.
     """
     
     def __init__(self, alpha: float = 1.0, reduction: str = "mean"):
+        """Initializes the DepthAwareIlluminationLoss instance.
+        
+        Args:
+            alpha (float): Weighting factor for depth influence. Defaults to 1.0.
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
         self.alpha = alpha
     
     def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
+        """Calculate the Depth-Aware Illumination Loss.
+        
+        Args:
+            input (torch.Tensor): Illumination map tensor of shape (B, 1, H, W)
+                with pixel values in the range [0.0, 1.0].
+            depth (torch.Tensor): Depth map tensor of shape (B, 1, H, W) with
+                pixel values in the range [0.0, 1.0].
+                
+        Returns:
+            torch.Tensor: Calculated Depth-Aware Illumination Loss.
+        """
         # Calculate gradients of illumination map (L) in x and y directions
         L_dx = input[:, :, :, 1:] - input[:, :, :, :-1]
         L_dy = input[:, :, 1:, :] - input[:, :, :-1, :]
@@ -215,14 +304,43 @@ class DepthAwareIlluminationLoss(BaseLoss):
 
 # ----- Objective Loss -----
 class PSNRLoss(BaseLoss):
-
+    """A Peak Signal-to-Noise Ratio (PSNR) Loss to measure the fidelity of the
+    enhanced image compared to the ground truth image.
+    
+    Attributes:
+        to_y (bool): If True, convert RGB images to Y channel before computing
+            PSNR.
+        coef (torch.Tensor): Coefficients for RGB to Y channel conversion.
+        first (bool): Flag to indicate if the coefficients need to be moved to
+            the input device.
+    """
+    
     def __init__(self, to_y: bool = False, reduction: str = "mean"):
+        """Initializes the PSNRLoss instance.
+        
+        Args:
+            to_y (bool): If True, convert RGB images to Y channel before
+                computing PSNR. Defaults to False.
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
         self.to_y  = to_y
         self.coef  = torch.tensor([65.481, 128.553, 24.966]).reshape(1, 3, 1, 1)
         self.first = True
 
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """Calculate the PSNR Loss between input and target.
+        
+        Args:
+            input (torch.Tensor): Input tensor (predictions) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+            target (torch.Tensor): Target tensor (ground truth) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Calculated PSNR Loss.
+        """
         if self.to_y:
             if self.first:
                 self.coef  = self.coef.to(input.device)
@@ -246,15 +364,35 @@ class PSNRLoss(BaseLoss):
 
 # ----- Spatial Loss -----
 class SpatialConsistencyLoss(BaseLoss):
-    """Spatial Consistency Loss encourages spatial coherence of the enhanced
-    image through preserving the difference of neighboring regions between the
-    input image and its enhanced version.
-
-    Args:
-        num_regions: Number of neighboring regions. Default: ``4``.
-        patch_size: Size of each neighboring region. Default: ``4`` (means 4x4).
-        reduction: Reduction method: ``"none"``, ``"mean"``, or ``"sum"``.
-            Default: ``"mean"``.
+    """A Spatial Consistency Loss to ensure spatial coherence in the enhanced
+    image by penalizing discrepancies in local gradients between the enhanced
+    and input images.
+    
+    Attributes:
+        num_regions (int): Number of directional regions to consider for
+            gradient comparison.
+        weight_left (torch.nn.Parameter): Convolution kernel for left gradient.
+        weight_right (torch.nn.Parameter): Convolution kernel for right gradient.
+        weight_up (torch.nn.Parameter): Convolution kernel for up gradient.
+        weight_down (torch.nn.Parameter): Convolution kernel for down gradient.
+        weight_upleft (torch.nn.Parameter): Convolution kernel for up-left gradient.
+        weight_upright (torch.nn.Parameter): Convolution kernel for up-right gradient.
+        weight_downleft (torch.nn.Parameter): Convolution kernel for down-left gradient.
+        weight_downright (torch.nn.Parameter): Convolution kernel for down-right gradient.
+        weight_left2 (torch.nn.Parameter): Convolution kernel for left gradient (2-pixel).
+        weight_right2 (torch.nn.Parameter): Convolution kernel for right gradient (2-pixel).
+        weight_up2 (torch.nn.Parameter): Convolution kernel for up gradient (2-pixel).
+        weight_down2 (torch.nn.Parameter): Convolution kernel for down gradient (2-pixel).
+        weight_up2left2 (torch.nn.Parameter): Convolution kernel for up-left gradient (2-pixel).
+        weight_up2right2 (torch.nn.Parameter): Convolution kernel for up-right gradient (2-pixel).
+        weight_down2left2 (torch.nn.Parameter): Convolution kernel for down-left gradient (2-pixel).
+        weight_down2right2 (torch.nn.Parameter): Convolution kernel for down-right gradient (2-pixel).
+        weight_up2left1 (torch.nn.Parameter): Convolution kernel for up-left gradient (mixed).
+        weight_up2right1 (torch.nn.Parameter): Convolution kernel for up-right gradient (mixed).
+        weight_up1left2 (torch.nn.Parameter): Convolution kernel for up-left gradient (mixed).
+        weight_up1right2 (torch.nn.Parameter): Convolution kernel for up-right gradient (mixed).
+        weight_down2left1 (torch.nn.Parameter): Convolution kernel for down-left gradient (mixed).
+        weight_down2right1 (torch.nn.Parameter): Convolution kernel for down-right gradient (mixed).
     """
     
     def __init__(
@@ -263,6 +401,16 @@ class SpatialConsistencyLoss(BaseLoss):
         patch_size : int = 4,
         reduction  : str = "mean",
     ):
+        """Initializes the SpatialConsistencyLoss instance.
+        
+        Args:
+            num_regions (int): Number of directional regions to consider for
+                gradient comparison. Can be one of 4, 8, 16, or 24. Defaults to 4.
+            patch_size (int): Size of the Gaussian kernel for blurring.
+                Defaults to 4.
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
         self.num_regions = num_regions
         
@@ -453,6 +601,17 @@ class SpatialConsistencyLoss(BaseLoss):
         self.pool = nn.AvgPool2d(patch_size)  # Default 4
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """Calculate the Spatial Consistency Loss between input and target.
+        
+        Args:
+            input (torch.Tensor): Input tensor (enhanced image) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+            target (torch.Tensor): Target tensor (input image) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+                
+        Returns:
+            torch.Tensor: Calculated Spatial Consistency Loss.
+        """
         # Ensure weights are on the same device as input
         if self.weight_left.device != input.device:
             self.weight_left = self.weight_left.to(input.device)
@@ -618,22 +777,37 @@ class SpatialConsistencyLoss(BaseLoss):
 
 # ----- Structural Loss -----
 class EdgeLoss(BaseLoss):
-    """Edge Loss computes the difference in edge features between input and
-    target using a Laplacian kernel.
-
-    Args:
-        reduction: Reduction method: ``"none"``, ``"mean"``, or ``"sum"``.
-            Default: ``"mean"``.
+    """An Edge Loss that focuses on preserving edge details in images by
+    computing the Laplacian edge maps and penalizing differences between
+    the input and target images.
+    
+    Attributes:
+        kernel (torch.Tensor): Gaussian kernel for convolution.
+        loss (CharbonnierLoss): Charbonnier loss function instance.
     """
     
     def __init__(self, reduction: str = "mean"):
+        """Initializes the EdgeLoss instance.
+        
+        Args:
+            reduction (str): Reduction method to apply to the loss. Can be one
+                of "none", "mean", or "sum". Defaults to "mean".
+        """
         super().__init__(reduction=reduction)
         k           = torch.Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
         self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
         self.loss   = CharbonnierLoss()
 
     def gauss_conv(self, image: torch.Tensor) -> torch.Tensor:
-        """Applies Gaussian convolution to the input image."""
+        """Applies Gaussian convolution to the input image.
+        
+        Args:
+            image (torch.Tensor): Input image tensor of shape (B, C, H, W) with
+                pixel values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Gaussian filtered image tensor.
+        """
         b, c, w, h  = self.kernel.shape
         self.kernel = self.kernel.to(image.device)
         image       = F.pad(image, (w // 2, h // 2, w // 2, h // 2), mode="replicate")
@@ -642,7 +816,15 @@ class EdgeLoss(BaseLoss):
         return gauss
     
     def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
-        """Computes the Laplacian edge map using a Gaussian pyramid."""
+        """Computes the Laplacian edge map using a Gaussian pyramid.
+        
+        Args:
+            image (torch.Tensor): Input image tensor of shape (B, C, H, W) with
+                pixel values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Laplacian edge map tensor.
+        """
         filtered   = self.gauss_conv(image)       # filter
         down       = filtered[:, :, ::2, ::2]     # downsample
         new_filter = torch.zeros_like(filtered)
@@ -652,6 +834,17 @@ class EdgeLoss(BaseLoss):
         return diff
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """Calculate the Edge Loss between input and target.
+        
+        Args:
+            input (torch.Tensor): Input tensor (enhanced image) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+            target (torch.Tensor): Target tensor (ground truth image) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+                
+        Returns:
+            torch.Tensor: Calculated Edge Loss.
+        """
         edge1 = self.laplacian_kernel(input)
         edge2 = self.laplacian_kernel(target)
         diff  = edge1 - edge2
@@ -661,16 +854,38 @@ class EdgeLoss(BaseLoss):
 
 
 class StructureTextureDecompositionLoss(nn.Module):
-    """Structure-Texture Decomposition Loss for denoising. It penalizes high-frequency
-    texture/noise in the reflectance map.
+    """A Structure-Texture Decomposition Loss that separates an image into
+    structure and texture components using Gaussian blurring, and penalizes
+    the texture component to encourage smoother textures in the enhanced image.
+    
+    Attributes:
+        kernel_size (int): Size of the Gaussian kernel for blurring.
+        sigma (float): Standard deviation for the Gaussian kernel.
     """
     
     def __init__(self, kernel_size: int = 3, sigma: float = 1.0):
+        """Initializes the StructureTextureDecompositionLoss instance.
+        
+        Args:
+            kernel_size (int): Size of the Gaussian kernel for blurring.
+                Defaults to 3.
+            sigma (float): Standard deviation for the Gaussian kernel.
+                Defaults to 1.0.
+        """
         super().__init__()
         self.kernel_size = kernel_size
         self.sigma       = sigma
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Calculate the Structure-Texture Decomposition Loss for the input.
+        
+        Args:
+            input (torch.Tensor): Input tensor (enhanced image) of shape (B, C, H, W)
+                with pixel values in the range [0.0, 1.0].
+        
+        Returns:
+            torch.Tensor: Calculated Structure-Texture Decomposition Loss.
+        """
         # Create a blurred version of the image to represent the "structure"
         structure = gaussian_blur(input, kernel_size=self.kernel_size, sigma=self.sigma)
         # The "texture" is the difference between the "input" and the "structure"

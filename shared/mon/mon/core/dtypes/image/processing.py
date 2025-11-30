@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements processing function for image."""
+"""A module for image processing.
+
+This module provides various functions for image processing tasks such as
+resizing, format conversion, shape conversion, and type conversion.
+"""
 
 __all__ = [
     "pad_square",
@@ -14,7 +18,6 @@ __all__ = [
 ]
 
 import math
-from typing import Union
 
 import numpy as np
 import torch
@@ -28,22 +31,22 @@ def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
     """Pads an image to make it square.
 
     Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`
-            in :math:`[0, 255]`.
-        pad_value: Pixel value for padding areas. Default: ``0``.
-
+        image (numpy.ndarray): Image as a numpy.ndarray of shape (H, W, C) with
+            pixel values in [0, 255].
+        pad_value (int, optional): Padding value. Default is 0.
+        
     Returns:
-        Padded square image as a ``numpy.ndarray`` of shape :math:`(S, S, C)`
-        in :math:`[0, 255]`, where :math:`S = max(H, W)`.
-
+        numpy.ndarray: Padded square image of shape (S, S, C), where S is the
+            maximum of H and W.
+    
     Raises:
-        ValueError: If ``image`` is not a 3D array.
+        ValueError: If ``image`` is not a 3D numpy array.
     """
     if not isinstance(image, np.ndarray) or len(image.shape) != 3:
         raise ValueError(f"``image`` must be a numpy.ndarray of shape (H, W, C), "
                          f"got {image.shape} with {len(image.shape)} dimensions.")
     
-    h, w, c = image.shape
+    h, w, c  = image.shape
     size     = max(h, w)
     padded   = np.full((size, size, c), pad_value, dtype=image.dtype)
     y_offset = (size - h) // 2
@@ -52,19 +55,22 @@ def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
     return padded
 
 
-def split(image: Union[torch.Tensor, np.ndarray], n: int = 2) -> list[np.ndarray]:
-    """Split an image into ``n`` equal parts.
+def split(image: np.ndarray, n: int = 2) -> list[np.ndarray]:
+    """Splits an image into ``n`` equal parts.
 
     Args:
-        image: Image as a ``numpy.ndarray``of shape :math:`(H, W, C)`
-            in :math:`[0, 255]`.
-        n: Number of parts to split into (positive integer). Default: ``2``.
+        image (numpy.ndarray): Image as a numpy.ndarray of shape (H, W, C) with
+            pixel values in [0, 255].
+        n (int): Number of parts to split the image into. Default is 2.
 
     Returns:
-        A list of sub-images.
+        list[numpy.ndarray]: List of ``n`` sub-images as numpy.ndarray of shape
+            approximately (H/n, W/n, C).
 
     Raises:
-        ValueError: If inputs are invalid (e.g., image shape, n).
+        ValueError: If ``image`` is not a 3D numpy array.
+        ValueError: If ``n`` is not a positive integer.
+        ValueError: If ``n`` exceeds the total number of pixels in the image.
     """
     if not isinstance(image, np.ndarray) or len(image.shape) != 3:
         raise ValueError(f"``image`` must be a numpy.ndarray of shape (H, W, C), "
@@ -133,16 +139,18 @@ def split(image: Union[torch.Tensor, np.ndarray], n: int = 2) -> list[np.ndarray
 
 
 # ----- Format Conversion -----
-def to_channel_first(image: Union[torch.Tensor, np.ndarray]) -> Union[torch.Tensor, np.ndarray]:
+def to_channel_first(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Converts an image to channel-first format.
 
     Args:
-        image: Image as a ``torch.Tensor`` or ``numpy.ndarray`` of arbitrary shape.
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor or
+            numpy.ndarray in 3D or 4D format.
     
     Returns:
-        Channel-first image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(C, H, W)` in :math:`[0, 255]`).
+        torch.Tensor or numpy.ndarray: Channel-first image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in
+            [0, 255]).
     
     Raises:
         ValueError: If ``image`` dimensions are not 3 or 4.
@@ -171,17 +179,18 @@ def to_channel_first(image: Union[torch.Tensor, np.ndarray]) -> Union[torch.Tens
     return image
 
 
-def to_channel_last(image: Union[torch.Tensor, np.ndarray]) -> Union[torch.Tensor, np.ndarray]:
+def to_channel_last(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Converts an image to channel-last format.
 
     Args:
-        image: Image as a ``torch.Tensor`` or ``numpy.ndarray`` in 3D or 4D format.
-    
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor or
+            numpy.ndarray in 3D or 4D format.
+            
     Returns:
-        Channel-last image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, H, W, C)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-    
+        torch.Tensor or numpy.ndarray: Channel-last image as a torch.Tensor
+            (i.e., of shape (B, H, W, C) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
+            
     Raises:
         ValueError: If ``image`` dimensions are not 3 or 4.
         TypeError: If ``image`` is not a ``torch.Tensor`` or ``numpy.ndarray``.
@@ -211,13 +220,14 @@ def to_channel_last(image: Union[torch.Tensor, np.ndarray]) -> Union[torch.Tenso
 
 # ----- Shape Conversion -----
 def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-    """Downsample an image tensor into a pair to half resolution.
+    """Downsamples an image tensor into a pair to half resolution.
     
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)`.
+        image (torch.Tensor): Image tensor of shape (B, C, H, W).
 
     Returns:
-        Two downsampled images, each image of shape :math:`(B, C, H/2, W/2)`.
+        tuple[torch.Tensor, torch.Tensor]: A tuple containing two downsampled
+            image tensors of shape (B, C, H/2, W/2).
 
     Notes:
         Averages diagonal pixels in non-overlapping patches:
@@ -248,19 +258,21 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
 # ----- Type Conversion -----
 def to_array(image: torch.Tensor) -> np.ndarray:
-    """Converts an image from ``torch.Tensor`` to ``numpy.ndarray``.
+    """Converts an image from torch.Tensor to numpy.ndarray.
     
     Args:
-        image: Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)`
-            in :math:`[0.0, 1.0]`.
+        image (torch.Tensor): Image as a torch.Tensor of shape (B, C, H, W)
+            with pixel values in [0.0, 1.0].
     
     Returns:
-        Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)` in :math:`[0, 255]`.
+        numpy.ndarray: Image as a numpy.ndarray of shape (H, W, C) with pixel
+            values in [0, 255].
     
     Raises:
-        ValueError: If ``image`` dimensions are not ``4``.
+        TypeError: If ``image`` is not a ``torch.Tensor`` or does not have 4
+            dimensions.
         
-    Recommend order:
+    Notes:
         image = (tensor.squeeze().detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy() * 255).round().astype("uint8")
     """
     if not isinstance(image, torch.Tensor) or image.ndim != 4:
@@ -273,21 +285,22 @@ def to_array(image: torch.Tensor) -> np.ndarray:
     
 
 def to_tensor(image: np.ndarray, normalize: bool = False) -> torch.Tensor:
-    """Converts an image from ``numpy.ndarray`` to ``torch.Tensor`` with optional
-    normalization.
+    """Converts an image from numpy.ndarray to torch.Tensor.
 
     Args:
-        image: Image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`
-            in :math:`[0, 255]`.
-        normalize: If ``True``, normalize to :math:`[0.0, 1.0]`. Default: ``False``.
+        image (numpy.ndarray): Image as a numpy.ndarray of shape (H, W, C) in
+            [0, 255].
+        normalize (bool): If True, normalizes pixel values to [0.0, 1.0].
+            Default to False.
 
     Returns:
-        Image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`.
+        torch.Tensor: Image as a torch.Tensor of shape (1, C, H, W) with pixel
+            values in [0.0, 1.0] if ``normalize`` is True, else in [0.0, 255.0].
     
     Raises:
-        TypeError: If ``image`` is not a ``numpy.ndarray``.
+        TypeError: If ``image`` is not a 3D numpy array.
         
-    Recommend order:
+    Notes:
         image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().div(255.0).unsqueeze(0).to(device)
     """
     if not isinstance(image, np.ndarray) or len(image.shape) != 3:

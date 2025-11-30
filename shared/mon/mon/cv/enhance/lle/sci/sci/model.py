@@ -35,12 +35,12 @@ class SCI(Finetunemodel, nn.ModelMixin):
         - Code: https://github.com/vis-opt-group/SCI
     """
     
-    arch     : str          = "sci"
-    name     : str          = "sci"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "sci"
+    _name     : str          = "sci"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "darkface": {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/sci/sci/darkface/sci_darkface.pt",

@@ -35,12 +35,12 @@ class PairLIE(net, nn.ModelMixin):
         - Code: https://github.com/zhenqifu/PairLIE
     """
     
-    arch     : str          = "pairlie"
-    name     : str          = "pairlie"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "pairlie"
+    _name     : str          = "pairlie"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "sice": {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/pairlie/pairlie/sice/pairlie_sice.pth",

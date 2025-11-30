@@ -35,12 +35,12 @@ class LFormer(net, nn.ModelMixin):
         - Code: https://github.com/huaqlili/unsupervised-light-enhance-ICLR2025
     """
     
-    arch     : str          = "lformer"
-    name     : str          = "lformer"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "lformer"
+    _name     : str          = "lformer"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "lolv1"    : {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/lformer/lformer/lolv1/lformer_lolv1.pth",

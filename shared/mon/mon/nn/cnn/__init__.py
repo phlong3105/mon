@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Convolutional Neural Networks (CNNs).
+"""A package for convolutional neural networks (CNNs).
+
+This package provides various modules and classes for building and training
+convolutional neural networks (CNNs) in deep learning applications.
 
 References:
     - Definition: https://www.ibm.com/think/topics/convolutional-neural-networks#763338459

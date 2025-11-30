@@ -43,12 +43,12 @@ class EfficientNet(tvm.EfficientNet, nn.ModelMixin, abc.ABC):
         - https://arxiv.org/abs/1905.11946
     """
     
-    arch     : str          = "efficientnet"
-    name     : str          = "efficientnet",
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "efficientnet"
+    _name     : str          = "efficientnet",
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, weights: Any = "imagenet1k_v1", num_classes: int = 1000, *args, **kwargs):
         weights, path, num_classes = self.parse_weights(weights, num_classes)
@@ -60,8 +60,8 @@ class EfficientNet(tvm.EfficientNet, nn.ModelMixin, abc.ABC):
 @MODELS.register(name="efficientnet_b0", arch="efficientnet")
 class EfficientNet_B0(EfficientNet):
     
-    name: str  = "efficientnet_b0"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b0"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pth",
@@ -85,8 +85,8 @@ class EfficientNet_B0(EfficientNet):
 @MODELS.register(name="efficientnet_b1", arch="efficientnet")
 class EfficientNet_B1(EfficientNet):
     
-    name: str  = "efficientnet_b1"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b1"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b1_rwightman-bac287d4.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pth",
@@ -115,8 +115,8 @@ class EfficientNet_B1(EfficientNet):
 @MODELS.register(name="efficientnet_b2", arch="efficientnet")
 class EfficientNet_B2(EfficientNet):
 
-    name: str  = "efficientnet_b2"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b2"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b2_rwightman-c35c1473.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pth",
@@ -140,8 +140,8 @@ class EfficientNet_B2(EfficientNet):
 @MODELS.register(name="efficientnet_b3", arch="efficientnet")
 class EfficientNet_B3(EfficientNet):
 
-    name: str  = "efficientnet_b3"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b3"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pth",
@@ -165,8 +165,8 @@ class EfficientNet_B3(EfficientNet):
 @MODELS.register(name="efficientnet_b4", arch="efficientnet")
 class EfficientNet_B4(EfficientNet):
     
-    name: str  = "efficientnet_b4"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b4"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b4_rwightman-23ab8bcd.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pth",
@@ -190,8 +190,8 @@ class EfficientNet_B4(EfficientNet):
 @MODELS.register(name="efficientnet_b5", arch="efficientnet")
 class EfficientNet_B5(EfficientNet):
 
-    name: str  = "efficientnet_b5"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b5"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b5_lukemelas-1a07897c.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pth",
@@ -217,8 +217,8 @@ class EfficientNet_B5(EfficientNet):
 @MODELS.register(name="efficientnet_b6", arch="efficientnet")
 class EfficientNet_B6(EfficientNet):
 
-    name: str  = "efficientnet_b6"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b6"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b6_lukemelas-24a108a5.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pth",
@@ -244,8 +244,8 @@ class EfficientNet_B6(EfficientNet):
 @MODELS.register(name="efficientnet_b7", arch="efficientnet")
 class EfficientNet_B7(EfficientNet):
 
-    name: str  = "efficientnet_b7"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_b7"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_b7_lukemelas-c5b4e57e.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pth",
@@ -271,8 +271,8 @@ class EfficientNet_B7(EfficientNet):
 @MODELS.register(name="efficientnet_v2_s", arch="efficientnet")
 class EfficientNet_V2_S(EfficientNet):
 
-    name: str  = "efficientnet_v2_s"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_v2_s"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pth",
@@ -298,8 +298,8 @@ class EfficientNet_V2_S(EfficientNet):
 @MODELS.register(name="efficientnet_v2_m", arch="efficientnet")
 class EfficientNet_V2_M(EfficientNet):
 
-    name: str  = "efficientnet_v2_m"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_v2_m"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_v2_m-dc08266a.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pth",
@@ -325,8 +325,8 @@ class EfficientNet_V2_M(EfficientNet):
 @MODELS.register(name="efficientnet_v2_l", arch="efficientnet")
 class EfficientNet_V2_L(EfficientNet):
 
-    name: str  = "efficientnet_v2_l"
-    zoo : dict = box.Box({
+    _name: str  = "efficientnet_v2_l"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pth",

@@ -41,12 +41,12 @@ class FourLLIE(enhancement_model, nn.ModelMixin):
         - Code: https://github.com/wangchx67/FourLLIE
     """
     
-    arch     : str          = "fourllie"
-    name     : str          = "fourllie"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box({
+    _arch     : str          = "fourllie"
+    _name     : str          = "fourllie"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box({
         "lolv2real" : {
             "url"        : None,
             "path"       : ROOT_DIR / "zoo/cv/enhance/lle/fourllie/fourllie/lolv2real/fourllie_lolv2real.pth",

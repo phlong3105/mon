@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the SICE dataset for exposure enhancement tasks.
+"""A module for the SICE dataset.
+
+This module implements the SICE dataset for exposure enhancement tasks.
 
 References:
     - Paper: "Learning a Deep Single Image Contrast Enhancer from Multi-Exposure
@@ -38,29 +40,38 @@ from ....core import *
 
 @DATASETS.register(name="sice")
 class SICE(ImageDataset):
-    """SICE dataset. We use the under-exposure images as the primary input modality.
-    
-    Args:
-        lr: Whether to use low-resolution images (i.e., downsampled by 8). Default: ``True``.
+    """SICE dataset. We use the under-exposure images as the primary input
+    modality.
     """
     
-    root_name : str         = "sice"
-    tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF, Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "sice"
+    _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF, Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image"      : Modality(name="image_under", type="image", module=Image,           train=True, test=True, primary=True),
         "image_under": Modality(name="image_under", type="image", module=Image,           train=True, test=False),
         "image_over" : Modality(name="image_over",  type="image", module=Image,           train=True, test=False),
         "depth"      : Modality(name=DepthName,     type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"        : Modality(name="ref",         type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
     def __init__(self, lr: bool = True, *args, **kwargs):
+        """Initializes the SICE dataset.
+        
+        Args:
+            lr (bool): If True, use the low-resolution version of the dataset.
+                Default is True.
+        """
         self.lr = lr
         super().__init__(*args, **kwargs)
     
-    def list_primary_data(self) -> list:
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         if self.lr:
             patterns = [self.root / "sice_lr" / self.split_str / "image_under"]
         else:
@@ -73,7 +84,7 @@ class SICE(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
         
         return images
 
@@ -85,17 +96,22 @@ class SICEME(ImageDataset):
     (e.g., Zero-DCE, Zero-DCE++, etc.).
     """
     
-    root_name : str         = "sice"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "sice"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True,  test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True,  test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=False, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "me" / self.split_str / "image"]
         
         images: list[Image] = []
@@ -105,6 +121,6 @@ class SICEME(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
     
         return images

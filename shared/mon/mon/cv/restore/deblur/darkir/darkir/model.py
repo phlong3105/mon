@@ -30,12 +30,12 @@ class DarkIR(archs.DarkIR, nn.ModelMixin):
         - Code: https://github.com/cidautai/DarkIR
     """
     
-    arch     : str          = "darkir"
-    name     : str          = "darkir"
-    tasks    : list[Task]   = [Task.LLE, Task.DEBLUR]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "darkir"
+    _name     : str          = "darkir"
+    _tasks    : list[Task]   = [Task.LLE, Task.DEBLUR]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
 
 
 MODELS.register(name="darkir_m", arch="darkir", module=DarkIR)

@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements model complexity benchmarking functionalities."""
+"""A module for computing and benchmarking model complexity.
+
+This module provides functions to compute the number of parameters, MACs, and
+FLOPs of a given PyTorch model. It also includes a benchmarking function to log
+these statistics.
+"""
 
 __all__ = [
     "benchmark",
@@ -22,15 +27,18 @@ def compute_model_stats(
     imgsz   : int = 512,
     channels: int = 3
 ) -> tuple[float, tuple, float]:
-    """Computes FLOPs and parameters for a model. Note: 1 MAC ≈ 2 FLOPs
+    """Computes the number of parameters, MACs, and FLOPs of a model.
     
     Args:
-        model: PyTorch model to profile.
-        imgsz: Input image size. Default: ``512``.
-        channels: Number of input channels. Default: ``3``.
-    
+        model (nn.Module): PyTorch model to profile.
+        imgsz (int): Input image size. Defaults to 512.
+        channels (int): Number of input channels. Defaults to 3.
+        
     Returns:
-        A tuple of :math:`(macs, flops, params)`.
+        tuple: A tuple containing:
+            - params (float): Number of parameters in the model.
+            - macs (tuple): Multiply-Accumulate Operations of the model.
+            - flops (float): Floating Point Operations of the model.
     """
     h, w         = I.imgsz(imgsz)
     device       = get_model_device(model)
@@ -49,9 +57,9 @@ def benchmark(model: nn.Module, imgsz: int = 512, channels: int = 3):
     """Measures and logs the complexity of a model.
 
     Args:
-        model: PyTorch model to profile.
-        imgsz: Input image size. Default: ``512``.
-        channels: Number of input channels. Default: ``3``.
+        model (nn.Module): PyTorch model to benchmark.
+        imgsz (int): Input image size. Defaults to 512.
+        channels (int): Number of input channels. Defaults to 3.
     """
     params, macs, flops = compute_model_stats(model=model, imgsz=imgsz, channels=channels)
     log(f"Params    : {params:.4f}")

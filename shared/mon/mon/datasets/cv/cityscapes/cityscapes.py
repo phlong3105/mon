@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Cityscapes dataset.
+"""A module for Cityscapes dataset.
+
+This module implements the Cityscapes main dataset for semantic segmentation tasks.
 
 References:
 	- Data: https://www.cityscapes-dataset.com
@@ -13,33 +15,22 @@ __all__ = [
 
 import cv2
 
-from mon.core import pathlib, rich
+from mon.core import Path, rich
 from ...core import *
 
 
 @DATASETS.register(name="cityscapes")
 class Cityscapes(ImageDataset):
-    """Cityscapes main dataset.
-
-    Args:
-        root: Root directory path. Default: ``default_root_dir``.
-        use_blurred: Use blurred images if ``True``. Default: ``False``.
-        use_coarse: Use coarse annotations if ``True``. Default: ``False``.
-        *args: Additional args for parent class.
-        **kwargs: Additional kwargs for parent class.
-   
-    Raises:
-        FileNotFoundError: If ``root``/cityscapes directory does not exist.
-    """
+    """Cityscapes main dataset."""
     
-    root_name : str         = "cityscapes"
-    tasks     : list[Task]  = [Task.SEGMENT]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = Modalities({
+    _root_name : str         = "cityscapes"
+    _tasks     : list[Task]  = [Task.SEGMENT]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = Modalities({
         "image"   : Image,
         "semantic": SemanticMask,
     })
-    classes   : Classes     = Classes([
+    _classes   : Classes     = Classes([
         {"name": "unlabeled"           , "id":  0, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "ego vehicle"         , "id":  1, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "rectification border", "id":  2, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
@@ -79,17 +70,28 @@ class Cityscapes(ImageDataset):
 
     def __init__(
         self,
-        root       : pathlib.Path,
+        root       : Path,
         use_blurred: bool = False,
         use_coarse : bool = False,
         *args, **kwargs
     ):
+        """Initializes the Cityscapes dataset.
+        
+        Args:
+            root (Path): The root directory of the dataset.
+            use_blurred (bool): Whether to use blurred images. Defaults to False.
+            use_coarse (bool): Whether to use coarse annotations. Defaults to False.
+        """
         self.use_blurred = use_blurred
         self.use_coarse  = use_coarse
         super().__init__(root=root, *args, **kwargs)
 
-    def list_primary_data(self) -> list:
-        """Lists image and semantic segmentation data from the dataset."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         image_name = "leftImg8bit_blurred" if self.use_blurred else "leftImg8bit"
         gt_name    = "gtCoarse"            if self.use_coarse  else "gtFine"
         patterns   = [self.root / self.split_str / image_name]
@@ -101,7 +103,7 @@ class Cityscapes(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} left image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         semantic: list[SemanticMask] = []
         with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
@@ -111,11 +113,11 @@ class Cityscapes(ImageDataset):
                 path = path.parent / f"{path.stem}_labelIds{path.suffix}"
                 semantic.append(
                     SemanticMask(
-                        path  = path.image_file(),
+                        datas  = path.image_file(),
                         root  = img.root,
                         flags = cv2.IMREAD_GRAYSCALE
                     )
                 )
 
-        self.datapoints["image"]    = images
-        self.datapoints["semantic"] = semantic
+        self._datapoints["image"]    = images
+        self._datapoints["semantic"] = semantic

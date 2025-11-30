@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module defines global constants used across ``mon`` framework."""
+"""A module for global constants.
+
+This module defines global constants used across the project, including
+directory paths, file extensions, and configuration flags.
+"""
 
 __all__ = [
     "DEPTH_SOURCE",

@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements core linear layers."""
+"""A module for core linear layers.
+
+This module implements various core linear layer components used in neural
+networks.
+"""
 
 __all__ = [
     "Bilinear",

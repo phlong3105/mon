@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements dataset classes where video/stream data (i.e., frames)
+"""A module for video-based datasets.
+
+This module implements dataset classes where video/stream data (i.e., frames)
 is the primary modality.
 """
 
 __all__ = [
-    "VideoLoader",
     "VideoLoaderCV",
     "is_video_dataset",
 ]
 
-import abc
+from typing import Any
 
 import cv2
 
@@ -23,71 +24,20 @@ from .image import ImageDataset
 
 
 # ----- Video Loader -----
-class VideoLoader(ImageDataset, abc.ABC):
-    """Base class for video loaders.
-
+class VideoLoaderCV(ImageDataset):
+    """A dataset class for loading video/stream data using OpenCV.
+    
     Attributes:
-        tasks: List of supported tasks.
-        modalities: Dictionary of datapoint modalities.
-
-    Args:
-        root: Absolute path to the video file or stream.
-        split: Data split subset to use. One of: ``Split.TRAIN``, ``Split.VAL``,
-            ``Split.TEST``, or ``Split.PREDICT``. Default: ``Split.PREDICT``.
-        transform: Transformations for input/target. Default: ``None``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
+        _tasks (list[Task]): List of tasks supported by the dataset.
+        _modalities (Modalities): A dictionary defining the dataset modalities.
+        _num_frames (int): Number of frames in the video.
+        _video_capture (cv2.VideoCapture): OpenCV video capture object.
     """
     
-    tasks     : list[Task] = [Task.VIDEO]
-    modalities: Modalities = {
+    _tasks     : list[Task] = [Task.VIDEO]
+    _modalities: Modalities = {
         "frame": Modality(name="image", type="image", module=Frame, train=True, test=True, primary=True),
     }
-    
-    def __init__(
-        self,
-        root      : Path,
-        split     : Split     = Split.PREDICT,
-        transform : A.Compose = None,
-        verbose   : bool      = True,
-        *args, **kwargs
-    ):
-        self.num_frames = 0
-        super().__init__(
-            root      = root,
-            split     = split,
-            transform = transform,
-            verbose   = verbose,
-            *args, **kwargs
-        )
-    
-    # ----- Magic Methods -----
-    def __len__(self) -> int:
-        """Retrieves the number of frames in the video."""
-        return self.num_frames
-    
-    # ----- Initialize -----
-    def verify_data(self):
-        """Verifies dataset integrity.
-
-        Raises:
-            RuntimeError: If no datapoints exist.
-        """
-        if self.__len__() <= 0:
-            raise RuntimeError("No datapoints in the dataset")
-        if self.verbose:
-            log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
-
-
-class VideoLoaderCV(VideoLoader):
-    """Loads video frames from a file or stream using ``cv2``.
-
-    Args:
-        root: Absolute path to the video file or stream.
-        split: Data split subset to use. One of: ``Split.TRAIN``, ``Split.VAL``,
-            ``Split.TEST``, or ``Split.PREDICT``. Default: ``Split.PREDICT``.
-        transform: Transformations for input/target. Default: ``None``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
-    """
     
     def __init__(
         self,
@@ -97,7 +47,17 @@ class VideoLoaderCV(VideoLoader):
         verbose  : bool      = True,
         *args, **kwargs
     ):
-        self.video_capture = None
+        """Initializes the VideoLoaderCV dataset.
+        
+        Args:
+            root (Path): Path to the video file or stream.
+            split (Split): Dataset split type. Defaults to Split.PREDICT.
+            transform (A.Compose): Transformations to apply to the data.
+                Defaults to None.
+            verbose (bool): Whether to print dataset information. Defaults to True.
+        """
+        self._num_frames    = 0
+        self._video_capture = None
         super().__init__(
             root      = root,
             split     = split,
@@ -105,92 +65,127 @@ class VideoLoaderCV(VideoLoader):
             verbose   = verbose,
             *args, **kwargs
         )
+        
+    # ----- Magic Methods -----
+    def __del__(self):
+        """Closes the dataset loading mechanism and releases resources."""
+        if isinstance(self._video_capture, cv2.VideoCapture):
+            self._video_capture.release()
+    
+    def __iter__(self):
+        """Initializes the dataset iterator."""
+        self._iter_idx = 0
+        if isinstance(self._video_capture, cv2.VideoCapture):
+            self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        return self
+    
+    def __len__(self) -> int:
+        """Returns the length of the dataset.
+        
+        Returns:
+            int: Length of the dataset.
+        """
+        return self._num_frames
     
     # ----- Properties -----
     @property
     def is_stream(self) -> bool:
-        """Returns ``True`` if the input is a stream, ``False`` otherwise."""
-        return self.root.is_video_stream() or self.num_frames == -1
+        """Getter to check if the video source is a stream.
+        
+        Returns:
+            bool: True if the video source is a stream, False otherwise.
+        """
+        return self._root.is_video_stream() or self._num_frames == -1
 
     @property
     def shape(self) -> tuple[int, int, int]:
-        """Returns the shape of video frames as a tuple of
-        :math:`(height, width, channels)`.
+        """Getter for the shape of video frames.
+        
+        Returns:
+            tuple[int, int, int]: A tuple representing the shape of video frames
+                as (H, W, C).
         """
         return (
-            int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
-            int(self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+            int(self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
             3
         )
     
     @property
     def imgsz(self) -> tuple[int, int]:
-        """Returns the resolution of video frames as a tuple of
-        :math:`(height, width)`.
+        """Getter for the size of video frames.
+        
+        Returns:
+            tuple[int, int]: A tuple representing the size of video frames as (H, W).
         """
         return (
-            int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
-            int(self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+            int(self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+            int(self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         )
     
     # ----- Initialize -----
-    def list_primary_data(self) -> list:
+    def _load_primary_data(self) -> list[Any]:
         """Gets video frames from the ``root`` path.
 
+        Returns:
+            list[Any]: An empty list as frames are read on-the-fly.
+            
         Raises:
-            IOError: If ``root`` is not a valid video file or stream.
+            IOError: If the video source is invalid.
         """
-        root = Path(self.root)
+        root = self.root
         if root.is_video_file():
-            self.video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
-            num_frames = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+            self._video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
+            num_frames = int(self._video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
         elif root.is_video_stream():
-            self.video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
+            self._video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
             num_frames = -1
         else:
-            raise IOError(f"Invalid video source: {self.root}")
+            raise IOError(f"Invalid video source: {root}")
         
-        if self.num_frames != num_frames:
-            self.num_frames = num_frames
+        if self._num_frames != num_frames:
+            self._num_frames = num_frames
         
         return []
-        
-    def reset(self):
-        """Resets the video loader."""
-        if isinstance(self.video_capture, cv2.VideoCapture):
-            self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
     
-    def close(self):
-        """Closes and releases video capture."""
-        if isinstance(self.video_capture, cv2.VideoCapture):
-            self.video_capture.release()
-    
-    # ----- Data Retrieval -----
-    def get_datapoint(self, index: int) -> dict:
-        """ets a datapoint at the specified ``index``.
-
-        Args:
-            index: Index of datapoint.
-
-        Returns:
-            A ``dict`` containing the datapoint.
+    def verify(self):
+        """Verifies dataset integrity.
 
         Raises:
-            StopIteration: If index exceeds frame count for non-streams.
-            RuntimeError: If ``video_capture`` not initialized.
+            RuntimeError: If no datapoints exist.
         """
-        if not self.is_stream and index >= self.num_frames:
-            self.close()
+        if self.__len__() <= 0:
+            raise RuntimeError("No datapoints in the dataset")
+        
+        if self.verbose:
+            log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
+    
+    # ----- Data Retrieval -----
+    def _get_datapoint(self, index: int) -> dict[str, Any]:
+        """Gets a datapoint at the specified ``index``.
+
+        Args:
+            index (int): Index of datapoint.
+
+        Returns:
+            dict[str, Any]: A dictionary containing the datapoint.
+
+        Raises:
+            StopIteration: If the end of the video stream is reached.
+            RuntimeError: If the video capture object is not initialized.
+        """
+        if not self.is_stream and index >= self._num_frames:
+            self._video_capture.release()
             raise StopIteration
         
-        if isinstance(self.video_capture, cv2.VideoCapture):
-            ret_val, frame = self.video_capture.read()
+        if isinstance(self._video_capture, cv2.VideoCapture):
+            ret_val, frame = self._video_capture.read()
         else:
-            raise RuntimeError("[video_capture] has not been initialized.")
+            raise RuntimeError("``video_capture`` has not been initialized.")
         
         if frame is not None:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = Frame(data=frame, index=index, orig_shape=self.imgsz, path=self.root)
+            frame = Frame(data=frame, index=index, path=self._root, root=self._root.parent)
         
         pk, _     = self.primary_modality
         datapoint = {}
@@ -204,14 +199,14 @@ class VideoLoaderCV(VideoLoader):
 
         return datapoint
     
-    def get_meta(self, index: int = 0) -> dict:
+    def _get_meta(self, index: int = 0) -> dict[str, Any]:
         """Gets metadata at the specified ``index``.
 
         Args:
-            index: Index of metadata. Default: ``0``.
+            index (int): Index of datapoint. Defaults to 0.
 
         Returns:
-            A ``dict`` containing the metadata.
+            dict[str, Any]: A dictionary containing the metadata.
         """
         path = self.root
         return {
@@ -220,15 +215,15 @@ class VideoLoaderCV(VideoLoader):
             "video_path"   : path,
             "orig_shape"   : self.shape,
             "shape"        : self.shape,
-            "format"       : self.video_capture.get(cv2.CAP_PROP_FORMAT),
-            "fourcc"       : str(self.video_capture.get(cv2.CAP_PROP_FOURCC)),
-            "fps"          : int(self.video_capture.get(cv2.CAP_PROP_FPS)),
-            "mode"         : self.video_capture.get(cv2.CAP_PROP_MODE),
-            "num_frames"   : self.num_frames,
-            "pos_avi_ratio": int(self.video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO)),
-            "pos_frames"   : int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES)),
-            "pos_msec"     : int(self.video_capture.get(cv2.CAP_PROP_POS_MSEC)),
-            "hash"         : self.root.stat().st_size if isinstance(self.root, Path) else None,
+            "format"       : self._video_capture.get(cv2.CAP_PROP_FORMAT),
+            "fourcc"       : str(self._video_capture.get(cv2.CAP_PROP_FOURCC)),
+            "fps"          : int(self._video_capture.get(cv2.CAP_PROP_FPS)),
+            "mode"         : self._video_capture.get(cv2.CAP_PROP_MODE),
+            "num_frames"   : self._num_frames,
+            "pos_avi_ratio": int(self._video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO)),
+            "pos_frames"   : int(self._video_capture.get(cv2.CAP_PROP_POS_FRAMES)),
+            "pos_msec"     : int(self._video_capture.get(cv2.CAP_PROP_POS_MSEC)),
+            "hash"         : path.stat().st_size if isinstance(path, Path) else None,
         }
 
 
@@ -237,13 +232,13 @@ def is_video_dataset(dataset: BaseDataset) -> bool:
     """Checks if a dataset is a video dataset.
 
     Args:
-        dataset: Dataset to check.
+        dataset (BaseDataset): The dataset to check.
 
     Returns:
-        ``True`` if dataset is a video dataset, ``False`` otherwise.
+        bool: True if the dataset is a video dataset, False otherwise.
     """
     if dataset is None:
         return False
     if hasattr(dataset, "tasks") and isinstance(dataset.tasks, list | tuple):
         return Task.VIDEO in dataset.tasks
-    return isinstance(dataset, VideoLoader | VideoLoaderCV)
+    return isinstance(dataset, VideoLoaderCV)

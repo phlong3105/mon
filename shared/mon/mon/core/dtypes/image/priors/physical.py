@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements image physical priors.
+"""A module for image physical priors.
 
-This category encompasses models about image properties based on physical (model-based).
+This module implements physical-based image priors used in computer vision
+and image processing tasks. These priors help in enhancing image quality by
+modeling physical phenomena such as atmospheric scattering and light absorption.
 """
 
 __all__ = [
@@ -23,30 +25,32 @@ def atmospheric_point_spread_function(
     q    : float = 0.2,
     T    : float = 1.2,
     k    : float = 0.5,
-) ->  torch.Tensor:
-    """Get the atmospheric point spread function (APSF) from an RGB image.
+) -> torch.Tensor:
+    """Gets the atmospheric point spread function (APSF) from an RGB image.
     
-    Args:
-        image: An RGB image as a ``torch.Tensor`` of shape :math:`(B, C, H, W)`
-            in :math:`[0.0, 1.0]`.
-        q: Forward scattering param.
-            - ``0.00-0.20``: air
-            - ``0.20-0.70``: aerosol
-            - ``0.70-0.80``: haze
-            - ``0.80-0.85``: mist
-            - ``0.85-0.90``: fog
-            - ``0.90-1.00``: rain
-            Default: ``0.2``.
-        T: Optical thickness. Possibly: [0.7, 1.2, 4]. According to Narasimhan in
-            CVPR03 paper: T = sigma * R (extinction coefficient * distance or depth),
-            which is the same \beta d in haze modelling. Default: ``1.2``.
-        k: Conversion param for kernel. Default: ``0.5``.
-    
-    Returns:
-        An APSF with similar type and format of the input ``image``.
-        
     References:
         - Code: https://github.com/jinyeying/night-enhancement/blob/main/glow_rendering_code/repro_ICCV2007_Fig5.m
+        
+    Args:
+        image (torch.Tensor): An RGB image as a torch.Tensor of shape (B, 3, H, W)
+            with pixel values in [0.0, 1.0].
+        q (float): Forward scattering param.
+            - 0.00-0.20: air
+            - 0.20-0.70: aerosol
+            - 0.70-0.80: haze
+            - 0.80-0.85: mist
+            - 0.85-0.90: fog
+            - 0.90-1.00: rain
+            Defaults to 0.2.
+        T (float): Optical thickness. Possibly: [0.7, 1.2, 4]. According to
+            Narasimhan in CVPR03 paper:
+            T = sigma * R (extinction coefficient * distance or depth),
+            which is the same \beta d in haze modelling. Defaults to 1.2.
+        k (float): Conversion param for kernel. Defaults to 0.5.
+    
+    Returns:
+        torch.Tensor: A torch.Tensor of shape (B, 3, H, W) with pixel values in
+            [0.0, 1.0], representing the APSF applied image.
     """
     from scipy.special import gamma
     
@@ -70,18 +74,18 @@ def atmospheric_point_spread_function(
 
 
 def atmospheric_prior(image: np.ndarray, ksize: int = 15, p: float = 0.0001) -> np.ndarray:
-    """Get the atmospheric light in an RGB image.
+    """Gets the atmospheric light in an RGB image.
 
     Args:
-        image: An RGB image as a ``numpy.ndarray`` of shape :math:`(H, W, C)`
-            in :math:`[0, 255]`.
-        ksize: Window size for the dark channel. Default: ``15``.
-        p: Percentage of pixels for estimating atmospheric light.
-            Default: ``0.0001``.
-
+        image (np.ndarray): An RGB image as a numpy.ndarray of shape (3, H, W)
+            with pixel values in [0, 255].
+        ksize (int): Window size for dark channel prior. Defaults to 15.
+        p (float): Percentage of brightest pixels in the dark channel to be
+            considered for atmospheric light estimation. Defaults to 0.0001.
+            
     Returns:
-        A 3-element array of atmospheric light as a ``numpy.ndarray`` in range
-        :math:`[0, 255]` for each channel.
+        np.ndarray: A numpy.ndarray of shape (3,) representing the estimated
+            atmospheric light for each RGB channel.
     """
     if not isinstance(image, np.ndarray):
         raise ValueError(f"``image`` must be numpy.ndarray, got {type(image)}.")

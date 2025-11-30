@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module extends the standard ``pathlib.Path`` class with additional
+"""A module for extended pathlib functionalities.
+
+This module extends the standard pathlib.Path class with additional
 functionalities.
 """
 
@@ -39,10 +41,11 @@ from mon.core.utils import snakecase
 
 # ----- Path Class -----
 class Path(type(Path_())):
-    """An extension of ``pathlib.Path`` with additional functionalities.
+    """An extended pathlib.Path class with additional methods for file type
+    checking and manipulation.
     
-    Notes:
-        Methods are kept as methods (not properties) for consistency with ``pathlib.Path``.
+    Many should-be-properties are kept as methods for consistency with
+    pathlib.Path.
     """
     
     # ----- Properties -----
@@ -59,7 +62,7 @@ class Path(type(Path_())):
         """Checks if the path is a file basename.
 
         Returns:
-            ``True`` if path matches its basename, ``False`` otherwise.
+            bool: True if path equals its name, False otherwise.
         """
         return str(self) == self.name
      
@@ -67,7 +70,7 @@ class Path(type(Path_())):
         """Checks if the path matches its stem.
 
         Returns:
-            ``True`` if path equals its stem, ``False`` otherwise.
+            bool: True if path equals its name, False otherwise.
         """
         return str(self) == self.stem
     
@@ -75,7 +78,7 @@ class Path(type(Path_())):
         """Checks if the path matches its stem.
 
         Returns:
-            ``True`` if path equals its stem, ``False`` otherwise.
+            bool: True if path equals its stem, False otherwise.
         """
         return str(self) == self.stem
     
@@ -83,7 +86,7 @@ class Path(type(Path_())):
         """Checks if the path is a valid URL.
 
         Returns:
-            ``True`` if path is a valid URL, ``False`` otherwise.
+            bool: True if path is a valid URL, False otherwise.
         """
         return not isinstance(validators.url(str(self)), validators.ValidationError)
     
@@ -91,10 +94,10 @@ class Path(type(Path_())):
         """Checks if the path is a file or valid URL.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a file or valid URL, ``False`` otherwise.
+            bool: True if path is a file or valid URL, False otherwise.
         """
         return (
             (not exist or self.is_file())
@@ -102,10 +105,10 @@ class Path(type(Path_())):
         )
     
     def is_file_like(self) -> bool:
-        """"Checks if the path resembles a file format.
+        """Checks if the path resembles a file format.
 
         Returns:
-            ``True`` if path has a suffix, ``False`` otherwise.
+            bool: True if path has a suffix, False otherwise.
         """
         return "." in self.suffix
     
@@ -113,7 +116,7 @@ class Path(type(Path_())):
         """Checks if the path resembles a directory format.
 
         Returns:
-            ``True`` if path has no suffix, ``False`` otherwise.
+            bool: True if path has no suffix, False otherwise.
         """
         return self.suffix == ""
     
@@ -121,55 +124,55 @@ class Path(type(Path_())):
         """Checks if the directory has a subdirectory with the given name.
 
         Args:
-            name: Subdirectory name to check.
+            name (str): Subdirectory name to check.
 
         Returns:
-            ``True`` if subdirectory exists, ``False`` otherwise.
+            bool: True if subdirectory exists, False otherwise.
         """
         return name in [d.name for d in self.subdirs()]
     
     # ----- Check Text File -----
     def is_json_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.json`` file.
+        """Checks if the path is a .json file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a ``.json`` file, ``False`` otherwise.
+            bool: True if path is a .json file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() == ".json"
     
     def is_txt_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.txt`` file.
+        """Checks if the path is a .txt file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a ``.txt`` file, ``False`` otherwise.
+            bool: True if path is a .txt file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() == ".txt"
     
     def is_xml_file(self, exist: bool = True) -> bool:
-        """Checks if the path is an ``.xml`` file.
+        """Checks if the path is an .xml file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is an ``.xml`` file, ``False`` otherwise.
+            bool: True if path is an .xml file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() == ".xml"
     
     def is_yaml_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.yaml`` or ``.yml`` file.
+        """Checks if the path is a .yaml or .yml file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a ``.yaml`` or ``.yml`` file, ``False`` otherwise.
+            bool: True if path is a .yaml or .yml file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() in [".yaml", ".yml"]
    
@@ -178,21 +181,21 @@ class Path(type(Path_())):
         """Checks if the path is an image file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is an image file, ``False`` otherwise.
+            bool: True if path is an image file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() in ImageExtension
         
     def is_raw_image_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a raw image file (``.dng`` or ``.arw``).
+        """Checks if the path is a raw image file (e.g., .dng or .arw).
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a raw image file, ``False`` otherwise.
+            bool: True if path is a raw image file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() in [".dng", ".arw"]
     
@@ -201,10 +204,10 @@ class Path(type(Path_())):
         """Checks if the path is a video file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a video file, ``False`` otherwise.
+            bool: True if path is a video file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() in VideoExtension
     
@@ -212,74 +215,74 @@ class Path(type(Path_())):
         """Checks if the path is a video stream.
 
         Returns:
-            ``True`` if path contains ``rtsp``, ``False`` otherwise.
+            bool: True if path is a video stream, False otherwise.
         """
         return "rtsp" in str(self).lower()
     
     # ----- Check ML File -----
     def is_cache_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.cache`` file.
+        """Checks if the path is a .cache file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a ``.cache`` file, ``False`` otherwise.
+            bool: True if path is a .cache file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() == ".cache"
     
     def is_ckpt_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.ckpt`` file.
+        """Checks if the path is a .ckpt file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a ``.ckpt`` file, ``False`` otherwise.
+            bool: True if path is a .ckpt file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() == ".ckpt"
     
     def is_config_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.config`` or ``.cfg`` file.
+        """Checks if the path is a .config or .cfg file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a config file, ``False`` otherwise.
+            bool: True if path is a config file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() in ConfigExtension
 
     def is_onnx_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.onnx`` file.
+        """Checks if the path is a .onnx file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a ``.onnx`` file, ``False`` otherwise.
+            bool: True if path is a .onnx file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() == ".onnx"
 
     def is_py_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.py`` file.
+        """Checks if the path is a .py file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a ``.py`` file, ``False`` otherwise.
+            bool: True if path is a .py file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() == ".py"
 
     def is_weights_file(self, exist: bool = True) -> bool:
-        """Checks if the path is a ``.pt`` or ``.pth`` file.
+        """Checks if the path is a .pt or .pth file.
 
         Args:
-            exist: If ``True``, verifies the file exists. Default: ``True``.
+            exist (bool): If True, verifies the file exists. Defaults to True.
 
         Returns:
-            ``True`` if path is a weights file, ``False`` otherwise.
+            bool: True if path is a weights file, False otherwise.
         """
         return (not exist or self.is_file()) and self.suffix.lower() in WeightExtension
     
@@ -288,10 +291,11 @@ class Path(type(Path_())):
         """Returns a list of subdirectory paths.
 
         Args:
-            recursive: If ``True``, includes subdirs recursively. Default: ``False``.
+            recursive (bool): If True, includes subdirs in subdirs.
+                Defaults to False.
 
         Returns:
-            List of subdirectory paths.
+            list[Path]: List of subdirectory paths.
         """
         path = self.parent if self.is_file_like() else self
         paths = list(path.rglob("*")) if recursive else list(path.iterdir())
@@ -301,10 +305,10 @@ class Path(type(Path_())):
         """Returns a list of file paths in the directory.
 
         Args:
-            recursive: If ``True``, includes files in subdirs. Default: ``False``.
+            recursive (bool): If True, includes files in subdirs. Defaults to False.
 
         Returns:
-            List of file paths.
+            list[Path]: List of file paths.
         """
         path = self.parent if self.is_file_like() else self
         paths = list(path.rglob("*")) if recursive else list(path.iterdir())
@@ -314,7 +318,7 @@ class Path(type(Path_())):
         """Returns the checkpoint file path if found.
 
         Returns:
-            Checkpoint file path or ``None`` if not found.
+            Path: Checkpoint file path or self if not found.
         """
         ckpt_path = self.with_suffix(".ckpt")
         return ckpt_path if ckpt_path.is_file() else self
@@ -323,7 +327,7 @@ class Path(type(Path_())):
         """Returns the configuration file path.
 
         Returns:
-            Configuration file path.
+            Path: Configuration file path.
         """
         for ext in ConfigExtension.values():
             for stem in [self.stem, snakecase(self.stem)]:
@@ -333,7 +337,11 @@ class Path(type(Path_())):
         return self
 
     def label_file(self) -> "Path":
-        """Returns the label file path."""
+        """Returns the label file path.
+        
+        Returns:
+            Path: Label file path.
+        """
         for ext in [".txt", ".xml", ".json"]:
             temp = self.with_suffix(ext)
             if temp.is_file():
@@ -344,13 +352,17 @@ class Path(type(Path_())):
         """Returns the latest file based on creation time.
 
         Returns:
-            Latest file path or ``None`` if no files exist.
+            Path: Latest file path or None if no files exist.
         """
         files = self.files()
         return max(files, key=os.path.getctime) if files else None
     
     def image_file(self) -> "Path":
-        """Returns the image file path."""
+        """Returns the image file path.
+        
+        Returns:
+            Path: Image file path.
+        """
         for ext in ImageExtension.values():
             temp = self.with_suffix(ext)
             if temp.is_file():
@@ -358,7 +370,11 @@ class Path(type(Path_())):
         return self
 
     def txt_file(self) -> "Path":
-        """Returns the .txt file path."""
+        """Returns the .txt file path.
+        
+        Returns:
+            Path: .txt file path.
+        """
         for ext in [".txt"]:
             temp = self.with_suffix(ext)
             if temp.is_file():
@@ -366,7 +382,11 @@ class Path(type(Path_())):
         return self
 
     def yaml_file(self) -> "Path":
-        """Returns the YAML file path."""
+        """Returns the YAML file path.
+        
+        Returns:
+            Path: YAML file path.
+        """
         for ext in [".yaml", ".yml"]:
             temp = self.with_suffix(ext)
             if temp.is_file():
@@ -377,10 +397,10 @@ class Path(type(Path_())):
         """Returns the relative path from a given start part.
 
         Args:
-            start_part: Starting path or string for relativity.
+            start_part (str): Starting part of the path.
 
         Returns:
-            Relative path from ``start_part``.
+            Path: Relative path from ``start_part``.
         """
         path       = Path(self)
         start_part = str(start_part)
@@ -395,15 +415,15 @@ class Path(type(Path_())):
         """Copies the file to a new location.
 
         Args:
-            dst: Destination path or string.
-            replace: If ``True``, replaces the existing file. Default: ``True``.
+            dst (str): Destination path or string.
+            replace (bool): If True, replaces the existing file. Defaults to True.
 
         Raises:
-            NotImplementedError: If ``dst`` is a URL.
+            NotImplementedError: If dst is a URL.
         """
         dst = Path(dst)
         if dst.is_url():
-            raise NotImplementedError("[dst] as a URL is not supported.")
+            raise NotImplementedError("``dst`` as a URL is not supported.")
         dst = dst / self.name if dst.is_dir_like() else dst
         dst.parent.mkdir(parents=True, exist_ok=True)
         if replace:
@@ -414,12 +434,12 @@ class Path(type(Path_())):
         """Replaces part of the Path.
 
         Args:
-            old: String to replace.
-            new: Replacement string.
-            count: Max number of replacements. Default: ``1``.
+            old (str): String to replace.
+            new (str): Replacement string.
+            count (int): Max number of replacements. Defaults to 1.
 
         Returns:
-            New path with replaced string.
+            Path: New path with replaced string.
         """
         return Path(str(self).replace(old, new, count))
     
@@ -432,21 +452,21 @@ class Path(type(Path_())):
 
 # ----- Download -----
 def download_url_to_file(url: str, path: Path, overwrite: bool = False) -> Path:
-    """Downloads weights from a ``url`` to a local ``path``.
+    """Downloads weights from a url to a local path.
 
     Args:
-        url: The URL to download weights from.
-        path: The local file path to save weights.
-        overwrite: If ``True``, overwrites the existing file. Default: ``False``.
+        url (str): URL to download weights from.
+        path (Path): The local path to save the downloaded weights.
+        overwrite (bool): If True, overwrites the existing file. Defaults to False.
 
     Returns:
-        The ``Path`` to downloaded weights file.
+        Path: The Path to downloaded weights file.
 
     Raises:
-        ValueError: If ``url`` is not a valid URL.
+        ValueError: If url is not a valid URL.
     """
     if not Path(url).is_url():
-        raise ValueError(f"``url`` must be a valid URL, got {url}.")
+        raise ValueError(f"url must be a valid URL, got {url}.")
     
     path = Path(path)
     if not path.exists() or overwrite:
@@ -462,9 +482,12 @@ def delete_files(path: Path, regex: str = None, recursive: bool = False):
     """Deletes files matching a pattern in a directory.
 
     Args:
-        path: Directory path to search for files.
-        regex: File path pattern. Default: ``None`` (deletes ``path`` if file).
-        recursive: If ``True``, searches subdirs. Default: ``False``.
+        path (Path): Directory path or file path.
+        regex (str, optional): Pattern to match files. Defaults to None.
+        recursive (bool): If True, searches subdirectories. Defaults to False.
+        
+    Raises:
+        Exception: If a file cannot be deleted.
     """
     path = Path(path)
     if regex:
@@ -476,4 +499,4 @@ def delete_files(path: Path, regex: str = None, recursive: bool = False):
         try:
             f.unlink()
         except Exception as err:
-            print(f"Cannot delete file: [{err}].")
+            print(f"Cannot delete file: {err}.")

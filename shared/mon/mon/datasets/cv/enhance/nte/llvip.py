@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the LLVIP dataset for nighttime object detection tasks.
+"""A module for LLVIP dataset.
+
+This module implements the LLVIP dataset for nighttime object detection tasks.
 
 References:
-    - Paper: "LLVIP: A Visible-infrared Paired Dataset for Low-light Vision," ICCV 2021.
+    - Paper: "LLVIP: A Visible-infrared Paired Dataset for Low-light Vision,"
+      ICCV 2021.
     - Data: https://github.com/bupt-ai-cz/LLVIP
 """
 
@@ -19,12 +22,12 @@ from ....core import *
 class LLVIP(ImageDataset):
     """LLVIP dataset."""
     
-    root_name : str         = "llvip"
-    tasks     : list[Task]  = [Task.NTE, Task.DETECT]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "llvip"
+    _tasks     : list[Task]  = [Task.NTE, Task.DETECT]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image"   : Modality(name="image",      type="image", module=Image,              train=True, test=True, primary=True),
         "depth"   : Modality(name=DepthName,    type="image", module=DefaultDepthMap,    train=True, test=True),
         "infrared": Modality(name=InfraredName, type="mask",  module=DefaultInfraredMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

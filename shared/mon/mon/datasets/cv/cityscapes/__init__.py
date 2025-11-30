@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides Cityscapes datasets.
+"""A package for Cityscapes datasets.
+
+This package implements various Cityscapes datasets for computer vision tasks.
 
 References:
 	- Data: https://www.cityscapes-dataset.com
 """
 
 from .cityscapes import *
-from .cityscapes_foggy import *
-from .cityscapes_rain import *

@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides various loss functions for training machine learning models.
+"""A package for loss functions.
+
+This package provides various loss functions commonly used in training machine
+learning models, particularly in computer vision tasks. Each loss function is
+implemented as a class that can be instantiated and used to compute the loss
+between predicted outputs and target values.
 
 References:
     - Definition: https://www.ibm.com/think/topics/loss-function#1580786328

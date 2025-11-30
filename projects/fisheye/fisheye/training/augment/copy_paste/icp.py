@@ -24,7 +24,7 @@ from mon.core import (
     console,
     create_progress_bar,
     error_console,
-    hbb,
+    bbox,
     image as I,
     Path,
 )
@@ -68,7 +68,7 @@ def group_image_and_label_files(data_dir: str | Path):
             label_file     = label_dir / f"{stem}.txt"
             new_label_file = subdir / "label" / label_file.name
             label_file.copy_file(label_file, new_label_file)
-
+            
 
 def concat_image_and_label_files(data_dir: str | Path):
     """Concatenate image and label files from subdirectories into a single one.
@@ -139,11 +139,7 @@ class Label:
         self.image_path = image_path
         self.class_id   = int(bbox[4])
         self.used       = 0
-    
-    def save_patch(self):
-        """Save the object patch (i.e., RGB pixels) as an image file."""
-        pass
-
+        
 
 # noinspection PyMethodMayBeStatic
 class ICPAugmentation:
@@ -325,20 +321,20 @@ class ICPAugmentation:
                 if not label_file.is_txt_file(exist=True):
                     continue
 
-                bs = hbb.load(path=label_file, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h, w))
+                bs = bbox.load(path=label_file, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h, w))
                 for b in bs:
                     labels.append(Label(b, None, image_file))
 
                 # Determine candidates objects
-                filtered_bs = hbb.filter_iou(bs, iou_thres=self._iou_thres)
+                filtered_bs = bbox.filter_iou(bs, iou_thres=self._iou_thres)
                 masks       = self._gen_fg_masks(image, filtered_bs)
                 for b, m in zip(filtered_bs, masks):
                     if m is None:  # Skip if no mask is found
                         continue
                     candidates.append(Label(b, m, image_file))
-        
+
         return labels, candidates
-    
+
     def _gen_fg_masks(self, image: np.ndarray, bbox: np.ndarray) -> list[np.ndarray]:
         """Generate foreground masks for the given bounding boxes using SAM."""
         sam_results = self._sam_model(image, bboxes=bbox[:, 0:4], device=torch.device("cuda"), verbose=False)
@@ -368,7 +364,7 @@ class ICPAugmentation:
                 masks.append(m)
         
         return masks
-    
+
     # ----- Sampling -----
     def process(self):
         # Copy and paste objects from candidate to each image
@@ -398,12 +394,12 @@ class ICPAugmentation:
 
                 # Save new label file
                 bs = [l.bbox for l in labels]
-                bs = hbb.convert(bs, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(h, w))
+                bs = bbox.convert(bs, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(h, w))
                 new_label_file = self._new_label_dir / f"{image_file.stem}_{self._suffix}_{self._run}.txt"
                 new_label_file.parent.mkdir(parents=True, exist_ok=True)
                 with open(new_label_file, "w") as f:
                     for b in bs:
-                        f.write(f"{int(b[4])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
+                        f.write(f"{int(b[5])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
 
         self._run += 1
     
@@ -440,7 +436,7 @@ class ICPAugmentation:
 
                 # Determine if the sample can be pasted
                 bs  = [l.bbox for l in labels]
-                iou = hbb.iou(new_label.bbox, bs)
+                iou = bbox.iou(new_label.bbox, bs)
                 if np.any(iou > self._iou_thres):
                     tries += 1
                     continue
@@ -455,7 +451,7 @@ class ICPAugmentation:
                 tries = 0
 
         return labels, new_labels
-    
+
     def _copy_paste_labels(self, image: np.ndarray, new_labels: list[Label]) -> np.ndarray:
         # Group labels by image_file
         grouped_labels = {}
@@ -475,7 +471,7 @@ class ICPAugmentation:
                 dst = self._copy_paste_single_label(src=source, dst=dst, label=l)
 
         return dst
-    
+
     def _copy_paste_single_label(self, src: np.ndarray, dst: np.ndarray, label: Label) -> np.ndarray:
         """Copy and paste a single ``label`` from ``src`` to ``dst`` image."""
         x1, y1, x2, y2    = label.bbox[:4].astype(int)
@@ -521,7 +517,7 @@ class ICPAugmentation:
             dst = self._shadow_gen_model("comp_image.jpg", "comp_mask.jpg")
         
         return dst
-    
+
     # ----- Utils -----
     def _group_obj_per_class(self, data: list[Label]) -> dict[int, list[Label]]:
         """Group objects per class."""
@@ -532,7 +528,7 @@ class ICPAugmentation:
                 groups[c] = []
             groups[c].append(b)
         return groups
-    
+
     def _count_obj_per_class(self, data: list[Label]) -> dict[int, int]:
         """Count objects per class."""
         counts = {c: 0 for c in range(self._num_classes)}
@@ -542,13 +538,13 @@ class ICPAugmentation:
                 counts[c] = 0
             counts[c] += 1
         return counts
-    
+
     def _count_obj_per_image(self, data: list[Label], image_file: Path) -> dict[int, int]:
         """Count objects per image."""
         counts = {}
         bs = [b.bbox for b in data if b.image_path == image_file]
         for b in bs:
-            c = int(b[4])
+            c = int(b[5])
             if c not in counts:
                 counts[c] = 0
             counts[c] += 1

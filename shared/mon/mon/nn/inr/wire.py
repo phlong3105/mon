@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the WIRE MLP architecture using Gabor wavelet activations.
+"""A module for WIRE MLP with Gabor wavelet activations.
+
+This module implements the WIRE (Wavelet Implicit Neural Representations) MLP
+architecture using Gabor wavelet activations. It includes both real and complex
+Gabor layers, as well as the WIRE MLP class itself.
 
 References:
     - Paper: "WIRE: Wavelet Implicit Neural Representations," CVPR 2023.
@@ -21,21 +25,14 @@ import torch.nn as nn
 
 # ----- Layer -----
 class RealGaborLayer(nn.Module):
-    r"""Applies an affine linear transformation with real Gabor activation to
-    the incoming data: :math:`y = \cos(w_0 \cdot (xA^T + b)) \cdot
-    \exp(-(\text{scale} \cdot (xA^T + b))^2)`, where :math:`w_0` is a
-    frequency factor, :math:`\cos` is the cosine function, and
-    :math:`\exp` is the exponential function.
+    r"""A layer that applies an affine linear transformation with real Gabor
+    activation to the incoming data.
     
-    Args:
-        in_features: Size of each input sample.
-        out_features: Size of each output sample.
-        bias: If set to ``False``, the layer will not learn an additive bias.
-            Default: ``True``.
-        is_first: First layer flag for initialization. Default: ``False``.
-        omega_0: Frequency scaling factor. Default: ``10.0``.
-        sigma_0: Scaling of Gabor Gaussian term. Default: ``10.0``.
-
+    It applies the transformation: :math:`y = \cos(w_0 \cdot (xA^T + b)) \cdot
+    \exp(-(\text{scale} \cdot (xA^T + b))^2)`, where :math:`w_0` is a
+    frequency factor, :math:`\cos` is the cosine function, and :math:`\exp` is
+    the exponential function.
+    
     References:
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
     """
@@ -50,6 +47,19 @@ class RealGaborLayer(nn.Module):
         sigma_0     : float = 10.0,
         trainable   : bool  = False
     ):
+        """Initializes the RealGaborLayer.
+        
+        Args:
+            in_features (int): Size of each input sample.
+            out_features (int): Size of each output sample.
+            bias (bool): If False, the layer will not learn an additive bias.
+                Defaults to True.
+            is_first (bool): First layer flag for initialization. Defaults to False.
+            omega_0 (float): Frequency scaling factor. Defaults to 10.0.
+            sigma_0 (float): Scaling of Gabor Gaussian term. Defaults to 10.0.
+            trainable (bool): If True, omega_0 and sigma_0 are trainable parameters.
+                Defaults to False.
+        """
         super().__init__()
         self.omega_0     = omega_0
         self.scale_0     = sigma_0
@@ -59,28 +69,27 @@ class RealGaborLayer(nn.Module):
         self.scale       = nn.Linear(in_features, out_features, bias=bias)
         
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the RealGaborLayer.
+        
+        Args:
+            input (torch.Tensor): Input tensor of shape (..., in_features).
+        
+        Returns:
+            torch.Tensor: Output tensor of shape (..., out_features).
+        """
         omega = self.omega_0 * self.freqs(input)
         scale = self.scale(input) * self.scale_0
         return torch.cos(omega) * torch.exp(-(scale ** 2))
 
 
 class ComplexGaborLayer(nn.Module):
-    r"""Applies an affine linear transformation with complex Gabor activation to
-    the incoming data: :math:`y = \exp(1j \cdot w_0 \cdot (xA^T + b)) \cdot
-    \exp(-(\text{scale} \cdot (xA^T + b))^2)`, where :math:`w_0` is a
-    frequency factor, :math:`\exp` is the exponential function, and
-    :math:`1j` is the imaginary unit.
+    r"""A layer that applies an affine linear transformation with complex Gabor
+    activation to the incoming data.
     
-    Args:
-        in_features: Size of each input sample.
-        out_features: Size of each output sample.
-        bias: If set to ``False``, the layer will not learn an additive bias.
-            Default: ``True``.
-        is_first: First layer flag for initialization. Default: ``False``.
-        omega_0: Frequency scaling factor. Default: ``10.0``.
-        sigma_0: Scaling of Gabor Gaussian term. Default: ``40.0``.
-        trainable: If ``True``, omega_0 and sigma_0 are trainable parameters.
-            Default: ``False``.
+    It applies the transformation: :math:`y = \exp(i \cdot w_0 \cdot (xA^T + b))
+    \cdot \exp(-(\text{scale} \cdot (xA^T + b))^2)`, where :math:`w_0` is a
+    frequency factor, :math:`i` is the imaginary unit, and :math:`\exp` is
+    the exponential function.
     """
     
     def __init__(
@@ -93,6 +102,19 @@ class ComplexGaborLayer(nn.Module):
         sigma_0     : float = 40.0,
         trainable   : bool  = False
     ):
+        """Initializes the ComplexGaborLayer.
+        
+        Args:
+            in_features (int): Size of each input sample.
+            out_features (int): Size of each output sample.
+            bias (bool): If False, the layer will not learn an additive bias.
+                Defaults to True.
+            is_first (bool): First layer flag for initialization. Defaults to False.
+            omega_0 (float): Frequency scaling factor. Defaults to 10.0.
+            sigma_0 (float): Scaling of Gabor Gaussian term. Defaults to 40.0.
+            trainable (bool): If True, omega_0 and sigma_0 are trainable parameters.
+                Defaults to False.
+        """
         super().__init__()
         self.omega_0     = omega_0
         self.scale_0     = sigma_0
@@ -110,6 +132,14 @@ class ComplexGaborLayer(nn.Module):
         self.linear  = nn.Linear(in_features, out_features, bias=bias, dtype=dtype)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the ComplexGaborLayer.
+        
+        Args:
+            input (torch.Tensor): Input tensor of shape (..., in_features).
+            
+        Returns:
+            torch.Tensor: Output tensor of shape (..., out_features).
+        """
         lin   = self.linear(input)
         omega = self.omega_0 * lin
         scale = self.scale_0 * lin
@@ -118,18 +148,7 @@ class ComplexGaborLayer(nn.Module):
 
 # ----- MLP -----
 class WIRE(nn.Module):
-    """Implements the WIRE MLP.
-
-    Args:
-        in_features: Size of each input sample.
-        out_features: Size of each output sample.
-        hidden_dim: Hidden channel dimensions.
-        hidden_layers: Number of hidden layers.
-        first_omega_0: Frequency scaling factor for the first layer. Default: ``10.0``.
-        hidden_omega_0: Frequency scaling factor for the hidden layers. Default: ``10.0``.
-        scale: Scaling factor for the Gabor Gaussian term. Default: ``10.0``.
-        bias: If set to ``False``, the layer will not learn an additive bias.
-            Default: ``True``.
+    """A WIRE MLP with Gabor wavelet activations.
     
     References:
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
@@ -146,6 +165,21 @@ class WIRE(nn.Module):
         scale         : float = 10.0,
         bias          : bool  = True,
     ):
+        """Initializes the WIRE MLP.
+        
+        Args:
+            in_features (int): Size of each input sample.
+            out_features (int): Size of each output sample.
+            hidden_dim (int): Size of each hidden layer.
+            hidden_layers (int): Number of hidden layers. Defaults to 4.
+            first_omega_0 (float): Frequency scaling factor for the first layer.
+                Defaults to 10.0.
+            hidden_omega_0 (float): Frequency scaling factor for hidden layers.
+                Defaults to 10.0.
+            scale (float): Scaling of Gabor Gaussian term. Defaults to 10.0.
+            bias (bool): If False, the layers will not learn an additive bias.
+                Defaults to True.
+        """
         super().__init__()
         # All results in the paper were with the default complex 'gabor' nonlinearity
         self.nonlin  = ComplexGaborLayer
@@ -172,6 +206,14 @@ class WIRE(nn.Module):
         self.net = nn.Sequential(*self.net)
         
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the WIRE MLP.
+        
+        Args:
+            x (torch.Tensor): Input tensor of shape (..., in_features).
+            
+        Returns:
+            torch.Tensor: Output tensor of shape (..., out_features).
+        """
         output = self.net(x)
         if self.wavelet == "gabor":
             return output.real

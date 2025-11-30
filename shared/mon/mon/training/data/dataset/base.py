@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base classes for various types of datasets and their
-mixin interfaces.
+"""A module for dataset abstract classes.
+
+This module provides abstract base classes for datasets, defining common
+interfaces and attributes for dataset handling, including loading, accessing,
+and iterating over datapoints. It supports multiple modalities and is designed
+to be extended for specific dataset implementations.
 """
 
 __all__ = [
+    "Dataset",
     "BaseDataset",
-    "BaseDualDomainDataset",
-    "BaseEvalDataset",
     "Modalities",
     "Modality",
 ]
@@ -25,7 +28,7 @@ from torch.utils.data import dataset
 from mon.core import create_progress_bar, log, Path, Split, Task
 from ..classes import Classes
 
-Modality = namedtuple("Modality", [
+Modality  = namedtuple("Modality", [
     "name",     # The name of the directory that contains the modality data.
     "type",     # Albumentations target type (e.g. "image", "mask", ...) for augmentations.
     "module",   # The tensor class that performs I/O operations.
@@ -33,144 +36,450 @@ Modality = namedtuple("Modality", [
     "test",     # If ``True``, this modality is included in test set.
     "primary"   # If ``True``, this is the primary modality.
 ], defaults=[None, None, True, False, False])
-
 Modalities: TypeAlias = Dict[str, Modality]
 
 
-# ----- Dataset -----
-class BaseDataset(dataset.Dataset, abc.ABC):
-    """A base class for general datasets.
+# ----- Abstract Dataset -----
+class Dataset(dataset.Dataset, abc.ABC):
+    """An abstract class for all datasets.
     
-    This class defines the protocol for loading all types of datasets from disks.
-    Most methods are left abstract and must be implemented by subclasses for
-    specific types (e.g., image, text, audio, …).
+    This class defines the common interface for initializing, iterating, and
+    accessing datapoints in a dataset. Most methods are left abstract and must
+    be implemented by subclasses.
     
     The primary use case for this is in training pipelines (train, val, test)
-    and dataset workflows that require full access to all properties of the dataset.
+    and dataset workflows that require full access to all properties of the
+    dataset.
     
     Attributes:
-        root_name: Dataset's root directory name.
-        tasks: List of supported tasks.
-        splits: List of supported splits.
-        modalities: Dictionary of datapoint modalities.
-        classes: List of class-labels. Default: ``None``.
-    
-    Args:
-        root: Absolute path to the dataset root directory.
-        split: Data split subset to use. One of: ``Split.TRAIN``, ``Split.VAL``,
-            ``Split.TEST``, or ``Split.PREDICT``. Default: ``Split.TRAIN``.
-        transform: Transformations for input/target. Default: ``None``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
+        _datapoints (dict): A dictionary containing lists of datapoints for
+            each modality.
+        classes (Classes): The dataset classes/labels.
+        verbose (bool): If True, enables verbose output.
     """
     
-    root_name : str         = None
-    tasks     : list[Task]  = []
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
-    modalities: Modalities  = {}
-    classes   : Classes     = None
+    _classes: Classes = None
+    
+    def __init__(
+        self,
+        classes: Path | Classes = None,
+        verbose: bool = True,
+        *args, **kwargs
+    ):
+        """Initializes the Dataset instance.
+        
+        Args:
+            classes (Path or Classes, optional): Either a path to a .yaml file
+                containing class label definitions, or a ``Classes`` instance.
+                If given, this will override any ``classes`` defined in the
+                subclass. Defaults to None.
+            verbose (bool, optional): If True, enables verbose output. Defaults
+                to True.
+        """
+        super().__init__(*args, **kwargs)
+        self.verbose = verbose
+        self.classes = classes
+        self._datapoints: dict[str, list[Any]] = {}
+        
+        # Loading pipeline
+        self.load()
+        if hasattr(self, "on_load_end"):  # Optional hook after loading
+            self.on_load_end()
+        self.verify()
+        
+    # ----- Magic Methods -----
+    @abc.abstractmethod
+    def __del__(self):
+        """Closes the dataset loading mechanism and releases resources."""
+        pass
+    
+    @abc.abstractmethod
+    def __getitem__(self, index: int) -> dict[str, Any]:
+        """Gets a datapoint and metadata at the specified ``index``.
+        
+        Args:
+            index (int): Index of datapoint.
+            
+        Returns:
+            dict[str, Any]: A dictionary containing the datapoint and metadata.
+        """
+        pass
+    
+    def __iter__(self):
+        """Initializes the dataset iterator."""
+        self._iter_idx = 0
+        return self
+
+    @abc.abstractmethod
+    def __len__(self) -> int:
+        """Returns the length of the dataset.
+        
+        Returns:
+            int: The number of datapoints in the dataset.
+        """
+        pass
+    
+    def __next__(self) -> dict[str, Any]:
+        """Returns the next datapoint in the dataset iteration.
+        
+        Returns:
+            dict[str, Any]: A dictionary containing the next datapoint.
+        
+        Raises:
+            StopIteration: If index exceeds the dataset length.
+        """
+        if self._iter_idx < self.__len__():
+            item = self.__getitem__(self._iter_idx)
+            self._iter_idx += 1
+            return item
+        else:
+            raise StopIteration
+    
+    def __repr__(self) -> str:
+        """Returns the string representation of the dataset.
+        
+        Returns:
+            str: String representation of the dataset.
+        """
+        lines  = ["Dataset " + self.__class__.__name__]
+        lines += [f"Number of datapoints: {self.__len__()}"]
+        return "\n".join(lines)
+    
+    # ----- Properties -----
+    @property
+    def classes(self) -> Classes:
+        """Getter for the dataset classes.
+        
+        Returns:
+            Classes: The dataset classes/labels.
+        """
+        return self._classes
+    
+    @classes.setter
+    def classes(self, classes: Path | Classes = None):
+        """Setter for the dataset classes.
+        
+        Args:
+            classes (Path or Classes, optional): Either a path to a .yaml file
+                containing class label definitions, or a ``Classes`` instance.
+                If given, this will override any ``classes`` defined in the
+                subclass. Defaults to None.
+        
+        Raises:
+            TypeError: If ``classes`` is not a valid type.
+        """
+        changed = False
+        if classes is not None and isinstance(classes, Path | Classes):
+            self._classes = Classes(classes)
+            changed  = True
+        
+        if self.verbose and changed:
+            log(f"``classes`` is updated with {classes}.")
+            
+    @property
+    def datapoints(self) -> dict[str, list[Any]]:
+        """Getter for the dataset datapoints.
+        
+        Returns:
+            dict[str, list[Any]]: A dictionary containing lists of datapoints
+                for each modality.
+        """
+        return self._datapoints
+    
+    @property
+    def verbose(self) -> bool:
+        """Getter for the verbosity mode.
+        
+        Returns:
+            bool: True if verbose output is enabled, False otherwise.
+        """
+        return self._verbose
+    
+    @verbose.setter
+    def verbose(self, verbose: bool):
+        """Setter for the verbosity mode.
+        
+        Args:
+            verbose (bool): If True, enables verbose output.
+        """
+        self._verbose = bool(verbose)
+    
+    @property
+    def disable_pbar(self) -> bool:
+        """Getter for disabling progress bars.
+        
+        Returns:
+            bool: True if progress bars are disabled, False otherwise.
+        """
+        return not self.verbose
+    
+    # ----- Initialize -----
+    @abc.abstractmethod
+    def load(self):
+        """Initializes and loads all datapoints in the dataset from disk.
+        
+        After calling this, ``self._datapoints`` will be populated with all
+        modalities' data lists. This method can be called internally or externally
+        to reload the data if needed.
+        """
+        pass
+    
+    @abc.abstractmethod
+    def verify(self):
+        """Verifies dataset integrity after loading.
+        
+        Raises:
+            RuntimeError: If no datapoints or attributes invalid.
+        """
+        pass
+    
+    # ----- Access -----
+    @abc.abstractmethod
+    def _get_datapoint(self, index: int) -> dict[str, Any]:
+        """Gets a datapoint at the specified ``index``.
+
+        Args:
+            index (int): Index of datapoint.
+            
+        Returns:
+            dict[str, Any]: A dictionary containing the datapoint.
+        """
+        pass
+    
+    @abc.abstractmethod
+    def _get_meta(self, index: int) -> dict[str, Any]:
+        """Gets metadata at the specified ``index``.
+
+        Args:
+            index (int): Index of datapoint.
+            
+        Returns:
+            dict[str, Any]: A dictionary containing the metadata.
+        """
+        pass
+    
+    # ----- Utils -----
+    @abc.abstractmethod
+    def collate_fn(self, batch: list[dict]) -> dict[str, Any]:
+        """Collates a batch of input items for torch.utils.data.dataset.DataLoader.
+        
+        By default, batch is a list of dicts, where each dict is a datapoint.
+        We need to collate these into a single dict where each key corresponds to
+        a modality and the values are stacked tensors or arrays.
+
+        Args:
+            batch (list[dict]): List of dicts, each dict is a datapoint.
+
+        Returns:
+            dict[str, Any]: Collated dictionary for torch.utils.data.dataset.DataLoader.
+        """
+        pass
+
+
+# ----- Base Dataset -----
+class BaseDataset(Dataset, abc.ABC):
+    """A partial abstract class for all datasets.
+    
+    This class extends the ``Dataset`` abstract class and provides common
+    attributes for categorizing datasets, such as supported tasks, splits,
+    modalities, and classes.
+    
+    This is primarily used for factory-based dataset initialization.
+    
+    Attributes:
+        _root_name (str): The name of the dataset root directory.
+        _tasks (list[Task]): A list of supported tasks.
+        _splits (list[Split]): A list of supported splits.
+        _modalities (Modalities): A dictionary defining the dataset modalities.
+        root (Path): The dataset root directory.
+        split (Split): The current dataset split.
+        transform (Any): The dataset transformations.
+    """
+    
+    _root_name : str         = None
+    _tasks     : list[Task]  = []
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
+    _modalities: Modalities  = {}
     
     def __init__(
         self,
         root     : Path,
         split    : Split = Split.TRAIN,
         transform: Any   = None,
+        classes  : Path | Classes = None,
         verbose  : bool  = False,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        """Initializes the BaseDataset instance.
+        
+        Args:
+            root (Path): Absolute path to the dataset root directory.
+            split (Split): Data split subset to use. One of: Split.TRAIN,
+                Split.VAL, Split.TEST, or Split.PREDICT. Defaults to Split.TRAIN.
+            transform (Any, optional): Transformations to apply. Defaults to None.
+            classes (Path or Classes, optional): Either a path to a .yaml file
+                containing class label definitions, or a Classes instance.
+                If given, this will override any classes defined in the
+                subclass. Defaults to None.
+            verbose (bool): If True, enables verbose output. Defaults to False.
+        
+        Raises:
+            ValueError: If ``modalities`` has no defined attributes.
+        """
+        # Validate modalities
         if not self.modalities:
             raise ValueError("``modalities`` has no defined attributes.")
-        
-        # Set attributes
+
         self.root      = root
         self.split     = split
-        self.transform = None
-        self.verbose   = verbose
-        self.index     = 0  # Used with `__iter__` and `__next__`
-        self.datapoints: dict[str, list[Any]] = {}
-        # Order-specific, DO NOT CHANGE
-        self.init_transform(transform)
-        self.init_data()
+        self.transform = transform
         
+        super().__init__(classes=classes, verbose=verbose, *args, **kwargs)
+    
     # ----- Magic Methods -----
-    def __del__(self):
-        """Closes the dataset."""
-        self.close()
-    
-    @abc.abstractmethod
-    def __getitem__(self, index: int) -> dict:
-        """Retrieves a datapoint and metadata at given ``index`` as a ``dict``."""
-        pass
-    
-    def __iter__(self):
-        """Initializes the dataset iterator."""
-        self.reset()
-        return self
-    
-    @abc.abstractmethod
-    def __len__(self) -> int:
-        """Retrieves the total number of datapoints."""
-        pass
-    
-    def __next__(self) -> dict:
-        """Retrieves the next datapoint and metadata as a ``dict``.
-
-        Raises:
-            StopIteration: If index exceeds the dataset length.
-        """
-        if self.index >= self.__len__():
-            raise StopIteration
-        result = self.__getitem__(self.index)
-        self.index += 1
-        return result
-    
     def __repr__(self) -> str:
-        head = "Dataset " + self.__class__.__name__
-        body = [f"Number of datapoints: {self.__len__()}"]
+        """Returns the string representation of the dataset.
+        
+        Returns:
+            str: String representation of the dataset.
+        """
+        lines  = ["Dataset " + self.__class__.__name__]
+        lines += [f"Number of datapoints: {self.__len__()}"]
         if self.root:
-            body.append(f"Root location: {self.root}")
+            lines += [f"Root location: {self.root}"]
         if hasattr(self, "transform") and self.transform:
-            body += [repr(self.transform)]
-        lines = [head]
+            lines += [repr(self.transform)]
         return "\n".join(lines)
     
     # ----- Properties -----
     @property
+    def root_name(self) -> str:
+        """Getter for the dataset root directory name.
+        
+        Returns:
+            str: The name of the dataset root directory.
+        """
+        return self._root_name
+    
+    @property
+    def tasks(self) -> list[Task]:
+        """Getter for the list of supported tasks.
+        
+        Returns:
+            list[Task]: The list of supported tasks.
+        """
+        return self._tasks
+    
+    @property
+    def splits(self) -> list[Split]:
+        """Getter for the list of supported splits.
+        
+        Returns:
+            list[Split]: The list of supported splits.
+        """
+        return self._splits
+    
+    @property
+    def modalities(self) -> Modalities:
+        """Getter for the dataset modalities.
+        
+        Returns:
+            Modalities: The dataset modalities.
+        """
+        return self._modalities
+    
+    @property
     def root(self) -> Path:
-        """Returns the dataset root directory."""
+        """Getter for the dataset root directory.
+        
+        Returns:
+            Path: The dataset root directory.
+        """
         return self._root
     
     @root.setter
     def root(self, root: Path):
+        """Setter for the dataset root directory.
+        
+        Args:
+            root (Path): Absolute path to the dataset root directory.
+            
+        Raises:
+            FileNotFoundError: If the specified root directory does not exist.
+        """
         root = Path(root)
-        if self.root_name not in [None, ""] and root.name != self.root_name:
-            root = root / self.root_name
+        if self._root_name not in [None, ""] and root.name != self._root_name:
+            root = root / self._root_name
         if not root.is_dir():
             raise FileNotFoundError(f"``root`` directory not found: {root}.")
         self._root = root
     
     @property
     def split(self) -> Split:
-        """Return the current dataset ``Split``."""
+        """Getter for the current dataset split.
+        
+        Returns:
+            Split: The current dataset split.
+        """
         return self._split
     
     @split.setter
     def split(self, split: Split):
-        split = Split.from_str(split) if isinstance(split, str) else split
-        if split in self.splits:
-            self._split = split
-        else:
-            raise ValueError(f"``split`` must be one of {self.splits}, got {split}.")
+        """Setter for the current dataset split.
+        
+        Args:
+            split (Split): Data split subset to use. One of: Split.TRAIN,
+                Split.VAL, Split.TEST, or Split.PREDICT.
+                
+        Raises:
+            ValueError: If ``split`` is not one of the supported splits.
+        """
+        split = Split(split)
+        if split not in self._splits:
+            raise ValueError(f"``split`` must be one of {self._splits}, got {split}.")
+        self._split = split
     
     @property
     def split_str(self) -> str:
-        """Returns the ``str`` representation of the current dataset ``Split``."""
+        """Getter for the current dataset split as a string.
+        
+        Returns:
+            str: The current dataset split as a string.
+        """
         return self.split.value
     
     @property
+    @abc.abstractmethod
+    def transform(self) -> Any:
+        """Getter for the dataset transformations.
+        
+        Returns:
+            Any: The dataset transformations.
+        """
+        pass
+    
+    @transform.setter
+    @abc.abstractmethod
+    def transform(self, transform: Any):
+        """Setter for the dataset transformations.
+        
+        This method is abstract and must be implemented by subclasses.
+        
+        Args:
+            transform (Any): Transformations to apply.
+        """
+        pass
+    
+    @property
     def primary_modality(self) -> tuple[str, Modality]:
-        """Returns the primary modality of the dataset, which is the first key
-        in ``modalities`` that is marked as ``"primary"``.
+        """Getter for the primary modality.
+        
+        Returns:
+            tuple[str, Modality]: A tuple containing the key and Modality
+                instance of the primary modality.
+                
+        Raises:
+            ValueError: If no primary modality is defined.
         """
         for k, v in self.modalities.items():
             if v.primary:
@@ -178,54 +487,51 @@ class BaseDataset(dataset.Dataset, abc.ABC):
         raise ValueError(f"``modalities`` has no primary modality. "
                          f"Please set `primary=True` for one of the modalities.")
     
-    @property
-    def disable_pbar(self) -> bool:
-        """Returns ``True`` if progress bar disabled, ``False`` otherwise."""
-        return not self.verbose
-    
     # ----- Initialize -----
-    @abc.abstractmethod
-    def init_transform(self, transform: Any = None):
-        """Initializes transformation operations.
-
-        Args:
-            transform: Transformations to apply. Default: ``None``.
-        """
-        pass
-    
-    def init_data(self):
-        """Initializes all datapoints in the dataset.
+    def load(self):
+        """Initializes and loads all datapoints in the dataset from disk.
         
-        Raises:
-            ValueError: If ``modalities`` has no attributes.
+        After calling this, ``self._datapoints`` will be populated with all
+        modalities' data lists. This method can be called internally or externally
+        to reload the data if needed.
         """
         # Initialize empty datapoints dictionary with modalities
         datapoints = {}
-        for k, v in self.modalities.items():
+        for k, v in self._modalities.items():
             if ((v.type  is None  or  v.module is None) or
                 (v.train is False and self.split in [Split.TRAIN, Split.VAL]) or
                 (v.test  is False and self.split in [Split.TEST,  Split.PREDICT])):
                 continue
             datapoints[k] = []
-        self.datapoints = datapoints
+        self._datapoints = datapoints
         
         # List data
         pk, _ = self.primary_modality
-        self.datapoints[pk] = self.list_primary_data()  # List primary modality
-        for k, v in self.datapoints.items():            # List other modalities
+        self._datapoints[pk] = self._load_primary_data()  # List primary modality
+        for k, v in self._datapoints.items():             # List other modalities
             if k != pk:
-                self.datapoints[k] = self.list_modality_data(k)
-                
-        # Verify data
-        self.verify_data()
-        
+                self._datapoints[k] = self._load_modality_data(k)
+    
     @abc.abstractmethod
-    def list_primary_data(self) -> list:
-        """Lists primary modality data files in the dataset."""
+    def _load_primary_data(self) -> list[Any]:
+        """Loads primary modality data files in the dataset.
+        
+        This method is abstract and must be implemented by subclasses.
+        
+        Returns:
+            list[Any]: A list of primary modality data files.
+        """
         pass
     
-    def list_modality_data(self, key: str) -> list:
-        """Lists other modalities data files in the dataset."""
+    def _load_modality_data(self, key: str) -> list[Any]:
+        """Loads modality data files in the dataset.
+        
+        Args:
+            key (str): The modality key to load.
+            
+        Returns:
+            list[Any]: A list of modality data files.
+        """
         pk, pk_modality = self.primary_modality
         pk_name  = pk_modality.name
         pk_files = self.datapoints[pk]
@@ -244,77 +550,43 @@ class BaseDataset(dataset.Dataset, abc.ABC):
                 
         return files
     
-    def verify_data(self):
+    def verify(self):
         """Verifies dataset integrity.
         
         Raises:
             RuntimeError: If no datapoints or attributes invalid.
         """
         if self.__len__() <= 0:
-            raise RuntimeError("No datapoints in the dataset.")
+            raise RuntimeError("No datapoints in the dataset!")
         
+        pk, _ = self.primary_modality
         for k, v in self.datapoints.items():
             if k not in self.modalities:
                 raise RuntimeError(f"Modality ``{k}`` is not defined in ``modalities``. "
                                    f"Define it in the class if intentional.")
             if self.modalities[k]:
-                if v is None:
-                    raise RuntimeError(f"No ``{k}`` attributes defined!")
+                if v in [None, []]:
+                    raise RuntimeError(f"``datapoints`` has no ``{k}`` attributes!")
                 elif len(v) != self.__len__():
-                    raise RuntimeError(f"Number of ``{k}`` attributes ({len(v)}) does not "
-                                       f"match datapoints ({self.__len__()}).")
+                    raise RuntimeError(f"Number of ``{k}`` items does not match number "
+                                       f"of ``{pk}``, got: {len(v)} != {self.__len__()}")
                 
         if self.verbose:
             log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
     
-    @abc.abstractmethod
-    def reset(self):
-        """Resets the dataset."""
-        pass
-    
-    @abc.abstractmethod
-    def close(self):
-        """Closes and releases the dataset."""
-        pass
-    
-    # ----- Data Retrieval -----
-    @abc.abstractmethod
-    def get_datapoint(self, index: int) -> dict:
-        """Gets a datapoint at the specified ``index``.
-
-        Args:
-            index: Index of datapoint.
-
-        Returns:
-            A ``dict`` containing the datapoint.
-        """
-        pass
-    
-    @abc.abstractmethod
-    def get_meta(self, index: int) -> dict:
-        """Gets metadata at the specified ``index``.
-
-        Args:
-            index: Index of metadata.
-
-        Returns:
-            A ``dict`` containing the metadata.
-        """
-        pass
-    
+    # ----- Utils -----
     def collate_fn(self, batch: list[dict]) -> dict:
-        """Collates a batch of input items for ``torch.utils.data.dataset.DataLoader``.
+        """Collates a batch of input items for torch.utils.data.dataset.DataLoader.
         
-        By default, ``batch`` is a ``list`` of dicts, where each ``dict``
-        is a datapoint. We need to collate these into a single ``dict``
-        where each key corresponds to a modality and the values are stacked
-        tensors or arrays.
+        By default, batch is a list of dicts, where each dict is a datapoint.
+        We need to collate these into a single dict where each key corresponds to
+        a modality and the values are stacked tensors or arrays.
 
         Args:
-            batch: List of dicts, each ``dict`` is a datapoint.
+            batch (list[dict]): List of dicts, each dict is a datapoint.
 
         Returns:
-            Collated ``dict`` for ``torch.utils.data.dataset.DataLoader``.
+            dict[str, Any]: Collated dictionary for torch.utils.data.dataset.DataLoader.
         """
         zipped = {
             k: list(v)
@@ -322,519 +594,8 @@ class BaseDataset(dataset.Dataset, abc.ABC):
         }
 
         for k, v in zipped.items():
-            if k not in self.modalities:  # i.e., metadata
+            if k not in self._modalities:  # i.e., metadata
                 continue
-            if v is None:
-                zipped[k] = None
-            elif isinstance(v[0], torch.Tensor):
-                zipped[k] = torch.stack(v, dim=0)
-            elif isinstance(v[0], np.ndarray):
-                zipped[k] = np.stack(v, axis=0)
-
-        return zipped
-
-
-# noinspection PyPep8Naming
-class BaseDualDomainDataset(dataset.Dataset, abc.ABC):
-    """A base class for all dual-domain datasets.
-    
-    This has the same protocol with ``BaseDataset`` but with two separate
-    domains A and B.
-    
-    The primary use case is in Image-to-Image translation tasks. It requires two
-    directories to host data from two domains A and B. The number of items in
-    each directory can be the same (paired) or different (unpaired/unaligned).
-    
-    Attributes:
-        root_name: Dataset's root directory name.
-        tasks: List of supported tasks.
-        splits: List of supported splits.
-        modalities_A: Dictionary of datapoint modalities in the domain A.
-        modalities_B: Dictionary of datapoint modalities in the domain B.
-        classes: List of class-labels. Default: ``None``.
-    
-    Args:
-        root: Absolute path to the dataset root directory.
-        split: Data split subset to use. One of: ``Split.TRAIN``, ``Split.VAL``,
-            ``Split.TEST``, or ``Split.PREDICT``. Default: ``Split.TRAIN``.
-        transform: Transformations for input/target. Default: ``None``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
-    """
-    
-    root_name   : str         = None
-    tasks       : list[Task]  = []
-    splits      : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
-    modalities_A: Modalities  = {}
-    modalities_B: Modalities  = {}
-    classes     : Classes     = None
-    
-    def __init__(
-        self,
-        root     : Path,
-        split    : Split = Split.TRAIN,
-        transform: Any   = None,
-        verbose  : bool  = False,
-        *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        if not self.modalities_A:
-            raise ValueError("``modalities_A`` has no defined attributes.")
-        if not self.modalities_B:
-            raise ValueError("``modalities_B`` has no defined attributes.")
-        
-        # Set attributes
-        self.root      = root
-        self.split     = split
-        self.transform = None
-        self.verbose   = verbose
-        self.index     = 0  # Used with `__iter__` and `__next__`
-        self.datapoints_A: dict[str, list[Any]] = {}
-        self.datapoints_B: dict[str, list[Any]] = {}
-        # Order-specific, DO NOT CHANGE
-        self.init_transform(transform)
-        self.init_data()
-        
-    # ----- Magic Methods -----
-    def __del__(self):
-        """Closes the dataset."""
-        self.close()
-    
-    @abc.abstractmethod
-    def __getitem__(self, index: int) -> dict:
-        """Retrieves a datapoint and metadata at given ``index`` as a ``dict``."""
-        pass
-    
-    def __iter__(self):
-        """Initializes the dataset iterator."""
-        self.reset()
-        return self
-    
-    @abc.abstractmethod
-    def __len__(self) -> int:
-        """Retrieves the total number of datapoints.
-        
-        As we have two datasets with potentially different numbers of images,
-        we take a maximum of.
-        """
-        # max_size = 0
-        # for k, v in self.datapoints.items():
-        #     max_size = max(max_size, len(v))
-        # return max_size
-        pass
-        
-    def __next__(self) -> dict:
-        """Retrieves the next datapoint and metadata as a ``dict``.
-
-        Raises:
-            StopIteration: If index exceeds the dataset length.
-        """
-        if self.index >= self.__len__():
-            raise StopIteration
-        result = self.__getitem__(self.index)
-        self.index += 1
-        return result
-    
-    def __repr__(self) -> str:
-        head = "Dataset " + self.__class__.__name__
-        body = [
-            f"Number of datapoints in domain A: {self.size(domain="A")}",
-            f"Number of datapoints in domain B: {self.size(domain="B")}",
-        ]
-        if self.root:
-            body.append(f"Root location: {self.root}")
-        if hasattr(self, "transform") and self.transform:
-            body += [repr(self.transform)]
-        lines = [head]
-        return "\n".join(lines)
-    
-    # ----- Properties -----
-    @property
-    def root(self) -> Path:
-        """Returns the dataset root directory."""
-        return self._root
-    
-    @root.setter
-    def root(self, root: Path):
-        root = Path(root)
-        if self.root_name not in [None, ""] and root.name != self.root_name:
-            root = root / self.root_name
-        if not root.is_dir():
-            raise FileNotFoundError(f"``root`` directory not found: {root}.")
-        self._root = root
-    
-    @property
-    def split(self) -> Split:
-        """Return the current dataset ``Split``."""
-        return self._split
-    
-    @split.setter
-    def split(self, split: Split):
-        split = Split.from_str(split) if isinstance(split, str) else split
-        if split in self.splits:
-            self._split = split
-        else:
-            raise ValueError(f"``split`` must be one of {self.splits}, got {split}.")
-    
-    @property
-    def split_str(self) -> str:
-        """Returns the ``str`` representation of the current dataset ``Split``."""
-        return self.split.value
-    
-    def primary_modality(self, domain: str) -> tuple[str, Modality]:
-        """Returns the primary modality in the ``domain``, which is the first key
-        in ``modalities`` that is marked as ``"primary"``.
-        """
-        modalities = self.modalities_A if domain == "A" else self.modalities_B
-        for k, v in modalities.items():
-            if v.primary:
-                return k, v
-        raise ValueError(f"``modalities`` in domain {domain} has no primary modality. "
-                         f"Please set `primary=True` for one of the modalities.")
-    
-    @abc.abstractmethod
-    def size(self, domain: str) -> int:
-        """Returns the number of items in the ``domain``."""
-        pass
-    
-    @property
-    def disable_pbar(self) -> bool:
-        """Returns ``True`` if progress bar disabled, ``False`` otherwise."""
-        return not self.verbose
-    
-    # ----- Initialize -----
-    @abc.abstractmethod
-    def init_transform(self, transform: Any = None):
-        """Initializes transformation operations.
-
-        Args:
-            transform: Transformations to apply. Default: ``None``.
-        """
-        pass
-    
-    def init_data(self):
-        """Initializes all datapoints in the dataset.
-        
-        Raises:
-            ValueError: If ``modalities`` has no attributes.
-        """
-        # ----- Domain A -----
-        # Initialize empty datapoints dictionary with modalities
-        datapoints_A = {}
-        for k, v in self.modalities_A.items():
-            if ((v.type  is None  or  v.module is None) or
-                (v.train is False and self.split in [Split.TRAIN, Split.VAL]) or
-                (v.test  is False and self.split in [Split.TEST,  Split.PREDICT])):
-                continue
-            datapoints_A[k] = []
-        self.datapoints_A = datapoints_A
-        
-        # List data
-        pk, _ = self.primary_modality(domain="A")
-        self.datapoints_A[pk] = self.list_primary_data_A()  # List primary modality
-        for k, v in self.datapoints_A.items():              # List other modalities
-            if k != pk:
-                self.datapoints_A[k] = self.list_modality_data(domain="A", key=k)
-        
-        # Verify data
-        self.verify_data(domain="A")
-        
-        # ----- Domain B -----
-        datapoints_B = {}
-        for k, v in self.modalities_B.items():
-            if ((v.type  is None  or  v.module is None) or
-                (v.train is False and self.split in [Split.TRAIN, Split.VAL]) or
-                (v.test  is False and self.split in [Split.TEST,  Split.PREDICT])):
-                continue
-            datapoints_B[k] = []
-        self.datapoints_B = datapoints_B
-        
-        # List data in each domain
-        pk, _ = self.primary_modality(domain="B")
-        self.datapoints_B[pk] = self.list_primary_data_B()  # List primary modality
-        for k, v in self.datapoints_B.items():              # List other modalities
-            if k != pk:
-                self.datapoints_B[k] = self.list_modality_data(domain="B", key=k)
-        
-        # Verify data
-        self.verify_data(domain="B")
-    
-    @abc.abstractmethod
-    def list_primary_data_A(self) -> list:
-        """Lists primary modality data files in domain A."""
-        pass
-    
-    @abc.abstractmethod
-    def list_primary_data_B(self) -> list:
-        """Lists primary modality data files in domain B."""
-        pass
-    
-    def list_modality_data(self, domain: str, key: str) -> list:
-        """Lists other modalities data files in the ``domain``."""
-        modalities = self.modalities_A if domain == "A" else self.modalities_B
-        datapoints = self.datapoints_A if domain == "A" else self.datapoints_B
-        
-        pk, pk_modality = self.primary_modality(domain)
-        pk_name  = pk_modality.name
-        pk_files = datapoints[domain][pk]
-        
-        modality = modalities[domain][key]
-        name     = modality.name
-        module   = modality.module
-        files    = []
-        with create_progress_bar(disable=self.disable_pbar) as pbar:
-            for file in pbar.track(
-                sequence    = pk_files,
-                description = f"Listing {self.__class__.__name__} {self.split_str} {key}(s)"
-            ):
-                path = file.path.replace_part(f"{os.sep}{pk_name}{os.sep}", f"{os.sep}{name}{os.sep}")
-                files.append(module(path=path, root=file.root))
-                
-        return files
-    
-    def verify_data(self, domain: str):
-        """Verifies ``domain``'s dataset integrity.
-        
-        Args:
-            domain: Domain name.
-        
-        Raises:
-            RuntimeError: If no datapoints or attributes are invalid.
-        """
-        modalities = self.modalities_A if domain == "A" else self.modalities_B
-        datapoints = self.datapoints_A if domain == "A" else self.datapoints_B
-        
-        if self.size(domain=domain) <= 0:
-            raise RuntimeError(f"No datapoints in domain {domain}.")
-        
-        for k, v in datapoints.items():
-            if k not in modalities:
-                raise RuntimeError(f"Modality ``{k}`` is not defined in ``modalities`` of domain {domain}. "
-                                   f"Define it in the class if intentional.")
-            if modalities[k]:
-                if v is None:
-                    raise RuntimeError(f"No ``{k}`` attributes defined in domain {domain}!")
-                elif len(v) != self.__len__():
-                    raise RuntimeError(f"Number of ``{k}`` attributes ({len(v)}) does not "
-                                       f"match datapoints ({self.__len__()}) in domain {domain}.")
-    
-        if self.verbose:
-            log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
-    
-    @abc.abstractmethod
-    def reset(self):
-        """Resets the dataset."""
-        pass
-    
-    @abc.abstractmethod
-    def close(self):
-        """Closes and releases the dataset."""
-        pass
-    
-    # ----- Data Retrieval -----
-    @abc.abstractmethod
-    def get_datapoint(self, domain: str, index: int) -> dict:
-        """Gets a datapoint in the ``domain`` at the specified ``index``.
-
-        Args:
-            domain: Domain name.
-            index: Index of datapoint.
-
-        Returns:
-            A ``dict`` containing the datapoint.
-        """
-        pass
-    
-    @abc.abstractmethod
-    def get_meta(self, domain: str, index: int) -> dict:
-        """Gets metadata in the ``domain`` at the specified ``index``.
-
-        Args:
-            domain: Domain name.
-            index: Index of metadata.
-            
-        Returns:
-            A ``dict`` containing the metadata.
-        """
-        pass
-    
-    def collate_fn(self, batch: list[dict]) -> dict:
-        """Collates a batch of input items for ``torch.utils.data.dataset.DataLoader``.
-        
-        By default, ``batch`` is a ``list`` of dicts, where each ``dict``
-        is a datapoint. We need to collate these into a single ``dict``
-        where each key corresponds to a modality and the values are stacked
-        tensors or arrays.
-
-        Args:
-            batch: List of dicts, each ``dict`` is a datapoint.
-
-        Returns:
-            Collated ``dict`` for ``torch.utils.data.dataset.DataLoader``.
-        """
-        zipped = {
-            k: list(v)
-            for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))
-        }
-        
-        for k, v in zipped.items():
-            # if k not in self.modalities_a:  # i.e., metadata
-            #     continue
-            if v is None:
-                zipped[k] = None
-            elif isinstance(v[0], torch.Tensor):
-                zipped[k] = torch.stack(v, dim=0)
-            elif isinstance(v[0], np.ndarray):
-                zipped[k] = np.stack(v, axis=0)
-
-        return zipped
-
-
-# ----- Eval Dataset -----
-class BaseEvalDataset(dataset.Dataset, abc.ABC):
-    """A base class for evaluation datasets, which only contains the input and
-    target data (i.e., leaving out the rest).
-    
-    This is primarily used for evaluation pipelines to calculate performance
-    metrics outside the training loop.
-    
-    Args:
-        input_dir: Absolute path to the input/predict data directory.
-        target_dir: Absolute path to the target data directory. Default: ``None``.
-        transform: Transformations for input/target. Default: ``None``.
-        verbose: If ``True``, enables verbose output. Default: ``False``.
-    """
-    
-    def __init__(
-        self,
-        input_dir : Path,
-        target_dir: Path = None,
-        transform : Any  = None,
-        verbose   : bool = True,
-        *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        self.input_dir  = input_dir
-        self.target_dir = target_dir
-        self.transform  = None
-        self.verbose    = verbose
-        self.index      = 0  # Used with `__iter__` and `__next__`
-        self.datapoints: dict[str, list[Any]] = {}
-        # Order-specific, DO NOT CHANGE
-        self.init_transform(transform)
-        self.init_data()
-        
-    # ----- Magic Methods -----
-    def __del__(self):
-        """Closes the dataset."""
-        self.close()
-    
-    @abc.abstractmethod
-    def __getitem__(self, index: int) -> dict:
-        """Retrieves a datapoint and metadata at given ``index`` as a ``dict``."""
-        pass
-    
-    def __iter__(self):
-        """Initializes the dataset iterator."""
-        self.reset()
-        return self
-    
-    @abc.abstractmethod
-    def __len__(self) -> int:
-        """Retrieves the total number of datapoints."""
-        pass
-    
-    def __next__(self) -> dict:
-        """Retrieves the next datapoint and metadata as a ``dict``.
-
-        Raises:
-            StopIteration: If index exceeds the dataset length.
-        """
-        if self.index >= self.__len__():
-            raise StopIteration
-        result = self.__getitem__(self.index)
-        self.index += 1
-        return result
-    
-    # ----- Properties -----
-    @property
-    def has_target(self) -> bool:
-        return self.target_dir is not None and self.target_dir.is_dir()
-    
-    @property
-    def disable_pbar(self) -> bool:
-        """Returns ``True`` if progress bar disabled, ``False`` otherwise."""
-        return not self.verbose
-
-    # ----- Initialize -----
-    @abc.abstractmethod
-    def init_transform(self, transform: Any = None):
-        """Initializes transformation operations.
-
-        Args:
-            transform: Transformations to apply. Default: ``None``.
-        """
-        pass
-    
-    @abc.abstractmethod
-    def init_data(self):
-        """Initializes all datapoints in the dataset."""
-        pass
-    
-    @abc.abstractmethod
-    def reset(self):
-        """Resets the dataset."""
-        pass
-    
-    @abc.abstractmethod
-    def close(self):
-        """Closes and releases the dataset."""
-        pass
-    
-    # ----- Data Retrieval -----
-    @abc.abstractmethod
-    def get_datapoint(self, index: int) -> dict:
-        """Gets a datapoint at the specified ``index``.
-
-        Args:
-            index: Index of datapoint.
-
-        Returns:
-            A ``dict`` containing the datapoint.
-        """
-        pass
-    
-    @abc.abstractmethod
-    def get_meta(self, index: int) -> dict:
-        """Gets metadata at the specified ``index``.
-
-        Args:
-            index: Index of metadata.
-
-        Returns:
-            A ``dict`` containing the metadata.
-        """
-        pass
-    
-    def collate_fn(self, batch: list[dict]) -> dict:
-        """Collates a batch of input items for ``torch.utils.data.dataset.DataLoader``.
-        
-        By default, ``batch`` is a ``list`` of dicts, where each ``dict``
-        is a datapoint. We need to collate these into a single ``dict``
-        where each key corresponds to a modality and the values are stacked
-        tensors or arrays.
-
-        Args:
-            batch: List of dicts, each ``dict`` is a datapoint.
-
-        Returns:
-            Collated ``dict`` for ``torch.utils.data.dataset.DataLoader``.
-        """
-        zipped = {
-            k: list(v)
-            for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))
-        }
-
-        for k, v in zipped.items():
             if v is None:
                 zipped[k] = None
             elif isinstance(v[0], torch.Tensor):

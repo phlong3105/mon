@@ -42,12 +42,12 @@ class CycleGAN(CycleGANModel, nn.ModelMixin):
         - Code: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
     """
     
-    arch     : str          = "cyclegan"
-    name     : str          = "cyclegan"
-    tasks    : list[Task]   = [Task.IMG2IMG]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "cyclegan"
+    _name     : str          = "cyclegan"
+    _tasks    : list[Task]   = [Task.IMG2IMG]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, opt: argparse.Namespace, weights: Any = None):
         super().__init__(opt)
@@ -65,12 +65,12 @@ class Pix2Pix(Pix2PixModel, nn.ModelMixin):
         - Code: https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
     """
     
-    arch     : str          = "pix2pix"
-    name     : str          = "pix2pix"
-    tasks    : list[Task]   = [Task.IMG2IMG]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "pix2pix"
+    _name     : str          = "pix2pix"
+    _tasks    : list[Task]   = [Task.IMG2IMG]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, opt: argparse.Namespace, weights: Any = None):
         super().__init__(opt)

@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements various Implicit Neural Representation (INR) layers
-and MLP architectures.
+"""A package for Implicit Neural Representations (INRs).
+
+This package provides various modules and classes for building and training
+Implicit Neural Representations (INRs) in deep learning applications.
 """
 
 __all__ = [

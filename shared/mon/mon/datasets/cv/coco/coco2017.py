@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements COCO-2017 dataset."""
+"""A module for COCO-2017 dataset.
+
+This module implements the COCO-2017 dataset for object detection tasks.
+"""
 
 __all__ = [
     "COCO80",
@@ -15,13 +18,13 @@ from ...core import *
 class COCO80(ImageDataset):
     """COCO-80-classes dataset."""
     
-    root_name : str         = "coco2017"
-    tasks     : list[Task]  = [Task.DETECT]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "coco2017"
+    _tasks     : list[Task]  = [Task.DETECT]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    classes   : Classes     = Classes([
+    _classes   : Classes     = Classes([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": (  0,   0,   0)},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": ( 81, 120, 228)},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": (138, 183,  33)},
@@ -111,13 +114,13 @@ class COCO80(ImageDataset):
 class COCO91(ImageDataset):
     """COCO-91-classes dataset."""
     
-    root_name : str         = "coco2017"
-    tasks     : list[Task]  = [Task.DETECT]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "coco2017"
+    _tasks     : list[Task]  = [Task.DETECT]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    classes   : Classes     = Classes([
+    _classes   : Classes     = Classes([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": [  0,   0,   0]},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": [ 81, 120, 228]},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": [138, 183,  33]},

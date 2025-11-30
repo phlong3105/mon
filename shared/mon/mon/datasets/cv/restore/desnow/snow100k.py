@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Snow100K dataset for image desnowing tasks."""
+"""A module for the Snow100K dataset.
+
+This module implements Snow100K dataset for image desnowing tasks.
+"""
 
 __all__ = [
     "Snow100K",
@@ -15,17 +18,21 @@ from ....core import *
 class Snow100K(ImageDataset):
     """Snow100K dataset."""
 
-    root_name : str         = "snow100k"
-    tasks     : list[Task]  = [Task.DESNOW]
-    splits    : list[Split] = [Split.TRAIN]
-    modalities: Modalities  = {
+    _root_name : str         = "snow100k"
+    _tasks     : list[Task]  = [Task.DESNOW]
+    _splits    : list[Split] = [Split.TRAIN]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / self.split_str / "lq"]
         
         images: list[Image] = []
@@ -35,6 +42,6 @@ class Snow100K(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
         
         return images

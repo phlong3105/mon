@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements various neural network (NN) components and architectures.
+"""A package for neural network (NN) components and architectures.
+
+This package implements various neural network (NN) components and architectures.
 
 Notes: In this package, we follow the same coding conventions as PyTorch to
 maintain consistency. If you don't know what to do, just look at the PyTorch

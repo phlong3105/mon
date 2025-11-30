@@ -133,7 +133,7 @@ class ImagePool():
     """
 
     def __init__(self, pool_size):
-        """Initialize the ImagePool class
+        """Initializes the ImagePool class
 
         Parameters:
             pool_size (int) -- the size of image buffer, if pool_size=0, no buffer will be created

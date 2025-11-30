@@ -30,12 +30,12 @@ current_dir  = current_file.parents[0]
 class GCENet_Baseline(nn.Module, nn.ModelMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
-    arch     : str          = "gcenet"
-    name     : str          = "gcenet_baseline"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = current_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "gcenet"
+    _name     : str          = "gcenet_baseline"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = current_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

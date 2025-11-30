@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Rain12 dataset for image deraining tasks."""
+"""A module for the Rain12 dataset.
+
+This module implements the Rain12 dataset for image deraining tasks.
+"""
 
 __all__ = [
     "Rain12",
@@ -15,11 +18,11 @@ from ....core import *
 class Rain12(ImageDataset):
     """Rain12 dataset."""
 
-    root_name : str         = "rain12"
-    tasks     : list[Task]  = [Task.DERAIN]
-    splits    : list[Split] = [Split.TRAIN]
-    modalities: Modalities  = {
+    _root_name : str         = "rain12"
+    _tasks     : list[Task]  = [Task.DERAIN]
+    _splits    : list[Split] = [Split.TRAIN]
+    _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

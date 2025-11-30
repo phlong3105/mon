@@ -34,12 +34,12 @@ class MobileNetV3(tvm.MobileNetV3, nn.ModelMixin, abc.ABC):
         - Paper: https://arxiv.org/abs/1905.02244
     """
     
-    arch     : str          = "mobilenet"
-    name     : str          = "mobilenet_v3"
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "mobilenet"
+    _name     : str          = "mobilenet_v3"
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, weights: Any = "imagenet1k_v1", num_classes: int = 1000, *args, **kwargs):
         weights, path, num_classes = self.parse_weights(weights, num_classes)
@@ -51,8 +51,8 @@ class MobileNetV3(tvm.MobileNetV3, nn.ModelMixin, abc.ABC):
 @MODELS.register(name="mobilenet_v3_large", arch="mobilenet")
 class MobileNetV3Large(MobileNetV3):
     
-    name: str  = "mobilenet_v3_large"
-    zoo : dict = box.Box({
+    _name: str  = "mobilenet_v3_large"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pth",
@@ -85,8 +85,8 @@ class MobileNetV3Small(MobileNetV3):
         dropout: Dropout rate for the model. Default: ``0.2``.
     """
     
-    name: str  = "mobilenet_v3_small"
-    zoo : dict = box.Box({
+    _name: str  = "mobilenet_v3_small"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pth",

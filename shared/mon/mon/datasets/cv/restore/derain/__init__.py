@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides datasets for image/video deraining tasks."""
+"""A package for deraining datasets.
+
+This package includes various datasets for image deraining tasks.
+"""
 
 from .gtrain import *
 from .rain100 import *

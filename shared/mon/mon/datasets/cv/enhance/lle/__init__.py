@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides low-light enhancement (LLE) datasets."""
+"""A package for low-light enhancement datasets.
+
+This package includes various datasets used for low-light image enhancement tasks.
+"""
 
 from .dicm import *
 from .fusion import *

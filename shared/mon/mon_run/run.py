@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements main running pipeline."""
+"""A script to run training and prediction for various models.
+
+This script serves as a unified interface to initiate training and prediction
+processes for different architectures and models. It handles argument parsing,
+environment setup, and execution of the respective training and prediction scripts.
+"""
 
 import os
 import subprocess
@@ -21,9 +26,9 @@ current_dir  = current_file.parents[0]
 def run_train(args: dict | box.Box):
     # Parse arguments
     args.root    = Path(args.root)
-    model_root   = mon.rt.parse_model_dir(args.arch, args.model)
-    args.config  = mon.rt.parse_config_file(args.config, args.root, model_root=model_root)
-    args.weights = mon.utils.to_str(args.weights, ",")
+    model_root   = mon.parse_model_dir(args.arch, args.model)
+    args.config  = mon.parse_config_file(args.config, args.root, model_root=model_root)
+    args.weights = mon.to_str(args.weights, ",")
     
     if args.fullname in [None, "None", ""]:
         args.fullname = Path(args.config).stem
@@ -100,11 +105,11 @@ def run_train(args: dict | box.Box):
 def run_predict(args: dict | box.Box):
     # Parse arguments
     args.root    = Path(args.root)
-    model_root   = mon.rt.parse_model_dir(args.arch, args.model)
-    args.data    = mon.utils.to_list(args.data)
-    args.config  = mon.rt.parse_config_file(args.config, args.root, model_root=model_root)
+    model_root   = mon.parse_model_dir(args.arch, args.model)
+    args.data    = mon.to_list(args.data)
+    args.config  = mon.parse_config_file(args.config, args.root, model_root=model_root)
     args.config  = args.config or ""
-    args.weights = mon.utils.to_str(args.weights, ",")
+    args.weights = mon.to_str(args.weights, ",")
     
     if args.fullname in [None, "None", ""]:
         args.fullname = args.model
@@ -168,9 +173,9 @@ def run_predict(args: dict | box.Box):
 
 # ----- Main -----
 def main():
-    cli   = mon.rt.parse_default_args()
+    cli   = mon.parse_default_args()
     cli.p = True  # With prompt
-    args  = mon.rt.parse_cli_args(cli=cli, name="main")
+    args  = mon.parse_cli_args(cli=cli, name="main")
  
     # Run
     if args.mode in ["train"]:

@@ -95,7 +95,7 @@ def predict(args: argparse.Namespace):
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 save_image_tensor(restored, output_path)
    
-    avg_time = float(timer.avg_time)
+    avg_time = float(timer.avg)
     mon.log(f"Average time: {avg_time}")
 
 

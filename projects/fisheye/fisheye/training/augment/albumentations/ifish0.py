@@ -10,7 +10,7 @@ References:
 import cv2
 import numpy as np
 
-from mon.core import BBoxFormat, hbb
+from mon.core import BBoxFormat, bbox as B
 
 
 # ----- Utils -----
@@ -20,18 +20,18 @@ def fish_xn_yn(
     radius    : float,
     distortion: float
 ) -> tuple[float, float]:
-    """Converting a pixel's coordinates to its corresponding coordinates in
-    fisheye image.
+    """Converts a pixel's coordinates in the original image to its corresponding
+    coordinates in fisheye image.
     
     Args:
-        source_x: Pixel's x-coordinate.
-        source_y: Pixel's y-coordinate.
-        radius: Pixel's distance from the image center.
-        distortion: Distortion coefficient.
+        source_x (np.ndarray): Image pixel coordinates.
+        source_y (np.ndarray): Image pixel coordinates.
+        radius (float): Pixel's distance from the image center.
+        distortion (float): Distortion coefficient.
 
     Returns:
-        fish_x: Pixel's new x-coordinate.
-        fish_y: Pixel's new y-coordinate.
+        float: Pixel's new x-coordinate.
+        float: Pixel's new y-coordinate.
     """
     if 1 - distortion * (radius ** 2) == 0:
         fish_x = source_x
@@ -48,18 +48,18 @@ def reverse_fish_xn_yn(
     radius    : float,
     distortion: float
 ) -> tuple[float, float]:
-    """Converting a pixel's coordinates in fisheye image to its corresponding
-    coordinates in the original image (The reverse function of fish_xn_yn).
+    """Converts a pixel's coordinates in fisheye image back to its corresponding
+    coordinates in the original image.
     
     Args:
-        source_x: Pixel's x-coordinate.
-        source_y: Pixel's y-coordinate.
-        radius: Pixel's distance from the image center.
-        distortion: Distortion coefficient.
+        source_x (np.ndarray): Image pixel coordinates.
+        source_y (np.ndarray): Image pixel coordinates.
+        radius (float): Pixel's distance from the image center.
+        distortion (float): Distortion coefficient.
 
     Returns:
-        fish_x: Pixel's new x-coordinate.
-        fish_y: Pixel's new y-coordinate.
+        float: Pixel's new x-coordinate.
+        float: Pixel's new y-coordinate.
     """
     if radius == 0:
         return source_x, source_y
@@ -68,11 +68,14 @@ def reverse_fish_xn_yn(
 
 
 def fish(image: np.ndarray, distortion: float) -> np.ndarray:
-    """Convert normal to fisheye image.
+    """Converts an ordinary image to fisheye image.
     
     Args:
-        image: The original image.
-        distortion: Distortion coefficient (should be between 0-1).
+        image (numpy.ndarray): The original image.
+        distortion (float): Distortion coefficient.
+        
+    Returns:
+        numpy.ndarray: Newly generated fisheye image.
     """
     w, h, c = image.shape
 
@@ -105,14 +108,14 @@ def fish(image: np.ndarray, distortion: float) -> np.ndarray:
 
 
 def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
-    """Add padding to the image to make it become a squared image.
+    """Adds padding to make the image square.
     
     Args:
-        image: The original image.
-        pad_value: Padding value.
+        image (numpy.ndarray): The input image.
+        pad_value (int): The padding value. Defaults to 0.
         
     Returns:
-         The padded image.
+        numpy.ndarray: The padded square image.
     """
     h, w, c = image.shape
     if w >= h:
@@ -126,15 +129,15 @@ def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
 
 # ----- Transformation -----
 def convert_image(image: np.ndarray, distortion: float, crop: bool = True) -> np.ndarray:
-    """Convert an ordinary image to fisheye image.
+    """Converts an ordinary image to fisheye image.
     
     Args:
-        image: The original image.
-        distortion: Distortion coefficient.
-        crop: Whether to crop the dark area around images.
-    
+        image (numpy.ndarray): The original image.
+        distortion (float): Distortion coefficient.
+        crop (bool): Whether to crop the dark area around images. Defaults to True.
+        
     Returns:
-        Newly generated fisheye image.
+        numpy.ndarray: Newly generated fisheye image.
     """
     new_img = fish(image, distortion)
     if not crop:
@@ -169,25 +172,24 @@ def convert_bboxes(
     distortion: float,
     crop      : bool = True
 ) -> np.ndarray:
-    """Convert bboxes coordinates in ordinary images to corresponding fisheye
-    images.
+    """Converts bounding boxes from an ordinary image to fisheye image.
     
     Args:
-        bboxes: list of bbox in xyxy format [left, top, right, bottom] (unnormalized),
-        old_size: original size of the image (w, h),
-        new_size: the size of the newly converted image (w, h),
-        distortion:
-        crop: whether to crop the dark area around images,
+        bboxes (np.ndarray): The bounding boxes.
+        old_size (tuple[int, int]): Original image size as (W, H).
+        new_size (tuple[int, int]): New image size as (W, H).
+        distortion (float): Distortion coefficient.
+        crop (bool): Whether to crop the dark area around images. Defaults to True.
 
     Returns:
-        New bounding boxes' coordinates,
+        numpy.ndarray: Newly generated bounding boxes.
     """
     old_w, old_h = old_size
     new_w, new_h = new_size
     left_margin  = int((old_w - new_w) // 2)
     top_margin   = int((old_h - new_h) // 2)
     
-    bboxes     = hbb.convert(bboxes, fmt=BBoxFormat.YOLO2VOC, imgsz=old_size)
+    bboxes     = B.convert(bboxes, fmt=BBoxFormat.YOLO2VOC, imgsz=old_size)
     new_bboxes = []
     for bbox in bboxes:
         # top_left, top_right, bottom_left, bottom_right
@@ -220,5 +222,5 @@ def convert_bboxes(
             new_bboxes.append([left_fish, top_fish, right_fish, bot_fish, bbox[4]])
     
     new_bboxes = np.array(new_bboxes)
-    new_bboxes = hbb.convert(new_bboxes, fmt=BBoxFormat.VOC2YOLO, imgsz=new_size)
+    new_bboxes = B.convert(new_bboxes, fmt=BBoxFormat.VOC2YOLO, imgsz=new_size)
     return new_bboxes

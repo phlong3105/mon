@@ -38,12 +38,12 @@ class DEIM(nn.Module, nn.ModelMixin):
         - Code: https://github.com/ShihuaHuang95/DEIM
     """
     
-    arch     : str          = "deim"
-    name     : str          = "deim"
-    tasks    : list[Task]   = [Task.DETECT]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "deim"
+    _name     : str          = "deim"
+    _tasks    : list[Task]   = [Task.DETECT]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

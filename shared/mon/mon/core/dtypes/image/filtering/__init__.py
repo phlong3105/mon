@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements filtering functions."""
+"""A package for image filtering data type.
+
+This package implements various image filtering techniques, including box filter,
+guided filter, and Sobel filter. These filters are commonly used in image
+processing tasks such as smoothing, edge detection, and detail enhancement.
+"""
 
 __all__ = [
     "BoxFilter",

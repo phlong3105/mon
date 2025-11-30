@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements various linear layers."""
+"""A package for linear layers.
+
+This package implements various linear layer components used in neural networks.
+"""
 
 __all__ = [
     "Bilinear",

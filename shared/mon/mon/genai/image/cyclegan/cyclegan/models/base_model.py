@@ -20,7 +20,7 @@ class BaseModel(ABC):
     """
 
     def __init__(self, opt):
-        """Initialize the BaseModel class.
+        """Initializes the BaseModel class.
 
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
@@ -280,7 +280,7 @@ class BaseModel(ABC):
                     param.requires_grad = requires_grad
 
     def init_networks(self, init_type="normal", init_gain=0.02):
-        """Initialize all networks: 1. move to device; 2. initialize weights
+        """Initializes all networks: 1. move to device; 2. initialize weights
 
         Parameters:
             init_type (str) -- initialization method: normal | xavier | kaiming | orthogonal

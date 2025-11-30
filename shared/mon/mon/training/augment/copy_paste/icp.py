@@ -24,7 +24,7 @@ from mon.core import (
     console,
     create_progress_bar,
     error_console,
-    hbb,
+    bbox,
     image as I,
     Path,
 )
@@ -139,12 +139,7 @@ class Label:
         self.image_path = image_path
         self.class_id   = int(bbox[4])
         self.used       = 0
-    
-    def save_patch(self):
-        """Save the object patch (i.e., RGB pixels) as an image file."""
-        pass
         
-    
 
 # noinspection PyMethodMayBeStatic
 class ICPAugmentation:
@@ -326,12 +321,12 @@ class ICPAugmentation:
                 if not label_file.is_txt_file(exist=True):
                     continue
 
-                bs = hbb.load(path=label_file, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h, w))
+                bs = bbox.load(path=label_file, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h, w))
                 for b in bs:
                     labels.append(Label(b, None, image_file))
 
                 # Determine candidates objects
-                filtered_bs = hbb.filter_iou(bs, iou_thres=self._iou_thres)
+                filtered_bs = bbox.filter_iou(bs, iou_thres=self._iou_thres)
                 masks       = self._gen_fg_masks(image, filtered_bs)
                 for b, m in zip(filtered_bs, masks):
                     if m is None:  # Skip if no mask is found
@@ -399,15 +394,15 @@ class ICPAugmentation:
 
                 # Save new label file
                 bs = [l.bbox for l in labels]
-                bs = hbb.convert(bs, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(h, w))
+                bs = bbox.convert(bs, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(h, w))
                 new_label_file = self._new_label_dir / f"{image_file.stem}_{self._suffix}_{self._run}.txt"
                 new_label_file.parent.mkdir(parents=True, exist_ok=True)
                 with open(new_label_file, "w") as f:
                     for b in bs:
-                        f.write(f"{int(b[4])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
+                        f.write(f"{int(b[5])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
 
         self._run += 1
-
+    
     def _get_new_samples(self, image_file: Path) -> tuple[list[Label], list[Label]]:
         """Get new samples for the given image file."""
         # Get all Labels for this image
@@ -441,7 +436,7 @@ class ICPAugmentation:
 
                 # Determine if the sample can be pasted
                 bs  = [l.bbox for l in labels]
-                iou = hbb.iou(new_label.bbox, bs)
+                iou = bbox.iou(new_label.bbox, bs)
                 if np.any(iou > self._iou_thres):
                     tries += 1
                     continue
@@ -549,7 +544,7 @@ class ICPAugmentation:
         counts = {}
         bs = [b.bbox for b in data if b.image_path == image_file]
         for b in bs:
-            c = int(b[4])
+            c = int(b[5])
             if c not in counts:
                 counts[c] = 0
             counts[c] += 1

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements LoLI-Street dataset for nighttime image enhancement."""
+"""A module for LoLI-Street dataset.
+
+This module implements LoLI-Street dataset for nighttime image enhancement.
+"""
 
 __all__ = [
     "LoLIStreet",
@@ -20,15 +23,15 @@ from ....core import *
 class LoLIStreet(ImageDataset):
     """LoLI-Street dataset."""
     
-    root_name : str         = "lolistreet"
-    tasks     : list[Task]  = [Task.NTE, Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "lolistreet"
+    _tasks     : list[Task]  = [Task.NTE, Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
     }
-    classes   : Classes     = Classes([
+    _classes   : Classes     = Classes([
         {"id": 0 , "name": "person"        , "supercategory": "person",     "color": [ 81, 120, 228]},
         {"id": 1 , "name": "bicycle"       , "supercategory": "vehicle",    "color": [138, 183,  33]},
         {"id": 2 , "name": "car"           , "supercategory": "vehicle",    "color": [ 49,   3, 150]},
@@ -116,8 +119,12 @@ class LoLIStreet(ImageDataset):
 class LoLIStreetVal(LoLIStreet):
     """LoLI-Street-Val subset."""
     
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "val" / "image"]
         
         images: list[Image] = []
@@ -127,7 +134,7 @@ class LoLIStreetVal(LoLIStreet):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
         
@@ -136,8 +143,12 @@ class LoLIStreetVal(LoLIStreet):
 class LoLIStreetVal_Light(LoLIStreet):
     """LoLI-Street-Val subset."""
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "val" / "image"]
         
         images: list[Image] = []
@@ -147,7 +158,7 @@ class LoLIStreetVal_Light(LoLIStreet):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
     
@@ -156,8 +167,12 @@ class LoLIStreetVal_Light(LoLIStreet):
 class LoLIStreetVal_Moderate(LoLIStreet):
     """LoLI-Street-Val subset."""
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "val" / "image"]
         
         images: list[Image] = []
@@ -167,7 +182,7 @@ class LoLIStreetVal_Moderate(LoLIStreet):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
     
@@ -176,8 +191,12 @@ class LoLIStreetVal_Moderate(LoLIStreet):
 class LoLIStreetVal_Dense(LoLIStreet):
     """LoLI-Street-Val subset."""
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "val" / "image"]
         
         images: list[Image] = []
@@ -187,7 +206,7 @@ class LoLIStreetVal_Dense(LoLIStreet):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images
 
@@ -196,8 +215,12 @@ class LoLIStreetVal_Dense(LoLIStreet):
 class LoLIStreetTest(LoLIStreet):
     """LoLI-Street-Test subset."""
 
-    def list_primary_data(self) -> list:
-        """Lists ``datapoints`` with image annotations for split."""
+    def _load_primary_data(self) -> list[Image]:
+        """Lists all image data for the primary modality.
+        
+        Returns:
+            list[Image]: A list of Image instances for the primary modality.
+        """
         patterns = [self.root / "test" / "image"]
 
         images: list[Image] = []
@@ -207,6 +230,6 @@ class LoLIStreetTest(LoLIStreet):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images

@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various upsampling layers."""
+"""A module for upsampling layers.
+
+This module provides classes for upsampling operations in neural networks.
+"""
 
 __all__ = [
     "Upsample",

@@ -15,16 +15,16 @@ from ...core import *
 class TSDME(ImageDataset):
     """TSD-ME dataset."""
     
-    root_name : str         = "tsd"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN]
-    modalities: Modalities  = {
+    _root_name : str         = "tsd"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None
     
-    def list_primary_data(self) -> list:
+    def _load_primary_data(self) -> list:
         if self.split == Split.TRAIN:
             patterns = [
                 self.root / "me" / self.split_str / "image",

@@ -33,19 +33,19 @@ class DAAC(DepthAnything_AC, nn.ModelMixin):
         - Code: https://github.com/HVision-NKU/DepthAnythingAC
     """
     
-    arch     : str          = "daac"
-    name     : str          = "daac"
-    tasks    : list[Task]   = [Task.MONODEPTH]
-    mltypes  : list[MLType] = [MLType.ZERO_SHOT]
-    model_dir: Path         = root_dir
-    zoo      : dict         = {}
+    _arch     : str          = "daac"
+    _name     : str          = "daac"
+    _tasks    : list[Task]   = [Task.MONODEPTH]
+    _mltypes  : list[MLType] = [MLType.ZERO_SHOT]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = {}
 
 
 @MODELS.register(name="daac_vits", arch="daac")
 class DAV2_ViTS(DAAC):
     
-    name: str  = "daac_vits"
-    zoo : dict = {
+    _name: str  = "daac_vits"
+    _zoo : dict = {
         "pretrained": {
             "path": ROOT_DIR / "zoo/cv/monodepth/daac/daac_vits/pretrained/daac_vits.pth",
         },

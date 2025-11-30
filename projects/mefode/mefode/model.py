@@ -36,12 +36,12 @@ class MEFODE(NODE, nn.ModelMixin):
         - Code:
     """
     
-    arch     : str          = "mefode"
-    name     : str          = "mefode"
-    tasks    : list[Task]   = [Task.MEF, Task.LLE]
-    mltypes  : list[MLType] = [MLType.UNSUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "mefode"
+    _name     : str          = "mefode"
+    _tasks    : list[Task]   = [Task.MEF, Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, weights: Any = None, *args, **kwarg):
         super().__init__(*args, **kwarg)

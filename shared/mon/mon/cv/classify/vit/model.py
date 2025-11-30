@@ -36,12 +36,12 @@ class ViT(tvm.VisionTransformer, nn.ModelMixin, abc.ABC):
         - Paper: https://arxiv.org/abs/2010.11929
     """
     
-    arch     : str          = "vit"
-    name     : str          = "vit"
-    tasks    : list[Task]   = [Task.CLASSIFY]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "vit"
+    _name     : str          = "vit"
+    _tasks    : list[Task]   = [Task.CLASSIFY]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(self, weights: Any = "imagenet1k_v1", num_classes: int = 1000, *args, **kwargs):
         weights, path, num_classes = self.parse_weights(weights, num_classes)
@@ -53,8 +53,8 @@ class ViT(tvm.VisionTransformer, nn.ModelMixin, abc.ABC):
 @MODELS.register(name="vit_b_16", arch="vit")
 class ViT_B_16(ViT):
     
-    name: str  = "vit_b_16"
-    zoo : dict = box.Box({
+    _name: str  = "vit_b_16"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vit/vit_b_16/imagenet1k_v1/vit_b_16_imagenet1k_v1.pth",
@@ -90,8 +90,8 @@ class ViT_B_16(ViT):
 @MODELS.register(name="vit_b_32", arch="vit")
 class ViT_B_32(ViT):
     
-    name: str  = "vit_b_32"
-    zoo : dict = box.Box({
+    _name: str  = "vit_b_32"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_b_32-d86f8d99.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vit/vit_b_32/imagenet1k_v1/vit_b_32_imagenet1k_v1.pth",
@@ -117,8 +117,8 @@ class ViT_B_32(ViT):
 @MODELS.register(name="vit_l_16", arch="vit")
 class ViT_L_16(ViT):
     
-    name: str  = "vit_l_16"
-    zoo : dict = box.Box({
+    _name: str  = "vit_l_16"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_16-852ce7e3.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vit/vit_l_16/imagenet1k_v1/vit_l_16_imagenet1k_v1.pth",
@@ -154,8 +154,8 @@ class ViT_L_16(ViT):
 @MODELS.register(name="vit_l_32", arch="vit")
 class ViT_L_32(ViT):
 
-    name: str  = "vit_l_32"
-    zoo : dict = box.Box({
+    _name: str  = "vit_l_32"
+    _zoo : dict = box.Box({
         "imagenet1k_v1": {
             "url"        : "https://download.pytorch.org/models/vit_l_32-c7638314.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vit/vit_l_32/imagenet1k_v1/vit_l_32_imagenet1k_v1.pth",
@@ -181,8 +181,8 @@ class ViT_L_32(ViT):
 @MODELS.register(name="vit_h_14", arch="vit")
 class ViT_H_14(ViT):
     
-    name: str  = "vit_h_14"
-    zoo : dict = box.Box({
+    _name: str  = "vit_h_14"
+    _zoo : dict = box.Box({
         "imagenet1k_swag_e2e_v1": {
             "url"        : "https://download.pytorch.org/models/vit_h_14_swag-80465313.pth",
             "path"       : ROOT_DIR / "zoo/cv/classify/vit/vit_h_14_swag/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",

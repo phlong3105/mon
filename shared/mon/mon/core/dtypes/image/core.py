@@ -1,115 +1,1 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-"""This module implements data structure for image."""
-
-__all__ = [
-    "Image",
-]
-
-from typing import Union
-
-import cv2
-import numpy as np
-import torch
-
-from mon.core.pathlib import Path
-from ..base import BaseTensorOrArray
-
-
-class Image(BaseTensorOrArray):
-    """Image object.
-
-    Args:
-        data: An RGB image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
-            Default: ``None``.
-        path: Image file path. Default: ``None``.
-        root: Root directory of the image (of a dataset). Default: ``None``.
-        flags: OpenCV flag to read image. One of: ``cv2.IMREAD_UNCHANGED``,
-            ``cv2.IMREAD_GRAYSCALE``, ``cv2.IMREAD_COLOR_BGR``, ``cv2.IMREAD_COLOR``,
-            ``cv2.IMREAD_ANYDEPTH``, ``cv2.IMREAD_ANYCOLOR``, ``cv2.IMREAD_COLOR_RGB``.
-            Default: ``cv2.IMREAD_COLOR``.
-        cache: If ``True``, caches image in memory. Default: ``False``.
-    """
-    
-    def __init__(
-        self,
-        data : Union[torch.Tensor, np.ndarray] = None,
-        path : Path = None,
-        root : Path = None,
-        flags: int  = cv2.IMREAD_COLOR,
-        cache: bool = False,
-    ):
-        if all(d is None for d in [data, path]):
-            raise ValueError("Either [data] or [path] must be provided to initialize the Image object.")
-        if data is not None:
-            orig_shape = data.shape
-        elif Path(path).is_image_file(exist=True):
-            from mon.core.dtypes.image import io
-            orig_shape = io.read_shape(path=path)
-        else:
-            orig_shape = None
-
-        super().__init__(data=data, orig_shape=orig_shape)
-        self._path = Path(path) if path is not None else None
-        self._root = Path(root) if root is not None else None
-        self.flags = flags
-        self.cache = cache
-    
-    @property
-    def shape(self) -> tuple[int, int, int]:
-        """Return the shape of the underlying data tensor."""
-        return self._orig_shape
-    
-    @property
-    def path(self) -> Path:
-        """Returns the image file path."""
-        return self._path
-    
-    @property
-    def root(self) -> Path:
-        """Returns the root directory for the image."""
-        return self._root
-    
-    @property
-    def meta(self) -> dict:
-        """Returns metadata about the image.
-
-        Returns:
-            A ``dict`` with keys ``name``, ``stem``, ``path``, ``shape``, and ``hash``.
-        """
-        return {
-            "path"      : self.path,
-            "orig_shape": self.orig_shape,
-            "shape"     : self.shape,
-            "hash"      : self.path.stat().st_size if isinstance(self.path, Path) else None,
-        }
-    
-    def load(self, reload: bool = False) -> np.ndarray:
-        """Loads an image into memory.
-
-        Args:
-            reload: If ``True``, reload the image even if already cached.
-                Default: ``False``.
-
-        Returns:
-            An image as a ``numpy.ndarray`` of shape :math:`(H, W, C)` in
-            range :math:`[0, 255]`.
-        """
-        # Return the image if it is already loaded and not reloading
-        if not reload and self._data is not None:
-            return self._data
-
-        # Load the image
-        from mon.core.dtypes.image.io import load
-        image = load(self.path, self.flags)
-
-        # Update the original shape of the image
-        if self._orig_shape != image.shape:
-            self._orig_shape = image.shape
-
-        # Cache the image if needed
-        self._data = image if self.cache else None
-        return image
+#!/usr/bin/env python# -*- coding: utf-8 -*-"""A module for image data type.This module provides base classes for handling image data, including loading,caching, and accessing image properties. It supports images stored as in-memoryarrays or as file paths, with lazy loading and metadata access."""__all__ = [    "Image",]import cv2import numpy as npfrom mon.core.pathlib import Pathfrom ..base import DataCV2_IMREAD_FLAGS = [    cv2.IMREAD_ANYCOLOR,    cv2.IMREAD_ANYDEPTH,    cv2.IMREAD_COLOR,    cv2.IMREAD_COLOR_BGR,    cv2.IMREAD_COLOR_RGB,    cv2.IMREAD_GRAYSCALE,    cv2.IMREAD_UNCHANGED,]class Image(Data):    """A base class for a single original image (i.e., must have a valid file    path).        This class extends Data to handle a single image, which can be provided    either as an in-memory array/tensor or as a file path. It supports lazy    loading, caching, and provides properties to access image metadata.    """        def __init__(        self,        data : np.ndarray | Path,        path : Path = None,        root : Path = None,        flags: int  = cv2.IMREAD_COLOR,        cache: bool = False,    ):        """Initializes the Image instance.                Args:            data (numpy.ndarray or Path): Either an RGB image as a numpy.ndarray                of shape (H, W, C) with pixel values in the range [0, 255], or                an image file path.            path (Path, optional): Image file path. Defaults to None.            root (Path, optional): Root directory of the image (of a dataset).                Defaults to None.            flags (int, optional): OpenCV flag to read image. Defaults to                cv2.IMREAD_COLOR.            cache (bool, optional): If True, caches image in memory. Defaults to                False.                Raises:            TypeError: If ``data`` is neither a numpy.ndarray nor a valid image                file path.            FileNotFoundError: If the provided image file path does not exist.            ValueError: If neither ``data`` nor a valid image ``path`` is provided,                or if the provided ``flag`` is not a valid OpenCV imread flag.        """        super().__init__()                # Validate data        shape = None        if isinstance(data, Path | str) and Path(data).is_image_file(exist=True):            path  = data            data  = None        elif isinstance(data, np.ndarray):            shape = data.shape        else:            raise TypeError(f"``data`` must be either a numpy.ndarray or a valid image file path, got {type(data)}.")                # Validate and set path        self._path = Path(path) if path is not None else None        self._root = Path(root) if root is not None else None        if data is None and self._path is not None:            if self._path.is_image_file(exist=True):                from . import io                shape = io.read_shape(path=path)            else:                raise FileNotFoundError(f"Image file not found: {path}.")                # Validate        if all(v is None for v in [data, self._path]):            raise ValueError("Either ``data`` or a valid image ``path`` must be provided.")                # Assign attributes        self._data  = data        self._shape = shape        self.flag   = flags        self.cache  = cache            #---- Magic Methods -----    def __len__(self) -> int:        """Returns the length of 1 (i.e., a single image)."""        return 1        def __getitem__(self, idx: int = 0) -> np.ndarray:        """Returns the image itself.                Args:            idx (int): Index to get the image. Defaults to 0.                Returns:            numpy.ndarray: The image itself.        """        return self.data        # ----- Properties -----    @property    def data(self) -> np.ndarray:        """Getter for the image.                This property returns the image if it is already loaded in memory;        otherwise, it calls the ``load()`` method to load the image from disk.        This lazy loading mechanism helps manage memory usage effectively.                Returns:            numpy.ndarray: An image as a numpy.ndarray of shape (H, W, C) with                pixel values in the range [0, 255].        """        return self._data if self._data is not None else self.load()            @property    def shape(self) -> tuple[int, int, int]:        """Getter for the original shape of the image as (H, W, C).                Returns:            tuple[int, int, int]: The original shape of the image.        """        return self._shape        @property    def imgsz(self) -> tuple[int, int]:        """Getter for the image size as (H, W).                Returns:            tuple[int, int]: The image size.        """        return self._shape[:2]        @property    def path(self) -> Path:        """Getter for the image file path.                Returns:            Path: The image file path.        """        return self._path        @property    def root(self) -> Path:        """Getter for the root directory of the image (i.e., dataset root).                Returns:            Path: The root directory of the image.        """        return self._root        @property    def flag(self) -> int:        """Getter for the OpenCV flag used to read the image."""        return self._flags        @flag.setter    def flag(self, flag: int):        """Setter for the OpenCV flag used to read the image.                Raises:            ValueError: If the provided flag is not a valid OpenCV imread flag.        """        if flag not in CV2_IMREAD_FLAGS:            raise ValueError(f"``flag`` must be one of {CV2_IMREAD_FLAGS}, got {flag}.")        self._flags = flag        @property    def cache(self) -> bool:        """Getter for the caching mode.                Returns:            bool: True if caching is enabled, False otherwise.        """        return self._cache        @cache.setter    def cache(self, cache: bool):        """Setter for the caching mode.                Args:            cache (bool): If True, enables caching of the image in memory.                If False, the image will be cleared if a valid image ``path``                is provided (i.e., image can be reloaded from disk when needed).        """        self._cache = bool(cache)        self.clear()        @property    def meta(self) -> dict:        """Getter for metadata about the image.                Returns:            dict: Metadata about the image.        """        return {            "path" : self.path,            "root" : self.root,            "shape": self.shape,            "imgsz": self.imgsz,            "hash" : self.path.stat().st_size if isinstance(self.path, Path) else None,        }        # ----- Initialize -----    def load(self, reload: bool = False) -> np.ndarray:        """Loads an image from disk to memory.        This method can be called internally or externally to reload the data.                Args:            reload (bool): If True, the image will be reloaded from disk                regardless of whether it is already cached in memory.                Defaults to False.                        Returns:            numpy.ndarray: An image as a numpy.ndarray of shape (H, W, C) with                pixel values in the range [0, 255].        """        # Return the image if it is already loaded        if self._data is not None and not reload:            return self._data                # Load the image from disk        from .io import load        image = load(self.path, self._flags)                # Update the original shape of the image        if self._shape != image.shape:            self._shape = image.shape                # Cache the image if needed        if self.cache:            self._data = image        else:            self.clear()                    return image        def clear(self):        """Clears the cached image from memory if caching is disabled, and a        valid image ``path`` is provided.        """        if (            not self.cache            and self.path is not None            and self.path.is_image_file(exist=True)        ):                self._data = None        # ----- Device Management Methods -----    def cpu(self):        """Do nothing.                Raises:            NotImplementedError: Not implemented yet.        """        raise NotImplementedError("Not implemented yet.")        def cuda(self):        """Do nothing.                Raises:            NotImplementedError: Not implemented yet.        """        raise NotImplementedError("Not implemented yet.")        def numpy(self):        """Do nothing.                Raises:            NotImplementedError: Not implemented yet.        """        raise NotImplementedError("Not implemented yet.")        def to(self, *args, **kwargs):        """"Do nothing.                Raises:            NotImplementedError: Not implemented yet.        """        raise NotImplementedError("Not implemented yet.")

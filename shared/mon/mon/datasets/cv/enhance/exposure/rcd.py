@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the Radiometry Correction Dataset (RCD) dataset for
+"""A module for the RCD dataset.
+
+This module implements the Radiometry Correction Dataset (RCD) dataset for
 exposure correction and multi-exposure fusion tasks.
 
 References:
@@ -13,7 +15,6 @@ __all__ = [
     "RCD",
 ]
 
-from mon.core import rich
 from ....core import *
 
 
@@ -21,10 +22,10 @@ from ....core import *
 class RCD(ImageDataset):
     """RCD dataset."""
     
-    root_name : str         = "rcd"
-    tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
-    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "rcd"
+    _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
+    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    _modalities: Modalities  = {
         "image"      : Modality(name="image_ev_0",  type="image", module=Image, train=True, test=True, primary=True),
         "image_ev_n3": Modality(name="image_ev_n3", type="image", module=Image, train=True, test=True),
         "image_ev_n2": Modality(name="image_ev_n2", type="image", module=Image, train=True, test=True),
@@ -35,4 +36,4 @@ class RCD(ImageDataset):
         "image_ev_p3": Modality(name="image_ev_p3", type="image", module=Image, train=True, test=True),
         "ref"        : Modality(name="ref",         type="image", module=Image, train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

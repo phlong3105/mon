@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements sparse neural network components."""
+"""A module for sparse neural network components.
+
+This module provides classes for embedding layers commonly used in neural
+networks to handle sparse data representations.
+"""
 
 __all__ = [
     "Embedding",

@@ -33,9 +33,9 @@ class FourierDiff(Diffusion, nn.ModelMixin):
         - Code: https://github.com/aipixel/FourierDiff
     """
     
-    arch     : str          = "fourierdiff"
-    name     : str          = "fourierdiff"
-    tasks    : list[Task]   = [Task.LLE, Task.DEBLUR]
-    mltypes  : list[MLType] = [MLType.ZERO_SHOT]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "fourierdiff"
+    _name     : str          = "fourierdiff"
+    _tasks    : list[Task]   = [Task.LLE, Task.DEBLUR]
+    _mltypes  : list[MLType] = [MLType.ZERO_SHOT]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()

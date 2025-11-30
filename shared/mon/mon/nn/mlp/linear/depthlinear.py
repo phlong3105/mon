@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements a depth-aware linear layer that incorporates depth
+"""A module for depth-aware linear layers.
+
+This module implements a depth-aware linear layer that incorporates depth
 information into the linear transformation process.
 """
 
@@ -15,30 +17,16 @@ import torch.nn.functional as F
 
 
 class DepthAwareLinear(nn.Module):
-    """A module that applies a linear transformation y = Wx + b to each pixel,
-    incorporating depth as a feature and extending with depth-similarity-weighted
+    """A linear layer with depth-aware local RGB averaging. It applies a linear
+    transformation to each pixel, augmenting the input with depth-similarity-weighted
     local RGB averages.
     
-    For each pixel, computes similarities to neighboring depths in a
-    `(kernel_size x kernel_size)` window using exponential decay similarity
-    :math:`FD(i,j) = exp^{-alpha * |D_{i} - D_{j}|}` then uses them to
-    weight-average the neighbor RGB values. This weighted RGB is concatenated to
-    the input: [R, G, B, depth, weighted_R, weighted_G, weighted_B].
-    
-    Args:
-        in_features: Size of each input sample.
-        depth_features: Size of depth features.
-        out_features: Size of each output sample.
-        kernel_size: Odd integer for neighborhood size (e.g., 3 for 3x3). Default: ``3``.
-        alpha: Controls similarity sensitivity (larger = stricter decay). Default: ``8.3``.
-        bias: If set to ``False``, the layer will not learn an additive bias. Default: ``True``.
-        
-    Forward Args:
-        image: RGB image of shape `(H, W, C)`.
-        depth: Depth map of shape `(H, W, 1)` with values 0-1.
-    
-    Returns:
-        Transformed output of shape `(H, W, out_features)`.
+    For each pixel, a neighborhood is defined by ``kernel_size``. The depth map
+    is used to compute similarity weights for the pixels in this neighborhood.
+    These weights are then used to compute a weighted average of the RGB values
+    in the neighborhood. The original RGB values, depth values, and the
+    depth-weighted RGB averages are concatenated and passed through a linear
+    layer.
     """
     
     def __init__(
@@ -50,6 +38,22 @@ class DepthAwareLinear(nn.Module):
         alpha         : float = 8.3,
         bias          : bool  = True,
     ):
+        """Initializes the DepthAwareLinear instance.
+        
+        Args:
+            in_features (int): Number of input features (RGB channels).
+            out_features (int): Number of output features.
+            depth_features (int): Number of depth features (depth channels).
+            kernel_size (int): Size of the square neighborhood for local averaging.
+                Must be an odd positive integer. Defaults to 3.
+            alpha (float): Parameter controlling the sensitivity of depth
+                similarity. Defaults to 8.3.
+            bias (bool): If True, includes a bias term in the linear layer.
+                Defaults to True.
+                
+        Raises:
+            ValueError: If ``kernel_size`` is not an odd positive integer.
+        """
         super().__init__()
         if kernel_size % 2 == 0 or kernel_size < 1:
             raise ValueError(f"``kernel_size`` must be odd positive integer, got {kernel_size}.")

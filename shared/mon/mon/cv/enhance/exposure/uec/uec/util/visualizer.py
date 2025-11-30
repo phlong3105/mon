@@ -59,7 +59,7 @@ class Visualizer():
     """
 
     def __init__(self, opt):
-        """Initialize the Visualizer class
+        """Initializes the Visualizer class
 
         Parameters:
             opt -- stores all the experiment flags; needs to be a subclass of BaseOptions

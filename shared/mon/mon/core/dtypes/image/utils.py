@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements utility functions for images."""
+"""A module for image utilities.
+
+This module implements utility functions for handling image data types,
+including accessing image properties and validating image formats.
+"""
 
 __all__ = [
     "center",
@@ -24,32 +28,33 @@ import torch
 
 
 # ----- Accessing -----
-def center(image: Union[torch.Tensor, np.ndarray]) -> Union[torch.Tensor, np.ndarray]:
-    """Retrieves the center of an image as :math:`(h/2, w/2)`.
+def center(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+    """Retrieves the center of an image as (H/2, W/2).
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in
+            [0, 255]).
     
     Returns:
-        Center coordinates as a ``torch.Tensor`` or ``numpy.ndarray`` of shape :math:`(2)`.
+        torch.Tensor or numpy.ndarray: Center of an image.
     """
     h, w    = imgsz(image)
     center_ = [h / 2, w / 2]
     return torch.tensor(center_) if isinstance(image, torch.Tensor) else np.array(center_)
 
     
-def num_channels(image: Union[torch.Tensor, np.ndarray]) -> int:
+def num_channels(image: torch.Tensor | np.ndarray) -> int:
     """Retrieves the number of channels in an image.
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
    
     Returns:
-        Number of channels (e.g., 1 for grayscale, 3 for RGB).
+        int: Number of channels in the image. 
     """
     if image.ndim == 4:
         c = image.shape[1] if is_channel_first(image) else image.shape[3]
@@ -62,16 +67,16 @@ def num_channels(image: Union[torch.Tensor, np.ndarray]) -> int:
     return c
 
 
-def shape(image: Union[torch.Tensor, np.ndarray]) -> tuple[int]:
+def shape(image: torch.Tensor | np.ndarray) -> tuple[int]:
     """Retrieves height, width, and channels of an image.
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
 
     Returns:
-        A ``tuple`` of :math:`(height, width, channels)`.
+        tuple[int]: Tuple of (H, W, C).
     """
     return (
         (image.shape[-2], image.shape[-1], image.shape[-3])
@@ -81,17 +86,18 @@ def shape(image: Union[torch.Tensor, np.ndarray]) -> tuple[int]:
 
 
 def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
-    """Retrieve the height and width of an image.
+    """Retrieves the height and width of an image.
 
     Args:
-        image_or_size: Image or size-like input.
-        divisor: Divisor to adjust size. Default: ``None``.
+        image_or_size (Any): Input image as a torch.Tensor or numpy.ndarray,
+            or size as int, Sequence[int].
+        divisor (int, optional): Divisor size for height and width.
 
     Returns:
-        Tuple of (height, width) in pixels as ``tuple[int, int]``.
+        tuple[int, int]: Tuple of (H, W).
 
     Raises:
-        TypeError: If ``input`` type is not supported.
+        TypeError: If ``image_or_size`` is not a valid type.
     """
     size = None
     if isinstance(image_or_size, list | tuple):
@@ -103,7 +109,7 @@ def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
             size = image_or_size[:2] if len(image_or_size) == 3 and image_or_size[0] >= image_or_size[2] else image_or_size[-2:]
     elif isinstance(image_or_size, (int, float)):
         size = (image_or_size, image_or_size)
-    elif isinstance(image_or_size, Union[torch.Tensor, np.ndarray]):
+    elif isinstance(image_or_size, torch.Tensor | np.ndarray):
         size = (
             (int(image_or_size.shape[-2]), int(image_or_size.shape[-1]))
             if is_channel_first(image_or_size)
@@ -119,32 +125,36 @@ def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
 
 
 # ----- Validation -----
-def is_image(image: Union[torch.Tensor, np.ndarray]) -> bool:
+def is_image(image: torch.Tensor | np.ndarray) -> bool:
     """Checks if an input is an image.
 
     Args:
-        image: Input to evaluate as a ``torch.Tensor`` or ``numpy.ndarray``.
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
+            
+    Returns:
+        bool: True if the input is an image, otherwise False.
     """
     return (
-        isinstance(image, Union[torch.Tensor, np.ndarray])
+        isinstance(image, torch.Tensor | np.ndarray)
         and (is_color(image) or is_grayscale(image))
     )
 
 
-def is_channel_first(image: Union[torch.Tensor, np.ndarray]) -> bool:
+def is_channel_first(image: torch.Tensor | np.ndarray) -> bool:
     """Checks if an image is in channel-first format.
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
             
     Returns:
-        ``True`` if ``image`` is in channel-first format, otherwise ``False``.
+        bool: True if image is in channel-first format, otherwise False.
 
     Raises:
-        TypeError: If ``image`` is not a ``torch.Tensor`` or ``numpy.ndarray``.
-        ValueError: If ``image`` dimensions are invalid or channel format is ambiguous.
+        ValueError: If unable to determine channel format.
 
     Notes:
         Assumes the smallest dimension is the channel dimension.
@@ -176,30 +186,30 @@ def is_channel_first(image: Union[torch.Tensor, np.ndarray]) -> bool:
         raise ValueError(f"Cannot determine channel format for shape [{shape_}].")
 
 
-def is_channel_last(image: Union[torch.Tensor, np.ndarray]) -> bool:
+def is_channel_last(image: torch.Tensor | np.ndarray) -> bool:
     """Checks if an image is in channel-last format.
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
             
     Returns:
-        ``True`` if ``image`` is in channel-last format, otherwise ``False``.
+        bool: True if image is in channel-last format, otherwise False.
     """
     return not is_channel_first(image)
 
 
-def is_color(image: Union[torch.Tensor, np.ndarray]) -> bool:
+def is_color(image: torch.Tensor | np.ndarray) -> bool:
     """Checks if an image is a color image.
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
 
     Returns:
-        ``True`` if the image has 3 or 4 channels, ``False`` otherwise.
+        bool: True if the image has 3 or 4 channels, False otherwise.
 
     Notes:
         Assumes a color image has 3 or 4 channels (e.g., RGB or RGBA).
@@ -207,33 +217,33 @@ def is_color(image: Union[torch.Tensor, np.ndarray]) -> bool:
     return num_channels(image) in [3, 4]
 
 
-def is_grayscale(image: Union[torch.Tensor, np.ndarray]) -> bool:
+def is_grayscale(image: torch.Tensor | np.ndarray) -> bool:
     """Checks if an image is grayscale.
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
    
     Returns:
-        ``True`` if the image has 1 channel or 2 dimensions, ``False`` otherwise.
+        bool: True if the image has 1 channel or is 2D, False otherwise.
     """
     return num_channels(image) == 1 or len(image.shape) == 2
 
 
-def is_normalized(image: Union[torch.Tensor, np.ndarray]) -> bool:
+def is_normalized(image: torch.Tensor | np.ndarray) -> bool:
     """Checks if an image is normalized to range [-1.0, 1.0] or [0.0, 1.0].
 
     Args:
-        image: Image as a
-            ``torch.Tensor`` (i.e., of shape :math:`(B, C, H, W)` in :math:`[0.0, 1.0]`)
-            or ``numpy.ndarray`` (i.e., of shape :math:`(H, W, C)` in :math:`[0, 255]`).
+        image (torch.Tensor or numpy.ndarray): Image as a torch.Tensor
+            (i.e., of shape (B, C, H, W) with pixel values in [0.0, 1.0]) or
+            numpy.ndarray (i.e., of shape (H, W, C) with pixel values in [0, 255]).
     
     Returns:
-        ``True`` if absolute max value is <= 1.0, ``False`` otherwise.
+        bool: True if the image is normalized, False otherwise.
     
     Raises:
-        TypeError: If image is not a ``torch.Tensor`` or ``numpy.ndarray``.
+        TypeError: If ``image`` is neither a torch.Tensor nor a numpy.ndarray.
     """
     if isinstance(image, torch.Tensor):
         return abs(torch.max(image)) <= 1.0

@@ -72,7 +72,7 @@ def get_scheduler(optimizer, opt):
 
 
 def init_weights(net, init_type="normal", init_gain=0.02):
-    """Initialize network weights.
+    """Initializes network weights.
 
     Parameters:
         net (network)   -- network to be initialized
@@ -107,7 +107,7 @@ def init_weights(net, init_type="normal", init_gain=0.02):
 
 
 def init_net(net, init_type="normal", init_gain=0.02):
-    """Initialize a network: 1. register CPU/GPU device; 2. initialize the network weights
+    """Initializes a network: 1. register CPU/GPU device; 2. initialize the network weights
     Parameters:
         net (network)      -- the network to be initialized
         init_type (str)    -- the name of an initialization method: normal | xavier | kaiming | orthogonal
@@ -214,7 +214,7 @@ class GANLoss(nn.Module):
     """
 
     def __init__(self, gan_mode, target_real_label=1.0, target_fake_label=0.0):
-        """Initialize the GANLoss class.
+        """Initializes the GANLoss class.
 
         Parameters:
             gan_mode (str) - - the type of GAN objective. It currently supports vanilla, lsgan, and wgangp.
@@ -365,7 +365,7 @@ class ResnetBlock(nn.Module):
     """Define a Resnet block"""
 
     def __init__(self, dim, padding_type, norm_layer, use_dropout, use_bias):
-        """Initialize the Resnet block
+        """Initializes the Resnet block
 
         A resnet block is a conv block with skip connections
         We construct a conv block with build_conv_block function,

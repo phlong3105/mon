@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the LOL-v1 dataset for low-light image enhancement tasks."""
+"""A module for LOL-v1 dataset.
+
+This module implements the LOL-v1 dataset for low-light image enhancement tasks.
+"""
 
 __all__ = [
     "LOLv1",
@@ -14,12 +17,12 @@ from ....core import *
 class LOLv1(ImageDataset):
     """LOL-v1 dataset."""
     
-    root_name : str         = "lolv1"
-    tasks     : list[Task]  = [Task.LLE]
-    splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    modalities: Modalities  = {
+    _root_name : str         = "lolv1"
+    _tasks     : list[Task]  = [Task.LLE]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    classes   : Classes     = None
+    _classes   : Classes     = None

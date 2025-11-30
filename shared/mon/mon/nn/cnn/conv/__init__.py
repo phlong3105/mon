@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements various convolutional layers and related components."""
+"""A package for convolutional neural network layers.
+
+This package includes various convolutional layers, including standard,
+depth-aware, depthwise separable, and Ghost modules, as well as MobileOne blocks.
+It also provides lazy initialization variants of convolutional layers and
+a utility function for computing offsets.
+"""
 
 __all__ = [
     "Conv1d",

@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements prior functions."""
+"""A package for image priors.
+
+This package implements various image priors used in computer vision and image
+processing tasks. These priors help in enhancing image quality, dehazing,
+denoising, and other applications by leveraging statistical, physical, and
+feature-based properties of images.
+"""
 
 __all__ = [
     "BoundaryAwarePrior",

@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides training pipelines and utilities for machine learning models.
+"""A package for model training pipelines.
+
+This package provides modules and functions to facilitate the training of machine
+learning models. It includes data augmentation techniques, dataset and dataloader
+builders, loss functions, metrics, and optimization algorithms.
 
 References:
     - Definition: https://www.ibm.com/think/topics/model-training#1580786329

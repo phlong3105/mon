@@ -36,12 +36,12 @@ class CoLIEMamba(nn.Module, nn.ModelMixin):
         - Code: https://github.com/Lo9ite/colie_mamba
     """
     
-    arch     : str          = "colie_mamba"
-    name     : str          = "colie_mamba"
-    tasks    : list[Task]   = [Task.LLE]
-    mltypes  : list[MLType] = [MLType.ZERO_SHOT]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "colie_mamba"
+    _name     : str          = "colie_mamba"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.ZERO_SHOT]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
     
     def __init__(
         self,

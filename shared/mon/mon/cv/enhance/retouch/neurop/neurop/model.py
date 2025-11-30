@@ -32,12 +32,12 @@ class NeurOP(FinetuneModel, nn.ModelMixin):
         - Code: https://github.com/amberwangyili/neurop
     """
     
-    arch     : str          = "neurop"
-    name     : str          = "neurop"
-    tasks    : list[Task]   = [Task.RETOUCH]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = root_dir
-    zoo      : dict         = box.Box()
+    _arch     : str          = "neurop"
+    _name     : str          = "neurop"
+    _tasks    : list[Task]   = [Task.RETOUCH]
+    _mltypes  : list[MLType] = [MLType.SUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
 
 
 class NeurOPInit(InitModel):

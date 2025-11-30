@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements an interactive CLI for configuring and running model tasks."""
+"""A module for interactive CLI runtime menu.
+
+This module implements an interactive command-line interface (CLI) menu using Rich
+prompts. It allows users to select options for tasks, models, configurations, and
+various runtime parameters in a guided manner.
+"""
 
 __all__ = [
     "RunCLI",
@@ -32,35 +37,57 @@ from .utils import (
 
 # ----- Base Prompts -----
 class Prompt:
-    """Wrap around ``core.rich.prompt`` with additional values parsing functionality."""
+    """A class that wraps around core.rich.prompt with additional values parsing
+    functionality.
+    """
     
     def __init__(self, text: str, default: str, choices: Sequence | Collection = None):
+        """Initializes the Prompt instance.
+        
+        Args:
+            text (str): The prompt text to display to the user.
+            default (str): The default value if the user provides no input.
+            choices (Sequence or Collection, optional): A list of choices to 
+                present to the user. Defaults to None.
+        """
         self.text    = text
         self.default = default
         self.choices = choices
         self.value   = None
     
     @property
-    def default(self):
-        """Returns the default value."""
+    def default(self) -> str:
+        """Getter for the default value.
+        
+        Returns:
+            str: The default value.
+        """
         return self._default
     
     @default.setter
     def default(self, default: str):
-        """Sets the default value."""
+        """Setter for the default value.
+        
+        Args:
+            default (str): The default value to set.
+        """
         self._default = str(default) if default else ""
     
     @property
-    def value(self):
-        """Returns the current input value."""
+    def value(self) -> str:
+        """Getter for the user's input value.
+        
+        Returns:
+            str: The user's input value.
+        """
         return self._value
     
     @value.setter
     def value(self, value: str):
-        """Parses the user's input.
+        """Setter for the user's input value.
         
-        If the choice is an integer (i.e., list index), it returns the corresponding
-        option from the list of options. Otherwise, it returns the choice as is.
+        Args:
+            value (str): The user's input value to set.
         """
         if value:
             value = value[0] if isinstance(value, list | tuple) and len(value) == 1 else value
@@ -70,16 +97,29 @@ class Prompt:
         
     @property
     def choices(self) -> list[str]:
-        """List of choices to display."""
+        """Getter for the list of choices to display.
+        
+        Returns:
+            list[str]: The list of choices.
+        """
         return self._choices
     
     @choices.setter
     def choices(self, choices: Sequence | Collection = None):
-        """Set list of choices to display."""
+        """Setter for the list of choices to display.
+        
+        Args:
+            choices (Sequence or Collection, optional): The list of choices to set.
+                Defaults to None.
+        """
         self._choices = to_list(choices) or None
     
     def prompt(self) -> Any:
-        """Prompts the user for a choice."""
+        """Prompts the user for a choice.
+        
+        Returns:
+            Any: The user's selected or input value.
+        """
         kwargs = {
             "prompt"        : self.text,
             "case_sensitive": True,
@@ -96,53 +136,90 @@ class Prompt:
 
 
 class Confirm:
-    """Wrap around ``core.rich.prompt`` with additional values parsing functionality."""
+    """A class that wraps around core.rich.prompt.Confirm."""
     
     def __init__(self, text: str, default: bool = True):
+        """Initializes the Confirm instance.
+        
+        Args:
+            text (str): The prompt text to display to the user.
+            default (bool, optional): The default value if the user provides no
+                input. Defaults to True.
+        """
         self.text    = text
         self.default = default
         self.value   = default
     
     def prompt(self) -> bool:
+        """Prompts the user for a confirmation (yes/no)."""
         self.value = prompt.Confirm().ask(prompt=self.text, default=self.default)
         return self.value
 
 
 class NumberPrompt:
-    """Wrap around ``core.rich.prompt`` with additional values parsing functionality."""
+    """A class that wraps around core.rich.prompt.IntPrompt."""
     
     def __init__(self, text: str, default: int = -1):
+        """Initializes the NumberPrompt instance.
+        
+        Args:
+            text (str): The prompt text to display to the user.
+            default (int, optional): The default value if the user provides no
+                input. Defaults to -1.
+        """
         self.text    = text
         self.default = default
         self.value   = default
 
     @property
     def default(self):
+        """Getter for the default value.
+        
+        Returns:
+            int: The default value.
+        """
         return self._default
     
     @default.setter
     def default(self, default: int):
+        """Setter for the default value.
+        
+        Args:
+            default (int): The default value to set.
+        """
         default       = default[0] if isinstance(default, list | tuple) else default
         default       = to_int(default)
         self._default = default if isinstance(default, int | float) else -1
 
     @property
-    def value(self):
+    def value(self) -> int:
+        """Getter for the user's input value.
+        
+        Returns:
+            int: The user's input value.
+        """
         return self._value
     
     @value.setter
     def value(self, value: int):
+        """Setter for the user's input value.
+        
+        Args:
+            value (int): The user's input value to set.
+        """
         value       = value[0] if isinstance(value, list | tuple) else value
         value       = to_int(value)
         self._value = None if isinstance(value, int | float) and value < 0 else value
         
     def prompt(self) -> int:
+        """Prompts the user for a number."""
         self.value = prompt.IntPrompt().ask(prompt=self.text, default=self.default)
         return self.value
 
 
 # ----- Predefined Prompts -----
 class TaskPrompt(Prompt):
+    """A prompt for selecting a task."""
     
     def __init__(
         self,
@@ -156,6 +233,7 @@ class TaskPrompt(Prompt):
 
 
 class ArchPrompt(Prompt):
+    """A prompt for selecting a model architecture."""
     
     def __init__(
         self,
@@ -171,6 +249,7 @@ class ArchPrompt(Prompt):
 
 
 class ModelPrompt(Prompt):
+    """A prompt for selecting a model."""
     
     def __init__(
         self,
@@ -187,6 +266,7 @@ class ModelPrompt(Prompt):
 
 
 class ConfigPrompt(Prompt):
+    """A prompt for selecting a configuration file."""
     
     def __init__(
         self,
@@ -208,6 +288,7 @@ class ConfigPrompt(Prompt):
 
 
 class WeightsPrompt(Prompt):
+    """A prompt for selecting a weights file."""
     
     def __init__(
         self,
@@ -225,10 +306,20 @@ class WeightsPrompt(Prompt):
     
     @property
     def value(self):
+        """Getter for the user's input value.
+        
+        Returns:
+            Any: The user's input value.
+        """
         return self._value
     
     @value.setter
     def value(self, value: Any):
+        """Setter for the user's input value.
+        
+        Args:
+            value (Any): The user's input value to set.
+        """
         value = value if value not in [None, ""] else None
         if value:
             if isinstance(value, str):
@@ -240,7 +331,11 @@ class WeightsPrompt(Prompt):
         self._value = value
 
     def prompt(self) -> Any:
-        """Prompts the user for a choice."""
+        """Prompts the user for a choice.
+        
+        Returns:
+            Any: The user's selected or input value.
+        """
         kwargs = {
             "prompt"        : self.text,
             "case_sensitive": True,
@@ -256,6 +351,7 @@ class WeightsPrompt(Prompt):
 
 
 class DataPrompt(Prompt):
+    """A prompt for selecting a dataset."""
     
     def __init__(
         self,
@@ -271,11 +367,21 @@ class DataPrompt(Prompt):
         super().__init__(text=text, default=default, choices=choices)
     
     @property
-    def value(self):
+    def value(self) -> str:
+        """Getter for the user's input value.
+        
+        Returns:
+            str: The user's input value.
+        """
         return self._value
     
     @value.setter
     def value(self, value: str):
+        """Setter for the user's input value.
+        
+        Args:
+            value (str): The user's input value to set.
+        """
         if value:
             value = to_list(value)
         else:
@@ -284,6 +390,7 @@ class DataPrompt(Prompt):
 
 
 class FullnamePrompt(Prompt):
+    """A prompt for specifying a model fullname."""
     
     def __init__(
         self,
@@ -297,6 +404,7 @@ class FullnamePrompt(Prompt):
 
 
 class DevicePrompt(Prompt):
+    """A prompt for selecting a device."""
     
     def __init__(
         self,
@@ -314,230 +422,261 @@ class DevicePrompt(Prompt):
 
 # ----- Interactive CLI -----
 class RunCLI:
+    """An interactive CLI menu for selecting runtime options."""
     
     def __init__(self, defaults: dict = None):
-        self.index = 0
-        self.args  = DEFAULT_ARGS
-        self.args.update(defaults or {})
-        self.config_args = {}
-
-    def __len__(self):
+        """Initializes the RunCLI instance.
+        
+        Args:
+            defaults (dict, optional): A dictionary of default argument values.
+                Defaults to None.
+        """
+        self._index = 0
+        self._args  = DEFAULT_ARGS
+        self._args.update(defaults or {})
+        self._config_args = {}
+    
+    def __len__(self) -> int:
+        """Returns the number of options in the menu."""
         return 27
 
-    def cycle_next(self):
-        """Move to the next option, wrapping around if needed."""
-        self.index = (self.index + 1) % self.__len__()
+    @property
+    def args(self) -> dict:
+        """Getter for the selected arguments.
+        
+        Returns:
+            dict: The selected arguments.
+        """
+        return self._args
+    
+    @property
+    def config_args(self) -> dict:
+        """Getter for the loaded configuration arguments.
+        
+        Returns:
+            dict: The loaded configuration arguments.
+        """
+        return self._config_args
+    
+    def _next(self):
+        """Moves to the next option, wrapping around if needed."""
+        self._index = (self._index + 1) % self.__len__()
 
-    def cycle_prev(self):
-        """Move to the previous option, wrapping around if needed."""
-        self.index = (self.index - 1) % self.__len__()
+    def _prev(self):
+        """Moves to the previous option, wrapping around if needed."""
+        self._index = (self._index - 1) % self.__len__()
 
-    def display_prompt(self):
-        if self.index == 0:
+    def _display_prompt(self):
+        """Displays the prompt for the current option and handles user input."""
+        if self._index == 0:
             # clear_terminal()
             console.rule(f"[bold red]Input Prompts")
         else:
             console.rule()
 
-        if self.index == 0:  # Task
-            self.args["task"] = TaskPrompt(
-                project_root = self.args["root"],
-                default      = self.args["task"],
+        if self._index == 0:  # Task
+            self._args["task"] = TaskPrompt(
+                project_root = self._args["root"],
+                default      = self._args["task"],
             ).prompt()
-        if self.index == 1:  # Mode
-            self.args["mode"] = Prompt(
+        if self._index == 1:  # Mode
+            self._args["mode"] = Prompt(
                 text    = CLI_OPTIONS["mode"]["prompt_text"],
-                default = self.args["mode"],
+                default = self._args["mode"],
                 choices = CLI_OPTIONS["mode"]["choices"],
             ).prompt()
-        if self.index == 2:  # Arch
-            self.args["arch"] = ArchPrompt(
-                task         = self.args["task"],
-                mode         = self.args["mode"],
-                project_root = self.args["root"],
-                default      = self.args["arch"],
+        if self._index == 2:  # Arch
+            self._args["arch"] = ArchPrompt(
+                task         = self._args["task"],
+                mode         = self._args["mode"],
+                project_root = self._args["root"],
+                default      = self._args["arch"],
             ).prompt()
-        if self.index == 3:  # Model
-            self.args["model"] = ModelPrompt(
-                task         = self.args["task"],
-                mode         = self.args["mode"],
-                arch         = self.args["arch"],
-                project_root = self.args["root"],
-                default      = self.args["model"],
+        if self._index == 3:  # Model
+            self._args["model"] = ModelPrompt(
+                task         = self._args["task"],
+                mode         = self._args["mode"],
+                arch         = self._args["arch"],
+                project_root = self._args["root"],
+                default      = self._args["model"],
             ).prompt()
-        if self.index == 4:  # Config
-            self.args["config"] = ConfigPrompt(
-                project_root = self.args["root"],
-                arch         = self.args["arch"],
-                model        = self.args["model"],
-                default      = self.args["config"],
+        if self._index == 4:  # Config
+            self._args["config"] = ConfigPrompt(
+                project_root = self._args["root"],
+                arch         = self._args["arch"],
+                model        = self._args["model"],
+                default      = self._args["config"],
             ).prompt()
-            self.config_args = load_config(self.args["config"], False)
-        if self.index == 5:  # Weights
-            self.args["weights"] = WeightsPrompt(
-                model        = self.args["model"],
-                project_root = self.args["root"],
-                default      = self.args["weights"] or self.config_args.get("weights"),
+            self._config_args = load_config(self._args["config"], False)
+        if self._index == 5:  # Weights
+            self._args["weights"] = WeightsPrompt(
+                model        = self._args["model"],
+                project_root = self._args["root"],
+                default      = self._args["weights"] or self._config_args.get("weights"),
             ).prompt()
-        if self.index == 6:  # Data
-            if self.args["mode"] not in ["predict"]:
-                self.cycle_next()
+        if self._index == 6:  # Data
+            if self._args["mode"] not in ["predict"]:
+                self._next()
             else:
-                self.args["data"] = DataPrompt(
-                    task         = self.args["task"],
-                    project_root = self.args["root"],
-                    default      = self.args["data"],
+                self._args["data"] = DataPrompt(
+                    task         = self._args["task"],
+                    project_root = self._args["root"],
+                    default      = self._args["data"],
                 ).prompt()
-        if self.index == 7:  # Fullname
-            self.args["fullname"] = FullnamePrompt(
-                config  = self.args["config"],
-                model   = self.args["model"],
-                default = self.args["fullname"] or self.config_args.get("fullname"),
+        if self._index == 7:  # Fullname
+            self._args["fullname"] = FullnamePrompt(
+                config  = self._args["config"],
+                model   = self._args["model"],
+                default = self._args["fullname"] or self._config_args.get("fullname"),
             ).prompt()
-        if self.index == 8:  # Device
-            self.args["device"] = DevicePrompt(
-                model   = self.args["model"],
-                mode    = self.args["mode"],
-                task    = self.args["task"],
-                default = self.args["device"],
+        if self._index == 8:  # Device
+            self._args["device"] = DevicePrompt(
+                model   = self._args["model"],
+                mode    = self._args["mode"],
+                task    = self._args["task"],
+                default = self._args["device"],
             ).prompt()
-        if self.index == 9:  # Seed
-            self.args["seed"] = NumberPrompt(
+        if self._index == 9:  # Seed
+            self._args["seed"] = NumberPrompt(
                 text    = CLI_OPTIONS["seed"]["prompt_text"],
-                default = self.args["seed"] or self.config_args.get("seed"),
+                default = self._args["seed"] or self._config_args.get("seed"),
             ).prompt()
-        if self.index == 10:  # Image Size
-            if self.args["mode"] not in ["predict", "speed"]:
-                self.cycle_next()
+        if self._index == 10:  # Image Size
+            if self._args["mode"] not in ["predict", "speed"]:
+                self._next()
             else:
-                self.args["imgsz"] = NumberPrompt(
+                self._args["imgsz"] = NumberPrompt(
                     text    = CLI_OPTIONS["imgsz"]["prompt_text"],
-                    default = self.args["imgsz"] or self.config_args.get("imgsz"),
+                    default = self._args["imgsz"] or self._config_args.get("imgsz"),
                 ).prompt()
-        if self.index == 11:  # Epochs
-            if self.args["mode"] not in ["train"]:
-                self.cycle_next()
+        if self._index == 11:  # Epochs
+            if self._args["mode"] not in ["train"]:
+                self._next()
             else:
-                self.args["epochs"] = NumberPrompt(
+                self._args["epochs"] = NumberPrompt(
                     text    = CLI_OPTIONS["epochs"]["prompt_text"],
-                    default = self.args["epochs"] or self.config_args.get("epochs"),
+                    default = self._args["epochs"] or self._config_args.get("epochs"),
                 ).prompt()
-        if self.index == 12:  # Batch Size
-            if self.args["mode"] not in ["train"]:
-                self.cycle_next()
+        if self._index == 12:  # Batch Size
+            if self._args["mode"] not in ["train"]:
+                self._next()
             else:
-                self.args["batch_size"] = NumberPrompt(
+                self._args["batch_size"] = NumberPrompt(
                     text    = CLI_OPTIONS["batch_size"]["prompt_text"],
-                    default = self.args["batch_size"] or self.config_args.get("batch_size"),
+                    default = self._args["batch_size"] or self._config_args.get("batch_size"),
                 ).prompt()
-        if self.index == 13:  # torchrun
-            if self.args["mode"] not in ["train"]:
-                self.cycle_next()
+        if self._index == 13:  # torchrun
+            if self._args["mode"] not in ["train"]:
+                self._next()
             else:
-                self.args["torchrun"] = Confirm(
+                self._args["torchrun"] = Confirm(
                     text    = CLI_OPTIONS["torchrun"]["prompt_text"],
-                    default = self.args["torchrun"] or self.config_args.get("torchrun", False),
+                    default = self._args["torchrun"] or self._config_args.get("torchrun", False),
                 ).prompt()
-        if self.index == 14:  # Master Port
-            if self.args["mode"] not in ["train"] or not self.args["torchrun"]:
-                self.cycle_next()
+        if self._index == 14:  # Master Port
+            if self._args["mode"] not in ["train"] or not self._args["torchrun"]:
+                self._next()
             else:
-                self.args["master_port"] = NumberPrompt(
+                self._args["master_port"] = NumberPrompt(
                     text    = CLI_OPTIONS["master_port"]["prompt_text"],
-                    default = self.args["master_port"] or self.config_args.get("master_port"),
+                    default = self._args["master_port"] or self._config_args.get("master_port"),
                 ).prompt()
-        if self.index == 15:  # Master Address
-            if self.args["mode"] not in ["train"] or not self.args["torchrun"]:
-                self.cycle_next()
+        if self._index == 15:  # Master Address
+            if self._args["mode"] not in ["train"] or not self._args["torchrun"]:
+                self._next()
             else:
-                self.args["master_addr"] = Prompt(
+                self._args["master_addr"] = Prompt(
                     text    = CLI_OPTIONS["master_addr"]["prompt_text"],
-                    default = self.args["master_addr"] or self.config_args.get("master_addr"),
+                    default = self._args["master_addr"] or self._config_args.get("master_addr"),
                 ).prompt()
-        if self.index == 16:  # Resize
-            if self.args["mode"] not in ["predict", "speed"]:
-                self.cycle_next()
+        if self._index == 16:  # Resize
+            if self._args["mode"] not in ["predict", "speed"]:
+                self._next()
             else:
-                self.args["resize"] = Confirm(
+                self._args["resize"] = Confirm(
                     text    = CLI_OPTIONS["resize"]["prompt_text"],
-                    default = self.args["resize"] or self.config_args.get("resize", False),
+                    default = self._args["resize"] or self._config_args.get("resize", False),
                 ).prompt()
-        if self.index == 17:  # Benchmark
-            self.args["benchmark"] = Confirm(
+        if self._index == 17:  # Benchmark
+            self._args["benchmark"] = Confirm(
                 text    = CLI_OPTIONS["benchmark"]["prompt_text"],
-                default = self.args["benchmark"] or self.config_args.get("benchmark", False),
+                default = self._args["benchmark"] or self._config_args.get("benchmark", False),
             ).prompt()
-        if self.index == 18:  # Save Result
-            if self.args["mode"] in ["speed"]:
-                self.args["save_result"] = Confirm(
+        if self._index == 18:  # Save Result
+            if self._args["mode"] in ["speed"]:
+                self._args["save_result"] = Confirm(
                     text    = CLI_OPTIONS["save_result"]["prompt_text"],
-                    default = self.args["save_result"],
+                    default = self._args["save_result"],
                 ).prompt()
             else:
-                self.args["save_result"] = Confirm(
+                self._args["save_result"] = Confirm(
                     text    = CLI_OPTIONS["save_result"]["prompt_text"],
-                    default = self.args["save_result"] or self.config_args.get("save_result", False),
+                    default = self._args["save_result"] or self._config_args.get("save_result", False),
                 ).prompt()
-        if self.index == 19:  # Save Image
-            if self.args["mode"] in ["speed"]:
-                self.args["save_image"] = Confirm(
+        if self._index == 19:  # Save Image
+            if self._args["mode"] in ["speed"]:
+                self._args["save_image"] = Confirm(
                     text    = CLI_OPTIONS["save_image"]["prompt_text"],
-                    default = self.args["save_image"],
+                    default = self._args["save_image"],
                 ).prompt()
             else:
-                self.args["save_image"] = Confirm(
+                self._args["save_image"] = Confirm(
                     text    = CLI_OPTIONS["save_image"]["prompt_text"],
-                    default = self.args["save_image"] or self.config_args.get("save_image", False),
+                    default = self._args["save_image"] or self._config_args.get("save_image", False),
                 ).prompt()
-        if self.index == 20:  # Save Debug
-            if self.args["mode"] in ["speed"]:
-                self.args["save_debug"] = Confirm(
+        if self._index == 20:  # Save Debug
+            if self._args["mode"] in ["speed"]:
+                self._args["save_debug"] = Confirm(
                     text    = CLI_OPTIONS["save_debug"]["prompt_text"],
-                    default = self.args["save_debug"],
+                    default = self._args["save_debug"],
                 ).prompt()
             else:
-                self.args["save_debug"] = Confirm(
+                self._args["save_debug"] = Confirm(
                     text    = CLI_OPTIONS["save_debug"]["prompt_text"],
-                    default = self.args["save_debug"] or self.config_args.get("save_debug", False),
+                    default = self._args["save_debug"] or self._config_args.get("save_debug", False),
                 ).prompt()
-        if self.index == 21:  # Use Fullname
-            self.args["use_fullname"] = Confirm(
+        if self._index == 21:  # Use Fullname
+            self._args["use_fullname"] = Confirm(
                 text    = CLI_OPTIONS["use_fullname"]["prompt_text"],
-                default = self.args["use_fullname"] or self.config_args.get("use_fullname", False),
+                default = self._args["use_fullname"] or self._config_args.get("use_fullname", False),
             ).prompt()
-        if self.index == 22:  # Keep Subdirs
-            self.args["keep_subdirs"] = Confirm(
+        if self._index == 22:  # Keep Subdirs
+            self._args["keep_subdirs"] = Confirm(
                 text    = CLI_OPTIONS["keep_subdirs"]["prompt_text"],
-                default = self.args["keep_subdirs"] or self.config_args.get("keep_subdirs", False),
+                default = self._args["keep_subdirs"] or self._config_args.get("keep_subdirs", False),
             ).prompt()
-        if self.index == 23:  # Save Nearby
-            if self.args["mode"] not in ["predict"]:
-                self.cycle_next()
+        if self._index == 23:  # Save Nearby
+            if self._args["mode"] not in ["predict"]:
+                self._next()
             else:
-                self.args["save_nearby"] = Confirm(
+                self._args["save_nearby"] = Confirm(
                     text    = CLI_OPTIONS["save_nearby"]["prompt_text"],
-                    default = self.args["save_nearby"] or self.config_args.get("save_nearby", False),
+                    default = self._args["save_nearby"] or self._config_args.get("save_nearby", False),
                 ).prompt()
-        if self.index == 24:  # Exist OK?
-            self.args["exist_ok"] = Confirm(
+        if self._index == 24:  # Exist OK?
+            self._args["exist_ok"] = Confirm(
                 text    = CLI_OPTIONS["exist_ok"]["prompt_text"],
-                default = self.args["exist_ok"] or self.config_args.get("exist_ok", False),
+                default = self._args["exist_ok"] or self._config_args.get("exist_ok", False),
             ).prompt()
-        if self.index == 25:  # Use Verbose
-            self.args["verbose"] = Confirm(
+        if self._index == 25:  # Use Verbose
+            self._args["verbose"] = Confirm(
                 text    = CLI_OPTIONS["verbose"]["prompt_text"],
-                default = self.args["verbose"] or self.config_args.get("verbose", False),
+                default = self._args["verbose"] or self._config_args.get("verbose", False),
             ).prompt()
-        if self.index == 26:  # Finish
-            rprint_dict(self.args, title="Input Arguments")
+        if self._index == 26:  # Finish
+            rprint_dict(self._args, title="Input Arguments")
             finish = Confirm(text="Finish/Re-input", default=True).prompt()
             if finish:
-                self.index = self.__len__()
-            
-    def prompt_args(self) -> dict | box.Box:
-        """Run the interactive menu and return the selected option."""
+                self._index = self.__len__()
+    
+    def prompt(self) -> dict | box.Box:
+        """Runs the interactive menu and return the selected option.
+        
+        Returns:
+            dict or box.Box: The selected arguments.
+        """
         while True:
-            self.display_prompt()
-            if self.index == self.__len__():
+            self._display_prompt()
+            if self._index == self.__len__():
                 return self.args
-            self.cycle_next()
+            self._next()
