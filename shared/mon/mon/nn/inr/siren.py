@@ -94,7 +94,7 @@ class SineLayer(nn.Module):
 
 
 class SineLayerBN(nn.Module):
-    """A sine layer with batch normalization.
+    r"""A sine layer with batch normalization.
     
     It applies an affine linear transformation with sine activation to the
     incoming data: :math:`y = \sin(w_0 \cdot (xA^T + b))`, where :math:`w_0` is a

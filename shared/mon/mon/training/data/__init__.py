@@ -12,6 +12,7 @@ data loaders and datasets.
 __all__ = [
     "BaseDataset",
     "Classes",
+    "DatasetMixin",
     "DataLoader",
     "DataPool",
     "Dataset",
@@ -21,6 +22,7 @@ __all__ = [
     "ImageLoader",
     "Modalities",
     "Modality",
+    "SAMInstanceMixin",
     "VideoLoaderCV",
     "build_dataloader",
     "build_dataset",
@@ -43,3 +45,4 @@ from .dataset import (
     Modality,
     VideoLoaderCV,
 )
+from .mixin import DatasetMixin, SAMInstanceMixin

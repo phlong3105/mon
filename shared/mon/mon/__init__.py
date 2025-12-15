@@ -5,8 +5,6 @@
 
 The organization structure of this framework is inspired by the taxonomy
 defined in https://www.ibm.com/think/machine-learning#605511093
-
-2025.11.08: I am still wondering what is the best way to expose the sub-packages.
 """
 
 __author__  = "Long H. Pham"

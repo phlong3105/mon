@@ -66,7 +66,7 @@ class DataPool(dataset.Dataset, abc.ABC):
         
         # Loading pipeline
         self.load()
-        if hasattr(self, "on_load_end"):
+        if hasattr(self, "on_load_end"):  # An optional hook after loading (implemented in Mixins)
             self.on_load_end()
         self.verify()
     
