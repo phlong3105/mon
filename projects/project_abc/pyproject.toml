@@ -8,7 +8,9 @@
 # (__(__)___(__)__)
 #
 # Installation:
-#   poetry install
+#   poetry install --with "docs gui"
+#   or,
+#   poetry install --with "docs"
 #
 # References:
 #   - pyproject.toml: https://packaging.python.org/en/latest/
@@ -17,31 +19,18 @@
 [project]
 name            = "project_abc"
 version         = "0.0.0"
-authors         = [
-    { name = "Long H. Pham", email = "longpham3105@gmail.com" },
-]
-maintainers     = [
-    { name = "Long H. Pham", email = "longpham3105@gmail.com" },
-]
 description     = "Project ABC."
-readme          = "README.md"
 license         = "MIT"
-license-files   = ["LICENSE.*"]
-keywords        = [
-    "computer vision",
-    "image processing",
-    "deep learning",
-    "research",
-]
+readme          = "README.md"
+requires-python = ">=3.12,<3.14"
+authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
+keywords        = ["computer vision", "deep learning", "research"]
 classifiers     = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python",
 ]
-requires-python = ">=3.12,<3.14"
-dependencies    = [
-    "mon",
-]
+dependencies    = ["mon"]
 
 [project.urls]
 Homepage      = ""
@@ -50,8 +39,10 @@ Repository    = ""
 Issues        = ""
 
 [tool.poetry]
-package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
-# packages = [ { include = "project_abc", from = "." } ]
+# package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
+packages = [
+    { include = "project_abc", from = "." },
+]
 include  = []
 exclude  = []
 
@@ -59,5 +50,6 @@ exclude  = []
 mon = { path = "../../shared/mon", develop = true }
 
 [build-system]
-requires      = ["poetry-core>=2.0.0"]
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+

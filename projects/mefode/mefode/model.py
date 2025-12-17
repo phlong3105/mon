@@ -27,7 +27,7 @@ root_dir     = current_file.parents[1]
 
 
 @MODELS.register(name="mefode", arch="mefode")
-class MEFODE(NODE, nn.ModelMixin):
+class MEFODE(NODE, nn.ModelMetadataMixin):
     """MEFODE model for multi-exposure fusion.
 
     References:

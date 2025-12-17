@@ -19,52 +19,62 @@
 [project]
 name            = "mon"
 version         = "2.9.1"
-authors         = [
-    { name = "Long H. Pham", email = "longpham3105@gmail.com" },
-]
-maintainers     = [
-    { name = "Long H. Pham", email = "longpham3105@gmail.com" },
-]
 description     = "Just a research package."
-readme          = "README.md"
 license         = "MIT"
-license-files   = ["LICENSE"]
-keywords        = [
-    "computer vision",
-    "image processing",
-    "deep learning",
-    "research",
-]
+readme          = "README.md"
+requires-python = ">=3.12,<3.14"
+authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
+keywords        = ["computer vision", "deep learning", "research"]
 classifiers     = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python",
 ]
-requires-python = ">=3.12,<3.14"
-dependencies    = [
-    # Python
+dependencies    = []
+
+[project.urls]
+Homepage        = "https://github.com/phlong3105/mon"
+Documentation   = "https://github.com/phlong3105/mon/docs"
+Repository      = "https://github.com/phlong3105/mon.git"
+Issues          = "https://github.com/phlong3105/mon/issues"
+
+[dependency-groups]
+core       = [                          # Core Utilities
     "PyYAML",                           # YAML parser and emitter for Python.
     "emoji",                            # Emoji for Python.
     "fjson",                            # Python JSON writer with formatted floats
     "loguru",                           # Python logging made (stupidly) simple.
-    "mypy",                             # Optional static typing for Python.
     "omegaconf",                        # Flexible Python configuration system.
     "psutil",                           # Cross-platform lib for process and system monitoring in Python.
-    "pytest",                           # Simple powerful testing with Python.
     "python-box",                       # Advanced Python dictionaries with dot notation access.
     "requests",                         # Requests is an elegant and simple HTTP library for Python, built with ♥.
     "rich",                             # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
     "tabulate",                         # Pretty-print tabular data in Python, a library and a command-line utility.
     "tqdm",                             # Fast, Extensible Progress Meter.
-    "typing-extensions",                # Backported and Experimental Type Hints for Python 3.7+.
     "validators",                       # Python Data Validation for Humans.
     "xmltodict",                        # Makes working with XML feel like you are working with JSON.
-    # ML/DL
+]
+dev        = [
+    "mypy",                             # Optional static typing for Python.
+    "pytest",                           # Simple powerful testing with Python.
+    "typing-extensions",                # Backported and Experimental Type Hints for Python 3.7+.
+]
+docs       = [                          # Documentation
+    "markdown",                         # Python implementation of Markdown.
+    "mkdocs",                           # Project documentation with Markdown.
+    "mkdocs-material",                  # A Material Design theme for mkdocs.
+    "mkdocstrings",                     # Automatic documentation from sources, for MkDocs.
+    "sphinx",                           # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
+    "sphinx-paramlinks",                # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
+]
+gui        = [                          # GUI Applications
+    "PyQt6",                            # Python bindings for the Qt cross-platform application toolkit.
+    "matplotlib",                       # Publication quality figures in Python.
+]
+nn         = [                          # ML Core
     "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
-    "diffusers",                        # 🤗 Diffusers: State-of-the-art diffusion models for image, video, and audio generation in PyTorch.
     "einops",                           # A new flavor of deep learning operations.
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
-    "flow_matching",                    # A PyTorch library for implementing flow matching algorithms.
     "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
     "numpy==2.2.6",                     # The fundamental package for scientific computing with Python.
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
@@ -74,17 +84,23 @@ dependencies    = [
     "spikingjelly",                     # SpikingJelly is an open-source deep learning framework for Spiking Neural Network (SNN) based on PyTorch.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
-    "torch>=2.9.1",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch>=2.9.0",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
     "transformers",                     # 🤗 Transformers: State-of-the-art Machine Learning for Pytorch, TensorFlow, and JAX.
-    "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
-    # ML/DL - Deployment
+]
+deployment = [                          # ML/DL - Deployment
     "onnx",                             # Open Neural Network Exchange.
     "onnxruntime",                      # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
     "openvino",                         # OpenVINO™ is a toolkit for optimizing and deploying AI inference.
-    # Vision
+]
+genai      = [                          # Generative AI
+    "diffusers",                        # 🤗 Diffusers: State-of-the-art diffusion models for image, video, and audio generation in PyTorch.
+    "flow_matching",                    # A PyTorch library for implementing flow matching algorithms.
+    "open-clip-torch",                  # OpenCLIP: Open and Reproducible CLIP Models.
+]
+vision     = [
     "Pillow",                           # Python Imaging Library (Fork).
     "albumentationsx",                  # Next-generation Albumentations.
     "faster-coco-eval",                 # Faster interpretation of the original COCOEval
@@ -98,36 +114,21 @@ dependencies    = [
     "pyiqa",                            # PyTorch Toolbox for Image Quality Assessment.
     "rawpy",                            # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
     "ultralytics",                      # Ultralytics YOLO 🚀.
-    # VLM
-    "open-clip-torch",                  # OpenCLIP: Open and Reproducible CLIP Models.
-    # Temporary Fix
-    # "bitsandbytes==0.42.0"              # Fix for macOS: 0.45.5 error
+    "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
 ]
-# dynamic         = ["dependencies"]
+fixes      = [                          # Temporary Fixes
+    "bitsandbytes==0.42.0"              # Fix for macOS: 0.45.5 error
+]
 
-[project.urls]
-Homepage      = "https://github.com/phlong3105/mon"
-Documentation = "https://github.com/phlong3105/mon/docs"
-Repository    = "https://github.com/phlong3105/mon.git"
-Issues        = "https://github.com/phlong3105/mon/issues"
-
-[project.optional-dependencies]
-docs = [
-    "markdown",                         # Python implementation of Markdown.
-    "mkdocs",                           # Project documentation with Markdown.
-    "mkdocs-material",                  # A Material Design theme for mkdocs.
-    "mkdocstrings",                     # Automatic documentation from sources, for MkDocs.
-    "sphinx",                           # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
-    "sphinx-paramlinks",                # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
-]
-gui  = [
-    "PyQt6",                            # Python bindings for the Qt cross-platform application toolkit.
-    "matplotlib",                       # Publication quality figures in Python.
-]
+[tool.poetry.group.docs]
+optional = true
+[tool.poetry.group.gui]
+optional = true
 
 [tool.poetry]
+# package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
 packages = [
-    { include = "mon", from = "." },
+    { include = "mon", from = "src" },
 ]
 include  = []
 exclude  = []
@@ -145,5 +146,5 @@ open-clip-torch = { path = "../ext/genai/open_clip"    , develop = true }
 ultralytics     = { path = "../ext/cv/ultralytics"     , develop = true }
 
 [build-system]
-requires      = ["poetry-core>=2.0.0"]
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

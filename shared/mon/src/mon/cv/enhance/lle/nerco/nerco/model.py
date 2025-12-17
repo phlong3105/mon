@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Implements NeRCo model for low-light image enhancement.
+
+References:
+    - Paper: "Implicit Neural Representation for Cooperative Low-light
+      Image Enhancement," ICCV 2023.
+    - Code: https://github.com/Ysz2022/NeRCo
+"""
+
+__all__ = [
+    "NeRCo",
+]
+
+import argparse
+from typing import Any
+
+import box
+
+from mon import nn
+from mon.core import MLType, MODELS, Path, Task
+from .models.nerco_model import NeRComodel
+
+current_file = Path(__file__).absolute()
+root_dir     = current_file.parents[1]
+
+
+@MODELS.register(name="nerco", arch="nerco")
+class NeRCo(NeRComodel, nn.ModelMetadataMixin):
+    """NeRCo model for low-light image enhancement.
+    
+    References:
+        - Paper: "Implicit Neural Representation for Cooperative Low-light
+          Image Enhancement," ICCV 2023.
+        - Code: https://github.com/Ysz2022/NeRCo
+    """
+    
+    _arch     : str          = "nerco"
+    _name     : str          = "nerco"
+    _tasks    : list[Task]   = [Task.LLE]
+    _mltypes  : list[MLType] = [MLType.UNSUPERVISED]
+    _model_dir: Path         = root_dir
+    _zoo      : dict         = box.Box()
+    
+    def __init__(self, opt: argparse.Namespace, weights: Any = None):
+        super().__init__(opt)
+        # Load weights
+        _, path, _ = self.parse_weights(weights)
+        self.setup(path, opt)

@@ -15,6 +15,4 @@ dependencies:
   - python=3.12
   - git                                 # Distributed version control system.
   - pip                                 # PyPA recommended tool for installing Python packages.
-  - pip:
-    # Building Tools
-    - poetry                            # Python packaging and dependency management made easy.
+  - uv                                  # An extremely fast Python package and project manager, written in Rust.

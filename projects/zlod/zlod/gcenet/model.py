@@ -27,7 +27,7 @@ current_dir  = current_file.parents[0]
 
 # ----- Baseline -----
 @MODELS.register(name="gcenet_baseline", arch="gcenet")
-class GCENet_Baseline(nn.Module, nn.ModelMixin):
+class GCENet_Baseline(nn.Module, nn.ModelMetadataMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
     _arch     : str          = "gcenet"
@@ -102,7 +102,7 @@ class GCENet_Baseline(nn.Module, nn.ModelMixin):
 
 # ----- Main Model -----
 @MODELS.register(name="gcenet", arch="gcenet")
-class GCENet(nn.Module, nn.ModelMixin):
+class GCENet(nn.Module, nn.ModelMetadataMixin):
     
     _arch     : str          = "gcenet"
     _name     : str          = "gcenet"
@@ -219,7 +219,7 @@ class GCENet(nn.Module, nn.ModelMixin):
 
 # ----- Variants -----
 #@MODELS.register(name="gcenet_pono", arch="gcenet")
-class GCENet_PONO(nn.Module, nn.ModelMixin):
+class GCENet_PONO(nn.Module, nn.ModelMetadataMixin):
     """GCE-Net with Positional Normalization (PONO) and Moment Shortcut (MS)."""
     
     _arch     : str          = "gcenet"
@@ -307,7 +307,7 @@ class GCENet_PONO(nn.Module, nn.ModelMixin):
 
 
 #@MODELS.register(name="gcenet_bam", arch="gcenet")
-class GCENet_BAM(nn.Module, nn.ModelMixin):
+class GCENet_BAM(nn.Module, nn.ModelMetadataMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
     _arch     : str          = "gcenet"
@@ -381,7 +381,7 @@ class GCENet_BAM(nn.Module, nn.ModelMixin):
 
 
 #@MODELS.register(name="gcenet_pono_bam", arch="gcenet")
-class GCENet_PONO_BAM(nn.Module, nn.ModelMixin):
+class GCENet_PONO_BAM(nn.Module, nn.ModelMetadataMixin):
     """GCE-Net with Positional Normalization (PONO) and Moment Shortcut (MS)."""
     
     _arch     : str          = "gcenet"
@@ -471,7 +471,7 @@ class GCENet_PONO_BAM(nn.Module, nn.ModelMixin):
 
 
 #@MODELS.register(name="gcenet_depth", arch="gcenet")
-class GCENet_Depth(nn.Module, nn.ModelMixin):
+class GCENet_Depth(nn.Module, nn.ModelMetadataMixin):
     """GCE-Net model for low-light image enhancement."""
     
     _arch     : str          = "gcenet"

@@ -27,7 +27,7 @@ current_dir  = current_file.parents[0]
 
 # ----- Baseline -----
 @MODELS.register(name="gcenet_baseline", arch="gcenet")
-class GCENet_Baseline(nn.Module, nn.ModelMixin):
+class GCENet_Baseline(nn.Module, nn.ModelMetadataMixin):
     """Reimplement the Zero-DCE network as the baseline."""
     
     _arch     : str          = "gcenet"

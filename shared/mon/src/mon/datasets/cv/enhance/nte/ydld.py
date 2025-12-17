@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""A module for YDLD dataset.
+
+This module implements YDLD (YouTube Driving Light Detection) dataset for
+nighttime light detection and enhancement.
+"""
+
+__all__ = [
+    "YDLD",
+]
+
+from ....core import *
+
+
+@DATASETS.register(name="ydld")
+class YDLD(ImageDataset):
+    """YDLD dataset."""
+
+    _subset    : str         = "ydld"
+    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    _modalities: Modalities  = {
+        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
+        # "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+    }
+    _classes   : Classes     = Classes([
+        {"name": "car_light",            "id": 0, "color": (255,   0,   0)},
+        {"name": "traffic_signal_light", "id": 1, "color": (0  , 128,   0)},
+        {"name": "street_light",         "id": 2, "color": (0  ,   0, 255)},
+    ])

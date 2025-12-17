@@ -44,7 +44,7 @@ INRS         = {
 
 
 @MODELS.register(name="zinf", arch="zinf")
-class ZINF(nn.Module, nn.ModelMixin):
+class ZINF(nn.Module, nn.ModelMetadataMixin):
     """ZINF model for low-light image enhancement."""
     
     _arch     : str          = "zinf"

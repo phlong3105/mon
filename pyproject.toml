@@ -8,9 +8,9 @@
 # (__(__)___(__)__)
 #
 # Installation:
-#   poetry install --extras "docs gui"
+#   poetry install --with "docs gui"
 #   or,
-#   poetry install --extras "docs"
+#   poetry install --with "docs"
 #
 # References:
 #   - pyproject.toml: https://packaging.python.org/en/latest/
@@ -19,41 +19,27 @@
 [project]
 name            = "mon-workspace"
 version         = "2.9.1"
-authors         = [
-    { name = "Long H. Pham", email = "longpham3105@gmail.com" },
-]
-maintainers     = [
-    { name = "Long H. Pham", email = "longpham3105@gmail.com" },
-]
 description     = "A monorepo centralizing multiple projects and sharing code."
-readme          = "README.md"
 license         = "MIT"
-license-files   = ["LICENSE"]
-keywords        = [
-    "computer vision",
-    "image processing",
-    "deep learning",
-    "research",
-]
+readme          = "README.md"
+requires-python = ">=3.12,<3.14"
+authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
+keywords        = ["computer vision", "deep learning", "research"]
 classifiers     = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python",
 ]
-requires-python = ">=3.12,<3.14"
-dependencies    = [
-    # Shared
-    "mon",
-]
+dependencies    = ["mon"]
 
 [project.urls]
-Homepage      = "https://github.com/phlong3105/mon"
-Documentation = "https://github.com/phlong3105/mon/docs"
-Repository    = "https://github.com/phlong3105/mon.git"
-Issues        = "https://github.com/phlong3105/mon/issues"
+Homepage        = "https://github.com/phlong3105/mon"
+Documentation   = "https://github.com/phlong3105/mon/docs"
+Repository      = "https://github.com/phlong3105/mon.git"
+Issues          = "https://github.com/phlong3105/mon/issues"
 
-[project.optional-dependencies]
-docs = [
+[dependency-groups]
+docs = [                                # Documentation
     "markdown",                         # Python implementation of Markdown.
     "mkdocs",                           # Project documentation with Markdown.
     "mkdocs-material",                  # A Material Design theme for mkdocs.
@@ -61,38 +47,32 @@ docs = [
     "sphinx",                           # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
     "sphinx-paramlinks",                # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
 ]
-gui  = [
+gui  = [                                # GUI Applications
     "PyQt6",                            # Python bindings for the Qt cross-platform application toolkit.
     "matplotlib",                       # Publication quality figures in Python.
 ]
 
+[tool.poetry.group.docs]
+optional = true
+[tool.poetry.group.gui]
+optional = true
+
 [tool.poetry]
 package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
-# packages = []
-include  = [
+include      = [
     ".gitignore",
     ".gitmodules",
     "install.sh",
     "LICENSE",
-    "mkdocs.yml",
     "pyproject.toml",
+    { path = "docs" },
     { path = "setup" },
 ]
-exclude  = []
+exclude      = []
 
 [tool.poetry.dependencies]
-mon             = { path = "shared/mon"                    , develop = true }
-torchdiffeq     = { path = "shared/ext/math/torchdiffeq"   , develop = true }
-snntorch        = { path = "shared/ext/nn/snntorch"        , develop = true }
-spikingjelly    = { path = "shared/ext/nn/spikingjelly"    , develop = true }
-transformers    = { path = "shared/ext/nn/transformers"    , develop = true }
-clip            = { path = "shared/ext/genai/clip"         , develop = true }
-diffusers       = { path = "shared/ext/genai/diffusers"    , develop = true }
-flow_matching   = { path = "shared/ext/genai/flow_matching", develop = true }
-mobileclip      = { path = "shared/ext/genai/mobileclip"   , develop = true }
-open-clip-torch = { path = "shared/ext/genai/open_clip"    , develop = true }
-ultralytics     = { path = "shared/ext/cv/ultralytics"     , develop = true }
+mon = { path = "shared/mon", develop = true }
 
 [build-system]
-requires      = ["poetry-core>=2.0.0"]
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
