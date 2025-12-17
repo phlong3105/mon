@@ -17,8 +17,8 @@
 
 [project]
 name            = "aicp"
-version         = "0.0.0"
-description     = "Active Inplace Copy-Paste Augmentation."
+version         = "0.1.0"
+description     = "Active Inplace Copy-Paste Augmentation"
 license         = "MIT"
 readme          = "README.md"
 requires-python = ">=3.12,<3.14"
@@ -44,7 +44,7 @@ include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-mon = { path = "../../shared/mon", develop = true }
+mon = { path = "../../libs/mon", develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.0.0,<3.0.0"]

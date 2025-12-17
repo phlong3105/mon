@@ -8,9 +8,9 @@
 # (__(__)___(__)__)
 #
 # Installation:
-#   poetry install --with "docs gui"
+#   poetry install --extras "docs gui"
 #   or,
-#   poetry install --with "docs"
+#   poetry install --extras "docs"
 #
 # References:
 #   - pyproject.toml: https://packaging.python.org/en/latest/

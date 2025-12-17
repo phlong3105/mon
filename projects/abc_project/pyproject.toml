@@ -44,7 +44,7 @@ include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-mon = { path = "../../shared/mon", develop = true }
+mon = { path = "../../libs/mon", develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.0.0,<3.0.0"]
