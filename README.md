@@ -13,63 +13,42 @@
 
 ```shell
 git clone https://phlong3105@github.com/phlong3105/mon
-cd mon
-
-sudo chmod +x install.sh
-./install.sh
+cd mon/scripts
+sudo chmod +x bootstrap.sh
+./bootstrap.sh
 ```
 
 The code is fully compatible with [PyTorch](https://pytorch.org/) >= 2.0.
 
 ## Repo Structure
 
-`🐈 mon` is a **[Monorepo](https://github.com/matakanobu/python-monorepo/tree/main)** with multiple projects (``projects``) and shared common libs (``shared``).
+`🐈 mon` is a **[Monorepo](https://github.com/matakanobu/python-monorepo/tree/main)** with multiple projects (``projects``) and shared common libs (``libs``).
 
 <details>
   <summary>Directory Structure</summary>
 
   ```text
   mon 
-  |__ docs                    # Documentation.
-  |__ projects                # Project-specific code.
-  |   |__ project_A           # Example project.
-  |   |   |__ config          # Configuration files for experiments.
-  |   |   |__ data            # Data related files.
-  |   |   |__ docker          # Docker files for deployment. 
-  |   |   |__ run             
-  |   |   |__ notebook        # Notebooks for experiments.
-  |   |   |__ tests           # Unit tests.
-  |   |   |__ tools           # Useful scripts.
-  |   |   |__ project_A       # Project's code.
-  |   |   |   |__ ...
-  |   |   |__ .dockerignore   
-  |   |   |__ .gitignore      
-  |   |   |__ Makefile        
-  |   |   |__ pyproject.toml  
-  |   |   |__ README.md       
-  |   |   |__ ...             
-  |   |__ ...                 
-  |                          
-  |__ shared                  # Common code shared across multiple projects is located.
-  |   |__ mon                 # My main package
-  |   |   |__ mon
-  |   |   |   |__ core        # Base functionality for other packages.
-  |   |   |   |__ datasets    # Dataset package.
-  |   |   |   |__ vision      # Computer vision package.
-  |   |   |   |__ ...      
-  |   |   |__ pyproject.toml             
-  |   |__ ...                 
-  |                          
-  |__ setup                   # Installation assets.
-  |__ tools                   # Useful tools and scripts.
-  |__ zoo                     # Model zoo (i.e., pre-trained models).
-  |__ .gitignore               
-  |__ .gitmodules             
-  |__ install.sh              # Installation script.
-  |__ LICENSE                 
-  |__ mkdocs.yaml             # mkdocs setup.
-  |__ pyproject.toml          $ Root configuration file. 
-  |__ README.md               # Readme file.
+  |__ docs                      # Documentation.
+  |__ libs                      # Common code shared across multiple projects is located.
+  |   |__ mon                   # My lib package.
+  |   |   |__ src/              # Adopt src/ layout.
+  |   |   |__ pyproject.toml               
+  |   |__ ...                   # Other 3rd-party packages.
+  |__ projects                  # Projects.
+  |   |__ project_A             # Adopt src/ layout.
+  |   |__ project_B             # Adopt src/ layout.
+  |   |__ ...                   
+  |__ scripts                   # General-purpose scripts, CI/CD helpers, local environment setup, testing runners.
+  |   |__ bootstrap.sh          # Bootstrap script for local development.
+  |   |__ ...                    
+  |__ tools                     # Custom CLI tools, internal automation systems, scaffolding utilities.
+  |__ zoo                       # Model zoo (i.e., pre-trained weights).
+  |__ .gitignore                 
+  |__ .gitmodules               
+  |__ LICENSE                   
+  |__ pyproject.toml            # Root configuration file. 
+  |__ README.md                 # Readme file.
   ```
 </details>
 

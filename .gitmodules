@@ -1,39 +1,30 @@
-[submodule "shared/ext/math/torchdiffeq"]
-	path = shared/ext/math/torchdiffeq
-	url  = https://github.com/phlong3105/torchdiffeq
-
-[submodule "shared/ext/nn/snntorch"]
-	path = shared/ext/nn/snntorch
-	url  = https://github.com/phlong3105/snntorch
-[submodule "shared/ext/nn/spikingjelly"]
-	path = shared/ext/nn/spikingjelly
-	url  = https://github.com/phlong3105/spikingjelly
-[submodule "shared/ext/nn/transformers"]
-	path = shared/ext/nn/transformers
-	url  = https://github.com/phlong3105/transformers
-
-[submodule "shared/ext/cv/libcom"]
-	path = shared/ext/cv/libcom
+[submodule "libs/cv/libcom"]
+	path = libs/cv/libcom
 	url  = https://github.com/phlong3105/libcom
-[submodule "shared/ext/cv/trackers"]
-	path = shared/ext/cv/trackers
+[submodule "libs/cv/trackers"]
+	path = libs/cv/trackers
 	url  = https://github.com/phlong3105/trackers
-[submodule "shared/ext/cv/ultralytics"]
-	path = shared/ext/cv/ultralytics
+[submodule "libs/cv/ultralytics"]
+	path = libs/cv/ultralytics
 	url  = https://github.com/phlong3105/ultralytics
 
-[submodule "shared/ext/genai/clip"]
-	path = shared/ext/genai/clip
+[submodule "libs/math/torchdiffeq"]
+	path = libs/math/torchdiffeq
+	url  = https://github.com/phlong3105/torchdiffeq
+
+[submodule "libs/nn/spikingjelly"]
+	path = libs/nn/spikingjelly
+	url  = https://github.com/phlong3105/spikingjelly
+[submodule "libs/nn/transformers"]
+	path = libs/nn/transformers
+	url  = https://github.com/phlong3105/transformers
+
+[submodule "libs/genai/clip"]
+	path = libs/genai/clip
 	url  = https://github.com/phlong3105/clip
-[submodule "shared/ext/genai/mobileclip"]
-	path = shared/ext/genai/mobileclip
-	url  = https://github.com/phlong3105/mobileclip
-[submodule "shared/ext/genai/open_clip"]
-	path = shared/ext/genai/open_clip
-	url  = https://github.com/phlong3105/open_clip
-[submodule "shared/ext/genai/diffusers"]
-	path = shared/ext/genai/diffusers
+[submodule "libs/genai/diffusers"]
+	path = libs/genai/diffusers
 	url  = https://github.com/phlong3105/diffusers
-[submodule "shared/ext/genai/flow_matching"]
-	path = shared/ext/genai/flow_matching
+[submodule "libs/genai/flow_matching"]
+	path = libs/genai/flow_matching
 	url  = https://github.com/phlong3105/flow_matching

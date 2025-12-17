@@ -1,0 +1,135 @@
+#
+#     /\_____/\
+#    /  o   o  \
+#   ( ==  ^  == )
+#    )         (
+#   (           )
+#  ( (  )   (  ) )
+# (__(__)___(__)__)
+#
+# Installation:
+#   poetry install --extras "docs gui"
+#   or,
+#   poetry install --extras "docs"
+#
+# References:
+#   - pyproject.toml: https://packaging.python.org/en/latest/
+#   - poetry        : https://python-poetry.org/docs/
+#   - uv            : https://docs.astral.sh/uv/
+
+[project]
+name            = "mon"
+version         = "2.9.1"
+description     = "Just a research package."
+license         = "MIT"
+readme          = "README.md"
+requires-python = ">=3.12,<3.14"
+authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
+keywords        = ["computer vision", "deep learning", "research"]
+classifiers     = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+]
+dependencies    = [
+    # ----- Core -----
+    "PyYAML",                           # YAML parser and emitter for Python.
+    "emoji",                            # Emoji for Python.
+    "fjson",                            # Python JSON writer with formatted floats
+    "loguru",                           # Python logging made (stupidly) simple.
+    "omegaconf",                        # Flexible Python configuration system.
+    "psutil",                           # Cross-platform lib for process and system monitoring in Python.
+    "python-box",                       # Advanced Python dictionaries with dot notation access.
+    "requests",                         # Requests is an elegant and simple HTTP library for Python, built with ♥.
+    "rich",                             # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
+    "tabulate",                         # Pretty-print tabular data in Python, a library and a command-line utility.
+    "tqdm",                             # Fast, Extensible Progress Meter.
+    "validators",                       # Python Data Validation for Humans.
+    "xmltodict",                        # Makes working with XML feel like you are working with JSON.
+    # ----- Dev -----
+    "mypy",                             # Optional static typing for Python.
+    "pytest",                           # Simple powerful testing with Python.
+    "typing-extensions",                # Backported and Experimental Type Hints for Python 3.7+.
+    # ----- NN -----
+    "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
+    "einops",                           # A new flavor of deep learning operations.
+    "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
+    "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+    "numpy (==2.2.6)",                  # The fundamental package for scientific computing with Python.
+    "protobuf",                         # Protocol Buffers - Google's data interchange format.
+    "scikit-image",                     # Image processing in Python.
+    "scikit-learn",                     # A set of python modules for machine learning and data mining.
+    "scipy",                            # Scientific Library for Python.
+    "spikingjelly",                     # SpikingJelly is an open-source deep learning framework for Spiking Neural Network (SNN) based on PyTorch.
+    "tensorboard",                      # TensorFlow's Visualization Toolkit.
+    "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
+    "torch (>=2.9.1)",                  # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
+    "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
+    "torchvision",                      # Image and video datasets and models for Torch deep learning.
+    "transformers",                     # 🤗 Transformers: State-of-the-art Machine Learning for Pytorch, TensorFlow, and JAX.
+    # ----- NN Deployment -----
+    "onnx",                             # Open Neural Network Exchange.
+    "onnxruntime",                      # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
+    "openvino",                         # OpenVINO™ is a toolkit for optimizing and deploying AI inference.
+    # ----- GenAI -----
+    "clip",                             # CLIP (Contrastive Language-Image Pretraining), Predict the most relevant text snippet given an image.
+    "diffusers",                        # 🤗 Diffusers: State-of-the-art diffusion models for image, video, and audio generation in PyTorch.
+    "flow_matching",                    # A PyTorch library for implementing flow matching algorithms.
+    # ----- Computer Vision -----
+    "Pillow",                           # Python Imaging Library (Fork).
+    "albumentationsx",                  # Next-generation Albumentations.
+    "faster-coco-eval",                 # Faster interpretation of the original COCOEval
+    "ffmpeg-python",                    # Python bindings for FFmpeg—with complex filtering support.
+    "kornia",                           # Kornia is a differentiable computer vision library for PyTorch.
+    # "libcom (>=0.1.3) ; sys_platform == 'linux'",  # Image composition toolbox: everything you want to know about image composition or object insertion.
+    "opencv-contrib-python",            # Wrapper package for OpenCV python bindings.
+    "opencv-python",                    # Computer vision and machine learning software library.
+    "pillow_heif",                      # Python interface for libheif library.
+    "pycocotools",                      # COCO dataset and evaluation metrics for object detection, instance segmentation, and person keypoint detection.
+    "pyiqa",                            # PyTorch Toolbox for Image Quality Assessment.
+    "rawpy",                            # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
+    "ultralytics",                      # Ultralytics YOLO 🚀.
+    "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
+    # ----- Fixes -----
+    "bitsandbytes (==0.42.0) ; sys_platform == 'darwin'"  
+]
+
+[project.urls]
+Homepage        = "https://github.com/phlong3105/mon"
+Documentation   = "https://github.com/phlong3105/mon/docs"
+Repository      = "https://github.com/phlong3105/mon.git"
+Issues          = "https://github.com/phlong3105/mon/issues"
+
+[project.optional-dependencies]
+docs = [                                # Documentation
+    "markdown",                         # Python implementation of Markdown.
+    "mkdocs",                           # Project documentation with Markdown.
+    "mkdocs-material",                  # A Material Design theme for mkdocs.
+    "mkdocstrings",                     # Automatic documentation from sources, for MkDocs.
+    "sphinx",                           # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
+    "sphinx-paramlinks",                # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
+]                                       
+gui = [                                 # GUI Applications
+    "PyQt6",                            # Python bindings for the Qt cross-platform application toolkit.
+    "matplotlib",                       # Publication quality figures in Python.
+]
+
+[tool.poetry]
+# package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
+# packages = [{ include = "mon", from = "src" }]
+include  = []
+exclude  = []
+
+[tool.poetry.dependencies]
+ultralytics     = { path = "../cv/ultralytics"     , develop = true }
+clip            = { path = "../genai/clip"         , develop = true }
+diffusers       = { path = "../genai/diffusers"    , develop = true }
+flow_matching   = { path = "../genai/flow_matching", develop = true }
+torchdiffeq     = { path = "../math/torchdiffeq"   , develop = true }
+spikingjelly    = { path = "../nn/spikingjelly"    , develop = true }
+transformers    = { path = "../nn/transformers"    , develop = true }
+
+[build-system]
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
