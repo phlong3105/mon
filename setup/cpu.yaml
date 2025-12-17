@@ -11,8 +11,8 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  # Basic
+  # Core
   - python=3.12
   - git                                 # Distributed version control system.
   - pip                                 # PyPA recommended tool for installing Python packages.
-  - uv                                  # An extremely fast Python package and project manager, written in Rust.
+  - poetry                              # Python dependency management and packaging made easy

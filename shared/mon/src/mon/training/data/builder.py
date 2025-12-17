@@ -19,7 +19,7 @@ from typing import Any
 
 from mon.core import DATASETS, parse_data_dir, Path, Split
 from .dataloader import DataLoader
-from .dataset import BaseDataset, ImageLoader, VideoLoaderCV
+from .dataset import Dataset, ImageLoader, VideoLoaderCV
 
 
 # ----- Builder -----
@@ -29,7 +29,7 @@ def build_dataset(
     transform: Any  = None,
     verbose  : bool = False,
     **kwargs
-) -> tuple[str, BaseDataset]:
+) -> tuple[str, Dataset]:
     """Parses given ``src`` to a corresponding dataset.
     
     Args:

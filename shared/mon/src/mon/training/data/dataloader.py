@@ -24,7 +24,7 @@ cv2.setNumThreads(0)
 
 from mon.core import DATASETS
 from torch.utils.data import dataloader
-from .dataset import BaseDataset
+from .dataset import Dataset
 
 
 # ----- DataLoader -----
@@ -33,7 +33,7 @@ class DataLoader(dataloader.DataLoader):
 
     def __init__(
         self,
-        dataset    : BaseDataset | dict | box.Box,
+        dataset    : Dataset | dict | box.Box,
         batch_size : int  = 1,
         shuffle    : bool = False,
         num_workers: int  = 4,
@@ -45,7 +45,7 @@ class DataLoader(dataloader.DataLoader):
         """Initializes the DataLoader instance.
         
         Args:
-            dataset (BaseDataset or dict or box.Box): The dataset to load data
+            dataset (Dataset or dict or box.Box): The dataset to load data
                 from, or a configuration dictionary to build the dataset.
             batch_size (int): Number of samples per batch. Defaults to 1.
             shuffle (bool): Whether to shuffle the data at every epoch. Defaults

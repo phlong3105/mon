@@ -309,7 +309,7 @@ setup_system() {
     install_ffmpeg
     install_imagemagick
     install_turbojpeg
-    install_ssh
+    #install_ssh
     setup_rlsync
 }
 

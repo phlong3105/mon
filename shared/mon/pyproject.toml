@@ -15,6 +15,7 @@
 # References:
 #   - pyproject.toml: https://packaging.python.org/en/latest/
 #   - poetry        : https://python-poetry.org/docs/
+#   - uv            : https://docs.astral.sh/uv/
 
 [project]
 name            = "mon"
@@ -30,16 +31,8 @@ classifiers     = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
 ]
-dependencies    = []
-
-[project.urls]
-Homepage        = "https://github.com/phlong3105/mon"
-Documentation   = "https://github.com/phlong3105/mon/docs"
-Repository      = "https://github.com/phlong3105/mon.git"
-Issues          = "https://github.com/phlong3105/mon/issues"
-
-[dependency-groups]
-core       = [                          # Core Utilities
+dependencies    = [
+    # ----- Core -----
     "PyYAML",                           # YAML parser and emitter for Python.
     "emoji",                            # Emoji for Python.
     "fjson",                            # Python JSON writer with formatted floats
@@ -53,30 +46,16 @@ core       = [                          # Core Utilities
     "tqdm",                             # Fast, Extensible Progress Meter.
     "validators",                       # Python Data Validation for Humans.
     "xmltodict",                        # Makes working with XML feel like you are working with JSON.
-]
-dev        = [
+    # ----- Development -----
     "mypy",                             # Optional static typing for Python.
     "pytest",                           # Simple powerful testing with Python.
     "typing-extensions",                # Backported and Experimental Type Hints for Python 3.7+.
-]
-docs       = [                          # Documentation
-    "markdown",                         # Python implementation of Markdown.
-    "mkdocs",                           # Project documentation with Markdown.
-    "mkdocs-material",                  # A Material Design theme for mkdocs.
-    "mkdocstrings",                     # Automatic documentation from sources, for MkDocs.
-    "sphinx",                           # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
-    "sphinx-paramlinks",                # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
-]
-gui        = [                          # GUI Applications
-    "PyQt6",                            # Python bindings for the Qt cross-platform application toolkit.
-    "matplotlib",                       # Publication quality figures in Python.
-]
-nn         = [                          # ML Core
+    # ----- NN -----
     "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
     "einops",                           # A new flavor of deep learning operations.
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
     "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
-    "numpy==2.2.6",                     # The fundamental package for scientific computing with Python.
+    "numpy (==2.2.6)",                  # The fundamental package for scientific computing with Python.
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "scikit-image",                     # Image processing in Python.
     "scikit-learn",                     # A set of python modules for machine learning and data mining.
@@ -84,29 +63,26 @@ nn         = [                          # ML Core
     "spikingjelly",                     # SpikingJelly is an open-source deep learning framework for Spiking Neural Network (SNN) based on PyTorch.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
-    "torch>=2.9.0",                     # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch (>=2.9.1)",                  # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
     "transformers",                     # 🤗 Transformers: State-of-the-art Machine Learning for Pytorch, TensorFlow, and JAX.
-]
-deployment = [                          # ML/DL - Deployment
+    # ----- NN Deployment -----
     "onnx",                             # Open Neural Network Exchange.
     "onnxruntime",                      # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
     "openvino",                         # OpenVINO™ is a toolkit for optimizing and deploying AI inference.
-]
-genai      = [                          # Generative AI
+    # ----- GenAI -----
     "diffusers",                        # 🤗 Diffusers: State-of-the-art diffusion models for image, video, and audio generation in PyTorch.
     "flow_matching",                    # A PyTorch library for implementing flow matching algorithms.
     "open-clip-torch",                  # OpenCLIP: Open and Reproducible CLIP Models.
-]
-vision     = [
+    # ----- Vision -----
     "Pillow",                           # Python Imaging Library (Fork).
     "albumentationsx",                  # Next-generation Albumentations.
     "faster-coco-eval",                 # Faster interpretation of the original COCOEval
     "ffmpeg-python",                    # Python bindings for FFmpeg—with complex filtering support.
     "kornia",                           # Kornia is a differentiable computer vision library for PyTorch.
-    # "libcom>=0.1.3",                    # Image composition toolbox: everything you want to know about image composition or object insertion.
+    "libcom (>=0.1.3) ; sys_platform == 'linux'",  # Image composition toolbox: everything you want to know about image composition or object insertion.
     "opencv-contrib-python",            # Wrapper package for OpenCV python bindings.
     "opencv-python",                    # Computer vision and machine learning software library.
     "pillow_heif",                      # Python interface for libheif library.
@@ -115,21 +91,33 @@ vision     = [
     "rawpy",                            # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
     "ultralytics",                      # Ultralytics YOLO 🚀.
     "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
-]
-fixes      = [                          # Temporary Fixes
-    "bitsandbytes==0.42.0"              # Fix for macOS: 0.45.5 error
+    # ----- Fixes -----
+    "bitsandbytes (==0.42.0) ; sys_platform == 'darwin'"  
 ]
 
-[tool.poetry.group.docs]
-optional = true
-[tool.poetry.group.gui]
-optional = true
+[project.urls]
+Homepage        = "https://github.com/phlong3105/mon"
+Documentation   = "https://github.com/phlong3105/mon/docs"
+Repository      = "https://github.com/phlong3105/mon.git"
+Issues          = "https://github.com/phlong3105/mon/issues"
+
+[project.optional-dependencies]
+docs = [                                # Documentation
+    "markdown",                         # Python implementation of Markdown.
+    "mkdocs",                           # Project documentation with Markdown.
+    "mkdocs-material",                  # A Material Design theme for mkdocs.
+    "mkdocstrings",                     # Automatic documentation from sources, for MkDocs.
+    "sphinx",                           # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
+    "sphinx-paramlinks",                # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
+]                                       
+gui = [                                 # GUI Applications
+    "PyQt6",                            # Python bindings for the Qt cross-platform application toolkit.
+    "matplotlib",                       # Publication quality figures in Python.
+]
 
 [tool.poetry]
 # package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
-packages = [
-    { include = "mon", from = "src" },
-]
+# packages = [{ include = "mon", from = "src" }]
 include  = []
 exclude  = []
 

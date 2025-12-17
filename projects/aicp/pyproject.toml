@@ -8,23 +8,22 @@
 # (__(__)___(__)__)
 #
 # Installation:
-#   poetry install --with "docs gui"
-#   or,
-#   poetry install --with "docs"
+#   poetry install
 #
 # References:
 #   - pyproject.toml: https://packaging.python.org/en/latest/
 #   - poetry        : https://python-poetry.org/docs/
+#   - uv            : https://docs.astral.sh/uv/
 
 [project]
-name            = "project_abc"
+name            = "aicp"
 version         = "0.0.0"
-description     = "Project ABC."
+description     = "Active Inplace Copy-Paste Augmentation."
 license         = "MIT"
 readme          = "README.md"
 requires-python = ">=3.12,<3.14"
 authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
-keywords        = ["computer vision", "deep learning", "research"]
+keywords        = ["data augmentation", "copy-paste", "active learning"]
 classifiers     = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -32,17 +31,15 @@ classifiers     = [
 ]
 dependencies    = ["mon"]
 
-[project.urls]
-Homepage      = ""
-Documentation = ""
-Repository    = ""
-Issues        = ""
+# [project.urls]
+# Homepage      = ""
+# Documentation = ""
+# Repository    = ""
+# Issues        = ""
 
 [tool.poetry]
 # package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
-packages = [
-    { include = "project_abc", from = "." },
-]
+# packages = [{ include = "abc_project", from = "src" }]
 include  = []
 exclude  = []
 
