@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# sudo chmod +x install.sh
-# ./install.sh
+# sudo chmod +x bootstrap.sh
+# ./bootstrap.sh
 
 clear
 echo "${HOSTNAME}"
 
 # ----- Input -----
-declare -a options=("mon" "update" "cuda" "docker" "tensorrt" "ssh" "rlsync" "xanylabeling")
+declare -a options=("mon" "update" "cuda" "docker" "tensorrt" "rlsync" "xanylabeling")
 option="${1:-0}"
 
 echo -e "\nAvailable options:"
@@ -21,7 +21,7 @@ option="${options[option]}"
 # ----- Directory & File -----
 current_file=$(readlink -f "${0}")
 current_dir=$(dirname "${current_file}")
-if [ $(basename "${current_file}") == "install" ]; then
+if [ $(basename "${current_file}") == "scripts" ]; then
     root_dir=$(dirname "${current_dir}")
 else
     root_dir="${current_dir}"
@@ -60,9 +60,9 @@ check_cuda() {
 get_env_yaml_path() {
     # echo -e "\nGetting environment YAML path"
     if check_cuda; then
-        echo "${root_dir}/setup/cuda.yaml"
+        echo "${root_dir}/scripts/cuda.yaml"
     else
-        echo "${root_dir}/setup/cpu.yaml"
+        echo "${root_dir}/scripts/cpu.yaml"
     fi
 }
 
@@ -289,27 +289,17 @@ install_tensorrt() {
     sudo cp /usr/src/tensorrt/bin/trtexec /usr/local/bin/
 }
 
-install_ssh() {
-    echo -e "\nInstall ssh"
-
-    # Install ssh
-    sudo apt update
-    sudo apt install openssh-server
-    sudo systemctl status ssh
-}
-
 setup_rlsync() {
     echo -e "\nSetting up Resilio Sync (rlsync)"
     rsync_dir="${root_dir}/.sync"
     mkdir -p "${rsync_dir}"
-    cp "${root_dir}/setup/IgnoreList" "${rsync_dir}/IgnoreList"
+    cp "${root_dir}/scripts/IgnoreList" "${rsync_dir}/IgnoreList"
 }
 
 setup_system() {
     install_ffmpeg
     install_imagemagick
     install_turbojpeg
-    #install_ssh
     setup_rlsync
 }
 
@@ -486,46 +476,49 @@ install_xanylabeling() {
 }
 
 # ----- Main -----
-case "${option}" in
-    mon)
-        echo -e "\nOption: mon"
-        setup_system
-        update_conda
-        create_mon_env
-        install_mon_env
-        ;;
-    update)
-        echo -e "\nOption: update"
-        update_conda
-        install_mon_env
-        ;;
-    cuda)
-        echo -e "\nOption: cuda"
-        install_nvidia_driver
-        install_cuda_toolkit
-        ;;
-    docker)
-        echo -e "\nOption: docker"
-        install_docker
-        ;;
-    tensorrt)
-        echo -e "\nOption: tensorrt"
-        install_tensorrt
-        ;;
-    rlsync)
-        echo -e "\nOption: rlsync"
-        setup_rlsync
-        ;;
-    xanylabeling)
-        echo -e "\nOption: xanylabeling"
-        install_xanylabeling
-        ;;
-    *)
-        echo -e "\nInvalid option: $option"
-        exit 1
-        ;;
-esac
+main() {
+    case "${option}" in
+        mon)
+            echo -e "\nOption: mon"
+            setup_system
+            update_conda
+            create_mon_env
+            install_mon_env
+            ;;
+        update)
+            echo -e "\nOption: update"
+            update_conda
+            install_mon_env
+            ;;
+        cuda)
+            echo -e "\nOption: cuda"
+            install_nvidia_driver
+            install_cuda_toolkit
+            ;;
+        docker)
+            echo -e "\nOption: docker"
+            install_docker
+            ;;
+        tensorrt)
+            echo -e "\nOption: tensorrt"
+            install_tensorrt
+            ;;
+        rlsync)
+            echo -e "\nOption: rlsync"
+            setup_rlsync
+            ;;
+        xanylabeling)
+            echo -e "\nOption: xanylabeling"
+            install_xanylabeling
+            ;;
+        *)
+            echo -e "\nInvalid option: $option"
+            exit 1
+            ;;
+    esac
+}
 
 # ----- Done -----
+main
 cd "${current_dir}" || exit
 exit 0
