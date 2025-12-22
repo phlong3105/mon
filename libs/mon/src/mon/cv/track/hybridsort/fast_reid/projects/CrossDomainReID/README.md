@@ -19,7 +19,7 @@ repository will be released upon the paper published.
 #### DukeMTMC-reID -> Market-1501
 
 | Method | Backbone | Pre-trained | mAP(%) | top-1(%) | top-5(%) | top-10(%) | Train time |
-| ----- | :------: | :---------: | :----: | :------: | :------: | :-------: | :------: | 
+| --- | :----: | :-------: | :----: | :----: | :----: | :-----: | :----: | 
 | Direct Transfer | ResNet50 | DukeMTMC | 32.2 | 64.9 | 78.7 | 83.4 | ~1h | 
 | [UDA_TP](https://github.com/open-mmlab/OpenUnReID/) PR'2020| ResNet50 | DukeMTMC | 52.3 | 76.0 | 87.8 | 91.9 | ~2h | 
 | [MMT](https://github.com/open-mmlab/OpenUnReID/) ICLR'2020| ResNet50 | DukeMTMC | 80.9 | 92.2 | 97.6 | 98.4 | ~6h |
@@ -31,7 +31,7 @@ repository will be released upon the paper published.
 #### Market-1501 -> DukeMTMC-reID
 
 | Method | Backbone | Pre-trained | mAP(%) | top-1(%) | top-5(%) | top-10(%) | Train time |
-| ----- | :------: | :---------: | :----: | :------: | :------: | :-------: | :------: | 
+| --- | :----: | :-------: | :----: | :----: | :----: | :-----: | :----: | 
 | Direct Transfer | ResNet50 | Market | 34.1 | 51.3 | 65.3 | 71.7 | ~1h | 
 | [UDA_TP](https://github.com/open-mmlab/OpenUnReID/) PR'2020| ResNet50 | Market | 45.7 | 65.5 | 78.0 | 81.7 | ~2h |
 | [MMT](https://github.com/open-mmlab/OpenUnReID/) ICLR'2020| ResNet50 | Market | 67.7 | 80.3 | 89.9 | 92.9 | ~6h |

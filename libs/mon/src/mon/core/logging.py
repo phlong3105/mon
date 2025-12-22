@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for logging utilities.
+"""Logging utility and context manager collection.
 
-This module implements logging utilities with rich formatting and context
-management to enable or disable logging and printing.
+This module provides logger creation and configuration, noisy library logger
+management, and context managers for suppressing stdout to enable consistent
+logging and output control across the codebase.
 """
 
 __all__ = [
@@ -26,7 +27,11 @@ from mon.core.pathlib import Path
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 
-# ----- Logger -----
+# ==============================================================================
+# CORE LOGGING SYSTEM
+# ==============================================================================
+
+# --- Initialization (Configuring the global Rich handler) ---
 logging.basicConfig(
     level    = logging.INFO,
     format   = "%(message)s",
@@ -36,15 +41,15 @@ logger = logging.getLogger("rich")
 # logger.setLevel(logging.INFO)
 
 
+# --- Factories ---
 def get_logger(path: Path = None) -> logging.Logger:
-    """Retrieves or creates a global logger with ``rich`` support.
+    """Return a configured logger.
+
+    Create a logger and, if a path is provided, attach a file handler that
+    writes INFO-level records with timestamps and file and line context.
 
     Args:
-        path (Path, optional): If provided, adds a file handler to log messages
-            to the specified file path. Defaults to None.
-
-    Returns:
-        logging.Logger: The configured global logger instance.
+        path: Optional path to a logfile. If None, skip file logging.
     """
     logger = logging.getLogger("global_logger")
     if path:
@@ -57,12 +62,64 @@ def get_logger(path: Path = None) -> logging.Logger:
     return logger
 
 
-# ----- Utils -----
-def _disable_default_loggers():
-    """Disables all logging by setting the logger to the lowest level.
+# ==============================================================================
+# OUTPUT INTERCEPTION
+# ==============================================================================
 
-    Notes:
-        Use this to suppress all logging output.
+# --- Context Managers ---
+@contextlib.contextmanager
+def _disable_stdout() -> Iterator[None]:
+    """Suppress stdout temporarily.
+
+    Redirect stdout to os.devnull for the duration of the context manager.
+
+    Yields:
+        Use the context to suppress print output for the enclosed block.
+    """
+    with open(os.devnull, "w") as devnull:
+        with contextlib.redirect_stdout(devnull):
+            yield
+
+
+def _enable_stdout():
+    """Restore stdout to the original stream.
+
+    Reset sys.stdout back to the original standard output stream.
+    """
+    sys.stdout = sys.__stdout__
+
+
+# --- Global Toggle ---
+def disable_print():
+    """Disable printing and silence default loggers.
+
+    Disable printing to stdout and silence common noisy library loggers to
+    reduce console clutter.
+    """
+    _disable_stdout()
+    _disable_default_loggers()
+
+
+def enable_print():
+    """Enable printing and restore logger levels.
+
+    Restore stdout and re-enable the default logger levels that were previously
+    suppressed.
+    """
+    _enable_stdout()
+    _enable_default_loggers()
+
+
+# ==============================================================================
+# OUTPUT INTERCEPTION
+# ==============================================================================
+
+# --- Third-Party Silencers (Specific handlers for TF/Torch/Built-ins) ---
+def _disable_default_loggers():
+    """Silence noisy library loggers.
+
+    Set global and frequently noisy library loggers to a high level to
+    suppress log record emission and reduce console noise.
     """
     # Disabling Python’s Built-in logging
     logging.getLogger().setLevel(logging.CRITICAL + 1)  # Suppresses everything
@@ -73,10 +130,10 @@ def _disable_default_loggers():
 
 
 def _enable_default_loggers():
-    """Enables all logging by resetting the logger to its default level.
+    """Restore default logger levels.
 
-    Notes:
-        Use this to restore all logging output.
+    Reset global and common library logger levels and the TensorFlow
+    environment variable to restore standard logging behavior.
     """
     # Enabling Python’s Built-in logging
     logging.getLogger().setLevel(logging.INFO)  # Restores default level
@@ -84,41 +141,6 @@ def _enable_default_loggers():
     logging.getLogger("torch").setLevel(logging.INFO)  # Restores default level
     # Enabling TensorFlow Logs
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"  # Restores default level
-
-
-@contextlib.contextmanager
-def _disable_stdout() -> Iterator[None]:
-    """Disables printing to stdout by redirecting it to ``os.devnull``.
-
-    Notes:
-        Use this to suppress all print output.
-    """
-    with open(os.devnull, "w") as devnull:
-        with contextlib.redirect_stdout(devnull):
-            yield
-
-
-def _enable_stdout():
-    """Restores printing to stdout by resetting it to the original stream.
-
-    Notes:
-        Use this to undo manual redirection of ``sys.stdout`` (e.g., to
-        ``os.devnull``).
-    """
-    sys.stdout = sys.__stdout__
-
-
-def disable_print():
-    """Temporarily disables printing to stdout and logging."""
-    _disable_stdout()
-    _disable_default_loggers()
-
-
-def enable_print():
-    """Restores printing to stdout and loggers."""
-    _enable_stdout()
-    _enable_default_loggers()
-
 
 # Disable default loggers
 _disable_default_loggers()

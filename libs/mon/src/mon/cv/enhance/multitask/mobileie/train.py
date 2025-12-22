@@ -22,7 +22,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Train -----
+# --- Train ---
 def train(args: dict | box.Box) -> str:
     # Start
     mon.print_run_summary(args)
@@ -142,7 +142,7 @@ def train(args: dict | box.Box) -> str:
                 torch.save(model_slim.state_dict(), args.save_dir / "best_slim.pt")
             
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)

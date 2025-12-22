@@ -200,7 +200,7 @@ if __name__ == "__main__":
     parser.add_argument('--l_Pconstraint', type=float, default=0.0)
     parser.add_argument('--l_Qconstraint', type=float, default=0.0)
     parser.add_argument('--l_Ltv', type=float, default=0.0)
-    # ----------------- loss arg for R ------------------------
+    # ----------- loss arg for R ----------------
     parser.add_argument('--l_R_l2', type=float, default=0.0)
     parser.add_argument('--l_R_ssim', type=float, default=0.0)
     parser.add_argument('--l_R_vgg', type=float, default=0.0)

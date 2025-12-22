@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for segmentation mask data type.
+"""Mask data classes and mixins.
 
-This module provides a base class for handling semantic segmentation masks,
-extending the image data type with specific attributes and methods for mask
-information.
+This module provides the base classes and mixins for mask data.
 """
 
 __all__ = [
@@ -17,20 +15,45 @@ import cv2
 from ..image import Image
 
 
+# ==============================================================================
+# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# ==============================================================================
+
+# --- Type Aliases ---
+
+
+# --- Structural Protocols ---
+
+
+# ==============================================================================
+# BASE CLASSES & MIXINS (Behaviors)
+# ==============================================================================
+
+# --- Structural Bases ---
+
+
+# --- Lifecycle Mixins ---
+
+
+# --- Compute Mixins ---
+
+
+# ==============================================================================
+# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# ==============================================================================
+
+# --- Primary Data Types ---
 class SemanticMask(Image):
-    """A base class for a single semantic segmentation mask (i.e., must have a
-    valid file path).
+    """A basic class for managing a semantic segmentation mask.
     
-    This class extends Image to handle a single semantic segmentation mask, which
-    can be provided either as an in-memory array/tensor or as a file path. It
-    includes methods specific to segmentation masks.
+    This class extends Image to handle semantic segmentation mask-specific
+    operations.
     """
     
     def __init__(self, flags: int = cv2.IMREAD_GRAYSCALE, *args, **kwargs):
-        """Initializes the SemanticMask instance.
-        
+        """Initialize the semantic segmentation mask.
+
         Args:
-            flags (int): OpenCV flag to read segmentation mask. Defaults to
-                cv2.IMREAD_GRAYSCALE.
+            flags: OpenCV flag used to read the segmentation mask. Defaults to cv2.IMREAD_GRAYSCALE.
         """
-        super().__init__(flags=flags, *args, **kwargs)
+        super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter

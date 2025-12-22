@@ -35,7 +35,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-# ----- Functional -----
+# --- Functional ---
 def mertens(
     images  : torch.Tensor | list[torch.Tensor],
     w_sat   : float = 1,
@@ -129,7 +129,7 @@ def compute_well_exposedness(images: torch.Tensor) -> torch.Tensor:
     return well_exposedness
 
 
-# ----- Model -----
+# --- Model ---
 @MODELS.register(name="mertens", arch="mertens")
 class Mertens(nn.Module, nn.ModelMetadataMixin):
     """Mertens et. al Exposure Fusion method.

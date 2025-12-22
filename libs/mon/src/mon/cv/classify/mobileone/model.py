@@ -31,7 +31,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Model -----
+# --- Model ---
 class MobileOne(nn.Module, nn.ModelMetadataMixin, abc.ABC):
     """MobileOne models for image classification.
     
@@ -274,7 +274,7 @@ class MobileOneS4(MobileOne):
             self.load_state_dict(weights)
 
 
-#----- Re-parameterization -----
+#--- Re-parameterization ---
 def reparameterize_model(model: nn.Module) -> nn.Module:
     """Method returns a model where a multi-branched structure used in training
     is re-parameterized into a single branch for inference.

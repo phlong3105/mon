@@ -9,7 +9,7 @@ This repository contains the evaluation scripts for the MOT challenges available
 This codebase replaces the previous version that used to be accessible at https://github.com/dendorferpatrick/MOTChallengeEvalKit and is no longer maintained.
 
 Challenge Name | Data url |
-|----- | ----------- |
+|--- | ------- |
 |2D MOT 15| https://motchallenge.net/data/MOT15/ |
 |MOT 16| https://motchallenge.net/data/MOT16/       |
 |MOT 17| https://motchallenge.net/data/MOT17/       |

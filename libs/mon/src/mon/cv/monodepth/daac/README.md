@@ -111,7 +111,7 @@ bash tools/val.sh <num_gpu> <port> <dataset>
 Quantitative results on the enhanced multi-condition DA-2K benchmark, including complex light and climate conditions. The evaluation metric is **Accuracy** ↑.
 
 | Method | Encoder | **DA-2K** | **DA-2K dark** | **DA-2K fog** | **DA-2K snow** | **DA-2K blur** |
-|:-------|:-------:|:---------:|:---------------:|:--------------:|:---------------:|:---------------:|
+|:-----|:-----:|:-------:|:---------:|:----------:|:---------:|:---------:|
 | DynaDepth | ResNet | 0.655 | 0.652 | 0.613 | 0.605 | 0.633 |
 | EC-Depth | ViT-S | 0.753 | 0.732 | 0.724 | 0.713 | 0.701 |
 | STEPS | ResNet | 0.577 | 0.587 | 0.581 | 0.561 | 0.577 |
@@ -127,7 +127,7 @@ Quantitative results on the enhanced multi-condition DA-2K benchmark, including 
 Zero-shot evaluation results on challenging real-world scenarios including night scenes, adverse weather conditions, and complex environmental factors. All results use ViT-S encoder.
 
 | Method | Encoder | **NuScenes-night** | | **RobotCar-night** | | **DS-rain** | | **DS-cloud** | | **DS-fog** | |
-|:-------|:-------:|:----------------:|:---:|:----------------:|:---:|:---------:|:---:|:----------:|:---:|:--------:|:---:|
+|:-----|:-----:|:----------:|:---:|:----------:|:---:|:-------:|:---:|:------:|:---:|:------:|:---:|
 | | | AbsRel ↓ | δ₁ ↑ | AbsRel ↓ | δ₁ ↑ | AbsRel ↓ | δ₁ ↑ | AbsRel ↓ | δ₁ ↑ | AbsRel ↓ | δ₁ ↑ |
 | DynaDepth | ResNet | 0.381 | 0.394 | 0.512 | 0.294 | 0.239 | 0.606 | 0.172 | 0.608 | 0.144 | 0.901 |
 | EC-Depth | ViT-S | 0.243 | 0.623 | 0.228 | 0.552 | 0.155 | 0.766 | 0.158 | 0.767 | 0.109 | 0.861 |
@@ -147,7 +147,7 @@ Zero-shot evaluation results on challenging real-world scenarios including night
 Zero-shot evaluation results on synthetic KITTI-C corruption benchmarks, testing robustness against various image degradations and corruptions.
 
 | Method | Encoder | **Dark** | | **Snow** | | **Motion** | | **Gaussian** | |
-|:-------|:-------:|:--------:|:---:|:--------:|:---:|:----------:|:---:|:------------:|:---:|
+|:-----|:-----:|:------:|:---:|:------:|:---:|:------:|:---:|:--------:|:---:|
 | | | AbsRel ↓ | δ₁ ↑ | AbsRel ↓ | δ₁ ↑ | AbsRel ↓ | δ₁ ↑ | AbsRel ↓ | δ₁ ↑ |
 | DynaDepth | ResNet | 0.163 | 0.752 | 0.338 | 0.393 | 0.234 | 0.609 | 0.274 | 0.501 |
 | STEPS | ResNet | 0.230 | 0.631 | 0.242 | 0.622 | 0.291 | 0.508 | 0.204 | 0.692 |

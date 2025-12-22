@@ -954,9 +954,9 @@ class LatentDiffusion(DDPM):
         loss_dict.update({f'{prefix}/loss_vlb': loss_vlb})
         loss += (self.original_elbo_weight * loss_vlb)
 
-        # ---------------------
+        # -------------
         #   DDIM x_start loss
-        # ---------------------
+        # -------------
         pred_x0 = self.pred_x_start(x_noisy, model_output, t)
 
         if False:
@@ -974,7 +974,7 @@ class LatentDiffusion(DDPM):
 
         loss += (self.l_x_start_weight * loss_x_start)
         loss_dict.update({f'{prefix}/loss_x_start': loss_x_start})
-        # ---------------------
+        # -------------
 
         loss_dict.update({f'{prefix}/loss': loss})
         return loss, loss_dict

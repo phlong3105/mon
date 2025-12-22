@@ -1,9 +1,9 @@
-# ------------------------------------------------------------------------
+# --------------------------------------------
 # Copyright (c) 2022 megvii-model. All Rights Reserved.
-# ------------------------------------------------------------------------
+# --------------------------------------------
 # Modified from BasicSR (https://github.com/xinntao/BasicSR)
 # Copyright 2018-2020 BasicSR Authors
-# ------------------------------------------------------------------------
+# --------------------------------------------
 
 from basicsr.utils import scandir
 from basicsr.utils.lmdb_util import make_lmdb_from_imgs

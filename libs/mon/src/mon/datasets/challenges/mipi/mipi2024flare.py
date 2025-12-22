@@ -30,7 +30,7 @@ class MIPI2024Flare(ImageDataset):
     }
     _classes   : Classes     = None
     
-    # ----- Initialize -----
+    # --- Initialize ---
     def _load_primary_data(self) -> list[Image]:
         """Lists all image data for the primary modality.
         

@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Predict -----
+# --- Predict ---
 def predict(args: argparse.Namespace):
     # General config
     data         = args.data
@@ -114,7 +114,7 @@ def predict(args: argparse.Namespace):
         mon.log(f"Average time: {avg_time}")
     
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)

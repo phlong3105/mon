@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for video data type.
+"""Video data type.
 
-This package provides data structures and utilities for handling video data,
-including frame representation and video writing capabilities using different
-backends.
+This package contains a "full-stack" toolkit for video data, including data
+structure, ingestion, analysis, atomic transformations, complex workflows, and
+rendering utilities.
 """
 
 __all__ = [
@@ -17,11 +17,9 @@ __all__ = [
     "write_video_ffmpeg",
 ]
 
-from .core import Frame
-from .io import (
-    VideoWriter,
-    VideoWriterCV,
-    VideoWriterFFmpeg,
-    load_video_ffmpeg,
-    write_video_ffmpeg,
-)
+from .core import *
+from .io import *
+from .meta import *
+from .ops import *
+from .proc import *
+from .vis import *

@@ -32,7 +32,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Export -----
+# --- Export ---
 class Model(torch.nn.Module):
 
     def __init__(self, cfg: list, export_postprocessor: bool = True):
@@ -257,7 +257,7 @@ def export(args: dict | box.Box) -> str:
         export_trt(onnx_file, engine_file, args)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     args = mon.parse_predict_args(model_root=root_dir)
     export(args)

@@ -19,7 +19,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Train -----
+# --- Train ---
 def train(args: dict | box.Box) -> str:
     # Start
     mon.print_run_summary(args)
@@ -73,7 +73,7 @@ def train(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# ------------------------------------------------------------------------
+# --------------------------------------------
 # Copyright (c) 2021 megvii-model. All Rights Reserved.
-# ------------------------------------------------------------------------
+# --------------------------------------------
 # Modified from BasicSR (https://github.com/xinntao/BasicSR)
 # Copyright 2018-2020 BasicSR Authors
-# ------------------------------------------------------------------------
+# --------------------------------------------
 
 from collections import OrderedDict
 from os import path as osp

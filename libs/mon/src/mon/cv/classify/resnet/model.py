@@ -209,7 +209,7 @@ class ResNet152(ResNet):
         )
         
 
-# ----- ResNeXt -----
+# --- ResNeXt ---
 @MODELS.register(name="resnext50_32x4d", arch="resnet")
 class ResNeXt50_32X4D(ResNet):
     """ResNeXt-50-32x4d model for image classification.
@@ -307,7 +307,7 @@ class ResNeXt101_64X4D(ResNet):
         )
         
 
-# ----- WideResNet -----
+# --- WideResNet ---
 @MODELS.register(name="wide_resnet50_2", arch="resnet")
 class WideResNet50_2(ResNet):
     """WideResNet-50-2 model for image classification.

@@ -34,7 +34,7 @@ Multi-Object Tracking (MOT) aims to detect and associate all desired objects acr
 ### Results on DanceTrack test set
 
 | Tracker          | HOTA | MOTA | IDF1 | FPS  |
-| :--------------- | :--: | :--: | :--: | :--: |
+| :--------- | :--: | :--: | :--: | :--: |
 | OC-SORT          | 54.6 | 89.6 | 54.6 | 30.3 |
 | Hybrid-SORT      | 62.2 | 91.6 | 63.0 | 27.8 |
 | Hybrid-SORT-ReID | 65.7 | 91.8 | 67.4 | 15.5 |
@@ -42,7 +42,7 @@ Multi-Object Tracking (MOT) aims to detect and associate all desired objects acr
 ### Results on MOT20 challenge test set
 
 | Tracker          | HOTA | MOTA | IDF1 |
-| :--------------- | :--: | :--: | :--: |
+| :--------- | :--: | :--: | :--: |
 | OC-SORT          | 62.1 | 75.5 | 75.9 |
 | Hybrid-SORT      | 62.5 | 76.4 | 76.2 |
 | Hybrid-SORT-ReID | 63.9 | 76.7 | 78.4 |
@@ -50,7 +50,7 @@ Multi-Object Tracking (MOT) aims to detect and associate all desired objects acr
 ### Results on MOT17 challenge test set
 
 | Tracker          | HOTA | MOTA | IDF1 |
-| :--------------- | :--: | :--: | :--: |
+| :--------- | :--: | :--: | :--: |
 | OC-SORT          | 63.2 | 78.0 | 77.5 |
 | Hybrid-SORT      | 63.6 | 79.3 | 78.4 |
 | Hybrid-SORT-ReID | 64.0 | 79.9 | 78.7 |
@@ -168,7 +168,7 @@ Download and store the trained models in 'pretrained' folder as follow:
 We provide some pretrained YOLO-X weights for Hybrid-SORT, which are inherited from [ByteTrack](https://github.com/ifzhang/ByteTrack).
 
 | Dataset         | HOTA | IDF1 | MOTA | Model                                                        |
-| --------------- | ---- | ---- | ---- | ------------------------------------------------------------ |
+| --------- | ---- | ---- | ---- | ------------------------------------ |
 | DanceTrack-val  | 59.3 | 60.6 | 89.5 | [Google Drive](https://drive.google.com/drive/folders/18IsZGeGiyKDshhYIzbpYXoNEcBhPY8lN?usp=sharing) |
 | DanceTrack-test | 62.2 | 63.0 | 91.6 | [Google Drive](https://drive.google.com/drive/folders/18IsZGeGiyKDshhYIzbpYXoNEcBhPY8lN?usp=sharing) |
 | MOT17-half-val  | 67.1 | 78.0 | 75.8 | [Google Drive](https://drive.google.com/drive/folders/18IsZGeGiyKDshhYIzbpYXoNEcBhPY8lN?usp=sharing) |

@@ -28,7 +28,7 @@ import torch.nn as nn
 from mon.nn.mlp.linear import DepthAwareLinear
 
 
-# ----- Layer -----
+# --- Layer ---
 class SineLayer(nn.Module):
     r"""A sine layer.
     
@@ -239,7 +239,7 @@ class DepthAwareSineLayer(nn.Module):
         return torch.sin(self.omega_0 * self.dalinear(input, depth))
 
 
-# ----- MLP -----
+# --- MLP ---
 class SIREN(nn.Module):
     """An implementation of SIREN MLP.
 

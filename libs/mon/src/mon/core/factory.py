@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for factory classes.
+"""Factory class registration and instantiation utilities.
 
-This module provides factory classes for registering and building various
-objects, such as deep learning models and datasets. It includes a base
-Factory class, and a specialized ModelFactory for organizing models by
-architecture.
+This module provides Factory and ModelFactory classes for registering and
+instantiating classes by normalized names, along with top-level registries
+used throughout the project.
 """
 
 __all__ = [
@@ -25,27 +24,33 @@ from mon.core.console import error_console
 from mon.core.utils import depascalize, pascalize
 
 
-# ----- Base Factory -----
+# ==============================================================================
+# METAPROGRAMMING & REGISTRATION ENGINE
+# ==============================================================================
+
+# --- Base Factory ---
 class Factory(dict):
-    """A base factory class for registering and building classes.
-    
-    This class extends the built-in ``dict`` to provide functionality for
-    registering classes with optional decorators and building instances of
-    those classes. It supports optional name transformations for registration.
+    """A dictionary-backed factory for class registration and construction.
+
+    Use register decorators or direct calls to add classes and build instances
+    by name.
+
+    Attributes:
+        _name (str): Factory name used in messages and repr.
+        _decamelize (bool): Whether registered class names are normalized to
+            snake_case.
     """
     
     def __init__(self, name: str, mapping: dict = None, decamelize: bool = False):
-        """Initializes the factory.
-        
+        """Initialize the factory.
+
         Args:
-            name (str): Factory's name.
-            mapping (dict): Pre-defined dictionary of registered classes.
-                Defaults to None.
-            decamelize (bool): If True, converts class names to lowercase with
-                underscores. Defaults to False.
-        
+            name: Factory name.
+            mapping: Optional initial mapping of registered classes.
+            decamelize: If True, normalize class names to snake_case.
+
         Raises:
-            ValueError: If ``name`` is ``None`` or empty.
+            ValueError: If ``name`` is empty.
         """
         if not name:
             raise ValueError("``name`` must not be empty.")
@@ -55,38 +60,28 @@ class Factory(dict):
         
         super().__init__(mapping or {})
     
-    # ----- Magic Methods -----
+    # --- Magic Methods ---
     def __repr__(self) -> str:
-        """Returns a string representation of the factory object.
-        
-        Returns:
-            str: String representation.
-        """
+        """Return a string representation of the factory."""
         return f"{self.__class__.__name__}(name={self._name}, items={self})"
     
-    # ----- Properties -----
+    # --- Properties ---
     @property
     def name(self) -> str:
-        """Getter for the factory name.
-        
-        Returns:
-            str: The factory name.
-        """
+        """Return the factory name."""
         return self._name
     
-    # ----- Register -----
+    # --- Register ---
     def register(self, name: str = None, module: Any = None, replace: bool = False) -> Callable:
-        """Registers a class to the factory with an optional decorator.
+        """Register a class or return a decorator for registration.
 
         Args:
-            name (str, optional): The name of the class to register.
-                Defaults to None.
-            module (Any, optional): The class to register. Defaults to None.
-            replace (bool, optional): If True, overwrites existing entry.
-                Defaults to False.
+            name: Optional registration key.
+            module: Class to register immediately.
+            replace: Overwrite existing entry when True.
 
         Returns:
-            Callable: Decorator if ``module`` is None, else registers directly.
+            A decorator or the registered class.
 
         Raises:
             TypeError: If ``name`` is not a str or None.
@@ -101,14 +96,12 @@ class Factory(dict):
         return _register(module) if module else _register
     
     def _register_module(self, module: Any, name: str = None, replace: bool = False):
-        """Registers a class to the factory.
+        """Register a class under a registry key.
 
         Args:
-            module (Any): The class to register.
-            name (str, optional): The name of the class to register.
-                Defaults to None means inferred from the class name.
-            replace (bool, optional): If True, overwrites existing entry.
-                Defaults to False.
+            module: The class to register.
+            name: Optional key; inferred when None.
+            replace: Overwrite an existing entry when True.
 
         Raises:
             ValueError: If ``module`` is not a class.
@@ -124,24 +117,30 @@ class Factory(dict):
             self[key] = module
     
     def sort(self, reverse: bool = False):
-        """Sorts the factory by keys."""
+        """Sort registry entries by key.
+
+        Args:
+            reverse: Sort in descending order when True.
+        """
         sorted_items = sorted(self.items(), key=lambda item: item[0], reverse=reverse)
         self.clear()
         self.update(sorted_items)
     
-    # ----- Build -----
+    # --- Build ---
     def build(self, name: str, **kwargs) -> Any:
-        """Builds an instance of a registered class.
+        """Instantiate a registered class by name.
+
+        Try normalized name variants (snake or pascal case) when looking up.
 
         Args:
-            name (str): The name of the class to build.
-            kwargs: Additional arguments to pass to the class constructor.
-           
+            name: Registered key to instantiate.
+            kwargs: Forwarded to the class constructor.
+
         Returns:
-            A registered class instance or None.
-        
+            The instantiated object.
+
         Raises:
-            ValueError: If ``name`` is not in the registry.
+            ValueError: If ``name`` is not present in registry.
         """
         if not name:
             error_console.log(f"``name`` must be defined to build an instance of {self._name}.")
@@ -156,40 +155,30 @@ class Factory(dict):
         raise ValueError(f"``name={name}`` must be in registry.")
     
 
-# ----- Model Factory -----
+# --- Specialization ---
 class ModelFactory(Factory):
-    """A factory class for registering and building machine learning models
-    organized by architecture.
+    """A factory specialized for organizing models by architecture.
 
-    This class extends the base Factory class to provide functionality for
-    registering models under specific architectures. It allows for easy
-    organization and retrieval of models based on their architecture type.
+    Maintain a nested mapping arch -> {model_name: model_class} and provide
+    registration helpers.
 
-    Example:
-        >>> MODEL = ModelFactory("Model")
-        >>> @MODEL.register(arch="resnet", name="resnet")
-        >>> class ResNet:
-        >>>     pass
-        >>> resnet = MODEL.build(name="resnet", config={})
+    Attributes:
+        _name (str): Factory name used in messages and repr.
+        _decamelize (bool): Whether registered class names are normalized to
+            snake_case.
+        items (dict): Mapping of architecture name to model name -> model
+            class.
     """
     
-    # ----- Properties -----
+    # --- Properties ---
     @property
     def archs(self) -> list[str]:
-        """Getter for all registered architecture names.
-        
-        Returns:
-            list[str]: A list of all registered architecture names.
-        """
+        """Return a list of registered architecture names."""
         return list(self)
     
     @property
     def models(self) -> list[str]:
-        """Getter for all registered model names.
-        
-        Returns:
-            list[str]: A list of all registered model names.
-        """
+        """Return a list of all registered model names."""
         return [
             model for models in self.values()
             if isinstance(models, dict)
@@ -198,19 +187,14 @@ class ModelFactory(Factory):
     
     @property
     def flatten_dict(self) -> dict:
-        """Getter for a flattened dictionary of all registered models.
-        
-        Returns:
-            dict: A flattened dictionary where each key is a model name, and
-                the value is the corresponding class with an added "arch" key.
-        """
+        """Return a flattened mapping of model name to class with arch metadata."""
         return {
             k2: {**v2, "arch": k1} if isinstance(v2, dict) else v2
             for k1, v1 in self.items()
             for k2, v2 in v1.items()
         }
     
-    # ----- Register -----
+    # --- Register ---
     def register(
         self,
         name   : str  = None,
@@ -218,20 +202,16 @@ class ModelFactory(Factory):
         module : Any  = None,
         replace: bool = False,
     ) -> Callable[[type], type]:
-        """Registers a model class under an architecture with an optional
-        decorator.
+        """Register a model class under an architecture or return a decorator.
 
         Args:
-            name (str, optional): Model name. Defaults to None means inferred
-                from the model class name.
-            arch (str, optional): Arch name. Defaults to None means inferred
-                from the model class name.
-            module (Any, optional): Model class to register. Defaults to None.
-            replace (bool, optional): If True, overwrites entry. Defaults to
-                False.
+            name: Optional model name.
+            arch: Optional architecture name.
+            module: Class to register immediately.
+            replace: Overwrite existing entry when True.
 
         Returns:
-            Decorator if ``module`` is None, else registers directly.
+            Decorator or the registered class.
 
         Raises:
             TypeError: If ``name`` is not a str or None.
@@ -252,19 +232,16 @@ class ModelFactory(Factory):
         arch   : str  = None,
         replace: bool = False
     ):
-        """Registers a model class under an architecture.
+        """Register a model class under an architecture key.
 
         Args:
-            name (str, optional): Model name. Defaults to None means inferred
-                from the model class name.
-            arch (str, optional): Arch name. Defaults to None means inferred
-                from the model class name.
-            module (Any): Model class to register.
-            replace (bool, optional): If True, overwrites entry. Defaults to
-                False.
+            module: Model class to register.
+            name: Optional model name; inferred when None.
+            arch: Optional architecture name; inferred when None.
+            replace: If True, overwrite an existing entry.
 
         Raises:
-            ValueError: If ``module_cls`` is not a class.
+            ValueError: If ``module`` is not a class.
         """
         if not inspect.isclass(module):
             raise ValueError(f"``module`` must be a class, got {type(module).__name__}.")
@@ -277,21 +254,20 @@ class ModelFactory(Factory):
         if replace or module_key not in self[arch_key]:
             self[arch_key][module_key] = module
     
-    # ----- Build -----
+    # --- Build ---
     def build(self, name: str, arch: str = None, **kwargs):
-        """Builds an instance of a registered model class.
+        """Instantiate a registered model by name and optional architecture.
 
         Args:
-            name (str, optional): Model name.
-            arch (str, optional): Arch name. Defaults to None means inferred
-                from the model name.
-            kwargs: Additional arguments to pass to the model constructor.
-           
+            name: Model name to instantiate.
+            arch: Optional architecture to restrict lookup.
+            kwargs: Forwarded to model constructor.
+
         Returns:
-            A registered model instance or None.
+            The instantiated model.
 
         Raises:
-            ValueError: If ``name`` not in the registry.
+            ValueError: If the requested ``arch``/``name`` pair is not found.
         """
         arch = arch or name
         if not name:
@@ -307,8 +283,12 @@ class ModelFactory(Factory):
                     return instance
         raise ValueError(f"``arch={arch}`` and ``name={name}`` must be in registry.")
 
-    
-# ----- Constants -----
+
+# ==============================================================================
+# GLOBAL REGISTRIES
+# ==============================================================================
+
+# --- Domain Factories ---
 ALBUMENTATIONS = Factory(name="Albumentations")
 DATASETS       = Factory(name="Datasets", decamelize=True)
 MODELS         = ModelFactory(name="Models", decamelize=True)

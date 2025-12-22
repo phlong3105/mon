@@ -23,12 +23,12 @@ from torch.autograd import Variable
 from torchvision.models.vgg import vgg16
 
 
-# ------------------------------------------------------------------------------
+# ------------------------------------------------
 # This code is adapted from:
 # https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
 # Original implementation by Li Chongyi
 # Modifications were made for specific use in this project.
-# ------------------------------------------------------------------------------
+# ------------------------------------------------
 class L_col(nn.Module):
 
     def __init__(self):

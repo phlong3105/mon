@@ -1,4 +1,4 @@
-# ----- Global Settings & Hyperparameters -----
+# --- Global Settings & Hyperparameters ---
 # These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
 task        : &task ~                                                           # Task name (e.g., detect, segment, classify).

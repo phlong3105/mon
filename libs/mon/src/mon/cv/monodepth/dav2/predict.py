@@ -25,7 +25,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Predict -----
+# --- Predict ---
 @torch.no_grad()
 def predict(args: dict | box.Box) -> str:
     # Start
@@ -110,14 +110,14 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(depth, out_path)
+                mon.image.write(depth, out_path)
 
             if args.save_debug:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 if args.save_nearby:
                     out_dir = out_dir.parent / f"{out_dir.stem}_c"
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(depth_c, out_path)
+                mon.image.write(depth_c, out_path)
     timers.total.tock()
 
     # Finish
@@ -125,7 +125,7 @@ def predict(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)

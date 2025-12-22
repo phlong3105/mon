@@ -50,12 +50,12 @@ class KalmanFilter(object):
     def initiate(self, measurement):
         """Create track from unassociated measurement.
         Parameters
-        ----------
+        ------
         measurement : ndarray
             Bounding box coordinates (x, y, a, h) with center position (x, y),
             aspect ratio a, and height h.
         Returns
-        -------
+        -----
         (ndarray, ndarray)
             Returns the mean vector (8 dimensional) and covariance matrix (8x8
             dimensional) of the new track. Unobserved velocities are initialized
@@ -80,7 +80,7 @@ class KalmanFilter(object):
     def predict(self, mean, covariance):
         """Run Kalman filter prediction step.
         Parameters
-        ----------
+        ------
         mean : ndarray
             The 8 dimensional mean vector of the object state at the previous
             time step.
@@ -88,7 +88,7 @@ class KalmanFilter(object):
             The 8x8 dimensional covariance matrix of the object state at the
             previous time step.
         Returns
-        -------
+        -----
         (ndarray, ndarray)
             Returns the mean vector and covariance matrix of the predicted
             state. Unobserved velocities are initialized to 0 mean.
@@ -114,13 +114,13 @@ class KalmanFilter(object):
     def project(self, mean, covariance):
         """Project state distribution to measurement space.
         Parameters
-        ----------
+        ------
         mean : ndarray
             The state's mean vector (8 dimensional array).
         covariance : ndarray
             The state's covariance matrix (8x8 dimensional).
         Returns
-        -------
+        -----
         (ndarray, ndarray)
             Returns the projected mean and covariance matrix of the given state
             estimate.
@@ -140,7 +140,7 @@ class KalmanFilter(object):
     def update(self, mean, covariance, measurement):
         """Run Kalman filter correction step.
         Parameters
-        ----------
+        ------
         mean : ndarray
             The predicted state's mean vector (8 dimensional).
         covariance : ndarray
@@ -150,7 +150,7 @@ class KalmanFilter(object):
             is the center position, a the aspect ratio, and h the height of the
             bounding box.
         Returns
-        -------
+        -----
         (ndarray, ndarray)
             Returns the measurement-corrected state distribution.
         """
@@ -175,7 +175,7 @@ class KalmanFilter(object):
         `only_position` is False, the chi-square distribution has 4 degrees of
         freedom, otherwise 2.
         Parameters
-        ----------
+        ------
         mean : ndarray
             Mean vector over the state distribution (8 dimensional).
         covariance : ndarray
@@ -188,7 +188,7 @@ class KalmanFilter(object):
             If True, distance computation is done with respect to the bounding
             box center position only.
         Returns
-        -------
+        -----
         ndarray
             Returns an array of length N, where the i-th element contains the
             squared Mahalanobis distance between (mean, covariance) and

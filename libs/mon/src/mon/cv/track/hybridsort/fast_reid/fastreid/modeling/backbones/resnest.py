@@ -143,7 +143,7 @@ class Bottleneck(nn.Module):
 class ResNeSt(nn.Module):
     """ResNet Variants
     Parameters
-    ----------
+    ------
     block : Block
         Class for the residual block. Options are BasicBlockV1, BottleneckV1.
     layers : list of int

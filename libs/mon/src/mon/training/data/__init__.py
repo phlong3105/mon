@@ -1,30 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for training data handling.
+"""AI data management.
 
-This package provides classes and functions for managing datasets, data loaders,
-and data pools for training machine learning models. It supports various data
-modalities including images and videos, and includes utilities for building
-data loaders and datasets.
+Provide data management functionalities for training machine learning models.
+
+Package structure:
+    data/
+    ├── __init__.py           # Unified API (exposes Dataset, DataLoader)
+    ├── base.py               # Abstract base classes (The "Contract")
+    ├── constants.py          # Enums, standard paths, default values
+    ├── mixins/               # Capability modules (Registrable, DualPath)
+    │   ├── __init__.py
+    │   ├── ...
+    ├── datasets/             # Concrete implementations (Image, Video)
+    │   ├── __init__.py
+    │   ├── ...
+    ├── loading/              # Data movement logic
+    │   ├── __init__.py
+    │   ├── dataloader.py     # The DataLoader class
+    └── registry.py           # Logic to list and switch between methods
 """
 
 __all__ = [
-    "Classes",
     "DataLoader",
-    "DataLoaderMixin",
-    "DataPool",
     "Dataset",
-    "DatasetLoadingMixin",
-    "DatasetMetadataMixin",
-    "DatasetMixin",
-    "DatasetMultimodalLoadingMixin",
-    "ImageDataPool",
     "ImageDataset",
     "ImageEvalDataset",
     "ImageLoader",
-    "Modalities",
-    "Modality",
     "SAMInstanceMixin",
     "VideoLoaderCV",
     "build_dataloader",
@@ -33,13 +36,10 @@ __all__ = [
     "parse_data_dir",
 ]
 
-from .builder import build_dataloader, build_dataset, parse_data_dir
-from .classes import Classes
-from .dataloader import DataLoader
-from .datapool import DataPool, ImageDataPool
-from .dataset import (
+from .base import Dataset
+from .constants import Modalities, Modality
+from .datasets import (
     DataLoaderMixin,
-    Dataset,
     DatasetLoadingMixin,
     DatasetMetadataMixin,
     DatasetMultimodalLoadingMixin,
@@ -51,4 +51,6 @@ from .dataset import (
     Modality,
     VideoLoaderCV,
 )
-from .mixin import DatasetMixin, SAMInstanceMixin
+from .loading import DataLoader
+from .mixins import DatasetMixin, SAMInstanceMixin
+from .registry import build_dataloader, build_dataset, parse_data_dir

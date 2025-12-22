@@ -21,7 +21,7 @@ class Track:
     velocities, where `(x, y)` is the center of the bounding box, `a` is the
     aspect ratio and `h` is the height.
     Parameters
-    ----------
+    ------
     mean : ndarray
         Mean vector of the initial state distribution.
     covariance : ndarray
@@ -39,7 +39,7 @@ class Track:
         Feature vector of the detection this track originates from. If not None,
         this feature is added to the `features` cache.
     Attributes
-    ----------
+    ------
     mean : ndarray
         Mean vector of the initial state distribution.
     covariance : ndarray
@@ -83,7 +83,7 @@ class Track:
         """Get current position in bounding box format `(top left x, top left y,
         width, height)`.
         Returns
-        -------
+        -----
         ndarray
             The bounding box.
         """
@@ -96,7 +96,7 @@ class Track:
         """Get current position in bounding box format `(min x, miny, max x,
         max y)`.
         Returns
-        -------
+        -----
         ndarray
             The bounding box.
         """
@@ -112,7 +112,7 @@ class Track:
         """Propagate the state distribution to the current time step using a
         Kalman filter prediction step.
         Parameters
-        ----------
+        ------
         kf : kalman_filter.KalmanFilter
             The Kalman filter.
         """
@@ -124,7 +124,7 @@ class Track:
         """Perform Kalman filter measurement update step and update the feature
         cache.
         Parameters
-        ----------
+        ------
         kf : kalman_filter.KalmanFilter
             The Kalman filter.
         detection : Detection

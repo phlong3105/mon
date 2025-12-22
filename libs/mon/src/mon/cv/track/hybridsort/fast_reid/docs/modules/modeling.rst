@@ -7,7 +7,7 @@ fastreid.modeling
     :show-inheritance:
 
 Model Registries
------------------
+-----------
 
 These are different registries provided in modeling.
 Each registry provide you the ability to replace it with your customized component,

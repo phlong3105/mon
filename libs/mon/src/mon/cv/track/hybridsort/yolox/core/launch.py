@@ -101,7 +101,7 @@ def launch_by_subprocess(
     ), "subprocess mode doesn't support single GPU, use spawn mode instead"
 
     if dist_url is None:
-        # ------------------------hack for multi-machine training -------------------- #
+        # ----------------hack for multi-machine training ------------ #
         if num_machines > 1:
             master_ip = subprocess.check_output(["hostname", "--fqdn"]).decode("utf-8")
             master_ip = str(master_ip).strip()

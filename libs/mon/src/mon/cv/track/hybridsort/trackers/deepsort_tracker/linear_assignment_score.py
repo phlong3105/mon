@@ -13,7 +13,7 @@ def min_cost_matching(
         detection_indices=None):
     """Solve linear assignment problem.
     Parameters
-    ----------
+    ------
     distance_metric : Callable[List[Track], List[Detection], List[int], List[int]) -> ndarray
         The distance metric is given a list of tracks and detections as well as
         a list of N track indices and M detection indices. The metric should
@@ -34,7 +34,7 @@ def min_cost_matching(
         List of detection indices that maps columns in `cost_matrix` to
         detections in `detections` (see description above).
     Returns
-    -------
+    -----
     (List[(int, int)], List[int], List[int])
         Returns a tuple with the following three entries:
         * A list of matched track and detection indices.
@@ -84,7 +84,7 @@ def matching_cascade(
         track_indices=None, detection_indices=None):
     """Run matching cascade.
     Parameters
-    ----------
+    ------
     distance_metric : Callable[List[Track], List[Detection], List[int], List[int]) -> ndarray
         The distance metric is given a list of tracks and detections as well as
         a list of N track indices and M detection indices. The metric should
@@ -108,7 +108,7 @@ def matching_cascade(
         detections in `detections` (see description above). Defaults to all
         detections.
     Returns
-    -------
+    -----
     (List[(int, int)], List[int], List[int])
         Returns a tuple with the following three entries:
         * A list of matched track and detection indices.
@@ -148,7 +148,7 @@ def gate_cost_matrix(
     """Invalidate infeasible entries in cost matrix based on the state
     distributions obtained by Kalman filtering.
     Parameters
-    ----------
+    ------
     kf : The Kalman filter.
     cost_matrix : ndarray
         The NxM dimensional cost matrix, where N is the number of track indices
@@ -172,7 +172,7 @@ def gate_cost_matrix(
         If True, only the x, y position of the state distribution is considered
         during gating. Defaults to False.
     Returns
-    -------
+    -----
     ndarray
         Returns the modified cost matrix.
     """

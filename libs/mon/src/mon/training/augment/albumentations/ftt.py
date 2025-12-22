@@ -122,7 +122,7 @@ class FisheyeTomographyTransform(DualTransform):
         self._y_trans       = 0
         self._z_trans       = 0
     
-    # ----- Initialize -----
+    # --- Initialize ---
     def set_ext_params_range(self, ext_params_range: list[int]):
         """Sets the range for external parameters.
         
@@ -177,7 +177,7 @@ class FisheyeTomographyTransform(DualTransform):
         tmp6         = random.random()
         self._z_trans = self._z_trans_range[0] * (1 - tmp6) + self._z_trans_range[1] * tmp6
     
-    # ----- Internal Calculation -----
+    # --- Internal Calculation ---
     def _calculate_coord_map(self, image: np.ndarray):
         """Calculates the coordinate map for fisheye transformation.
         
@@ -286,7 +286,7 @@ class FisheyeTomographyTransform(DualTransform):
                 [0,           0,           1,        0]
             ])
     
-    # ----- Distortion -----
+    # --- Distortion ---
     def _transform_image(self, image: np.ndarray) -> np.ndarray:
         """Applies fisheye transformation to the input image.
         
@@ -391,7 +391,7 @@ class FisheyeTomographyTransform(DualTransform):
         t_bbox = B.convert(t_bbox, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=imgsz)
         return t_bbox
     
-    # ----- Apply -----
+    # --- Apply ---
     def apply(self, img: np.ndarray, *args: Any, **params: Any) -> np.ndarray:
         """Applies fisheye transformation to the input image.
         
@@ -431,7 +431,7 @@ class FisheyeTomographyTransform(DualTransform):
         """
         return self._transform_bbox(bboxes, old_size=params["old_size"])
     
-    # ----- Utils -----
+    # --- Utils ---
     def get_params_dependent_on_data(self, params: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
         """Gets parameters dependent on the input data.
         

@@ -55,7 +55,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- YOLOv11 -----
+# --- YOLOv11 ---
 class YOLOv11(YOLO, nn.ModelMetadataMixin):
     """Ultralytics YOLOs model for object detection.
     
@@ -150,7 +150,7 @@ class YOLOv11x(YOLOv11):
     })
 
 
-# ----- YOLOv11-OBB -----
+# --- YOLOv11-OBB ---
 class YOLOv11_OBB(YOLO, nn.ModelMetadataMixin):
     """Ultralytics YOLOs model for orientation bounding box detection.
     
@@ -235,7 +235,7 @@ class YOLOv11x_OBB(YOLOv11_OBB):
     })
 
 
-# ----- YOLOv11-SEG -----
+# --- YOLOv11-SEG ---
 class YOLOv11_SEG(YOLO, nn.ModelMetadataMixin):
     """Ultralytics YOLOs model for segmentation.
     
@@ -320,7 +320,7 @@ class YOLOv11x_SEG(YOLOv11_SEG):
     })
 
 
-# ----- YOLOv11-CLS -----
+# --- YOLOv11-CLS ---
 class YOLOv11_CLS(YOLO, nn.ModelMetadataMixin):
     """Ultralytics YOLOs model for classification.
     
@@ -405,7 +405,7 @@ class YOLOv11x_CLS(YOLOv11_CLS):
     })
 
 
-# ----- YOLOv11-POSE -----
+# --- YOLOv11-POSE ---
 class YOLOv11_POSE(YOLO, nn.ModelMetadataMixin):
     """Ultralytics YOLOs model for pose estimation.
     
@@ -490,7 +490,7 @@ class YOLOv11x_POSE(YOLOv11_POSE):
     })
 
 
-# ----- YOLOv12 -----
+# --- YOLOv12 ---
 class YOLOv12(YOLO, nn.ModelMetadataMixin):
     """Ultralytics YOLOs model for object detection.
     

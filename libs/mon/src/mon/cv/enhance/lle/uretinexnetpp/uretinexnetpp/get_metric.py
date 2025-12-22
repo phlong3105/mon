@@ -108,4 +108,4 @@ def evaluate_all(dataset, alg_name, opts, file_path):
         print("gt dir %s don't exist~"%gt_dir)
         exit(0)
     metric_dicts = evaluate(pred_dir, gt_dir, transform, alg_name, dataset, mean=True)
-    write_metric_to_file(alg_name+"-----%s"%dataset, metric_dicts, file_path)
+    write_metric_to_file(alg_name+"---%s"%dataset, metric_dicts, file_path)

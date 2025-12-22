@@ -25,7 +25,7 @@ def parse_args():
 Compute metrics for trackers using DETRAC challenge ground-truth data.
 
 Files
------
+---
 Ground truth files can be in .XML format or .MAT format as provided by http://detrac-db.rit.albany.edu/download
 
 Test Files for the challenge are reuired to be in MOTchallenge format, they have to comply with the format described in
@@ -36,7 +36,7 @@ arXiv preprint arXiv:1603.00831 (2016).
 https://motchallenge.net/
 
 Directory Structure
----------
+-------
 
 Layout for ground truth data
     <GT_ROOT>/<SEQUENCE_1>.txt

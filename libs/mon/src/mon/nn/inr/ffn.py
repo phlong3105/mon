@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 
 
-# ----- Layer -----
+# --- Layer ---
 class FFEncoding(nn.Module):
     """An implementation of Fourier Feature Encoding layer."""
     
@@ -58,7 +58,7 @@ class FFEncoding(nn.Module):
             return embedding
         
 
-# ----- MLP -----
+# --- MLP ---
 class FFEncodingMLP(nn.Module):
     """An implementation of Fourier Feature Encoding MLP.
 

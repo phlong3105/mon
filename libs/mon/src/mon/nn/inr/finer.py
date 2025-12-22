@@ -23,7 +23,7 @@ import torch
 import torch.nn as nn
 
 
-# ----- Layer -----
+# --- Layer ---
 class FINERLayer(nn.Module):
     r"""An implementation of a FINER layer.
     
@@ -111,7 +111,7 @@ class FINERLayer(nn.Module):
         return torch.sin(self.omega_0 * scale * linear)
         
        
-# ----- MLP -----
+# --- MLP ---
 class FINER(nn.Module):
     """An implementation of the FINER MLP.
 

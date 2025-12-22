@@ -21,7 +21,7 @@ def loading_corresponding_model(expected_evaluate):
         unfolding_path = "./pretrained_model/unfolding/unfolding_model.pth"
         adjust_fusion_path = "./pretrained_model/fusion_enhance/fusion.pth"
     else:
-        print("----------------->invalid algo name")
+        print("----------->invalid algo name")
         exit()
     return unfolding_path, adjust_fusion_path
 

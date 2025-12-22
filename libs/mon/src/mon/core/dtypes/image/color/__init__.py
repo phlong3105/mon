@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for color processing.
+"""Color processing operations.
 
-This package provides modules and functions for color space conversions
-and color transfer techniques.
+This package contains operations for color processing.
 """
 
 __all__ = [

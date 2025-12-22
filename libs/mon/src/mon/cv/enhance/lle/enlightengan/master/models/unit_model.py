@@ -81,13 +81,13 @@ class UNITModel(BaseModel):
         self.dis_a.cuda()
         self.dis_b.cuda()
 
-        print('---------- Networks initialized -------------')
+        print('------ Networks initialized ---------')
         networks.print_network(self.gen_a)
         networks.print_network(self.gen_b)
         if self.isTrain:
             networks.print_network(self.dis_a)
             networks.print_network(self.dis_b)
-        print('-----------------------------------------------')
+        print('-----------------------------')
 
     def set_input(self, input):
         AtoB = self.opt.which_direction == 'AtoB'

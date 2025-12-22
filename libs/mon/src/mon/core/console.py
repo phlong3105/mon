@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for enhanced console logging and pretty-printing.
+"""Enhanced console logging and pretty-printing utilities.
 
-This module provides utilities for improved console logging and pretty-printing
-using the ``rich`` library. It includes functions to log messages with different
-severity levels, and to pretty-print dictionaries and lists of dictionaries in
-a visually appealing format.
+This module provides rich Console instances and helpers for logging and
+rendering structured data (mappings and lists of mappings).
 """
 
 __all__ = [
@@ -27,7 +25,11 @@ from rich.table import Table
 from rich.theme import Theme
 
 
-# ----- Console -----
+# ==============================================================================
+# CONSOLE CONFIGURATION
+# ==============================================================================
+
+# --- Styles (Themes and style constants) ---
 rich_console_theme = Theme({
     "debug"   : "dark_green",
     "info"    : "green",
@@ -36,6 +38,8 @@ rich_console_theme = Theme({
     "critical": "bold red",
 })
 
+
+# --- Instances ---
 console = Console(
     color_system    = "auto",
     log_time_format = "[%X]",  # "[%m/%d/%Y %H:%M:%S]",
@@ -55,20 +59,32 @@ error_console = Console(
 )
 
 
-# ----- Pretty Print -----
+# ==============================================================================
+# LOGGING HANDLERS
+# ==============================================================================
+
+# --- Shortcuts ---
 log       = console.log
 log_error = error_console.log
 
 
+# ==============================================================================
+# STRUCTURED DATA RENDERING
+# ==============================================================================
+
+# --- Mapping Views ---
 def pprint_dict(a_dict: dict | box.Box, title: str = ""):
-    """Prints a dictionary with a title using pretty.Pretty format.
+    """Pretty-print a mapping inside a panel.
+
+    Print a mapping (dictionary or box.Box) in a visually appealing panel using
+    the rich library.
 
     Args:
-        a_dict (dict or box.Box): Dictionary to print.
-        title (str): Title above the printed dictionary. Defaults to "".
+        a_dict: Mapping to print.
+        title: Optional title for the panel.
 
     Raises:
-        TypeError: If ``a_dict`` is not a dictionary.
+        TypeError: If ``a_dict`` is not a dict or box.Box.
     """
     if isinstance(a_dict, box.Box):
         a_dict = a_dict.to_dict()
@@ -85,15 +101,19 @@ def pprint_dict(a_dict: dict | box.Box, title: str = ""):
     console.log(p)
 
 
+# --- Tabular Views ---
 def rprint_dict(a_dict: dict | box.Box, title: str = ""):
-    """Prints a dictionary in a table format.
+    """Render a mapping as a two-column table.
+
+    Display a mapping (dictionary or box.Box) as a two-column table using the
+    rich library.
 
     Args:
-        a_dict (dict or box.Box): Dictionary to print.
-        title (str): Title above the printed dictionary. Defaults to "".
+        a_dict: Mapping to print.
+        title: Optional table title.
 
     Raises:
-        TypeError: If ``a_dict`` is not a dictionary.
+        TypeError: If ``a_dict`` is not a dict or box.Box.
     """
     if isinstance(a_dict, box.Box):
         a_dict = a_dict.to_dict()
@@ -115,16 +135,17 @@ def rprint_dict(a_dict: dict | box.Box, title: str = ""):
 
 
 def rprint_list_dicts(list_of_dicts: list[dict]):
-    """Prints a list of similar dictionaries in a table format.
-    
+    """Render a list of dictionaries as a table with shared columns.
+
+    Display a list of dictionaries as a table, where each dictionary must have
+    identical keys.
+
     Args:
-        list_of_dicts (list of dict): List of dictionaries to print.
-            All dictionaries must have identical keys.
+        list_of_dicts: List of dicts that must share identical keys.
 
     Raises:
-        TypeError: If ``list_of_dicts`` is not a list of dictionaries.
-        ValueError: If ``list_of_dicts`` is empty or if the dictionaries
-            do not have identical keys.
+        TypeError: If ``list_of_dicts`` is not a list of dicts.
+        ValueError: If ``list_of_dicts`` is empty or dicts have differing keys.
     """
     if not isinstance(list_of_dicts, list) or not all(isinstance(d, dict) for d in list_of_dicts):
         raise TypeError(f"``list_of_dicts`` must be a list of dicts, got {type(list_of_dicts)}.")

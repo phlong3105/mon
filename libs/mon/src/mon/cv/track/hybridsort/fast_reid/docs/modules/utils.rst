@@ -2,7 +2,7 @@ fastreid.utils
 ========================
 
 fastreid.utils.colormap module
---------------------------------
+--------------------
 
 .. automodule:: fastreid.utils.colormap
     :members:
@@ -10,7 +10,7 @@ fastreid.utils.colormap module
     :show-inheritance:
 
 fastreid.utils.comm module
-----------------------------
+------------------
 
 .. automodule:: fastreid.utils.comm
     :members:
@@ -19,7 +19,7 @@ fastreid.utils.comm module
 
 
 fastreid.utils.events module
-------------------------------
+------------------
 
 .. automodule:: fastreid.utils.events
     :members:
@@ -28,7 +28,7 @@ fastreid.utils.events module
 
 
 fastreid.utils.logger module
-------------------------------
+------------------
 
 .. automodule:: fastreid.utils.logger
     :members:
@@ -37,7 +37,7 @@ fastreid.utils.logger module
 
 
 fastreid.utils.registry module
---------------------------------
+--------------------
 
 .. automodule:: fastreid.utils.registry
     :members:
@@ -45,7 +45,7 @@ fastreid.utils.registry module
     :show-inheritance:
 
 fastreid.utils.memory module
-----------------------------------
+----------------------
 
 .. automodule:: fastreid.utils.memory
     :members:
@@ -54,7 +54,7 @@ fastreid.utils.memory module
 
 
 fastreid.utils.analysis module
-----------------------------------
+----------------------
 
 .. automodule:: fastreid.utils.analysis
     :members:
@@ -63,7 +63,7 @@ fastreid.utils.analysis module
 
 
 fastreid.utils.visualizer module
-----------------------------------
+----------------------
 
 .. automodule:: fastreid.utils.visualizer
     :members:
@@ -71,7 +71,7 @@ fastreid.utils.visualizer module
     :show-inheritance:
 
 fastreid.utils.video\_visualizer module
------------------------------------------
+-------------------------
 
 .. automodule:: fastreid.utils.video_visualizer
     :members:

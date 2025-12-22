@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for depth map data type.
+"""Depth data type.
 
-This package provides a base class for handling depth map data along with
-utility functions for processing depth maps.
+This package contains a "full-stack" toolkit for depth data, including data
+structure, ingestion, analysis, atomic transformations, complex workflows, and
+rendering utilities.
 """
 
 __all__ = [
@@ -12,5 +13,9 @@ __all__ = [
     "to_color",
 ]
 
-from .core import DepthMap
-from .processing import to_color
+from .core import *
+from .io import *
+from .meta import *
+from .ops import *
+from .proc import *
+from .vis import *

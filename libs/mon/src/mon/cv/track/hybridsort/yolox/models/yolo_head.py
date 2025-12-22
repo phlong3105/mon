@@ -452,7 +452,7 @@ class YOLOXHead(nn.Module):
     ):
 
         if mode == "cpu":
-            print("------------CPU Mode for This Batch-------------")
+            print("--------CPU Mode for This Batch---------")
             gt_bboxes_per_image = gt_bboxes_per_image.cpu().float()
             bboxes_preds_per_image = bboxes_preds_per_image.cpu().float()
             gt_classes = gt_classes.cpu().float()
@@ -624,7 +624,7 @@ class YOLOXHead(nn.Module):
 
     def dynamic_k_matching(self, cost, pair_wise_ious, gt_classes, num_gt, fg_mask):
         # Dynamic K
-        # ---------------------------------------------------------------
+        # ---------------------------------------
         matching_matrix = torch.zeros_like(cost)
 
         ious_in_boxes_matrix = pair_wise_ious

@@ -26,7 +26,7 @@ If you run a tracking benchmark and want to use TrackEval as your official evalu
 The following metrics are currently implemented:
 
 Metric Family | Sub metrics | Paper | Code | Notes |
-|----- | ----------- |----- | ----------- | ----- |
+|--- | ------- |--- | ------- | --- |
 | | | |  |  |
 |**HOTA metrics**|HOTA, DetA, AssA, LocA, DetPr, DetRe, AssPr, AssRe|[paper](https://link.springer.com/article/10.1007/s11263-020-01375-2)|[code](trackeval/metrics/hota.py)|**Recommended tracking metric**|
 |**CLEARMOT metrics**|MOTA, MOTP, MT, ML, Frag, etc.|[paper](https://link.springer.com/article/10.1155/2008/246309)|[code](trackeval/metrics/clear.py)| |
@@ -42,7 +42,7 @@ Metric Family | Sub metrics | Paper | Code | Notes |
 The following benchmarks are currently implemented:
 
 Benchmark | Sub-benchmarks | Type | Website | Code | Data Format |
-|----- | ----------- |----- | ----------- | ----- | ----- |
+|--- | ------- |--- | ------- | --- | --- |
 | | | |  |  | |
 |**RobMOTS**|Combination of 8 benchmarks|Seg Masks|[website](https://eval.vision.rwth-aachen.de/rvsu-workshop21/?page_id=110)|[code](trackeval/datasets/rob_mots.py)|[format](docs/RobMOTS-Official/Readme.md)|
 |**Open World Tracking**|TAO-OW|OpenWorld / Seg Masks|[website](https://openworldtracking.github.io)|[code](trackeval/datasets/tao_ow.py)|[format](docs/OpenWorldTracking-Official/Readme.md)|

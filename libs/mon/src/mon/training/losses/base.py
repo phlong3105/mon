@@ -21,7 +21,7 @@ from torch.nn.modules.loss import _Loss
 from mon.core import depascalize
 
 
-# ----- Base Loss -----
+# --- Base Loss ---
 class BaseLoss(_Loss, abc.ABC):
     """A base class for all loss functions.
     
@@ -47,7 +47,7 @@ class BaseLoss(_Loss, abc.ABC):
         if self.reduction not in self.reductions:
             raise ValueError(f"``reduction`` must be one of: {self.reductions}, got {reduction}.")
     
-    # ----- Magic Methods -----
+    # --- Magic Methods ---
     def __str__(self):
         """Returns the string representation of the loss class."""
         return depascalize(self.__class__.__name__).lower()

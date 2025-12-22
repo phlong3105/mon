@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for color transfer between images.
+"""Color transfer function.
 
 This module provides a function to transfer the color characteristics from a
 source image to a target image using statistical methods in the LAB color space.
@@ -23,18 +23,17 @@ import numpy as np
 
 
 def color_transfer(source: np.ndarray, target: np.ndarray) -> np.ndarray:
-    """Transfers the color distribution from the target image to the source
+    """Transfer the color distribution from the target image to the source
     image using the mean and standard deviation of the LAB color space.
 
     Args:
-        source (numpy.ndarray): The source image as a numpy.ndarray of shape
-            (H, W, 3) in range [0, 255] and RGB format.
-        target (numpy.ndarray): The target image as a numpy.ndarray of shape
-            (H, W, 3) in range [0, 255] and RGB format.
+        source (numpy.ndarray): An RGB source image as a numpy.ndarray of shape
+            (H, W, 3) with pixel values in the range [0, 255].
+        target (numpy.ndarray): An RGB target image as a numpy.ndarray of shape
+            (H, W, 3) with pixel values in the range [0, 255].
 
     Returns:
-        numpy.ndarray: The color transferred image as a numpy.ndarray of shape
-            (H, W, 3) in range [0, 255] and RGB format.
+        The color transferred image.
     """
     # Convert to LAB color space
     s = cv2.cvtColor(source, cv2.COLOR_RGB2LAB).astype(np.float32)

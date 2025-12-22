@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for default CLI options and argument parsing.
+"""Default CLI options and normalization helpers.
 
-This module defines default command-line interface (CLI) options and provides
-utilities for parsing and handling these options.
+This module provides CLI option metadata, default argument values, and
+coercion helpers for argument normalization.
 """
 
 __all__ = [
@@ -20,44 +20,57 @@ from mon.core.device import list_devices
 from mon.core.enum import Task, TRTPrecision
 
 
-# ----- Utils -----
+# ==============================================================================
+# TYPE COERCION HELPERS
+# ==============================================================================
+
 def _str_or_none(a_str: Any) -> str | None:
-    """Converts a value to a string.
+    """Convert a value to a string or None.
+
+    Treat None, the string "None", and the empty string as None.
 
     Args:
-        a_str (Any): Value to convert.
+        a_str: Value to convert.
 
     Returns:
-        str: A string. If the input is "None" or empty, returns None.
+        Normalized string or None.
     """
     return None if a_str in [None, "None", ""] else str(a_str)
 
 
 def _int_or_none(int_or_str: Any) -> int | None:
-    """Converts a value to an integer
+    """Convert a value to an int or None.
+
+    Treat None, the string "None", and the empty string as None.
 
     Args:
-        int_or_str (Any): Value to convert.
+        int_or_str: Value to convert.
 
     Returns:
-        int: An integer. If the input is "None" or empty, returns None.
+        Converted integer or None.
     """
     return None if int_or_str in [None, "None", ""] else int(int_or_str)
 
 
 def _float_or_none(float_or_str: Any) -> float | None:
-    """Converts a value to a float.
+    """Convert a value to a float or None.
+
+    Treat None, the string "None", and the empty string as None.
 
     Args:
-        float_or_str (Any): Value to convert.
+        float_or_str: Value to convert.
 
     Returns:
-        int: A float. If the input is "None" or empty, returns None.
+        Converted float or None.
     """
     return None if float_or_str in [None, "None", ""] else float(float_or_str)
 
 
-# ----- Default CLI Options -----
+# ==============================================================================
+# CLI OPTION SCHEMA
+# ==============================================================================
+
+# --- Option Registry ---
 CLI_OPTIONS  = {
     "p"            : {
         "action"     : "store_true",
@@ -279,6 +292,12 @@ CLI_OPTIONS  = {
 }
 CLI_OPTIONS  = box.Box(CLI_OPTIONS)
 
+
+# ==============================================================================
+# DEFAULT ARGUMENT GENERATION
+# ==============================================================================
+
+# --- State Initialization ---
 DEFAULT_ARGS = {
     k: False if v.get("action") in ["store_true"] else v.get("default", None)
     for k, v in CLI_OPTIONS.items()

@@ -23,7 +23,7 @@ import torch
 import torch.nn as nn
 
 
-# ----- Layer -----
+# --- Layer ---
 class RealGaborLayer(nn.Module):
     r"""A layer that applies an affine linear transformation with real Gabor
     activation to the incoming data.
@@ -146,7 +146,7 @@ class ComplexGaborLayer(nn.Module):
         return torch.exp(1j * omega - scale.abs().square())
 
 
-# ----- MLP -----
+# --- MLP ---
 class WIRE(nn.Module):
     """A WIRE MLP with Gabor wavelet activations.
     

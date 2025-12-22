@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for contour data type.
+"""Contour data type.
 
-This package provides functionalities for handling contour data, including
-normalization, denormalization, and conversion between different formats.
+This package contains a "full-stack" toolkit for contour data, including data
+structure, ingestion, analysis, atomic transformations, complex workflows, and
+rendering utilities.
 """
 
 __all__ = [
@@ -13,4 +14,10 @@ __all__ = [
     "normalize",
 ]
 
-from .processing import convert, denormalize, normalize
+from .core import *
+from .io import *
+from .meta import *
+from .ops import *
+from .proc import *
+from .vis import *
+

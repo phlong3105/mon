@@ -39,7 +39,7 @@ from .base import BaseLoss
 from .core import CharbonnierLoss
 
 
-# ----- Pixel-wise Loss -----
+# --- Pixel-wise Loss ---
 class ColorConstancyLoss(BaseLoss):
     """A Color Constancy Loss to ensure the color consistency of the enhanced
     image by penalizing the variance of the mean of R, G, and B channels.
@@ -248,7 +248,7 @@ class TotalVariationLoss(BaseLoss):
         return loss
 
 
-# ----- Geometry Loss -----
+# --- Geometry Loss ---
 class DepthAwareIlluminationLoss(BaseLoss):
     """A Depth-Aware Illumination Loss to encourage smoothness in the illumination
     map while preserving depth discontinuities.
@@ -302,7 +302,7 @@ class DepthAwareIlluminationLoss(BaseLoss):
         return loss
 
 
-# ----- Objective Loss -----
+# --- Objective Loss ---
 class PSNRLoss(BaseLoss):
     """A Peak Signal-to-Noise Ratio (PSNR) Loss to measure the fidelity of the
     enhanced image compared to the ground truth image.
@@ -359,10 +359,10 @@ class PSNRLoss(BaseLoss):
         return loss
 
 
-# ----- Perceptual Loss -----
+# --- Perceptual Loss ---
 
 
-# ----- Spatial Loss -----
+# --- Spatial Loss ---
 class SpatialConsistencyLoss(BaseLoss):
     """A Spatial Consistency Loss to ensure spatial coherence in the enhanced
     image by penalizing discrepancies in local gradients between the enhanced
@@ -775,7 +775,7 @@ class SpatialConsistencyLoss(BaseLoss):
         return loss
 
 
-# ----- Structural Loss -----
+# --- Structural Loss ---
 class EdgeLoss(BaseLoss):
     """An Edge Loss that focuses on preserving edge details in images by
     computing the Laplacian edge maps and penalizing differences between

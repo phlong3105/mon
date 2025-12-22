@@ -21,7 +21,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Train -----
+# --- Train ---
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find("Conv") != -1:
@@ -139,7 +139,7 @@ def train(args: dict | box.Box) -> str:
                 torch.save(model.state_dict(), args.save_dir / "best_psnr.pt")
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)

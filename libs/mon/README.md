@@ -15,17 +15,20 @@
   <summary>Directory Structure</summary>
 
   ```text
-  mon                     
-  |__ shared                  # Common code shared across multiple projects is located.
-  |   |__ mon                 # My main package
-  |       |__ mon
-  |       |   |__ core        # Base functionality for other packages.
-  |       |   |__ datasets    # Dataset package.
-  |       |   |__ vision      # Computer vision package.
-  |       |   |__ ...      
-  |       |__ pyproject.toml  # For both packaging and dependency management.    
-  |       |__ README.md
-  |__ ...
+  mon                       # Package root
+  |__ adapters              # Adapters for integrating other packages into ``mon``.
+  |__ src
+  |   |__ mon
+  |       |__ core          # Base functionality for other packages.
+  |       |__ cv            # Computer vision package.
+  |       |__ datasets      # Dataset package.
+  |       |__ genai         # Generative AI package.
+  |       |__ nn            # Neural network package.
+  |       |__ training      # Training utilities package.
+  |       |__ __init__.py      
+  |__ tools                 # Tools for various utilities.
+  |__ pyproject.toml        # For both packaging and dependency management.    
+  |__ README.md
   ```
 </details>
 

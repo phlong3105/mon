@@ -16,7 +16,7 @@ import torch
 import torch.nn as nn
 
 
-# ----- Layer -----
+# --- Layer ---
 class GaussLayer(nn.Module):
     r"""An implementation of a Gaussian layer.
     
@@ -57,7 +57,7 @@ class GaussLayer(nn.Module):
         return torch.exp(-(self.scale * self.linear(input)) ** 2)
 
 
-# ----- MLP -----
+# --- MLP ---
 class GAUSS(nn.Module):
     """An implementation of a Gaussian MLP.
 

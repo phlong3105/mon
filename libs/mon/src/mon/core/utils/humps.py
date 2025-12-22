@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for converting string case styles.
+"""String case conversion and validation utilities.
 
-This module implements functions for converting strings between different case
-styles, including camel-case, pascal-case, kebab-case, and snake-case. It also
-includes functions to validate if a string is in a specific case style.
+This module provides recursive converters and validators for camelCase,
+PascalCase, kebab-case, and snake_case, supporting structured data.
 """
 
 __all__ = [
@@ -27,22 +26,89 @@ import re
 from collections.abc import Mapping
 
 
-ACRONYM_RE    = re.compile(r"([A-Z\d]+)(?=[A-Z\d]|$)")
-PASCAL_RE     = re.compile(r"([^\-_]+)")
-SPLIT_RE      = re.compile(r"([\-_]*[A-Z][^A-Z]*[\-_]*)")
-UNDERSCORE_RE = re.compile(r"(?<=[^\-_])[\-_]+[^\-_]")
+# ==============================================================================
+# VALIDATION & SANITIZATION (Integrity Checks)
+# ==============================================================================
 
+# --- Verify ---
+def is_camelcase(str_or_iter) -> bool:
+    """Return True if input is camelCase.
 
-# ----- Convert -----
-def pascalize(str_or_iter):
-    """Converts a string, dict, or list of dicts to pascal-case.
-    
     Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-    
+        str_or_iter: String or structure to validate.
+
     Returns:
-        str, dict, or list: The input converted to pascal-case.
+        True if the input equals its camelized form.
+    """
+    return str_or_iter == camelize(str_or_iter)
+
+
+def is_pascalcase(str_or_iter) -> bool:
+    """Return True if input is PascalCase.
+
+    Args:
+        str_or_iter: String or structure to validate.
+
+    Returns:
+        True if the input equals its pascalized form.
+    """
+    return str_or_iter == pascalize(str_or_iter)
+
+
+def is_kebabcase(str_or_iter) -> bool:
+    """Return True if input is kebab-case.
+
+    Args:
+        str_or_iter: String or structure to validate.
+
+    Returns:
+        True if the input equals its kebabized form.
+    """
+    return str_or_iter == kebabize(str_or_iter)
+
+
+def is_snakecase(str_or_iter) -> bool:
+    """Return True if input is snake_case.
+
+    Args:
+        str_or_iter: String or structure to validate.
+
+    Returns:
+        True if the input equals its decamelized form. Treat certain kebab-case
+        inputs as non-snake to avoid false positives.
+    """
+    if is_kebabcase(str_or_iter) and not is_camelcase(str_or_iter):
+        return False
+
+    return str_or_iter == decamelize(str_or_iter)
+
+
+def _is_none(_in) -> str:
+    """Normalize None to an empty string and collapse whitespace.
+
+    Args:
+        _in: Input value.
+
+    Returns:
+        Compact string with internal whitespace removed, or empty string for None.
+    """
+    return "" if _in is None else re.sub(r"\s+", "", str(_in))
+
+
+# ==============================================================================
+# CASE TRANSFORMATION
+# ==============================================================================
+
+# --- Structural Converters ---
+def pascalize(str_or_iter):
+    """Convert input to PascalCase.
+
+    Args:
+        str_or_iter: A string, mapping, or list. If a mapping or list is
+            provided, convert keys/elements recursively.
+
+    Returns:
+        Converted value in PascalCase or a structure with converted keys.
     """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, pascalize)
@@ -59,14 +125,14 @@ def pascalize(str_or_iter):
 
 
 def camelize(str_or_iter):
-    """Converts a string, dict, or list of dicts to camel-case.
-    
+    """Convert input to camelCase.
+
     Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-            
+        str_or_iter: A string, mapping, or list. If a mapping or list is
+            provided, convert keys/elements recursively.
+
     Returns:
-        str, dict, or list: The input converted to camel-case.
+        Converted value in camelCase or a structure with converted keys.
     """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, camelize)
@@ -84,14 +150,14 @@ def camelize(str_or_iter):
 
 
 def kebabize(str_or_iter):
-    """Converts a string, dict, or list of dicts to kebab-case.
-   
+    """Convert input to kebab-case.
+
     Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-            
+        str_or_iter: A string, mapping, or list. If a mapping or list is
+            provided, convert keys/elements recursively.
+
     Returns:
-        str, dict, or list: The input converted to kebab-case.
+        Converted value in kebab-case or a structure with converted keys.
     """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, kebabize)
@@ -112,14 +178,14 @@ def kebabize(str_or_iter):
 
 
 def decamelize(str_or_iter):
-    """Converts a string, dict, or list of dicts to snake-case.
-    
+    """Convert input to snake_case.
+
     Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-            
+        str_or_iter: A string, mapping, or list. If a mapping or list is
+            provided, convert keys/elements recursively.
+
     Returns:
-        str, dict, or list: The input converted to snake-case.
+        Converted value in snake_case or a structure with converted keys.
     """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, decamelize)
@@ -132,27 +198,26 @@ def decamelize(str_or_iter):
 
 
 def depascalize(str_or_iter):
-    """Converts a string, dict, or list of dicts to snake-case.
-    
+    """Alias for decamelize; convert input to snake_case.
+
     Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-    
+        str_or_iter: Input to convert; behaves like decamelize.
+
     Returns:
-        str, dict, or list: The input converted to snake-case.
+        Converted value in snake_case.
     """
     return decamelize(str_or_iter)
 
 
 def dekebabize(str_or_iter):
-    """Converts a string, dict, or list of dicts to snake-case.
-    
+    """Convert kebab-case input to snake_case.
+
     Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-    
+        str_or_iter: A string, mapping, or list. If a mapping or list is
+            provided, convert keys/elements recursively.
+
     Returns:
-        str, dict, or list: The input converted to snake-case.
+        Converted value in snake_case or a structure with converted keys.
     """
     if isinstance(str_or_iter, (list, Mapping)):
         return _process_keys(str_or_iter, dekebabize)
@@ -167,83 +232,27 @@ def dekebabize(str_or_iter):
 snakecase = depascalize
 
 
-# ----- Validation -----
-def is_camelcase(str_or_iter) -> bool:
-    """Checks if a string, dict, or list of dicts is camel-case.
-    
-    Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-            
-    Returns:
-        bool: True if the input is camel-case, False otherwise.
-    """
-    return str_or_iter == camelize(str_or_iter)
+# ==============================================================================
+# INTERNALS & RECURSION LOGIC
+# ==============================================================================
+
+# --- Regex Patterns ---
+ACRONYM_RE    = re.compile(r"([A-Z\d]+)(?=[A-Z\d]|$)")
+PASCAL_RE     = re.compile(r"([^\-_]+)")
+SPLIT_RE      = re.compile(r"([\-_]*[A-Z][^A-Z]*[\-_]*)")
+UNDERSCORE_RE = re.compile(r"(?<=[^\-_])[\-_]+[^\-_]")
 
 
-def is_pascalcase(str_or_iter) -> bool:
-    """Checks if a string, dict, or list of dicts is pascal-case.
-    
-    Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-    
-    Returns:
-        bool: True if the input is pascal-case, False otherwise.
-    """
-    return str_or_iter == pascalize(str_or_iter)
-
-
-def is_kebabcase(str_or_iter) -> bool:
-    """Checks if a string, dict, or list of dicts is kebab-case.
-    
-    Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-    
-    Returns:
-        bool: True if the input is kebab-case, False otherwise.
-    """
-    return str_or_iter == kebabize(str_or_iter)
-
-
-def is_snakecase(str_or_iter) -> bool:
-    """Checks if a string, dict, or list of dicts is snake-case.
-    
-    Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-    
-    Returns:
-        bool: True if the input is snake-case, False otherwise.
-    """
-    if is_kebabcase(str_or_iter) and not is_camelcase(str_or_iter):
-        return False
-
-    return str_or_iter == decamelize(str_or_iter)
-
-
-def _is_none(_in) -> str:
-    """Determines if the input is None, returning an empty string if so.
-    
-    Returns:
-        str: An empty string if the input is None; otherwise, the input
-            converted to a string with all whitespace removed.
-    """
-    return "" if _in is None else re.sub(r"\s+", "", str(_in))
-
-
-# ----- Utils -----
+# --- Structural Walkers --
 def _process_keys(str_or_iter, fn):
-    """Recursively process keys in a dict or list using a specified function.
-    
+    """Recursively apply a conversion function to mapping keys or list elements.
+
     Args:
-        str_or_iter (str, dict, or list): Input string, dictionary, or list of
-            dictionaries.
-        fn (callable): Function to apply to each key.
-    
+        str_or_iter: Input mapping or list to process.
+        fn: Conversion function to apply to keys/strings.
+
     Returns:
-        str, dict, or list: The input with keys processed by the specified function.
+        Processed structure with fn applied to keys or elements.
     """
     if isinstance(str_or_iter, list):
         return [_process_keys(k, fn) for k in str_or_iter]
@@ -253,28 +262,25 @@ def _process_keys(str_or_iter, fn):
 
 
 def _fix_abbreviations(string: str) -> str:
-    """Rewrites incorrectly cased acronyms, initialisms, and abbreviations,
-    allowing them to be decamelized correctly. For example, given the string
-    "APIResponse", this function is responsible for ensuring the output is
-    "api_response" instead of "a_p_i_response".
-    
+    """Normalize acronym capitalization for consistent splitting.
+
     Args:
-        string (str): A string that may contain an incorrectly cased abbreviation.
-    
+        string: Input string possibly containing uppercase acronyms.
+
     Returns:
-        str: A rewritten string with properly cased abbreviations.
+        String with acronyms title-cased for consistent splitting.
     """
     return ACRONYM_RE.sub(lambda m: m.group(0).title(), string)
 
 
 def _separate_words(string: str, separator: str = "_") -> str:
-    """Splits words that are separated by case differentiation.
-    
+    """Split camel or Pascal strings into words and join with a separator.
+
     Args:
-        string (str): A string that may contain an incorrectly cased abbreviation.
-        separator (str): A string used to separate the words. Defaults to "_".
-    
+        string: Input camel or Pascal string.
+        separator: Separator to join the extracted words.
+
     Returns:
-        str: A string with words separated by the specified separator.
+        String with words joined by the given separator.
     """
     return separator.join(s for s in SPLIT_RE.split(string) if s)

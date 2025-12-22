@@ -10,8 +10,8 @@ and tasks.
 """
 
 __all__ = [
-    "BBoxes",
-    "BaseTensorOrArray",
+    "BBoxList",
+    "TensorOrArray",
     "Classes",
     "DATASETS",
     "DEPTH_SOURCE",
@@ -56,8 +56,8 @@ from mon.core import (
     Task,
 )
 from mon.core.dtypes import (
-    BaseTensorOrArray,
-    BBoxes,
+    TensorOrArray,
+    BBoxList,
     DepthMap,
     Frame,
     Image,

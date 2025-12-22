@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for system utilities.
+"""System utility helpers for terminal and reproducibility.
 
-This module implements system-related utilities such as clearing the terminal
-and setting random seeds for reproducibility.
+This module provides helpers for terminal control and for setting reproducible
+seeds across Python, NumPy, and PyTorch to enable consistent terminal clearing
+and experiment reproducibility in the codebase.
 """
 
 __all__ = [
@@ -21,13 +22,20 @@ import numpy as np
 import torch
 
 
-# ----- Seed -----
+# ==============================================================================
+# REPRODUCIBILITY & DETERMINISM
+# ==============================================================================
+
+# --- Global Seeding (Python, NumPy, and PyTorch RNG synchronization) ---
 def set_random_seed(seed: int | tuple[int, int]):
-    """Sets random seeds for various libraries.
+    """Set random seeds for reproducibility.
+
+    Use the provided seed or sample from a two-element range to set the Python,
+    NumPy, and PyTorch RNGs and the PYTHONHASHSEED environment variable.
 
     Args:
-        seed (int or tuple of int): The seed value or a range (min, max) to
-            sample from.
+        seed: Single integer seed or a two-element range (min, max) from which
+            a seed will be sampled.
     """
     if isinstance(seed, Sequence):
         seed = random.randint(seed[0], seed[1]) if len(seed) == 2 else seed[-1]
@@ -39,9 +47,16 @@ def set_random_seed(seed: int | tuple[int, int]):
     os.environ["PYTHONHASHSEED"] = str(seed)
 
 
-# ----- Terminal -----
+# ==============================================================================
+# SYSTEM & TERMINAL CONTROL
+# ==============================================================================
+
+# --- Shell Utilities (OS-agnostic terminal management) ---
 def clear_terminal():
-    """Clears the terminal screen."""
+    """Clear the terminal screen.
+
+    Issue the platform-specific command to clear the terminal display.
+    """
     if platform.system() == "Windows":
         os.system("cls")
     elif platform.system() in ["Darwin", "Linux"]:

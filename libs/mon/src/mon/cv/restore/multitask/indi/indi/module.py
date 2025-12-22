@@ -12,7 +12,7 @@ from torch.nn import functional as F
 from tqdm import tqdm
 
 
-# ----- Modules -----
+# --- Modules ---
 class EMA:
     """Exponential Moving Average (EMA) for model parameters.
     
@@ -164,7 +164,7 @@ class Up(nn.Module):
         return x + emb
 
 
-# ----- Network -----
+# --- Network ---
 class InDiUnet(nn.Module):
     
     def __init__(

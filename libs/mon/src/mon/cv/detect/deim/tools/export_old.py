@@ -32,7 +32,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Utils -----
+# --- Utils ---
 class Model(torch.nn.Module):
 
     def __init__(self, cfg, export_postprocessor: bool = True):
@@ -50,7 +50,7 @@ class Model(torch.nn.Module):
         return outputs
 
 
-# ----- Export -----
+# --- Export ---
 @torch.no_grad()
 def export_onnx(model: Model, path: Path, args: dict | box.Box) -> Path:
     imgsz = args.imgsz[0] if isinstance(args.imgsz, list | tuple) else args.imgsz
@@ -242,7 +242,7 @@ def export(args: dict | box.Box) -> str:
         export_trt(onnx_file, engine_file, args)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     args = mon.parse_predict_args(model_root=root_dir)
     export(args)

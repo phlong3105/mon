@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for rich progress bars and prompts.
+"""Rich-based progress and prompt utility collection.
 
-This module implements utilities for creating rich progress bars and prompts
-using the ``rich`` library. It includes functions to create download and general
-progress bars, as well as a custom prompt class that allows for selection or
-direct input.
+This module provides helpers to construct Progress instances and custom
+ProgressColumn and prompt subclasses for interactive command-line flows,
+including download and general-purpose progress bars, memory and processing
+columns, and a prompt class that accepts either selection indices or free-form
+input.
 """
 
 __all__ = [
@@ -41,18 +42,20 @@ from mon.core.enum import MemoryUnit
 from mon.core.utils import is_int, to_int_list, to_list
 
 
-# ----- Progress -----
+# ==============================================================================
+# PROGRESS TRACKING SYSTEMS
+# ==============================================================================
+
+# --- Specialized Bars (Download vs. General Task configurations) ---
 def create_download_bar(transient: bool = False, disable: bool = False) -> Progress:
-    """Creates a rich.progress.Progress for download tracking.
+    """Create a download progress bar.
 
     Args:
-        transient (bool): If true, the progress bar will only display transient
-            progress. Defaults to False.
-        disable (bool): If true, the progress bar will be disabled. Defaults to
-            False.
+        transient: If True, remove progress display after completion.
+        disable: If True, disable the progress display.
 
     Returns:
-        rich.progress.Progress: A progress bar with download-specific columns.
+        Configured Progress instance for download tasks.
     """
     return Progress(
         TextColumn(
@@ -79,16 +82,14 @@ def create_download_bar(transient: bool = False, disable: bool = False) -> Progr
 
 
 def create_progress_bar(transient: bool = False, disable: bool = False) -> Progress:
-    """Creates a rich.progress.Progress for general progress tracking.
+    """Create a general-purpose progress bar.
 
     Args:
-        transient (bool): If true, the progress bar will only display transient
-            progress. Defaults to False.
-        disable (bool): If true, the progress bar will be disabled. Defaults to
-            False.
+        transient: If True, remove progress display after completion.
+        disable: If True, disable the progress display.
 
     Returns:
-        rich.progress.Progress: A progress bar with general-purpose columns.
+        Configured Progress instance for general tasks.
     """
     return Progress(
         TextColumn(
@@ -115,35 +116,44 @@ def create_progress_bar(transient: bool = False, disable: bool = False) -> Progr
     )
 
 
+# --- Telemetry Columns (Memory, Processing Speed, and Item counters) ---
 class MemoryUsageColumn(ProgressColumn):
-    """Displays CPU/GPU memory usage in a progress bar (e.g., 33.1/48.0GB)."""
-    
+    """A progress column for memory usage.
+
+    Display machine or GPU memory usage aggregated across configured devices.
+
+    Attributes:
+        devices (list[int]): GPU device indices to query.
+        unit (MemoryUnit): Unit used for reporting values.
+    """
+
     def __init__(
         self,
         devices     : int | list[int] = 0,
         unit        : str    = "GB",
         table_column: Column = None
     ):
-        """Initializes the MemoryUsageColumn.
-        
+        """Initialize the memory usage column.
+
+        Configure which GPU device(s) to query and the memory unit to display.
+
         Args:
-            devices (int): GPU device index or list of indices. Defaults to 0.
-            unit (str): Memory unit (e.g., 'GB'). Defaults to 'GB'.
-            table_column (Column, optional): Column in table to associate with.
-                Defaults to None.
+            devices: Device index or list of device indices.
+            unit: Unit label used for display.
+            table_column: Optional associated table column.
         """
         super().__init__(table_column=table_column)
         self.devices = to_int_list(devices)
         self.unit    = MemoryUnit(value=unit)
     
     def render(self, task: Task) -> Text:
-        """Renders current GPU or CPU memory usage as text.
+        """Render current memory usage for the task.
 
         Args:
-            task: rich.progress.Task object for the progress task.
+            task: Rich Task representing the progress.
 
         Returns:
-            rich.text.Text with memory usage status.
+            Text instance describing the memory usage (CPU or GPU).
         """
         return self.gpu_memory_text \
             if torch.cuda.is_available() \
@@ -151,31 +161,31 @@ class MemoryUsageColumn(ProgressColumn):
     
     @property
     def machine_memory_text(self) -> Text:
-        """Renders current RAM usage as text.
+        """Format machine (RAM) memory usage.
 
         Returns:
-            rich.text.Text with RAM usage status.
+            Text instance with CPU memory usage summary.
         """
-        from mon.core.device import get_memory_usages
+        from mon.core.device import query_ram_usages
         
-        total, used, _ = get_memory_usages(unit=self.unit)
+        total, used, _ = query_ram_usages(unit=self.unit)
         memory_status  = f"{used:.1f}/{total:.1f}{self.unit.value} (CPU)"
         memory_text    = Text(memory_status, style="bright_yellow")
         return memory_text
     
     @property
     def gpu_memory_text(self) -> Text:
-        """Renders current GPU memory usage as text.
+        """Format aggregated GPU memory usage across devices.
 
         Returns:
-            rich.text.Text with GPU memory usage status.
+            Text instance with aggregated GPU memory usage summary.
         """
-        from mon.core.device import get_cuda_memory_usages
+        from mon.core.device import query_vram_usage
         
         num_devices = len(self.devices)
         totals, useds = [], []
         for i in self.devices:
-            total, used, _ = get_cuda_memory_usages(device=i, unit=self.unit)
+            total, used, _ = query_vram_usage(device=i, unit=self.unit)
             totals.append(total)
             useds.append(used)
         total = min(totals)
@@ -186,25 +196,27 @@ class MemoryUsageColumn(ProgressColumn):
 
 
 class ProcessedItemsColumn(ProgressColumn):
-    """Shows number of processed items in a progress bar (e.g., 1728/2025)."""
-    
+    """A progress column showing processed item counts.
+
+    Present completed/total counts in a fixed-width field.
+    """
+
     def __init__(self, table_column: Column = None):
-        """Initializes the ProcessedItemsColumn.
-        
+        """Initialize processed-items column.
+
         Args:
-            table_column (Column, optional): Column in table to associate with.
-                Defaults to None.
+            table_column: Optional associated table column.
         """
         super().__init__(table_column=table_column)
     
     def render(self, task: Task) -> Text:
-        """Renders the number of processed items as text.
+        """Render processed items count for the task.
 
         Args:
-            task: rich.progress.Task object for the progress task.
+            task: Rich Task representing the progress.
 
         Returns:
-            rich.text.Text with processed items count.
+            Text instance showing completed/total items for the task.
         """
         completed = int(task.completed)
         total     = int(task.total)
@@ -214,16 +226,20 @@ class ProcessedItemsColumn(ProgressColumn):
 
 
 class ProcessingSpeedColumn(ProgressColumn):
-    """Shows human-readable processing speed in a progress bar."""
-    
+    """A progress column showing processing speed.
+
+    Show task processing speed in items per second or a placeholder when
+    unknown.
+    """
+
     def render(self, task: Task) -> Text:
-        """Renders the processing speed as text.
+        """Render processing speed for the task.
 
         Args:
-            task: rich.progress.Task object for the progress task.
+            task: Rich Task representing the progress.
 
         Returns:
-            rich.text.Text with the processing speed.
+            Text instance displaying the processing speed or a placeholder.
         """
         speed = task.speed
         if speed is None:
@@ -233,15 +249,25 @@ class ProcessingSpeedColumn(ProgressColumn):
         return Text(f"{speed_text}it/s", style="progress.data.speed")
 
 
-# ----- Prompt Class -----
+# ==============================================================================
+# INTERACTIVE CLI FLOWS
+# ==============================================================================
+
+# --- Custom Prompts ---
 class SelectionOrInputPrompt(Prompt):
-    """Extends rich.prompt.Prompt to allow for either selecting an index or
-    directly entering value.
-    
+    """A selection-or-input prompt.
+
+    Support selection by index or direct input, optional empty input, and
+    configurable choice display.
+
     Attributes:
-        response_type (type): The expected type of the response value.
+        response_type (type): Expected response type for default rendering.
+        allow_empty (bool): Whether empty input is permitted.
+        column_first (bool): Whether columns are printed column-first.
+        choices (Optional[list[str]]): Optional list of choices for selection.
+        password (bool): Whether the prompt is a password prompt.
     """
-    
+
     response_type: type = str
 
     def __init__(
@@ -257,21 +283,18 @@ class SelectionOrInputPrompt(Prompt):
         column_first  : bool                = False,
         allow_empty   : bool                = False,
     ):
-        """Initializes the SelectionOrInputPrompt.
-        
+        """Initialize the selection-or-input prompt.
+
         Args:
-            prompt (TextType): Prompt text. Defaults to "".
-            console (Console, optional): Console instance or None to use global
-                console. Defaults to None.
-            password (bool): Enable password input. Defaults to False.
-            choices (list[str]): List of column names. Defaults to None.
-            case_sensitive (bool): Matching of choices should be case-sensitive.
-                Defaults to True.
-            show_default (bool): Show default in prompt. Defaults to True.
-            show_choices (bool): Show choices in prompt. Defaults to True.
-            allow_empty (bool): Allow empty input. Defaults to False.
-            column_first (bool): Align items from top to bottom (rather
-                than left to right). Defaults to False.
+            prompt: Prompt text to display.
+            console: Optional Console to render the prompt.
+            password: If True, hide input.
+            choices: Optional list of choices to present.
+            case_sensitive: Whether choice matching is case sensitive.
+            show_default: Whether to display the default value.
+            show_choices: Whether to display choices.
+            column_first: Whether to print choices column-first.
+            allow_empty: Whether to accept empty input.
         """
         self.allow_empty  = allow_empty
         self.column_first = column_first
@@ -286,7 +309,10 @@ class SelectionOrInputPrompt(Prompt):
         )
 
     def print_choices(self):
-        """Prints columns of choices to the console."""
+        """Print available choices in columns.
+
+        Print the available choices as aligned columns to the console.
+        """
         choices_ = []
         for i, choice in enumerate(self.choices):
             choices_.append(f"{f'{i}.':>6} {choice}")
@@ -309,27 +335,23 @@ class SelectionOrInputPrompt(Prompt):
         default       : Any                 = ...,
         stream        : Optional[TextIO]    = None,
     ) -> Any:
-        """Shortcuts to construct and run a prompt loop and return the result.
-
-        Example:
-            >>> filename = Prompt.ask("Enter a filename")
+        """Create and run a selection-or-input prompt.
 
         Args:
-            prompt (TextType): Prompt text. Defaults to "".
-            console (Console, optional): Console instance or None to use global
-                console. Defaults to None.
-            password (bool): Enable password input. Defaults to False.
-            choices (list[str]): List of column names. Defaults to None.
-            case_sensitive (bool): Matching of choices should be case-sensitive.
-                Defaults to True.
-            show_default (bool): Show default in prompt. Defaults to True.
-            show_choices (bool): Show choices in prompt. Defaults to True.
-            allow_empty (bool): Allow empty input. Defaults to False.
-            column_first (bool): Align items from top to bottom (rather
-                than left to right). Defaults to False.
-            default (Any, optional): Optional default value.
-            stream (TextIO, optional): Stream to read input from. Defaults to
-                None.
+            prompt: Prompt text to display.
+            console: Optional Console to render the prompt.
+            password: If True, hide input.
+            choices: Optional list of choices to present.
+            case_sensitive: Whether choice matching is case sensitive.
+            show_default: Whether to display the default value.
+            show_choices: Whether to display choices.
+            allow_empty: Whether to accept empty input.
+            column_first: Whether to print choices column-first.
+            default: Default value to use when input is empty.
+            stream: Optional text stream for input/output.
+
+        Returns:
+            Processed user response.
         """
         _prompt = cls(
             prompt,
@@ -345,24 +367,24 @@ class SelectionOrInputPrompt(Prompt):
         return _prompt(default=default, stream=stream)
 
     def render_default(self, default: DefaultType) -> Text:
-        """Turns the supplied default in to a Text instance.
+        """Render the default value for display.
 
         Args:
-            default (DefaultType): Default value.
+            default: Default value to render.
 
         Returns:
-            Text containing rendering of default value.
+            Text instance that shows the provided default.
         """
         return Text(f"[{default}]", "prompt.default")
     
     def make_prompt(self, default: DefaultType) -> Text:
-        """Makes prompt text.
+        """Build the prompt text to display.
 
         Args:
-            default (DefaultType): Default value.
+            default: Default value to show in the prompt when provided.
 
         Returns:
-            Text to display in prompt.
+            Constructed prompt Text instance.
         """
         if self.show_choices and self.choices and len(self.choices) > 0:
             rich.print(self.prompt)
@@ -386,13 +408,13 @@ class SelectionOrInputPrompt(Prompt):
         return prompt
     
     def check_choice(self, value: str) -> bool:
-        """Checks value is in the list of valid choices.
+        """Validate that a value is among the valid choices.
 
         Args:
-            value (str): Value entered by user.
+            value: Candidate value to validate.
 
         Returns:
-            bool: True if value is a valid choice, False otherwise.
+            True when the provided value matches one of the configured choices.
         """
         assert self.choices is not None
         if self.case_sensitive:
@@ -400,16 +422,19 @@ class SelectionOrInputPrompt(Prompt):
         return value.lower() in [choice.lower() for choice in self.choices]
     
     def process_response(self, value: str) -> PromptType:
-        """Processes response from user, convert to prompt type.
+        """Validate and convert the user's response.
+
+        Accept indices or values, convert indices to choices, and raise an
+        InvalidResponse for invalid input.
 
         Args:
-            value (str): String typed by user.
-
-        Raises:
-            If ``value`` is invalid.
+            value: Raw user input string.
 
         Returns:
-            PromptType: Processed value.
+            Validated and possibly converted response.
+
+        Raises:
+            InvalidResponse: When the provided ``value`` is not acceptable.
         """
         value = value.strip() if isinstance(value, str) else value
 
@@ -428,26 +453,19 @@ class SelectionOrInputPrompt(Prompt):
                 raise InvalidResponse(self.illegal_choice_message)
             value = [self.choices[int(v)] if is_int(v) else v for v in value]
             
-            '''
-            for i, v in enumerate(value):
-                if not self.check_choice(v):
-                    raise InvalidResponse(self.illegal_choice_message)
-                if not self.case_sensitive:
-                    # return the original choice, not the lower case version
-                    value[i] = self.choices[[choice.lower() for choice in self.choices].index(v.lower())]
-            '''
-            # value = value[0] if len(value) == 1 else value
-            
         return value
     
     def __call__(self, *, default: Any = ..., stream: Optional[TextIO] = None) -> Any:
-        """Runs the prompt loop.
+        """Prompt until a valid response is obtained.
+
+        Loop until the response validates, then return the processed value.
 
         Args:
-            default (Any, optional): Optional default value.
+            default: Default value to use when input is empty.
+            stream: Optional text stream for input/output.
 
         Returns:
-            PromptType: Processed value.
+            Processed user response.
         """
         while True:
             self.pre_prompt()

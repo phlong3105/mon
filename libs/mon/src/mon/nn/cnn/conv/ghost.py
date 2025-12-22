@@ -29,7 +29,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# ----- Utils -----
+# --- Utils ---
 def _make_divisible(v: int, divisor: int, min_value: int = None) -> int:
     """This function ensures that all layers have a channel number that is
     divisible by ``8``.
@@ -53,7 +53,7 @@ def hard_sigmoid(x: torch.Tensor, inplace: bool = False) -> torch.Tensor:
         return F.relu6(x + 3.0) / 6.0
 
 
-# ----- Modules -----
+# --- Modules ---
 class SqueezeExcite(nn.Module):
     
     def __init__(
@@ -105,7 +105,7 @@ class ConvBnAct(nn.Module):
         return x
 
 
-# ----- GhostModule -----
+# --- GhostModule ---
 class GhostModule(nn.Module):
     """Ghost module.
     
@@ -231,7 +231,7 @@ class GhostBottleneck(nn.Module):
         return x
 
 
-# ----- GhostModuleV2 -----
+# --- GhostModuleV2 ---
 class GhostModuleV2(nn.Module):
     """Ghost module V2 with long-range attention.
     

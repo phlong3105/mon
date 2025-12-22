@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for image filtering data type.
+"""Image filtering operations.
 
 This package implements various image filtering techniques, including box filter,
 guided filter, and Sobel filter. These filters are commonly used in image

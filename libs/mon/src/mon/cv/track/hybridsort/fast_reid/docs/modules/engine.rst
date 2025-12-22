@@ -8,7 +8,7 @@ fastreid.engine
 
 
 fastreid.engine.defaults module
----------------------------------
+---------------------
 
 .. automodule:: fastreid.engine.defaults
     :members:
@@ -16,7 +16,7 @@ fastreid.engine.defaults module
     :show-inheritance:
 
 fastreid.engine.hooks module
----------------------------------
+---------------------
 
 .. automodule:: fastreid.engine.hooks
     :members:

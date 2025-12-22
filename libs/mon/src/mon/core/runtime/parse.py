@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for CLI argument parsing.
+"""CLI argument parsing and preparation utilities.
 
-This module implements command-line interface (CLI) argument parsing utilities.
+This module provides helpers to build, parse, and merge CLI arguments for
+runtime workflows.
 """
 
 __all__ = [
@@ -32,15 +33,21 @@ from .utils import (
 )
 
 
-# ----- Parser -----
+# ==============================================================================
+# BASIC PARSING OPERATIONS
+# ==============================================================================
+
+# --- Argument Reflection (Building argparse from metadata) ---
 def parse_default_args(name: str = "main") -> dict | box.Box:
-    """Parses default CLI arguments based on predefined options.
-    
+    """Build and parse default CLI arguments.
+
+    Construct an ArgumentParser from CLI_OPTIONS and return parsed args.
+
     Args:
-        name (str): The name of the CLI option. Defaults to "main".
-        
+        name: Program description used in the ArgumentParser.
+
     Returns:
-        dict | box.Box: Parsed CLI arguments as a dictionary or Box object.
+        Parsed arguments as a Box.
     """
     parser = argparse.ArgumentParser(description=name)
     
@@ -84,16 +91,19 @@ def parse_default_args(name: str = "main") -> dict | box.Box:
     return box.Box(vars(parser.parse_args()))
 
 
+# --- CLI Orchestration (Handling the switch between direct and interactive) ---
 def parse_cli_args(cli: box.Box = None, root: Path = None, name: str = "main") -> dict | box.Box:
-    """Parses CLI arguments, with support for interactive prompts.
-    
+    """Parse CLI arguments and optionally run the interactive prompt.
+
+    If the interactive flag is present, launch RunCLI to gather values.
+
     Args:
-        cli (box.Box, optional): Predefined CLI arguments. Defaults to None.
-        root (Path, optional): Root directory path. Defaults to None.
-        name (str, optional): Name of the CLI option set. Defaults to "main".
-    
+        cli: Pre-parsed CLI or None.
+        root: Project root to attach to parsed args or None.
+        name: Program description for parser (used if parsing defaults).
+
     Returns:
-        dict | box.Box: Parsed CLI arguments as a dictionary or Box object.
+        Normalized CLI arguments.
     """
     cli      = cli      or parse_default_args(name)  # Direct CLI
     cli.root = cli.root or root
@@ -104,23 +114,30 @@ def parse_cli_args(cli: box.Box = None, root: Path = None, name: str = "main") -
     return cli
 
 
-# ----- Parse Args -----
+# ==============================================================================
+# RUNTIME CONTEXT PREPARATION
+# ==============================================================================
+
+# --- Train Logic ---
 def parse_train_args(
     cli       : box.Box = None,
     root      : Path    = None,
     model_root: Path    = None,
     verbose   : bool    = False
 ) -> dict | box.Box:
-    """Parse arguments from either CLI or config file for training.
-    
+    """Parse and prepare training arguments.
+
+    Merge CLI and config values, resolve paths and devices, and prepare the
+    save directory.
+
     Args:
-        cli (box.Box, optional): Predefined CLI arguments. Defaults to None.
-        root (Path, optional): Root directory path. Defaults to None.
-        model_root (Path, optional): Model root directory path. Defaults to None.
-        verbose (bool, optional): If True, enables verbose output. Defaults to False.
-    
+        cli: CLI arguments or None.
+        root: Project root path.
+        model_root: Model root path for config resolution or None.
+        verbose: If True, print helpful logs.
+
     Returns:
-        dict | box.Box: Parsed arguments as a dictionary or Box object.
+        Finalized training arguments.
     """
     # CLI
     cli        = parse_cli_args(cli, root=root)
@@ -162,22 +179,26 @@ def parse_train_args(
     return args
 
 
+# --- Predict Logic ---
 def parse_predict_args(
     cli       : box.Box = None,
     root      : Path    = None,
     model_root: Path    = None,
     verbose   : bool    = False
 ) -> dict | box.Box:
-    """Parses arguments from either CLI or config file for prediction.
-    
+    """Parse and prepare prediction arguments.
+
+    Merge CLI and config values, resolve devices and weights, and adjust
+    image size. Prepare save directories as required.
+
     Args:
-        cli (box.Box, optional): Predefined CLI arguments. Defaults to None.
-        root (Path, optional): Root directory path. Defaults to None.
-        model_root (Path, optional): Model root directory path. Defaults to None.
-        verbose (bool, optional): If True, enables verbose output. Defaults to False.
-    
+        cli: CLI arguments or None.
+        root: Project root path.
+        model_root: Model root path for config resolution or None.
+        verbose: If True, print helpful logs.
+
     Returns:
-        dict | box.Box: Parsed arguments as a dictionary or Box object.
+        Finalized prediction arguments.
     """
     # CLI
     cli        = parse_cli_args(cli, root=root)

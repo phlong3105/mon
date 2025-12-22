@@ -372,7 +372,7 @@ class SkipModule(nn.Module):
 
 
 # Defines the submodule with skip connection.
-# X -------------------identity---------------------- X
+# X -------------identity-------------- X
 #   |-- downsampling -- |submodule| -- upsampling --|
 class UnetSkipConnectionBlock(nn.Module):
     def __init__(self, outer_nc, inner_nc,

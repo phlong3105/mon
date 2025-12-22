@@ -25,7 +25,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Utils -----
+# --- Utils ---
 def compute_model_stats(model: mon.nn.Module, imgsz: int = 512) -> tuple[float, float, float]:
     """Computes FLOPs and parameters for a model.
 
@@ -36,8 +36,8 @@ def compute_model_stats(model: mon.nn.Module, imgsz: int = 512) -> tuple[float, 
     Returns:
         A tuple of :math:`(flops, params)`.
     """
-    patches      = torch.rand(imgsz, imgsz, 49).to(mon.get_model_device(model))
-    coords       = torch.rand(imgsz, imgsz,  2).to(mon.get_model_device(model))
+    patches      = torch.rand(imgsz, imgsz, 49).to(mon.inspect_model_device(model))
+    coords       = torch.rand(imgsz, imgsz,  2).to(mon.inspect_model_device(model))
     macs, params = thop.profile(model, inputs=(patches, coords,), verbose=False)
     flops        = 2 * macs
     return params, macs, flops
@@ -50,7 +50,7 @@ def benchmark(model: mon.nn.Module):
     mon.log(f"FLOPs     : {flops:.4f}")
 
 
-# ----- Predict -----
+# --- Predict ---
 @torch.no_grad()
 def predict(args: dict | box.Box) -> str:
     # Start
@@ -126,7 +126,7 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(enhanced, out_path)
+                mon.image.write(enhanced, out_path)
     timers.total.tock()
     
     # Finish
@@ -134,7 +134,7 @@ def predict(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)

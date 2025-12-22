@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""The ``mon`` framework.
+"""Mon framework package.
 
-The organization structure of this framework is inspired by the taxonomy
-defined in https://www.ibm.com/think/machine-learning#605511093
+Provide the top-level package for the mon framework, expose core and
+high-frequency APIs, and offer lazy loading for heavy optional subpackages.
 """
 
 __author__  = "Long H. Pham"
@@ -37,7 +37,11 @@ console.log(f"`mon` loaded in: {__end - __start:.4f} seconds.")
 
 # Keep specialized sub-packages lazy-loaded
 def preload(verbose: bool = True):
-    """Preload the specialized sub-packages of ``mon`` framework."""
+    """Preload specialized mon subpackages.
+
+    Import optional heavy subpackages (cv, genai, datasets) to reduce first-call
+    latency; optionally log the elapsed load time when verbose is True.
+    """
     start = time.time()
     
     import mon.cv

@@ -18,7 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# ----- SE -----
+# --- SE ---
 class SEBlock(nn.Module):
     """An implementation of Squeeze-and-Excitation (SE) Block.
     
@@ -59,7 +59,7 @@ class SEBlock(nn.Module):
         return inputs * x
     
 
-# ----- Parameter-Free Attention -----
+# --- Parameter-Free Attention ---
 class SimAM(nn.Module):
     """An implementation of Simple, Parameter-Free Attention Module (SimAM).
 

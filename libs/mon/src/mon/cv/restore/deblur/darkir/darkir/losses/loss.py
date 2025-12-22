@@ -317,7 +317,7 @@ class CharbonnierLoss(nn.Module):
 #         gram = features.bmm(features_t) / (c * h * w)
 #         return gram
 
-#-----------------------------------------------------------------------------
+#-----------------------------------------------
 # define the perceptual loss
 class VGG19(torch.nn.Module):
     def __init__(self, requires_grad=False):
@@ -379,7 +379,7 @@ class VGGLoss(nn.Module):
         return self.weight * loss
 
 
-#---------------------------------------------------------------
+#---------------------------------------
 #define the edge loss to enhance the deblurring task
 class EdgeLoss(nn.Module):
 

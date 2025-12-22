@@ -12,7 +12,7 @@ import torch
 from mon import nn
 
 
-# ----- Module -----
+# --- Module ---
 class pce(nn.Module):
     # Pyramid color embedding
 

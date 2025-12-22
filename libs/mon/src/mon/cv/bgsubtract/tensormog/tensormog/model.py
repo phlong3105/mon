@@ -21,7 +21,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-# ----- Module -----
+# --- Module ---
 class MOG:
     """Mixture of Gaussians model for background subtraction.
 
@@ -347,7 +347,7 @@ class HVR:
         return self.background_model.estimate_entropy()
 
 
-# ----- Model -----
+# --- Model ---
 @MODELS.register(name="tensormog", arch="tensormog")
 class TensorMOG(nn.Module, nn.ModelMetadataMixin):
     """TensorMoG model for background subtraction.

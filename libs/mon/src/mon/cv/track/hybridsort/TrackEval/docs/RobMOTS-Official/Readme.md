@@ -15,7 +15,7 @@ The RobMOTS Challenge tests trackers' ability to work robustly across 8 differen
 The following benchmarks are included:
 
 Benchmark | Website |
-|----- | ----------- |
+|--- | ------- |
 |MOTS Challenge| https://motchallenge.net/results/MOTS/ |
 |KITTI-MOTS| http://www.cvlibs.net/datasets/kitti/eval_mots.php       |
 |DAVIS Challenge Unsupervised| https://davischallenge.org/challenge2020/unsupervised.html       |

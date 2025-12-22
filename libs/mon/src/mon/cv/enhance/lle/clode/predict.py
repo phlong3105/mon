@@ -18,7 +18,7 @@ import torch
 
 import clode
 import mon
-import mon.training.albumentations as A
+from mon.training import albumentations as A
 
 mon.preload()
 
@@ -26,7 +26,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Predict -----
+# --- Predict ---
 @torch.no_grad()
 def predict(args: dict | box.Box) -> str:
     # Start
@@ -123,15 +123,15 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(enhanced, out_path)
+                mon.image.write(enhanced, out_path)
             if args.save_debug:
                 debug_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 debug_path = debug_dir / f"{path.stem}_curve_map{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(curve_map, debug_path)
+                mon.image.write(curve_map, debug_path)
                 debug_path = debug_dir / f"{path.stem}_noise_map{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(noise_map, debug_path)
+                mon.image.write(noise_map, debug_path)
                 debug_path = debug_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(debug_image, debug_path)
+                mon.image.write(debug_image, debug_path)
     timers.total.tock()
 
     # Finish
@@ -139,7 +139,7 @@ def predict(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)

@@ -47,12 +47,12 @@ def load_motchallenge(fname, **kwargs):
     r"""Load MOT challenge data.
 
     Params
-    ------
+    ----
     fname : str
         Filename to load data from
 
     Kwargs
-    ------
+    ----
     sep : str
         Allowed field separators, defaults to '\s+|\t+|,'
     min_confidence : float
@@ -62,7 +62,7 @@ def load_motchallenge(fname, **kwargs):
         the ground truth are not considered during matching.
 
     Returns
-    ------
+    ----
     df : pandas.DataFrame
         The returned dataframe has the following columns
             'X', 'Y', 'Width', 'Height', 'Confidence', 'ClassId', 'Visibility'
@@ -109,12 +109,12 @@ def load_vatictxt(fname, **kwargs):
         10+ attributes. Each column after this is an attribute set in the current frame
 
     Params
-    ------
+    ----
     fname : str
         Filename to load data from
 
     Returns
-    ------
+    ----
     df : pandas.DataFrame
         The returned dataframe has the following columns
             'X', 'Y', 'Width', 'Height', 'Lost', 'Occluded', 'Generated', 'ClassId', '<Attr1>', '<Attr2>', ...
@@ -190,16 +190,16 @@ def load_detrac_mat(fname):
     and Object ID. Separate arrays for top, left, width and height are given.
 
     Params
-    ------
+    ----
     fname : str
         Filename to load data from
 
     Kwargs
-    ------
+    ----
     Currently none of these arguments used.
 
     Returns
-    ------
+    ----
     df : pandas.DataFrame
         The returned dataframe has the following columns
             'X', 'Y', 'Width', 'Height', 'Confidence', 'ClassId', 'Visibility'
@@ -250,16 +250,16 @@ def load_detrac_xml(fname):
     Competition Site: http://detrac-db.rit.albany.edu/download
 
     Params
-    ------
+    ----
     fname : str
         Filename to load data from
 
     Kwargs
-    ------
+    ----
     Currently none of these arguments used.
 
     Returns
-    ------
+    ----
     df : pandas.DataFrame
         The returned dataframe has the following columns
             'X', 'Y', 'Width', 'Height', 'Confidence', 'ClassId', 'Visibility'
@@ -323,12 +323,12 @@ def render_summary(summary, formatters=None, namemap=None, buf=None):
     """Render metrics summary to console friendly tabular output.
 
     Params
-    ------
+    ----
     summary : pd.DataFrame
         Dataframe containing summaries in rows.
 
     Kwargs
-    ------
+    ----
     buf : StringIO-like, optional
         Buffer to write to
     formatters : dict, optional
@@ -340,7 +340,7 @@ def render_summary(summary, formatters=None, namemap=None, buf=None):
         `{'num_false_positives': 'FP'}`.
 
     Returns
-    -------
+    -----
     string
         Formatted string
     """

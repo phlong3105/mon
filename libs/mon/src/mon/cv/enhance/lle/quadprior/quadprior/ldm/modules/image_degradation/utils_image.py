@@ -15,13 +15,13 @@ os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # Kai Zhang (github: https://github.com/cszn)
 # 03/Mar/2019
-# --------------------------------------------
+# ----------------------------
 # https://github.com/twhui/SRGAN-pyTorch
 # https://github.com/xinntao/BasicSR
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -60,9 +60,9 @@ def surf(Z, cmap='rainbow', figsize=None):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # get image pathes
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -86,9 +86,9 @@ def _get_paths_from_images(path):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # split large images into small images 
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -146,9 +146,9 @@ def split_imageset(original_dataroot, taget_dataroot, n_channels=3, p_size=800, 
         #del img_path
 
 '''
-# --------------------------------------------
+# ----------------------------
 # makedir
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -174,16 +174,16 @@ def mkdir_and_rename(path):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # read image from path
 # opencv is fast, but read BGR numpy image
-# --------------------------------------------
+# ----------------------------
 '''
 
 
-# --------------------------------------------
+# ----------------------------
 # get uint8 image of size HxWxn_channles (RGB)
-# --------------------------------------------
+# ----------------------------
 def imread_uint(path, n_channels=3):
     #  input: path
     # output: HxWx3(RGB or GGG), or HxWx1 (G)
@@ -199,9 +199,9 @@ def imread_uint(path, n_channels=3):
     return img
 
 
-# --------------------------------------------
+# ----------------------------
 # matlab's imwrite
-# --------------------------------------------
+# ----------------------------
 def imsave(img, img_path):
     img = np.squeeze(img)
     if img.ndim == 3:
@@ -216,9 +216,9 @@ def imwrite(img, img_path):
 
 
 
-# --------------------------------------------
+# ----------------------------
 # get single image of size HxWxn_channles (BGR)
-# --------------------------------------------
+# ----------------------------
 def read_img(path):
     # read image by cv2
     # return: Numpy float32, HWC, BGR, [0,1]
@@ -233,19 +233,19 @@ def read_img(path):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # image format conversion
-# --------------------------------------------
+# ----------------------------
 # numpy(single) <--->  numpy(unit)
 # numpy(single) <--->  tensor
 # numpy(unit)   <--->  tensor
-# --------------------------------------------
+# ----------------------------
 '''
 
 
-# --------------------------------------------
+# ----------------------------
 # numpy(single) [0, 1] <--->  numpy(unit)
-# --------------------------------------------
+# ----------------------------
 
 
 def uint2single(img):
@@ -268,9 +268,9 @@ def single2uint16(img):
     return np.uint16((img.clip(0, 1)*65535.).round())
 
 
-# --------------------------------------------
+# ----------------------------
 # numpy(unit) (HxWxC or HxW) <--->  tensor
-# --------------------------------------------
+# ----------------------------
 
 
 # convert uint to 4-dimensional torch tensor
@@ -295,9 +295,9 @@ def tensor2uint(img):
     return np.uint8((img*255.0).round())
 
 
-# --------------------------------------------
+# ----------------------------
 # numpy(single) (HxWxC) <--->  tensor
-# --------------------------------------------
+# ----------------------------
 
 
 # convert single (HxWxC) to 3-dimensional torch tensor
@@ -369,13 +369,13 @@ def tensor2img(tensor, out_type=np.uint8, min_max=(0, 1)):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # Augmentation, flipe and/or rotate
-# --------------------------------------------
+# ----------------------------
 # The following two are enough.
 # (1) augmet_img: numpy image of WxHxC or WxH
 # (2) augment_img_tensor4: tensor image 1xCxWxH
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -487,9 +487,9 @@ def augment_imgs(img_list, hflip=True, rot=True):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # modcrop and shave
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -518,13 +518,13 @@ def shave(img_in, border=0):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # image processing process on numpy image
 # channel_convert(in_c, tar_type, img_list):
 # rgb2ycbcr(img, only_y=True):
 # bgr2ycbcr(img, only_y=True):
 # ycbcr2rgb(img):
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -611,15 +611,15 @@ def channel_convert(in_c, tar_type, img_list):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # metric, PSNR and SSIM
-# --------------------------------------------
+# ----------------------------
 '''
 
 
-# --------------------------------------------
+# ----------------------------
 # PSNR
-# --------------------------------------------
+# ----------------------------
 def calculate_psnr(img1, img2, border=0):
     # img1 and img2 have range [0, 255]
     #img1 = img1.squeeze()
@@ -638,9 +638,9 @@ def calculate_psnr(img1, img2, border=0):
     return 20 * math.log10(255.0 / math.sqrt(mse))
 
 
-# --------------------------------------------
+# ----------------------------
 # SSIM
-# --------------------------------------------
+# ----------------------------
 def calculate_ssim(img1, img2, border=0):
     '''calculate SSIM
     the same outputs as MATLAB's
@@ -692,9 +692,9 @@ def ssim(img1, img2):
 
 
 '''
-# --------------------------------------------
+# ----------------------------
 # matlab's bicubic imresize (numpy and torch) [0, 1]
-# --------------------------------------------
+# ----------------------------
 '''
 
 
@@ -762,9 +762,9 @@ def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width
     return weights, indices, int(sym_len_s), int(sym_len_e)
 
 
-# --------------------------------------------
+# ----------------------------
 # imresize for tensor image [0, 1]
-# --------------------------------------------
+# ----------------------------
 def imresize(img, scale, antialiasing=True):
     # Now the scale should be the same for H and W
     # input: img: pytorch tensor, CHW or HW [0,1]
@@ -835,9 +835,9 @@ def imresize(img, scale, antialiasing=True):
     return out_2
 
 
-# --------------------------------------------
+# ----------------------------
 # imresize for numpy image [0, 1]
-# --------------------------------------------
+# ----------------------------
 def imresize_np(img, scale, antialiasing=True):
     # Now the scale should be the same for H and W
     # input: img: Numpy, HWC or HW [0,1]

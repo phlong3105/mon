@@ -65,7 +65,7 @@ class MOTEvaluator:
         """Compute the warp matrix from src (former frame) to dst (current frame).
 
         Parameters
-        ----------
+        ------
         src : ndarray
             An NxM matrix of source img(BGR or Gray), it must be the same format as dst.
         dst : ndarray
@@ -86,7 +86,7 @@ class MOTEvaluator:
             whether to warp affine or perspective transforms to the source image
 
         Returns
-        -------
+        -----
         warp matrix : ndarray
             Returns the warp matrix from src to dst.
             if motion models is homography, the warp matrix will be 3x3, otherwise 2x3

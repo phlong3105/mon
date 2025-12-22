@@ -62,13 +62,13 @@ class PairModel(BaseModel):
             self.optimizer_G = torch.optim.Adam(self.netG_A.parameters(),
                                                 lr=opt.lr, betas=(opt.beta1, 0.999))
 
-        print('---------- Networks initialized -------------')
+        print('------ Networks initialized ---------')
         networks.print_network(self.netG_A)
         if opt.isTrain:
             self.netG_A.train()
         else:
             self.netG_A.eval()
-        print('-----------------------------------------------')
+        print('-----------------------------')
 
     def set_input(self, input):
         AtoB = self.opt.which_direction == 'AtoB'

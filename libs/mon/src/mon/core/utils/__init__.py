@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for utility functions.
+"""A collection of string case and type utility functions.
 
-This package provides various utility functions for string manipulation,
-type checking and conversion, dictionary merging, sorting, and generating
-combinations.
+This package contains helpers for string case conversion, type coercion,
+collection utilities, and dictionary operations.
 """
 
 __all__ = [

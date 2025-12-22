@@ -281,6 +281,6 @@ if __name__ == '__main__':
         f.write(f"E_weight: {opt.E_weight}\n")  
         f.write(f"P_weight: {opt.P_weight}\n")  
         f.write("| Epochs | PSNR | SSIM | LPIPS |\n")  
-        f.write("|----------------------|----------------------|----------------------|----------------------|\n")  
+        f.write("|--------------|--------------|--------------|--------------|\n")  
         for i in range(len(psnr)):
             f.write(f"| {opt.start_epoch+(i+1)*opt.snapshots} | { psnr[i]:.4f} | {ssim[i]:.4f} | {lpips[i]:.4f} |\n")  

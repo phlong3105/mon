@@ -488,7 +488,7 @@ def _interpolate(raw, input, size=None, scale_factor=None, mode='nearest', align
     return x
 
 
-# ----- for Variable operations --------
+# --- for Variable operations ------
 
 def _view(input, *args):
     x = raw_view(input, *args)

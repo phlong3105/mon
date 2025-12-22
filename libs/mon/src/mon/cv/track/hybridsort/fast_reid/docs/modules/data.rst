@@ -8,7 +8,7 @@ fastreid.data
 
 
 fastreid.data.data\_utils module
----------------------------------------
+-------------------------
 
 .. automodule:: fastreid.data.data_utils
     :members:
@@ -17,7 +17,7 @@ fastreid.data.data\_utils module
 
 
 fastreid.data.datasets module
----------------------------------------
+-------------------------
 
 .. automodule:: fastreid.data.datasets.market1501
     :members:
@@ -78,7 +78,7 @@ fastreid.data.datasets module
 
 
 fastreid.data.samplers module
----------------------------------------
+-------------------------
 
 .. automodule:: fastreid.data.samplers
     :members:
@@ -87,7 +87,7 @@ fastreid.data.samplers module
 
 
 fastreid.data.transforms module
----------------------------------------
+-------------------------
 
 .. automodule:: fastreid.data.transforms
     :members:

@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 
 
-# ----- Layer -----
+# --- Layer ---
 class ConvINRLayer(nn.Module):
     """A single layer of the Conv-INR architecture."""
     
@@ -49,7 +49,7 @@ class ConvINRLayer(nn.Module):
         return self.relu(self.bn(self.conv(input)))
 
 
-# ----- MLP -----
+# --- MLP ---
 class ConvINR(nn.Module):
     """Convolutional Implicit Neural Representation (Conv-INR) model."""
     

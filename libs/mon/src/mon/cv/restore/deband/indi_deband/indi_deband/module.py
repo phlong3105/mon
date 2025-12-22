@@ -15,7 +15,7 @@ import torch.nn as nn
 from torch.nn.utils import weight_norm
 
 
-# ----- Module -----
+# --- Module ---
 class PaddedConv2d(nn.Module):
     
     def __init__(
@@ -190,7 +190,7 @@ class Snake(nn.Module):
         return x
 
 
-# ----- Network -----
+# --- Network ---
 # 2D Unet that takes in a timestep T in encoder and decoder blocks
 # uses sin activations, denoising target is done in the fourier domain instead of raw signal
 class AutoFFTime2d(nn.Module):

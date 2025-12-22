@@ -34,7 +34,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Utils -----
+# --- Utils ---
 def benchmark(model: nn.Module):
     params, macs, flops = mon.nn.compute_model_stats(model=model)
     mon.log(f"Params    : {params:.4f}")
@@ -42,7 +42,7 @@ def benchmark(model: nn.Module):
     mon.log(f"FLOPs     : {flops:.4f}")
 
 
-# ----- Predict -----
+# --- Predict ---
 class Model(torch.nn.Module):
 
     def __init__(self, cfg):
@@ -219,7 +219,7 @@ def predict(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)

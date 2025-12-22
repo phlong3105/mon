@@ -1,7 +1,7 @@
 """
 DEIMv2: Real-Time Object Detection Meets DINOv3
 Copyright (c) 2025 The DEIMv2 Authors. All Rights Reserved.
----------------------------------------------------------------------------------
+-------------------------------------------------
 Modified from DINOv3 (https://github.com/facebookresearch/dinov3)
 Modified from https://huggingface.co/spaces/Hila/RobustViT/blob/main/ViT/ViT_new.py
 

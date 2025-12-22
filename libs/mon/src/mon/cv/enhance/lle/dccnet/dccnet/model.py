@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-# ----- Model -----
+# --- Model ---
 @MODELS.register(name="dccnet", arch="dccnet")
 class DCCNet(nn.Module, nn.ModelMetadataMixin):
     """DCC-Net model for low-light image enhancement.

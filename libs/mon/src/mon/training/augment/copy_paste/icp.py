@@ -32,7 +32,7 @@ from mon.core import (
 _SUFFIX = "icp"  # Suffix for the new image and label files
 
 
-# ----- Dataset Utils -----
+# --- Dataset Utils ---
 def group_image_and_label_files(data_dir: str | Path):
     """Group image and label files to subdirectories by their file names.
     
@@ -117,7 +117,7 @@ def concat_image_and_label_files(data_dir: str | Path):
                 label_file.copy_file(new_label_file)
 
 
-# ----- Augmentation -----
+# --- Augmentation ---
 class Label:
     """Candidate object for ``ICP`` augmentation.
     
@@ -229,7 +229,7 @@ class ICPAugmentation:
             for k, v in self.candidates.items():
                 console.log(f"  |_ Class {k}: {len(v):<10}")
     
-    # ----- Properties -----
+    # --- Properties ---
     @property
     def ratio(self) -> dict[int, float]:
         """Return the ratio of objects to sample per class."""
@@ -291,7 +291,7 @@ class ICPAugmentation:
         """Return the counts of objects per class."""
         return self._counts
 
-    # ----- Initialize -----
+    # --- Initialize ---
     def _init_sam_model(self, model: Any):
         """Set the SAM model."""
         if isinstance(model, str | Path):
@@ -365,7 +365,7 @@ class ICPAugmentation:
         
         return masks
 
-    # ----- Sampling -----
+    # --- Sampling ---
     def process(self):
         # Copy and paste objects from candidate to each image
         image_files = sorted([f for f in list(self._image_dir.rglob("*")) if f.is_image_file()])
@@ -518,7 +518,7 @@ class ICPAugmentation:
         
         return dst
 
-    # ----- Utils -----
+    # --- Utils ---
     def _group_obj_per_class(self, data: list[Label]) -> dict[int, list[Label]]:
         """Group objects per class."""
         groups = {c: [] for c in range(self._num_classes)}

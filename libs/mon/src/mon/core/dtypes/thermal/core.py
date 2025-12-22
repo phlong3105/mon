@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for thermal map data type.
+"""Thermal classes and mixins.
 
-This module provides a base class for handling infrared map data, extending the
-image data type with specific attributes and methods for infrared information.
+This module provides the base classes and mixins for thermal data.
 """
 
 __all__ = [
@@ -17,12 +16,42 @@ from mon.core.enum import InfraredSource
 from ..image import Image
 
 
+# ==============================================================================
+# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# ==============================================================================
+
+# --- Type Aliases ---
+
+
+# --- Structural Protocols ---
+
+
+# ==============================================================================
+# BASE CLASSES & MIXINS (Behaviors)
+# ==============================================================================
+
+# --- Structural Bases ---
+
+
+# --- Lifecycle Mixins ---
+
+
+# --- Compute Mixins ---
+
+
+# ==============================================================================
+# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# ==============================================================================
+
+# --- Primary Data Types ---
 class InfraredMap(Image):
-    """A base class for a single infrared map (i.e., must have a valid file path).
-    
-    This class extends Image to handle a single infrared map, which can be
-    provided either as an in-memory array/tensor or as a file path. It includes
-    an attribute to specify the source of the infrared data.
+    """A basic class for managing an infrared map.
+
+    This class extends Image to handle infrared-specific attributes and provide
+    functionality related to infrared data.
+
+    Attributes:
+        _source (InfraredSource): The configured infrared data source.
     """
     
     def __init__(
@@ -31,16 +60,15 @@ class InfraredMap(Image):
         flags : int            = cv2.IMREAD_GRAYSCALE,
         *args, **kwargs
     ):
-        """Initializes the InfraredMap instance.
-        
+        """Initialize the InfraredMap instance.
+
         Args:
-            source (InfraredSource): The source of the infrared data. Defaults
-                to InfraredSource.INFRARED.
-            flags (int): OpenCV flag to read infrared map. Defaults to
-                cv2.IMREAD_GRAYSCALE.
+            source: Source of the infrared data. Defaults to InfraredSource.INFRARED.
+            flags: OpenCV flag used to read the infrared map. Defaults to cv2.IMREAD_GRAYSCALE.
+
+        Raises:
+            ValueError: If ``source`` is not a valid InfraredSource.
         """
-        super().__init__(flags=flags, *args, **kwargs)
-        
         # Validate inputs
         source = InfraredSource(source)
         if source not in InfraredSource:
@@ -48,13 +76,11 @@ class InfraredMap(Image):
         
         # Assign attributes
         self._source = source
+        
+        super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter
      
-    # ---- Properties -----
+    # ---- Properties ---
     @property
     def source(self) -> InfraredSource:
-        """Getter for the source of the infrared data.
-        
-        Returns:
-            InfraredSource: The source of the infrared data.
-        """
+        """Return the configured infrared data source."""
         return self._source

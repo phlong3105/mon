@@ -26,7 +26,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-# ----- Modules -----
+# --- Modules ---
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find("Conv") != -1:
@@ -64,7 +64,7 @@ class DSConv(nn.Module):
         return y
 
 
-# ----- Model -----
+# --- Model ---
 @MODELS.register(name="zerodce++", arch="zerodce++")
 class ZeroDCEpp(nn.Module, nn.ModelMetadataMixin):
     """Zero-DCE++ model for low-light image enhancement.

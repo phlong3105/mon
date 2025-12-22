@@ -23,7 +23,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Model -----
+# --- Model ---
 @MODELS.register(name="mobilenet_v2", arch="mobilenet")
 class MobileNetV2(tvm.MobileNetV2, nn.ModelMetadataMixin):
     """MobileNetV2 model for image classification.

@@ -67,7 +67,7 @@ The structure of `datasets` directory should be like
 #### Download the pretrain model in ```./experiments/pretrained_models/```
 
 | name | scale |#Params|PSNR|SSIM| pretrained models | configs |
-|:----:|:----:|:----:|:----:|:----:|:----:|-----:|
+|:----:|:----:|:----:|:----:|:----:|:----:|---:|
 |NAFSSR-T|x4|0.46M|23.69|0.7384|[gdrive](https://drive.google.com/file/d/1owfYG1KTXFMl4wHpUZefWAcVlBpLohe5/view?usp=sharing)  \|  [baidu](https://pan.baidu.com/s/1yC5XzJcL5peC1YuW3MkFMA?pwd=5j1u)|[train](../option/test/NAFSSR/NAFSSR-T_4x.yml) \| [test](../option/test/NAFSSR/NAFSSR-T_4x.yml)|
 |NAFSSR-S|x4|1.56M|23.88|0.7468|[gdrive](https://drive.google.com/file/d/1RpfS2lemsgetIQwBwkZpZwLBJfOTDCU5/view?usp=sharing)  \|  [baidu](https://pan.baidu.com/s/1XvwM5KVhNsKAxWbxU85SFA?pwd=n5au)|[train](../option/test/NAFSSR/NAFSSR-S_4x.yml) \| [test](../option/test/NAFSSR/NAFSSR-S_4x.yml)|
 |NAFSSR-B|x4|6.80M|24.07|0.7551|[gdrive](https://drive.google.com/file/d/1Su0OTp66_NsXUbqTAIi1msvsp0G5WVxp/view?usp=sharing)  \|  [baidu](https://pan.baidu.com/s/18tVlH-QIVtvDC1LM2oPatw?pwd=3up5)|[train](../option/test/NAFSSR/NAFSSR-B_4x.yml) \| [test](../option/test/NAFSSR/NAFSSR-B_4x.yml)|

@@ -149,7 +149,7 @@ def run(opts, model):
     if opts.reload:
         if os.path.exists(opts.model_path):
             continue_epoch = reload(model, opts.model_path)
-            print("----------------------------------------------------reloading epoch: %d----------------------------------------------------"%continue_epoch)
+            print("--------------------------------reloading epoch: %d--------------------------------"%continue_epoch)
     else:
         print("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<  do not reload  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     for epoch in range(continue_epoch, opts.epoch):

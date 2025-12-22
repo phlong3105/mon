@@ -1,4 +1,4 @@
------------------ Options ---------------
+----------- Options ---------
              aspect_ratio: 1.0                           
                batch_size: 1                             
           checkpoints_dir: ./checkpoints                 
@@ -29,4 +29,4 @@
                 use_wandb: False                         
                   verbose: False                         
        wandb_project_name: CycleGAN-and-pix2pix          
------------------ End -------------------
+----------- End -------------

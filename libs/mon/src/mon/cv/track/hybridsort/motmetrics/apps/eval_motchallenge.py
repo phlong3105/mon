@@ -25,7 +25,7 @@ def parse_args():
 Compute metrics for trackers using MOTChallenge ground-truth data.
 
 Files
------
+---
 All file content, ground truth and test files, have to comply with the
 format described in
 
@@ -35,7 +35,7 @@ arXiv preprint arXiv:1603.00831 (2016).
 https://motchallenge.net/
 
 Structure
----------
+-------
 
 Layout for ground truth data
     <GT_ROOT>/<SEQUENCE_1>/gt/gt.txt

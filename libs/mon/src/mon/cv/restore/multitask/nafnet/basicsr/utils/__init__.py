@@ -1,9 +1,9 @@
-# ------------------------------------------------------------------------
+# --------------------------------------------
 # Copyright (c) 2022 megvii-model. All Rights Reserved.
-# ------------------------------------------------------------------------
+# --------------------------------------------
 # Modified from BasicSR (https://github.com/xinntao/BasicSR)
 # Copyright 2018-2020 BasicSR Authors
-# ------------------------------------------------------------------------
+# --------------------------------------------
 from .create_lmdb import (
 	create_lmdb_for_gopro, create_lmdb_for_rain13k, create_lmdb_for_reds,
 )

@@ -24,7 +24,7 @@ from PIL import Image
 from torch.autograd import Variable
 
 from mon import nn
-from mon.core import get_model_device, log, MLType, MODELS, Path, Task
+from mon.core import inspect_model_device, log, MLType, MODELS, Path, Task
 from mon.nn import functional as F
 from mon.training import optims
 from .module import (
@@ -66,7 +66,7 @@ class RetinexNet(nn.Module):
 
     def forward(self, input_low, input_high):
         # Forward DecompNet
-        device         = get_model_device(self)
+        device         = inspect_model_device(self)
         input_low      = Variable(torch.FloatTensor(torch.from_numpy(input_low))).to(device)
         input_high     = Variable(torch.FloatTensor(torch.from_numpy(input_high))).to(device)
         R_low, I_low   = self.DecomNet(input_low)
@@ -107,7 +107,7 @@ class RetinexNet(nn.Module):
         self.output_S       = R_low.detach().cpu() * I_delta_3.detach().cpu()
 
     def gradient(self, input_tensor, direction):
-        device = get_model_device(self)
+        device = inspect_model_device(self)
         self.smooth_kernel_x = torch.FloatTensor([[0, 0], [-1, 1]]).view((1, 1, 2, 2)).to(device)
         self.smooth_kernel_y = torch.transpose(self.smooth_kernel_x, 2, 3)
 

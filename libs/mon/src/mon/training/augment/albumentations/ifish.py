@@ -27,7 +27,7 @@ from pydantic import Field
 from mon.core import ALBUMENTATIONS, image as I
 
 
-# ----- Utils -----
+# --- Utils ---
 def get_fisheye_factor(r: float, d: float) -> float:
     """Calculates the fisheye transformation factor.
     
@@ -95,7 +95,7 @@ def reverse_fisheye_xy_n(x_n: float, y_n: float, r: float, d: float) -> tuple[fl
     return x_n * factor, y_n * factor
 
 
-# ----- Transformation Functions -----
+# --- Transformation Functions ---
 def transform_image(image: np.ndarray, distortion: float) -> np.ndarray:
     """Applies fisheye transformation to an image.
     
@@ -437,7 +437,7 @@ def transform_bbox(
     return bbox_new
 
 
-# ----- Augmentation -----
+# --- Augmentation ---
 @ALBUMENTATIONS.register()
 class iFishTransform(DualTransform):
     """A transformation that applies a fisheye effect to images and adjusts
@@ -483,7 +483,7 @@ class iFishTransform(DualTransform):
         self._area_thres   = area_thres
         self._aspect_thres = aspect_thres
     
-    # ----- Apply -----
+    # --- Apply ---
     def apply(
         self,
         img          : np.ndarray,
@@ -555,7 +555,7 @@ class iFishTransform(DualTransform):
         """
         return transform_bbox0(bboxes, old_size, new_size, self._distortion, self._area_thres, self._aspect_thres)
     
-    # ----- Utils -----
+    # --- Utils ---
     def get_params_dependent_on_data(
         self,
         params: dict[str, Any],

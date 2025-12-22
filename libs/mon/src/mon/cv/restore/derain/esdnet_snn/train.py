@@ -97,9 +97,9 @@ if __name__ == "__main__":
     ######### Pretrain ###########
     if Pretrain:
         utils.load_checkpoint(model_restoration, model_pre_dir)
-        print('------------------------------------------------------------------------------')
+        print('------------------------------------------------')
         print("==> Retrain Training with: " + model_pre_dir)
-        print('------------------------------------------------------------------------------')
+        print('------------------------------------------------')
 
     ######### Resume ###########
     if RESUME:
@@ -111,9 +111,9 @@ if __name__ == "__main__":
         for i in range(1, start_epoch):
             scheduler.step()
         new_lr = scheduler.get_lr()[0]
-        print('------------------------------------------------------------------------------')
+        print('------------------------------------------------')
         print("==> Resuming Training with learning rate:", new_lr)
-        print('------------------------------------------------------------------------------')
+        print('------------------------------------------------')
 
     if len(device_ids) > 1:
         model_restoration = nn.DataParallel(model_restoration, device_ids=device_ids)

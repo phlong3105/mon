@@ -28,7 +28,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Model -----
+# --- Model ---
 class ViT(tvm.VisionTransformer, nn.ModelMetadataMixin, abc.ABC):
     """Vision Transformer model for image classification.
 

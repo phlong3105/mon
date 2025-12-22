@@ -1,10 +1,10 @@
 """
 DEIMv2: Real-Time Object Detection Meets DINOv3
 Copyright (c) 2025 The DEIMv2 Authors. All Rights Reserved.
----------------------------------------------------------------------------------
+-------------------------------------------------
 DEIM: DETR with Improved Matching for Fast Convergence
 Copyright (c) 2024 The DEIM Authors. All Rights Reserved.
----------------------------------------------------------------------------------
+-------------------------------------------------
 Modified from RT-DETR (https://github.com/lyuwenyu/RT-DETR)
 Copyright (c) 2023 lyuwenyu. All Rights Reserved.
 """

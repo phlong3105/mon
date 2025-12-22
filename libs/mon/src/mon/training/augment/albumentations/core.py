@@ -20,7 +20,7 @@ from albumentations import *
 from mon.core import ALBUMENTATIONS
 
 
-# ----- Constants -----
+# --- Constants ---
 TARGET_TYPES = [
     "image",      # The primary input image(s) (e.g., [H, W, C]). Receives geometric, color, and intensity transforms. Uses standard interpolation for geometric transforms.
     "mask",       # Segmentation mask(s) (e.g., [H, W]). Receives geometric transforms using nearest-neighbor interpolation. Does not receive color/intensity transforms.
@@ -34,7 +34,7 @@ TARGET_TYPES = [
 ]
 
 
-# ----- Registry -----
+# --- Registry ---
 def __register_transforms(module, prefix: str = ""):
     """Recursively registers all transformation classes from the given module
     and its submodules into the ALBUMENTATIONS registry.

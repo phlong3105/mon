@@ -98,7 +98,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
     """Load a CLIP model
 
     Parameters
-    ----------
+    ------
     name : str
         A model name listed by `clip.available_models()`, or the path to a model checkpoint containing the state_dict
 
@@ -112,7 +112,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
         path to download the model files; by default, it uses "~/.cache/clip"
 
     Returns
-    -------
+    -----
     model : torch.nn.Module
         The CLIP model
 
@@ -202,7 +202,7 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 77, truncate: b
     Returns the tokenized representation of given input string(s)
 
     Parameters
-    ----------
+    ------
     texts : Union[str, List[str]]
         An input string or a list of input strings to tokenize
 
@@ -213,7 +213,7 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 77, truncate: b
         Whether to truncate the text in case its encoding is longer than the context length
 
     Returns
-    -------
+    -----
     A two-dimensional tensor containing the resulting tokens, shape = [number of input strings, context_length].
     We return LongTensor when torch version is <1.8.0, since older index_select requires indices to be long.
     """

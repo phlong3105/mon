@@ -23,9 +23,9 @@ class TestModel(BaseModel):
         which_epoch = opt.which_epoch
         self.load_network(self.netG, 'G', which_epoch)
 
-        print('---------- Networks initialized -------------')
+        print('------ Networks initialized ---------')
         networks.print_network(self.netG)
-        print('-----------------------------------------------')
+        print('-----------------------------')
 
     def set_input(self, input):
         # we need to use single_dataset mode

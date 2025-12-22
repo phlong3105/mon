@@ -12,7 +12,7 @@ SSKD is implemented based on **FastReID v1.0.0**. You can refer to [sskd github 
 It contains 447,233 labeled images of 40,061 subjects captured by 82 cameras. The details of FastHuman, you can refer to [paper](https://arxiv.org/pdf/2108.05045.pdf).
 
 | Source Domain |  \#subjects | \#images | \#cameras | collection place |
-| ----- | :------: | :---------: | :----: | :------: |
+| --- | :----: | :-------: | :----: | :----: |
 | CUHK03|  1,090 | 14,096 | 2 | campus |  
 | SAIVT | 152   | 7,150  | 8 | buildings |
 | AirportALERT | 9,651 | 30,243 | 6 | airport |
@@ -34,7 +34,7 @@ It contains 447,233 labeled images of 40,061 subjects captured by 82 cameras. Th
 
 
 |Unseen Domain|  \#subjects | \#images | \#cameras | collection place  |
-| ----- | :------: | :---------: | :----: | :------: |
+| --- | :----: | :-------: | :----: | :----: |
 |Market1501 | 1,501  | 32,217 | 6 | campus |
 |DukeMTMC | 1,812 | 36,441 | 8 | campus |
 |MSMT17 | 4,101 | 126,441| 15| campus |

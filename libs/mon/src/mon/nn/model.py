@@ -20,7 +20,7 @@ import torch
 from mon.core import download_url_to_file, log, MLType, Path, Task, VERBOSE
 
 
-# ----- Mixins -----
+# --- Mixins ---
 class ModelMetadataMixin:
     """A mixin class that adds metadata and helper methods to a model.
     
@@ -51,7 +51,7 @@ class ModelMetadataMixin:
     _model_dir: Path         = None
     _zoo      : dict         = box.Box()
     
-    # ----- Properties -----
+    # --- Properties ---
     @property
     def arch(self) -> str:
         """Getter for the architecture of the model.
@@ -106,7 +106,7 @@ class ModelMetadataMixin:
         """
         return self._zoo
     
-    # ----- Initialize -----
+    # --- Initialize ---
     def parse_weights(
         self,
         weights    : Any,

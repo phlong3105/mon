@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for bounding boxes I/O operations.
+"""Bounding box I/O operations.
 
-This module provides functions to load and save bounding boxes in various
-formats, including COCO, VOC, and YOLO.
+This module provides functions for input and output operations for bounding
+box data.
 """
 
 __all__ = [
@@ -14,35 +14,51 @@ __all__ = [
 import json
 import xml.etree.ElementTree as ET
 
+import box
 import numpy as np
-from box import box
 
 from mon.core.console import error_console
 from mon.core.enum import BBoxFormat
 from mon.core.pathlib import Path
-from .processing import convert
+from .ops import convert
 
 
-# ----- Reading -----
-def _load_coco(
+# ==============================================================================
+# RESOURCE RESOLVERS (Path/URL Handling)
+# ==============================================================================
+
+# --- Path Handling (Resolving URIs, Local Paths) ---
+
+
+# --- Backend Selection (Selecting PIL vs. OpenCV vs. TurboJPEG) ---
+
+
+# ==============================================================================
+# HYDRATION & DESERIALIZATION (Read/Load)
+# ==============================================================================
+
+# --- Deserialize (Bytes to Object) ---
+
+
+# --- Loaders (Standard Disk-to-RAM logic) ---
+
+def _read_coco(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
 ) -> np.ndarray:
-    """Loads COCO-format bounding boxes from a .json file.
-    
+    """Load COCO-format annotations from a JSON file.
+
     Args:
-        path (Path): Label file path (one .json file for the dataset).
-        remap (dict or box.Box, optional): Dictionary containing class remapping.
-            Defaults to None.
-        verbose (bool): Verbosity. Defaults to True.
-        
+        path: Path to the COCO JSON file.
+        remap: Optional mapping to remap class ids/names.
+        verbose: If True, print warnings to error_console.
+
     Returns:
-        numpy.ndarray: Bounding boxes as a numpy array of shape (N, 7+).
-    
+        Numpy array of bounding boxes (N, 7+).
+
     Raises:
-        ValueError: If the file is not a valid .json file or contains no
-            annotations.
+        ValueError: If file is not a valid COCO JSON or contains no annotations.
     """
     path = Path(path)
     if not path.is_json_file(exist=True):
@@ -64,23 +80,20 @@ def _load_coco(
             error_console.print(f"No annotations found in {path}.")
 
 
-def _load_voc(
+def _read_voc(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
 ) -> np.ndarray:
-    """Loads VOC-format bounding boxes from a .xml file.
-    
-    Note that this is a legacy format and is not recommended for new projects.
+    """Load Pascal VOC annotations from an XML file.
 
     Args:
-        path (Path): Label file path (one .xml for each image).
-        remap (dict or box.Box, optional): Dictionary containing class remapping.
-            Defaults to None.
-        verbose (bool): Verbosity. Defaults to True.
-        
+        path: Path to the VOC XML file.
+        remap: Optional mapping to remap class ids/names.
+        verbose: If True, print warnings to error_console.
+
     Returns:
-        numpy.ndarray: Bounding boxes as a numpy array of shape (N, 7+).
+        Numpy array of bounding boxes (N, 7+).
     """
     path = Path(path)
     if not path.is_xml_file(exist=True):
@@ -141,13 +154,13 @@ def _load_voc(
     return np.stack([x1, y1, x2, y2, 0, c] + rest, axis=-1)
 
 
-def _load_yolo(
+def _read_yolo(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
 ) -> np.ndarray:
-    """Loads YOLO-format bounding boxes from a .txt file.
-    
+    """Load YOLO-format labels from a text file.
+
     Each line in the file should contain:
         <class_id> <center_x> <center_y> <width> <height> <angle> | Optional: <confidence>
     where:
@@ -159,17 +172,15 @@ def _load_yolo(
         - <confidence> is an optional value representing the confidence score.
 
     Args:
-        path (Path): Label file path (one .txt for each image).
-        remap (dict or box.Box, optional): Dictionary containing class remapping.
-            Defaults to None.
-        verbose (bool): Verbosity. Defaults to True.
-        
+        path: Path to the YOLO .txt label file.
+        remap: Optional mapping to remap class ids.
+        verbose: If True, print warnings to error_console.
+
     Returns:
-        numpy.ndarray: Bounding boxes as a numpy array of shape (N, 7+).
-    
+        Numpy array of bounding boxes (N, 7+).
+
     Raises:
-        ValueError: If the file is not a valid .txt file or contains no
-            bounding boxes.
+        ValueError: If file is invalid or contains no bounding boxes.
     """
     path = Path(path)
     if not path.is_txt_file(exist=True):
@@ -209,23 +220,21 @@ def load(
     remap  : dict | box.Box = None,
     verbose: bool = False
 ) -> np.ndarray:
-    """Loads bounding boxes from a file in the specified format.
-    
+    """Load bounding boxes from a label file and optionally convert to the
+    desired format.
+
     Args:
-        path (Path): Label file path.
-        fmt (BBoxFormat): Format of the bounding boxes to load.
-        imgsz (tuple[int, int]): Image size as (width, height). Required
-            when converting bounding boxes.
-        remap (dict or box.Box, optional): Dictionary containing class remapping.
-            Defaults to None.
-        verbose (bool): Verbosity. Defaults to False.
-        
+        path: Label file path (YOLO .txt, VOC .xml, COCO .json).
+        fmt: Desired target format or conversion code (BBoxFormat).
+        imgsz: Image size as (H, W) required for format conversions.
+        remap: Optional remapping for class ids/names.
+        verbose: If True, print warnings to error_console.
+
     Returns:
-        numpy.ndarray: Bounding boxes as a numpy array of shape (N, 7+).
-        
+        Bounding boxes as numpy.ndarray of shape (N, 7+) in the desired format.
+
     Raises:
-        ValueError: If the specified format is not supported or if ``imgsz``
-            is not provided when converting bounding boxes.
+        ValueError: If ``fmt`` is unsupported or ``imgsz`` required but missing.
     """
     fmt = BBoxFormat(value=fmt)
     if fmt in BBoxFormat.conversion_codes():
@@ -234,14 +243,15 @@ def load(
     else:
         src_fmt = fmt
         fmt     = None
-
+    
+    bbox = None
     match src_fmt:
         case BBoxFormat.COCO | BBoxFormat.XYWH:
-            bbox = _load_coco(path, remap, verbose)
+            bbox = _read_coco(path, remap, verbose)
         case BBoxFormat.VOC  | BBoxFormat.XYXY:
-            bbox = _load_voc(path, remap, verbose)
+            bbox = _read_voc(path, remap, verbose)
         case BBoxFormat.YOLO | BBoxFormat.CXCYWHN:
-            bbox = _load_yolo(path, remap, verbose)
+            bbox = _read_yolo(path, remap, verbose)
         case _:
             raise ValueError(f"``src_fmt`` must be one of {BBoxFormat.formats()}, got {src_fmt}.")
 
@@ -252,3 +262,13 @@ def load(
         bbox = convert(bbox=bbox, fmt=fmt, imgsz=imgsz)
 
     return bbox
+
+
+# ==============================================================================
+# PERSISTENCE & EXPORT (Write/Commit)
+# ==============================================================================
+
+# --- Serialize (Object to Bytes) ---
+
+
+# --- Commit (Saving to Disk/Cloud) ---

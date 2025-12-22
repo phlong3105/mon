@@ -106,7 +106,7 @@ class Dataset(object):
         logger.info("attributes:")
         for label, attr in self.attr_dict.items():
             logger.info('{:3d}: {}'.format(label, attr))
-        logger.info("------------------------------")
+        logger.info("------------------")
         logger.info("# attributes: {}".format(len(self.attr_dict)))
 
     def show_test(self):

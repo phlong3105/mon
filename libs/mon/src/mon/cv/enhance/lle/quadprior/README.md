@@ -66,7 +66,7 @@ If you want to train from scratch, please set `resume_path=''`. Currently it con
 
 For evaluating the trained checkpoint, you might need to adjust the code for loading the checkpoint. Please refer to this [issue](https://github.com/daooshee/QuadPrior/issues/2) for more details.
 
--------
+-----
 
 If you have any questions, you can submit an Issue or contact daooshee at pku.edu.cn
 
@@ -81,6 +81,6 @@ If you find our code useful, please consider citing our paper.
 }
 ```
 
--------
+-----
 
 This code is based on [ControlNet](https://github.com/lllyasviel/ControlNet) 

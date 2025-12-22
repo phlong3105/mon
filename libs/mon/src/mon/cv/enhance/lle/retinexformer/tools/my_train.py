@@ -40,7 +40,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Train -----
+# --- Train ---
 def init_loggers(opt):
     log_file      = osp.join(opt['path']['log'], f"train_{opt['name']}_{get_time_str()}.log")
     logger        = get_root_logger( logger_name='basicsr', log_level=logging.INFO, log_file=log_file)
@@ -291,7 +291,7 @@ def train(args: argparse.Namespace):
             # update learning rate
             model.update_learning_rate(current_iter, warmup_iter=opt["train"].get("warmup_iter", -1))
             
-            # ------Progressive learning ---------------------
+            # ----Progressive learning -------------
             j = ((current_iter > groups) != True).nonzero()[0]  # 根据当前的iter次数判断在哪个阶段
             if len(j) == 0:
                 bs_j = len(groups) - 1
@@ -320,7 +320,7 @@ def train(args: argparse.Namespace):
                 y1 = y0 + mini_gt_size
                 lq = lq[:, :, x0:x1, y0:y1]
                 gt = gt[:, :, x0 * scale:x1 * scale, y0 * scale:y1 * scale]
-            # -------------------------------------------
+            # ---------------------------
             
             # print(lq.shape)
             model.feed_train_data({"lq": lq, "gt": gt})
@@ -383,7 +383,7 @@ def train(args: argparse.Namespace):
         tb_logger.close()
 
 
-# ----- Main -----
+# --- Main ---
 
 def main() -> str:
     args = mon.parse_train_args(root=root_dir, model_root=root_dir)

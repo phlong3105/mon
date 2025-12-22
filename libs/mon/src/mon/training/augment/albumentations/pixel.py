@@ -153,7 +153,7 @@ class NormalizeWithMask(BasicTransform):
         self._max_pixel_value = max_pixel_value
         self._normalization   = normalization
     
-    # ----- Properties -----
+    # --- Properties ---
     @property
     def targets(self) -> dict[str, Callable[..., Any]]:
         """Getter for the targets mapping.
@@ -174,7 +174,7 @@ class NormalizeWithMask(BasicTransform):
             "volumes": self.apply_to_volumes,
         }
     
-    # ----- Apply -----
+    # --- Apply ---
     def apply(self, img: np.ndarray, **params: Any) -> np.ndarray:
         """Applies normalization to the input image.
 

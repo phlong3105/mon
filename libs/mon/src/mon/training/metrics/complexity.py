@@ -19,7 +19,7 @@ import thop
 import torch
 import torch.nn as nn
 
-from mon.core import get_model_device, image as I, log
+from mon.core import inspect_model_device, image as I, log
 
 
 def compute_model_stats(
@@ -41,7 +41,7 @@ def compute_model_stats(
             - flops (float): Floating Point Operations of the model.
     """
     h, w         = I.imgsz(imgsz)
-    device       = get_model_device(model)
+    device       = inspect_model_device(model)
     input        = torch.randn(1, channels, h, w).to(device)
     model_copy   = copy.deepcopy(model)
     model_copy   = model_copy.to(device)

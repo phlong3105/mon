@@ -129,11 +129,11 @@ class CSPDarkNet(nn.Module):
 @register()
 class CSPPAN(nn.Module):
     """
-    P5 ---> 1x1  ---------------------------------> concat --> c3 --> det
+    P5 ---> 1x1  ---------------------> concat --> c3 --> det
              | up                                     | conv /2
-    P4 ---> concat ---> c3 ---> 1x1  -->  concat ---> c3 -----------> det
+    P4 ---> concat ---> c3 ---> 1x1  -->  concat ---> c3 -------> det
                                  | up       | conv /2
-    P3 -----------------------> concat ---> c3 ---------------------> det
+    P3 ---------------> concat ---> c3 -------------> det
     """
 
     __share__ = [

@@ -82,7 +82,7 @@
 ## 1. Model Zoo
 
 | Model | Dataset | AP | #Params | GFLOPs | Latency (ms) | config | checkpoint | log |
-| :---: | :---: | :---: | :---: | :---: |:------------:| :---: | :---: | :---: |
+| :---: | :---: | :---: | :---: | :---: |:--------:| :---: | :---: | :---: |
 | **Atto** | COCO | **23.8** | 0.5M | 0.8 |     1.10     | [yml](option/deimv2_dinov3/deimv2_hgnetv2_atto_coco.yml) | [Google](https://drive.google.com/file/d/18sRJXX3FBUigmGJ1y5Oo_DPC5C3JCgYc/view?usp=sharing) / [Quark](https://pan.quark.cn/s/04c997582fca) | [Google](https://drive.google.com/file/d/1M7FLN8EeVHG02kegPN-Wxf_9BlkghZfj/view?usp=sharing) / [Quark](https://pan.quark.cn/s/7bf3548d3e10) |
 | **Femto** | COCO | **31.0** | 1.0M | 1.7 |     1.45     | [yml](option/deimv2_dinov3/deimv2_hgnetv2_femto_coco.yml) | [Google](https://drive.google.com/file/d/16hh6l9Oln9TJng4V0_HNf_Z7uYb7feds/view?usp=sharing) / [Quark](https://pan.quark.cn/s/169f3cefec1b) | [Google](https://drive.google.com/file/d/1_KWVfOr3bB5TMHTNOmDIAO-tZJmKB9-b/view?usp=sharing) / [Quark](https://pan.quark.cn/s/9dd5c4940199) |
 | **Pico** | COCO | **38.5** | 1.5M | 5.2 |     2.13     | [yml](option/deimv2_dinov3/deimv2_hgnetv2_pico_coco.yml) | [Google](https://drive.google.com/file/d/1PXpUxYSnQO-zJHtzrCPqQZ3KKatZwzFT/view?usp=sharing) / [Quark](https://pan.quark.cn/s/0db5b1dff721) | [Google](https://drive.google.com/file/d/1GwyWotYSKmFQdVN9k2MM6atogpbh0lo1/view?usp=sharing) / [Quark](https://pan.quark.cn/s/5ab2a74bb867) |

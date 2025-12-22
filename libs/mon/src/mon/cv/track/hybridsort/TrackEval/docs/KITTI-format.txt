@@ -48,7 +48,7 @@ All values (numerical or strings) are separated via spaces, each row
 corresponds to one object. The 17 columns represent:
 
 #Values    Name      Description
-----------------------------------------------------------------------------
+----------------------------------------------
    1    frame        Frame within the sequence where the object appearers
    1    track id     Unique tracking id of this object within this sequence
    1    type         Describes the type of object: 'Car', 'Van', 'Truck',

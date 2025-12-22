@@ -23,7 +23,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Predict -----
+# --- Predict ---
 
 def predict(args: argparse.Namespace):
     # General config
@@ -101,7 +101,7 @@ def predict(args: argparse.Namespace):
 
 
 
-# ----- Main -----
+# --- Main ---
 
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)

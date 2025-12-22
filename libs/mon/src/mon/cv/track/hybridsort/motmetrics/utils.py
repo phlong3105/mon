@@ -25,14 +25,14 @@ def compare_to_groundtruth(gt, dt, dist='iou', distfields=None, distth=0.5, vfla
     Depending on the distance to be used relevant distfields need to be specified.
 
     Params
-    ------
+    ----
     gt : pd.DataFrame
         Dataframe for ground-truth
     test : pd.DataFrame
         Dataframe for detector results
 
     Kwargs
-    ------
+    ----
     dist : str, optional
         String identifying distance to be used. Defaults to intersection over union.
     distfields: array, optional
@@ -91,14 +91,14 @@ def CLEAR_MOT_M(gt, dt, inifile, dist='iou', distfields=None, distth=0.5, includ
     Depending on the distance to be used relevant distfields need to be specified.
 
     Params
-    ------
+    ----
     gt : pd.DataFrame
         Dataframe for ground-truth
     test : pd.DataFrame
         Dataframe for detector results
 
     Kwargs
-    ------
+    ----
     dist : str, optional
         String identifying distance to be used. Defaults to intersection over union.
     distfields: array, optional

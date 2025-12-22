@@ -19,7 +19,7 @@ from .pixel import NormalizeWithMask
 from .resize import ResizeDivisibleBy
 
 
-# ----- Extended Compose -----
+# --- Extended Compose ---
 class Compose(A.Compose):
     """An extended version of ``albumentations.Compose`` that builds transformations
     from configuration dictionaries.
@@ -39,7 +39,7 @@ class Compose(A.Compose):
         super().__init__(transforms, **kwargs)
 
 
-# ----- Builder -----
+# --- Builder ---
 def build_transforms(transforms: list[Any]) -> list[A.BasicTransform]:
     """Builds a list of albumentations transformation operations.
     

@@ -192,7 +192,7 @@ class KalmanBoxTracker(object):
         """
         update 'self.mean' of current tracklet with ecc results.
         Parameters
-        ----------
+        ------
         warp_matrix: warp matrix computed by ECC.
         """
         x1, y1, x2, y2, s = convert_x_to_bbox(self.kf.x)[0]

@@ -30,7 +30,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- SAM -----
+# --- SAM ---
 class SAM(SAM_, nn.ModelMetadataMixin):
     """Ultralytics SAM model for segmentation.
     
@@ -78,7 +78,7 @@ class SAM_L(SAM):
     })
 
 
-# ----- SAM2 -----
+# --- SAM2 ---
 class SAM2(SAM_, nn.ModelMetadataMixin):
     
     _arch: str  = "sam2"

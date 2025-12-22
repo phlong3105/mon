@@ -14,7 +14,7 @@ from tqdm import tqdm
 calc_SSIM = SSIM(data_range=1.)
 
 
-#---------- Set of functions to work with DDP
+#------ Set of functions to work with DDP
 def setup(rank, world_size, Master_port = '12355'):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = Master_port

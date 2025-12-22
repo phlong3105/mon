@@ -50,14 +50,14 @@ def run(args: dict | box.Box):
     timers.postprocess.tock()
     
     # Save
-    mon.image.save(fused, out_path)
+    mon.image.write(fused, out_path)
     timers.total.tock()
 
     # Finish
     timers.print()
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     parser = argparse.ArgumentParser()
     parser.add_argument("--image-dir", type=str, default="house", help="Path to image folder")

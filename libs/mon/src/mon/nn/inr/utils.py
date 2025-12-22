@@ -26,7 +26,7 @@ import torch.nn.functional as F
 from mon.core.dtypes import image as I
 
 
-# ----- Coordinate -----
+# --- Coordinate ---
 def create_coords(size: int) -> torch.Tensor:
     """Creates a normalized coordinates grid.
     
@@ -92,7 +92,7 @@ def ff_embedding(p: torch.Tensor, B: torch.Tensor = None) -> torch.Tensor:
         return embedding
 
 
-# ----- Context/Patch -----
+# --- Context/Patch ---
 def create_patches(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
     """Creates a tensor where the channel contains patch information.
 
@@ -170,7 +170,7 @@ def create_depth_aware_patches(
     return torch.movedim(patches, 0, -1)
 
 
-# ----- Scale -----
+# --- Scale ---
 def pair_downsampler(image: torch.Tensor) -> torch.Tensor:
     """Downsamples the image into two sub-images using learned filters.
     

@@ -74,7 +74,7 @@ class CycleGANModel(BaseModel):
             self.optimizer_D_A = torch.optim.Adam(self.netD_A.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_D_B = torch.optim.Adam(self.netD_B.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
-        print('---------- Networks initialized -------------')
+        print('------ Networks initialized ---------')
         networks.print_network(self.netG_A)
         networks.print_network(self.netG_B)
         if self.isTrain:
@@ -86,7 +86,7 @@ class CycleGANModel(BaseModel):
         else:
             self.netG_A.eval()
             self.netG_B.eval()
-        print('-----------------------------------------------')
+        print('-----------------------------')
 
     def set_input(self, input):
         AtoB = self.opt.which_direction == 'AtoB'

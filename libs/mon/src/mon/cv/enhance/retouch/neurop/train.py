@@ -23,7 +23,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Train -----
+# --- Train ---
 def train(args: dict | box.Box) -> str:
     cfg_path = root_dir / "neurop" / "option" / "train" / args.cfg
     cfgs     = parse(str(cfg_path))
@@ -90,7 +90,7 @@ def train(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     args = mon.parse_train_args(root=root_dir, model_root=root_dir)
     train(args)

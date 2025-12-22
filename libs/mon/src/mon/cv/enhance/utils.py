@@ -12,7 +12,7 @@ import torch
 from mon.training import metrics
 
 
-# ----- Pseudo-GT Image Generator -----
+# --- Pseudo-GT Image Generator ---
 class PseudoGTGenerator:
     """To create the pseudo GT image, we compare and combine the 2N generated
     reference images, the original image, and the output of the enhancement

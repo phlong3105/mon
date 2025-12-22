@@ -13,7 +13,7 @@ import torch
 from mon import nn
 
 
-# ----- SIREN -----
+# --- SIREN ---
 class SIRENLayer(nn.Module):
     
     def __init__(

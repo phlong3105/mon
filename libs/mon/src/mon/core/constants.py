@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for global constants.
+"""Project-wide constant definitions.
 
-This module defines global constants used across the project, including
-directory paths, file extensions, and configuration flags.
+This module provides project-wide constants and default directory and file
+extensions for configuration and I/O operations.
 """
 
 __all__ = [
@@ -31,20 +31,44 @@ from mon.core.enum import (
 from mon.core.pathlib import Path
 
 
-# ----- Directory -----
+# ==============================================================================
+# PATH ORCHESTRATION
+# ==============================================================================
+
+# --- Roots (Calculating the absolute base of the project) ---
 current_file = Path(__file__).absolute()   # mon/shared/mon/mon/constants.py
-ROOT_DIR     = current_file.parents[3]     # ./mon
-ZOO_DIR      = ROOT_DIR / "zoo"            # ./mon/zoo
+ROOT_DIR     = current_file.parents[4]     # ./mon
 
 
-# ----- Constants -----
-DEPTH_SOURCE       = DepthSource.DAv2_ViTB
-INFRARED_SOURCE    = InfraredSource.INFRARED
+# --- Resources ---
+ZOO_DIR = ROOT_DIR / "zoo"                 # ./mon/zoo
+
+
+# ==============================================================================
+# IO & PERSISTENCE DEFAULTS
+# ==============================================================================
+
+# --- Directory Names (Standard folder names for outputs) ---
 SAVE_DEBUG_DIR     = "debug"
 SAVE_IMAGE_DIR     = "pred"
 SAVE_LABEL_DIR     = "label"
 SAVE_VISUALIZE_DIR = "visualize"
-SAVE_CKPT_EXT      = WeightExtension.CKPT.value
-SAVE_IMAGE_EXT     = ImageExtension.JPG.value
-SAVE_WEIGHTS_EXT   = WeightExtension.PT.value
-VERBOSE            = True  # Global verbosity flag for internal logging
+
+
+# --- Extensions (Allowed/Default file formats) ---
+SAVE_CKPT_EXT    = WeightExtension.CKPT.value
+SAVE_IMAGE_EXT   = ImageExtension.JPG.value
+SAVE_WEIGHTS_EXT = WeightExtension.PT.value
+
+
+# ==============================================================================
+# IO & PERSISTENCE DEFAULTS
+# ==============================================================================
+
+# --- Execution Flags (Verbosity, debug modes) ---
+VERBOSE = True  # Global verbosity flag for internal logging
+
+
+# --- Algorithm Defaults (Source selection, model types) ---
+DEPTH_SOURCE    = DepthSource.DAv2_ViTB
+INFRARED_SOURCE = InfraredSource.INFRARED

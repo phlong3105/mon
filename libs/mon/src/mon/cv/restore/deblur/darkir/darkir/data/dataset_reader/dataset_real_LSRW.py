@@ -33,7 +33,7 @@ def main_dataset_real_LSRW(rank = 1, test_path='../../data/datasets', batch_size
         print("    -Images in the PATH_LOW_VALID folder: ", len(list_blur_valid_LOLv2_real))
         print("    -Images in the PATH_HIGH_VALID folder: ", len(list_sharp_valid_LOLv2_real), '\n')
 
-    #------------------------------------------------------------------------
+    #--------------------------------------------
     # now load the LSRW dataset    
     PATH_VALID_HUAWEI = os.path.join(test_path, 'Low_Light_Enhancement_Datasets', 'LSRW_', 'Eval', 'Huawei')
 
@@ -59,7 +59,7 @@ def main_dataset_real_LSRW(rank = 1, test_path='../../data/datasets', batch_size
         print("    -Images in the PATH_LOW_VALID folder: ", len(list_blur_valid_lsrw))
         print("    -Images in the PATH_HIGH_VALID folder: ", len(list_sharp_valid_lsrw), '\n')    
 
-    #------------------------------------------------------------------------  
+    #--------------------------------------------  
     # finally the LOLBlur dataset
     PATH_VALID = os.path.join(test_path, 'LOLBlur', 'test')
     
@@ -84,7 +84,7 @@ def main_dataset_real_LSRW(rank = 1, test_path='../../data/datasets', batch_size
         print("    -Images in the PATH_HIGH_VALID folder: ", len(list_sharp_valid_lolblur), '\n')
 
 
-    #------------------------------------------------------------------------  
+    #--------------------------------------------  
     # finally add the lol and lolblur, augmenting the lol datasets to a ratio 1:1 with lolblur
 
     tensor_transform = transforms.ToTensor()
@@ -137,4 +137,3 @@ if __name__ == '__main__':
     
     test_loader, samplers= main_dataset_real_LSRW(verbose = True)
 
-    

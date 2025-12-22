@@ -39,7 +39,7 @@ def _select_initial_step(func, t0, y0, order, rtol, atol, norm, f0=None):
     The algorithm is described in [1]_.
 
     References
-    ----------
+    ------
     .. [1] E. Hairer, S. P. Norsett G. Wanner, "Solving Ordinary Differential
            Equations I: Nonstiff Problems", Sec. II.4, 2nd edition.
     """

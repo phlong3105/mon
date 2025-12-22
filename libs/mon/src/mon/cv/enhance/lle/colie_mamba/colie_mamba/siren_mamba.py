@@ -12,7 +12,7 @@ import torch.nn as nn
 from mamba_ssm import Mamba
 
 
-# ----- SIREN -----
+# --- SIREN ---
 class SIRENLayer(nn.Module):
     
     def __init__(
@@ -43,7 +43,7 @@ class SIRENLayer(nn.Module):
         return x if self.is_last else torch.sin(self.w0 * x)
 
 
-# ----- Mamba -----
+# --- Mamba ---
 class MambaBlock(nn.Module):
     """A Mamba block adapted for 2D vision tasks.
     
@@ -143,7 +143,7 @@ class MambaDecoderBlock(nn.Module):
         return x
 
 
-# ----- Final Three-Branch Network -----
+# --- Final Three-Branch Network ---
 class CoLIEMambaNet(nn.Module):
     
     def __init__(

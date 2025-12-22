@@ -21,7 +21,7 @@ import thop
 import torch
 
 from mon import nn
-from mon.core import get_model_device, image as I
+from mon.core import inspect_model_device, image as I
 from mon.nn import functional as F
 
 
@@ -74,7 +74,7 @@ class RelightNet(nn.Module):
         self.net2_output    = nn.Conv2d(channel, 1, kernel_size=3, padding=0)
 
     def forward(self, input_L=torch.rand(1, 1, 512, 512), input_R=torch.rand(1, 3, 512, 512)):
-        device     = get_model_device(self)
+        device     = inspect_model_device(self)
         input_L    = input_L.to(device)
         input_R    = input_R.to(device)
         input_img  = torch.cat((input_R, input_L), dim=1)
@@ -101,7 +101,7 @@ class RelightNet(nn.Module):
 def calculate_efficiency_score_decomnet(model, imgsz: int = 512):
     # Define input tensor
     h, w  = I.imgsz(imgsz)
-    input = torch.rand(1, 3, h, w).to(get_model_device(model))
+    input = torch.rand(1, 3, h, w).to(inspect_model_device(model))
     # Get FLOPs and Params
     flops, params = thop.profile(deepcopy(model), inputs=(input, ), verbose=False)
     return flops, params
@@ -110,8 +110,8 @@ def calculate_efficiency_score_decomnet(model, imgsz: int = 512):
 def calculate_efficiency_score_enhancenet(model, imgsz: int = 512):
     # Define input tensor
     h, w  = I.imgsz(imgsz)
-    input = torch.rand(1, 1, h, w).to(get_model_device(model))
-    mask  = torch.rand(1, 3, h, w).to(get_model_device(model))
+    input = torch.rand(1, 1, h, w).to(inspect_model_device(model))
+    mask  = torch.rand(1, 3, h, w).to(inspect_model_device(model))
     # Get FLOPs and Params
     flops, params = thop.profile(deepcopy(model), inputs=(input, mask, ), verbose=False)
     return flops, params

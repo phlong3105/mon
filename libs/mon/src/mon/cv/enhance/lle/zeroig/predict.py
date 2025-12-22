@@ -30,7 +30,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Utils -----
+# --- Utils ---
 def save_images(tensor):
     image_numpy = tensor[0].detach().cpu().float().numpy()
     image_numpy = (np.transpose(image_numpy, (1, 2, 0)))
@@ -57,7 +57,7 @@ def benchmark():
     mon.log(f"Total Params = {total_params:.4f}")
 
 
-# ----- Predict -----
+# --- Predict ---
 def predict(args: dict | box.Box) -> str:
     # Start
     mon.print_run_summary(args)
@@ -146,7 +146,7 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(denoise, out_path)
+                mon.image.write(denoise, out_path)
 
             # if args.save_debug:
             #    out_dir  = mon.parse_output_dir(args.save_dir, data_name, f"{mon.SAVE_IMAGE_DIR}_denoise", path, args.keep_subdirs, args.save_nearby)
@@ -159,7 +159,7 @@ def predict(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)

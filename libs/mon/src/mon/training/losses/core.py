@@ -44,7 +44,7 @@ import torch.nn.functional as F
 from .base import BaseLoss
 
 
-# ----- Basic Loss -----
+# --- Basic Loss ---
 class CharbonnierLoss(BaseLoss):
     """A Charbonnier loss function, a differentiable variant of L1 loss.
     

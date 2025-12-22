@@ -10,12 +10,12 @@ def get_dark_channel(image, w=15):
     """
     Get the dark channel prior in the (RGB) image data.
     Parameters
-    -----------
+    -------
     image:  an M * N * 3 numpy array containing data ([0, L-1]) in the image where
         M is the height, N is the width, 3 represents R/G/B channels.
     w:  window size
     Return
-    -----------
+    -------
     An M * N array for the dark channel prior ([0, L-1]).
     """
     M, N, _ = image.shape
@@ -29,12 +29,12 @@ def get_dark_channel(image, w=15):
 def get_atmosphere(image, p=0.0001, w=15):
     """Get the atmosphere light in the (RGB) image data.
     Parameters
-    -----------
+    -------
     image:      the 3 * M * N RGB image data ([0, L-1]) as numpy array
     w:      window for dark channel
     p:      percentage of pixels for estimating the atmosphere light
     Return
-    -----------
+    -------
     A 3-element array containing atmosphere light ([0, L-1]) for each channel
     """
     image = image.transpose(1, 2, 0)

@@ -118,7 +118,7 @@ def bright_channel_prior(
 def dark_channel_prior(
     image: torch.Tensor | np.ndarray,
     ksize: int
-) ->  torch.Tensor | np.ndarray:
+) -> torch.Tensor | np.ndarray:
     """Gets dark channel prior from an RGB image.
     
     Args:
@@ -151,7 +151,7 @@ def dark_channel_prior(
 def dark_channel_prior_paper(
     image: torch.Tensor | np.ndarray,
     ksize: int
-) ->  torch.Tensor | np.ndarray:
+) -> torch.Tensor | np.ndarray:
     """Gets dark channel prior from an RGB image as per the original paper.
     
     Args:

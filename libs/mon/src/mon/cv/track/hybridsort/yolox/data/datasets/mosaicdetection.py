@@ -141,9 +141,9 @@ class MosaicDetection(Dataset):
                 border=[-input_h // 2, -input_w // 2],
             )  # border to remove
 
-            # -----------------------------------------------------------------
+            # ---------------------------------------
             # CopyPaste: https://arxiv.org/abs/2012.07177
-            # -----------------------------------------------------------------
+            # ---------------------------------------
             if self.enable_mixup and not len(mosaic_labels) == 0:
                 mosaic_img, mosaic_labels = self.mixup(mosaic_img, mosaic_labels, self.input_dim)
             

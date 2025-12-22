@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for box filtering.
+"""Box filter.
 
-This module implements box filtering techniques for image processing, including
-a function, and a class for applying box filters to images. Box filtering is
-commonly used for smoothing and noise reduction in images.
+This module implements box filtering techniques for image processing.
 """
 
 __all__ = [
@@ -17,23 +15,23 @@ import torch
 import torch.nn as nn
 
 
-# ----- Utils -----
+# --- Utils ---
 def _diff_x(image: torch.Tensor, kernel_size: int) -> torch.Tensor:
-    """Computes difference along the x-axis of an image.
+    """Compute the differences along the x-axis of an image.
+    
+    Args:
+        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
+            values in the range [0, 1].
+        kernel_size: Kernel size (e.g., 3, 5, 7, 9).
+    
+    Returns:
+        The x-axis differences.
+    
+    Raises:
+        ValueError: If ``image`` does not have 4 dimensions.
     
     References:
         - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py
-    
-    Args:
-        image (torch.Tensor): Image as torch.Tensor of shape (B, C, H, W) in
-            [0.0, 1.0].
-        kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
-    
-    Returns:
-        torch.Tensor: x-axis differences.
-    
-    Raises:
-        ValueError: If image does not have 4 dimensions.
     """
     if image.ndim != 4:
         raise ValueError(f"``image`` must have 4 dimensions, got {image.ndim}.")
@@ -46,18 +44,21 @@ def _diff_x(image: torch.Tensor, kernel_size: int) -> torch.Tensor:
 
 
 def _diff_y(image: torch.Tensor, kernel_size: int) -> torch.Tensor:
-    """Computes difference along the y-axis of an image.
+    """Compute the differences along the y-axis of an image.
 
-    References:
-        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py
-    
     Args:
-        image (torch.Tensor): Image as torch.Tensor of shape (B, C, H, W) in
-            [0.0, 1.0].
-        kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
+        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
+            values in the range [0, 1].
+        kernel_size: Kernel size (e.g., 3, 5, 7, 9).
     
     Returns:
-        torch.Tensor: y-axis differences.
+        The y-axis differences.
+    
+    Raises:
+        ValueError: If ``image`` does not have 4 dimensions.
+    
+    References:
+        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py
     """
     if image.ndim != 4:
         raise ValueError(f"``image`` must have 4 dimensions, got {image.ndim}.")
@@ -69,23 +70,23 @@ def _diff_y(image: torch.Tensor, kernel_size: int) -> torch.Tensor:
     return output
 
 
-# ----- Box Filter -----
+# --- Box Filter ---
 def box_filter(image: torch.Tensor, kernel_size: int) -> torch.Tensor:
-    """Performs box filtering on an image.
-    
-    References:
-        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py
+    """Perform box filtering on an image.
     
     Args:
-        image (torch.Tensor): Image as torch.Tensor of shape (B, C, H, W) in
-            [0.0, 1.0].
-        kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
+        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
+            values in the range [0, 1].
+        kernel_size: Kernel size (e.g., 3, 5, 7, 9).
     
     Returns:
         torch.Tensor: Box filtered image.
     
     Raises:
-        ValueError: If image does not have 4 dimensions.
+        ValueError: If ``image`` does not have 4 dimensions.
+    
+    References:
+        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/box_filter.py
     """
     if image.ndim != 4:
         raise ValueError(f"``image`` must have 4 dimensions, got {image.ndim}.")
@@ -100,19 +101,19 @@ class BoxFilter(nn.Module):
     """
     
     def __init__(self, kernel_size: int):
-        """Initializes the BoxFilter module.
+        """Initialize the BoxFilter module.
         
         Args:
-            kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
+            kernel_size: Kernel size (e.g., 3, 5, 7, 9).
         """
         super().__init__()
         self.kernel_size = kernel_size
 
     def forward(self, image: torch.Tensor) -> torch.Tensor:
-        """Performs box filtering on an image.
+        """Perform box filtering on an image.
         
         Args:
-            image (torch.Tensor): Image as torch.Tensor of shape (B, C, H, W) in
-                [0.0, 1.0].
+            image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
+                values in the range [0, 1].
         """
         return box_filter(image, self.kernel_size)

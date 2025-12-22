@@ -29,7 +29,7 @@ def recall_at_ks(query_features: torch.Tensor,
     """
     Compute the recall between samples at each k. This function uses about 8GB of memory.
     Parameters
-    ----------
+    ------
     query_features : torch.Tensor
         Features for each query sample. shape: (num_queries, num_features)
     query_labels : torch.LongTensor
@@ -43,7 +43,7 @@ def recall_at_ks(query_features: torch.Tensor,
     cosine : bool
         Use cosine distance between samples instead of euclidean distance.
     Returns
-    -------
+    -----
     recalls : Dict[int, float]
         Values of the recall at each k.
     """

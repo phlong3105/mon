@@ -37,7 +37,7 @@ def get_iou(bb1, bb2):
     Calculate the Intersection over Union (IoU) of two bounding boxes.
 
     Parameters
-    ----------
+    ------
     bb1 : dict
         Keys: {'x1', 'x2', 'y1', 'y2'}
         The (x1, y1) position is at the top left corner,
@@ -48,7 +48,7 @@ def get_iou(bb1, bb2):
         the (x2, y2) position is at the bottom right corner
 
     Returns
-    -------
+    -----
     float
         in [0, 1]
     """

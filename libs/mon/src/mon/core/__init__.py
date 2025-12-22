@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for core data and functionalities.
+"""Core utilities and consolidated public API.
 
-This package contains modules that provide core data types, utilities, and
-functionalities used throughout the project. It serves as a foundational layer
-for handling various data types, device management, logging, configuration
-parsing, and other essential operations.
+This package contains foundational data types, device and logging helpers,
+configuration parsers, runtime utilities, and other common helpers used across
+the project.
 """
 
 __all__ = [
@@ -72,9 +71,9 @@ __all__ = [
     "download_url_to_file",
     "enable_print",
     "error_console",
-    "get_cuda_memory_usages",
-    "get_memory_usages",
-    "get_model_device",
+    "query_vram_usage",
+    "query_ram_usages",
+    "inspect_model_device",
     "is_camelcase",
     "is_float",
     "is_int",
@@ -127,13 +126,13 @@ __all__ = [
     "unique",
     # Hierarchical exposed APIs
     "bbox",
+    "classes",
     "contour",
     "depth",
     "dtypes",
     "image",
     "instance",
     "mask",
-    "probs",
     "thermal",
     "video",
 ]  # Public API
@@ -163,21 +162,21 @@ from .constants import (
 )
 from .device import (
     create_device,
-    get_cuda_memory_usages,
-    get_memory_usages,
-    get_model_device,
+    query_vram_usage,
+    query_ram_usages,
+    inspect_model_device,
     list_devices,
     parse_device,
     pynvml_available,
 )
 from .dtypes import (
     bbox,
+    classes,
     contour,
     depth,
     image,
     instance,
     mask,
-    probs,
     thermal,
     video,
 )

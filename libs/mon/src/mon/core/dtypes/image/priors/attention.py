@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for attention priors.
+"""Attention-based image priors.
 
 This module implements attention-based image priors used in computer vision
 and image processing tasks. These priors help in enhancing image quality by
@@ -18,12 +18,13 @@ import torch
 import torch.nn as nn
 
 
+# --- Functions ---
 def brightness_attention_map(
     image      : torch.Tensor,
     gamma      : float = 2.5,
     kernel_size: int   = None
 ) -> torch.Tensor:
-    """Gets the Brightness Attention Map (BAM) prior from an RGB image.
+    """Get the Brightness Attention Map (BAM) prior to an RGB image.
 
     This is a self-attention map extracted from the V-channel of a low-light
     image, multiplied to convolutional activations of all layers in the
@@ -32,19 +33,17 @@ def brightness_attention_map(
     dark regions effectively.
 
     Args:
-        image (torch.Tensor): Input RGB image as torch.Tensor of shape
-            (B, 3, H, W) with pixel values in [0.0, 1.0].
-        gamma (float): Parameter controlling the curvature of the map. Defaults
-            to 2.5.
-        kernel_size (int): Window size for denoising operation. Defaults to None.
+        image: An RGB image as a torch.Tensor of shape (B, 3, H, W) with pixel
+            values in the range [0, 1].
+        gamma: Parameter controlling the curvature of the map. Defaults to 2.5.
+        kernel_size: Window size for denoising operation. Defaults to None.
         
     Returns:
-        torch.Tensor: Brightness Attention Map (BAM) as torch.Tensor of shape
-            (B, 1, H, W) with pixel values in [0.0, 1.0].
+        The Brightness Attention Map as a torch.Tensor of shape (B, 1, H, W)
+        with pixel values in the range [0, 1].
     """
     if kernel_size:
         image = kornia.filters.median_blur(image, kernel_size)
-        # image = kornia.filters.bilateral_blur(image, denoise_ksize, 0.1, (1.5, 1.5))
         
     hsv = kornia.color.rgb_to_hsv(image)
     v   = hsv[:, 2:3, :, :]  # Extract the V-channel (brightness)
@@ -52,8 +51,9 @@ def brightness_attention_map(
     return bam
 
 
+# --- Modules ---
 class BrightnessAttentionMap(nn.Module):
-    """Gets the Brightness Attention Map (BAM) prior from an RGB image.
+    """A module that computes the Brightness Attention Map (BAM) prior.
 
     This is a self-attention map extracted from the V-channel of a low-light
     image, multiplied to convolutional activations of all layers in the
@@ -67,27 +67,25 @@ class BrightnessAttentionMap(nn.Module):
     """
     
     def __init__(self, gamma: float = 2.5, kernel_size: int = None):
-        """Initializes the BrightnessAttentionMap instance.
+        """Initialize the BrightnessAttentionMap instance.
         
         Args:
-            gamma (float): Parameter controlling the curvature of the map.
-                Defaults to 2.5.
-            kernel_size (int): Window size for denoising operation. Defaults to
-                None.
+            gamma: Parameter controlling the curvature of the map. Defaults to 2.5.
+            kernel_size: Window size for denoising operation. Defaults to None.
         """
         super().__init__()
         self.gamma       = gamma
         self.kernel_size = kernel_size
     
     def forward(self, image: torch.Tensor) -> torch.Tensor:
-        """Gets the Brightness Attention Map (BAM) prior from an RGB image.
+        """Get the Brightness Attention Map (BAM) prior from an RGB image.
         
         Args:
-            image (torch.Tensor): Input RGB image as torch.Tensor of shape
-                (B, 3, H, W) with pixel values in [0.0, 1.0].
+            image: An RGB image as a torch.Tensor of shape (B, 3, H, W) with
+                pixel values in the range [0, 1].
                 
         Returns:
-            torch.Tensor: Brightness Attention Map (BAM) as torch.Tensor of
-                shape (B, 1, H, W) with pixel values in [0.0, 1.0].
+            The Brightness Attention Map as a torch.Tensor of shape (B, 1, H, W)
+            with pixel values in the range [0, 1].
         """
         return brightness_attention_map(image, self.gamma, self.kernel_size)

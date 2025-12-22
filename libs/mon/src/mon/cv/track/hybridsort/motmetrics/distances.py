@@ -17,21 +17,21 @@ def norm2squared_matrix(objs, hyps, max_d2=float('inf')):
     """Computes the squared Euclidean distance matrix between object and hypothesis points.
 
     Params
-    ------
+    ----
     objs : NxM array
         Object points of dim M in rows
     hyps : KxM array
         Hypothesis points of dim M in rows
 
     Kwargs
-    ------
+    ----
     max_d2 : float
         Maximum tolerable squared Euclidean distance. Object / hypothesis points
         with larger distance are set to np.nan signalling do-not-pair. Defaults
         to +inf
 
     Returns
-    -------
+    -----
     C : NxK array
         Distance matrix containing pairwise distances or np.nan.
     """
@@ -89,21 +89,21 @@ def iou_matrix(objs, hyps, max_iou=1.):
     zero.
 
     Params
-    ------
+    ----
     objs : Nx4 array
         Object rectangles (x,y,w,h) in rows
     hyps : Kx4 array
         Hypothesis rectangles (x,y,w,h) in rows
 
     Kwargs
-    ------
+    ----
     max_iou : float
         Maximum tolerable overlap distance. Object / hypothesis points
         with larger distance are set to np.nan signalling do-not-pair. Defaults
         to 0.5
 
     Returns
-    -------
+    -----
     C : NxK array
         Distance matrix containing pairwise distances or np.nan.
     """

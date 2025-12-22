@@ -92,7 +92,7 @@ class TempModel(BaseModel):
             # if self.opt.patchD:
             #     self.optimizer_D_P = torch.optim.Adam(self.netD_P.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
-        print('---------- Networks initialized -------------')
+        print('------ Networks initialized ---------')
         networks.print_network(self.netG_A)
         # networks.print_network(self.netG_B)
         if self.isTrain:
@@ -106,7 +106,7 @@ class TempModel(BaseModel):
         else:
             self.netG_A.eval()
             # self.netG_B.eval()
-        print('-----------------------------------------------')
+        print('-----------------------------')
 
     def set_input(self, input):
         AtoB = self.opt.which_direction == 'AtoB'

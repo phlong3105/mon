@@ -8,12 +8,12 @@ import numpy as np
 from pylab import *
 from torch.autograd import Variable
 
-# ------------------------------------------------------------------------------
+# ------------------------------------------------
 # This code is adapted from:
 # https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
 # Original implementation by Li Chongyi
 # Modifications were made for specific use in this project.
-# ------------------------------------------------------------------------------
+# ------------------------------------------------
 
 def normalize_minmax(x):
     normalized = (x-x.min()) / (x.max() - x.min())

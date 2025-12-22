@@ -15,7 +15,7 @@ current_file = mon.Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Export -----
+# --- Export ---
 @torch.no_grad()
 def export_onnx(model: nn.Module, path: mon.Path, args: dict | box.Box) -> mon.Path:
     opset    = args.opset
@@ -203,7 +203,7 @@ def export(args: dict | box.Box) -> str:
         export_trt(onnx_file, engine_file, args)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     args = mon.parse_predict_args(root=root_dir, model_root=root_dir)
     export(args)

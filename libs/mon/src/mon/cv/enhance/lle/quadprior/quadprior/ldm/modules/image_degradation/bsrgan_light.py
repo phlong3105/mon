@@ -15,14 +15,14 @@ from scipy.linalg import orth
 from . import utils_image as util
 
 """
-# --------------------------------------------
+# ----------------------------
 # Super-Resolution
-# --------------------------------------------
+# ----------------------------
 #
 # Kai Zhang (cskaizhang@gmail.com)
 # https://github.com/cszn
 # From 2019/03--2021/08
-# --------------------------------------------
+# ----------------------------
 """
 
 def modcrop_np(img, sf):
@@ -39,9 +39,9 @@ def modcrop_np(img, sf):
 
 
 """
-# --------------------------------------------
+# ----------------------------
 # anisotropic Gaussian kernels
-# --------------------------------------------
+# ----------------------------
 """
 
 
@@ -218,9 +218,9 @@ def fspecial(filter_type, *args, **kwargs):
 
 
 """
-# --------------------------------------------
+# ----------------------------
 # degradation models
-# --------------------------------------------
+# ----------------------------
 """
 
 
@@ -442,12 +442,12 @@ def degradation_bsrgan(img, sf=4, lq_patchsize=72, isp_model=None):
     """
     This is the degradation model of BSRGAN from the paper
     "Designing a Practical Degradation Model for Deep Blind Image Super-Resolution"
-    ----------
+    ------
     img: HXWXC, [0, 1], its size should be large than (lq_patchsizexsf)x(lq_patchsizexsf)
     sf: scale factor
     isp_model: camera ISP model
     Returns
-    -------
+    -----
     img: low-quality patch, size: lq_patchsizeXlq_patchsizeXC, range: [0, 1]
     hq: corresponding high-quality patch, size: (lq_patchsizexsf)X(lq_patchsizexsf)XC, range: [0, 1]
     """
@@ -534,11 +534,11 @@ def degradation_bsrgan_variant(image, sf=4, isp_model=None, up=False):
     """
     This is the degradation model of BSRGAN from the paper
     "Designing a Practical Degradation Model for Deep Blind Image Super-Resolution"
-    ----------
+    ------
     sf: scale factor
     isp_model: camera ISP model
     Returns
-    -------
+    -----
     img: low-quality patch, size: lq_patchsizeXlq_patchsizeXC, range: [0, 1]
     hq: corresponding high-quality patch, size: (lq_patchsizexsf)X(lq_patchsizexsf)XC, range: [0, 1]
     """

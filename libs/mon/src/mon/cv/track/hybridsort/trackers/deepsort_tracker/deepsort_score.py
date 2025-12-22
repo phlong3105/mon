@@ -54,7 +54,7 @@ class Tracker:
     def update(self, detections, classes):
         """Perform measurement update and track management.
         Parameters
-        ----------
+        ------
         detections : List[deep_sort.detection.Detection]
             A list of detections at the current time step.
         """

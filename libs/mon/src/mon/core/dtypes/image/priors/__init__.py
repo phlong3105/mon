@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for image priors.
+"""Image priors.
 
 This package implements various image priors used in computer vision and image
 processing tasks. These priors help in enhancing image quality, dehazing,

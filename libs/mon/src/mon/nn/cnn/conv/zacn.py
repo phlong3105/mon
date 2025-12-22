@@ -15,7 +15,7 @@ __all__ = [
 import torch
 
 
-# ----- Utils -----
+# --- Utils ---
 def grid(half_size: int) -> tuple[torch.Tensor, torch.Tensor]:
     """Compute the index for u and v direction for a grid.
     
@@ -35,7 +35,7 @@ def grid(half_size: int) -> tuple[torch.Tensor, torch.Tensor]:
     return dir_u_index, dir_v_index
 
 
-# ----- Step 1: Back-project -----
+# --- Step 1: Back-project ---
 def neighbors2d(depth: torch.Tensor, conv_filter: int = 3, dilation: int = 1):
     """Compute the 2D neighbors for each pixel in the depth image.
     
@@ -132,7 +132,7 @@ def back_projection(neighbors_2d_posit: torch.Tensor) -> torch.Tensor:
     return neighbor_2d_posit_2_3d
 
 
-# ----- Step 2: Plane fitting -----
+# --- Step 2: Plane fitting ---
 def compute_plane(neighbors_2d_posit_2_3d: torch.Tensor) -> torch.Tensor:
     # Compute the normal (a, b, c, d) of the associated plane (least square) for each set of neighborhoods :  ax+by+cz+d = 0(supposed to be 1)
     # Input : 3D positions (3, h, w, n x n, batch)
@@ -160,7 +160,7 @@ def compute_plane(neighbors_2d_posit_2_3d: torch.Tensor) -> torch.Tensor:
     return abcd
 
 
-# ----- Step 3: 3D planar grid -----
+# --- Step 3: 3D planar grid ---
 def orthogonal_projected_vectors(abcd: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     device = abcd.device
     zu     = - abcd[..., 0, 0].to(device)
@@ -252,7 +252,7 @@ def project_real_plane(
     return proj
 
 
-# ----- Step 4: Project back to 2D -----
+# --- Step 4: Project back to 2D ---
 def grid_projection(grid_3d: torch.Tensor) -> torch.Tensor:
     # Compute the projection of 3d grid on the image
     # Input : 3d grid with size (n x n, 3, batch, h, w)
@@ -274,7 +274,7 @@ def grid_projection(grid_3d: torch.Tensor) -> torch.Tensor:
     return grid_2d
 
 
-# ------ Main Function -----
+# ---- Main Function ---
 def compute_offset(depth: torch.Tensor, conv_filter: int = 3, dilation: int = 1) -> torch.Tensor:
     device = depth.device
     
@@ -430,7 +430,7 @@ def compute_offset2(
     return offset
 
 
-# ----- Debug -----
+# --- Debug ---
 if __name__ == "__main__":
     depth  = torch.randn(1, 480, 640)
     # offset = compute_offset(depth, 3)

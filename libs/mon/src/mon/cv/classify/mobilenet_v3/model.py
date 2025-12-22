@@ -26,7 +26,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Model -----
+# --- Model ---
 class MobileNetV3(tvm.MobileNetV3, nn.ModelMetadataMixin, abc.ABC):
     """MobileNetV3 model for image classification.
 

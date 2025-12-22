@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for video data type.
+"""Video data classes and mixins.
 
-This module provides classes for handling video and video frames, including
-loading, caching, and accessing frame properties. It supports frames stored
-as in-memory arrays or tensors, with metadata access.
+This module provides the base classes and mixins for video data.
 """
 
 __all__ = [
@@ -19,12 +17,43 @@ from mon.core.pathlib import Path
 from ..base import Data
 
 
+# ==============================================================================
+# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# ==============================================================================
+
+# --- Type Aliases ---
+
+
+# --- Structural Protocols ---
+
+
+# ==============================================================================
+# BASE CLASSES & MIXINS (Behaviors)
+# ==============================================================================
+
+# --- Structural Bases ---
+
+
+# --- Lifecycle Mixins ---
+
+
+# --- Compute Mixins ---
+
+
+# ==============================================================================
+# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# ==============================================================================
+
+# --- Primary Data Types ---
 class Frame(Data):
-    """A base class for a single video frame.
-    
-    This class extends Data to handle a single frame from a video, which is
-    provided as an in-memory array/tensor. It provides properties to access
-    frame metadata such as index, path, and shape.
+    """A basic class for managing a video frame.
+
+    Attributes:
+        _data (np.ndarray): An RGB frame as a numpy.ndarray of shape (H, W, C)
+            with pixel values in the range [0, 255].
+        _index (int): Index of the frame in the video.
+        _path (Path): Video file path.
+        _root (Path): Root directory of the video (of a dataset).
     """
     
     def __init__(
@@ -34,108 +63,79 @@ class Frame(Data):
         path : Path = None,
         root : Path = None,
     ):
-        """Initializes the Frame instance.
-        
+        """Initialize the frame instance.
+
         Args:
-            data (numpy.ndarray): An RGB image as a numpy.ndarray of shape
-                (H, W, C) with pixel values in the range [0, 255].
-            index (int): The index of the frame in the video.
-            path (Path, optional): Video file path. Defaults to None.
-            root (Path, optional): Root directory of the video (of a dataset).
-                Defaults to None.
+            data: An RGB frame as a numpy.ndarray of shape (H, W, C) with pixel
+                values in the range [0, 255].
+            index: Index of the frame in the video.
+            path: Video file path. Defaults to None.
+            root: Root directory of the video (of a dataset). Defaults to None.
+
+        Raises:
+            TypeError: If data is not a numpy.ndarray.
         """
-        super().__init__()
         # Validate inputs
         if not isinstance(data, np.ndarray):
             raise TypeError(f"``data`` must be a numpy.ndarray, got {type(data)}")
-            
+         
+        super().__init__(data=data)
+        
         # Assign attributes
-        self._data  = data
         self._index = index
         self._path  = Path(path) if path is not None else None
         self._root  = Path(root) if root is not None else None
     
-    #---- Magic Methods -----
+    #---- Magic Methods ---
     def __len__(self) -> int:
-        """Returns the length of 1 (i.e., a single frame)."""
+        """Return the logical length of the container."""
         return 1
     
     def __getitem__(self, idx: int = 0) -> np.ndarray:
-        """Returns the frame itself.
-        
+        """Return the frame image.
+
         Args:
-            idx (int): Index to get the image. Defaults to 0.
-        
-        Returns:
-            numpy.ndarray: The image itself.
+            idx: Index to get the image. Defaults to 0.
         """
         return self.data
     
-    # ----- Properties -----
+    # --- Properties ---
     @property
     def data(self) -> np.ndarray:
-        """Getter for the frame.
-        
-        Returns:
-            numpy.ndarray: The frame as a numpy.ndarray of shape (H, W, C) with
-                pixel values in the range [0, 255].
-        """
+        """Return the underlying frame array."""
         return self._data
     
     @property
     def shape(self) -> tuple[int, int, int]:
-        """Getter for the original shape of the frame as (H, W, C).
-        
-        Returns:
-            tuple[int, int, int]: The original shape of the frame.
-        """
+        """Return the frame shape as (H, W, C)."""
         return self.data.shape
     
     @property
     def imgsz(self) -> tuple[int, int]:
-        """Getter for the frame size as (H, W).
-        
-        Returns:
-            tuple[int, int]: The frame size.
-        """
+        """Return the frame size as (H, W)."""
         return self.data.shape[:2]
     
     @property
     def index(self) -> int:
-        """Getter for the frame index in the video.
-        
-        Returns:
-            int: The frame index.
-        """
+        """Return the frame index within the video."""
         return self._index
 
     @property
     def path(self) -> Path:
-        """Getter for the video file path.
-        
-        Returns:
-            Path: The video file path.
-        """
+        """Return the video file path associated with this frame."""
         return self._path
 
     @property
     def root(self) -> Path:
-        """Getter for the root directory of the video (i.e., dataset root).
-        
-        Returns:
-            Path: The root directory of the videos.
-        """
+        """Return the root directory for the video dataset, if any."""
         return self._root
 
     @property
     def frame_path(self) -> Path:
-        """Getter for the frame file path.
-        
-        This constructs a path for the frame based on the video path and frame
-        index. If the video path is not provided, it returns a default path.
-        
-        Returns:
-            Path: The frame file path.
+        """Return a generated frame file path.
+
+        Construct a path for the frame based on the video path and frame index.
+        If no video path is provided, return the stored path.
         """
         if self.path is not None:
             path = self.path
@@ -145,10 +145,9 @@ class Frame(Data):
 
     @property
     def meta(self) -> dict:
-        """Getter for metadata about the frame.
-        
-        Returns:
-            dict: Metadata about the frame.
+        """Return metadata dictionary for the frame.
+
+        Include index, frame path, source video path, root, shape, and hash.
         """
         return {
             "index"     : self.index,
@@ -158,48 +157,3 @@ class Frame(Data):
             "shape"     : self.shape,
             "hash"      : self.path.stat().st_size if isinstance(self.path, Path) else None,
         }
-    
-    # ----- Initialize -----
-    def load(self, reload: bool = False) -> np.ndarray:
-        """No need to load data from disk, just return the underlying data.
-        
-        Args:
-            reload (bool): Ignored for this base class. Defaults to False.
-            
-        Returns:
-            numpy.ndarray: The underlying frame.
-        """
-        return self.data
-    
-    # ----- Device Management Methods -----
-    def cpu(self):
-        """Do nothing.
-        
-        Raises:
-            NotImplementedError: Not implemented yet.
-        """
-        raise NotImplementedError("Not implemented yet.")
-    
-    def cuda(self):
-        """Do nothing.
-        
-        Raises:
-            NotImplementedError: Not implemented yet.
-        """
-        raise NotImplementedError("Not implemented yet.")
-    
-    def numpy(self):
-        """Do nothing.
-        
-        Raises:
-            NotImplementedError: Not implemented yet.
-        """
-        raise NotImplementedError("Not implemented yet.")
-    
-    def to(self, *args, **kwargs):
-        """"Do nothing.
-        
-        Raises:
-            NotImplementedError: Not implemented yet.
-        """
-        raise NotImplementedError("Not implemented yet.")

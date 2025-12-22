@@ -194,7 +194,7 @@ class Upsample(nn.Module):
 
 
 ##########################################################################
-##---------- Restormer -----------------------
+##------ Restormer ---------------
 class Restormer(nn.Module):
     def __init__(self, 
         inp_channels=3, 

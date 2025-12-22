@@ -1,4 +1,4 @@
-# ----- Global Settings & Hyperparameters -----
+# --- Global Settings & Hyperparameters ---
 # These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
 task        : &task "dehaze"                                                    # Task name (e.g., detect, segment, classify).
@@ -36,7 +36,7 @@ verbose     : &verbose True                                                     
 # Custom config.yaml
 cfg         : ~                                                                 # For overriding settings defined in this file.
 
-# ----- Model -----
+# --- Model ---
 # Network
 network:                                                                        # Network architecture.
   num_channels: 64
@@ -48,14 +48,14 @@ loss: ~                                                                         
 # Optimizer
 optimizer: ~                                                                    # Optimizer.
 
-# ----- Data -----
+# --- Data ---
 # Train
 train_dataloader: ~                                                             # Train dataloader.
 
 # Val
 val_dataloader: ~                                                               # Val dataloader.
 
-# ----- Deploy -----
+# --- Deploy ---
 # Export
 export:
   format        : "onnx"                                                        # Export format (e.g., onnx, engine, torchscript, coreml, tflite, openvino).

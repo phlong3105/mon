@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for guided filters.
+"""Guided filters.
 
-This module implements various guided filtering techniques, including standard
-guided filtering, fast guided filtering, and convolutional guided filtering.
-These filters are useful for edge-preserving smoothing and detail enhancement in
-images.
+This module provides guided filtering operations.
 """
 
 __all__ = [
@@ -24,32 +21,30 @@ from torch.autograd import Variable
 from .box_filter import BoxFilter
 
 
-# ----- Guided Filter -----
+# --- Functions ---
 def guided_filter(
     image      : torch.Tensor,
     guide      : torch.Tensor,
     kernel_size: int,
     eps        : float = 1e-8
 ) -> torch.Tensor:
-    """Applies guided filtering to an image.
-    
-    References:
-        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
+    """Apply guided filtering to an image.
     
     Args:
-        image (torch.Tensor): Input image as torch.Tensor of shape (B, C, H, W)
-            with pixel values in [0.0, 1.0].
-        guide (torch.Tensor): Guidance image with the same shape, type, and
-            format as ``image``.
-        kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
-        eps (float): Sharpness control value. Defaults to 1e-8.
+        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
+            values in the range [0, 1].
+        guide: A guidance image with the same shape, type, and format as ``image``.
+        kernel_size: Kernel size (e.g., 3, 5, 7, 9).
+        eps: Sharpness control value. Defaults to 1e-8.
     
     Returns:
-        torch.Tensor: Filtered image with the same shape, type, and format as
-            ``image``.
+        Filtered image with the same shape, type, and format as ``image``.
     
     Raises:
         TypeError: If ``image`` or ``guide`` is not a torch.Tensor.
+    
+    References:
+        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
     """
     if not isinstance(image, torch.Tensor) or not isinstance(guide, torch.Tensor):
         raise TypeError(f"``image`` and ``guide`` must be torch.Tensor, got {type(image)} and {type(guide)}.")
@@ -70,16 +65,17 @@ def guided_filter(
     return mean_A * x + mean_b
 
 
+# --- Modules ---
 class GuidedFilter(nn.Module):
     """A class that applies guided filtering to an image.
-    
-    References:
-        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
     
     Attributes:
         kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
         eps (float): Sharpness control value.
         box_filter (BoxFilter): Box filter instance.
+    
+    References:
+        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
     """
 
     def __init__(self, kernel_size: int, eps: float = 1e-8):
@@ -95,12 +91,12 @@ class GuidedFilter(nn.Module):
         self.box_filter  = BoxFilter(kernel_size=kernel_size)
 
     def forward(self, image: torch.Tensor, guide: torch.Tensor) -> torch.Tensor:
-        """Filters an image using a guide.
+        """Filter an image using a guide.
         
         Args:
-            image: Input image as torch.Tensor of shape (B, C, H, W) with pixel
-                values in [0.0, 1.0].
-            guide: Guidance image with the same shape, type, and format as
+            image: An RGB image as a torch.Tensor of shape (B, C, H, W) with
+                pixel values in the range [0, 1].
+            guide: A guidance image with the same shape, type, and format as
                 ``image``.
         
         Returns:
@@ -122,19 +118,19 @@ class GuidedFilter(nn.Module):
 
 
 class FastGuidedFilter(nn.Module):
-    """A class that applies fast guided filtering to an image.
+    """A class that applies fast-guided filtering to an image.
 
-    References:
-        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
-    
     Attributes:
         kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
         eps (float): Sharpness control value.
         box_filter (BoxFilter): Box filter instance.
+        
+    References:
+        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
     """
 
     def __init__(self, kernel_size: int, eps: float = 1e-8):
-        """Initializes the GuidedFilter instance.
+        """Initialize the GuidedFilter instance.
         
         Args:
             kernel_size: Kernel size (e.g., 3, 5, 7, 9).
@@ -146,19 +142,18 @@ class FastGuidedFilter(nn.Module):
         self.box_filter  = BoxFilter(kernel_size=kernel_size)
 
     def forward(self, x_lr: torch.Tensor, y_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
-        """Filters a high-resolution image using low-resolution image and guide.
-
+        """Filter a high-resolution image using a low-resolution image and guide.
+        
         Args:
-            x_lr (torch.Tensor): Low-res input image as torch.Tensor of shape
-                (B, C, H, W) in [0.0, 1.0].
-            y_lr (torch.Tensor): Low-res guidance image with the same type and
+            x_lr: A low-resolution RGB image as a torch.Tensor of shape
+                (B, C, H, W) with pixel values in the range [0, 1].
+            y_lr: A low-resolution guidance image with the same shape, type, and
                 format as ``x_lr``.
-            x_hr (torch.Tensor): High-res input image with the same type and
-                format as ``x_lr``, but larger in size.
+            x_hr: A high-resolution RGB image with the same type and format as
+                ``x_lr``, but larger in size.
         
         Returns:
-            torch.Tensor: Filtered high-resolution image with the same type and
-                format as ``x_hr``.
+            Filtered image with the same shape, type, and format as ``x_hr``.
         """
         _, _, h_xlr, w_xlr = x_lr.shape
         _, _, h_xhr, w_xhr = x_hr.shape
@@ -175,20 +170,19 @@ class FastGuidedFilter(nn.Module):
 
 
 class ConvGuidedFilter(nn.Module):
-    """Applies convolutional guided filtering to an image.
+    """Apply convolutional guided filtering to an image.
  
-    References:
-        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
-    
     Attributes:
-        kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
         box_filter (nn.Conv2d): Box filter implemented as a convolutional layer.
         conv_a (nn.Sequential): Convolutional layers to compute the linear
             coefficients.
+    
+    References:
+        - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
     """
 
     def __init__(self, kernel_size: int, norm: nn.Module = nn.BatchNorm2d):
-        """Initializes the ConvGuidedFilter instance.
+        """Initialize the ConvGuidedFilter instance.
         
         Args:
             kernel_size: Kernel size (e.g., 3, 5, 7, 9).
@@ -209,19 +203,18 @@ class ConvGuidedFilter(nn.Module):
         self.box_filter.weight.data[...] = 1.0
 
     def forward(self, x_lr: torch.Tensor, y_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
-        """Filters a high-resolution image using low-resolution image and guide.
+        """Filters a high-resolution image using a low-resolution image and guide.
 
         Args:
-            x_lr (torch.Tensor): Low-res input image as torch.Tensor of shape
-                (B, C, H, W) in [0.0, 1.0].
-            y_lr (torch.Tensor): Low-res guidance image with the same type and
+            x_lr: A low-resolution RGB image as a torch.Tensor of shape
+                (B, C, H, W) with pixel values in the range [0, 1].
+            y_lr: A low-resolution guidance image with the same shape, type, and
                 format as ``x_lr``.
-            x_hr (torch.Tensor): High-res input image with the same type and
-                format as ``x_lr``, but larger in size.
+            x_hr: A high-resolution RGB image with the same type and format as
+                ``x_lr``, but larger in size.
         
         Returns:
-            torch.Tensor: Filtered high-resolution image with the same type and
-                format as ``x_hr``.
+            Filtered image with the same shape, type, and format as ``x_hr``.
         """
         _, _, h_lrx, w_lrx = x_lr.shape
         _, _, h_hrx, w_hrx = x_hr.shape

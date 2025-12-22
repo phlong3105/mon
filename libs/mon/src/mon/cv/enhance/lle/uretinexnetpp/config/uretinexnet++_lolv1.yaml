@@ -1,4 +1,4 @@
-# ----- Global Settings & Hyperparameters -----
+# --- Global Settings & Hyperparameters ---
 # These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
 task        : &task "lle"                                                       # Task name (e.g., detect, segment, classify).
@@ -43,7 +43,7 @@ fusion_weights            : "vision/enhance/lle/uretinexnet++/uretinexnet++/lolv
 pretrain_unfolding_weights: "vision/enhance/lle/uretinexnet++/uretinexnet++/lolv1/uretinexnet++_lolv1_unfolding.pth"
 ratio: 3
 
-# ----- Model -----
+# --- Model ---
 # Network
 network: ~                                                                      # Network architecture.
 
@@ -53,14 +53,14 @@ loss: ~                                                                         
 # Optimizer
 optimizer: ~                                                                    # Optimizer.
 
-# ----- Data -----
+# --- Data ---
 # Train
 train_dataloader: ~                                                             # Train dataloader.
 
 # Val
 val_dataloader: ~                                                               # Val dataloader.
 
-# ----- Deploy -----
+# --- Deploy ---
 # Export
 export:
   format        : "onnx"                                                        # Export format (e.g., onnx, engine, torchscript, coreml, tflite, openvino).

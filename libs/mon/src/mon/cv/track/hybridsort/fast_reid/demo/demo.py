@@ -83,7 +83,7 @@ def postprocess(features):
 if __name__ == '__main__':
     args = get_parser().parse_args()
 
-    # ------------------------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------
     train_data = 'DukeMTMC'
     method = 'sbs_S50'  # bagtricks_S50 | sbs_S50
     seq = 'MOT20-02'
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     args.input = [r'/home/nir/Datasets/MOT20/train/' + seq + '/img1', '*.jpg']
     args.output = seq + '_' + method + '_' + train_data
     args.opts = ['MODEL.WEIGHTS', '../pretrained/duke_bot_S50.pth']
-    # ------------------------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------
 
     cfg = setup_cfg(args)
     demo = FeatureExtractionDemo(cfg, parallel=args.parallel)

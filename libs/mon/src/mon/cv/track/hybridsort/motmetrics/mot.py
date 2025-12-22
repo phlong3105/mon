@@ -60,7 +60,7 @@ class MOTAccumulator(object):
     for a list of metrics computed.
 
     References
-    ----------
+    ------
     1. Bernardin, Keni, and Rainer Stiefelhagen. "Evaluating multiple object tracking performance: the CLEAR MOT metrics."
     EURASIP Journal on Image and Video Processing 2008.1 (2008): 1-10.
     2. Milan, Anton, et al. "Mot16: A benchmark for multi-object tracking." arXiv preprint arXiv:1603.00831 (2016).
@@ -72,7 +72,7 @@ class MOTAccumulator(object):
         """Create a MOTAccumulator.
 
         Params
-        ------
+        ----
         auto_id : bool, optional
             Whether or not frame indices are auto-incremented or provided upon
             updating. Defaults to false. Not specifying a frame-id when this value
@@ -143,7 +143,7 @@ class MOTAccumulator(object):
         4. Create 'FP' events for all remaining unassigned hypotheses.
 
         Params
-        ------
+        ----
         oids : N array
             Array of object ids.
         hids : M array
@@ -153,18 +153,18 @@ class MOTAccumulator(object):
             See `distances` module for support methods.
 
         Kwargs
-        ------
+        ----
         frameId : id
             Unique frame id. Optional when MOTAccumulator.auto_id is specified during
             construction.
         vf: file to log details
         Returns
-        -------
+        -----
         frame_events : pd.DataFrame
             Dataframe containing generated events
 
         References
-        ----------
+        ------
         1. Bernardin, Keni, and Rainer Stiefelhagen. "Evaluating multiple object tracking performance: the CLEAR MOT metrics."
         EURASIP Journal on Image and Video Processing 2008.1 (2008): 1-10.
         """
@@ -350,7 +350,7 @@ class MOTAccumulator(object):
         """Create a new DataFrame filled with data.
 
         Params
-        ------
+        ----
         indices: dict
             dict of lists with fields 'FrameId' and 'Event'
         events: dict
@@ -403,12 +403,12 @@ class MOTAccumulator(object):
         """Merge dataframes.
 
         Params
-        ------
+        ----
         dfs : list of pandas.DataFrame or MotAccumulator
             A list of event containers to merge
 
         Kwargs
-        ------
+        ----
         update_frame_indices : boolean, optional
             Ensure that frame indices are unique in the merged container
         update_oids : boolean, unique
@@ -419,7 +419,7 @@ class MOTAccumulator(object):
             Whether or not to return mapping information
 
         Returns
-        -------
+        -----
         df : pandas.DataFrame
             Merged event data frame
         """

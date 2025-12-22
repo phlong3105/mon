@@ -21,7 +21,7 @@ option="${options[option]}"
 # ----- Directory & File -----
 current_file=$(readlink -f "${0}")
 current_dir=$(dirname "${current_file}")
-if [ $(basename "${current_file}") == "scripts" ]; then
+if [ $(basename "${current_dir}") == "scripts" ]; then
     root_dir=$(dirname "${current_dir}")
 else
     root_dir="${current_dir}"

@@ -26,9 +26,9 @@ def calculate_psnr(img1, img2, border=0):
     return 20 * math.log10(255.0 / math.sqrt(mse))
 
 
-# --------------------------------------------
+# ----------------------------
 # SSIM
-# --------------------------------------------
+# ----------------------------
 def calculate_ssim(img1, img2, border=0):
     '''calculate SSIM
     the same outputs as MATLAB's

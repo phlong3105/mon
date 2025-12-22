@@ -342,7 +342,7 @@ class Logger(object):
         self.comm = comm
 
     # Logging API, forwarded
-    # ----------------------------------------
+    # ------------------------
     def logkv(self, key, val):
         self.name2val[key] = val
 
@@ -377,7 +377,7 @@ class Logger(object):
             self._do_log(args)
 
     # Configuration
-    # ----------------------------------------
+    # ------------------------
     def set_level(self, level):
         self.level = level
 
@@ -392,7 +392,7 @@ class Logger(object):
             fmt.close()
 
     # Misc
-    # ----------------------------------------
+    # ------------------------
     def _do_log(self, args):
         for fmt in self.output_formats:
             if isinstance(fmt, SeqWriter):

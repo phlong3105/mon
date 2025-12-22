@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for video input/output operations.
+"""Video data I/O operations.
 
-This module provides classes and functions to read and write video files using
-different backends such as OpenCV and FFmpeg.
+This module provides functions for input and output operations for video data.
 """
 
 __all__ = [
@@ -27,21 +26,17 @@ from mon.core.pathlib import Path
 from .. import image as I
 
 
-# ----- Reading -----
+# --- Reading ---
 def load_video_ffmpeg(process, height: int, width: int) -> np.ndarray:
-    """Reads a frame from video using ``ffmpeg``.
-    
+    """Read a frame from an ffmpeg process.
+
     Args:
-        process (subprocess.Popen): Subprocess managing ``ffmpeg``.
-        height (int): Height of the output frame.
-        width (int): Width of the output frame.
-        
-    Returns:
-        numpy.ndarray: Frame/image as a numpy.ndarray of shape (H, W, C) in RGB
-            format.
-    
+        process: Subprocess managing ffmpeg.
+        height: Height of the output frame.
+        width: Width of the output frame.
+
     Raises:
-        ValueError: If the read bytes length does not match the expected size.
+        ValueError: If the number of bytes read does not match the expected size.
     """
     # RGB24: 3 bytes per pixel
     img_size = height * width * 3
@@ -59,14 +54,16 @@ def load_video_ffmpeg(process, height: int, width: int) -> np.ndarray:
     return image
 
 
-# ----- Writing -----
+# --- Writing ---
 def write_video_ffmpeg(process, frame: Union[torch.Tensor, np.ndarray]):
-    """Writes a frame to video using ``ffmpeg``.
-    
+    """Write a frame to an ffmpeg process.
+
     Args:
-        process (subprocess.Popen): Subprocess managing ``ffmpeg``.
-        frame (numpy.ndarray or torch.Tensor): Frame/image as a numpy.ndarray
-            of shape (H, W, C) in RGB format.
+        process: Subprocess managing ffmpeg.
+        frame: Frame as an RGB numpy array.
+
+    Raises:
+        ValueError: If frame is not a numpy.ndarray.
     """
     if not isinstance(frame, np.ndarray):
         raise ValueError(f"``frame`` must be a numpy.ndarray, got {type(frame).__name__}.")
@@ -79,13 +76,17 @@ def write_video_ffmpeg(process, frame: Union[torch.Tensor, np.ndarray]):
 
 
 class VideoWriter(abc.ABC):
-    """A base class for writing images to video.
-    
-    This class provides an interface for writing video frames to a video file.
-    Subclasses must implement the `_init`, `close`, and `write` methods.
-    
+    """An abstract base for video writers.
+
+    Define the interface for writing frames to video files; subclasses must
+    implement initialization, closing, and frame writing.
+
     Attributes:
-        _cur_idx (int): The current index of written frames.
+        verbose (bool): Enable verbosity.
+        _cur_idx (int): Current written frame index.
+        _dst (Path): Destination path for the output video.
+        _imgsz (tuple[int, int]): Output video size as (H, W).
+        _frame_rate (float): Output video frame rate.
     """
     
     def __init__(
@@ -96,15 +97,13 @@ class VideoWriter(abc.ABC):
         verbose   : bool  = False,
         *args, **kwargs
     ):
-        """Initializes the VideoWriter instance.
-        
+        """Initialize the video writer.
+
         Args:
-            dst (Path): Absolute path to save video. If it is a directory, the
-                video will be saved as ``result.mp4``.
-            imgsz (tuple[int, int], optional): Output video size as a tuple of
-                (H, W). Defaults to (480, 640).
-            frame_rate (float, optional): Frame rate of output video. Defaults to 30.
-            verbose (bool, optional): Enable verbosity if True. Defaults to False.
+            dst: Destination path or directory for the video output.
+            imgsz: Output video size as (H, W).
+            frame_rate: Output video frame rate.
+            verbose: Enable verbosity.
         """
         self.verbose     = verbose
         self._cur_idx    = 0
@@ -113,86 +112,59 @@ class VideoWriter(abc.ABC):
         self._frame_rate = frame_rate
         self._init()
      
-     # ----- Magic Methods -----
+     # --- Magic Methods ---
     def __len__(self) -> int:
-        """Returns the number of written frames.
-        
-        Returns:
-            int: Number of written frames.
-        """
+        """Return the number of written frames."""
         return self._cur_idx
     
     @abc.abstractmethod
     def __del__(self):
-        """Closes the video writer."""
+        """Close resources held by the writer."""
         pass
     
-    # ----- Properties -----
+    # --- Properties ---
     @property
     def cur_idx(self) -> int:
-        """Getter for the current index of written frames.
-        
-        Returns:
-            int: Current index of written frames.
-        """
+        """Return the current written frame index."""
         return self._cur_idx
     
     @property
     def dst(self) -> Path:
-        """Getter for the destination path.
-        
-        Returns:
-            Path: Destination path where the video is saved.
-        """
+        """Return the destination path for the output video."""
         return self._dst
     
     @property
     def imgsz(self) -> tuple[int, int]:
-        """Getter for the frame size.
-        
-        Returns:
-            tuple[int, int]: Frame size as a tuple of (H, W).
-        """
+        """Return the configured frame size as (H, W)."""
         return self._imgsz
     
     @property
     def frame_rate(self) -> float:
-        """Getter for the frame rate.
-        
-        Returns:
-            float: Frame rate of the output video.
-        """
+        """Return the configured frame rate."""
         return self._frame_rate
     
-    # ----- Initialize -----
+    # --- Initialize ---
     @abc.abstractmethod
     def _init(self):
-        """Initializes video writer."""
+        """Create and configure backend-specific writer resources."""
         pass
     
-    # ----- Write  -----
+    # --- Write  ---
     @abc.abstractmethod
     def write(self, frame: np.ndarray, path: Path = None):
-        """Writes a frame to video.
+        """Write a frame to the video output.
 
         Args:
-            frame (numpy.ndarray): Video frame as a numpy.ndarray of shape
-                (H, W, C).
-            path (Path, optional): Optional path to save ``frame`` as image.
-                Defaults to None.
+            frame: Frame array as (H, W, C).
+            path: Optional path to also save the frame as an image.
         """
         pass
 
 
 class VideoWriterCV(VideoWriter):
-    """Writes images to video using ``cv2``.
-    
-    This class extends VideoWriter and implements video writing using OpenCV's
-    VideoWriter.
-    
-    Attributes:
-        _fourcc (str): FourCC code for the video codec.
-        _video_writer (cv2.VideoWriter): OpenCV VideoWriter instance.
+    """A video writer using OpenCV.
+
+    Use cv2.VideoWriter to encode frames and save to disk.
     """
     
     def __init__(
@@ -204,16 +176,14 @@ class VideoWriterCV(VideoWriter):
         verbose   : bool  = False,
         *args, **kwargs
     ):
-        """Initializes the VideoWriterCV instance.
-        
+        """Initialize the OpenCV video writer.
+
         Args:
-            dst (Path): Absolute path to save video. If it is a directory, the
-                video will be saved as ``result.mp4``.
-            imgsz (tuple[int, int]): Output video size as a tuple of (H, W).
-                Defaults to (480, 640).
-            frame_rate (float, optional): Frame rate of output video. Defaults to 30.
-            fourcc (str, optional): FourCC code for the video codec. Defaults to "mp4v".
-            verbose (bool, optional): Enable verbosity if True. Defaults to False.
+            dst: Destination path or directory for the video output.
+            imgsz: Output video size as a tuple of (H, W).
+            frame_rate: Output video frame rate.
+            fourcc: FourCC code for the video codec.
+            verbose: Enable verbosity.
         """
         self._fourcc       = fourcc
         self._video_writer = None
@@ -225,15 +195,15 @@ class VideoWriterCV(VideoWriter):
             *args, **kwargs
         )
     
-    # ---- Magic Methods -----
+    # ---- Magic Methods ---
     def __del__(self):
         """Close video writer."""
         if self._video_writer:
             self._video_writer.release()
     
-    # ---- Initialize -----
+    # ---- Initialize ---
     def _init(self):
-        """Initializes video writer."""
+        """Initialize the OpenCV video writer."""
         if self._dst.is_dir():
             video_file = self._dst / f"result.mp4"
         else:
@@ -251,15 +221,13 @@ class VideoWriterCV(VideoWriter):
         if self._video_writer is None:
             raise FileNotFoundError(f"``video_file`` cannot be created at {video_file}.")
     
-    # ----- Write  -----
+    # --- Write  ---
     def write(self, frame: torch.Tensor | np.ndarray, path: Path = None):
-        """Writes a frame to video.
-        
+        """Write a frame to the video output.
+
         Args:
-            frame (numpy.ndarray or torch.Tensor): Video frame as a numpy.ndarray
-                of shape (H, W, C).
-            path (Path, optional): Optional path to save ``frame`` as image.
-                Defaults to None.
+            frame: Video frame as a numpy.ndarray of shape (H, W, C).
+            path: Optional path to save frame as image. Defaults to None.
         """
         image = I.to_array(frame)
         # IMPORTANT: Image must be in a BGR format
@@ -269,14 +237,9 @@ class VideoWriterCV(VideoWriter):
 
 
 class VideoWriterFFmpeg(VideoWriter):
-    """A class to write images to video using ``ffmpeg``.
-    
-    This class extends VideoWriter and implements video writing using FFmpeg.
-    
-    Attributes:
-        _pix_fmt (str): Pixel format for output video.
-        _ffmpeg_process (subprocess.Popen): Subprocess managing ``ffmpeg``.
-        _ffmpeg_kwargs (dict): Additional keyword arguments for FFmpeg output.
+    """A video writer using FFmpeg.
+
+    Use an ffmpeg subprocess to pipe raw frames to the encoder and save output.
     """
     
     def __init__(
@@ -288,16 +251,14 @@ class VideoWriterFFmpeg(VideoWriter):
         verbose   : bool  = False,
         *args, **kwargs
     ):
-        """Initializes the VideoWriterFFmpeg instance.
-        
+        """Initialize the FFmpeg video writer.
+
         Args:
-            dst (Path): Absolute path to save video. If it is a directory, the
-                video will be saved as ``result.mp4``.
-            imgsz (tuple[int, int]): Output video size as a tuple of (H, W).
-                Defaults to (480, 640).
-            frame_rate (float): Frame rate of output video. Defaults to 10.
-            pix_fmt (str): Pixel format for output video. Defaults to "yuv420p".
-            verbose (bool): Enable verbosity if True. Defaults to False.
+            dst: Destination path or directory for the video output.
+            imgsz: Output video size as a tuple of (H, W).
+            frame_rate: Output video frame rate.
+            pix_fmt: Pixel format for output video.
+            verbose: Enable verbosity.
         """
         self._pix_fmt        = pix_fmt
         self._ffmpeg_process = None
@@ -310,7 +271,7 @@ class VideoWriterFFmpeg(VideoWriter):
             *args, **kwargs
         )
     
-    # ---- Magic Methods -----
+    # ---- Magic Methods ---
     def __del__(self):
         """Close video writer."""
         if self._ffmpeg_process:
@@ -319,9 +280,9 @@ class VideoWriterFFmpeg(VideoWriter):
             self._ffmpeg_process.wait()
             self._ffmpeg_process = None
         
-    # ---- Initialize -----
+    # ---- Initialize ---
     def _init(self):
-        """Initializes video writer."""
+        """Initialize the FFmpeg video writer."""
         if self._dst.is_dir():
             video_file = self._dst / "result.mp4"
         else:
@@ -348,15 +309,13 @@ class VideoWriterFFmpeg(VideoWriter):
             stream = stream.global_args("-loglevel", "quiet")
         self._ffmpeg_process = stream.run_async(pipe_stdin=True)
     
-    # ----- Write  -----
+    # --- Write  ---
     def write(self, frame: torch.Tensor | np.ndarray, path: Path = None):
-        """Writes a frame to video.
-        
+        """Write a frame to the video output.
+
         Args:
-            frame (numpy.ndarray or torch.Tensor): Video frame as a numpy.ndarray
-                of shape (H, W, C).
-            path (Path, optional): Optional path to save ``frame`` as image.
-                Defaults to None.
+            frame: Video frame as a numpy.ndarray of shape (H, W, C).
+            path: Optional path to save frame as image. Defaults to None.
         """
         write_video_ffmpeg(self._ffmpeg_process, frame)
         self._cur_idx += 1

@@ -146,13 +146,13 @@ def weights_init_xavier(m):
 
 def initial_model(model, opts):
     if opts.init == "normal":
-        print("[*]------------------------normal initialization for model")
+        print("[*]----------------normal initialization for model")
         model.apply(weights_init_normal)
     elif opts.init == "xavier":
-        print("[*]------------------------xavier initialization for model")
+        print("[*]----------------xavier initialization for model")
         model.apply(weights_init_xavier)
     elif opts.init == "kaiming":
-        print("[*]------------------------kaiming initialization for model")
+        print("[*]----------------kaiming initialization for model")
         model.apply(weights_init_kaiming)
     else:
         print("init method not implemented, check utils.py")

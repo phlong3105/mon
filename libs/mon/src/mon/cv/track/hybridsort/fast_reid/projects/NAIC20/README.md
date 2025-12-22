@@ -58,7 +58,7 @@ To quickly verify the results, we use resnet34-ibn as backbone to conduct ablati
 The datasets are `naic19`, `naic20r1` and `naic20r2`.
 
 | Setting | Rank-1 | mAP |
-| ------  | ------ | --- |
+| ----  | ---- | --- |
 | Baseline | 70.11 | 63.29 |
 | w/ tripletx10 | 73.79 | 67.01 |
 | w/ cosface | 75.61 | 70.07 |

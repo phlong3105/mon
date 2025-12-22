@@ -455,7 +455,7 @@ class UnetGenerator(nn.Module):
 
 class UnetSkipConnectionBlock(nn.Module):
     """Defines the Unet submodule with skip connection.
-    X -------------------identity----------------------
+    X -------------identity--------------
     |-- downsampling -- |submodule| -- upsampling --|
     """
 

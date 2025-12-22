@@ -13,7 +13,7 @@ import torch
 from mon import nn
 
 
-# ----- FF-FINER -----
+# --- FF-FINER ---
 class FINERLayer(nn.Module):
     """Applies scaled sine activation to linear transformation.
 

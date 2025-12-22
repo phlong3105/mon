@@ -119,7 +119,7 @@ class FocalLoss(nn.Module):
         # print(probs)
 
         batch_loss = -(torch.pow((1 - probs), self.gamma)) * log_p
-        # print('-----bacth_loss------')
+        # print('---bacth_loss----')
         # print(batch_loss)
 
         if self.reduce:

@@ -61,7 +61,7 @@ for sigma_test in sigmas:
     model_restoration.load_state_dict(checkpoint['params'])
 
     print("===>Testing using weights: ",weights)
-    print("------------------------------------------------")
+    print("------------------------------")
     model_restoration.cuda()
     model_restoration = nn.DataParallel(model_restoration)
     model_restoration.eval()

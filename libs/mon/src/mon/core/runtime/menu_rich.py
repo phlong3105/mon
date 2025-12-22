@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for interactive CLI runtime menu.
+"""Interactive CLI menu utilities using Rich.
 
-This module implements an interactive command-line interface (CLI) menu using Rich
-prompts. It allows users to select options for tasks, models, configurations, and
-various runtime parameters in a guided manner.
+This module provides prompt wrappers and interactive flows to collect runtime
+options using Rich-based prompts.
 """
 
 __all__ = [
@@ -35,20 +34,31 @@ from .utils import (
 )
 
 
-# ----- Base Prompts -----
+# ==============================================================================
+# ABSTRACT PROMPT WRAPPERS
+# ==============================================================================
+
+# --- Base Interaction Types (Generic Prompt, Confirm, and NumberPrompt) ---
 class Prompt:
-    """A class that wraps around core.rich.prompt with additional values parsing
-    functionality.
+    """A wrapper for interactive selection or input prompts.
+
+    Store prompt text, default, choices, and the last returned value. Normalize
+    and display prompts using the Rich-based SelectionOrInputPrompt.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Normalized default string.
+        choices (list[str] | None): Normalized choices list or None.
+        value (str): Last returned value from prompt().
     """
     
     def __init__(self, text: str, default: str, choices: Sequence | Collection = None):
-        """Initializes the Prompt instance.
-        
+        """Initialize the prompt wrapper.
+
         Args:
-            text (str): The prompt text to display to the user.
-            default (str): The default value if the user provides no input.
-            choices (Sequence or Collection, optional): A list of choices to 
-                present to the user. Defaults to None.
+            text: Prompt text to display.
+            default: Default value to show.
+            choices: Optional sequence of choices for selection prompts.
         """
         self.text    = text
         self.default = default
@@ -57,37 +67,29 @@ class Prompt:
     
     @property
     def default(self) -> str:
-        """Getter for the default value.
-        
-        Returns:
-            str: The default value.
-        """
+        """Return the default as a displayable string."""
         return self._default
     
     @default.setter
     def default(self, default: str):
-        """Setter for the default value.
-        
+        """Set and normalize the default value.
+
         Args:
-            default (str): The default value to set.
+            default: The default value to set.
         """
         self._default = str(default) if default else ""
     
     @property
     def value(self) -> str:
-        """Getter for the user's input value.
-        
-        Returns:
-            str: The user's input value.
-        """
+        """Return the last stored value."""
         return self._value
     
     @value.setter
     def value(self, value: str):
-        """Setter for the user's input value.
-        
+        """Normalize and store a value returned from the prompt.
+
         Args:
-            value (str): The user's input value to set.
+            value: The value to store.
         """
         if value:
             value = value[0] if isinstance(value, list | tuple) and len(value) == 1 else value
@@ -97,29 +99,20 @@ class Prompt:
         
     @property
     def choices(self) -> list[str]:
-        """Getter for the list of choices to display.
-        
-        Returns:
-            list[str]: The list of choices.
-        """
+        """Return normalized choices for display."""
         return self._choices
     
     @choices.setter
     def choices(self, choices: Sequence | Collection = None):
-        """Setter for the list of choices to display.
-        
+        """Normalize and store choices.
+
         Args:
-            choices (Sequence or Collection, optional): The list of choices to set.
-                Defaults to None.
+            choices: The choices to store.
         """
         self._choices = to_list(choices) or None
     
     def prompt(self) -> Any:
-        """Prompts the user for a choice.
-        
-        Returns:
-            Any: The user's selected or input value.
-        """
+        """Display the prompt and return the user's response."""
         kwargs = {
             "prompt"        : self.text,
             "case_sensitive": True,
@@ -136,36 +129,52 @@ class Prompt:
 
 
 class Confirm:
-    """A class that wraps around core.rich.prompt.Confirm."""
+    """A boolean confirmation prompt wrapper.
+
+    Store prompt text, default boolean, and last returned value. Display a
+    confirmation prompt using Rich.
+
+    Attributes:
+        text (str): Prompt text.
+        default (bool): Default boolean selection.
+        value (bool): Last returned value from prompt().
+    """
     
     def __init__(self, text: str, default: bool = True):
-        """Initializes the Confirm instance.
-        
+        """Initialize the confirmation prompt.
+
         Args:
-            text (str): The prompt text to display to the user.
-            default (bool, optional): The default value if the user provides no
-                input. Defaults to True.
+            text: Prompt text to display.
+            default: Default boolean selection.
         """
         self.text    = text
         self.default = default
         self.value   = default
     
     def prompt(self) -> bool:
-        """Prompts the user for a confirmation (yes/no)."""
+        """Ask for confirmation and return the result."""
         self.value = prompt.Confirm().ask(prompt=self.text, default=self.default)
         return self.value
 
 
 class NumberPrompt:
-    """A class that wraps around core.rich.prompt.IntPrompt."""
+    """An integer prompt wrapper for numeric input.
+
+    Store prompt text, default integer, and last returned value. Normalize
+    numeric input and display an integer prompt using Rich.
+
+    Attributes:
+        text (str): Prompt text.
+        default (int): Default numeric value or -1 for unset.
+        value (int | None): Last returned value from prompt().
+    """
     
     def __init__(self, text: str, default: int = -1):
-        """Initializes the NumberPrompt instance.
-        
+        """Initialize the numeric prompt.
+
         Args:
-            text (str): The prompt text to display to the user.
-            default (int, optional): The default value if the user provides no
-                input. Defaults to -1.
+            text: Prompt text.
+            default: Default numeric value or -1 for unset.
         """
         self.text    = text
         self.default = default
@@ -173,19 +182,15 @@ class NumberPrompt:
 
     @property
     def default(self):
-        """Getter for the default value.
-        
-        Returns:
-            int: The default value.
-        """
+        """Return the normalized numeric default."""
         return self._default
     
     @default.setter
     def default(self, default: int):
-        """Setter for the default value.
-        
+        """Normalize and set the numeric default.
+
         Args:
-            default (int): The default value to set.
+            default: The default value to set.
         """
         default       = default[0] if isinstance(default, list | tuple) else default
         default       = to_int(default)
@@ -193,33 +198,42 @@ class NumberPrompt:
 
     @property
     def value(self) -> int:
-        """Getter for the user's input value.
-        
-        Returns:
-            int: The user's input value.
-        """
+        """Return the stored numeric value."""
         return self._value
     
     @value.setter
     def value(self, value: int):
-        """Setter for the user's input value.
-        
+        """Normalize and set the numeric value.
+
         Args:
-            value (int): The user's input value to set.
+            value: The value to set.
         """
         value       = value[0] if isinstance(value, list | tuple) else value
         value       = to_int(value)
         self._value = None if isinstance(value, int | float) and value < 0 else value
         
     def prompt(self) -> int:
-        """Prompts the user for a number."""
+        """Prompt for an integer and return the normalized value."""
         self.value = prompt.IntPrompt().ask(prompt=self.text, default=self.default)
         return self.value
 
 
-# ----- Predefined Prompts -----
+# ==============================================================================
+# ABSTRACT PROMPT WRAPPERS
+# ==============================================================================
+
+# --- File & Resource Discovery ---
 class TaskPrompt(Prompt):
-    """A prompt for selecting a task."""
+    """A task selection prompt.
+
+    Provide a prompt for selecting a task from available options.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default task.
+        choices (list[str] | None): List of available tasks.
+        value (str): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -228,12 +242,29 @@ class TaskPrompt(Prompt):
         default     : str = CLI_OPTIONS["task"]["default"],
         choices     : Sequence | Collection = None,
     ):
+        """Initialize the task prompt.
+
+        Args:
+            project_root: Project root to discover tasks.
+            text: Prompt text.
+            default: Default task.
+            choices: Optional override list of choices.
+        """
         choices = choices or list_tasks(project_root=project_root)
         super().__init__(text=text, default=default, choices=choices)
 
 
 class ArchPrompt(Prompt):
-    """A prompt for selecting a model architecture."""
+    """An architecture selection prompt.
+
+    Provide a prompt for selecting an architecture from available options.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default architecture.
+        choices (list[str] | None): List of available architectures.
+        value (str): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -244,12 +275,31 @@ class ArchPrompt(Prompt):
         default     : str = CLI_OPTIONS["arch"]["default"],
         choices     : Sequence | Collection = None,
     ):
+        """Initialize the architecture prompt.
+
+        Args:
+            task: Task name.
+            mode: Run mode.
+            project_root: Project root.
+            text: Prompt text.
+            default: Default architecture.
+            choices: Optional override list of choices.
+        """
         choices = choices or list_archs(task=task, mode=mode, project_root=project_root)
         super().__init__(text=text, default=default, choices=choices)
 
 
 class ModelPrompt(Prompt):
-    """A prompt for selecting a model."""
+    """A model selection prompt.
+
+    Provide a prompt for selecting a model from available options.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default model.
+        choices (list[str] | None): List of available models.
+        value (str): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -261,12 +311,32 @@ class ModelPrompt(Prompt):
         default     : str = CLI_OPTIONS["model"]["default"],
         choices     : Sequence | Collection = None,
     ):
+        """Initialize the model prompt.
+
+        Args:
+            task: Task name.
+            mode: Run mode.
+            arch: Architecture name.
+            project_root: Project root.
+            text: Prompt text.
+            default: Default model.
+            choices: Optional override list of choices.
+        """
         choices = choices or list_models(task=task, mode=mode, arch=arch, project_root=project_root)
         super().__init__(text=text, default=default, choices=choices)
 
 
 class ConfigPrompt(Prompt):
-    """A prompt for selecting a configuration file."""
+    """A configuration file selection prompt.
+
+    Provide a prompt for selecting a configuration file from available options.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default configuration.
+        choices (list[str] | None): List of available configuration files.
+        value (str): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -277,6 +347,16 @@ class ConfigPrompt(Prompt):
         default     : str = CLI_OPTIONS["config"]["default"],
         choices     : Sequence | Collection = None,
     ):
+        """Initialize the configuration prompt.
+
+        Args:
+            project_root: Project root.
+            arch: Architecture name.
+            model: Model name.
+            text: Prompt text.
+            default: Default configuration.
+            choices: Optional override list of choices.
+        """
         choices = choices or list_config_files(
             project_root  = project_root,
             model_root    = parse_model_dir(arch, model),
@@ -288,7 +368,16 @@ class ConfigPrompt(Prompt):
 
 
 class WeightsPrompt(Prompt):
-    """A prompt for selecting a weights file."""
+    """A weights selection prompt.
+
+    Provide a prompt for selecting weights files from available options.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default weights.
+        choices (list[str] | None): List of available weights files.
+        value (str | list[str] | None): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -298,6 +387,15 @@ class WeightsPrompt(Prompt):
         default     : str = CLI_OPTIONS["weights"]["default"],
         choices     : Sequence | Collection = None,
     ):
+        """Initialize the weights prompt.
+
+        Args:
+            model: Model name.
+            project_root: Project root.
+            text: Prompt text.
+            default: Default weights.
+            choices: Optional override list of choices.
+        """
         default = (parse_weights_file(project_root, default))
         default = str(default) if default else None
         choices = choices or list_weights_files(model=model, project_root=project_root)
@@ -306,19 +404,15 @@ class WeightsPrompt(Prompt):
     
     @property
     def value(self):
-        """Getter for the user's input value.
-        
-        Returns:
-            Any: The user's input value.
-        """
+        """Return the normalized weights selection."""
         return self._value
     
     @value.setter
     def value(self, value: Any):
-        """Setter for the user's input value.
-        
+        """Normalize and set chosen weights (resolve indices to choices).
+
         Args:
-            value (Any): The user's input value to set.
+            value: The value to set.
         """
         value = value if value not in [None, ""] else None
         if value:
@@ -331,11 +425,7 @@ class WeightsPrompt(Prompt):
         self._value = value
 
     def prompt(self) -> Any:
-        """Prompts the user for a choice.
-        
-        Returns:
-            Any: The user's selected or input value.
-        """
+        """Display weights prompt allowing empty input."""
         kwargs = {
             "prompt"        : self.text,
             "case_sensitive": True,
@@ -350,8 +440,18 @@ class WeightsPrompt(Prompt):
         return self.value
 
 
+# --- File & Resource Discovery ---
 class DataPrompt(Prompt):
-    """A prompt for selecting a dataset."""
+    """A dataset selection prompt.
+
+    Provide a prompt for selecting datasets from available options.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default data.
+        choices (list[str] | None): List of available datasets.
+        value (list[str]): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -361,6 +461,15 @@ class DataPrompt(Prompt):
         default     : str = CLI_OPTIONS["data"]["default"],
         choices     : Sequence | Collection = None,
     ):
+        """Initialize the data prompt.
+
+        Args:
+            task: Task name.
+            project_root: Project root.
+            text: Prompt text.
+            default: Default data.
+            choices: Optional override list of choices.
+        """
         default = to_str(default, sep=", ")
         # default = wrap_str(default, max_length=get_terminal_size()[0])
         choices = choices or list_datasets(task=task, mode="predict", project_root=project_root)
@@ -368,19 +477,15 @@ class DataPrompt(Prompt):
     
     @property
     def value(self) -> str:
-        """Getter for the user's input value.
-        
-        Returns:
-            str: The user's input value.
-        """
+        """Return the normalized data selection as a list."""
         return self._value
     
     @value.setter
     def value(self, value: str):
-        """Setter for the user's input value.
-        
+        """Normalize and store the data selection.
+
         Args:
-            value (str): The user's input value to set.
+            value: The value to set.
         """
         if value:
             value = to_list(value)
@@ -390,7 +495,16 @@ class DataPrompt(Prompt):
 
 
 class FullnamePrompt(Prompt):
-    """A prompt for specifying a model fullname."""
+    """A run fullname prompt.
+
+    Provide a prompt for entering or confirming a run fullname.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default fullname.
+        choices (list[str] | None): List of choices.
+        value (str): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -399,12 +513,29 @@ class FullnamePrompt(Prompt):
         text   : str = CLI_OPTIONS["fullname"]["prompt_text"],
         default: str = CLI_OPTIONS["fullname"]["default"],
     ):
+        """Initialize the fullname prompt.
+
+        Args:
+            config: Configuration file.
+            model: Model name.
+            text: Prompt text.
+            default: Default fullname.
+        """
         default = default or (Path(config).stem if config not in [None, "None", ""] else model)
         super().__init__(text=text, default=default)
 
 
 class DevicePrompt(Prompt):
-    """A prompt for selecting a device."""
+    """A device selection prompt.
+
+    Provide a prompt for selecting a device from available options.
+
+    Attributes:
+        text (str): Prompt text.
+        default (str): Default device.
+        choices (list[str] | None): List of available devices.
+        value (str): Last returned value from prompt().
+    """
     
     def __init__(
         self,
@@ -415,21 +546,43 @@ class DevicePrompt(Prompt):
         default: str  = CLI_OPTIONS["device"]["default"],
         choices: list = CLI_OPTIONS["device"]["choices"],
     ):
+        """Initialize the device prompt.
+
+        Args:
+            model: Model name.
+            mode: Run mode.
+            task: Task name.
+            text: Prompt text.
+            default: Default device.
+            choices: List of choices.
+        """
         default = default or "cuda:0"
         choices = choices or CLI_OPTIONS["device"]["choices"]
         super().__init__(text=text, default=default, choices=choices)
 
 
-# ----- Interactive CLI -----
+# ==============================================================================
+# CLI FLOW CONTROL (THE WIZARD)
+# ==============================================================================
+
+# --- State Machine ---
 class RunCLI:
-    """An interactive CLI menu for selecting runtime options."""
+    """An interactive runtime configuration menu.
+
+    Manage the interactive CLI flow for collecting and validating runtime
+    arguments and configuration selections.
+
+    Attributes:
+        args (dict): Current in-progress arguments.
+        config_args (dict): Loaded configuration arguments from the
+            selected config.
+    """
     
     def __init__(self, defaults: dict = None):
-        """Initializes the RunCLI instance.
-        
+        """Initialize the interactive CLI with defaults.
+
         Args:
-            defaults (dict, optional): A dictionary of default argument values.
-                Defaults to None.
+            defaults: Default overrides for arguments.
         """
         self._index = 0
         self._args  = DEFAULT_ARGS
@@ -437,37 +590,29 @@ class RunCLI:
         self._config_args = {}
     
     def __len__(self) -> int:
-        """Returns the number of options in the menu."""
+        """Return the total number of interactive steps."""
         return 27
 
     @property
     def args(self) -> dict:
-        """Getter for the selected arguments.
-        
-        Returns:
-            dict: The selected arguments.
-        """
+        """Return current in-progress arguments."""
         return self._args
     
     @property
     def config_args(self) -> dict:
-        """Getter for the loaded configuration arguments.
-        
-        Returns:
-            dict: The loaded configuration arguments.
-        """
+        """Return loaded configuration arguments from the selected config."""
         return self._config_args
     
     def _next(self):
-        """Moves to the next option, wrapping around if needed."""
+        """Advance the prompt index by one."""
         self._index = (self._index + 1) % self.__len__()
 
     def _prev(self):
-        """Moves to the previous option, wrapping around if needed."""
+        """Move the prompt index back by one."""
         self._index = (self._index - 1) % self.__len__()
 
     def _display_prompt(self):
-        """Displays the prompt for the current option and handles user input."""
+        """Display and handle the current prompt step based on index."""
         if self._index == 0:
             # clear_terminal()
             console.rule(f"[bold red]Input Prompts")
@@ -670,10 +815,10 @@ class RunCLI:
                 self._index = self.__len__()
     
     def prompt(self) -> dict | box.Box:
-        """Runs the interactive menu and return the selected option.
-        
+        """Run the interactive menu until completion.
+
         Returns:
-            dict or box.Box: The selected arguments.
+            The final arguments mapping (box.Box or dict).
         """
         while True:
             self._display_prompt()

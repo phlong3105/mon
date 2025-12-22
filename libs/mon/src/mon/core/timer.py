@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for timer utilities.
+"""Timer and profiling utility collection.
 
-This module implements a simple timer and time profiler classes for measuring
-execution time of code segments.
+This module provides lightweight timer and profiling helpers for measuring
+elapsed time and profiling pipeline stages.
 """
 
 __all__ = [
@@ -15,21 +15,30 @@ __all__ = [
 import time
 
 
-# ----- Timer -----
+# ==============================================================================
+# CORE MEASUREMENT ENGINE
+# ==============================================================================
+
+# --- Atomic Timer (The Timer class for tracking intervals) ---
 class Timer:
-    """A simple timer.
-    
+    """A lightweight timer for measuring elapsed time.
+
+    Accumulate total time, count calls, and provide per-call average and last
+    duration statistics.
+
     Attributes:
-        start (float): Start time of the timer.
-        end (float): End time of the timer.
-        total (float): Total accumulated time.
-        calls (int): Number of times the timer has been used.
-        diff (float): Difference between end and start time.
-        avg (float): Average time per call.
-        duration (float): Duration of the last timing.
+        start (float): Timestamp when the current interval started.
+        end (float): Timestamp when the current interval ended.
+        total (float): Accumulated total time across intervals.
+        calls (int): Number of timing intervals recorded.
+        diff (float): Duration of the most recent interval.
+        avg (float): Running average duration per call.
+        duration (float): Last reported duration (either last interval or
+            average).
     """
     
     def __init__(self):
+        """Initialize the timer."""
         self.start    = 0.0
         self.end      = 0.0
         self.total    = 0.0
@@ -40,87 +49,71 @@ class Timer:
     
     @property
     def total_m(self) -> float:
-        """Returns the total time in minutes.
-        
-        Returns:
-            float: Total time in minutes.
-        """
+        """Return the total time in minutes."""
         return self.total / 60.0
     
     @property
     def total_h(self) -> float:
-        """Returns the total time in hours.
-        
-        Returns:
-            float: Total time in hours.
-        """
+        """Return the total time in hours."""
         return self.total / 3600.0
     
     @property
     def avg_m(self) -> float:
-        """Returns the average time in minutes.
-        
-        Returns:
-            float: Average time in minutes.
-        """
+        """Return the average time in minutes."""
         return self.avg / 60.0
     
     @property
     def avg_h(self) -> float:
-        """Returns the average time in hours.
-        
-        Returns:
-            float: Average time in hours.
-        """
+        """Return the average time in hours."""
         return self.avg / 3600.0
     
     @property
     def duration_m(self) -> float:
-        """Returns the duration in minutes.
-        
-        Returns:
-            float: Duration in minutes.
-        """
+        """Return the last duration in minutes."""
         return self.duration / 60.0
     
     @property
     def duration_h(self) -> float:
-        """Returns the duration in hours.
-        
-        Returns:
-            float: Duration in hours.
-        """
+        """Return the last duration in hours."""
         return self.duration / 3600.0
     
     def start(self):
-        """Starts the timer."""
+        """Start the timer and clear previous statistics.
+
+        Reset accumulated statistics and record the start time.
+        """
         self.clear()
         self.tick()
     
     def end(self) -> float:
-        """Ends the timer and returns the average time.
-        
+        """End the timer and return the current average.
+
+        Stop the current timing interval and return the average time per call.
+
         Returns:
-            float: Average time per call.
+            The current average duration per call.
         """
         self.tock()
         return self.avg
     
     def tick(self):
-        """Starts the timer."""
+        """Record the start time for a timing interval.
+
+        Begin a new timing segment without clearing previous data.
+        """
         # using time.time instead of time.clock because time time.clock
         # does not normalize for multithreading
         self.start = time.time()
     
     def tock(self, average: bool = True) -> float:
-        """Ends the timer and returns the duration.
-        
+        """Stop the current timing interval and update statistics.
+
         Args:
-            average (bool): If True, returns the average time per call. If False,
-                returns the duration of the last timing. Defaults to True.
-        
+            average: If True, set duration to the running average; otherwise set
+                duration to the most recent interval.
+
         Returns:
-            float: Duration or average time per call.
+            The resulting duration (either average or most recent interval).
         """
         self.end    = time.time()
         self.diff   = self.end - self.start
@@ -134,7 +127,10 @@ class Timer:
         return self.duration
     
     def clear(self):
-        """Clears the timer statistics."""
+        """Reset all timer statistics to zero.
+
+        Clear start, end, total, calls, diff, avg, and duration values.
+        """
         self.start    = 0.0
         self.end      = 0.0
         self.total    = 0.0
@@ -144,18 +140,26 @@ class Timer:
         self.duration = 0.0
 
 
-# ----- Time Profiler -----
+# ==============================================================================
+# PIPELINE INSTRUMENTATION
+# ==============================================================================
+
+# --- Stage Profiler ---
 class TimeProfiler:
-    """A simple time profiler for measuring different stages of a process.
-    
+    """A profiler holding timers for different pipeline stages.
+
+    Provide Timer instances for preprocess, infer, postprocess, and total
+    measurements and helpers to compute aggregate process times.
+
     Attributes:
-        preprocess (Timer): Timer for the preprocessing stage.
-        infer (Timer): Timer for the inference stage.
-        postprocess (Timer): Timer for the postprocessing stage.
-        total (Timer): Timer for the total process.
+        preprocess (Timer): Timer for preprocessing stage.
+        infer (Timer): Timer for inference stage.
+        postprocess (Timer): Timer for postprocessing stage.
+        total (Timer): Timer for the overall total stage.
     """
 
     def __init__(self):
+        """Initialize the time profiler."""
         self.preprocess  = Timer()
         self.infer       = Timer()
         self.postprocess = Timer()
@@ -163,32 +167,26 @@ class TimeProfiler:
 
     @property
     def process_time(self) -> float:
-        """Returns the average time taken by the profiler.
-        
-        Returns:
-            float: Average process time.
+        """Return the cumulative process time.
+
+        Return the sum of preprocess, infer, and postprocess total times.
         """
         return self.preprocess.total + self.infer.total + self.postprocess.total
 
     @property
     def avg_process_time(self) -> float:
-        """Returns the average time taken by the profiler.
-        
-        Returns:
-            float: Average process time.
+        """Return the cumulative average process time.
+
+        Return the sum of preprocess, infer, and postprocess average times.
         """
         return self.preprocess.avg + self.infer.avg + self.postprocess.avg
 
     def print(self):
-        '''
-        console.log(f"Total Time     : {self.total.total_time:09.6f} (s).")
-        console.log(f"  - Preprocess : {self.preprocess.total_time:09.6f} (s).")
-        console.log(f"  - Infer      : {self.infer.total_time:09.6f} (s).")
-        console.log(f"  - Postprocess: {self.postprocess.total_time:09.6f} (s).")
-        console.log(f"  - -----")
-        console.log(f"  - Process    : {self.process_time:09.6f} (s).")
-        '''
+        """Print a formatted summary of collected timing statistics.
 
+        Emit a simple tabular summary for total, preprocess, infer, and
+        postprocess times to stdout.
+        """
         results = {
             "Total"      : self.total.total,
             "Preprocess" : self.preprocess.total,

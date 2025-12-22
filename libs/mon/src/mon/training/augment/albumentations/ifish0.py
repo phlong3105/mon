@@ -13,7 +13,7 @@ import numpy as np
 from mon.core import BBoxFormat, bbox as B
 
 
-# ----- Utils -----
+# --- Utils ---
 def fish_xn_yn(
     source_x  : np.ndarray,
     source_y  : np.ndarray,
@@ -127,7 +127,7 @@ def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
     return image
 
 
-# ----- Transformation -----
+# --- Transformation ---
 def convert_image(image: np.ndarray, distortion: float, crop: bool = True) -> np.ndarray:
     """Converts an ordinary image to fisheye image.
     

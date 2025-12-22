@@ -19,7 +19,7 @@
 
 
 | <img src="assets/teaser/0085_low.png" alt="add" width="450"> | <img src="assets/teaser/0085_retinexformer.png" alt="add" width="450"> | <img src="assets/teaser/0085_darkir.png" alt="add" width="450"> |
-|:-------------------------:|:-------------------------:|:-------------------------:|
+|:---------------:|:---------------:|:---------------:|
 | Low-light w/ blur                | RetinexFormer                 | **DarkIR** (ours)    |
 | <img src="assets/teaser/low00747.png" alt="add" width="450"> | <img src="assets/teaser/low00747_lednet.png" alt="add" width="450"> | <img src="assets/teaser/low00747_darkir.png" alt="add" width="450"> |
 | Low-light w/o blur                 | LEDNet    | **DarkIR** (ours)                 |
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 The datasets used for training and/or evaluation are:
 
 |Dataset     | Sets of images | Source  |
-| -----------| :---------------:|------|
+| -------| :---------:|----|
 |LOL-Blur    | 10200 training pairs / 1800 test pairs| [LEDNet](https://github.com/sczhou/LEDNet) |
 |LOLv2-real        | 689 training pairs / 100 test pairs | [Google Drive](https://drive.google.com/file/d/1dzuLCk9_gE2bFF222n3-7GVUlSVHpMYC/view) |
 |LOLv2-synth        | 900 training pairs / 100 test pairs | [Google Drive](https://drive.google.com/file/d/1dzuLCk9_gE2bFF222n3-7GVUlSVHpMYC/view) |
@@ -74,7 +74,7 @@ You can download each specific dataset and put it on the `/data/datasets` folder
 We present results in different datasets for DarkIR of different sizes. While **DarkIR-m** has channel depth of 32, 3.31 M parameters and 7.25 GMACs, **DarkIR-l** has channel depth 64, 12.96 M parameters and 27.19 GMACs.
 
 |Dataset     | Model| PSNR| SSIM  | LPIPS |
-| -----------| :---------------:|:------:|------|------|
+| -------| :---------:|:----:|----|----|
 |LOL-Blur    | DarkIR-m| 27.00| 0.883| 0.162|
 |   | DarkIR-l| 27.30| 0.898| 0.137|
 |LOLv2-real  | DarkIR-m| 23.87| 0.880| 0.186|
@@ -84,7 +84,7 @@ We present results in different datasets for DarkIR of different sizes. While **
 We present perceptual metrics for Real-LOLBlur dataset:
 
 | Model| MUSIQ| NRQM  | NIQE |
-| -----------| :---------------:|:------:|:------:|
+| -------| :---------:|:----:|:----:|
 | DarkIR-m| 48.36| 4.983| 4.998|
 | DarkIR-l| 48.79| 4.917| 5.051|
 
@@ -93,7 +93,7 @@ We present perceptual metrics for Real-LOLBlur dataset:
 In addition, we tested our **DarkIR-m** in Real-World LLIE unpaired Datasets (downloaded from [Drive](https://drive.google.com/drive/folders/0B_FjaR958nw_djVQanJqeEhUM1k?usp=sharing)):
 
 | | DICM| MEF  | LIME | NPE | VV |
-| -----------| :---------------:|:------:|:------:|:------:|:------:|
+| -------| :---------:|:----:|:----:|:----:|:----:|
 | BRISQUE| 18.688| 13.903| 21.62| 12.877|  26.87|
 | NIQE| 3.759| 3.448| 4.074| 3.991|  3.74|
 
@@ -134,13 +134,13 @@ which will be saved in `./videos/results`.
 <p align="center"> <strong>  LOLv2-real </strong> </p>
 
 | <img src="assets/lolv2real/low00733_low.png" alt="add" width="300"> | <img src="assets/lolv2real/00733_snr.png" alt="add" width="300"> | <img src="assets/lolv2real/low00733_retinexformer.png" alt="add" width="300"> | <img src="assets/lolv2real/low00733_darkir.png" alt="add" width="300"> | <img src="assets/lolv2real/normal00733.png" alt="add" width="300"> |
-|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|
+|:---------------:|:---------------:|:---------------:|:---------------:|:---------------:|
 | Low-light                | SNR-Net | RetinexFormer    | **DarkIR** (ours) | Ground Truth                 |
 
 <p align="center"> <strong>  LOLv2-synth </strong> </p>
 
 | <img src="assets/lolv2synth/r13073518t_low.png" alt="add" width="300"> | <img src="assets/lolv2synth/r13073518t_snr.png" alt="add" width="300"> | <img src="assets/lolv2synth/r13073518t_retinexformer.png" alt="add" width="300"> | <img src="assets/lolv2synth/r13073518t_darkir.png" alt="add" width="300"> | <img src="assets/lolv2synth/r13073518t_normal.png" alt="add" width="300"> |
-|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|
+|:---------------:|:---------------:|:---------------:|:---------------:|:---------------:|
 | Low-light                | SNR-Net | RetinexFormer    | **DarkIR** (ours) | Ground Truth                 |
 
 &nbsp;

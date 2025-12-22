@@ -16,7 +16,7 @@ __all__ = [
 from ....core import *
 
 
-# ----- Dataset -----
+# --- Dataset ---
 @DATASETS.register(name="gta5nighttimefog")
 class GTA5NighttimeFog(ImageDataset):
     """GTA5NighttimeFog dataset."""

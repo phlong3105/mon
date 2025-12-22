@@ -31,7 +31,7 @@ def main_dataset_all_lol(rank = 1, test_path='../../data/datasets/', batch_size_
         print("    -Images in the PATH_LOW_VALID folder: ", len(list_blur_valid_LOLv2_real))
         print("    -Images in the PATH_HIGH_VALID folder: ", len(list_sharp_valid_LOLv2_real), '\n')
 
-    #------------------------------------------------------------------------
+    #--------------------------------------------
     # now load the LOLv2_synth dataset    
     PATH_VALID = os.path.join(test_path, 'LOL-v2/Synthetic', 'test')
     
@@ -50,7 +50,7 @@ def main_dataset_all_lol(rank = 1, test_path='../../data/datasets/', batch_size_
         print("    -Images in the PATH_LOW_VALID folder: ", len(list_blur_valid_LOLv2_synth))
         print("    -Images in the PATH_HIGH_VALID folder: ", len(list_sharp_valid_LOLv2_synth), '\n')    
 
-    #------------------------------------------------------------------------  
+    #--------------------------------------------  
     # finally the LOLBlur dataset
     PATH_VALID = os.path.join(test_path, 'LOLBlur', 'test')
     
@@ -75,7 +75,7 @@ def main_dataset_all_lol(rank = 1, test_path='../../data/datasets/', batch_size_
         print("    -Images in the PATH_LOW_VALID folder: ", len(list_blur_valid_lolblur))
         print("    -Images in the PATH_HIGH_VALID folder: ", len(list_sharp_valid_lolblur), '\n')
 
-    #------------------------------------------------------------------------  
+    #--------------------------------------------  
 
     tensor_transform = transforms.ToTensor()
 
@@ -125,4 +125,3 @@ if __name__ == '__main__':
     
     test_loader, samplers= main_dataset_all_lol(verbose = True, test_path='/mnt/valab-datasets/')
 
-    

@@ -39,7 +39,7 @@ def dict2namespace(config):
     return namespace
 
 
-# ----- Predict -----
+# --- Predict ---
 @torch.no_grad()
 def predict(args: dict | box.Box) -> str:
     cfg_path = root_dir / "lightendiffusion" / "option" / args.cfg
@@ -124,7 +124,7 @@ def predict(args: dict | box.Box) -> str:
             if args.save_image:
                 out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.save(enhanced, out_path)
+                mon.image.write(enhanced, out_path)
     timers.total.tock()
 
     # Finish
@@ -132,7 +132,7 @@ def predict(args: dict | box.Box) -> str:
     return str(args.save_dir)
 
 
-# ----- Main -----
+# --- Main ---
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)

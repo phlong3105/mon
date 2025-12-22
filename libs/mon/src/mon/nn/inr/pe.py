@@ -23,7 +23,7 @@ import torch
 import torch.nn as nn
 
 
-# ----- Layer -----
+# --- Layer ---
 class PosEncodingNeRF(nn.Module):
     """An implementation of the NeRF Positional Encoding (PE)."""
     
@@ -98,7 +98,7 @@ class PosEncodingNeRF(nn.Module):
         return encoding.reshape(coords.shape[0], -1, self.out_features)
 
 
-# ----- MLP -----
+# --- MLP ---
 class PosEncodingMLP(nn.Module):
     """An implementation of a Positional Encoding (PE) MLP.
     

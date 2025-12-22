@@ -1,4 +1,4 @@
-# ----- Global Settings & Hyperparameters -----
+# --- Global Settings & Hyperparameters ---
 # These settings can be overridden by the CLI.
 root        : ~                                                                 # Root directory of the current run.
 task        : &task "detect"                                                    # Task name (e.g., detect, segment, classify).
@@ -36,7 +36,7 @@ verbose     : &verbose True                                                     
 # Custom config.yaml
 cfg         : "deim_dfine/coco80/deim_hgnetv2_s_coco80.yaml"                    # For overriding settings defined in this file.
 
-# ----- Custom Settings -----
+# --- Custom Settings ---
 test_only   : False                                                             # Test only.
 print_method: "builtin"                                                         # Print method.
 print_rank  : 0                                                                 # Print rank ID.
@@ -96,7 +96,7 @@ updated_cfg:
           - { type: ConvertPILImage, dtype: "float32", scale: True }
     total_batch_size: *batch_size
 
-# ----- Deploy -----
+# --- Deploy ---
 # Export
 export:
   format        : "onnx"                                                        # Export format (e.g., onnx, engine, torchscript, coreml, tflite, openvino).

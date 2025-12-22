@@ -79,7 +79,7 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
     for h in hooks:
         h.remove()
 
-    print("----------------------------------------------------------------")
+    print("----------------------------------------")
     line_new = "{:>20}  {:>25} {:>15}".format("Layer (type)", "Output Shape", "Param #")
     print(line_new)
     print("================================================================")
@@ -110,10 +110,10 @@ def summary(model, input_size, batch_size=-1, device="cuda"):
     print("Total params: {0:,}".format(total_params))
     print("Trainable params: {0:,}".format(trainable_params))
     print("Non-trainable params: {0:,}".format(total_params - trainable_params))
-    print("----------------------------------------------------------------")
+    print("----------------------------------------")
     print("Input size (MB): %0.2f" % total_input_size)
     print("Forward/backward pass size (MB): %0.2f" % total_output_size)
     print("Params size (MB): %0.2f" % total_params_size)
     print("Estimated Total Size (MB): %0.2f" % total_size)
-    print("----------------------------------------------------------------")
+    print("----------------------------------------")
     # return summary

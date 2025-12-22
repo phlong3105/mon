@@ -9,7 +9,7 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
-# -- Path setup --------------------------------------------------------------
+# -- Path setup --------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -65,7 +65,7 @@ os.environ["DOC_BUILDING"] = "True"
 DEPLOY = os.environ.get("READTHEDOCS") == "True"
 
 
-# -- Project information -----------------------------------------------------
+# -- Project information ---------------------------------
 
 # fmt: off
 try:
@@ -100,7 +100,7 @@ version = fastreid.__version__
 release = version
 
 
-# -- General configuration ---------------------------------------------------
+# -- General configuration -------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
@@ -121,7 +121,7 @@ extensions = [
     "sphinx.ext.githubpages",
 ]
 
-# -- Configurations for plugins ------------
+# -- Configurations for plugins --------
 napoleon_google_docstring = True
 napoleon_include_init_with_doc = True
 napoleon_include_special_with_doc = True
@@ -140,7 +140,7 @@ intersphinx_mapping = {
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "torch": ("https://pytorch.org/docs/master/", None),
 }
-# -------------------------
+# ---------------
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -167,7 +167,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "build", "README.md", "t
 pygments_style = "sphinx"
 
 
-# -- Options for HTML output -------------------------------------------------
+# -- Options for HTML output -------------------------------
 
 html_theme = "sphinx_rtd_theme"
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
@@ -195,13 +195,13 @@ html_css_files = ["css/custom.css"]
 # html_sidebars = {}
 
 
-# -- Options for HTMLHelp output ---------------------------------------------
+# -- Options for HTMLHelp output ---------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "fastreiddoc"
 
 
-# -- Options for LaTeX output ------------------------------------------------
+# -- Options for LaTeX output ------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -226,14 +226,14 @@ latex_documents = [
 ]
 
 
-# -- Options for manual page output ------------------------------------------
+# -- Options for manual page output --------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [(master_doc, "fastreid", "fastreid Documentation", [author], 1)]
 
 
-# -- Options for Texinfo output ----------------------------------------------
+# -- Options for Texinfo output ----------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
@@ -251,7 +251,7 @@ texinfo_documents = [
 ]
 
 
-# -- Options for todo extension ----------------------------------------------
+# -- Options for todo extension ----------------------------
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True

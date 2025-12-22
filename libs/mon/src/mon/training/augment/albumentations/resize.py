@@ -118,7 +118,7 @@ class ResizeDivisibleBy(DualTransform):
         self._mask_interpolation = mask_interpolation
         self._area_for_downscale = area_for_downscale
     
-    # ----- Apply -----
+    # --- Apply ---
     def apply(self, img: np.ndarray, **params: Any) -> np.ndarray:
         """Applies the resizing transformation to the input image.
         

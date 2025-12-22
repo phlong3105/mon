@@ -94,7 +94,7 @@ function [mssim, ssim_map] = SSIM_index(img1, img2, K, window, L)
 %for Computational Vision at Center for Neural Science and Courant
 %Institute of Mathematical Sciences, New York University.
 %
-%----------------------------------------------------------------------
+%------------------------------------------
 %Permission to use, copy, or modify this software and its documentation
 %for educational and research purposes only and without fee is hereby
 %granted, provided that this copyright notice and the original authors'
@@ -104,7 +104,7 @@ function [mssim, ssim_map] = SSIM_index(img1, img2, K, window, L)
 %authors. The authors make no representations about the suitability of
 %this software for any purpose. It is provided "as is" without express
 %or implied warranty.
-%----------------------------------------------------------------------
+%------------------------------------------
 %
 %This is an implementation of the algorithm for calculating the
 %Structural SIMilarity (SSIM) index between two images. Please refer
@@ -116,7 +116,7 @@ function [mssim, ssim_map] = SSIM_index(img1, img2, K, window, L)
 %
 %Kindly report any suggestions or corrections to zhouwang@ieee.org
 %
-%----------------------------------------------------------------------
+%------------------------------------------
 %
 %Input : (1) img1: the first image being compared
 %        (2) img2: the second image being compared

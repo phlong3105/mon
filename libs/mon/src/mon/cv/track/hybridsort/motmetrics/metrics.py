@@ -38,14 +38,14 @@ class MetricsHost:
         """Register a new metric.
 
         Params
-        ------
+        ----
         fnc : Function
             Function that computes the metric to be registered. The number of arguments
             is 1 + N, where N is the number of dependencies of the metric to be registered.
             The order of the argument passed is `df, result_dep1, result_dep2, ...`.
 
         Kwargs
-        ------
+        ----
         deps : string, list of strings or None, optional
             The dependencies of this metric. Each dependency is evaluated and the result
             is passed as argument to `fnc` as described above. If None is specified, the
@@ -145,12 +145,12 @@ class MetricsHost:
         """Compute metrics on the dataframe / accumulator.
 
         Params
-        ------
+        ----
         df : MOTAccumulator or pandas.DataFrame
             The dataframe to compute the metrics on
 
         Kwargs
-        ------
+        ----
         ana: dict or None, optional
             To cache results for fast computation.
         metrics : string, list of string or None, optional
@@ -196,11 +196,11 @@ class MetricsHost:
         """Compute overall metrics based on multiple results.
 
         Params
-        ------
+        ----
         partials : list of metric results to combine overall
 
         Kwargs
-        ------
+        ----
         metrics : string, list of string or None, optional
             The identifiers of the metrics to be computed. This method will only
             compute the minimal set of necessary metrics to fullfill the request.
@@ -214,7 +214,7 @@ class MetricsHost:
             the computed metric values.
 
         Returns
-        -------
+        -----
         df : pandas.DataFrame
             A datafrom containing the metrics in columns and names in rows.
         """
@@ -239,12 +239,12 @@ class MetricsHost:
         """Compute metrics on multiple dataframe / accumulators.
 
         Params
-        ------
+        ----
         dfs : list of MOTAccumulator or list of pandas.DataFrame
             The data to compute metrics on.
 
         Kwargs
-        ------
+        ----
         anas: dict or None, optional
             To cache results for fast computation.
         metrics : string, list of string or None, optional
@@ -260,7 +260,7 @@ class MetricsHost:
             to offset frame indices avoid object id collisions.
 
         Returns
-        -------
+        -----
         df : pandas.DataFrame
             A datafrom containing the metrics in columns and names in rows.
         """

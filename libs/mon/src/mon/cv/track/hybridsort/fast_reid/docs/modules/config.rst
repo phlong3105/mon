@@ -11,7 +11,7 @@ Related tutorials: :doc:`../tutorials/configs`, :doc:`../tutorials/extend`.
 
 
 Config References
------------------
+-----------
 
 .. literalinclude:: ../../fastreid/config/defaults.py
   :language: python

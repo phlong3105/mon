@@ -35,9 +35,9 @@ def PSNR(img1, img2):
     return 10 * math.log10(1 / mse_)
 
 
-# --------------------------------------------
+# ----------------------------
 # SSIM
-# --------------------------------------------
+# ----------------------------
 def calculate_ssim(img1, img2, border=0):
     '''calculate SSIM
     the same outputs as MATLAB's

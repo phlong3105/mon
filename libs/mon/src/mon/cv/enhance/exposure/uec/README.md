@@ -47,7 +47,7 @@ If you are using the Radiometry Correction Dataset, set `--dataset_mode` to `fiv
 We removed TVLoss because we found the performance to be better without it. The PSNR result is as following:
 
 | EV    | -2     | -1     | 0      | +1     | +2     | +3     |
-|-------|--------|--------|--------|--------|--------|--------|
+|-----|------|------|------|------|------|------|
 | w/ TVLoss  | 22.577 | 20.528 | 18.336 | 17.820 | 15.752 | 15.138 |
 | w/o TVLoss | 25.343 | 23.637 | 20.552 | 18.391 | 15.327 | 13.175 |
 

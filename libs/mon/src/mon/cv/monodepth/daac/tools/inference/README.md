@@ -52,7 +52,7 @@ python tools/infer.py --input dataset/ --output results/ --recursive
 ### Parameters
 
 | Parameter | Short | Type | Default | Description |
-|-----------|-------|------|---------|-------------|
+|-------|-----|----|-------|---------|
 | `--input` | `-i` | str | - | Input image/video path or directory (required) |
 | `--output` | `-o` | str | - | Output path (file or directory) (required) |
 | `--model` | `-m` | str | `checkpoints/depth_anything_v2_vits.pth` | Model weight path |

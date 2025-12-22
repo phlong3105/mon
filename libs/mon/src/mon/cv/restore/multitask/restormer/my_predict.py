@@ -26,7 +26,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-# ----- Predict -----
+# --- Predict ---
 
 def load_img(filepath: str) -> np.ndarray:
     return cv2.cvtColor(cv2.imread(str(filepath)), cv2.COLOR_BGR2RGB)
@@ -201,7 +201,7 @@ def predict(args: argparse.Namespace):
 
 
 
-# ----- Main -----
+# --- Main ---
 
 def main() -> str:
     cli  = mon.parse_cli_args(root=root_dir)

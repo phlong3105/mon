@@ -26,7 +26,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-# ----- Modules -----
+# --- Modules ---
 def weights_init(m):
     classname = m.__class__.__name__
     if classname.find("Conv") != -1:
@@ -36,7 +36,7 @@ def weights_init(m):
         m.bias.data.fill_(0)
         
 
-# ----- Model -----
+# --- Model ---
 @MODELS.register(name="zerodce", arch="zerodce")
 class ZeroDCE(nn.Module, nn.ModelMetadataMixin):
     """Zero-DCE model for low-light image enhancement.

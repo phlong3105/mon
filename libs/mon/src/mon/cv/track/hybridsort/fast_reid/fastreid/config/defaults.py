@@ -1,8 +1,8 @@
 from .config import CfgNode as CN
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # Convention about Training / Test specific parameters
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # Whenever an argument can be either used for training or for testing, the
 # corresponding name will be post-fixed by a _TRAIN for a training parameter,
 # or _TEST for a test-specific parameter.
@@ -10,15 +10,15 @@ from .config import CfgNode as CN
 # IMAGES_PER_BATCH_TRAIN, while the number of images for testing will be
 # IMAGES_PER_BATCH_TEST
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # Config definition
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 
 _C = CN()
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # MODEL
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 _C.MODEL = CN()
 _C.MODEL.DEVICE = "cuda"
 _C.MODEL.META_ARCHITECTURE = "Baseline"
@@ -28,9 +28,9 @@ _C.MODEL.FREEZE_LAYERS = []
 # MoCo memory size
 _C.MODEL.QUEUE_SIZE = 8192
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 # Backbone options
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 _C.MODEL.BACKBONE = CN()
 
 _C.MODEL.BACKBONE.NAME = "build_resnet_backbone"
@@ -57,9 +57,9 @@ _C.MODEL.BACKBONE.PRETRAIN = False
 # Pretrain model path
 _C.MODEL.BACKBONE.PRETRAIN_PATH = ''
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 # REID HEADS options
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 _C.MODEL.HEADS = CN()
 _C.MODEL.HEADS.NAME = "EmbeddingHead"
 # Normalization method for the convolution layers.
@@ -82,9 +82,9 @@ _C.MODEL.HEADS.CLS_LAYER = "Linear"  # ArcSoftmax" or "CircleSoftmax"
 _C.MODEL.HEADS.MARGIN = 0.
 _C.MODEL.HEADS.SCALE = 1
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 # REID LOSSES options
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 _C.MODEL.LOSSES = CN()
 _C.MODEL.LOSSES.NAME = ("CrossEntropyLoss",)
 
@@ -129,9 +129,9 @@ _C.MODEL.PIXEL_MEAN = [0.485*255, 0.456*255, 0.406*255]
 # Values to be used for image normalization
 _C.MODEL.PIXEL_STD = [0.229*255, 0.224*255, 0.225*255]
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # KNOWLEDGE DISTILLATION
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 
 _C.KD = CN()
 _C.KD.MODEL_CONFIG = []
@@ -139,9 +139,9 @@ _C.KD.MODEL_WEIGHTS = []
 _C.KD.EMA = CN({"ENABLED": False})
 _C.KD.EMA.MOMENTUM = 0.999
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # INPUT
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 _C.INPUT = CN()
 # Size of the image during training
 _C.INPUT.SIZE_TRAIN = [256, 128]
@@ -193,9 +193,9 @@ _C.INPUT.REA.VALUE = [0.485*255, 0.456*255, 0.406*255]
 _C.INPUT.RPT = CN({"ENABLED": False})
 _C.INPUT.RPT.PROB = 0.5
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # Dataset
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 _C.DATASETS = CN()
 # List of the dataset names for training
 _C.DATASETS.NAMES = ("Market1501",)
@@ -204,9 +204,9 @@ _C.DATASETS.TESTS = ("Market1501",)
 # Combine trainset and testset joint training
 _C.DATASETS.COMBINEALL = False
 
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 # DataLoader
-# -----------------------------------------------------------------------------
+# -----------------------------------------------
 _C.DATALOADER = CN()
 # Options: TrainingSampler, NaiveIdentitySampler, BalancedIdentitySampler
 _C.DATALOADER.SAMPLER_TRAIN = "TrainingSampler"
@@ -217,9 +217,9 @@ _C.DATALOADER.NUM_WORKERS = 8
 # For set re-weight
 _C.DATALOADER.SET_WEIGHT = []
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 # Solver
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 _C.SOLVER = CN()
 
 # AUTOMATIC MIXED PRECISION
@@ -317,9 +317,9 @@ _C.TEST.PRECISE_BN = CN({"ENABLED": False})
 _C.TEST.PRECISE_BN.DATASET = 'Market1501'
 _C.TEST.PRECISE_BN.NUM_ITER = 300
 
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 # Misc options
-# ---------------------------------------------------------------------------- #
+# ---------------------------------------------- #
 _C.OUTPUT_DIR = "logs/"
 
 # Benchmark different cudnn algorithms.

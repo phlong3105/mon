@@ -45,13 +45,13 @@ def linear_sum_assignment(costs, solver=None):
     We therefore support various solvers out of the box (currently lapsolver, scipy, ortools, munkres)
 
     Params
-    ------
+    ----
     costs : np.array
         numpy matrix containing costs. Use NaN/Inf values for unassignable
         row/column pairs.
 
     Kwargs
-    ------
+    ----
     solver : callable or str, optional
         When str: name of solver to use.
         When callable: function to invoke
@@ -81,7 +81,7 @@ def add_expensive_edges(costs):
     then the original problem was infeasible.
 
     Parameters
-    ----------
+    ------
     costs : np.ndarray
     """
     # The graph is probably already dense if we are doing this.
@@ -341,7 +341,7 @@ def set_default_solver(newsolver):
             rids, cids = lap.linear_sum_assignment(costs)
 
     Params
-    ------
+    ----
     newsolver : callable or str
         new solver function
     """

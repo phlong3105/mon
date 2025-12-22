@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for runtime utilities and CLI.
+"""Runtime utilities and CLI helpers.
 
-This package provides various utilities for command-line interface (CLI) handling,
-configuration loading, argument parsing, and runtime summaries.
+This package contains command-line interface helpers, configuration loaders,
+argument parsers, and runtime summary utilities for the project.
 """
 
 __all__ = [
