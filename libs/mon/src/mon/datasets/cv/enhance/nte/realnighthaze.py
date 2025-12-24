@@ -24,4 +24,4 @@ class RealNightHaze(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None

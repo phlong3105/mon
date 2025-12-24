@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Bounding box classes and mixins.
+"""Bounding box base classes and mixins.
 
 This module provides the base classes and mixins for bounding box data.
 """
@@ -28,21 +28,21 @@ from ..base import DataLoadMixin
 class BBox(TensorOrArray):
     """A basic class for managing a bounding box.
 
-    Store a single bounding box in the internal CXCYWHN-like representation.
-    Provide helpers to access class, confidence, id, and convert to XYXY/XYWH
-    formats.
+    Extend TensorOrArray to handle a single bounding box and provide properties
+    and methods related to bounding box conversions and accessors.
 
     Attributes:
-        _data (np.ndarray): A bounding box as a numpy.ndarray of shape (7+) in
-            CXCYWHN format.
+        _data (np.ndarray): A bounding box, formatted as a numpy.ndarray of
+            dimensions (7+) and in CXCYWHN format.
         _imgsz (tuple[int, int]): Image size as (H, W) used for conversions.
     """
 
     def __init__(self, data: np.ndarray, imgsz: tuple[int, int]):
-        """Initialize a BBox.
+        """Initialize a new instance.
 
         Args:
-            data: A bounding box as a numpy.ndarray of shape (7+) in CXCYWHN format.
+            data: A bounding box, formatted as a numpy.ndarray of dimensions
+                (7+) and in CXCYWHN format.
             imgsz: Image size as (H, W).
 
         Raises:
@@ -51,15 +51,17 @@ class BBox(TensorOrArray):
         # Validate and set imgsz
         if imgsz is None:
             raise ValueError(f"``imgsz`` must be specified.")
-        self._imgsz = I.imgsz(imgsz)
+        imgsz = I.imgsz(imgsz)
         
+        # Initialize parent classes and assign attributes
+        self._imgsz = imgsz
         super().__init__(data=data)  # This will call the data setter
     
     # ---- Properties ---
     @property
     def data(self) -> np.ndarray:
-        """Return the bounding bbox as a numpy.ndarray of shape (7+) in CXCYWHN
-        format.
+        """Return the bounding box, formatted as a numpy.ndarray of dimensions
+        (7+) and in CXCYWHN format.
         """
         return self._data
     
@@ -68,7 +70,8 @@ class BBox(TensorOrArray):
         """Set the bounding box data.
 
         Args:
-            data: A bounding box as a numpy.ndarray of shape (7+) in CXCYWHN format.
+            data: A bounding box, formatted as a numpy.ndarray of dimensions
+                (7+) and in CXCYWHN format.
 
         Raises:
             TypeError: If ``data`` is not a numpy.ndarray.
@@ -113,11 +116,10 @@ class BBox(TensorOrArray):
         return self.data
     
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
-        """Convert a bounding box from CXCYWHN to XYXY format.
+        """Convert the bounding box from CXCYWHN to XYXY format.
 
         Args:
-            imgsz: Optional image size as (H, W). If omitted, uses the stored
-                ``_imgsz``.
+            imgsz: image size as (H, W). If omitted, uses the stored ``_imgsz``.
 
         Returns:
             A bounding box in XYXY format.
@@ -127,11 +129,10 @@ class BBox(TensorOrArray):
         return cxcywhn_to_xyxy(self.data, imgsz)[0]
     
     def xywh(self, imgsz: tuple[int, int] = None) -> np.ndarray:
-        """Convert a bounding box from CXCYWHN to XYWH format.
+        """Convert the bounding box from CXCYWHN to XYWH format.
 
         Args:
-            imgsz: Optional image size as (H, W). If omitted, uses the stored
-                ``_imgsz``.
+            imgsz: Image size as (H, W). If omitted, uses the stored ``_imgsz``.
 
         Returns:
             A bounding box in XYWH format.
@@ -153,13 +154,13 @@ class BBox(TensorOrArray):
 class BBoxList(TensorOrArray, DataLoadMixin):
     """A basic class for managing a list of bounding boxes.
 
-    Store a list of bounding boxes as a numpy.ndarray of shape (N, 7+) in
-    CXCYWHN format. Provide batch conversions, I/O loading, and accessors for
-    class, confidence, and id.
+    Extend TensorOrArray and DataLoadMixin to handle a batch of bounding boxes
+    and provide properties and methods related to bounding box conversions,
+    accessors, and loading from label files.
 
     Attributes:
-        _data (np.ndarray): A list of bounding boxes as a numpy.ndarray of shape
-            (N, 7+) in CXCYWHN format.
+        _data (np.ndarray): A batch of bounding boxes, formatted as a
+            numpy.ndarray of dimensions (N, 7+) and in CXCYWHN.
         _imgsz (tuple[int, int]): Image size as (H, W).
         _path (Path): Label file path.
         _root (Path): Root directory of the label file.
@@ -169,29 +170,28 @@ class BBoxList(TensorOrArray, DataLoadMixin):
 
     def __init__(
         self,
-        data : np.ndarray | Path,
-        imgsz: tuple[int, int],
-        path : Path       = None,
-        root : Path       = None,
-        fmt  : BBoxFormat = BBoxFormat.CXCYWHN,
+        data   : np.ndarray | Path,
+        imgsz  : tuple[int, int],
+        path   : Path       = None,
+        root   : Path       = None,
+        fmt    : BBoxFormat = BBoxFormat.CXCYWHN,
+        persist: bool       = True,
     ):
-        """Initialize BBoxes container.
+        """Initialize a new instance.
 
         Args:
-            data: Either bounding boxes as a numpy.ndarray of shape (N, 7+) in
-                CXCYWHN format or a path to a label file.
+            data: Either A batch of bounding boxes, formatted as a numpy.ndarray
+                of dimensions (N, 7+) and in CXCYWHN; or a path to a label file.
             imgsz: Image size as (H, W), used for conversions.
             path: Label file path.
             root: Root directory of the label file.
             fmt: Bounding box format in the label file or conversion code.
+            persist: If True, persist loaded data in memory. Defaults to True.
         """
         # Validate and set imgsz
         if imgsz is None:
             raise ValueError(f"``imgsz`` must be specified.")
-        self._imgsz = I.imgsz(imgsz)
-        
-        # Set fmt and cvt_fmt in case of loading bounding boxes from file
-        self._set_fmt(fmt)
+        imgsz = I.imgsz(imgsz)
         
         # Validate data
         if isinstance(data, Path | str) and Path(data).is_txt_file(exist=True):
@@ -201,31 +201,36 @@ class BBoxList(TensorOrArray, DataLoadMixin):
             raise TypeError(f"``data`` must be a ``numpy.ndarray`` or a valid label file path, got {type(data)}.")
         
         # Validate and set path
-        self._path = Path(path) if path is not None else None
-        self._root = Path(root) if root is not None else None
-        if data is None and self._path is not None:  # Load from path if data not provided
-            if self._path.is_txt_file(exist=True):
-                from .io import load
-                data = load(path=self._path, fmt=self._cvt_fmt, imgsz=self._imgsz)
-            else:
-                raise FileNotFoundError(f"Label file not found: {self._path}.")
+        path = Path(path) if path is not None else None
+        root = Path(root) if root is not None else None
+        if data is None and path is not None:  # Load from path if data not provided
+            if not path.is_txt_file(exist=True):
+                raise FileNotFoundError(f"Label file not found: {path}.")
         
-        super().__init__(data=data)  # This will call the data setter
+        # Validate
+        if all(v is None for v in [data, path]):
+            raise ValueError("Either ``data`` or a valid label ``path`` must be provided.")
+        
+        # Initialize parent classes and assign attributes
+        self._imgsz = imgsz
+        self._set_fmt(fmt)  # Set fmt and cvt_fmt in case of loading bounding boxes from file
+        super().__init__(data=data, path=path, root=root, persist=persist)  # This will call the data setter
     
     # --- Properties ---
     @property
     def data(self) -> np.ndarray:
-        """Return stored bounding boxes as a numpy.ndarray of shape (N, 7+) in
-        CXCYWHN format.
+        """Return stored batch of bounding boxes, formatted as a numpy.ndarray
+        of dimensions (N, 7+) and in CXCYWHN format.
         """
-        return self._data
+        return self._data if self._data is not None else self.load()
     
     @data.setter
     def data(self, data: np.ndarray):
-        """Set the bounding boxes data.
+        """Set the bounding boxes.
 
         Args:
-            data: Bounding boxes as a numpy.ndarray of shape (N, 7+) in CXCYWHN format.
+            data: A batch of bounding boxes, formatted as a numpy.ndarray of
+                dimensions (N, 7+) and in CXCYWHN format.
 
         Raises:
             TypeError: If ``data`` is not a numpy.ndarray.
@@ -249,16 +254,6 @@ class BBoxList(TensorOrArray, DataLoadMixin):
         """Return the image size as (H, W)."""
         return self._imgsz
     
-    @property
-    def path(self) -> Path:
-        """Return the associated label file path."""
-        return self._path
-
-    @property
-    def root(self) -> Path:
-        """Return the root directory for the label file."""
-        return self._root
-
     @property
     def fmt(self) -> BBoxFormat:
         """Return label file format."""
@@ -288,26 +283,26 @@ class BBoxList(TensorOrArray, DataLoadMixin):
     
     @property
     def conf(self) -> np.ndarray:
-        """Return confidence scores for all boxes."""
+        """Return confidence scores for all bounding boxes."""
         return self.data[:, 5:6]
 
     @property
     def cls(self) -> np.ndarray:
-        """Return class ids for all boxes."""
+        """Return class ids for all bounding boxes."""
         return self.data[:, 6:7]
 
     @property
     def id(self) -> np.ndarray:
-        """Return tracking ids for all boxes."""
+        """Return tracking ids for all bounding boxes."""
         return self.data[:, 6:7]
     
     @property
     def cxcywhn(self) -> np.ndarray:
-        """Return all boxes in CXCYWHN format."""
+        """Return all bounding boxes in CXCYWHN format."""
         return self.data
     
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
-        """Convert bounding boxes from CXCYWHN to XYXY format.
+        """Convert all bounding boxes from CXCYWHN to XYXY format.
 
         Args:
             imgsz: Optional image size as (H, W). If omitted, uses the stored
@@ -321,7 +316,7 @@ class BBoxList(TensorOrArray, DataLoadMixin):
         return cxcywhn_to_xyxy(self.data, imgsz)
     
     def xywh(self, imgsz: tuple[int, int] = None) -> np.ndarray:
-        """Convert bounding boxes from CXCYWHN to XYWH format.
+        """Convert all bounding boxes from CXCYWHN to XYWH format.
 
         Args:
             imgsz: Optional image size as (H, W). If omitted, uses the stored
@@ -336,7 +331,7 @@ class BBoxList(TensorOrArray, DataLoadMixin):
     
     # --- Data Loading ---
     def load(self, reload: bool = False) -> np.ndarray:
-        """Load a list of bounding boxes from a label file.
+        """Load all bounding boxes from a label file.
 
         Args:
             reload: If True, force reloading even if data is already in memory.
@@ -352,6 +347,15 @@ class BBoxList(TensorOrArray, DataLoadMixin):
         from .io import load
         bbox = load(path=self._path, fmt=self._cvt_fmt, imgsz=self._imgsz)
         
-        # Cache
+        # Cache the bounding boxes if needed
         self._data = bbox
         return self._data
+    
+    def clear(self):
+        """Clear the loaded bounding boxes from memory."""
+        if (
+            not self._persist
+            and self._path is not None
+            and self._path.is_txt_file(exist=True)
+        ):
+            self._data = None

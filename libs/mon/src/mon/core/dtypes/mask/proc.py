@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mask data complex operations.
+"""Mask complex operations.
 
 This module provides higher-level logics that might involve multiple atomic
-operations to manipulate the mask data.
+operations to manipulate the masks.
 """
 
 __all__ = []

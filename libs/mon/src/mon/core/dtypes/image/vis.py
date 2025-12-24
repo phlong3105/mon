@@ -3,7 +3,7 @@
 
 """Image visualization operations.
 
-This module provides functions to visualize the image data for debugging and
+This module provides functions to visualize the images for debugging and
 human interaction.
 """
 

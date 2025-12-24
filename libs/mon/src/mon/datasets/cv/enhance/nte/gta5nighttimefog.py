@@ -29,4 +29,4 @@ class GTA5NighttimeFog(ImageDataset):
         "depth": Modality(DepthName,    type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",   type="image", module=Image,           train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None

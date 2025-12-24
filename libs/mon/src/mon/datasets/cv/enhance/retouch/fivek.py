@@ -36,7 +36,7 @@ class FiveK(ImageDataset):
         "ref_d": Modality(name="ref_d",   type="image", module=Image,           train=True, test=True),
         "ref_e": Modality(name="ref_e",   type="image", module=Image,           train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
 
 
 @DATASETS.register(name="fiveka")
@@ -51,7 +51,7 @@ class FiveKA(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_a",   type="image", module=Image,           train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
     
 
 @DATASETS.register(name="fivekb")

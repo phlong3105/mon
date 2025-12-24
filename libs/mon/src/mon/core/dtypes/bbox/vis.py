@@ -3,7 +3,7 @@
 
 """Bounding box visualization operations.
 
-This module provides functions to visualize the bounding box data for debugging
+This module provides functions to visualize the bounding boxes for debugging
 and human interaction.
 """
 

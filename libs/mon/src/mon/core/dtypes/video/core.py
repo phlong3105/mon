@@ -1,20 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Video data classes and mixins.
+"""Video base classes and mixins.
 
-This module provides the base classes and mixins for video data.
+This module provides the base classes and mixins for videos.
 """
 
 __all__ = [
     "Frame",
 ]
 
+from typing import Any
+
 import numpy as np
 
 from mon.core.constants import SAVE_IMAGE_EXT
 from mon.core.pathlib import Path
-from ..base import Data
+from ..base import Data, DataLoadMixin
 
 
 # ==============================================================================
@@ -45,15 +47,17 @@ from ..base import Data
 # ==============================================================================
 
 # --- Primary Data Types ---
-class Frame(Data):
+class Frame(Data, DataLoadMixin):
     """A basic class for managing a video frame.
-
+    
+    Extend Data to handle a single video frame and provide properties and
+    methods related to frame data.
+    
     Attributes:
-        _data (np.ndarray): An RGB frame as a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        _data (np.ndarray): An RGB or grayscale image, formatted as a
+            numpy.ndarray with dimensions (H, W, C) and pixel values ranging
+            from 0 to 255.
         _index (int): Index of the frame in the video.
-        _path (Path): Video file path.
-        _root (Path): Root directory of the video (of a dataset).
     """
     
     def __init__(
@@ -63,39 +67,36 @@ class Frame(Data):
         path : Path = None,
         root : Path = None,
     ):
-        """Initialize the frame instance.
+        """Initialize a new instance.
 
         Args:
-            data: An RGB frame as a numpy.ndarray of shape (H, W, C) with pixel
-                values in the range [0, 255].
+            data: An RGB or grayscale image, formatted as a numpy.ndarray with
+                dimensions (H, W, C) and pixel values ranging from 0 to 255.
             index: Index of the frame in the video.
             path: Video file path. Defaults to None.
             root: Root directory of the video (of a dataset). Defaults to None.
 
         Raises:
-            TypeError: If data is not a numpy.ndarray.
+            TypeError: If ``data`` is not a numpy.ndarray.
         """
         # Validate inputs
         if not isinstance(data, np.ndarray):
             raise TypeError(f"``data`` must be a numpy.ndarray, got {type(data)}")
-         
-        super().__init__(data=data)
         
-        # Assign attributes
+        # Initialize parent classes and assign attributes
         self._index = index
-        self._path  = Path(path) if path is not None else None
-        self._root  = Path(root) if root is not None else None
-    
+        super().__init__(data=data, path=path, root=root, persist=True)  # This will call the data setter
+        
     #---- Magic Methods ---
     def __len__(self) -> int:
-        """Return the logical length of the container."""
+        """Return the logical length of the container. For a frame, this is always 1."""
         return 1
     
     def __getitem__(self, idx: int = 0) -> np.ndarray:
-        """Return the frame image.
+        """Return the frame.
 
         Args:
-            idx: Index to get the image. Defaults to 0.
+            idx: Index to get the frame. Defaults to 0.
         """
         return self.data
     
@@ -107,13 +108,13 @@ class Frame(Data):
     
     @property
     def shape(self) -> tuple[int, int, int]:
-        """Return the frame shape as (H, W, C)."""
+        """Return the shape of the frame as (H, W, C)."""
         return self.data.shape
     
     @property
     def imgsz(self) -> tuple[int, int]:
         """Return the frame size as (H, W)."""
-        return self.data.shape[:2]
+        return self.shape[0], self.shape[1]
     
     @property
     def index(self) -> int:
@@ -121,21 +122,9 @@ class Frame(Data):
         return self._index
 
     @property
-    def path(self) -> Path:
-        """Return the video file path associated with this frame."""
-        return self._path
-
-    @property
-    def root(self) -> Path:
-        """Return the root directory for the video dataset, if any."""
-        return self._root
-
-    @property
     def frame_path(self) -> Path:
-        """Return a generated frame file path.
-
-        Construct a path for the frame based on the video path and frame index.
-        If no video path is provided, return the stored path.
+        """Construct a path for the frame based on the video path and frame index.
+        If no video path is provided, return the stored ``path``.
         """
         if self.path is not None:
             path = self.path
@@ -157,3 +146,15 @@ class Frame(Data):
             "shape"     : self.shape,
             "hash"      : self.path.stat().st_size if isinstance(self.path, Path) else None,
         }
+    
+    # --- Data Loading ---
+    def load(self, reload: bool = False) -> Any:
+        """Dummy load method. Frames are expected to be provided directly and
+        not loaded from disk.
+        """
+        pass
+    
+    def clear(self):
+        """Clear the frame data from memory."""
+        pass
+    

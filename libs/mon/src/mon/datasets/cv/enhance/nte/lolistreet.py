@@ -31,7 +31,7 @@ class LoLIStreet(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
     }
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"id": 0 , "name": "person"        , "supercategory": "person",     "color": [ 81, 120, 228]},
         {"id": 1 , "name": "bicycle"       , "supercategory": "vehicle",    "color": [138, 183,  33]},
         {"id": 2 , "name": "car"           , "supercategory": "vehicle",    "color": [ 49,   3, 150]},

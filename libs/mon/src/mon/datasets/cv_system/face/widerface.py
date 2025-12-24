@@ -25,7 +25,7 @@ class WiderFace(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"name": "face", "id": 0, "color": [ 81, 120, 228]},
     ])
 

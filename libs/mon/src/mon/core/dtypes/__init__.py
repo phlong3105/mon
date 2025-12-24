@@ -10,17 +10,16 @@ consistent data representation and manipulation for downstream modules.
 
 Package structure:
     dtypes/
-    ├── __init__.py           # Unified entry point
-    ├── base.py               # Global BaseDType (abstract)
-    ├── mixins/               # Shared Mixins (Registrable, IO, etc.)
-    ├── image/                # Image sub-package
-    │   ├── __init__.py
-    │   ├── core.py           # Base classes and mixins
-    │   ├── io.py             # Ingestion & Retrieval – This module handles moving the raw bit
-    │   ├── meta.py           # Analysis – Operations that return information about the data without changing it
-    │   ├── ops.py            # Atomic Transformations – Pure functions that perform a single mathematical or structural change
-    │   ├── proc.py           # Complex Workflows – Higher-level logic that might involve multiple atomic steps
-    │   └── vis.py            # Rendering – For debugging and human interaction
+    ├── __init__.py        # Unified entry point
+    ├── base.py            # Global BaseDType (abstract)
+    ├── abc/               #
+    │   ├── __init__.py    
+    │   ├── core.py        # Base classes and mixins
+    │   ├── io.py          # Ingestion & Retrieval – This module handles moving the raw bit
+    │   ├── meta.py        # Analysis – Operations that return information about the data without changing it
+    │   ├── ops.py         # Atomic Transformations – Pure functions that perform a single mathematical or structural change
+    │   ├── proc.py        # Complex Workflows – Higher-level logic that might involve multiple atomic steps
+    │   └── vis.py         # Rendering – For debugging and human interaction
     └── ... (contour, depth, etc.)
 """
 
@@ -28,18 +27,26 @@ __all__ = [
     # Flat exposed APIs
     "BBox",
     "BBoxList",
-    "TensorOrArray",
     "Class",
     "ClassList",
     "Data",
+    "DataLoadMixin",
     "DepthMap",
+    "DeviceManagementMixin",
     "Frame",
     "Image",
     "InfraredMap",
     "Instance",
+    "Probabilities",
     "SemanticMask",
+    "TensorOrArray",
+    "VideoWriter",
+    "VideoWriterCV",
+    "VideoWriterFFmpeg",
     # Hierarchical exposed APIs
+    "array",
     "bbox",
+    "classes",
     "contour",
     "depth",
     "image",
@@ -50,12 +57,12 @@ __all__ = [
 ]
 
 from .array import TensorOrArray
-from .base import Data
+from .base import Data, DataLoadMixin, DeviceManagementMixin
 from .bbox import BBox, BBoxList
-from .classes import Class, ClassList
+from .classes import Class, ClassList, Probabilities
 from .depth import DepthMap
 from .image import Image
 from .instance import Instance
 from .mask import SemanticMask
 from .thermal import InfraredMap
-from .video import Frame
+from .video import Frame, VideoWriter, VideoWriterCV, VideoWriterFFmpeg

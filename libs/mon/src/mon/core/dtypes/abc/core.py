@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""<Name> classes and mixins.
+"""<Name> base classes and mixins.
 
 This module provides the base classes and mixins for <Name>.
 """

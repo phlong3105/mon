@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Class data I/O operations.
+"""Classes I/O operations.
 
-This module provides functions for input and output operations for class data.
+This module provides functions for input and output operations for classes.
 """
 
 __all__ = []

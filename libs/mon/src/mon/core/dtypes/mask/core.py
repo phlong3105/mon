@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mask data classes and mixins.
+"""Mask base classes and mixins.
 
-This module provides the base classes and mixins for mask data.
+This module provides the base classes and mixins for masks.
 """
 
 __all__ = [
@@ -46,14 +46,15 @@ from ..image import Image
 class SemanticMask(Image):
     """A basic class for managing a semantic segmentation mask.
     
-    This class extends Image to handle semantic segmentation mask-specific
-    operations.
+    Extend Image to handle semantic mask data and provide properties and methods
+    related to mask data.
     """
     
     def __init__(self, flags: int = cv2.IMREAD_GRAYSCALE, *args, **kwargs):
-        """Initialize the semantic segmentation mask.
+        """Initialize a new instance.
 
         Args:
-            flags: OpenCV flag used to read the segmentation mask. Defaults to cv2.IMREAD_GRAYSCALE.
+            flags: OpenCV flag to read the mask. Defaults to cv2.IMREAD_GRAYSCALE.
         """
+        # Initialize parent classes and assign attributes
         super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter

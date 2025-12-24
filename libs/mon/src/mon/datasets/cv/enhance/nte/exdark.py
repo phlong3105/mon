@@ -28,7 +28,7 @@ class ExDark(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"name": "Bicycle"  , "id":  1, "coco80_id":  2, "color": [138, 183,  33]},
         {"name": "Boat"     , "id":  2, "coco80_id":  9, "color": [ 19,  64,  83]},
         {"name": "Bottle"   , "id":  3, "coco80_id": 40, "color": [139, 160,   1]},

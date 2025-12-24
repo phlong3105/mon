@@ -25,7 +25,7 @@ class YDLD(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         # "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"name": "car_light",            "id": 0, "color": (255,   0,   0)},
         {"name": "traffic_signal_light", "id": 1, "color": (0  , 128,   0)},
         {"name": "street_light",         "id": 2, "color": (0  ,   0, 255)},

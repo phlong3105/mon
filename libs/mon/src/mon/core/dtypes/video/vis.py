@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Video data visualization operations.
+"""Video visualization operations.
 
-This module provides functions to visualize the video data for debugging and
-human interaction.
+This module provides functions to visualize the videos for debugging and human
+interaction.
 """
 
 __all__ = []

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for optimization algorithms and learning rate schedulers.
+"""Basic optimizers and learning rate schedulers from PyTorch.
 
-This module provides various optimization algorithms and learning rate schedulers
-commonly used in training machine learning models.
+This module provides various optimizers and learning rate schedulers commonly
+used in training machine learning models.
 """
 
 __all__ = [

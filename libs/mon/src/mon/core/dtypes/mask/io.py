@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mask data I/O operations.
+"""Mask I/O operations.
 
-This module provides functions for input and output operations for mask data.
+This module provides functions for input and output operations for masks.
 """
 
 __all__ = []

@@ -3,7 +3,7 @@
 
 """<Name> visualization operations.
 
-This module provides functions to visualize the <Name> for debugging and human
+This module provides functions to visualize the <Name>sfor debugging and human
 interaction.
 """
 

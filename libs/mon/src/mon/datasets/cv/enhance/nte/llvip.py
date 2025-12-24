@@ -30,4 +30,4 @@ class LLVIP(ImageDataset):
         "depth"   : Modality(name=DepthName,    type="image", module=DefaultDepthMap,    train=True, test=True),
         "infrared": Modality(name=InfraredName, type="mask",  module=DefaultInfraredMap, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None

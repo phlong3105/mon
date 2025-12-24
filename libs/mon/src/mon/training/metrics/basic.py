@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for training and evaluating metrics.
+"""Basic metrics from torchmetrics.
 
 This module provides various metrics used for assessing the performance of
-machine learning models, particularly in image processing tasks.
+machine learning models.
 """
 
 __all__ = [

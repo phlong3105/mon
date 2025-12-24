@@ -35,7 +35,7 @@ class MSEC(ImageDataset):
         "image_ev_p1.5": Modality(name="image_ev_p1.5", type="image", module=Image, train=True, test=True),
         "ref"          : Modality(name="ref_c",         type="image", module=Image, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
     
     def __init__(self, lr: bool = True, *args, **kwargs):
         """Initializes the MSEC dataset.

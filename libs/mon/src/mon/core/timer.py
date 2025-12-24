@@ -38,7 +38,7 @@ class Timer:
     """
     
     def __init__(self):
-        """Initialize the timer."""
+        """Initialize a new instance."""
         self.start    = 0.0
         self.end      = 0.0
         self.total    = 0.0
@@ -159,7 +159,7 @@ class TimeProfiler:
     """
 
     def __init__(self):
-        """Initialize the time profiler."""
+        """Initialize a new instance."""
         self.preprocess  = Timer()
         self.infer       = Timer()
         self.postprocess = Timer()

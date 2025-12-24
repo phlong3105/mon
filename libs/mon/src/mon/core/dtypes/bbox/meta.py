@@ -3,8 +3,8 @@
 
 """Bounding box metadata operations.
 
-This module provides operations that return information about the bounding box
-data without changing it.
+This module provides operations that return information about the bounding boxes
+without changing it.
 """
 
 __all__ = []
@@ -21,17 +21,7 @@ __all__ = []
 
 
 # ==============================================================================
-# COMPONENT REGISTRIES (Type Resolution)
-# ==============================================================================
-
-# --- Register (Adding new spokes to the hub) ---
-
-
-# --- Resolve (Retrieving spokes by name/key) ---
-
-
-# ==============================================================================
-# COMPONENT REGISTRIES (Type Resolution)
+# REGISTRY & FACTORY (Type Resolution)
 # ==============================================================================
 
 # --- Register (Adding new spokes to the hub) ---

@@ -25,7 +25,7 @@ class FishEye8K(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"name": "bus",        "id": 0, "color": [140,  24, 143]},
         {"name": "bike",       "id": 1, "color": [122,  35,   2]},
         {"name": "car",        "id": 2, "color": [ 49,   3, 150]},

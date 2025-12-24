@@ -54,7 +54,7 @@ class SICE(ImageDataset):
         "depth"      : Modality(name=DepthName,     type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"        : Modality(name="ref",         type="image", module=Image,           train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
     
     def __init__(self, lr: bool = True, *args, **kwargs):
         """Initializes the SICE dataset.
@@ -104,7 +104,7 @@ class SICEME(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True,  test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=False, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
     
     def _load_primary_data(self) -> list[Image]:
         """Lists all image data for the primary modality.

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Image data I/O operations.
+"""Image I/O operations.
 
-This module provides functions for input and output operations for image data.
+This module provides functions for input and output operations for images.
 """
 
 __all__ = [
@@ -21,7 +21,7 @@ import torch
 import torchvision
 
 from mon.core.pathlib import Path
-from .meta import is_color
+from .ops import is_color
 
 
 # ==============================================================================
@@ -55,7 +55,8 @@ def read(path: Path, flags: int = cv2.IMREAD_COLOR) -> np.ndarray:
         flags: OpenCV flag to read image. Defaults to cv2.IMREAD_COLOR.
     
     Returns:
-        An RGB image of shape (H, W, C) with pixel values in the range [0, 255].
+        An RGB or grayscale image, formatted as a numpy.ndarray with dimensions
+        (H, W, C) and pixel values ranging from 0 to 255.
     """
     path = Path(path)
     if path.is_raw_image_file():  # Read raw image
@@ -118,13 +119,14 @@ def read_size(path: Path) -> tuple[int, int]:
 
 
 # --- Commit (Saving to Disk/Cloud) ---
-def write(image: torch.Tensor | np.ndarray, path: Path):
+def write(image: np.ndarray | torch.Tensor, path: Path):
     """Save an image to disk.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
         path: Absolute path to save the image. The parent directories will be
             created if they do not exist.
 

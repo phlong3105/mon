@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mon framework package.
+"""``mon`` framework package.
 
 Provide the top-level package for the mon framework, expose core and
 high-frequency APIs, and offer lazy loading for heavy optional subpackages.
@@ -13,23 +13,9 @@ __version__ = "2.9.1"
 import time
 __start = time.time()
 
-# Flat exposed APIs (core, high-frequency used functions)
 from .core import *
-from .training import build_dataloader, build_dataset
-
-# Hierarchical exposed APIs (sub-packages)
-from . import (
-    nn,
-    training as trn  # Alias for convenience
-)
-from .training import (
-    albumentations,
-    augment,
-    data,
-    losses,
-    metrics,
-    optims,
-)
+from .training import *
+from . import nn
 
 __end = time.time()
 console.log(f"`mon` loaded in: {__end - __start:.4f} seconds.")

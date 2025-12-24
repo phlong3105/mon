@@ -28,7 +28,7 @@ class MIPI2024Flare(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
     
     # --- Initialize ---
     def _load_primary_data(self) -> list[Image]:

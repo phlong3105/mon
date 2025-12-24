@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for basic loss functions.
+"""Basic loss functions from PyTorch.
 
 This module provides various loss functions commonly used in training machine
-learning models, particularly in computer vision tasks. Each loss function is
-implemented as a class that can be instantiated and used to compute the loss
-between predicted outputs and target values.
+learning models.
 """
 
 __all__ = [
@@ -38,15 +36,20 @@ __all__ = [
 ]
 
 import torch
-from torch.nn.modules.loss import *  # Expose all losses from ``torch.nn.modules.loss``
+import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.modules.loss import *  # Expose all losses from ``torch.nn.modules.loss``
 
 from .base import BaseLoss
 
 
-# --- Basic Loss ---
+# ==============================================================================
+# BASIC & ATOMIC LOSSES
+# ==============================================================================
+
+# --- Regression ---
 class CharbonnierLoss(BaseLoss):
-    """A Charbonnier loss function, a differentiable variant of L1 loss.
+    """A differentiable variant of L1 loss.
     
     Attributes:
         eps2 (float): Small constant for numerical stability.
@@ -56,60 +59,61 @@ class CharbonnierLoss(BaseLoss):
         """Initializes the CharbonnierLoss instance.
         
         Args:
-            eps (float): Small constant for numerical stability. Defaults to 1e-6.
-            reduction (str): Reduction method to apply to the loss. Can be one
+            eps: Small constant for numerical stability. Defaults to 1e-6.
+            reduction: Reduction method to apply to the loss. Can be one
                 of "none", "mean", or "sum". Defaults to "mean".
         """
         super().__init__(reduction=reduction)
         self.eps2 = eps ** 2
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        """Calculates the Charbonnier loss between input and target.
+        """Calculate the Charbonnier loss between input and target.
         
         Args:
-            input (torch.Tensor): Input tensor (predictions) of shape (B, C, H, W)
-                with pixel values in the range [0.0, 1.0].
-            target (torch.Tensor): Target tensor (ground truth) of shape (B, C, H, W)
-                with pixel values in the range [0.0, 1.0].
+           input: Input (predictions), formatted as a torch.Tensor of dimensions
+                (B, C, H, W) and values ranging from 0.0 to 1.0.
+            target: Target (ground truth), formatted as a torch.Tensor of dimensions
+                (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
-            torch.Tensor: Calculated Charbonnier loss.
+            Loss value, formatted according to the specified reduction method.
         """
         loss = (F.mse_loss(input, target, reduction="none") + self.eps2) ** 0.5
         loss = self.reduce(loss=loss)
         return loss
     
 
+# --- Relational & Vector ---
 class CosineSimilarityLoss(BaseLoss):
-    """A Cosine Similarity loss function.
+    """Cosine Similarity loss function.
     
     Attributes:
-        cos (torch.nn.CosineSimilarity): Cosine similarity module.
+        cos (nn.CosineSimilarity): Cosine similarity module.
     """
     
     def __init__(self, dim: int = 1, eps: float = 1e-6, reduction: str = "mean"):
-        """Initializes the CosineSimilarityLoss instance.
+        """Initialize a new instance.
         
         Args:
-            dim (int): Dimension along which to compute cosine similarity. Defaults to 1.
-            eps (float): Small constant for numerical stability. Defaults to 1e-6.
-            reduction (str): Reduction method to apply to the loss. Can be one
-                of "none", "mean", or "sum". Defaults to "mean".
+            dim: Dimension along which to compute cosine similarity. Defaults to 1.
+            eps: Small constant for numerical stability. Defaults to 1e-6.
+            reduction: Reduction method to apply to the loss. Can be one of
+                "none", "mean", or "sum". Defaults to "mean".
         """
         super().__init__(reduction=reduction)
-        self.cos = torch.nn.CosineSimilarity(dim=dim, eps=eps)
+        self.cos = nn.CosineSimilarity(dim=dim, eps=eps)
     
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculates the Cosine Similarity loss between input and target.
         
         Args:
-            input (torch.Tensor): Input tensor (predictions) of shape (B, C, H, W)
-                with pixel values in the range [0.0, 1.0].
-            target (torch.Tensor): Target tensor (ground truth) of shape (B, C, H, W)
-                with pixel values in the range [0.0, 1.0].
+           input: Input (predictions), formatted as a torch.Tensor of dimensions
+                (B, C, H, W) and values ranging from 0.0 to 1.0.
+            target: Target (ground truth), formatted as a torch.Tensor of dimensions
+                (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
-            torch.Tensor: Calculated Cosine Similarity loss.
+            Loss value, formatted according to the specified reduction method.
         """
         b, c, h, w = input.shape
         x    = input.permute(0, 2, 3, 1).view(-1, c)
@@ -117,21 +121,22 @@ class CosineSimilarityLoss(BaseLoss):
         loss = 1.0 - self.cos(x, y).sum() / (1.0 * b * h * w)
         loss = self.reduce(loss=loss)
         return loss
-        
 
+
+# --- Specialized & Masked ---
 class ExtendedL1Loss(BaseLoss):
-    """An Extended L1 loss function that applies a mask to the input and target.
+    """Extended L1 loss function that applies a mask to the input and target.
     
     Attributes:
         loss_l1 (L1Loss): L1 loss module.
     """
     
     def __init__(self, reduction: str = "mean"):
-        """Initializes the ExtendedL1Loss instance.
+        """Initialize a new instance.
         
         Args:
-            reduction (str): Reduction method to apply to the loss. Can be one
-                of "none", "mean", or "sum". Defaults to "mean".
+            reduction: Reduction method to apply to the loss. Can be one of
+                "none", "mean", or "sum". Defaults to "mean".
         """
         super().__init__(reduction=reduction)
         self.loss_l1 = L1Loss()
@@ -143,18 +148,19 @@ class ExtendedL1Loss(BaseLoss):
         target: torch.Tensor,
         mask  : torch.Tensor
     ) -> torch.Tensor:
-        """Calculates the Extended L1 loss between input and target using a mask.
+        """Calculate the Extended L1 loss between input and target using a mask.
         
         Args:
-            input (torch.Tensor): Input tensor (predictions) of shape (B, C, H, W)
-                with pixel values in the range [0.0, 1.0].
-            target (torch.Tensor): Target tensor (ground truth) of shape (B, C, H, W)
-                with pixel values in the range [0.0, 1.0].
-            mask (torch.Tensor): Mask tensor of shape (B, 1, H, W) with binary
-                values indicating the regions to consider in the loss calculation.
+            input: Input (predictions), formatted as a torch.Tensor of dimensions
+                (B, C, H, W) and values ranging from 0.0 to 1.0.
+            target: Target (ground truth), formatted as a torch.Tensor of dimensions
+                (B, C, H, W) and values ranging from 0.0 to 1.0.
+            mask: Mask, formatted as a torch.Tensor of dimensions (B, 1, H, W)
+                with binary values indicating the regions to consider in the
+                loss calculation.
                 
         Returns:
-            torch.Tensor: Calculated Extended L1 loss.
+            Loss value, formatted according to the specified reduction method.
         """
         norm = self.loss_l1(mask, torch.zeros_like(mask))
         loss = self.loss_l1(mask * input, mask * target) / norm

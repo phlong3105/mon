@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Class metadata operations.
+"""Classes metadata operations.
 
-This module provides operations that return information about the class data
+This module provides operations that return information about the classes
 without changing it.
 """
 
@@ -21,7 +21,7 @@ __all__ = []
 
 
 # ==============================================================================
-# COMPONENT REGISTRIES (Type Resolution)
+# REGISTRY & FACTORY (Type Resolution)
 # ==============================================================================
 
 # --- Register (Adding new spokes to the hub) ---

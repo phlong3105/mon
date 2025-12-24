@@ -25,4 +25,4 @@ class Rain800(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None

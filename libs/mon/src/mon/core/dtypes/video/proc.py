@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Video data complex operations.
+"""Video complex operations.
 
 This module provides higher-level logics that might involve multiple atomic
-operations to manipulate the video data.
+operations to manipulate the videos.
 """
 
 __all__ = []

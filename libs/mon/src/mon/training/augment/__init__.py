@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for data augmentation and transformation.
+"""Data augmentation and transformation.
 
 This package provides various data augmentation techniques to enhance the
 diversity of training datasets. These augmentations can help improve the

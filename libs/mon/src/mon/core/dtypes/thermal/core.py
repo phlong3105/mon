@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Thermal classes and mixins.
+"""Thermal base classes and mixins.
 
 This module provides the base classes and mixins for thermal data.
 """
@@ -47,11 +47,11 @@ from ..image import Image
 class InfraredMap(Image):
     """A basic class for managing an infrared map.
 
-    This class extends Image to handle infrared-specific attributes and provide
-    functionality related to infrared data.
+    Extend Image to handle infrared map data and provide properties and methods
+    related to infrared data.
 
     Attributes:
-        _source (InfraredSource): The configured infrared data source.
+        _source (InfraredSource): The infrared data source.
     """
     
     def __init__(
@@ -60,7 +60,7 @@ class InfraredMap(Image):
         flags : int            = cv2.IMREAD_GRAYSCALE,
         *args, **kwargs
     ):
-        """Initialize the InfraredMap instance.
+        """Initialize a new instance.
 
         Args:
             source: Source of the infrared data. Defaults to InfraredSource.INFRARED.
@@ -74,13 +74,12 @@ class InfraredMap(Image):
         if source not in InfraredSource:
             raise ValueError(f"``source`` must be one of {InfraredSource}, got {source}.")
         
-        # Assign attributes
+        # Initialize parent classes and assign attributes
         self._source = source
-        
         super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter
-     
+        
     # ---- Properties ---
     @property
     def source(self) -> InfraredSource:
-        """Return the configured infrared data source."""
+        """Return the infrared data source."""
         return self._source

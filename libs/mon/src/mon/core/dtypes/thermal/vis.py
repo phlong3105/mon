@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Thermal data visualization operations.
+"""Thermal visualization operations.
 
 This module provides functions to visualize the thermal data for debugging and
 human interaction.

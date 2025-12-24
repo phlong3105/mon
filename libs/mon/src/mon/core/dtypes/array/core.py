@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Array-like classes and mixins.
+"""Array-like base classes and mixins.
 
 This module provides the base classes and mixins for array-like data types
 which can be a torch.Tensor or numpy.ndarray.
@@ -48,22 +48,20 @@ from ..base import Data, DeviceManagementMixin
 class TensorOrArray(Data, DeviceManagementMixin):
     """A basic class for tensor-like or ndarray-like data types.
     
-    This class extends Data to handle torch.Tensor or numpy.ndarray data. It
-    provides methods for device management and basic data operations.
+    Extend Data to handle either torch.Tensor or numpy.ndarray and provide
+    properties and methods related to both data types.
     
     Attributes:
-        _data (torch.Tensor | np.ndarray): Either a torch.Tensor or numpy.ndarray.
+        _data (np.ndarray | torch.Tensor): Either a torch.Tensor or numpy.ndarray.
     """
 
-    def __init__(self, data: torch.Tensor | np.ndarray):
-        """Initialize the container with tensor or ndarray data.
+    def __init__(self, data: np.ndarray | torch.Tensor, *args, **kwargs):
+        """Initialize a new instance.
 
         Args:
             data: Either a torch.Tensor or numpy.ndarray.
-
-        Raises:
-            TypeError: If ``data`` is not a torch.Tensor or numpy.ndarray.
         """
+        # Initialize parent classes and assign attributes
         super().__init__(data=data)  # This will call the data setter
 
     # --- Magic Methods ---
@@ -81,12 +79,12 @@ class TensorOrArray(Data, DeviceManagementMixin):
 
     # --- Properties ---
     @property
-    def data(self) -> torch.Tensor | np.ndarray:
+    def data(self) -> np.ndarray | torch.Tensor:
         """Return the underlying data."""
         return self._data
 
     @data.setter
-    def data(self, data: torch.Tensor | np.ndarray):
+    def data(self, data: np.ndarray | torch.Tensor):
         """Set the underlying data.
 
         Args:

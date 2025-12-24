@@ -42,7 +42,7 @@ class Factory(dict):
     """
     
     def __init__(self, name: str, mapping: dict = None, decamelize: bool = False):
-        """Initialize the factory.
+        """Initialize a new instance.
 
         Args:
             name: Factory name.

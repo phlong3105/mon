@@ -9,18 +9,20 @@ rendering utilities.
 """
 
 __all__ = [
+    "BoundaryAwarePrior",
     "BoxFilter",
+    "BrightnessAttentionMap",
     "ConvGuidedFilter",
     "FastGuidedFilter",
     "GuidedFilter",
     "Image",
+    "ImageLocalMean",
+    "ImageLocalStdDev",
+    "ImageLocalVariance",
     "RGBToHVI",
-    "boundary_aware_prior",
-    "box_filter",
-    "brightness_attention_map",
+    "apsf",
     "center",
     "color_transfer",
-    "guided_filter",
     "imgsz",
     "is_channel_first",
     "is_channel_last",
@@ -44,12 +46,12 @@ __all__ = [
     "write",
 ]
 
-
 from .color import *
 from .core import *
 from .filtering import *
 from .io import *
 from .meta import *
 from .ops import *
+from .priors import *
 from .proc import *
 from .vis import *

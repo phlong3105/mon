@@ -4,7 +4,7 @@
 """Bounding box I/O operations.
 
 This module provides functions for input and output operations for bounding
-box data.
+boxes.
 """
 
 __all__ = [
@@ -177,7 +177,8 @@ def _read_yolo(
         verbose: If True, print warnings to error_console.
 
     Returns:
-        Numpy array of bounding boxes (N, 7+).
+        A batch of bounding boxes, formatted as a numpy.ndarray of dimensions
+        (N, 7+) and in CXCYWHN.
 
     Raises:
         ValueError: If file is invalid or contains no bounding boxes.
@@ -228,10 +229,11 @@ def load(
         fmt: Desired target format or conversion code (BBoxFormat).
         imgsz: Image size as (H, W) required for format conversions.
         remap: Optional remapping for class ids/names.
-        verbose: If True, print warnings to error_console.
+        verbose: If True, print warnings to ``error_console``.
 
     Returns:
-        Bounding boxes as numpy.ndarray of shape (N, 7+) in the desired format.
+        A batch of bounding boxes, formatted as a numpy.ndarray of dimensions
+        (N, 7+) and in the desired format.
 
     Raises:
         ValueError: If ``fmt`` is unsupported or ``imgsz`` required but missing.

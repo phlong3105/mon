@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Contour classes and mixins.
+"""Contour base classes and mixins.
 
-This module provides the base classes and mixins for contour data.
+This module provides the base classes and mixins for contours.
 """
 
 __all__ = []

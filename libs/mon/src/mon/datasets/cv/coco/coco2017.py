@@ -24,7 +24,7 @@ class COCO80(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": (  0,   0,   0)},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": ( 81, 120, 228)},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": (138, 183,  33)},
@@ -120,7 +120,7 @@ class COCO91(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": [  0,   0,   0]},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": [ 81, 120, 228]},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": [138, 183,  33]},

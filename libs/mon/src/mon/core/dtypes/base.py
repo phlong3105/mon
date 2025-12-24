@@ -15,6 +15,8 @@ __all__ = [
 import abc
 from typing import Any
 
+from mon.core.pathlib import Path
+
 
 # ==============================================================================
 # TYPE DEFINITIONS & PROTOCOLS (Interfaces)
@@ -38,8 +40,8 @@ class Data(abc.ABC):
         _data (Any): Underlying data object.
     """
     
-    def __init__(self, data: Any):
-        """Initialize the Data object.
+    def __init__(self, data: Any, *args, **kwargs):
+        """Initialize a new instance.
 
         Args:
             data: Underlying data.
@@ -83,10 +85,66 @@ class Data(abc.ABC):
 
 # --- Lifecycle Mixins ---
 class DataLoadMixin(abc.ABC):
-    """A mixin for data loading operations (i.e., reading from disk to memory
-    + parsing).
+    """A mixin for data loading operations (i.e., reading from disk and parsing).
+    
+    Attributes:
+        _path (Path): Path to load data from.
+        _root (Path): Root directory for relative paths.
+        _persist (bool): Whether to persist loaded data in memory. Defaults to False.
     """
     
+    def __init__(
+        self,
+        path   : Path,
+        root   : Path = None,
+        persist: bool = False
+    ):
+        """Initialize a new instance.
+
+        Args:
+            path: Path to load data from.
+            root: Root directory for relative paths. Defaults to None.
+            persist: If True, persist loaded data in memory. Defaults to False.
+        """
+        path = Path(path) if path is not None else None
+        root = Path(root) if root is not None else None
+        if path is not None and not path.exists():
+            raise FileNotFoundError(f"``path`` does not exist: {path}.")
+        if root is not None and not root.exists():
+            raise FileNotFoundError(f"``root`` does not exist: {root}.")
+            
+        self._path    = path
+        self._root    = root
+        self._persist = persist
+    
+    # --- Properties ---
+    @property
+    def path(self) -> Path:
+        """Return the path to load data from."""
+        return self._path
+    
+    @property
+    def root(self) -> Path:
+        """Return the root directory for relative paths."""
+        return self._root
+    
+    @property
+    def persist(self) -> bool:
+        """Return whether loaded data is persisted in memory."""
+        return self._persist
+    
+    @persist.setter
+    def persist(self, persist: bool):
+        """Set whether loaded data is persisted in memory.
+
+        Args:
+            persist: If True, persist loaded data in memory.
+        """
+        self._persist = persist
+        if not self._persist:
+            self.clear()
+    
+    # --- Data Loading ---
     @abc.abstractmethod
     def load(self, reload: bool = False) -> Any:
         """Load data from disk to memory (i.e., reading from disk and parsing).
@@ -97,6 +155,11 @@ class DataLoadMixin(abc.ABC):
         Returns:
             The loaded data object.
         """
+        pass
+    
+    @abc.abstractmethod
+    def clear(self):
+        """Clear the loaded data from memory."""
         pass
 
 

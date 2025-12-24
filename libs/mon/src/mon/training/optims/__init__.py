@@ -1,78 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for optimization algorithms and learning rate schedulers.
+"""Optimizers and learning rate schedulers.
 
-This package provides various optimization algorithms and learning rate schedulers
-commonly used in training machine learning models.
+This package contains various optimization algorithms and learning rate
+schedulers commonly used in training machine learning models.
+
+This is the Component-Based Framework. It is useful to organize a family of
+related functionalities that share a common interface/inheritance but aren't tie
+to the specific "interchanged algorithm" requirement of the Strategy Pattern.
+
+The Component-Based Framework typically has the following structure:
+    component/
+    ├── __init__.py    # Exposes all concrete classes
+    ├── base.py        # The Abstract Base Class (ABC)
+    ├── ...
+    └── utils.py       # Utility functions and helpers
 """
 
-__all__ = [
-    "ASGD",
-    "Adadelta",
-    "Adafactor",
-    "Adagrad",
-    "Adam",
-    "AdamW",
-    "Adamax",
-    "ChainedScheduler",
-    "ConstantLR",
-    "CosineAnnealingLR",
-    "CosineAnnealingWarmRestarts",
-    "CyclicLR",
-    "ExponentialLR",
-    "LBFGS",
-    "LRScheduler",
-    "LambdaLR",
-    "LinearLR",
-    "MultiStepLR",
-    "MultiplicativeLR",
-    "NAdam",
-    "OneCycleLR",
-    "Optimizer",
-    "PolynomialLR",
-    "RAdam",
-    "RMSprop",
-    "ReduceLROnPlateau",
-    "Rprop",
-    "SGD",
-    "SequentialLR",
-    "SparseAdam",
-    "StepLR",
-    # "lr_scheduler",
-    # "swa_utils",
-]
+from .base import *
+from .basic import *
+from .external import *
+from .utils import *
 
-from .core import (
-    Adadelta,
-    Adafactor,
-    Adagrad,
-    Adam,
-    Adamax,
-    AdamW,
-    ASGD,
-    ChainedScheduler,
-    ConstantLR,
-    CosineAnnealingLR,
-    CosineAnnealingWarmRestarts,
-    CyclicLR,
-    ExponentialLR,
-    LambdaLR,
-    LBFGS,
-    LinearLR,
-    LRScheduler,
-    MultiplicativeLR,
-    MultiStepLR,
-    NAdam,
-    OneCycleLR,
-    Optimizer,
-    PolynomialLR,
-    RAdam,
-    ReduceLROnPlateau,
-    RMSprop,
-    Rprop,
-    SequentialLR,
-    SGD,
-    SparseAdam,
-    StepLR,
-)
+
+# ==============================================================================
+# REGISTRY & FACTORY (Type Resolution)
+# ==============================================================================
+
+# --- Register (Adding new spokes to the hub) ---
+
+
+# --- Resolve (Retrieving spokes by name/key) ---

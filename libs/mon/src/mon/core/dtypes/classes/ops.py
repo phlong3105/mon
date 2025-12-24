@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Class data atomic operations.
+"""Classes atomic operations.
 
 This module provides pure functions that perform a single mathematical or
-structural change to the class data.
+structural change to the classes.
 """
 
 __all__ = [
@@ -22,6 +22,16 @@ import numpy as np
 
 
 # --- Clean (Fixing corrupt values/nulls) ---
+
+
+# ==============================================================================
+# CONVERSIONS (Backend Interop)
+# ==============================================================================
+
+# --- Formats (Channel shuffling) ---
+
+
+# --- Types (Data type casting) ---
 
 
 # ==============================================================================

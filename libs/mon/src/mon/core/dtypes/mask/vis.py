@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mask data visualization operations.
+"""Mask visualization operations.
 
-This module provides functions to visualize the mask data for debugging and
-human interaction.
+This module provides functions to visualize the masks for debugging and human
+interaction.
 """
 
 __all__ = []

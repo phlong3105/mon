@@ -4,7 +4,7 @@
 """Contour complex operations.
 
 This module provides higher-level logics that might involve multiple atomic
-operations to manipulate the contour data.
+operations to manipulate the contours.
 """
 
 __all__ = []

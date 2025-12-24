@@ -3,7 +3,7 @@
 
 """<Name> I/O operations.
 
-This module provides functions for input and output operations for <Name>.
+This module provides functions for input and output operations for the <Name>s.
 """
 
 __all__ = []

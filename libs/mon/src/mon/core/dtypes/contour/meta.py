@@ -3,7 +3,7 @@
 
 """Contour metadata operations.
 
-This module provides operations that return information about the contour data
+This module provides operations that return information about the contours
 without changing it.
 """
 
@@ -21,7 +21,7 @@ __all__ = []
 
 
 # ==============================================================================
-# COMPONENT REGISTRIES (Type Resolution)
+# REGISTRY & FACTORY (Type Resolution)
 # ==============================================================================
 
 # --- Register (Adding new spokes to the hub) ---

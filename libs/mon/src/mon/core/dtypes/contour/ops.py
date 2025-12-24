@@ -4,7 +4,7 @@
 """Contour atomic operations.
 
 This module provides pure functions that perform a single mathematical or
-structural change to the contour data.
+structural change to the contours.
 """
 
 __all__ = [
@@ -27,6 +27,16 @@ from .. import image as I
 
 
 # --- Clean (Fixing corrupt values/nulls) ---
+
+
+# ==============================================================================
+# CONVERSIONS (Backend Interop)
+# ==============================================================================
+
+# --- Formats (Channel shuffling) ---
+
+
+# --- Types (Data type casting) ---
 
 
 # ==============================================================================

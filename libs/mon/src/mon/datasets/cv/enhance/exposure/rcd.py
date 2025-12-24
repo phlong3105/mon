@@ -36,4 +36,4 @@ class RCD(ImageDataset):
         "image_ev_p3": Modality(name="image_ev_p3", type="image", module=Image, train=True, test=True),
         "ref"        : Modality(name="ref",         type="image", module=Image, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None

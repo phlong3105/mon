@@ -1,23 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""HVI color space.
+"""Color processing operations.
 
-This module provides functions for converting RGB images to HVI color space and
-back.
+This module provides operations for color processing.
 """
 
 __all__ = [
     "RGBToHVI",
+    "color_transfer",
 ]
 
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 
 
+# ==============================================================================
+# LEARNABLE COLOR SPACES
+# ==============================================================================
+
+# --- HVI Space (Perceptual Saturation & Intensity) ---
 class RGBToHVI(nn.Module):
-    """A class for converting RGB images to HVI color space and back.
+    """A module for converting RGB images to HVI color space and back.
     
+    References:
+        - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/net/HVI_transform.py
+        
     Attributes:
         eps (float): Epsilon value to avoid division by zero.
         density_k (nn.Parameter): Learnable parameter for color sensitivity.
@@ -26,13 +36,10 @@ class RGBToHVI(nn.Module):
         alpha (float): Scaling factor for RGB values if ``gated2`` is True.
         alpha_s (float): Scaling factor for saturation if ``gated`` is True.
         this_k (float): Current value of ``density_k`` used in conversions.
-    
-    References:
-        - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/net/HVI_transform.py
     """
     
     def __init__(self, eps: float = 1e-8, requires_grad: bool = False):
-        """Initialize the RGBToHVI instance.
+        """Initialize a new instance.
         
         Args:
             eps: Epsilon value to avoid division by zero. Defaults to 1e-8.
@@ -53,12 +60,12 @@ class RGBToHVI(nn.Module):
         """Convert an RGB image to HVI color space.
         
         Args:
-            image: An RGB image as a torch.Tensor of shape (B, 3, H, W) with
-                pixel values in the range [0, 1].
+            image: An RGB image, formatted as a torch.Tensor with dimensions
+                (B, 3, H, W) and pixel values ranging from 0.0 to 1.0.
                 
         Returns:
-            The HVI image as a torch.Tensor of shape (B, 3, H, W) with pixel
-            values in the range [0, 1].
+            The HVI image, formatted as a torch.Tensor with dimensions
+                (B, 3, H, W) and pixel values ranging from 0.0 to 1.0.
         """
         pi      = 3.141592653589793
         device  = image.device
@@ -96,12 +103,13 @@ class RGBToHVI(nn.Module):
         """Convert an HVI image to RGB color space.
         
         Args:
-            image: An HVI image as a torch.Tensor of shape (B, 3, H, W) with
-                H and V in range [-1, 1] and I in range [0, 1]
-            
+            image: An HVI image, formatted as a torch.Tensor with dimensions
+                (B, 3, H, W) and H and V pixel values ranging from -1.0 to 1.0
+                and I pixel values ranging from 0.0 to 1.0.
+
         Returns:
-            An RGB image as a torch.Tensor of shape (B, 3, H, W) with pixel
-            values in the range [0, 1].
+            An RGB image, formatted as a torch.Tensor with dimensions
+            (B, 3, H, W) and pixel values ranging from 0.0 to 1.0.
         """
         pi      = 3.141592653589793
         H, V, I = image[:, 0, :, :], image[:, 1, :, :], image[:, 2, :, :]
@@ -176,3 +184,48 @@ class RGBToHVI(nn.Module):
         if self.gated2:
             rgb = rgb * self.alpha
         return rgb
+
+
+# ==============================================================================
+# COLOR & STYLE (Domain Alignment)
+# ==============================================================================
+
+# --- Distribution Matching ---
+def color_transfer(source: np.ndarray, target: np.ndarray) -> np.ndarray:
+    """Transfer the color distribution from the target image to the source
+    image using the mean and standard deviation of the LAB color space.
+    
+    References:
+        - Paper: "Color Transfer between Images".
+        - Code: https://github.com/rinsa318/color-transfer
+        - Code: https://github.com/chia56028/Color-Transfer-between-Images
+        - Code: https://www.cnblogs.com/likethanlove/p/6003677.html
+        - Code: https://pyimagesearch.com/2014/06/30/super-fast-color-transfer-images/
+    
+    Args:
+        source: An RGB source image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+        target: An RGB target image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+
+    Returns:
+        The color transferred image.
+    """
+    # Convert to LAB color space
+    s = cv2.cvtColor(source, cv2.COLOR_RGB2LAB).astype(np.float32)
+    t = cv2.cvtColor(target, cv2.COLOR_RGB2LAB).astype(np.float32)
+    
+    # Compute mean and std for each channel
+    s_mean = np.mean(s, axis=(0, 1))
+    s_std  = np.std(s,  axis=(0, 1))
+    t_mean = np.mean(t, axis=(0, 1))
+    t_std  = np.std(t,  axis=(0, 1))
+    
+    # Apply color transfer using vectorized operations
+    s = (s - s_mean) * (t_std / np.maximum(s_std, 1e-10)) + t_mean
+    
+    # Clip values to valid range and convert to uint8
+    s = np.clip(np.round(s), 0, 255).astype("uint8")
+    
+    # Convert back to RGB
+    return cv2.cvtColor(s, cv2.COLOR_LAB2RGB)

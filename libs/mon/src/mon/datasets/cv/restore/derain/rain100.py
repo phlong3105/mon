@@ -26,7 +26,7 @@ class Rain100(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
 
 
 @DATASETS.register(name="rain100h")
@@ -40,7 +40,7 @@ class Rain100H(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
 
     
 
@@ -55,4 +55,4 @@ class Rain100L(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None

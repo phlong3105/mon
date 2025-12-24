@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Instance annotation classes and mixins.
+"""Instance annotation base classes and mixins.
 
 This module provides the base classes and mixins for instance annotations.
 """
@@ -47,9 +47,10 @@ from ..array import TensorOrArray
 # --- Primary Data Types ---
 class Instance(TensorOrArray):
     """A base class for instance annotations.
-
-    Encapsulate per-object annotations (bbox, mask, polygon, keypoints,
-    cuboid, class, confidence, tracking id) and provide convenient accessors.
+    
+    Extend TensorOrArray to encapsulate per-object annotations (i.e., bbox,
+    mask, polygon, keypoints, cuboid, class, confidence, tracking id) and
+    provide convenient accessors.
 
     One instance can have these kinds of annotations (i.e., attributes):
         - bbox     : bounding box, support both OBB and HBB (*primary).
@@ -58,18 +59,8 @@ class Instance(TensorOrArray):
         - keypoints: points on key parts, like eyes or joints.
         - cuboid   : 3D bounding box with depth.
         - cls      : the type of object, like "car".
-
-    Attributes:
-        data (np.ndarray): The bounding box as a numpy.ndarray of shape (7+) in
-            CXCYWHN format.
-        mask (np.ndarray): Instance mask as a numpy.ndarray of shape (H, W, C)
-            with pixel values in [0, 255].
-        _imgsz (tuple[int, int]): Original image size as (H, W).
-        _image_path (Path): Associated image file path.
-        _root (Path): Root directory for the label file.
-
-    Notes:
-        The bounding boxes are expected to in the following format:
+    
+    The bounding boxes are expected to in the following format:
             <cx, cy, w, h, a, cls, conf, id, ...>
         where:
             - <cx, cy, w, h> are the bounding box coordinates in CXCYWHN format.
@@ -77,9 +68,19 @@ class Instance(TensorOrArray):
             - <cls> is the class ID (optional).
             - <conf> is the confidence score (optional).
             - <id> is the tracking ID (optional).
-
-    **I am in the process of adding more annotations to this class, so it may
-    subject to changes in the future.**
+    
+    Notes:
+        I am in the process of adding more annotations to this class, so it
+        may subject to changes in the future.
+    
+    Attributes:
+        _data (np.ndarray): A bounding box, formatted as a numpy.ndarray of
+            dimensions (7+) and in CXCYWHN format.
+        _mask (np.ndarray): Instance mask, formatted as a numpy.ndarray of
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+        _imgsz (tuple[int, int]): Image size as (H, W) used for conversions.
+        _image_path (Path): Associated image file path.
+        _root (Path): Root directory for the label file.
     """
 
     def __init__(
@@ -90,33 +91,34 @@ class Instance(TensorOrArray):
         image_path: Path       = None,
         root      : Path       = None,
     ):
-        """Initialize the instance annotation container.
-
-        Validate inputs, determine image size if needed, and store bounding box,
-        mask, and associated paths.
-
+        """Initialize a new instance.
+        
         Args:
-            data: Bounding box data as numpy.ndarray.
-            imgsz: Image size as tuple (H, W).
-            mask: Optional instance mask.
-            image_path: Optional path to associated image.
-            root: Optional root directory.
+            data: A bounding box, formatted as a numpy.ndarray of dimensions
+                (7+) and in CXCYWHN format.
+            imgsz: Image size as (H, W).
+            mask: Instance mask, formatted as a numpy.ndarray of dimensions
+                (H, W, C) and pixel values ranging from 0 to 255.
+            image_path: Associated image file path.
+            root: Root directory for the label file.
 
         Raises:
-            ValueError: If neither imgsz nor a valid image_path is provided.
-            TypeError: If data is not a numpy.ndarray.
+            ValueError: If neither ``imgsz`` nor a valid ``image_path`` is provided.
+            TypeError: If ``data`` is not a numpy.ndarray.
         """
         # Validate and set imgsz
         if imgsz is None and Path(image_path).is_image_file(exist=True):
             imgsz = I.read_size(image_path)
         if imgsz is None:
             raise ValueError("Either ``imgsz`` or a valid ``image_path`` must be provided to determine the original image size.")
-        self._imgsz = I.imgsz(imgsz)
+        imgsz = I.imgsz(imgsz)
         
-        super().__init__(data=data)  # This will call the data setter
+        # Initialize parent classes and assign attributes
+        self._imgsz      = imgsz
         self._mask       = mask
         self._image_path = Path(image_path) if image_path is not None else None
         self._root       = Path(root)       if root       is not None else None
+        super().__init__(data=data)  # This will call the data setter
     
     # --- Properties ---
     @property
@@ -127,13 +129,14 @@ class Instance(TensorOrArray):
     @data.setter
     def data(self, data: np.ndarray):
         """Set the bounding box data.
-
-        Validate the input array and convert common formats to CXCYWHN before
-        storing.
-
+        
+        Args:
+            data: A bounding box, formatted as a numpy.ndarray of dimensions
+                (7+) and in CXCYWHN format.
+                
         Raises:
-            TypeError: If data is not a numpy.ndarray.
-            ValueError: If data does not have shape (7+).
+            TypeError: If ``data`` is not a numpy.ndarray.
+            ValueError: If ``data`` has incorrect shape.
         """
         if not isinstance(data, np.ndarray):
             raise TypeError(f"``data`` must be a numpy.ndarray, got {type(data)}.")
@@ -196,10 +199,10 @@ class Instance(TensorOrArray):
         return self.data
     
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
-        """Convert the bounding box to XYXY format.
+        """Convert the bounding box from CXCYWHN to XYXY format.
 
         Args:
-            imgsz: Image size (H, W). Defaults to the instance imgsz.
+            imgsz: Image size as (H, W). If omitted, uses the stored ``_imgsz``.
 
         Returns:
             Bounding box in XYXY format.
@@ -208,10 +211,10 @@ class Instance(TensorOrArray):
         return B.cxcywhn_to_xyxy(self.data, imgsz)[0]
     
     def xywh(self, imgsz: tuple[int, int] = None) -> np.ndarray:
-        """Convert the bounding box to XYWH format.
+        """Convert the bounding box from CXCYWHN to XYWH format.
 
         Args:
-            imgsz: Image size (H, W). Defaults to the instance imgsz.
+            imgsz: Image size as (H, W). If omitted, uses the stored ``_imgsz``.
 
         Returns:
             Bounding box in XYWH format.

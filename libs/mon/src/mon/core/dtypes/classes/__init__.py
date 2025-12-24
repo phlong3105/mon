@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Class data type.
+"""Classes data type.
 
-This package contains a "full-stack" toolkit for class data, including data
+This package contains a "full-stack" toolkit for classes, including data
 structure, ingestion, analysis, atomic transformations, complex workflows, and
 rendering utilities.
 """

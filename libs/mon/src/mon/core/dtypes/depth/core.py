@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Depth data classes and mixins.
+"""Depth base classes and mixins.
 
 This module provides the base classes and mixins for depth data.
 """
@@ -47,11 +47,11 @@ from ..image import Image
 class DepthMap(Image):
     """A basic class for managing a depth map.
 
-    This class extends Image to handle depth-specific attributes and provide
-    properties related to depth data.
+    Extend Image to handle depth map data and provide properties and methods
+    related to depth data.
 
     Attributes:
-        _source (DepthSource): The configured depth data source.
+        _source (DepthSource): The depth data source.
     """
     
     def __init__(
@@ -60,11 +60,11 @@ class DepthMap(Image):
         flags : int         = cv2.IMREAD_GRAYSCALE,
         *args, **kwargs
     ):
-        """Initialize a DepthMap instance.
+        """Initialize a new instance.
 
         Args:
             source: Source of the depth data. Defaults to DepthSource.DAv2_ViTB.
-            flags: OpenCV flag used to read the depth map. Defaults to cv2.IMREAD_GRAYSCALE.
+            flags: OpenCV flag to read the depth map. Defaults to cv2.IMREAD_GRAYSCALE.
             *args: Additional positional arguments forwarded to Image.
             **kwargs: Additional keyword arguments forwarded to Image.
 
@@ -75,14 +75,13 @@ class DepthMap(Image):
         source = DepthSource(source)
         if source not in DepthSource:
             raise ValueError(f"``source`` must be one of {DepthSource}, got {source}.")
-        
-        # Assign attributes
+            
+        # Initialize parent classes and assign attributes
         self._source = source
-        
         super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter
         
     # ---- Properties ---
     @property
     def source(self) -> DepthSource:
-        """Return the configured depth data source."""
+        """Return the depth data source."""
         return self._source

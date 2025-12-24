@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Depth data complex operations.
+"""Depth complex operations.
 
 This module provides higher-level logics that might involve multiple atomic
 operations to manipulate the depth data.

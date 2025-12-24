@@ -27,7 +27,7 @@ class LOLv2Real(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
 
     def _load_primary_data(self) -> list[Image]:
         """Lists all image data for the primary modality.
@@ -61,7 +61,7 @@ class LOLv2Syn(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None
     
     def _load_primary_data(self) -> list[Image]:
         """Lists all image data for the primary modality.

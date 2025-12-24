@@ -4,12 +4,10 @@
 """Image atomic operations.
 
 This module provides pure functions that perform a single mathematical or
-structural change to the image data.
+structural change to the images.
 """
 
 __all__ = [
-    "boundary_aware_prior",
-    "brightness_attention_map",
     "center",
     "imgsz",
     "is_channel_first",
@@ -42,30 +40,31 @@ import torch.nn.functional as F
 # ==============================================================================
 
 # --- Verify (Schema and range checking) ---
-def is_image(image: torch.Tensor | np.ndarray) -> bool:
+def is_image(image: np.ndarray | torch.Tensor) -> bool:
     """Check if the input is an image.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
             
     Returns:
         True if the input is an image, otherwise False.
     """
     return (
-        isinstance(image, torch.Tensor | np.ndarray)
+        isinstance(image, np.ndarray | torch.Tensor)
         and (is_color(image) or is_grayscale(image))
     )
 
 
-def is_channel_first(image: torch.Tensor | np.ndarray) -> bool:
+def is_channel_first(image: np.ndarray | torch.Tensor) -> bool:
     """Check if an image is in channel-first format.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray pixel
+            values ranging from 0 to 255; or as a torch.Tensor with dimensions
+            and pixel values ranging from 0.0 to 1.0.
             
     Returns:
         True if the image is in channel-first format, otherwise False.
@@ -100,13 +99,13 @@ def is_channel_first(image: torch.Tensor | np.ndarray) -> bool:
         raise ValueError(f"Cannot determine channel format for shape [{shape_}].")
 
 
-def is_channel_last(image: torch.Tensor | np.ndarray) -> bool:
+def is_channel_last(image: np.ndarray | torch.Tensor) -> bool:
     """Check if an image is in channel-last format.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            pixel values ranging from 0 to 255; or as a torch.Tensor with pixel
+            values ranging from 0.0 to 1.0.
             
     Returns:
         True if the image is in channel-last format, otherwise False.
@@ -114,13 +113,14 @@ def is_channel_last(image: torch.Tensor | np.ndarray) -> bool:
     return not is_channel_first(image)
 
 
-def is_color(image: torch.Tensor | np.ndarray) -> bool:
+def is_color(image: np.ndarray | torch.Tensor) -> bool:
     """Check if an image is a color image.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
 
     Returns:
         True if the image has 3 or 4 channels, False otherwise.
@@ -131,13 +131,14 @@ def is_color(image: torch.Tensor | np.ndarray) -> bool:
     return num_channels(image) in [3, 4]
 
 
-def is_grayscale(image: torch.Tensor | np.ndarray) -> bool:
+def is_grayscale(image: np.ndarray | torch.Tensor) -> bool:
     """Check if an image is a grayscale image.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
    
     Returns:
         True if the image has 1 channel or is 2D, False otherwise.
@@ -145,13 +146,14 @@ def is_grayscale(image: torch.Tensor | np.ndarray) -> bool:
     return num_channels(image) == 1 or len(image.shape) == 2
 
 
-def is_normalized(image: torch.Tensor | np.ndarray) -> bool:
-    """Check if an image is normalized to range [-1.0, 1.0] or [0.0, 1.0].
+def is_normalized(image: np.ndarray | torch.Tensor) -> bool:
+    """Check if an image is normalized to range [-1, 1] or [0, 1].
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
     
     Returns:
         True if the image is normalized, False otherwise.
@@ -171,17 +173,162 @@ def is_normalized(image: torch.Tensor | np.ndarray) -> bool:
 
 
 # ==============================================================================
+# CONVERSIONS (Backend Interop)
+# ==============================================================================
+
+# --- Formats (Channel shuffling) ---
+def to_channel_first(image: np.ndarray | torch.Tensor) -> np.ndarray | torch.Tensor:
+    """Convert an image to channel-first format.
+
+    Args:
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
+    
+    Returns:
+        An RGB or grayscale image, formatted as a numpy.ndarray with dimensions
+        (C, H, W) and pixel values ranging from 0 to 255; or as a torch.Tensor
+        with dimensions (B, C, H, W) and pixel values ranging from 0.0 to 1.0.
+    
+    Raises:
+        ValueError: If ``image`` dimensions are not 3 or 4.
+        TypeError: If ``image`` is not a torch.Tensor or numpy.ndarray.
+    """
+    if is_channel_first(image):
+        return image
+    if not 3 <= image.ndim <= 4:
+        raise ValueError(f"``image``'s number of dimensions must be between 3 and 4, got {image.ndim}.")
+    
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
+        if image.ndim == 3:
+            image = image.permute(2, 0, 1)     # [H, W, C] -> [C, H, W]
+        elif image.ndim == 4:
+            image = image.permute(0, 3, 1, 2)  # [B, H, W, C] -> [B, C, H, W]
+    elif isinstance(image, np.ndarray):
+        image = np.copy(image)  # Changed from copy.deepcopy for efficiency
+        if image.ndim == 3:
+            image = np.transpose(image, (2, 0, 1))     # [H, W, C] -> [C, H, W]
+        elif image.ndim == 4:
+            image = np.transpose(image, (0, 3, 1, 2))  # [B, H, W, C] -> [B, C, H, W]
+    else:
+        raise TypeError(f"``image`` must be a torch.Tensor or numpy.ndarray, got {type(image)}.")
+    
+    return image
+
+
+def to_channel_last(image: np.ndarray | torch.Tensor) -> np.ndarray | torch.Tensor:
+    """Convert an image to channel-last format.
+
+    Args:
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
+            
+    Returns:
+        An RGB or grayscale image, formatted as a numpy.ndarray with dimensions
+        (H, W, C) and pixel values ranging from 0 to 255; or as a torch.Tensor
+        with dimensions (B, H, W, C) and pixel values ranging from 0.0 to 1.0.
+        
+    Raises:
+        ValueError: If ``image`` dimensions are not 3 or 4.
+        TypeError: If ``image`` is not a torch.Tensor or numpy.ndarray.
+    """
+    if is_channel_last(image):
+        return image
+    if not 3 <= image.ndim <= 4:
+        raise ValueError(f"``image``'s number of dimensions must be between 3 and 4, got {image.ndim}.")
+    
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
+        if image.ndim == 3:
+            image = image.permute(1, 2, 0)     # [C, H, W] -> [H, W, C]
+        elif image.ndim == 4:
+            image = image.permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, H, W, C]
+    elif isinstance(image, np.ndarray):
+        image = np.copy(image)  # Changed from copy.deepcopy for efficiency
+        if image.ndim == 3:
+            image = np.transpose(image, (1, 2, 0))     # [C, H, W] -> [H, W, C]
+        elif image.ndim == 4:
+            image = np.transpose(image, (0, 2, 3, 1))  # [B, C, H, W] -> [B, H, W, C]
+    else:
+        raise TypeError(f"``image`` must be a torch.Tensor or numpy.ndarray, got {type(image)}.")
+    
+    return image
+
+
+# --- Types (Tensor <-> Array) ---
+def to_array(image: torch.Tensor) -> np.ndarray:
+    """Convert an image from torch.Tensor to numpy.ndarray.
+    
+    Args:
+        image: An RGB or grayscale image, formatted as a torch.Tensor with
+            dimensions (B, C, H, W) and pixel values ranging from 0.0 to 1.0.
+    
+    Returns:
+        An RGB or grayscale image, formatted as a numpy.ndarray with dimensions
+        (H, W, C) and pixel values ranging from 0 to 255.
+    
+    Raises:
+        TypeError: If ``image`` is not a torch.Tensor or does not have 4 dimensions.
+        
+    Notes:
+        image = (tensor.squeeze().detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy() * 255).round().astype("uint8")
+    """
+    if not isinstance(image, torch.Tensor) or image.ndim != 4:
+        raise TypeError(f"``image`` must be a torch.Tensor of shape (B, C, H, W), "
+                        f"got {type(image)} with {image.ndim} dimensions.")
+    
+    image = (image.squeeze().detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy())
+    image = np.clip(image * 255, 0, 255).astype("uint8")
+    return image
+    
+
+def to_tensor(image: np.ndarray, normalize: bool = False) -> torch.Tensor:
+    """Convert an image from numpy.ndarray to torch.Tensor.
+
+    Args:
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+        normalize: If True, scales pixel values to range [0.0, 1.0]. Defaults to False.
+
+    Returns:
+        An RGB or grayscale image, formatted as a torch.Tensor with dimensions
+        (B, C, H, W) and pixel values ranging from 0.0 to 1.0 if ``normalize``
+        is True, else ranging from 0 to 255.
+        
+    Raises:
+        TypeError: If ``image`` is not a 3D numpy.array.
+        
+    Notes:
+        image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().div(255.0).unsqueeze(0).to(device)
+    """
+    if not isinstance(image, np.ndarray) or len(image.shape) != 3:
+        raise TypeError(f"``image`` must be a numpy.ndarray of shape (H, W, C), "
+                        f"got {type(image)} with {len(image.shape)} dimensions.")
+    
+    if normalize:
+        image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().div(255.0).unsqueeze(0)
+    else:
+        image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().unsqueeze(0)
+    return image
+
+
+# ==============================================================================
 # GEOMETRIC TRANSFORMATIONS (Resizing, Warping)
 # ==============================================================================
 
 # --- Analytics (Area, Perimeter, Centroid calculations) ---
-def center(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+def center(image: np.ndarray | torch.Tensor) -> np.ndarray | torch.Tensor:
     """Extract the center coordinates of an image.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
     
     Returns:
         The center of an image as (H/2, W/2).
@@ -191,13 +338,14 @@ def center(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     return torch.tensor(center_) if isinstance(image, torch.Tensor) else np.array(center_)
 
 
-def shape(image: torch.Tensor | np.ndarray) -> tuple[int, int, int]:
+def shape(image: np.ndarray | torch.Tensor) -> tuple[int, int, int]:
     """Extract the shape of an image as (H, W, C).
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
 
     Returns:
         The shape of the image as (H, W, C).
@@ -233,7 +381,7 @@ def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
             size = image_or_size[:2] if len(image_or_size) == 3 and image_or_size[0] >= image_or_size[2] else image_or_size[-2:]
     elif isinstance(image_or_size, (int, float)):
         size = (image_or_size, image_or_size)
-    elif isinstance(image_or_size, torch.Tensor | np.ndarray):
+    elif isinstance(image_or_size, np.ndarray | torch.Tensor):
         size = (
             (int(image_or_size.shape[-2]), int(image_or_size.shape[-1]))
             if is_channel_first(image_or_size)
@@ -248,13 +396,14 @@ def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
     return size
 
 
-def num_channels(image: torch.Tensor | np.ndarray) -> int:
+def num_channels(image: np.ndarray | torch.Tensor) -> int:
     """Extract the number of channels in an image.
 
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255; or as a
+            torch.Tensor with dimensions (B, C, H, W) and pixel values ranging
+            from 0.0 to 1.0.
    
     Returns:
         The number of channels in the image.
@@ -281,8 +430,8 @@ def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
     """Pad an image to make it a square.
 
     Args:
-        image: An RGB image as a numpy.ndarray of shape (H, W, C) with pixel
-            values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
         pad_value: Padding value. Default to 0.
         
     Returns:
@@ -308,8 +457,8 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """Downsample an image tensor into a pair to half resolution.
     
     Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1].
+        image: An RGB or grayscale image, formatted as a torch.Tensor with
+            dimensions (B, C, H, W) and pixel values ranging from 0.0 to 1.0.
 
     Returns:
         A tuple containing two downsampled images of shape (B, C, H/2, W/2).
@@ -345,8 +494,8 @@ def split(image: np.ndarray, n: int = 2) -> list[np.ndarray]:
     """Split an image into ``n`` equal parts.
 
     Args:
-        image: An RGB image as a numpy.ndarray of shape (H, W, C) with pixel
-            values in the range [0, 255].
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
         n: Number of parts to split the image into. Default to 2.
 
     Returns:
@@ -431,144 +580,3 @@ def split(image: np.ndarray, n: int = 2) -> list[np.ndarray]:
 
 
 # --- Standardize (Unit conversion) ---
-
-
-# ==============================================================================
-# CONVERSIONS
-# ==============================================================================
-
-# --- Formats ---
-def to_channel_first(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert an image to channel-first format.
-
-    Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
-    
-    Returns:
-        A channel-first image as a torch.Tensor of shape (B, C, H, W) with pixel
-        values in the range [0, 1] or a numpy.ndarray of shape (H, W, C) with
-        pixel values in the range [0, 255].
-    
-    Raises:
-        ValueError: If ``image`` dimensions are not 3 or 4.
-        TypeError: If ``image`` is not a torch.Tensor or numpy.ndarray.
-    """
-    if is_channel_first(image):
-        return image
-    if not 3 <= image.ndim <= 4:
-        raise ValueError(f"``image``'s number of dimensions must be between 3 and 4, got {image.ndim}.")
-    
-    if isinstance(image, torch.Tensor):
-        image = image.clone()
-        if image.ndim == 3:
-            image = image.permute(2, 0, 1)     # [H, W, C] -> [C, H, W]
-        elif image.ndim == 4:
-            image = image.permute(0, 3, 1, 2)  # [B, H, W, C] -> [B, C, H, W]
-    elif isinstance(image, np.ndarray):
-        image = np.copy(image)  # Changed from copy.deepcopy for efficiency
-        if image.ndim == 3:
-            image = np.transpose(image, (2, 0, 1))     # [H, W, C] -> [C, H, W]
-        elif image.ndim == 4:
-            image = np.transpose(image, (0, 3, 1, 2))  # [B, H, W, C] -> [B, C, H, W]
-    else:
-        raise TypeError(f"``image`` must be a torch.Tensor or numpy.ndarray, got {type(image)}.")
-    
-    return image
-
-
-def to_channel_last(image: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert an image to channel-last format.
-
-    Args:
-        image: An RGB image as a torch.Tensor of shape (B, C, H, W) with pixel
-            values in the range [0, 1] or a numpy.ndarray of shape (H, W, C)
-            with pixel values in the range [0, 255].
-            
-    Returns:
-        A channel-last image as a torch.Tensor of shape (B, C, H, W) with pixel
-        values in the range [0, 1] or a numpy.ndarray of shape (H, W, C) with
-        pixel values in the range [0, 255].
-            
-    Raises:
-        ValueError: If ``image`` dimensions are not 3 or 4.
-        TypeError: If ``image`` is not a torch.Tensor or numpy.ndarray.
-    """
-    if is_channel_last(image):
-        return image
-    if not 3 <= image.ndim <= 4:
-        raise ValueError(f"``image``'s number of dimensions must be between 3 and 4, got {image.ndim}.")
-    
-    if isinstance(image, torch.Tensor):
-        image = image.clone()
-        if image.ndim == 3:
-            image = image.permute(1, 2, 0)     # [C, H, W] -> [H, W, C]
-        elif image.ndim == 4:
-            image = image.permute(0, 2, 3, 1)  # [B, C, H, W] -> [B, H, W, C]
-    elif isinstance(image, np.ndarray):
-        image = np.copy(image)  # Changed from copy.deepcopy for efficiency
-        if image.ndim == 3:
-            image = np.transpose(image, (1, 2, 0))     # [C, H, W] -> [H, W, C]
-        elif image.ndim == 4:
-            image = np.transpose(image, (0, 2, 3, 1))  # [B, C, H, W] -> [B, H, W, C]
-    else:
-        raise TypeError(f"``image`` must be a torch.Tensor or numpy.ndarray, got {type(image)}.")
-    
-    return image
-
-
-# --- Types ---
-def to_array(image: torch.Tensor) -> np.ndarray:
-    """Convert an image from torch.Tensor to numpy.ndarray.
-    
-    Args:
-        image: Image as a torch.Tensor of shape (B, C, H, W) with pixel values
-            in the range [0.0, 1.0].
-    
-    Returns:
-        Image as a numpy.ndarray of shape (H, W, C) with pixel values in the
-        range [0, 255].
-    
-    Raises:
-        TypeError: If ``image`` is not a torch.Tensor or does not have 4 dimensions.
-        
-    Notes:
-        image = (tensor.squeeze().detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy() * 255).round().astype("uint8")
-    """
-    if not isinstance(image, torch.Tensor) or image.ndim != 4:
-        raise TypeError(f"``image`` must be a torch.Tensor of shape (B, C, H, W), "
-                        f"got {type(image)} with {image.ndim} dimensions.")
-    
-    image = (image.squeeze().detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy())
-    image = np.clip(image * 255, 0, 255).astype("uint8")
-    return image
-    
-
-def to_tensor(image: np.ndarray, normalize: bool = False) -> torch.Tensor:
-    """Convert an image from numpy.ndarray to torch.Tensor.
-
-    Args:
-        image: Image as a numpy.ndarray of shape (H, W, C) with pixel values in
-            the range [0, 255].
-        normalize: If True, normalizes pixel values to [0.0, 1.0]. Default to False.
-
-    Returns:
-        Image as a torch.Tensor of shape (1, C, H, W) with pixel values in the
-        range [0, 1] if ``normalize`` is True, else in [0, 255].
-    
-    Raises:
-        TypeError: If ``image`` is not a 3D numpy.array.
-        
-    Notes:
-        image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().div(255.0).unsqueeze(0).to(device)
-    """
-    if not isinstance(image, np.ndarray) or len(image.shape) != 3:
-        raise TypeError(f"``image`` must be a numpy.ndarray of shape (H, W, C), "
-                        f"got {type(image)} with {len(image.shape)} dimensions.")
-    
-    if normalize:
-        image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().div(255.0).unsqueeze(0)
-    else:
-        image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().unsqueeze(0)
-    return image

@@ -1,91 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for loss functions.
+"""Loss functions.
 
-This package provides various loss functions commonly used in training machine
-learning models, particularly in computer vision tasks. Each loss function is
-implemented as a class that can be instantiated and used to compute the loss
-between predicted outputs and target values.
+This package contains various loss functions commonly used in training machine
+learning models, particularly in computer vision tasks.
 
-References:
-    - Definition: https://www.ibm.com/think/topics/loss-function#1580786328
+This is the Component-Based Framework. It is useful to organize a family of
+related functionalities that share a common interface/inheritance but aren't tie
+to the specific "interchanged algorithm" requirement of the Strategy Pattern.
+
+The Component-Based Framework typically has the following structure:
+    component/
+    ├── __init__.py    # Exposes all concrete classes
+    ├── base.py        # The Abstract Base Class (ABC)
+    ├── ...
+    └── utils.py       # Utility functions and helpers
 """
 
-__all__ = [
-    "BCELoss",
-    "BCEWithLogitsLoss",
-    "BaseLoss",
-    "CTCLoss",
-    "CharbonnierLoss",
-    "ColorConstancyLoss",
-    "CosineEmbeddingLoss",
-    "CosineSimilarityLoss",
-    "CrossEntropyLoss",
-    "DepthAwareIlluminationLoss",
-    "EdgeLoss",
-    "ExposureControlLoss",
-    "ExposureValueControlLoss",
-    "ExtendedL1Loss",
-    "GaussianNLLLoss",
-    "HingeEmbeddingLoss",
-    "HuberLoss",
-    "KLDivLoss",
-    "L1Loss",
-    "MSELoss",
-    "MarginRankingLoss",
-    "MultiLabelMarginLoss",
-    "MultiLabelSoftMarginLoss",
-    "MultiMarginLoss",
-    "NLLLoss",
-    "NLLLoss2d",
-    "PSNRLoss",
-    "PoissonNLLLoss",
-    "SmoothL1Loss",
-    "SoftMarginLoss",
-    "SpatialConsistencyLoss",
-    "StructureTextureDecompositionLoss",
-    "TotalVariationLoss",
-    "TripletMarginLoss",
-    "TripletMarginWithDistanceLoss",
-]
+from .base import *
+from .basic import *
+from .external import *
+from .image import *
+from .utils import *
 
-from .base import BaseLoss
-from .core import (
-    BCELoss,
-    BCEWithLogitsLoss,
-    CharbonnierLoss,
-    CosineEmbeddingLoss,
-    CosineSimilarityLoss,
-    CrossEntropyLoss,
-    CTCLoss,
-    ExtendedL1Loss,
-    GaussianNLLLoss,
-    HingeEmbeddingLoss,
-    HuberLoss,
-    KLDivLoss,
-    L1Loss,
-    MarginRankingLoss,
-    MSELoss,
-    MultiLabelMarginLoss,
-    MultiLabelSoftMarginLoss,
-    MultiMarginLoss,
-    NLLLoss,
-    NLLLoss2d,
-    PoissonNLLLoss,
-    SmoothL1Loss,
-    SoftMarginLoss,
-    TripletMarginLoss,
-    TripletMarginWithDistanceLoss,
-)
-from .image import (
-    ColorConstancyLoss,
-    DepthAwareIlluminationLoss,
-    EdgeLoss,
-    ExposureControlLoss,
-    ExposureValueControlLoss,
-    PSNRLoss,
-    SpatialConsistencyLoss,
-    StructureTextureDecompositionLoss,
-    TotalVariationLoss,
-)
+# ==============================================================================
+# REGISTRY & FACTORY (Type Resolution)
+# ==============================================================================
+
+# --- Register (Adding new spokes to the hub) ---
+
+
+# --- Resolve (Retrieving spokes by name/key) ---

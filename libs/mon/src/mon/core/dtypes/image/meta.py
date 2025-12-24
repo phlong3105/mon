@@ -3,8 +3,8 @@
 
 """Image metadata operations.
 
-This module provides operations that return information about the image without
-changing it.
+This module provides operations that return information about the images
+without changing it.
 """
 
 __all__ = []
@@ -21,7 +21,7 @@ __all__ = []
 
 
 # ==============================================================================
-# COMPONENT REGISTRIES (Type Resolution)
+# REGISTRY & FACTORY (Type Resolution)
 # ==============================================================================
 
 # --- Register (Adding new spokes to the hub) ---

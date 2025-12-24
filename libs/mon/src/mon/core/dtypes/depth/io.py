@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Depth data I/O operations.
+"""Depth I/O operations.
 
 This module provides functions for input and output operations for depth data.
 """

@@ -53,7 +53,7 @@ class Prompt:
     """
     
     def __init__(self, text: str, default: str, choices: Sequence | Collection = None):
-        """Initialize the prompt wrapper.
+        """Initialize a new instance.
 
         Args:
             text: Prompt text to display.
@@ -141,7 +141,7 @@ class Confirm:
     """
     
     def __init__(self, text: str, default: bool = True):
-        """Initialize the confirmation prompt.
+        """Initialize a new instance.
 
         Args:
             text: Prompt text to display.
@@ -170,7 +170,7 @@ class NumberPrompt:
     """
     
     def __init__(self, text: str, default: int = -1):
-        """Initialize the numeric prompt.
+        """Initialize a new instance.
 
         Args:
             text: Prompt text.
@@ -242,7 +242,7 @@ class TaskPrompt(Prompt):
         default     : str = CLI_OPTIONS["task"]["default"],
         choices     : Sequence | Collection = None,
     ):
-        """Initialize the task prompt.
+        """Initialize a new instance.
 
         Args:
             project_root: Project root to discover tasks.
@@ -275,7 +275,7 @@ class ArchPrompt(Prompt):
         default     : str = CLI_OPTIONS["arch"]["default"],
         choices     : Sequence | Collection = None,
     ):
-        """Initialize the architecture prompt.
+        """Initialize a new instance.
 
         Args:
             task: Task name.
@@ -311,7 +311,7 @@ class ModelPrompt(Prompt):
         default     : str = CLI_OPTIONS["model"]["default"],
         choices     : Sequence | Collection = None,
     ):
-        """Initialize the model prompt.
+        """Initialize a new instance.
 
         Args:
             task: Task name.
@@ -347,7 +347,7 @@ class ConfigPrompt(Prompt):
         default     : str = CLI_OPTIONS["config"]["default"],
         choices     : Sequence | Collection = None,
     ):
-        """Initialize the configuration prompt.
+        """Initialize a new instance.
 
         Args:
             project_root: Project root.
@@ -387,7 +387,7 @@ class WeightsPrompt(Prompt):
         default     : str = CLI_OPTIONS["weights"]["default"],
         choices     : Sequence | Collection = None,
     ):
-        """Initialize the weights prompt.
+        """Initialize a new instance.
 
         Args:
             model: Model name.
@@ -461,7 +461,7 @@ class DataPrompt(Prompt):
         default     : str = CLI_OPTIONS["data"]["default"],
         choices     : Sequence | Collection = None,
     ):
-        """Initialize the data prompt.
+        """Initialize a new instance.
 
         Args:
             task: Task name.
@@ -513,7 +513,7 @@ class FullnamePrompt(Prompt):
         text   : str = CLI_OPTIONS["fullname"]["prompt_text"],
         default: str = CLI_OPTIONS["fullname"]["default"],
     ):
-        """Initialize the fullname prompt.
+        """Initialize a new instance.
 
         Args:
             config: Configuration file.
@@ -546,7 +546,7 @@ class DevicePrompt(Prompt):
         default: str  = CLI_OPTIONS["device"]["default"],
         choices: list = CLI_OPTIONS["device"]["choices"],
     ):
-        """Initialize the device prompt.
+        """Initialize a new instance.
 
         Args:
             model: Model name.
@@ -573,13 +573,12 @@ class RunCLI:
     arguments and configuration selections.
 
     Attributes:
-        args (dict): Current in-progress arguments.
-        config_args (dict): Loaded configuration arguments from the
-            selected config.
+        _args (dict): Current in-progress arguments.
+        _config_args (dict): Loaded configuration arguments from the selected config.
     """
     
     def __init__(self, defaults: dict = None):
-        """Initialize the interactive CLI with defaults.
+        """Initialize a new instance.
 
         Args:
             defaults: Default overrides for arguments.

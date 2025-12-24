@@ -3,7 +3,7 @@
 
 """Contour visualization operations.
 
-This module provides functions to visualize the contour data for debugging and
+This module provides functions to visualize the contours for debugging and
 human interaction.
 """
 

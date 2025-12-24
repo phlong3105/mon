@@ -23,4 +23,4 @@ class LightEffect(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : Classes     = None
+    _classes   : ClassList   = None

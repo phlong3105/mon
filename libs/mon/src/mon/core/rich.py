@@ -133,7 +133,7 @@ class MemoryUsageColumn(ProgressColumn):
         unit        : str    = "GB",
         table_column: Column = None
     ):
-        """Initialize the memory usage column.
+        """Initialize a new instance.
 
         Configure which GPU device(s) to query and the memory unit to display.
 
@@ -202,7 +202,7 @@ class ProcessedItemsColumn(ProgressColumn):
     """
 
     def __init__(self, table_column: Column = None):
-        """Initialize processed-items column.
+        """Initialize a new instance.
 
         Args:
             table_column: Optional associated table column.
@@ -283,7 +283,7 @@ class SelectionOrInputPrompt(Prompt):
         column_first  : bool                = False,
         allow_empty   : bool                = False,
     ):
-        """Initialize the selection-or-input prompt.
+        """Initialize a new instance.
 
         Args:
             prompt: Prompt text to display.

@@ -30,7 +30,7 @@ class Cityscapes(ImageDataset):
         "image"   : Image,
         "semantic": SemanticMask,
     })
-    _classes   : Classes     = Classes([
+    _classes   : ClassList   = ClassList([
         {"name": "unlabeled"           , "id":  0, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "ego vehicle"         , "id":  1, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "rectification border", "id":  2, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},

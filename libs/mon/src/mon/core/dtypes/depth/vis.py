@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Depth data visualization operations.
+"""Depth visualization operations.
 
 This module provides functions to visualize the depth data for debugging and
 human interaction.
@@ -33,13 +33,13 @@ def to_color(depth: np.ndarray, color_map: int = cv2.COLORMAP_JET) -> np.ndarray
     """Convert a depth map to a color-coded image.
 
     Args:
-        depth: A depth map as a 2-D numpy.array. It can be normalized (values in
-            [0, 1]) or in absolute depth units.
-        color_map: OpenCV colormap constant to use. Defaults to cv2.COLORMAP_JET.
+        depth: A depth map, formatted as a numpy array of shape (H, W) and pixel
+            values ranging from 0.0 to 1.0 or in absolute depth units (e.g., mm).
+        color_map: OpenCV colormap to use for coloring. Defaults to cv2.COLORMAP_JET.
 
     Returns:
-        Color-coded depth image of shape (H, W, 3) with pixel values in the
-        range [0, 255].
+        Color-coded depth image, formatted as a numpy.ndarray with shape (H, W, 3)
+        and pixel values ranging from 0 to 255.
 
     Raises:
         TypeError: If ``depth`` is not a numpy.ndarray.

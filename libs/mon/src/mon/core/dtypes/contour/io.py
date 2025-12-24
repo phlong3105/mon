@@ -3,7 +3,7 @@
 
 """Contour I/O operations.
 
-This module provides functions for input and output operations for contour data.
+This module provides functions for input and output operations for contours.
 """
 
 __all__ = []

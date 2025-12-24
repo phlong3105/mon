@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Class data classes and mixins.
+"""Class base classes and mixins.
 
-This module provides the base classes and mixins for label data.
+This module provides the base classes and mixins for classes.
 """
 
 __all__ = [
@@ -54,17 +54,16 @@ Class = dict[str, Any]  # An alias for a dictionary of arbitrary key-value pairs
 class ClassList(list[Class]):
     """A basic class for managing a list of classes.
     
-    This class extends the built-in list to handle a list of class dictionaries.
-    It supports loading labels from a YAML file, accessing various properties,
-    and filtering labels based on class labels.
+    Extend the built-in list to handle a list of class dictionaries and provide
+    properties and methods related to class management.
     
     Notes:
-        - I choose the List suffix to indicate that this class will behave like
-          a Python list.
+        - I choose the "List" suffix to indicate that this class will behave
+          like a Python list.
     """
     
     def __init__(self, data: list[dict] | Path = ()):
-        """Initialize a LabelList instance.
+        """Initialize a new instance.
         
         Args:
             data: Either a list of class dictionaries or a Path to a YAML file
@@ -77,7 +76,8 @@ class ClassList(list[Class]):
             classes = []
         else:
             classes = data
-            
+        
+        # Initialize parent classes and assign attributes
         super().__init__(classes)
     
     # --- Properties ---
@@ -158,7 +158,7 @@ class Probabilities(TensorOrArray):
     """
     
     def __init__(self, data: np.ndarray | int, num_classes: int = None):
-        """Initialize the Probabilities instance.
+        """Initialize a new instance.
         
         Args:
             data: Probability vector as a numpy.ndarray of shape (``num_classes``),

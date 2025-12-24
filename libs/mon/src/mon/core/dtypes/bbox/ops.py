@@ -4,7 +4,7 @@
 """Bounding box atomic operations.
 
 This module provides pure functions that perform a single mathematical or
-structural change to the bounding box data.
+structural change to the bounding boxes.
 """
 
 __all__ = [
@@ -59,11 +59,11 @@ def is_normalized(bbox: np.ndarray) -> bool:
     """Check if bounding boxes are normalized.
 
     Args:
-         bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+).
+         bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in CXCYWHN format.
 
     Returns:
-        True if the first four values lie in [0, 1].
+        True if the first four values of each bounding box range from 0 to 1.
 
     Raises:
         ValueError: If ``bbox``'s shape is invalid.
@@ -78,12 +78,12 @@ def is_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> bool:
     """Check if bounding boxes are in CXCYWHN format.
 
     Args:
-         bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+).
-        imgsz: Image size (H, W) for checks where needed.
+         bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+).
+        imgsz: Image size as (H, W).
 
     Returns:
-        True if values and sizes match expected normalized ranges.
+        True if coordinates match CXCYWHN semantics.
 
     Raises:
         ValueError: If ``bbox``'s shape is invalid.
@@ -101,9 +101,9 @@ def is_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> bool:
     """Check if bounding boxes are in XYXY format.
 
     Args:
-         bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+).
-        imgsz: Image size (H, W).
+         bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+).
+        imgsz: Image size as (H, W).
 
     Returns:
         True if coordinates match XYXY semantics.
@@ -129,9 +129,9 @@ def is_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> bool:
     """Check if bounding boxes are in XYWH format.
 
     Args:
-         bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+).
-        imgsz: Image size (H, W).
+         bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+).
+        imgsz: Image size as (H, W).
 
     Returns:
         True if coordinates match XYWH semantics.
@@ -158,10 +158,10 @@ def to_2d(bbox: Union[np.ndarray, list, tuple]) -> np.ndarray:
     """Convert bounding boxes to a 2-D numpy.ndarray.
 
     Args:
-        bbox: Single or batched input (ndarray, list, or tuple).
+        bbox: Single or a batch of bounding boxes.
 
     Returns:
-        A 2-D numpy.ndarray with shape (N, M).
+        A numpy.ndarray of dimensions (N, M).
 
     Raises:
         ValueError: If ``bbox``'s type is unsupported.
@@ -193,8 +193,8 @@ def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
     """Filter bounding boxes by IoU threshold using a simple area comparison.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
         iou_thres: Threshold to suppress overlapping boxes.
 
     Returns:
@@ -226,6 +226,16 @@ def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
 
 
 # ==============================================================================
+# CONVERSIONS (Backend Interop)
+# ==============================================================================
+
+# --- Formats (Channel shuffling) ---
+
+
+# --- Types (Data type casting) ---
+
+
+# ==============================================================================
 # GEOMETRIC TRANSFORMATIONS (Resizing, Warping)
 # ==============================================================================
 
@@ -234,8 +244,8 @@ def area(bbox: np.ndarray) -> np.ndarray:
     """Calculate the area(s) of bounding box(es).
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
 
     Returns:
         An array of areas with shape (N,).
@@ -252,8 +262,8 @@ def center(bbox: np.ndarray) -> np.ndarray:
     """Calculate the center point(s) of bounding box(es).
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
 
     Returns:
         An array of center points with shape (N, 2).
@@ -272,8 +282,8 @@ def corners(bbox: np.ndarray) -> np.ndarray:
     """Get corner coordinates for bounding boxes.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
 
     Returns:
         An array of corner coordinates with shape (N, 8), with each corner in
@@ -301,12 +311,12 @@ def corners_pts(bbox: np.ndarray) -> np.ndarray:
     """Get corner coordinates for bounding boxes.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
 
     Returns:
-        An array of corner points with shape (N, 4, 2), with each corner point
-        in [x, y] format.
+        An array of corner points of dimensions (N, 4, 2), with each corner
+        point is a pair of (x, y) coordinates.
     """
     bbox = to_2d(bbox)
     x1   = bbox[..., 0]
@@ -359,13 +369,14 @@ def center_distance(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     """Compute normalized inverted center distances between box sets.
 
     Args:
-        bbox1: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
-        bbox2: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (M, 4+) in XYXY format.
+        bbox1: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
+        bbox2: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (M, 7+) and in XYXY format.
 
     Returns:
-        A normalized inverted distance matrix in [0, 1] where a smaller
+        A normalized inverted distance, formatted as a numpy.ndarray of
+        dimensions (N, M) and values ranging from 0 to 1, where a smaller
         geometric distance yields a larger value.
     """
     # Ensure 2D arrays
@@ -404,13 +415,13 @@ def iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     bounding boxes.
 
     Args:
-        bbox1: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
-        bbox2: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (M, 4+) in XYXY format.
+        bbox1: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
+        bbox2: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (M, 7+) and in XYXY format.
 
     Returns:
-        An IoU matrix of shape (N, M).
+        An IoU matrix, formatted as a numpy.ndarray of dimensions (N, M).
     """
     # Ensure 2D arrays
     bbox1 = to_2d(bbox1)
@@ -441,13 +452,13 @@ def giou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     """Compute generalized IoU (GIoU) between two sets of bounding boxes.
 
     Args:
-        bbox1:A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
-        bbox2: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (M, 4+) in XYXY format.
+        bbox1: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
+        bbox2: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (M, 7+) and in XYXY format.
 
     Returns:
-        A GIoU matrix of shape (N, M).
+        A GIoU matrix, formatted as a numpy.ndarray of dimensions (N, M).
     """
     # Ensure 2D arrays
     bbox1 = to_2d(bbox1)
@@ -498,13 +509,13 @@ def diou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     """Compute distance IoU (DIoU) between two sets of bounding boxes.
 
     Args:
-        bbox1: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
-        bbox2: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (M, 4+) in XYXY format.
+        bbox1: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
+        bbox2: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (M, 7+) and in XYXY format.
 
     Returns:
-        A DIoU matrix of shape (N, M).
+        A DIoU matrix, formatted as a numpy.ndarray of dimensions (N, M).
     """
     # Ensure 2D arrays
     bbox1 = to_2d(bbox1)
@@ -558,13 +569,13 @@ def ciou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     """Compute complete IoU (CIoU) between two sets of bounding boxes.
 
     Args:
-        bbox1: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
-        bbox2: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (M, 4+) in XYXY format.
+        bbox1: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
+        bbox2: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (M, 7+) and in XYXY format.
 
     Returns:
-        A CIoU matrix of shape (N, M).
+        A CIoU matrix, formatted as a numpy.ndarray of dimensions (N, M).
     """
     # Ensure 2D arrays
     bbox1 = to_2d(bbox1)
@@ -630,11 +641,11 @@ def iou_matrix(bbox: np.ndarray) -> np.ndarray:
     """Compute pairwise IoU matrix between all bounding boxes in a set.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
-
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
+        
     Returns:
-        An IoU matrix (N, N) with diagonal set to zero.
+        An IoU matrix, formatted as a numpy.ndarray of dimensions (N, N).
     """
     # Ensure 2D arrays
     bbox = to_2d(bbox)
@@ -670,15 +681,15 @@ def iou_matrix(bbox: np.ndarray) -> np.ndarray:
 
 # --- Project (Affine, Perspective, and Coordinate space transforms) ---
 def xywh_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
-    """Convert bounding boxes from XYWH to normalized CXCYWHN.
+    """Convert bounding boxes from XYWH to CXCYWHN format.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYWH format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYWH format.
         imgsz: Image size as (H, W).
 
     Returns:
-        Bounding boxes in CXCYWHN normalized format.
+        Bounding boxes in CXCYWHN format.
     """
     h0, w0 = I.imgsz(imgsz)
     bbox   = to_2d(bbox)
@@ -696,8 +707,8 @@ def xywh_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from XYWH to XYXY format.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYWH format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYWH format.
         imgsz: Image size as (H, W) (kept for signature consistency).
 
     Returns:
@@ -714,12 +725,12 @@ def xyxy_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from XYXY to normalized CXCYWHN.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
         imgsz: Image size as (H, W).
 
     Returns:
-        Bounding boxes in CXCYWHN normalized format.
+        Bounding boxes in CXCYWHN format.
     """
     h0, w0 = I.imgsz(imgsz)
     bbox   = to_2d(bbox)
@@ -739,8 +750,8 @@ def xyxy_to_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from XYXY to XYWH format.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in XYXY format.
         imgsz: Image size as (H, W) (kept for signature consistency).
 
     Returns:
@@ -757,12 +768,12 @@ def cxcywhn_to_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from CXCYWHN to XYWH.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in CXCYWHN format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in CXCYWHN format.
         imgsz: Image size as (H, W).
 
     Returns:
-        Bounding boxes in XYWH pixel format.
+        Bounding boxes in XYWH format.
     """
     h0, w0 = I.imgsz(imgsz)
     bbox   = to_2d(bbox)
@@ -779,12 +790,12 @@ def cxcywhn_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from CXCYWHN to XYXY.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in CXCYWHN format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in CXCYWHN format.
         imgsz: Image size as (H, W).
 
     Returns:
-        Bounding boxes in XYXY pixel format.
+        Bounding boxes in XYXY format.
     """
     h0, w0 = I.imgsz(imgsz)
     bbox   = to_2d(bbox)
@@ -800,13 +811,13 @@ def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.nda
     """Convert bounding boxes between supported formats.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+).
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+).
         fmt: Target conversion format.
         imgsz: Image size as (H, W).
 
     Returns:
-        Converted bounding boxes in the desired format.
+        Bounding boxes in the desired format.
 
     Raises:
         ValueError: If fmt is invalid or unsupported.
@@ -839,16 +850,17 @@ def crop_center(image: np.ndarray, bbox : np.ndarray, imgsz: int) -> tuple[np.nd
     """Center-crop an image and adjust accompanying bounding boxes.
 
     Args:
-        image: Image of shape (H, W, C) with pixel values in the range [0, 255].
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in CXCYWHN format.
-        imgsz: Target image size (H, W) for cropping.
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in CXCYWHN format.
+        imgsz: Target image size as (H, W) for cropping.
 
     Returns:
-        A tuple of (cropped_image, adjusted_bboxes).
+        A tuple of cropped image and adjusted bounding boxes.
 
     Raises:
-        ValueError: If ``imgsz`` exceeds the original `` image ``'s size.
+        ValueError: If ``imgsz`` exceeds the original ``image ``'s size.
     """
     h0, w0 = I.imgsz(image)
     h1, w1 = I.imgsz(imgsz)
@@ -895,13 +907,14 @@ def crop_fit_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> 
     """Crop background content and pad to a centered square.
 
     Args:
-        image: Image of shape (H, W, C) with pixel values in the range [0, 255].
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in CXCYWHN format.
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in CXCYWHN format.
         pad_value: Padding value. Defaults to 0.
 
     Returns:
-        A tuple of (padded_image, adjusted_bboxes).
+        A tuple of padded image and adjusted bounding boxes.
     """
     h0, w0 = I.imgsz(image)
     
@@ -964,13 +977,14 @@ def pad_square(image: np.ndarray, bbox: np.ndarray, pad_value: int = 0) -> tuple
     """Pad an image to a centered square and adjust bboxes.
 
     Args:
-        image: Image of shape (H, W, C) with pixel values in the range [0, 255].
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in CXCYWHN format.
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in CXCYWHN format.
         pad_value: Padding value. Defaults to 0.
 
     Returns:
-        A tuple (padded_image, adjusted_bboxes).
+        A tuple of padded image and adjusted bounding boxes.
     """
     h0, w0 = I.imgsz(image)
     dim    = max(h0, w0)
@@ -1007,13 +1021,14 @@ def split(image: np.ndarray, bbox : np.ndarray, n: int = 2) -> tuple[list[np.nda
     """Split an image into ``n`` tiles and adjust bounding boxes per tile.
 
     Args:
-        image: Image of shape (H, W, C) with pixel values in the range [0, 255].
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in CXCYWHN format.
+        image: An RGB or grayscale image, formatted as a numpy.ndarray with
+            dimensions (H, W, C) and pixel values ranging from 0 to 255.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+) and in CXCYWHN format.
         n: Number of tiles to split into. Defaults to 2.
 
     Returns:
-        A tuple (list_of_sub_images, list_of_sub_bboxes).
+        A tuple of two lists: sub-images and their corresponding bounding boxes.
     """
     if not isinstance(image, np.ndarray) or len(image.shape) != 3:
         raise ValueError(f"``image`` must be a numpy.ndarray of shape (H, W, C), got {image.shape}.")
@@ -1121,12 +1136,13 @@ def normalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Normalize bounding boxes by image size.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+).
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+).
         imgsz: Image size as (H, W).
 
     Returns:
-        Normalized bounding boxes in range [0, 1].
+        Normalized bounding boxes, formatted as a numpy.ndarray of dimensions
+        (N, 7+) and values ranging from 0 to 1.
     """
     h0, w0 = I.imgsz(imgsz)
     bbox   = to_2d(bbox)
@@ -1145,12 +1161,13 @@ def denormalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Denormalize bounding boxes to pixel units.
 
     Args:
-        bbox: A bounding box of shape (4+) or a list of bounding boxes of shape
-            (N, 4+) in XYXY format.
+        bbox: A batch of bounding boxes, formatted as a numpy.ndarray of
+            dimensions (N, 7+).
         imgsz: Image size as (H, W).
 
     Returns:
-        Denormalized bounding boxes.
+        Denormalized bounding boxes, formatted as a numpy.ndarray of dimensions
+        (N, 7+) and values ranging from 0 to 255.
     """
     h0, w0 = I.imgsz(imgsz)
     bbox   = to_2d(bbox)

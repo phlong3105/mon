@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Depth data atomic operations.
+"""Depth atomic operations.
 
 This module provides pure functions that perform a single mathematical or
 structural change to the depth data.
@@ -18,6 +18,16 @@ __all__ = []
 
 
 # --- Clean (Fixing corrupt values/nulls) ---
+
+
+# ==============================================================================
+# CONVERSIONS (Backend Interop)
+# ==============================================================================
+
+# --- Formats (Channel shuffling) ---
+
+
+# --- Types (Data type casting) ---
 
 
 # ==============================================================================

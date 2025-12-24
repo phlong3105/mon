@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Video data atomic operations.
+"""Video atomic operations.
 
 This module provides pure functions that perform a single mathematical or
-structural change to the video data.
+structural change to the videos.
 """
 
 __all__ = []
@@ -18,6 +18,16 @@ __all__ = []
 
 
 # --- Clean (Fixing corrupt values/nulls) ---
+
+
+# ==============================================================================
+# CONVERSIONS (Backend Interop)
+# ==============================================================================
+
+# --- Formats (Channel shuffling) ---
+
+
+# --- Types (Data type casting) ---
 
 
 # ==============================================================================

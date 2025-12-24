@@ -4,7 +4,7 @@
 """Bounding box complex operations.
 
 This module provides higher-level logics that might involve multiple atomic
-operations to manipulate the bounding box data.
+operations to manipulate the bounding boxes.
 """
 
 __all__ = []
