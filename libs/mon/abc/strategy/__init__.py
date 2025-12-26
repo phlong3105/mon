@@ -6,23 +6,25 @@
 This package contains a "full-stack" strategy pattern for <Name>, including
 strategy definition, registration, resolution, and execution utilities.
 
-This is the "Strategy" pattern. It is useful for scenarios where multiple
-algorithms or behaviors can be swapped interchangeably at RUNTIME, allowing the
-system to choose the most appropriate one based on context.
-
-The "Strategy" Pattern typically has the following structure:
-    strategy/
-    ├── __init__.py                     # Exposes the Registry and Context
-    ├── base.py                         # Abstract Base Classes (The Contract)
-    ├── context.py                      # The "Executor" that runs the strategy
-    ├── registry.py                     # Logic for @register and .get()
-    ├── utils.py                        # Performance decorators & shared utils
-    └── algorithms/                     # Concrete implementations
-        ├── __init__.py                 # Auto-import algorithms here
-        ├── algorithm_a.py
-        ├── algorithm_b.py
-        ├── algorithm_c.py
-        └── ...
+Notes:
+    - Design Pattern: Strategy Pattern.
+    - Goal: Define a family of algorithms, encapsulate each one, and make them
+      interchangeable at RUNTIME.
+    - Structure:
+        ::
+        
+            strategy/
+            ├── __init__.py            # Exposes all
+            ├── base.py                # Base classes and mixins
+            ├── context.py             # Execution context
+            ├── registry.py            # Registry and factory logic
+            ├── utils.py               # Utility functions and helpers
+            └── algorithms/            # Concrete implementations
+                ├── __init__.py        # Exposes all algorithms
+                ├── algorithm_a.py
+                ├── algorithm_b.py
+                ├── algorithm_c.py
+                └── ...
 """
 
 __all__ = []

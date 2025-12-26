@@ -3,9 +3,25 @@
 
 """Albumentations-based data augmentation and transformation.
 
-This package provides various data augmentation and transformation techniques
-using the albumentations library. It includes custom transformations and
-utilities to build and compose complex augmentation pipelines for image data.
+This package provides various data augmentations and transformations using the
+albumentations library.
+
+Notes:
+    - Design Pattern: Template Method.
+    - Goal: Provide a structured way to define a family of methods or classes
+      that share a common interface/inheritance but aren't tied to the specific
+      "interchanged" requirement of the "Strategy Pattern".
+    - Structure:
+        ::
+        
+            template/
+            ├── __init__.py    # Registry and factory logic
+            ├── base.py        # Base classes and mixins
+            ├── basic.py       # Basic functionalities
+            ├── ...
+            ├── utils.py       # Utility functions and helpers
+            └── external/      # Expose external libraries
+                └── ...
 """
 
 from typing import Any
@@ -28,8 +44,8 @@ from .utils import *
 
 # --- Resolve (Retrieving spokes by name/key) ---
 class Compose(A.Compose):
-    """An extended version of ``albumentations.Compose`` that builds transformations
-    from configuration dictionaries.
+    """An extended version of ``albumentations.Compose`` that builds
+    transformations from configuration dictionaries.
     """
     
     def __init__(self, transforms: list[Any], **kwargs):

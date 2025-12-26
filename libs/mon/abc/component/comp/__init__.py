@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""<Name> components.
+
+This package contains various modular <Name> components which can be assembled
+together to form concrete <Name>.
+"""
+
+__all__ = []
+

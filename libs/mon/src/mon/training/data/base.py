@@ -9,18 +9,56 @@ datasets.
 
 __all__ = [
     "Dataset",
+    "Modalities",
+    "Modality",
 ]
 
 import abc
-from typing import Any
+from collections import namedtuple
+from typing import Any, Dict, TypeAlias
 
 from torch.utils.data import dataset
 
 from mon.core import log, Path
-from mon.core.dtypes import Classes
+from mon.core.dtypes import ClassList
 
 
-# --- Abstract Dataset ---
+# ==============================================================================
+# GLOBAL CONFIGURATIONS (Constants)
+# ==============================================================================
+
+# --- Constants (Global defaults, versioning) ---
+
+
+# --- Environment ---
+
+
+# ==============================================================================
+# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# ==============================================================================
+
+# --- Type Aliases ---
+Modality  = namedtuple(
+    typename    = "Modality",
+    field_names = [
+        "name",     # The name of the directory that contains the modality data.
+        "type",     # Albumentations target type (e.g. "image", "mask", ...) for augmentations.
+        "module",   # The tensor class that performs I/O operations.
+        "train",    # If ``True``, this modality is included in train/val set.
+        "test",     # If ``True``, this modality is included in test set.
+        "primary"   # If ``True``, this is the primary modality.
+    ],
+    defaults    = [None, None, True, False, False])
+Modalities: TypeAlias = Dict[str, Modality]
+
+# --- Structural Protocols ---
+
+
+# ==============================================================================
+# BASE CLASSES & MIXINS (Behaviors)
+# ==============================================================================
+
+# --- Structural Bases ---
 class Dataset(dataset.Dataset, abc.ABC):
     """An abstract class for all datasets.
     
@@ -30,52 +68,50 @@ class Dataset(dataset.Dataset, abc.ABC):
     Attributes:
         _datapoints (dict): A dictionary containing lists of datapoints for
             each modality.
-        classes (Classes): The dataset classes/labels. Defaults to None and
+        _classlist (ClassList): The dataset object classes. Defaults to None and
             should be overridden in subclasses.
         verbose (bool): If True, enables verbose output.
     """
     
-    _classes: Classes = None
+    _classlist: ClassList = None
     
     def __init__(
         self,
         datapoints: dict[str, list[Any]] = None,
-        classes   : Path | Classes       = None,
+        classlist : Path | ClassList     = None,
         verbose   : bool                 = True,
         *args, **kwargs
     ):
-        """Initialize the Dataset instance.
+        """Initialize a new instance.
         
         Args:
-            datapoints (dict, optional): A dictionary containing lists of
-                datapoints for each modality. Defaults to None.
-            classes (Path or Classes, optional): Either a path to a .yaml file
-                containing class label definitions, or a ``Classes`` instance.
-                If given, this will override any ``classes`` defined in the
-                subclass. Defaults to None.
-            verbose (bool, optional): If True, enables verbose output. Defaults
-                to True.
+            datapoints: A dictionary containing lists of datapoints for each
+                modality. Defaults to None.
+            classlist: Either a .yaml file containing the classes definitions,
+                or a ``ClassList`` instance. If given, this will override any
+                ``classes`` defined in the subclass. Defaults to None.
+            verbose: If True, enables verbose output. Defaults to True.
         """
         super().__init__(*args, **kwargs)
         self.verbose     = verbose
-        self.classes     = classes
+        self.classlist   = classlist
         self._datapoints = datapoints if datapoints is not None else {}
     
     # --- Magic Methods ---
     @abc.abstractmethod
-    def __del__(self):
-        """Close the dataset loading mechanism and releases resources."""
+    def __len__(self) -> int:
+        """Return the length of the dataset (i.e., number of datapoints)."""
         pass
     
     @abc.abstractmethod
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Get a datapoint and metadata at the specified ``index``.
+        """Return the datapoint at the specified ``index`` in ``_datapoints``.
         
         Args:
             index (int): Index of datapoint.
             
         Returns:
-            dict[str, Any]: A dictionary containing the datapoint and metadata.
+            A dictionary containing the datapoint and its metadata.
         """
         pass
     
@@ -84,20 +120,11 @@ class Dataset(dataset.Dataset, abc.ABC):
         self._iter_idx = 0
         return self
 
-    @abc.abstractmethod
-    def __len__(self) -> int:
-        """Return the length of the dataset.
-        
-        Returns:
-            int: The number of datapoints in the dataset.
-        """
-        pass
-    
     def __next__(self) -> dict[str, Any]:
         """Return the next datapoint in the dataset iteration.
         
         Returns:
-            dict[str, Any]: A dictionary containing the next datapoint.
+            A dictionary containing the datapoint and its metadata.
         
         Raises:
             StopIteration: If ``_iter_idx`` exceeds the dataset length.
@@ -110,14 +137,15 @@ class Dataset(dataset.Dataset, abc.ABC):
             raise StopIteration
     
     def __repr__(self) -> str:
-        """Return the string representation of the dataset.
-        
-        Returns:
-            str: String representation of the dataset.
-        """
+        """Return the string representation of the dataset."""
         lines  = ["Dataset " + self.__class__.__name__]
         lines += [f"Number of datapoints: {self.__len__()}"]
         return "\n".join(lines)
+    
+    @abc.abstractmethod
+    def __del__(self):
+        """Close the dataset loading mechanism and releases resources."""
+        pass
     
     # --- Properties ---
     @property
@@ -131,60 +159,33 @@ class Dataset(dataset.Dataset, abc.ABC):
         return self._datapoints
     
     @property
-    def classes(self) -> Classes:
-        """Getter for the dataset classes.
-        
-        Returns:
-            Classes: The dataset classes/labels.
-        """
+    def classlist(self) -> ClassList:
+        """Return the dataset's class definitions."""
         return self._classes
     
-    @classes.setter
-    def classes(self, classes: Path | Classes = None):
+    @classlist.setter
+    def classlist(self, classlist: Path | ClassList = None):
         """Setter for the dataset classes.
         
         Args:
-            classes (Path or Classes, optional): Either a path to a .yaml file
-                containing class label definitions, or a ``Classes`` instance.
-                If given, this will override any ``classes`` defined in the
-                subclass. Defaults to None.
+            classlist: Either a .yaml file containing the classes definitions,
+                or a ``ClassList`` instance. If given, this will override any
+                ``classes`` defined in the subclass. Defaults to None.
         
         Raises:
-            TypeError: If ``classes`` is not a valid type.
+            TypeError: If ``classlist`` is not a valid type.
         """
         changed = False
-        if classes is not None and isinstance(classes, Path | Classes):
-            self._classes = Classes(classes)
+        if classlist is not None and isinstance(classlist, Path | ClassList):
+            self._classlist = ClassList(classlist)
             changed  = True
         
         if self.verbose and changed:
-            log(f"``classes`` is updated with {classes}.")
-    
-    @property
-    def verbose(self) -> bool:
-        """Getter for the verbosity mode.
-        
-        Returns:
-            bool: True if verbose output is enabled, False otherwise.
-        """
-        return self._verbose
-    
-    @verbose.setter
-    def verbose(self, verbose: bool):
-        """Setter for the verbosity mode.
-        
-        Args:
-            verbose (bool): If True, enables verbose output.
-        """
-        self._verbose = bool(verbose)
+            log(f"``_classlist`` is updated with {classlist}.")
     
     @property
     def disable_pbar(self) -> bool:
-        """Getter for disabling progress bars.
-        
-        Returns:
-            bool: True if progress bars are disabled, False otherwise.
-        """
+        """Return True if progress bars are disabled, False otherwise."""
         return not self.verbose
     
     # --- Access ---
@@ -211,3 +212,9 @@ class Dataset(dataset.Dataset, abc.ABC):
             dict[str, Any]: A dictionary containing the metadata.
         """
         pass
+
+
+# --- Lifecycle Mixins ---
+
+
+# --- Compute Mixins ---

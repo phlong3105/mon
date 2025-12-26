@@ -1,37 +1,42 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""<Name> visualization operations.
+"""<Name> base classes and mixins.
 
-This module provides functions to visualize the <Name>sfor debugging and human
-interaction.
+This module provides the base classes and mixins for <Name>.
 """
 
 __all__ = []
 
 
 # ==============================================================================
-# CANVAS CONFIGURATION (Canvas Setup)
+# GLOBAL CONFIGURATIONS (Constants)
 # ==============================================================================
 
-# --- Style (Colormaps, Palettes, Themes) ---
+# --- Constants (Global defaults, versioning) ---
 
 
-# ==============================================================================
-# RENDERING ENGINES (Drawing logic)
-# ==============================================================================
-
-# --- Decorate (Drawing Overlays, BBoxes, Text) ---
-
-
-# --- Compose (Creating Grids and Collages) ---
+# --- Environment ---
 
 
 # ==============================================================================
-# DISPLAY & PLOTTING (High-level wrappers)
+# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
 # ==============================================================================
 
-# --- Render (Notebook/GUI display logic) ---
+# --- Type Aliases ---
 
 
-# --- Snapshot (Saving visual previews for QA) ---
+# --- Structural Protocols ---
+
+
+# ==============================================================================
+# BASE CLASSES & MIXINS (Behaviors)
+# ==============================================================================
+
+# --- Structural Bases ---
+
+
+# --- Lifecycle Mixins ---
+
+
+# --- Compute Mixins ---

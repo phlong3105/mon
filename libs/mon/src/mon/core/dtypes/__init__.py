@@ -8,19 +8,24 @@ This package exposes common, flat aliases for frequent types and groups
 domain-specific implementations under subpackages. This package enables
 consistent data representation and manipulation for downstream modules.
 
-Package structure:
-    dtypes/
-    ├── __init__.py        # Unified entry point
-    ├── base.py            # Global BaseDType (abstract)
-    ├── abc/               #
-    │   ├── __init__.py    
-    │   ├── core.py        # Base classes and mixins
-    │   ├── io.py          # Ingestion & Retrieval – This module handles moving the raw bit
-    │   ├── meta.py        # Analysis – Operations that return information about the data without changing it
-    │   ├── ops.py         # Atomic Transformations – Pure functions that perform a single mathematical or structural change
-    │   ├── proc.py        # Complex Workflows – Higher-level logic that might involve multiple atomic steps
-    │   └── vis.py         # Rendering – For debugging and human interaction
-    └── ... (contour, depth, etc.)
+Notes:
+    - Design Pattern: Multiple Toolkits Pattern.
+    - Goal: Encapsulate multiple "Toolkits" for multiple data types.
+    - Structure:
+        ::
+        
+            dtypes/
+            ├── __init__.py        # Unified entry point
+            ├── base.py            # Global base classes and mixins
+            ├── toolkit/           # A "Toolkit" for a specific data type
+            │   ├── __init__.py    # Exposes all
+            │   ├── core.py        # Base classes and mixins
+            │   ├── io.py          # Resource management
+            │   ├── meta.py        # Discovery and lookup
+            │   ├── ops.py         # Utility and algorithm
+            │   ├── proc.py        # Workflow orchestration
+            │   └── vis.py         # UI/UX rendering
+            └── ... (contour, depth, etc.)
 """
 
 __all__ = [

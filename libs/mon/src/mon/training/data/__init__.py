@@ -1,25 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""AI data management.
+"""Training data management.
 
-Provide data management functionalities for training machine learning models.
+This package contains various data management functionalities for training
+machine learning models.
 
-Package structure:
-    data/
-    ├── __init__.py           # Unified API (exposes Dataset, DataLoader)
-    ├── base.py               # Abstract base classes (The "Contract")
-    ├── constants.py          # Enums, standard paths, default values
-    ├── mixins/               # Capability modules (Registrable, DualPath)
-    │   ├── __init__.py
-    │   ├── ...
-    ├── datasets/             # Concrete implementations (Image, Video)
-    │   ├── __init__.py
-    │   ├── ...
-    ├── loading/              # Data movement logic
-    │   ├── __init__.py
-    │   ├── dataloader.py     # The DataLoader class
-    └── registry.py           # Logic to list and switch between methods
+Notes:
+    - Design Pattern: Component-Based Framework.
+    - Goal: Build systems from reusable, interchangeable components that can be
+      independently developed, tested, and maintained. Each component is a modular
+      unit with well-defined interfaces, encapsulating specific functionality
+      that can be assembled, replaced, or reused across applications.
+    - Structure:
+        ::
+        
+            component/
+            ├── __init__.py             # Exposes all
+            ├── base.py                 # Base classes and mixins
+            ├── comp/                   # Reusable components
+            │   ├── __init__.py
+            │   ├── base.py             # Component base classes and mixins
+            │   └── ...                 # Concrete component
+            ├── impl/                   # Concrete classes using base + components
+            │   ├── __init__.py
+            │   ├── concrete_impl.py    # Example implementation
+            │   └── ...
+            ├── usages/                 # Example usages of concrete implementations
+            │   ├── __init__.py
+            │   └── ...
+            └── utils.py                # Utility functions and helpers
 """
 
 __all__ = [
@@ -36,21 +46,93 @@ __all__ = [
     "parse_data_dir",
 ]
 
-from .base import Dataset
-from .constants import Modalities, Modality
-from .datasets import (
-    DataLoaderMixin,
-    DatasetLoadingMixin,
-    DatasetMetadataMixin,
-    DatasetMultimodalLoadingMixin,
-    ImageDataset,
-    ImageEvalDataset,
-    ImageLoader,
-    is_video_dataset,
-    Modalities,
-    Modality,
-    VideoLoaderCV,
-)
-from .loading import DataLoader
-from .mixins import DatasetMixin, SAMInstanceMixin
-from .registry import build_dataloader, build_dataset, parse_data_dir
+from typing import Any
+
+from mon.core import DATASETS, Path, Split
+from .base import *
+from .comp import *
+from .impl import *
+from .usages import *
+from .utils import *
+
+
+# ==============================================================================
+# REGISTRY & FACTORY (Type Resolution)
+# ==============================================================================
+
+# --- Register (Adding new spokes to the hub) ---
+
+
+# --- Resolve (Retrieving spokes by name/key) ---
+def build_dataset(
+    src      : Path | str,
+    data_root: Path = None,
+    transform: Any  = None,
+    verbose  : bool = False,
+    **kwargs
+) -> tuple[str, Dataset]:
+    """Parses given ``src`` to a corresponding dataset.
+    
+    Args:
+        src: An input data source
+        data_root: Dataset root dir. Defaults to None.
+        transform: Transforms to apply to the dataset. Defaults to None.
+        verbose: If True, enables verbose output. Defaults to False.
+        **kwargs: Additional keyword arguments for the dataset.
+        
+    Returns:
+        tuple[str, BaseDataset]: Dataset name and dataset.
+    """
+    src = Path(src)
+
+    if src.stem in DATASETS:
+        src       = src.stem
+        root      = parse_data_dir(root=data_root, data_dir=src)
+        config    = kwargs | {
+            "name"     : src,
+            "root"     : root,
+            "split"    : Split.TEST,
+            "transform": transform,
+            "verbose"  : verbose,
+        }
+        data_name = src
+        dataset   = DATASETS.build(**config)
+    elif src.is_dir():
+        data_name = src.name
+        dataset   = ImageLoader(root=src, transform=transform, verbose=verbose, **kwargs)
+    elif src.is_video_file():
+        data_name = src.name
+        dataset = VideoLoaderCV(root=src, transform=transform, verbose=verbose, **kwargs)
+    else:
+        raise ValueError(f"``src`` is invalid: {src}.")
+
+    return data_name, dataset
+
+
+def build_dataloader(
+    src       : Path | str,
+    data_root : Path = None,
+    transform : Any  = None,
+    batch_size: int  = 1,
+    verbose   : bool = False,
+    **kwargs
+) -> tuple[str, DataLoader]:
+    """Parses given ``src`` to a corresponding dataloader.
+
+    Args:
+        src: An input data source
+        data_root: Dataset root dir. Defaults to None.
+        transform: Transforms to apply to the dataset. Defaults to None.
+        batch_size: Number of samples per batch. Defaults to 1.
+        verbose: If True, enables verbose output. Defaults to False.
+        **kwargs: Additional keyword arguments for the dataset.
+
+    Returns:
+        tuple[str, DataLoader]: Dataset name and dataloader.
+
+    Raises:
+        ValueError: If ``src`` is invalid.
+    """
+    data_name, dataset = build_dataset(src, data_root, transform, verbose)
+    dataloader         = DataLoader(dataset, batch_size=batch_size, **kwargs)
+    return data_name, dataloader

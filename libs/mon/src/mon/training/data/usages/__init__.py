@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Data loading mechanisms.
+"""Training data usages.
 
-This package provides data loading mechanisms when training machine learning
-models.
+This package contains example usages of training data loaders.
 """
 
 __all__ = [

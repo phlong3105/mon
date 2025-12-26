@@ -6,23 +6,31 @@
 This package contains various metrics used for assessing the performance of
 machine learning models.
 
-This is the Component-Based Framework. It is useful to organize a family of
-related functionalities that share a common interface/inheritance but aren't tie
-to the specific "interchanged algorithm" requirement of the Strategy Pattern.
-
-The Component-Based Framework typically has the following structure:
-    component/
-    ├── __init__.py    # Exposes all concrete classes
-    ├── base.py        # The Abstract Base Class (ABC)
-    ├── ...
-    └── utils.py       # Utility functions and helpers
+Notes:
+    - Design Pattern: Template Method.
+    - Goal: Provide a structured way to define a family of methods or classes
+      that share a common interface/inheritance but aren't tied to the specific
+      "interchanged" requirement of the "Strategy Pattern".
+    - Structure:
+        ::
+        
+            template/
+            ├── __init__.py    # Registry and factory logic
+            ├── base.py        # Base classes and mixins
+            ├── basic.py       # Basic functionalities
+            ├── ...
+            ├── utils.py       # Utility functions and helpers
+            └── external/      # Expose external libraries
+                └── ...
 """
 
 from .base import *
+from .basic import *
 from .complexity import *
 from .external import *
-# from .basic import *
+from .external import *
 from .image import *
+
 
 # ==============================================================================
 # REGISTRY & FACTORY (Type Resolution)

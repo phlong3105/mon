@@ -3,23 +3,40 @@
 
 """<Name>.
 
-This package contains various <Name>s commonly used in <application domain>.
+This package contains various <Name> commonly used in <application domain>.
 
-This is the Component-Based Framework. It is useful to organize a family of
-related functionalities that share a common interface/inheritance but aren't tie
-to the specific "interchanged algorithm" requirement of the Strategy Pattern.
-
-The Component-Based Framework typically has the following structure:
-    component/
-    ├── __init__.py    # Exposes all concrete classes
-    ├── base.py        # The Abstract Base Class (ABC)
-    ├── ...
-    └── utils.py       # Utility functions and helpers
+Notes:
+    - Design Pattern: Component-Based Framework.
+    - Goal: Build systems from reusable, interchangeable components that can be
+      independently developed, tested, and maintained. Each component is a modular
+      unit with well-defined interfaces, encapsulating specific functionality
+      that can be assembled, replaced, or reused across applications.
+    - Structure:
+        ::
+        
+            component/
+            ├── __init__.py             # Exposes all
+            ├── base.py                 # Base classes and mixins
+            ├── comp/                   # Reusable components
+            │   ├── __init__.py
+            │   ├── base.py             # Component base classes and mixins
+            │   └── ...                 # Concrete component
+            ├── impl/                   # Concrete classes using base + components
+            │   ├── __init__.py
+            │   ├── concrete_impl.py    # Example implementation
+            │   └── ...
+            ├── usages/                 # Example usages of concrete implementations
+            │   ├── __init__.py
+            │   └── ...
+            └── utils.py                # Utility functions and helpers
 """
 
 __all__ = []
 
 from .base import *
+from .comp import *
+from .impl import *
+from .usages import *
 from .utils import *
 
 
