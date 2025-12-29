@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for image retouching datasets.
+"""Image retouching datasets.
 
-This package includes various datasets used for image retouching tasks.
+This package includes various datasets for image retouching.
 """
 
 from .fivek import *

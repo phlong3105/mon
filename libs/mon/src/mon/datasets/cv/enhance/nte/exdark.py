@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for ExDark dataset.
+"""ExDark dataset.
 
 This module implements the ExDark dataset for nighttime object enhancement and
 detection.
@@ -14,7 +14,7 @@ __all__ = [
     "ExDark",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="exdark")
@@ -28,7 +28,7 @@ class ExDark(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "Bicycle"  , "id":  1, "coco80_id":  2, "color": [138, 183,  33]},
         {"name": "Boat"     , "id":  2, "coco80_id":  9, "color": [ 19,  64,  83]},
         {"name": "Bottle"   , "id":  3, "coco80_id": 40, "color": [139, 160,   1]},

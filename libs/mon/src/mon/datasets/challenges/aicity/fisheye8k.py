@@ -1,18 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for FishEye8K dataset.
+"""FishEye8K dataset.
 
-This module defines the FishEye8K dataset class, which is designed for object
-detection tasks. It specifies the dataset's structure, including its classes,
-modalities, and splits.
+This module implements the FishEye8K dataset for fisheye object detection.
 """
 
 __all__ = [
     "FishEye8K",
 ]
 
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="fisheye8k")
@@ -25,7 +23,7 @@ class FishEye8K(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "bus",        "id": 0, "color": [140,  24, 143]},
         {"name": "bike",       "id": 1, "color": [122,  35,   2]},
         {"name": "car",        "id": 2, "color": [ 49,   3, 150]},

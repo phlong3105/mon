@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the GT-Rain dataset.
+"""GT-Rain dataset.
 
-This module implements the GT-Rain dataset for image deraining tasks.
+This module implements the GT-Rain dataset for image de-raining.
 """
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="gtrain")
@@ -25,4 +25,4 @@ class GTRain(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

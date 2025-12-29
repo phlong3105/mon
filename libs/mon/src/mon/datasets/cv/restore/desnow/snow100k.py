@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the Snow100K dataset.
+"""Snow100K dataset.
 
-This module implements Snow100K dataset for image desnowing tasks.
+This module implements Snow100K dataset for image de-snowing.
 """
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="snow100k")
@@ -25,13 +25,14 @@ class Snow100K(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / self.split_str / "lq"]
         

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base dataset classes and mixins.
+"""Base data container classes and mixins.
 
 Provides a skeleton for defining datasets and mixins for various operations on
-datasets.
+data containers.
 """
 
 __all__ = [
@@ -67,7 +67,8 @@ class Dataset(dataset.Dataset, abc.ABC):
     
     Attributes:
         _datapoints (dict): A dictionary containing lists of datapoints for
-            each modality.
+            each modality. For example, it can be:
+            {"image": [...], "mask": [...], "meta": [...], ...}
         _classlist (ClassList): The dataset object classes. Defaults to None and
             should be overridden in subclasses.
         verbose (bool): If True, enables verbose output.
@@ -108,7 +109,7 @@ class Dataset(dataset.Dataset, abc.ABC):
         """Return the datapoint at the specified ``index`` in ``_datapoints``.
         
         Args:
-            index (int): Index of datapoint.
+            index: Index of datapoint.
             
         Returns:
             A dictionary containing the datapoint and its metadata.
@@ -153,15 +154,14 @@ class Dataset(dataset.Dataset, abc.ABC):
         """Getter for the dataset datapoints.
         
         Returns:
-            dict[str, list[Any]]: A dictionary containing lists of datapoints
-                for each modality.
+            A dictionary containing lists of datapoints for each modality.
         """
         return self._datapoints
     
     @property
     def classlist(self) -> ClassList:
         """Return the dataset's class definitions."""
-        return self._classes
+        return self._classlist
     
     @classlist.setter
     def classlist(self, classlist: Path | ClassList = None):
@@ -192,27 +192,32 @@ class Dataset(dataset.Dataset, abc.ABC):
     @abc.abstractmethod
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
-
+        
+        This method must be implemented by subclasses.
+        
         Args:
-            index (int): Index of datapoint.
+            index: Index of datapoint.
             
         Returns:
-            dict[str, Any]: A dictionary containing the datapoint.
+            A dictionary containing all modalities for the specified datapoint.
         """
         pass
     
-    @abc.abstractmethod
-    def _get_meta(self, index: int) -> dict[str, Any]:
-        """Get metadata at the specified ``index``.
+    def _get_underlying_data(self, index: int) -> dict[str, Any]:
+        """Get the underlying data of a datapoint at the specified ``index``.
 
         Args:
-            index (int): Index of datapoint.
+            index: Index of datapoint.
             
         Returns:
-            dict[str, Any]: A dictionary containing the metadata.
+            A dictionary containing the datapoint's underlying data.
         """
-        pass
-
+        datapoint = self._get_datapoint(index=index)
+        for k, v in datapoint.items():
+            if v is not None and hasattr(v, "data"):
+                datapoint[k] = v.data
+        return datapoint
+    
 
 # --- Lifecycle Mixins ---
 

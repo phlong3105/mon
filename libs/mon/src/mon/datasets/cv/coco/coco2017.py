@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for COCO-2017 dataset.
+"""COCO-2017 dataset.
 
-This module implements the COCO-2017 dataset for object detection tasks.
+This module implements the COCO-2017 dataset for object detection.
 """
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
     "COCO91",
 ]
 
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="coco80")
@@ -24,7 +24,7 @@ class COCO80(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": (  0,   0,   0)},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": ( 81, 120, 228)},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": (138, 183,  33)},
@@ -109,7 +109,6 @@ class COCO80(ImageDataset):
     ])
     
 
-
 @DATASETS.register(name="coco91")
 class COCO91(ImageDataset):
     """COCO-91-classes dataset."""
@@ -120,7 +119,7 @@ class COCO91(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": [  0,   0,   0]},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": [ 81, 120, 228]},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": [138, 183,  33]},

@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the GT-Snow dataset.
+"""GT-Snow dataset.
 
-This module implements GT-Snow dataset for image desnowing tasks.
+This module implements GT-Snow dataset for image de-snowing.
 """
 
 __all__ = [
     "GTSnow",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="gtsnow")
@@ -24,4 +24,4 @@ class GTSnow(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

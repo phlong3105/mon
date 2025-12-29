@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for UHD datasets.
+"""UHD dataset.
 
-This module implements UHD datasets for low-light enhancement tasks.
+This module implements the UHD dataset for low-light enhancement.
 """
 
 __all__ = [
@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 # @DATASETS.register(name="uhd4k")
@@ -27,13 +27,14 @@ class UHD4K(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "4k" / self.split_str / "image"]
 
@@ -61,13 +62,14 @@ class UHD8K(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "8k" / self.split_str / "image"]
 
@@ -78,6 +80,6 @@ class UHD8K(ImageDataset):
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
                 for path in pbar.track(sequence=paths, description=desc):
                     if path.is_image_file():
-                        images.append(Image(path=path, root=pattern))
+                        images.append(Image(data=path, root=pattern))
 
         return images

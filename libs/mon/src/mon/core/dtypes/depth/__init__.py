@@ -29,9 +29,9 @@ __all__ = [
     "to_color",
 ]
 
-from .core import *
+from .core import DepthMap
 from .io import *
 from .meta import *
 from .ops import *
 from .proc import *
-from .vis import *
+from .vis import to_color

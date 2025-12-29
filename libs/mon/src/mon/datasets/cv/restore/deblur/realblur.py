@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for RealBlur dataset.
+"""RealBlur dataset.
 
-This module provides classes for the RealBlur-J and RealBlur-R datasets,
-which are used for image deblurring tasks.
+This module implements the RealBlur dataset for image de-blurring.
 """
 
 __all__ = [
@@ -13,7 +12,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="realblurj")
@@ -27,13 +26,14 @@ class RealBlurJ(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / self.split_str / "j" / "image"]
 
@@ -60,13 +60,14 @@ class RealBlurR(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / self.split_str / "r" / "image"]
 

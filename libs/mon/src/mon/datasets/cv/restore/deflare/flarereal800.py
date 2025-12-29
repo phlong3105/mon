@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the FlareReal800 dataset.
+"""FlareReal800 dataset.
 
-This module implements the FlareReal800 dataset for deflaring tasks.
+This module implements the FlareReal800 dataset for image de-flaring.
 """
 
 __all__ = [
     "FlareReal800",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="flarereal800")
@@ -24,4 +24,4 @@ class FlareReal800(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

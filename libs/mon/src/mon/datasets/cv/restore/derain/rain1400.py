@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the Rain1400 dataset.
+"""Rain1400 dataset.
 
-This module implements the Rain1400 dataset for image deraining tasks.
+This module implements the Rain1400 dataset for image de-raining.
 """
 
 __all__ = [
     "Rain1400",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="rain1400")
@@ -24,4 +24,4 @@ class Rain1400(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

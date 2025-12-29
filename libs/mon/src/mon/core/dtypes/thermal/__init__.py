@@ -28,7 +28,7 @@ __all__ = [
     "InfraredMap",
 ]
 
-from .core import *
+from .core import InfraredMap
 from .io import *
 from .meta import *
 from .ops import *

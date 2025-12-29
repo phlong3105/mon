@@ -28,7 +28,7 @@ __all__ = [
     "Instance",
 ]
 
-from .core import *
+from .core import Instance
 from .io import *
 from .meta import *
 from .ops import *

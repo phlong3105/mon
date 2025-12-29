@@ -31,9 +31,9 @@ __all__ = [
     "class_id_to_one_hot",
 ]
 
-from .core import *
+from .core import Class, ClassList, Probabilities
 from .io import *
 from .meta import *
-from .ops import *
+from .ops import class_id_to_one_hot
 from .proc import *
 from .vis import *

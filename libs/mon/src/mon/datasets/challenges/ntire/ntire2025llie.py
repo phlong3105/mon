@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the NTIRE 2025 LLIE dataset.
+"""NTIRE 2025 LLIE dataset.
 
-This module implements the NTIRE 2025 LLIE dataset for low-light image
-enhancement tasks.
+This module implements the NTIRE 2025 LLIE dataset for low-light image enhancement.
 
 References:
 	- Data: https://codalab.lisn.upsaclay.fr/competitions/21636
@@ -15,7 +14,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="ntire2025llie")
@@ -29,16 +28,16 @@ class NTIRE2025LLIE(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
 
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
             
         Raises:
-            ValueError: If the specified split is invalid.
+            ValueError: If the specified ``split`` is invalid.
         """
         if self.split in [Split.TRAIN]:
             patterns = [self.root / "train" / "image"]

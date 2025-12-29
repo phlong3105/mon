@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the Real-LOL-Blur dataset.
+"""Real-LOL-Blur dataset.
 
-This module implements the Real-LOL-Blur dataset for deblurring and low-light
-enhancement.
+This module implements the Real-LOL-Blur dataset for image de-blurring and
+low-light enhancement.
 """
 
 __all__ = [
     "RealLOLBlur",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="reallolblur")
@@ -24,4 +24,4 @@ class RealLOLBlur(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

@@ -24,7 +24,7 @@ cv2.setNumThreads(0)
 
 from mon.core import DATASETS
 from torch.utils.data import dataloader
-from ..datasets import Dataset
+from ..base import Dataset
 
 
 # --- DataLoader ---
@@ -42,22 +42,20 @@ class DataLoader(dataloader.DataLoader):
         drop_last  : bool = False,
         *args, **kwargs
     ):
-        """Initialize the DataLoader instance.
+        """Initialize a new instance.
         
         Args:
-            dataset (Dataset or dict or box.Box): The dataset to load data
-                from, or a configuration dictionary to build the dataset.
-            batch_size (int): Number of samples per batch. Defaults to 1.
-            shuffle (bool): Whether to shuffle the data at every epoch. Defaults
-                to False.
-            num_workers (int): Number of subprocesses to use for data loading.
-                Defaults to 4.
-            collate_fn (callable, optional): Function to merge a list of samples
-                to form a mini-batch. Defaults to None.
-            pin_memory (bool): If True, the data loader will copy Tensors into
-                CUDA pinned memory before returning them. Defaults to True.
-            drop_last (bool): If True, drops the last incomplete batch if the
-                dataset size is not divisible by the batch size. Defaults to False.
+            dataset: The dataset to load data from, or a configuration dictionary
+                to build the dataset.
+            batch_size: Number of samples per batch. Defaults to 1.
+            shuffle: Whether to shuffle the data at every epoch. Defaults to False.
+            num_workers: Number of subprocesses to use for data loading. Defaults to 4.
+            collate_fn: Function to merge a list of samples to form a mini-batch.
+                Defaults to None.
+            pin_memory: If True, the data loader will copy Tensors into CUDA
+                pinned memory before returning them. Defaults to True.
+            drop_last: If True, drops the last incomplete batch if the dataset
+                size is not divisible by the batch size. Defaults to False.
         """
         if isinstance(dataset, dict | box.Box):
             dataset = DATASETS.build(**dataset)

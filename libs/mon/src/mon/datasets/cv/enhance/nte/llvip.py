@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for LLVIP dataset.
+"""LLVIP dataset.
 
-This module implements the LLVIP dataset for nighttime object detection tasks.
+This module implements the LLVIP dataset for nighttime object detection.
 
 References:
     - Paper: "LLVIP: A Visible-infrared Paired Dataset for Low-light Vision,"
@@ -15,7 +15,7 @@ __all__ = [
     "LLVIP",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="llvip")
@@ -30,4 +30,4 @@ class LLVIP(ImageDataset):
         "depth"   : Modality(name=DepthName,    type="image", module=DefaultDepthMap,    train=True, test=True),
         "infrared": Modality(name=InfraredName, type="mask",  module=DefaultInfraredMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

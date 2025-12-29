@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for dataset handling.
+"""Training datasets.
 
 This package provides various dataset classes and utilities for loading and
 managing datasets, including image and video datasets. It includes base classes
@@ -10,29 +10,13 @@ evaluation capabilities and video datasets using OpenCV.
 """
 
 __all__ = [
-    "DataLoaderMixin",
-    "Dataset",
-    "DatasetLoadingMixin",
-    "DatasetMetadataMixin",
-    "DatasetMultimodalLoadingMixin",
     "ImageDataset",
     "ImageEvalDataset",
     "ImageLoader",
-    "Modalities",
-    "Modality",
-    "VideoLoaderCV",
+    "VideoLoader",
     "is_video_dataset",
 ]
 
-from .base import (
-    DataLoaderMixin,
-    Dataset,
-    DatasetLoadingMixin,
-    DatasetMetadataMixin,
-    DatasetMultimodalLoadingMixin,
-    Modalities,
-    Modality,
-)
 from .eval import ImageEvalDataset
 from .image import ImageDataset, ImageLoader
-from .video import is_video_dataset, VideoLoaderCV
+from .video import is_video_dataset, VideoLoader

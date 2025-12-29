@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the MSEC dataset.
+"""MSEC datasets.
 
 This module implements the Multi-Scale Exposure Correction (MSEC) dataset for
-exposure correction tasks.
+exposure correction.
 
 References:
     - Paper: "Learning Multi-Scale Photo Exposure Correction," CVPR 2021.
@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="msec")
@@ -35,10 +35,10 @@ class MSEC(ImageDataset):
         "image_ev_p1.5": Modality(name="image_ev_p1.5", type="image", module=Image, train=True, test=True),
         "ref"          : Modality(name="ref_c",         type="image", module=Image, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
     def __init__(self, lr: bool = True, *args, **kwargs):
-        """Initializes the MSEC dataset.
+        """Initialize a new instance.
         
         Args:
             lr (bool): If True, use low-resolution versions of the images.
@@ -47,11 +47,12 @@ class MSEC(ImageDataset):
         self.lr = lr
         super().__init__(*args, **kwargs)
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         if self.lr:
             patterns = [self.root / "msec_lr" / self.split_str / "image_ev_0"]

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for DarkFace dataset.
+"""DarkFace dataset.
 
-This module implements DarkFace dataset for nighttime face enhancement and
+This module implements the DarkFace dataset for nighttime face enhancement and
 detection.
 """
 
@@ -11,7 +11,7 @@ __all__ = [
     "DarkFace",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="darkface")
@@ -25,6 +25,6 @@ class DarkFace(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "face", "id": 0, "color": [ 81, 120, 228]},
     ])

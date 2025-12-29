@@ -11,7 +11,7 @@ __all__ = [
 
 from mon.core import Path, rich
 from mon.training import albumentations as A
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="cyclegan_dataset")

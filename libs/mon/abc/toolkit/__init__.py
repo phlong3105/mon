@@ -13,7 +13,7 @@ Notes:
       domain within a single package.
     - Structure:
         ::
-
+        
             toolkit/           # A "Toolkit" for a specific data type
             ├── __init__.py    # Exposes all
             ├── core.py        # Base classes and mixins

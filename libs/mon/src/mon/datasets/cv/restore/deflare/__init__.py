@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for deflaring datasets.
+"""De-flaring datasets.
 
-This package includes various datasets used for image deflaring tasks.
+This package includes various datasets used for image de-flaring.
 """
 
 from .flarereal800 import *

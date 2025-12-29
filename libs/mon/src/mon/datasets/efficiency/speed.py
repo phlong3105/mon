@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for Speed datasets.
+"""Speed benchmarking datasets.
 
-This module implements the Speed10 and Speed1K datasets for efficiency
-benchmarking in low-light image enhancement tasks.
+This module implements datasets for efficiency benchmarking.
 """
 
 __all__ = [
     "Speed1K",
 ]
 
-from ..core import *
+from ..meta import *
 
 
 @DATASETS.register(name="speed10")
@@ -25,7 +24,7 @@ class Speed10(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
 
 @DATASETS.register(name="speed1k")
@@ -39,4 +38,4 @@ class Speed1K(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for VV dataset.
+"""VV dataset.
 
 This module implements the VV dataset for low-light enhancement tasks.
 """
@@ -10,7 +10,7 @@ __all__ = [
     "VV",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="vv")
@@ -24,4 +24,4 @@ class VV(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

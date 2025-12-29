@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for low-light enhancement datasets.
+"""Low-light enhancement datasets.
 
-This package includes various datasets used for low-light image enhancement tasks.
+This package includes various datasets for low-light image enhancement.
 """
 
 from .dicm import *

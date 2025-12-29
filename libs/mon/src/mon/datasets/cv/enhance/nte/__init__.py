@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for nighttime image enhancement datasets.
+"""Nighttime image enhancement datasets.
 
-This package implements various datasets used for nighttime image enhancement (NTE)
+This package implements various datasets for nighttime image enhancement (NTE)
 tasks in computer vision. NTE focuses on improving the quality and visibility of
 images captured in nighttime conditions, addressing challenges such as low light,
 glare, glow, and uneven illumination.

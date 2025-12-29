@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Training data management.
+"""Training data containers.
 
-This package contains various data management functionalities for training
-machine learning models.
+This package contains various data containers used for training machine learning
+models.
 
 Notes:
     - Design Pattern: Component-Based Framework.
@@ -33,26 +33,45 @@ Notes:
 """
 
 __all__ = [
+    "BatchCollateMixin",
+    "DataLoadMixin",
     "DataLoader",
     "Dataset",
     "ImageDataset",
     "ImageEvalDataset",
     "ImageLoader",
-    "SAMInstanceMixin",
-    "VideoLoaderCV",
+    "InputTargetLoadMixin",
+    "Modalities",
+    "Modality",
+    "MultimodalDataLoadMixin",
+    "RegistrableMixin",
+    "RootLoadMixin",
+    "VideoLoader",
     "build_dataloader",
     "build_dataset",
     "is_video_dataset",
-    "parse_data_dir",
 ]
 
 from typing import Any
 
-from mon.core import DATASETS, Path, Split
-from .base import *
-from .comp import *
-from .impl import *
-from .usages import *
+from mon.core import DATASETS, parse_data_dir, Path, Split
+from .base import Dataset, Modalities, Modality
+from .comp import (
+    BatchCollateMixin,
+    DataLoadMixin,
+    InputTargetLoadMixin,
+    MultimodalDataLoadMixin,
+    RegistrableMixin,
+    RootLoadMixin,
+)
+from .impl import (
+    ImageDataset,
+    ImageEvalDataset,
+    ImageLoader,
+    is_video_dataset,
+    VideoLoader,
+)
+from .usages import DataLoader
 from .utils import *
 
 
@@ -71,7 +90,7 @@ def build_dataset(
     verbose  : bool = False,
     **kwargs
 ) -> tuple[str, Dataset]:
-    """Parses given ``src`` to a corresponding dataset.
+    """Build a dataset from a given source.
     
     Args:
         src: An input data source
@@ -81,7 +100,10 @@ def build_dataset(
         **kwargs: Additional keyword arguments for the dataset.
         
     Returns:
-        tuple[str, BaseDataset]: Dataset name and dataset.
+        A tuple containing the dataset name and the dataset instance.
+
+    Raises:
+        ValueError: If ``src`` is invalid.
     """
     src = Path(src)
 
@@ -102,7 +124,7 @@ def build_dataset(
         dataset   = ImageLoader(root=src, transform=transform, verbose=verbose, **kwargs)
     elif src.is_video_file():
         data_name = src.name
-        dataset = VideoLoaderCV(root=src, transform=transform, verbose=verbose, **kwargs)
+        dataset = VideoLoader(root=src, transform=transform, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"``src`` is invalid: {src}.")
 
@@ -117,7 +139,7 @@ def build_dataloader(
     verbose   : bool = False,
     **kwargs
 ) -> tuple[str, DataLoader]:
-    """Parses given ``src`` to a corresponding dataloader.
+    """Build a dataloader from a given source.
 
     Args:
         src: An input data source
@@ -128,7 +150,7 @@ def build_dataloader(
         **kwargs: Additional keyword arguments for the dataset.
 
     Returns:
-        tuple[str, DataLoader]: Dataset name and dataloader.
+        A tuple containing the dataset name and the dataloader instance.
 
     Raises:
         ValueError: If ``src`` is invalid.

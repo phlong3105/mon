@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the RESIDE datasets.
+"""RESIDE datasets.
 
-This module implements RESIDE datasets for image dehazing tasks.
+This module implements the theRESIDE dataset for image de-hazing.
 """
 
 __all__ = [
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="reside_hstsreal")
@@ -32,13 +32,14 @@ class RESIDE_HSTSReal(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "hsts" / "real" / self.split_str / "image"]
         
@@ -66,13 +67,14 @@ class RESIDE_HSTSSyn(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "hsts" / "synthetic" / self.split_str / "image"]
         
@@ -100,13 +102,13 @@ class RESIDE_ITS(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "its" / self.split_str / "image"]
         
@@ -134,13 +136,14 @@ class RESIDE_OTS(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "ots" / self.split_str / "image"]
         
@@ -167,13 +170,14 @@ class RESIDE_RTTS(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "rtts" / self.split_str / "image"]
         
@@ -201,13 +205,14 @@ class RESIDE_SOTSIndoor(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "sots" / "indoor" / self.split_str / "image"]
         
@@ -235,13 +240,14 @@ class RESIDE_SOTSOutdoor(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "sots" / "outdoor" / self.split_str / "image"]
         
@@ -268,13 +274,14 @@ class RESIDE_URHI(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "urhi" / self.split_str / "image"]
         

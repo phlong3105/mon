@@ -8,7 +8,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="tsdme")
@@ -22,7 +22,7 @@ class TSDME(ImageDataset):
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
     def _load_primary_data(self) -> list:
         if self.split == Split.TRAIN:

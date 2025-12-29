@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for dehazing datasets.
+"""De-hazing datasets.
 
-This package includes various datasets used for image dehazing tasks.
+This package includes various datasets used for image de-hazing.
 """
 
 from .densehaze import *

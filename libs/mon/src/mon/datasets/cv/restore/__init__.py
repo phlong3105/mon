@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for image restoration datasets.
+"""Image restoration datasets.
 
 This package provides various datasets for image restoration tasks such as
-deblurring, deflaring, dehazing, deraining, and desnowing.
+de-blurring, de-flaring, de-hazing, de-raining, and de-snowing.
 """
 
 from .deblur import *

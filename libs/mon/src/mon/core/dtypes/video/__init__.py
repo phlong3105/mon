@@ -33,8 +33,14 @@ __all__ = [
     "write_video_ffmpeg",
 ]
 
-from .core import *
-from .io import *
+from .core import Frame
+from .io import (
+    load_video_ffmpeg,
+    VideoWriter,
+    VideoWriterCV,
+    VideoWriterFFmpeg,
+    write_video_ffmpeg,
+)
 from .meta import *
 from .ops import *
 from .proc import *

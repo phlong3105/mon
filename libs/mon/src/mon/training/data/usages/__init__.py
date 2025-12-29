@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Training data usages.
+"""Usages of training data containers.
 
 This package contains example usages of training data loaders.
 """

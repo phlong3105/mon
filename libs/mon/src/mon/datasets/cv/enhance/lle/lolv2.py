@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for LOL-v2 dataset.
+"""LOL-v2 dataset.
 
-This module implements the LOL-v2 dataset for low-light image enhancement tasks.
+This module implements the LOL-v2 dataset for low-light image enhancement.
 """
 
 __all__ = [
@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="lolv2real")
@@ -27,13 +27,14 @@ class LOLv2Real(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
-
+    _classlist : ClassList   = None
+    
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "real" / self.split_str / "image"]
 
@@ -61,13 +62,14 @@ class LOLv2Syn(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "syn" / self.split_str / "image"]
 

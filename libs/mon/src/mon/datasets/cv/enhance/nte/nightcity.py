@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for NightCity dataset.
+"""NightCity dataset.
 
 This module implements the NightCity dataset for nighttime scene parsing.
 
@@ -15,7 +15,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="nightcity")
@@ -30,7 +30,7 @@ class NightCity(ImageDataset):
         "depth": Modality(name=DepthName,  type="image", module=DefaultDepthMap, train=True, test=True),
         "mask" : Modality(name="labelIds", type="image", module=SemanticMask,    train=True, test=False),
     }
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "unlabeled"           , "id": 0 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
         {"name": "ego vehicle"         , "id": 1 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
         {"name": "rectification border", "id": 2 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
@@ -67,12 +67,13 @@ class NightCity(ImageDataset):
         {"name": "bicycle"             , "id": 33, "train_id": 18 , "category": "vehicle"     , "category_id": 7, "ignore_in_eval": False, "color": [119, 11 ,  32]},
         {"name": "license plate"       , "id": -1, "train_id": -1 , "category": "vehicle"     , "category_id": 7, "ignore_in_eval": True , "color": [0  , 0  , 142]},
     ])
-
+    
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         if self.split == Split.TEST:
             patterns = [self.root / "val" / "image"]

@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the UHD-LL dataset.
+"""UHD-LL dataset.
 
-This module implements the UHD-LL dataset for low-light image enhancement tasks.
+This module implements the UHD-LL dataset for low-light image enhancement.
 """
 
 __all__ = [
     "UHDLL",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="uhdll")
@@ -25,4 +25,4 @@ class UHDLL(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the RCD dataset.
+"""RCD dataset.
 
 This module implements the Radiometry Correction Dataset (RCD) dataset for
-exposure correction and multi-exposure fusion tasks.
+exposure correction and multi-exposure fusion.
 
 References:
     - Paper: "Unsupervised Exposure Correction," ECCV 2024.
@@ -15,7 +15,7 @@ __all__ = [
     "RCD",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="rcd")
@@ -36,4 +36,4 @@ class RCD(ImageDataset):
         "image_ev_p3": Modality(name="image_ev_p3", type="image", module=Image, train=True, test=True),
         "ref"        : Modality(name="ref",         type="image", module=Image, train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

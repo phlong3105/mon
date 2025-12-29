@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the SICE dataset.
+"""SICE dataset.
 
-This module implements the SICE dataset for exposure enhancement tasks.
+This module implements the SICE dataset for exposure enhancement.
 
 References:
     - Paper: "Learning a Deep Single Image Contrast Enhancer from Multi-Exposure
@@ -35,7 +35,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="sice")
@@ -54,7 +54,7 @@ class SICE(ImageDataset):
         "depth"      : Modality(name=DepthName,     type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"        : Modality(name="ref",         type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
     def __init__(self, lr: bool = True, *args, **kwargs):
         """Initializes the SICE dataset.
@@ -66,11 +66,12 @@ class SICE(ImageDataset):
         self.lr = lr
         super().__init__(*args, **kwargs)
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         if self.lr:
             patterns = [self.root / "sice_lr" / self.split_str / "image_under"]
@@ -104,13 +105,14 @@ class SICEME(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True,  test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=False, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "me" / self.split_str / "image"]
         

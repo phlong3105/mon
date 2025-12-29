@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for deraining datasets.
+"""De-raining datasets.
 
-This package includes various datasets for image deraining tasks.
+This package includes various datasets for image de-raining.
 """
 
 from .gtrain import *

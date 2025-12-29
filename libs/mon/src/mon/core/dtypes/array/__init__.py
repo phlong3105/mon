@@ -28,7 +28,7 @@ __all__ = [
     "TensorOrArray",
 ]
 
-from .core import *
+from .core import TensorOrArray
 from .io import *
 from .meta import *
 from .ops import *

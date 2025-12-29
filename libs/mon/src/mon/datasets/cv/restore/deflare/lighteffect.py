@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the LightEffect dataset.
+"""LightEffect dataset.
 
-This module implements the LightEffect dataset for deflaring tasks.
+This module implements the LightEffect dataset for image de-flaring.
 """
 
 __all__ = [
     "LightEffect",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="lighteffect")
@@ -23,4 +23,4 @@ class LightEffect(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

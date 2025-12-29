@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Training data utility functions.
+"""Data container utility functions.
 
-This module provides various utility functions for training data containers.
+This module provides various utility functions for data containers.
 """
 
 __all__ = []

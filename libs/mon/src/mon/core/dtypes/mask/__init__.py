@@ -28,7 +28,7 @@ __all__ = [
     "SemanticMask",
 ]
 
-from .core import *
+from .core import SemanticMask
 from .io import *
 from .meta import *
 from .ops import *

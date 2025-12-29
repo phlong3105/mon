@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the Dense-Haze dataset.
+"""Dense-Haze dataset.
 
-This module implements the Dense-Haze dataset for image dehazing.
+This module implements the Dense-Haze dataset for image de-hazing.
 """
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="densehaze")
@@ -26,4 +26,4 @@ class DenseHaze(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

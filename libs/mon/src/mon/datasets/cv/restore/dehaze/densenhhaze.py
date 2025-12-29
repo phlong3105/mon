@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the Dense-NH-Haze dataset.
+"""Dense-NH-Haze dataset.
 
-This module implements Dense-NH-Haze dataset for image dehazing.
+This module implements the Dense-NH-Haze dataset for image de-hazing.
 """
 
 __all__ = [
     "DenseNHHaze",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="densenhhaze")
@@ -25,4 +25,4 @@ class DenseNHHaze(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

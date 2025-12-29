@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for desnowing datasets.
+"""De-snowing datasets.
 
-This package provides datasets for image/video desnowing tasks.
+This package provides datasets for image de-snowing.
 """
 
 from .gtsnow import *

@@ -33,7 +33,7 @@ __all__ = [
 from .core import *
 from .io import *
 from .meta import *
-from .ops import *
+from .ops import convert, denormalize, normalize
 from .proc import *
 from .vis import *
 

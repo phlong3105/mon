@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for the Rain13K dataset.
+"""Rain13K dataset.
 
-This module implements the Rain13K dataset for image deraining tasks.
+This module implements the Rain13K dataset for image de-raining.
 """
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="rain13k")
@@ -25,4 +25,4 @@ class Rain13K(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

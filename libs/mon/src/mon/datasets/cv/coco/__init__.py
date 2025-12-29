@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for COCO datasets.
+"""COCO datasets.
 
-This package implements various COCO datasets for computer vision tasks.
+This package implements various COCO datasets.
 """
 
 from .coco2017 import *

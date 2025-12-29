@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for LOL-v1 dataset.
+"""LOL-v1 dataset.
 
-This module implements the LOL-v1 dataset for low-light image enhancement tasks.
+This module implements the LOL-v1 dataset for low-light image enhancement.
 """
 
 __all__ = [
     "LOLv1",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 @DATASETS.register(name="lolv1")
@@ -25,4 +25,4 @@ class LOLv1(ImageDataset):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

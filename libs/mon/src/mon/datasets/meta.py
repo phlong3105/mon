@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for core dataset classes and types.
+"""Datasets metadata operations.
 
-This module provides core dataset classes and types for handling various data
-modalities, including images, depth maps, and infrared maps. It includes base
-dataset classes, data loaders, and utilities for managing different data sources
-and tasks.
+This module provides metadata operations for building datasets.
 """
 
 __all__ = [
@@ -43,7 +40,7 @@ __all__ = [
     "Split",
     "Task",
     "TensorOrArray",
-    "VideoLoaderCV",
+    "VideoLoader",
     "VideoWriter",
     "VideoWriterCV",
     "VideoWriterFFmpeg",
@@ -88,7 +85,7 @@ from mon.training.data import (
     ImageLoader,
     Modalities,
     Modality,
-    VideoLoaderCV,
+    VideoLoader,
 )
 
 # Constants for convenience

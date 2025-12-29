@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for Cityscapes dataset.
+"""Cityscapes datasets.
 
-This module implements the Cityscapes main dataset for semantic segmentation tasks.
+This module implements the Cityscapes' main dataset for semantic segmentation.
 
 References:
 	- Data: https://www.cityscapes-dataset.com
@@ -16,7 +16,7 @@ __all__ = [
 import cv2
 
 from mon.core import Path, rich
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="cityscapes")
@@ -30,7 +30,7 @@ class Cityscapes(ImageDataset):
         "image"   : Image,
         "semantic": SemanticMask,
     })
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "unlabeled"           , "id":  0, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "ego vehicle"         , "id":  1, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "rectification border", "id":  2, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
@@ -85,12 +85,13 @@ class Cityscapes(ImageDataset):
         self.use_blurred = use_blurred
         self.use_coarse  = use_coarse
         super().__init__(root=root, *args, **kwargs)
-
+    
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         image_name = "leftImg8bit_blurred" if self.use_blurred else "leftImg8bit"
         gt_name    = "gtCoarse"            if self.use_coarse  else "gtFine"

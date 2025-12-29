@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for LOL-Blur dataset.
+"""LOL-Blur dataset.
 
 This module implements LOL-Blur dataset for image deblurring, denoising, and
 low-light enhancement.
@@ -19,7 +19,7 @@ __all__ = [
 import abc
 
 from mon.core import rich
-from ....core import *
+from ....meta import *
 
 
 class LOLBlur(ImageDataset, abc.ABC):
@@ -32,7 +32,7 @@ class LOLBlur(ImageDataset, abc.ABC):
         "depth": Modality(name=DepthName,    type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",        type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
 
 
 @DATASETS.register(name="lolblurb")
@@ -40,12 +40,13 @@ class LOLBlurB(LOLBlur):
     """LOL-Blur-B (Blur) dataset."""
 
     _tasks: list[Task] = [Task.DEBLUR]
-
+    
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "b" / self.split_str / "image"]
 
@@ -67,11 +68,12 @@ class LOLBlurBN(LOLBlur):
 
     _tasks: list[Task] = [Task.DEBLUR, Task.DENOISE]
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "bn" / self.split_str / "image"]
 
@@ -93,11 +95,12 @@ class LOLBlurL(LOLBlur):
 
     _tasks: list[Task] = [Task.LLE]
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "l" / self.split_str / "image"]
 
@@ -119,11 +122,12 @@ class LOLBlurLB(LOLBlur):
 
     _tasks: list[Task] = [Task.DEBLUR, Task.LLE]
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "lb" / self.split_str / "image"]
 
@@ -145,11 +149,12 @@ class LOLBlurLBN(LOLBlur):
 
     _tasks: list[Task] = [Task.DEBLUR, Task.DENOISE, Task.LLE]
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "lbn" / self.split_str / "image"]
 
@@ -171,11 +176,12 @@ class LOLBlurN(LOLBlur):
 
     _tasks: list[Task] = [Task.DENOISE]
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "n" / self.split_str / "image"]
 

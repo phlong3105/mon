@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for MIPI 2024 Flare dataset.
+"""MIPI 2024 Flare dataset.
 
-This module implements the MIPI 2024 Flare dataset for image deflare tasks.
+This module implements the MIPI 2024 Flare dataset for image de-flaring.
 
 References:
 	- Data: https://mipi-challenge.org/MIPI2024/index.html
@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="mipi2024flare")
@@ -28,17 +28,17 @@ class MIPI2024Flare(ImageDataset):
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
         "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None
     
-    # --- Initialize ---
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
             
         Raises:
-            ValueError: If the specified split is invalid.
+            ValueError: If the specified ``split`` is invalid.
         """
         if self.split in [Split.TRAIN]:
             patterns = [self.root / "train" / "image"]

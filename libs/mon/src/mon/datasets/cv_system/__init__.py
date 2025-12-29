@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for computer vision-assisted systems datasets.
+"""CV-assisted systems datasets.
 
-This package contains datasets used in computer vision-assisted systems tasks,
-such as autonomous driving, robotics, and surveillance.
+This package contains datasets used in computer vision systems, such as
+autonomous driving, robotics, and surveillance.
 """
+
+from .face import *

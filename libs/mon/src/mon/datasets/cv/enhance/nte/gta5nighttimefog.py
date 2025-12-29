@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for GTA5NighttimeFog dataset.
+"""GTA5NighttimeFog dataset.
 
 This module implements the GTA5NighttimeFog dataset for nighttime image dehazing.
 
@@ -13,7 +13,7 @@ __all__ = [
     "GTA5NighttimeFog",
 ]
 
-from ....core import *
+from ....meta import *
 
 
 # --- Dataset ---
@@ -29,4 +29,4 @@ class GTA5NighttimeFog(ImageDataset):
         "depth": Modality(DepthName,    type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref",   type="image", module=Image,           train=True, test=True),
     }
-    _classes   : ClassList   = None
+    _classlist : ClassList   = None

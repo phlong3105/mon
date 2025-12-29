@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for datasets.
+"""Datasets.
 
-This package includes various datasets, challenges, computer vision tasks,
-and efficiency benchmarks.
+This package includes concrete dataset implementations.
 """
 
-__all__ = []  # Do not populate ``mon`` namespace.
+__all__ = []  # Prevent accidental imports of submodules.
 
 from .challenges import *
 from .cv import *

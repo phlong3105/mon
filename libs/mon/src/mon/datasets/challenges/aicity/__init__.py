@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for AICity challenge datasets.
+"""AI City challenge datasets.
 
-This package includes modules for handling datasets from the AICity challenge,
-such as fisheye 8K dataset. Each module provides specific functionalities
-and classes to work with the respective datasets.s
+This package includes modules for handling datasets from the AI City challenge.
+Each module provides specific functionalities and classes to work with the
+respective datasets.
 """
 
 from .fisheye8k import *

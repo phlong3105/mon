@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for WiderFace dataset.
+"""WiderFace dataset.
 
-This module implements the WiderFace dataset for face detection tasks.
+This module implements the WiderFace dataset for face recognition.
 """
 
 __all__ = [
@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ...core import *
+from ...meta import *
 
 
 @DATASETS.register(name="widerface")
@@ -25,7 +25,7 @@ class WiderFace(ImageDataset):
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
     }
-    _classes   : ClassList   = ClassList([
+    _classlist : ClassList   = ClassList([
         {"name": "face", "id": 0, "color": [ 81, 120, 228]},
     ])
 
@@ -34,11 +34,12 @@ class WiderFace(ImageDataset):
 class WiderFaceVal(WiderFace):
     """WiderFace-Val subset."""
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
-        """Lists all image data for the primary modality.
+        """Load primary modality data files in the dataset.
         
         Returns:
-            list[Image]: A list of Image instances for the primary modality.
+            A list of Image instances for the primary modality.
         """
         patterns = [self.root / "val" / "image"]
 
