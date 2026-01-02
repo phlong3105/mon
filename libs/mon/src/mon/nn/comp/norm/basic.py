@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic normalization layers from PyTorch.
+"""Basic normalization layers.
 
-This module implements various normalization layers commonly used in neural
-networks.
+This module implements various basic normalization layers from PyTorch.
 """
 
 __all__ = [

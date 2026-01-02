@@ -33,11 +33,12 @@ from .conv import *
 from .dropout import *
 from .flatten import *
 from .fold import *
-from .fusion import*
+from .fusion import *
 from .linear import *
 from .norm import *
 from .padding import *
 from .pooling import *
+from .pos_enc import *
 from .rnn import *
 from .shuffle import *
 from .sparse import *

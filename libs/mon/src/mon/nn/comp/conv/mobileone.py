@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for MobileOne building block.
+"""MobileOne convolutional blocks.
 
-This module implements the MobileOneBlock class, which is a building block
-for the MobileOne architecture. The block features a multi-branched structure
-during training and a re-parameterized single-branch structure for inference.
-
-References:
-    - Paper: "MobileOne: An Improved One millisecond Mobile Backbone," CVPR 2023.
-    - Code: https://github.com/apple/ml-mobileone/tree/main
+This module implements MobileOne building blocks used for efficient convolutional
+networks. The block features a multi-branched structure during training and a
+re-parameterized single-branch structure for inference.
 """
 
 __all__ = [
@@ -25,13 +21,13 @@ from ..attention import SEBlock
 
 
 def reparameterize_model(model: nn.Module) -> nn.Module:
-    """Re-parameterizes all re-parameterizable modules in the model for inference.
+    """Re-parameterize all re-parameterizable modules in the model for inference.
     
     Args:
-        model (nn.Module): The model containing re-parameterizable modules.
+        model: The model containing re-parameterizable modules.
         
     Returns:
-        nn.Module: The re-parameterized model ready for inference.
+        The re-parameterized model for inference.
     """
     # Avoid editing original graph
     model = copy.deepcopy(model)
@@ -42,10 +38,14 @@ def reparameterize_model(model: nn.Module) -> nn.Module:
 
 
 class MobileOneBlock(nn.Module):
-    """A MobileOne building block.
+    """MobileOne building block.
 
     This block has a multi-branched architecture at train-time and plain-CNN
     style architecture at inference time.
+    
+    References:
+        - Paper: "MobileOne: An Improved One millisecond Mobile Backbone," CVPR 2023.
+        - Code: https://github.com/apple/ml-mobileone/tree/main
     """
     
     def __init__(
@@ -62,22 +62,21 @@ class MobileOneBlock(nn.Module):
         use_act          : bool = True,
         num_conv_branches: int  = 1
     ):
-        """Initializes the MobileOneBlock.
+        """Initialize a new instance.
         
         Args:
-            in_channels (int): Number of input channels.
-            out_channels (int): Number of output channels.
-            kernel_size (int): Size of the convolutional kernel.
-            stride (int): Stride of the convolution. Defaults to 1.
-            padding (int): Padding for the convolution. Defaults to 0.
-            dilation (int): Dilation for the convolution. Defaults to 1.
-            groups (int): Number of groups for grouped convolution. Defaults to 1.
-            inference (bool): If True, initializes in inference mode.
-                Defaults to False.
-            use_se (bool): If True, includes SE block. Defaults to False.
-            use_act (bool): If True, includes ReLU activation. Defaults to True.
-            num_conv_branches (int): Number of convolutional branches during
-                training. Defaults to 1.
+            in_channels: Number of input channels.
+            out_channels: Number of output channels.
+            kernel_size: Size of the convolutional kernel.
+            stride: Stride of the convolution. Defaults to 1.
+            padding: Padding for the convolution. Defaults to 0.
+            dilation: Dilation for the convolution. Defaults to 1.
+            groups: Number of groups for grouped convolution. Defaults to 1.
+            inference: If True, initializes in inference mode. Defaults to False.
+            use_se: If True, includes SE block. Defaults to False.
+            use_act: If True, includes ReLU activation. Defaults to True.
+            num_conv_branches: Number of convolutional branches during training.
+                Defaults to 1.
         """
         super().__init__()
         self.inference         = inference
@@ -126,42 +125,42 @@ class MobileOneBlock(nn.Module):
             if kernel_size > 1:
                 self.rbr_scale = self._conv_bn(kernel_size=1, padding=0)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the MobileOneBlock.
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
         
         Args:
-            x (torch.Tensor): Input tensor of shape (N, C_in, H, W).
+            input: Input tensor with dimensions (N, C_in, H, W) and values ranging
+                from 0.0 to 1.0.
             
         Returns:
-            torch.Tensor: Output tensor of shape (N, C_out, H_out, W_out).
+            Output tensor with dimensions (N, C_out, H_out, W_out) and values
+                ranging from 0.0 to 1.0.
         """
         # Inference mode forward pass.
         if self.inference:
-            return self.activation(self.se(self.reparam_conv(x)))
+            return self.activation(self.se(self.reparam_conv(input)))
 
         # Multi-branched train-time forward pass.
         # Skip branch output
         identity_out = 0
         if self.rbr_skip is not None:
-            identity_out = self.rbr_skip(x)
+            identity_out = self.rbr_skip(input)
 
         # Scale branch output
         scale_out = 0
         if self.rbr_scale is not None:
-            scale_out = self.rbr_scale(x)
+            scale_out = self.rbr_scale(input)
 
         # Other branches
-        out = scale_out + identity_out
+        output = scale_out + identity_out
         for ix in range(self.num_conv_branches):
-            out += self.rbr_conv[ix](x)
+            output += self.rbr_conv[ix](input)
 
-        return self.activation(self.se(out))
+        return self.activation(self.se(output))
     
     def reparameterize(self):
-        """Following works like `RepVGG: Making VGG-style ConvNets Great Again` -
-        https://arxiv.org/pdf/2101.03697.pdf. We re-parameterize multi-branched
-        architecture used at training time to obtain a plain CNN-like structure
-        for inference.
+        """Re-parameterize multi-branched architecture used at training time to
+        obtain a plain CNN-like structure for inference.
         """
         if self.inference:
             return
@@ -190,14 +189,14 @@ class MobileOneBlock(nn.Module):
         self.inference = True
 
     def _get_kernel_bias(self) -> tuple[torch.Tensor, torch.Tensor]:
-        """Fuses all branches to obtain equivalent kernel and bias for
+        """Fuse all branches to obtain equivalent kernel and bias for
         re-parameterized conv layer.
         
         References:
             - Code: https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L83
 
         Returns:
-             tuple[torch.Tensor, torch.Tensor]: Tuple of kernel and bias tensors.
+             A tuple of kernel and bias tensors.
         """
         # get weights and bias of scale branch
         kernel_scale = 0
@@ -227,13 +226,13 @@ class MobileOneBlock(nn.Module):
         return kernel_final, bias_final
 
     def _fuse_bn_tensor(self, branch) -> tuple[torch.Tensor, torch.Tensor]:
-        """Fuses batchnorm parameters into convolutional kernel and bias.
+        """Fuse batchnorm parameters into convolutional kernel and bias.
         
         References:
-            -Code: https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L95
+            - Code: https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L95
     
         Returns:
-            tuple[torch.Tensor, torch.Tensor]: Tuple of kernel and bias tensors.
+            A tuple of kernel and bias tensors.
         """
         if isinstance(branch, nn.Sequential):
             kernel       = branch.conv.weight
@@ -267,14 +266,14 @@ class MobileOneBlock(nn.Module):
         return kernel * t, beta - running_mean * gamma / std
 
     def _conv_bn(self, kernel_size: int, padding: int) -> nn.Sequential:
-        """Creates a convolutional layer followed by batch normalization.
+        """Create a convolutional layer followed by batch normalization.
         
         Args:
-            kernel_size (int): Size of the convolutional kernel.
-            padding (int): Padding for the convolution.
+            kernel_size: Size of the convolutional kernel.
+            padding: Padding for the convolution.
             
         Returns:
-            nn.Sequential: A sequential container with conv and batchnorm layers.
+            A sequential container with conv and batchnorm layers.
         """
         mod_list = nn.Sequential()
         mod_list.add_module(

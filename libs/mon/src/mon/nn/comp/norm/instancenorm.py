@@ -3,8 +3,8 @@
 
 """Instance normalization layers.
 
-This module implements various instance normalization layers commonly used in
-convolutional neural networks (CNNs) and deep learning models.
+This module implements various instance normalization layers used for
+normalizing ...
 """
 
 __all__ = [

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic linear layers from PyTorch.
+"""Basic linear layers.
 
-This module implements various linear layers commonly used in MLP and deep
-neural networks.
+This module implements various basic linear layers from PyTorch.
 """
 
 __all__ = [

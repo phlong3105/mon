@@ -3,7 +3,8 @@
 
 """Depthwise-separable convolutional layers.
 
-This module implements the depthwise separable convolutional layer for 2D inputs.
+This module implements the depthwise separable convolutional layers used for
+lightweight feature extraction.
 """
 
 __all__ = [

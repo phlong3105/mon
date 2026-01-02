@@ -3,7 +3,7 @@
 
 """Depth-aware linear layers.
 
-This module implements a depth-aware linear layer that incorporates depth
+This module implements depth-aware linear layers that incorporate depth
 information into the linear transformation process.
 """
 

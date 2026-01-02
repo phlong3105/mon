@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for dropout layers.
+"""Dropout layers.
 
-This module implements various dropout layers commonly used in neural networks
-to prevent overfitting by randomly setting a fraction of input units to zero
-during training.
+This module implements various dropout layers used for regularization by randomly
+setting activations to zero.
 """
 
 __all__ = [

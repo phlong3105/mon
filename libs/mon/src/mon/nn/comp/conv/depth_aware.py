@@ -115,7 +115,7 @@ class DepthAwareAvgPool2d(nn.Module):
         """Forward pass.
         
         Args:
-            x: Input tensor with dimensions (N, C, H, W) and values ranging
+            input: Input tensor with dimensions (N, C, H, W) and values ranging
                 from 0.0 to 1.0.
             depth: Depth tensor with dimensions (N, 1, H, W) and values ranging
                 from 0.0 to 1.0.

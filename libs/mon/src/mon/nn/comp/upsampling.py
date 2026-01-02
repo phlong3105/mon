@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for upsampling layers.
+"""Upsampling layers.
 
-This module implements classes for upsampling operations in neural networks.
+This module implements various upsampling layers commonly used for increasing
+the resolution of feature maps.
 """
 
 __all__ = [

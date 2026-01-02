@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic convolutional layers from PyTorch.
+"""Basic convolutional layers.
 
-This module implements standard convolutional layers and their lazy initialization
-variants.
+This module implements standard convolutional layers from PyTorch.
 """
 
 __all__ = [

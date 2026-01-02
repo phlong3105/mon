@@ -3,8 +3,8 @@
 
 """Convolutional layers.
 
-This package includes various convolutional layers, including standard, depth-aware,
-depthwise separable, and Ghost modules, as well as MobileOne blocks.
+This package contains various convolutional layers - the basic building blocks
+of convolutional neural networks.
 """
 
 # __all__ = []  # Prevent accidental imports of submodules.

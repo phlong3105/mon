@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for recurrent neural networks (RNNs).
+"""Recurrent neural networks (RNNs).
 
-This module implements various recurrent neural network (RNN) components and
-architectures.
-
-References:
-    - Definition: https://www.ibm.com/think/topics/recurrent-neural-networks#763338458
+This module implements various recurrent neural network (RNN) components.
 """
 
 __all__ = [

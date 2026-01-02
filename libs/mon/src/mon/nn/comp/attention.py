@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Attention mechanisms.
+"""Attention layers.
 
-This module implements various attention mechanisms used in neural networks.
+This module implements various attention layers used for extracting features from
+high-dimensional inputs.
 """
 
 __all__ = [

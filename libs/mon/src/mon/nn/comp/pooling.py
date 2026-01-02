@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for pooling layers.
+"""Pooling layers.
 
-This module implements various pooling layers commonly used in convolutional neural
-networks (CNNs) for downsampling feature maps.
+This module implements various pooling layers used for reducing the spatial
+dimensionality of feature maps.
 """
 
 __all__ = [

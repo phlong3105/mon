@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for padding layers.
+"""Padding layers.
 
-This module implements various padding layers commonly used in convolutional neural
-networks (CNNs) to adjust the spatial dimensions of input feature maps.
+This module implements various padding layers used for padding feature maps to
+ensure that they are of the same size without changing the spatial resolution.
 """
 
 __all__ = [

@@ -9,3 +9,4 @@ architectural features.
 
 # __all__ = []  # Prevent accidental imports of submodules.
 
+from . import inr

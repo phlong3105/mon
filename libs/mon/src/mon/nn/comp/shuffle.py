@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for shuffle operations.
+"""Shuffle operations.
 
-This module implements classes for channel shuffling and pixel shuffling in neural
-networks.
+This module implements various shuffle operations used for rearranging
+elements in tensors, such as channel shuffling and pixel shuffling.
 """
 
 __all__ = [

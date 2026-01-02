@@ -3,8 +3,8 @@
 
 """Activation functions.
 
-This module implements various activation functions used in neural networks
-to introduce non-linearity.
+This module implements various activation layers used for introducing
+non-linearity into neural networks.
 """
 
 __all__ = [
@@ -59,7 +59,7 @@ class SimpleGate(nn.Module):
         """Forward pass.
         
         Args:
-            input: The input tensor with dimensions (B, 2*C, ...) and values
+            input: Input tensor with dimensions (B, 2*C, ...) and values
                 ranging from 0.0 to 1.0.
             
         Returns:

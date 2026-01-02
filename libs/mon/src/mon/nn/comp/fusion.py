@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for feature fusion layers.
+"""Feature fusion layers.
 
-This module implements classes for various feature fusion techniques used in
-neural networks, including Attentional Feature Fusion (AFF), Direct Add Fuse
-(DAF), Multi-Scale Channel Attention Module (MS-CAM), and Iterative Attentional
-Feature Fusion (iAFF).
-
-References:
-    - Paper: "Attentional Feature Fusion," WACV 2021.
-    - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
+This module implements various feature fusion layers used for fusing features
+into a single feature map.
 """
 
 __all__ = [
@@ -25,19 +19,22 @@ import torch.nn as nn
 
 
 class DAF(nn.Module):
-    """Direct Add Fuse (DAF) layer."""
+    """Direct-Add-Fuse (DAF) layer."""
     
-    def forward(self, x: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the DAF layer.
+    def forward(self, input: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
         
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W).
-            residual (torch.Tensor): Residual tensor of shape (B, C, H, W).
+            input: Input tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            residual: Residual tensor with dimensions (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
         
         Returns:
-            torch.Tensor: Fused output tensor of shape (B, C, H, W).
+            Output tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
         """
-        return x + residual
+        return input + residual
 
 
 class MS_CAM(nn.Module):
@@ -49,12 +46,11 @@ class MS_CAM(nn.Module):
     """
 
     def __init__(self, channels: int = 64, ratio: int = 4):
-        """Initializes the MS-CAM layer.
+        """Initialize a new instance.
         
         Args:
-            channels (int): Number of input channels. Defaults to 64.
-            ratio (int): Reduction ratio for the intermediate channels.
-                Defaults to 4.
+            channels: Number of input channels. Defaults to 64.
+            ratio: Reduction ratio for the intermediate channels. Defaults to 4.
         """
         super().__init__()
         mid_channels   = int(channels // ratio)
@@ -75,15 +71,18 @@ class MS_CAM(nn.Module):
         )
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the MS-CAM layer.
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
         
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W).
+            input: Input tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
             
         Returns:
-            torch.Tensor: Output tensor after applying MS-CAM of shape (B, C, H, W).
+            Output tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
         """
+        x    = input
         x_l  = self.local_att(x)
         x_g  = self.global_att(x)
         x_lg = x_l + x_g
@@ -100,12 +99,11 @@ class AFF(nn.Module):
     """
 
     def __init__(self, channels: int = 64, ratio: int = 4):
-        """Initializes the AFF layer.
+        """Initialize a new instance.
         
         Args:
-            channels (int): Number of input channels. Defaults to 64.
-            ratio (int): Reduction ratio for the intermediate channels.
-                Defaults to 4.
+            channels: Number of input channels. Defaults to 64.
+            ratio: Reduction ratio for the intermediate channels. Defaults to 4.
         """
         super().__init__()
         mid_channels   = int(channels // ratio)
@@ -126,22 +124,25 @@ class AFF(nn.Module):
         )
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the AFF layer.
+    def forward(self, input: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
         
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W).
-            residual (torch.Tensor): Residual tensor of shape (B, C, H, W
+            input: Input tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            residual: Residual tensor with dimensions (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
             
         Returns:
-            torch.Tensor: Fused output tensor of shape (B, C, H, W).
+            Fused output tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
         """
-        x_a  = x + residual
+        x_a  = input + residual
         x_l  = self.local_att(x_a)
         x_g  = self.global_att(x_a)
         x_lg = x_l + x_g
         w    = self.sigmoid(x_lg)
-        x_o  = 2 * x * w + 2 * residual * (1 - w)
+        x_o  = 2 * input * w + 2 * residual * (1 - w)
         return x_o
 
 
@@ -154,12 +155,11 @@ class iAFF(nn.Module):
     """
 
     def __init__(self, channels: int = 64, ratio: int = 4):
-        """Initializes the iAFF layer.
+        """Initialize a new instance.
         
         Args:
-            channels (int): Number of input channels. Defaults to 64.
-            ratio (int): Reduction ratio for the intermediate channels.
-                Defaults to 4.
+            channels: Number of input channels. Defaults to 64.
+            ratio: Reduction ratio for the intermediate channels. Defaults to 4.
         """
         super().__init__()
         mid_channels   = int(channels // ratio)
@@ -196,26 +196,29 @@ class iAFF(nn.Module):
         )
         self.sigmoid = nn.Sigmoid()
 
-    def forward(self, x: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
-        """Forward pass of the iAFF layer.
+    def forward(self, input: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
         
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W).
-            residual (torch.Tensor): Residual tensor of shape (B, C, H, W).
+            input: Input tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            residual: Residual tensor with dimensions (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
             
         Returns:
-            torch.Tensor: Fused output tensor of shape (B, C, H, W).
+            Fused output tensor with dimensions (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
         """
-        x_a   = x + residual
+        x_a   = input + residual
         x_l1  = self.local_att(x_a)
         x_g1  = self.global_att(x_a)
         x_lg1 = x_l1 + x_g1
         w1    = self.sigmoid(x_lg1)
-        x_i   = x * w1 + residual * (1 - w1)
+        x_i   = input * w1 + residual * (1 - w1)
 
         x_l2  = self.local_att2(x_i)
         x_g2  = self.global_att2(x_i)
         x_lg2 = x_l2 + x_g2
         w2    = self.sigmoid(x_lg2)
-        x_o   = x * w2 + residual * (1 - w2)
+        x_o   = input * w2 + residual * (1 - w2)
         return x_o

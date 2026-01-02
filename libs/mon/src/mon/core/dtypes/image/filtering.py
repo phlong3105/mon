@@ -218,7 +218,7 @@ class FastGuidedFilter(nn.Module):
                 dimensions (B, 3, H, W) and pixel values ranging from 0.0 to 1.0.
             y_lr: A low-resolution guidance image with the same shape, type, and
                 format as ``x_lr``.
-            x_hr: A high-resolution of ``x_lr``.
+            x_hr: The high-resolution version of ``x_lr``.
         
         Returns:
             Filtered image with the same shape, type, and format as ``x_hr``.
@@ -278,7 +278,7 @@ class ConvGuidedFilter(nn.Module):
                 dimensions (B, 3, H, W) and pixel values ranging from 0.0 to 1.0.
             y_lr: A low-resolution guidance image with the same shape, type, and
                 format as ``x_lr``.
-            x_hr: A high-resolution of ``x_lr``.
+            x_hr: The high-resolution version of ``x_lr``.
         
         Returns:
             Filtered image with the same shape, type, and format as ``x_hr``.

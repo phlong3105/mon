@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for flattening layers.
+"""Flattening layers.
 
-This module implements classes for flattening and unflattening tensors in neural
-networks.
+This module implements various flattening layers commonly used for flattening a
+continuous range of dims into a tensor.
 """
 
 __all__ = [

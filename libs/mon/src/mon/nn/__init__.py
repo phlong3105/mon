@@ -55,6 +55,7 @@ from .comp import (
     pooling,
 )
 from .impl import *
+from .impl import inr
 from .usages import *
 from .utils import *
 

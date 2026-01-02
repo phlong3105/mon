@@ -3,8 +3,8 @@
 
 """Batch normalization layers.
 
-This module implements various batch normalization layers commonly used in
-convolutional neural networks (CNNs) and deep learning models.
+This module implements various batch normalization layers used for normalizing
+a batch of inputs in neural networks.
 """
 
 __all__ = [

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for Transformer architectures.
+"""Transformer components.
 
-This module implements implementations of Transformer models, including encoder
-and decoder layers, as well as the full Transformer architecture.
+This module implements various transformer components used for sequence modeling
+tasks.
 """
 
 __all__ = [

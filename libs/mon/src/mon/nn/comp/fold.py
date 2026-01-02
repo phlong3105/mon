@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A module for fold and unfold operations.
+"""Fold and unfold layers.
 
-This module implements classes for folding and unfolding tensors in neural
-networks.
+This module implements various fold and unfold layers used for reducing the
+spatial dimensionality of feature maps.
 """
 
 __all__ = [
