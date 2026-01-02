@@ -23,7 +23,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import mon
-from mon import console, metrics, Path, tfms, optims
+from mon import console, metric, Path, tfms, optim
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from engine.core import YAMLConfig

@@ -7,4 +7,6 @@ This package contains datasets used in computer vision systems, such as
 autonomous driving, robotics, and surveillance.
 """
 
+# __all__ = []  # Prevent accidental imports of submodules.
+
 from .face import *

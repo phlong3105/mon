@@ -23,7 +23,7 @@ import torch
 
 from mon import nn
 from mon.core import MLType, MODELS, Path, Task
-from mon.training import losses, optims
+from mon.training import losses, optim
 from .module import Estimation, EstimationLLIE
 
 current_file = Path(__file__).absolute()
@@ -51,7 +51,7 @@ class ZeroRestore(nn.Module, abc.ABC):
         # Optimize
         self.model.load_state_dict(self.state_dict)
         self.model.train()
-        optimizer = optims.Adam(self.parameters(), lr=1e-3, weight_decay=1e-2)
+        optimizer = optim.Adam(self.parameters(), lr=1e-3, weight_decay=1e-2)
         
         for i in range(self.iters):
             optimizer.zero_grad()

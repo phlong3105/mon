@@ -6,4 +6,6 @@
 This package implements various COCO datasets.
 """
 
+# __all__ = []  # Prevent accidental imports of submodules.
+
 from .coco2017 import *

@@ -8,19 +8,7 @@ is a template method pattern for a specific type of data container (e.g., datase
 dataloaders, etc.).
 """
 
-__all__ = [
-    "ImageDataset",
-    "ImageEvalDataset",
-    "ImageLoader",
-    "VideoLoader",
-    "is_video_dataset",
-]
+# __all__ = []  # Prevent accidental imports of submodules.
 
-# from .datapools import *
-from .datasets import (
-    ImageDataset,
-    ImageEvalDataset,
-    ImageLoader,
-    is_video_dataset,
-    VideoLoader,
-)
+# from .datapool import *
+from .dataset import *

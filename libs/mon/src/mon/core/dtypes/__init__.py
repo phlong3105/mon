@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A collection of custom data types.
+"""A collection of different data types.
 
 This package provides custom and complex data types used across the project.
 This package exposes common, flat aliases for frequent types and groups

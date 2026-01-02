@@ -8,8 +8,6 @@ diversity of training datasets. These augmentations can help improve the
 robustness and generalization of machine learning models.
 """
 
-__all__ = [
-    # "ICPAugmentation",
-]
+# __all__ = []  # Prevent accidental imports of submodules.
 
 # from .copy_paste import ICPAugmentation

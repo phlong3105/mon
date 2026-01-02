@@ -6,6 +6,8 @@
 This package includes various datasets for image de-raining.
 """
 
+# __all__ = []  # Prevent accidental imports of submodules.
+
 from .gtrain import *
 from .rain100 import *
 from .rain12 import *

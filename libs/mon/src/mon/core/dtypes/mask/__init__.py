@@ -24,11 +24,9 @@ Notes:
             └── vis.py         # UI/UX rendering
 """
 
-__all__ = [
-    "SemanticMask",
-]
+# __all__ = []  # Prevent accidental imports of submodules.
 
-from .core import SemanticMask
+from .core import *
 from .io import *
 from .meta import *
 from .ops import *

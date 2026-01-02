@@ -31,7 +31,7 @@ Notes:
             └── utils.py                # Utility functions and helpers
 """
 
-__all__ = []
+# __all__ = []  # Prevent accidental imports of submodules.
 
 from .base import *
 from .comp import *

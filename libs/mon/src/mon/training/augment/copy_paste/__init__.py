@@ -4,8 +4,6 @@
 """This package implements copy-paste data augmentation functionalities.
 """
 
-__all__ = [
-    "ICPAugmentation",
-]
+# __all__ = []  # Prevent accidental imports of submodules.
 
-from .icp import ICPAugmentation
+from .icp import *

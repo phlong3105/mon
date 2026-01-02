@@ -6,6 +6,8 @@
 This package provides various datasets for image and video deblurring.
 """
 
+# __all__ = []  # Prevent accidental imports of submodules.
+
 from .lolblur import *
 from .realblur import *
 from .realblurtele import *

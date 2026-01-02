@@ -37,7 +37,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import mon
-from mon import console, metrics, Path, tfms, optims
+from mon import console, metric, Path, tfms, optim
 
 
 def init_loggers(args):

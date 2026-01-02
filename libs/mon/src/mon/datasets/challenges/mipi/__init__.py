@@ -8,4 +8,6 @@ such as flare detection dataset. Each module provides specific functionalities
 and classes to work with the respective datasets.
 """
 
+# __all__ = []  # Prevent accidental imports of submodules.
+
 from .mipi2024flare import *

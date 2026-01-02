@@ -21,7 +21,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import mon
-from mon import console, metrics, Path, tfms, optims
+from mon import console, metric, Path, tfms, optim
 from basicsr.data import create_dataloader, create_dataset
 from basicsr.data.data_sampler import EnlargedSampler
 from basicsr.data.prefetch_dataloader import CPUPrefetcher, CUDAPrefetcher

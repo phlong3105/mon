@@ -24,16 +24,11 @@ Notes:
             └── vis.py         # UI/UX rendering
 """
 
-__all__ = [
-    "Class",
-    "ClassList",
-    "Probabilities",
-    "class_id_to_one_hot",
-]
+# __all__ = []  # Prevent accidental imports of submodules.
 
-from .core import Class, ClassList, Probabilities
+from .core import *
 from .io import *
 from .meta import *
-from .ops import class_id_to_one_hot
+from .ops import *
 from .proc import *
 from .vis import *

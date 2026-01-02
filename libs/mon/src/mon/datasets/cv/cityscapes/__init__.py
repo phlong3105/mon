@@ -9,4 +9,6 @@ References:
 	- Data: https://www.cityscapes-dataset.com
 """
 
+# __all__ = []  # Prevent accidental imports of submodules.
+
 from .cityscapes import *

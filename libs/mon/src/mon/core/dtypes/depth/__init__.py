@@ -24,14 +24,11 @@ Notes:
             └── vis.py         # UI/UX rendering
 """
 
-__all__ = [
-    "DepthMap",
-    "to_color",
-]
+# __all__ = []  # Prevent accidental imports of submodules.
 
-from .core import DepthMap
+from .core import *
 from .io import *
 from .meta import *
 from .ops import *
 from .proc import *
-from .vis import to_color
+from .vis import *

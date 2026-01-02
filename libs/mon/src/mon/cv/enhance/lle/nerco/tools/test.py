@@ -3,7 +3,7 @@ import os
 import mon
 from data import create_dataset
 from models import create_model
-from mon import metrics, optims
+from mon import metric, optim
 from options.test_options import TestOptions
 from util import html
 from util.visualizer import save_images

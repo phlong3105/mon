@@ -16,7 +16,7 @@ import torch
 
 from mon import nn
 from mon.core import image as I, MLType, MODELS, Path, Task
-from mon.training import losses, optims
+from mon.training import losses, optim
 
 current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
@@ -72,8 +72,8 @@ class ZSN2N(nn.Module, nn.ModelMetadataMixin):
         # Optimize
         self.model.load_state_dict(self.state_dict)
         self.model.train()
-        optimizer = optims.Adam(self.model.parameters(), lr=0.001)
-        scheduler = optims.StepLR(optimizer, step_size=1000, gamma=0.5)
+        optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+        scheduler = optim.StepLR(optimizer, step_size=1000, gamma=0.5)
         mse       = losses.MSELoss().to(device)
         
         for i in range(self.iters):

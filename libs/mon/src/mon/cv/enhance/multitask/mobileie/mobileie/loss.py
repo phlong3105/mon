@@ -1,7 +1,7 @@
 import torch
 
 from mon import nn
-from mon.training import losses, metrics
+from mon.training import losses, metric
 
 
 class CharbonnierLoss(losses.BaseLoss):
@@ -36,7 +36,7 @@ class WarmupLoss(losses.BaseLoss):
     def __init__(self, reduction: str = "mean"):
         super().__init__(reduction=reduction)
         self.loss_cb = losses.CharbonnierLoss(1e-8, reduction=reduction)
-        self.loss_cs = metrics.CosineSimilarity(reduction=reduction)
+        self.loss_cs = metric.CosineSimilarity(reduction=reduction)
 
     def forward(self, input, target, warmup1, warmup2):
         loss = (self.loss_cb(warmup2, input) +
@@ -50,7 +50,7 @@ class LLELoss(losses.BaseLoss):
     
     def __init__(self, reduction: str = "mean"):
         super().__init__(reduction=reduction)
-        self.loss_cs = metrics.CosineSimilarity(reduction=reduction)
+        self.loss_cs = metric.CosineSimilarity(reduction=reduction)
         self.loss_oa = OutlierAwareLoss(reduction=reduction)
         self.psnr    = losses.PSNRLoss(reduction=reduction)
     
@@ -66,7 +66,7 @@ class ISPLoss(losses.BaseLoss):
     
     def __init__(self, reduction: str = "mean"):
         super().__init__(reduction=reduction)
-        self.loss_cs = metrics.CosineSimilarity(reduction=reduction)
+        self.loss_cs = metric.CosineSimilarity(reduction=reduction)
         self.loss_oa = OutlierAwareLoss(reduction=reduction)
         self.psnr    = losses.PSNRLoss(reduction=reduction)
 

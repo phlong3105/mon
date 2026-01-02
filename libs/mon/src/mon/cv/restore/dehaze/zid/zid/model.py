@@ -20,7 +20,7 @@ from cv2.ximgproc import guidedFilter
 
 from mon import nn
 from mon.core import log, MLType, MODELS, Path, Task
-from mon.training import optims
+from mon.training import optim
 from .net import *
 from .net.losses import StdLoss
 from .net.vae_model import VAE
@@ -149,7 +149,7 @@ class ZID(nn.ModelMetadataMixin):
     def optimize(self):
         torch.backends.cudnn.enabled   = True
         torch.backends.cudnn.benchmark = True
-        optimizer = optims.Adam(self.parameters, lr=self.learning_rate)
+        optimizer = optim.Adam(self.parameters, lr=self.learning_rate)
         for j in range(self.num_iter):
             optimizer.zero_grad()
             self._optimization_closure()
