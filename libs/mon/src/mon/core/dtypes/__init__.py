@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A collection of different data types.
+"""A collection of complex data types.
 
 This package provides custom and complex data types used across the project.
 This package exposes common, flat aliases for frequent types and groups
@@ -48,6 +48,8 @@ __all__ = [
     "VideoWriter",
     "VideoWriterCV",
     "VideoWriterFFmpeg",
+    "Weights",
+    "WeightsEnum",
     # Hierarchical exposed APIs
     "array",
     "bbox",
@@ -59,6 +61,7 @@ __all__ = [
     "mask",
     "thermal",
     "video",
+    "weights",
 ]
 
 from .array import TensorOrArray
@@ -71,3 +74,4 @@ from .instance import Instance
 from .mask import SemanticMask
 from .thermal import InfraredMap
 from .video import Frame, VideoWriter, VideoWriterCV, VideoWriterFFmpeg
+from .weights import Weights, WeightsEnum

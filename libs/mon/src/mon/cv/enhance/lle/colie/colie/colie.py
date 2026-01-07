@@ -28,7 +28,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="colie", arch="colie")
+@MODELS.register(variant="colie", name="colie")
 class CoLIE(nn.Module, nn.ModelMetadataMixin):
     """CoLIE model for low-light image enhancement.
 

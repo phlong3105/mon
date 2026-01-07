@@ -24,7 +24,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="zeroig", arch="zeroig")
+@MODELS.register(variant="zeroig", name="zeroig")
 class ZERO_IG(Network, nn.ModelMetadataMixin):
     """ZERO-IG model for low-light image enhancement.
     

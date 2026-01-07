@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="clode", arch="clode")
+@MODELS.register(variant="clode", name="clode")
 class CLODE(NODE, nn.ModelMetadataMixin):
     """CLODE model for low-light image enhancement.
 

@@ -37,6 +37,7 @@ import torch.nn as nn
 class PositionalNorm(nn.Module):
     """Positional normalization layer."""
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-5):
         """Initialize a new instance.
         
@@ -46,6 +47,7 @@ class PositionalNorm(nn.Module):
         super().__init__()
         self.eps = eps
 
+    # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Forward pass.
         
@@ -68,6 +70,7 @@ class PositionalNorm(nn.Module):
 class MomentShortcut(nn.Module):
     """Moment shortcut layer."""
     
+    # --- Callable & Context Manager ---
     def forward(
         self,
         x    : torch.Tensor,

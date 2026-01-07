@@ -40,6 +40,7 @@ class Data(abc.ABC):
         _data (Any): Underlying data object.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, data: Any, *args, **kwargs):
         """Initialize a new instance.
 
@@ -48,7 +49,7 @@ class Data(abc.ABC):
         """
         self._data = data
     
-    # --- Magic Methods ---
+    # --- Container / Sequence Methods ---
     @abc.abstractmethod
     def __len__(self) -> int:
         """Return the logical length."""
@@ -93,6 +94,7 @@ class DataLoadMixin(abc.ABC):
         _persist (bool): Whether to persist loaded data in memory. Defaults to False.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         path   : Path,

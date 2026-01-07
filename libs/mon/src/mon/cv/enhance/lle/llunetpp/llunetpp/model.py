@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="llunet++", arch="llunet++")
+@MODELS.register(variant="llunet++", name="llunet++")
 class LLUnetPP(NestedUNet, nn.ModelMetadataMixin):
     """LL-UNet++ model for low-light image enhancement.
     

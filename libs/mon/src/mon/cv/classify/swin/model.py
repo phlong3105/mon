@@ -54,7 +54,7 @@ class SwinTransformer(tvm.SwinTransformer, nn.ModelMetadataMixin, abc.ABC):
             self.load_state_dict(weights)
     
 
-@MODELS.register(name="swin_t", arch="swin")
+@MODELS.register(variant="swin_t", name="swin")
 class Swin_T(SwinTransformer):
     
     _name: str  = "swin_t"
@@ -80,7 +80,7 @@ class Swin_T(SwinTransformer):
         )
         
 
-@MODELS.register(name="swin_s", arch="swin")
+@MODELS.register(variant="swin_s", name="swin")
 class Swin_S(SwinTransformer):
 
     _name: str  = "swin_s"
@@ -106,7 +106,7 @@ class Swin_S(SwinTransformer):
         )
 
 
-@MODELS.register(name="swin_b", arch="swin")
+@MODELS.register(variant="swin_b", name="swin")
 class Swin_B(SwinTransformer):
 
     _name: str  = "swin_b"
@@ -132,7 +132,7 @@ class Swin_B(SwinTransformer):
         )
         
 
-@MODELS.register(name="swin_v2_t", arch="swin")
+@MODELS.register(variant="swin_v2_t", name="swin")
 class Swin_V2_T(SwinTransformer):
 
     _name: str  = "swin_v2_t"
@@ -160,7 +160,7 @@ class Swin_V2_T(SwinTransformer):
         )
         
 
-@MODELS.register(name="swin_v2_s", arch="swin")
+@MODELS.register(variant="swin_v2_s", name="swin")
 class Swin_V2_S(SwinTransformer):
     
     _name: str  = "swin_v2_s"
@@ -188,7 +188,7 @@ class Swin_V2_S(SwinTransformer):
         )
         
 
-@MODELS.register(name="swin_v2_b", arch="swin")
+@MODELS.register(variant="swin_v2_b", name="swin")
 class Swin_V2_B(SwinTransformer):
 
     _name: str  = "swin_v2_b"

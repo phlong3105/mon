@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="lformer", arch="lformer")
+@MODELS.register(variant="lformer", name="lformer")
 class LFormer(net, nn.ModelMetadataMixin):
     """LFormer model for low-light image enhancement.
     

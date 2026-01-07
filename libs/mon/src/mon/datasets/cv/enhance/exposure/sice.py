@@ -35,7 +35,7 @@ __all__ = [
 ]
 
 from mon.core import rich
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="sice")

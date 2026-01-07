@@ -23,7 +23,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-@MODELS.register(name="retinexformer", arch="retinexformer")
+@MODELS.register(variant="retinexformer", name="retinexformer")
 class Retinexformer(ImageCleanModel, nn.ModelMetadataMixin):
     """Retinexformer model for low-light image enhancement.
     

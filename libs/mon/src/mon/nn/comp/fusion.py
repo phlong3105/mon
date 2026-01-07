@@ -21,6 +21,7 @@ import torch.nn as nn
 class DAF(nn.Module):
     """Direct-Add-Fuse (DAF) layer."""
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -45,6 +46,7 @@ class MS_CAM(nn.Module):
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, channels: int = 64, ratio: int = 4):
         """Initialize a new instance.
         
@@ -71,6 +73,7 @@ class MS_CAM(nn.Module):
         )
         self.sigmoid = nn.Sigmoid()
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -98,6 +101,7 @@ class AFF(nn.Module):
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, channels: int = 64, ratio: int = 4):
         """Initialize a new instance.
         
@@ -124,6 +128,7 @@ class AFF(nn.Module):
         )
         self.sigmoid = nn.Sigmoid()
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -154,6 +159,7 @@ class iAFF(nn.Module):
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, channels: int = 64, ratio: int = 4):
         """Initialize a new instance.
         
@@ -196,6 +202,7 @@ class iAFF(nn.Module):
         )
         self.sigmoid = nn.Sigmoid()
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         

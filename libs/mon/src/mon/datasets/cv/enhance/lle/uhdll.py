@@ -10,7 +10,7 @@ __all__ = [
     "UHDLL",
 ]
 
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="uhdll")

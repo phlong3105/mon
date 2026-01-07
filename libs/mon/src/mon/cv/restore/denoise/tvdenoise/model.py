@@ -18,7 +18,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-@MODELS.register(name="tvdenoise", arch="tvdenoise")
+@MODELS.register(variant="tvdenoise", name="tvdenoise")
 class TVDenoise(nn.Module, nn.ModelMetadataMixin):
     
     _arch     : str          = "tvdenoise"

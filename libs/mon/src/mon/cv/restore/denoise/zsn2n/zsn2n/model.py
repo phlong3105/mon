@@ -39,7 +39,7 @@ class Network(nn.Module):
         return x
     
 
-@MODELS.register(name="zsn2n", arch="zsn2n")
+@MODELS.register(variant="zsn2n", name="zsn2n")
 class ZSN2N(nn.Module, nn.ModelMetadataMixin):
     """ZS-N2N model for zero-shot image denoising.
     

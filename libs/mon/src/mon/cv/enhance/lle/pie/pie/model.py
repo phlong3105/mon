@@ -45,7 +45,7 @@ def PIE(src):
 '''
 
 
-@MODELS.register(name="pie", arch="pie")
+@MODELS.register(variant="pie", name="pie")
 class PIE(nn.Module, nn.ModelMetadataMixin):
     """PIE model for low-light image enhancement.
     

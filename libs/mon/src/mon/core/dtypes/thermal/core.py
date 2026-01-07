@@ -54,6 +54,7 @@ class InfraredMap(Image):
         _source (InfraredSource): The infrared data source.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         source: InfraredSource = InfraredSource.INFRARED,

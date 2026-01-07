@@ -37,6 +37,7 @@ class Timer:
             average).
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self):
         """Initialize a new instance."""
         self.start    = 0.0
@@ -47,6 +48,7 @@ class Timer:
         self.avg      = 0.0
         self.duration = 0.0
     
+    # --- Properties ---
     @property
     def total_m(self) -> float:
         """Return the total time in minutes."""
@@ -77,6 +79,7 @@ class Timer:
         """Return the last duration in hours."""
         return self.duration / 3600.0
     
+    # --- Callable & Context Manager ---
     def start(self):
         """Start the timer and clear previous statistics.
 
@@ -158,13 +161,15 @@ class TimeProfiler:
         total (Timer): Timer for the overall total stage.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self):
         """Initialize a new instance."""
         self.preprocess  = Timer()
         self.infer       = Timer()
         self.postprocess = Timer()
         self.total       = Timer()
-
+    
+    # --- Properties ---
     @property
     def process_time(self) -> float:
         """Return the cumulative process time.
@@ -180,7 +185,8 @@ class TimeProfiler:
         Return the sum of preprocess, infer, and postprocess average times.
         """
         return self.preprocess.avg + self.infer.avg + self.postprocess.avg
-
+    
+    # --- Representation ---
     def print(self):
         """Print a formatted summary of collected timing statistics.
 

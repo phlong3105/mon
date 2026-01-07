@@ -66,6 +66,7 @@ class FisheyeTomographyTransform(DualTransform):
         reuse    : bool  = False
         p        : float = 1.0
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         f        : int   = 150,

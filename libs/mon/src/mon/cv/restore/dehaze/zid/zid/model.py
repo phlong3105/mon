@@ -33,7 +33,7 @@ root_dir     = current_file.parents[1]
 DehazeResult = namedtuple("DehazeResult", ["learned", "t", "a"])
 
 
-@MODELS.register(name="zid", arch="zid")
+@MODELS.register(variant="zid", name="zid")
 class ZID(nn.ModelMetadataMixin):
     """ZID model for image dehazing.
     

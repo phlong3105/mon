@@ -36,7 +36,8 @@ class BBox(TensorOrArray):
             dimensions (7+) and in CXCYWHN format.
         _imgsz (tuple[int, int]): Image size as (H, W) used for conversions.
     """
-
+    
+    # --- Lifecycle & Initialization ---
     def __init__(self, data: np.ndarray, imgsz: tuple[int, int]):
         """Initialize a new instance.
 
@@ -167,7 +168,8 @@ class BBoxList(TensorOrArray, DataLoadMixin):
         _fmt (BBoxFormat): Bounding box format in the label file.
         _cvt_fmt (BBoxFormat): Conversion code used when loading from file.
     """
-
+    
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         data   : np.ndarray | Path,

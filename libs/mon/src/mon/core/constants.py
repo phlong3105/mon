@@ -37,7 +37,7 @@ from mon.core.pathlib import Path
 
 # --- Roots (Calculating the absolute base of the project) ---
 current_file = Path(__file__).absolute()   # mon/shared/mon/mon/constants.py
-ROOT_DIR     = current_file.parents[4]     # ./mon
+ROOT_DIR     = current_file.parents[5]     # ./mon
 
 
 # --- Resources ---

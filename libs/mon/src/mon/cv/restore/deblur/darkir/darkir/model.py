@@ -38,5 +38,5 @@ class DarkIR(archs.DarkIR, nn.ModelMetadataMixin):
     _zoo      : dict         = box.Box()
 
 
-MODELS.register(name="darkir_m", arch="darkir", module=DarkIR)
-MODELS.register(name="darkir_l", arch="darkir", module=DarkIR)
+MODELS.register(variant="darkir_m", name="darkir", module=DarkIR)
+MODELS.register(variant="darkir_l", name="darkir", module=DarkIR)

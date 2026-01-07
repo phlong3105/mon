@@ -35,7 +35,7 @@ def read_pytorch_lightning_state_dict(ckpt):
     return new_state_dict
 
 
-@MODELS.register(name="psenet", arch="psenet")
+@MODELS.register(variant="psenet", name="psenet")
 class PSENet(UnetTMO, nn.ModelMetadataMixin):
     """PSENet model for low-light image enhancement.
     

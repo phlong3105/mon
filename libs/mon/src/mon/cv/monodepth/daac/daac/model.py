@@ -41,7 +41,7 @@ class DAAC(DepthAnything_AC, nn.ModelMetadataMixin):
     _zoo      : dict         = {}
 
 
-@MODELS.register(name="daac_vits", arch="daac")
+@MODELS.register(variant="daac_vits", name="daac")
 class DAV2_ViTS(DAAC):
     
     _name: str  = "daac_vits"

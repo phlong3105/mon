@@ -26,6 +26,7 @@ from torch.nn.modules.instancenorm import *
 class AdaptiveInstanceNorm2d(nn.Module):
     r"""Adaptive instance normalization layer."""
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         num_features: int,
@@ -48,6 +49,7 @@ class AdaptiveInstanceNorm2d(nn.Module):
         self.w1  = nn.Parameter(torch.tensor(0.0))
         self.in_ = nn.InstanceNorm2d(num_features, eps, momentum, *args, **kwargs)
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -75,6 +77,7 @@ class HalfInstanceNorm2d(nn.Module):
     where :math:`\oplus` is concatenation along the channel dimension.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         num_features: int,
@@ -103,6 +106,7 @@ class HalfInstanceNorm2d(nn.Module):
             raise ValueError(f"``num_features`` must be even, got {num_features}.")
         self.in_ = nn.InstanceNorm2d(int(num_features // 2), eps, momentum, *args, **kwargs)
         
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         

@@ -10,7 +10,7 @@ __all__ = [
     "OHaze",
 ]
 
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="ohaze")

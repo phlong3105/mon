@@ -16,7 +16,7 @@ __all__ = [
 import cv2
 
 from mon.core import Path, rich
-from ...meta import *
+from ...api import *
 
 
 @DATASETS.register(name="cityscapes")

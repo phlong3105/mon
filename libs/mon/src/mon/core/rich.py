@@ -127,6 +127,7 @@ class MemoryUsageColumn(ProgressColumn):
         unit (MemoryUnit): Unit used for reporting values.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         devices     : int | list[int] = 0,
@@ -201,6 +202,7 @@ class ProcessedItemsColumn(ProgressColumn):
     Present completed/total counts in a fixed-width field.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, table_column: Column = None):
         """Initialize a new instance.
 
@@ -270,6 +272,7 @@ class SelectionOrInputPrompt(Prompt):
 
     response_type: type = str
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         prompt        : TextType            = "",
@@ -455,6 +458,7 @@ class SelectionOrInputPrompt(Prompt):
             
         return value
     
+    # --- Callable & Context Manager ---
     def __call__(self, *, default: Any = ..., stream: Optional[TextIO] = None) -> Any:
         """Prompt until a valid response is obtained.
 

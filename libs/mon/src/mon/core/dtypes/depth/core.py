@@ -54,6 +54,7 @@ class DepthMap(Image):
         _source (DepthSource): The depth data source.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         source: DepthSource = DepthSource.DAv2_ViTB,

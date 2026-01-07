@@ -30,7 +30,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-@MODELS.register(name="uretinexnet", arch="uretinexnet")
+@MODELS.register(variant="uretinexnet", name="uretinexnet")
 class URetinexNet(nn.Module, nn.ModelMetadataMixin):
     """URetinex-Net model for low-light image enhancement.
     

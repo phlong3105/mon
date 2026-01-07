@@ -40,6 +40,7 @@ class BrightnessAttentionMap(nn.Module):
         gamma (float): Parameter controlling the curvature of the map.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, gamma: float = 2.5, kernel_size: int = None):
         """Initialize a new instance.
         
@@ -51,6 +52,7 @@ class BrightnessAttentionMap(nn.Module):
         self.gamma   = gamma
         self.denoise = kornia.filters.MedianBlur(kernel_size=kernel_size) if kernel_size else None
     
+    # --- Callable & Context Manager ---
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         """Get the Brightness Attention Map (BAM) prior from an RGB image.
         
@@ -140,6 +142,7 @@ class BoundaryAwarePrior(nn.Module):
             binary boundary.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         eps        : float = 0.05,
@@ -159,6 +162,7 @@ class BoundaryAwarePrior(nn.Module):
         self.eps         = eps
         self.as_gradient = as_gradient
     
+    # --- Callable & Context Manager ---
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         """Computes the boundary prior from the input image.
         
@@ -193,6 +197,7 @@ class ImageLocalMean(nn.Module):
         patch_size (int): Size of the sliding window.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, patch_size: int = 5):
         """Initialize a new instance.
         
@@ -202,6 +207,7 @@ class ImageLocalMean(nn.Module):
         super().__init__()
         self.patch_size = patch_size
     
+    # --- Callable & Context Manager ---
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         """Calculate the local mean of the input image.
 
@@ -225,6 +231,7 @@ class ImageLocalVariance(nn.Module):
         patch_size (int): Size of the sliding window.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, patch_size: int = 5):
         """Initialize a new instance.
         
@@ -234,6 +241,7 @@ class ImageLocalVariance(nn.Module):
         super().__init__()
         self.patch_size = patch_size
     
+    # --- Callable & Context Manager ---
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         """Calculate the local variance of the input image.
         
@@ -260,6 +268,7 @@ class ImageLocalStdDev(nn.Module):
         eps (float): Small value to avoid division by zero.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, patch_size: int = 5, eps: float = 1e-9):
         """Initialize a new instance.
         
@@ -271,6 +280,7 @@ class ImageLocalStdDev(nn.Module):
         self.patch_size = patch_size
         self.eps        = eps
     
+    # --- Callable & Context Manager ---
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         """Calculate the local standard deviation of the input image.
         

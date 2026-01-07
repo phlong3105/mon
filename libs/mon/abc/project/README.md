@@ -10,15 +10,15 @@ This repository contains the template for a project.
   <summary>Directory Structure</summary>
 
   ```text
-  project                  # Project root.
+  project/                 # Project root.
   |__ archive              
   |__ config               # Configuration files for experiments.
   |__ data                 # Data-related files.
   |__ docker               # Docker files for deployment. 
   |__ notebook             # Notebooks for experiments.
   |__ run                  
-  |__ src                  # Adopt src/ layout.
-  |   |__ project          # Project's source code.
+  |__ src/                 # Adopt src/ layout.
+  |   |__ project/         # Project's source code.
   |       |__ __init__.py
   |       |__ ...
   |__ tests                # Unit tests.

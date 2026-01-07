@@ -348,7 +348,7 @@ class HVR:
 
 
 # --- Model ---
-@MODELS.register(name="tensormog", arch="tensormog")
+@MODELS.register(variant="tensormog", name="tensormog")
 class TensorMOG(nn.Module, nn.ModelMetadataMixin):
     """TensorMoG model for background subtraction.
 

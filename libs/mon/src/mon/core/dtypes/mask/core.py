@@ -50,6 +50,7 @@ class SemanticMask(Image):
     related to mask data.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, flags: int = cv2.IMREAD_GRAYSCALE, *args, **kwargs):
         """Initialize a new instance.
 

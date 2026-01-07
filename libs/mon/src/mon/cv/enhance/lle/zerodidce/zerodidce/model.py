@@ -22,7 +22,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="zerodidce", arch="zerodidce")
+@MODELS.register(variant="zerodidce", name="zerodidce")
 class ZeroDiDCE(nn.Module, nn.ModelMetadataMixin):
     """Zero-DiDCE model for low-light image enhancement.
     

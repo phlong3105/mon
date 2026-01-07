@@ -19,6 +19,7 @@ from torch.nn.common_types import _size_2_t
 class DSConv2d(nn.Module):
     """Depthwise separable convolutional layer."""
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels : int,
@@ -39,15 +40,16 @@ class DSConv2d(nn.Module):
         self.dw_conv = nn.Conv2d(in_channels, in_channels, kernel_size, groups=in_channels, *args, **kwargs)
         self.pw_conv = nn.Conv2d(in_channels, out_channels, 1, *args, **kwargs)
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
         Args:
-            input: Input tensor with dimensions (N, C_in, H, W) and values
+            input: Input tensor with dimensions (B, C_in, H, W) and values
                 ranging from 0.0 to 1.0.
             
         Returns:
-            Output tensor with dimensions (N, C_out, H_out, W_out) and values
+            Output tensor with dimensions (B, C_out, H_out, W_out) and values
                 ranging from 0.0 to 1.0.
         """
         return self.pw_conv(self.dw_conv(input))

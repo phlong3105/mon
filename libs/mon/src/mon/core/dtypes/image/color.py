@@ -38,6 +38,7 @@ class RGBToHVI(nn.Module):
         this_k (float): Current value of ``density_k`` used in conversions.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-8, requires_grad: bool = False):
         """Initialize a new instance.
         

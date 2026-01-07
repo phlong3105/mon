@@ -91,8 +91,8 @@ class DEIM(nn.Module, nn.ModelMetadataMixin):
         return outputs
     
 
-MODELS.register(name="deim_dfine_n", arch="deim", module=DEIM)
-MODELS.register(name="deim_dfine_s", arch="deim", module=DEIM)
-MODELS.register(name="deim_dfine_m", arch="deim", module=DEIM)
-MODELS.register(name="deim_dfine_l", arch="deim", module=DEIM)
-MODELS.register(name="deim_dfine_x", arch="deim", module=DEIM)
+MODELS.register(variant="deim_dfine_n", name="deim", module=DEIM)
+MODELS.register(variant="deim_dfine_s", name="deim", module=DEIM)
+MODELS.register(variant="deim_dfine_m", name="deim", module=DEIM)
+MODELS.register(variant="deim_dfine_l", name="deim", module=DEIM)
+MODELS.register(variant="deim_dfine_x", name="deim", module=DEIM)

@@ -22,7 +22,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="hvi_cidnet", arch="hvi_cidnet")
+@MODELS.register(variant="hvi_cidnet", name="hvi_cidnet")
 class HVI_CIDNet(CIDNet, nn.ModelMetadataMixin):
     """HVI-CIDNet model for low-light image enhancement.
     

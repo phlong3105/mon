@@ -23,7 +23,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="lightendiffusion", arch="lightendiffusion")
+@MODELS.register(variant="lightendiffusion", name="lightendiffusion")
 class LightenDiffusion(DenoisingDiffusion, nn.ModelMetadataMixin):
     """LightenDiffusion model for low-light image enhancement.
     

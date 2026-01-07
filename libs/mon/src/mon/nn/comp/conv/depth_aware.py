@@ -24,6 +24,7 @@ import torch.nn.functional as F
 class DepthAwareConv2d(nn.Module):
     """Depth-aware 2D convolutional layer."""
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels : int,
@@ -47,17 +48,18 @@ class DepthAwareConv2d(nn.Module):
         self.kernel_size = kernel_size
         self.padding     = padding
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
         Args:
-            input: Input tensor with dimensions (N, C_in, H, W) and values
+            input: Input tensor with dimensions (B, C_in, H, W) and values
                 ranging from 0.0 to 1.0.
-            depth: Depth tensor with dimensions (N, 1, H, W) and values ranging
+            depth: Depth tensor with dimensions (B, 1, H, W) and values ranging
                 from 0.0 to 1.0.
             
         Returns:
-            Output tensor with dimensions (N, C_out, H_out, W_out) and values
+            Output tensor with dimensions (B, C_out, H_out, W_out) and values
                 ranging from 0.0 to 1.0.
         """
         # input: [b, channels, h, w]
@@ -90,6 +92,7 @@ class DepthAwareConv2d(nn.Module):
 class DepthAwareAvgPool2d(nn.Module):
     """Depth-aware 2D average pooling layer."""
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         kernel_size: int,
@@ -111,17 +114,18 @@ class DepthAwareAvgPool2d(nn.Module):
         self.padding     = padding
         self.alpha       = alpha
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
         Args:
-            input: Input tensor with dimensions (N, C, H, W) and values ranging
+            input: Input tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-            depth: Depth tensor with dimensions (N, 1, H, W) and values ranging
+            depth: Depth tensor with dimensions (B, 1, H, W) and values ranging
                 from 0.0 to 1.0.
             
         Returns:
-            Output tensor with dimensions (N, C, H_out, W_out) and values ranging
+            Output tensor with dimensions (B, C, H_out, W_out) and values ranging
                 from 0.0 to 1.0.
         """
         # input: [b, c, h, w]

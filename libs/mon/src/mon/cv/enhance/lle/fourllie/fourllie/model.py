@@ -31,7 +31,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="fourllie", arch="fourllie")
+@MODELS.register(variant="fourllie", name="fourllie")
 class FourLLIE(enhancement_model, nn.ModelMetadataMixin):
     """FourLLIE model for low-light image enhancement.
     

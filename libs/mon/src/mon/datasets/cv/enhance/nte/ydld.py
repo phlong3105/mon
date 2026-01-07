@@ -11,7 +11,7 @@ __all__ = [
     "YDLD",
 ]
 
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="ydld")

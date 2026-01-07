@@ -83,6 +83,7 @@ class Instance(TensorOrArray):
         _root (Path): Root directory for the label file.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         data      : np.ndarray,

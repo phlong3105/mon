@@ -8,7 +8,7 @@ This module implements the base classes and mixins for neural networks.
 
 __all__ = [
     "Container",
-    "ModalAdapterMixin",
+    "ModelAdapterMixin",
     "ModelZooMixin",
     "Module",
     "ModuleDict",
@@ -83,7 +83,6 @@ class RegistrableMixin:
     _tasks    : list[Task]   = []
     _mltypes  : list[MLType] = []
     _model_dir: Path         = None
-    _zoo      : dict         = box.Box()
     
     # --- Properties ---
     @property
@@ -189,6 +188,7 @@ class ModelZooMixin:
             NotImplementedError: If the parent class does not implement ``load_state_dict()``.
         """
         weights, path, _ = self.parse_weights(weights, None)
+        
         if weights:
             if hasattr(self, "load_state_dict"):  # Optional runtime check
                 self.load_state_dict(weights, strict=strict)
@@ -198,7 +198,7 @@ class ModelZooMixin:
                 raise NotImplementedError("The class using ModelMixin must implement ``load_state_dict()``.")
    
 
-class ModalAdapterMixin(RegistrableMixin, ModelZooMixin):
+class ModelAdapterMixin(RegistrableMixin, ModelZooMixin):
     """A mixin class that provide a unified interface to bridge any model to
     ``mon`` framework.
     """

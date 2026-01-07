@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A package for computer vision.
+"""Computer vision.
 
-This package provides various modules and functions for computer vision tasks
-such as background subtraction, image classification, object detection, image
-enhancement, monocular depth estimation, image restoration, and image segmentation.
+This package contains various computer vision algorithms, including both
+traditional and deep learning approaches.
 
 References:
     - Definition: https://www.ibm.com/think/topics/computer-vision#691946467

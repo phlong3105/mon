@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-@MODELS.register(name="sci", arch="sci")
+@MODELS.register(variant="sci", name="sci")
 class SCI(Finetunemodel, nn.ModelMetadataMixin):
     """SCI model for low-light image enhancement.
     

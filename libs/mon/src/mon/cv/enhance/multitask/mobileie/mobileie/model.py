@@ -26,7 +26,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="mobileie_lle", arch="mobileie")
+@MODELS.register(variant="mobileie_lle", name="mobileie")
 class MobileIELLE(nn.Module, nn.ModelMetadataMixin):
     """MobileIE model for real-time low-light image enhancement.
     

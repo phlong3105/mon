@@ -14,7 +14,7 @@ __all__ = [
     "ImageEvalDataset",
 ]
 
-from typing import Any
+from typing import Any, Optional
 
 import box
 import numpy as np
@@ -27,6 +27,10 @@ from ...base import Dataset
 from ...comp import BatchCollateMixin, InputTargetLoadMixin
 
 
+# ==============================================================================
+# DATASETS
+# ==============================================================================
+
 class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
     """A concrete class for image quality assessment (IQA) datasets.
     
@@ -38,6 +42,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         _transform (albumentations.Compose): Transformations for input/target.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         input_dir : Path,
@@ -66,11 +71,24 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             *args, **kwargs
         )
         self.transform  = transform
-        
-    # --- Magic Methods ---
+    
     def __del__(self):
         """Close the dataset loading mechanism and releases resources."""
         pass
+    
+    # --- Representation ---
+    def __repr__(self) -> str:
+        """Return the string representation of the dataset."""
+        lines  = ["Dataset " + self.__class__.__name__]
+        lines += [f"Number of datapoints: {self.__len__()}"]
+        if hasattr(self, "transform") and self._transform:
+            lines += [repr(self._transform)]
+        return "\n".join(lines)
+    
+    # --- Container / Sequence Methods ---
+    def __len__(self) -> int:
+        """Return the length of the dataset (i.e., number of datapoints)."""
+        return len(self.datapoints["image"])
     
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return the datapoint at the specified ``index`` in ``_datapoints``.
@@ -92,26 +110,14 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             else:
                 augmented      = self.transform(image=data["image"])
                 data["image"]  = augmented["image"]
-            # Convert to float32 if necessary
             for k, v in data.items():
+                # Converts non‑float tensors/arrays to float32
                 if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
                     data[k] = v.to(torch.float32)
                 elif isinstance(v, np.ndarray) and v.dtype != np.float32:
                     data[k] = v.astype(np.float32)
                     
         return data | {"meta": meta}
-    
-    def __len__(self) -> int:
-        """Return the length of the dataset (i.e., number of datapoints)."""
-        return len(self.datapoints["image"])
-    
-    def __repr__(self) -> str:
-        """Return the string representation of the dataset."""
-        lines  = ["Dataset " + self.__class__.__name__]
-        lines += [f"Number of datapoints: {self.__len__()}"]
-        if hasattr(self, "transform") and self._transform:
-            lines += [repr(self._transform)]
-        return "\n".join(lines)
     
     # --- Properties ---
     @property
@@ -159,7 +165,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         datapoints["image"] = images
         
         # List target
-        targets: list[Image] = None
+        targets: Optional[list[Image]] = None
         if self.has_target:
             targets: list[Image] = []
             with create_progress_bar(disable=self.disable_pbar) as pbar:
@@ -206,9 +212,16 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             A dictionary containing all modalities for the specified datapoint.
         """
         datapoint = {}
-        for k, v in self._datapoints.items():
+        for k, v in self.datapoints.items():
             if v is not None:
                 datapoint[k] = v[index]
             else:
                 datapoint[k] = None
         return datapoint
+
+
+# ==============================================================================
+# UTILITIES
+# ==============================================================================
+
+# --- Validation & Sanitization ---

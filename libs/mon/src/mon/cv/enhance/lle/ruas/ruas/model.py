@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="ruas", arch="ruas")
+@MODELS.register(variant="ruas", name="ruas")
 class RUAS(Network, nn.ModelMetadataMixin):
     """RUAS model for low-light image enhancement.
     

@@ -112,7 +112,7 @@ class DataLoadMixin(abc.ABC):
             RuntimeError: If no datapoints or attributes are invalid.
         """
         pass
-    
+
 
 class RootLoadMixin(DataLoadMixin, abc.ABC):
     """A mixin class that adds data loading functionality from a given ``root``
@@ -132,10 +132,11 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
             validate the given attribute ``split``. Defaults to an empty list
             and should be overridden in subclasses.
     """
-
+    
     _subset: str         = None
     _splits: list[Split] = []
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, root: Path, split: Split, *args, **kwargs):
         """Initialize a new instance.
 
@@ -220,6 +221,7 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
         target_dir (Path): Absolute path to the target directory.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, input_dir: Path, target_dir: Path, *args, **kwargs):
         """Initialize a new instance.
 
@@ -282,6 +284,11 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
         """
         return self.target_dir is not None and self.target_dir.is_dir()
     
+    @property
+    def label_dir(self) -> Path:
+        """An alias to ``target_dir`` for better readability in certain contexts."""
+        return self.target_dir
+
 
 class MultimodalDataLoadMixin(RootLoadMixin):
     """A mixin class that adds multimodal data loading functionality from a

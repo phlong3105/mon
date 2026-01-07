@@ -24,10 +24,15 @@ Notes:
             ├── comp/                   # Reusable components
             │   ├── __init__.py
             │   ├── base.py             # Component base classes and mixins
-            │   └── ...                 # Concrete component
+            │   ├── component_A.py      # Concrete component
+            │   ├── component_B/        # Concrete component with submodules (Template Method)
+            │   │   └── ...
+            │   └── ...
             ├── impl/                   # Concrete classes using base + components
             │   ├── __init__.py
-            │   ├── concrete_impl.py    # Example implementation
+            │   ├── concrete_impl_A.py  # Example implementation
+            │   ├── concrete_impl_B/    # Example implementation with submodules (Template Method)
+            │   │   └── ...
             │   └── ...
             ├── usages/                 # Example usages of concrete implementations
             │   ├── __init__.py
@@ -39,7 +44,7 @@ Notes:
       PyTorch source code.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+__all__ = []  # Prevent accidental imports of submodules.
 
 from .base import *
 from .comp import *

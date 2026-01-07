@@ -9,4 +9,7 @@ architectural features.
 
 # __all__ = []  # Prevent accidental imports of submodules.
 
-from . import inr
+from .backbone import *
+from .head import *
+from .neck import *
+from .repr import *

@@ -23,7 +23,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="fourierdiff", arch="fourierdiff")
+@MODELS.register(variant="fourierdiff", name="fourierdiff")
 class FourierDiff(Diffusion, nn.ModelMetadataMixin):
     """FourierDiff model for zero-shot joint low-light enhancement and deblurring.
     

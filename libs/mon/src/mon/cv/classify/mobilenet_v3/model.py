@@ -48,7 +48,7 @@ class MobileNetV3(tvm.MobileNetV3, nn.ModelMetadataMixin, abc.ABC):
             self.load_state_dict(weights)
     
 
-@MODELS.register(name="mobilenet_v3_large", arch="mobilenet")
+@MODELS.register(variant="mobilenet_v3_large", name="mobilenet")
 class MobileNetV3Large(MobileNetV3):
     
     _name: str  = "mobilenet_v3_large"
@@ -76,7 +76,7 @@ class MobileNetV3Large(MobileNetV3):
         )
         
         
-@MODELS.register(name="mobilenet_v3_small", arch="mobilenet")
+@MODELS.register(variant="mobilenet_v3_small", name="mobilenet")
 class MobileNetV3Small(MobileNetV3):
     """MobileNetV3-Small model for image classification.
 

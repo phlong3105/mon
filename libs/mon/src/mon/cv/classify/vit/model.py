@@ -50,7 +50,7 @@ class ViT(tvm.VisionTransformer, nn.ModelMetadataMixin, abc.ABC):
             self.load_state_dict(weights)
             
 
-@MODELS.register(name="vit_b_16", arch="vit")
+@MODELS.register(variant="vit_b_16", name="vit")
 class ViT_B_16(ViT):
     
     _name: str  = "vit_b_16"
@@ -87,7 +87,7 @@ class ViT_B_16(ViT):
         )
         
 
-@MODELS.register(name="vit_b_32", arch="vit")
+@MODELS.register(variant="vit_b_32", name="vit")
 class ViT_B_32(ViT):
     
     _name: str  = "vit_b_32"
@@ -114,7 +114,7 @@ class ViT_B_32(ViT):
         )
     
 
-@MODELS.register(name="vit_l_16", arch="vit")
+@MODELS.register(variant="vit_l_16", name="vit")
 class ViT_L_16(ViT):
     
     _name: str  = "vit_l_16"
@@ -151,7 +151,7 @@ class ViT_L_16(ViT):
         )
         
 
-@MODELS.register(name="vit_l_32", arch="vit")
+@MODELS.register(variant="vit_l_32", name="vit")
 class ViT_L_32(ViT):
 
     _name: str  = "vit_l_32"
@@ -178,7 +178,7 @@ class ViT_L_32(ViT):
         )
     
 
-@MODELS.register(name="vit_h_14", arch="vit")
+@MODELS.register(variant="vit_h_14", name="vit")
 class ViT_H_14(ViT):
     
     _name: str  = "vit_h_14"

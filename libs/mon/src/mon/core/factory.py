@@ -13,6 +13,7 @@ __all__ = [
     "ModelFactory",
     # Constants
     "ALBUMENTATIONS",
+    "BACKBONES",
     "DATASETS",
     "MODELS",
 ]
@@ -41,6 +42,7 @@ class Factory(dict):
             snake_case.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, name: str, mapping: dict = None, decamelize: bool = False):
         """Initialize a new instance.
 
@@ -60,10 +62,10 @@ class Factory(dict):
         
         super().__init__(mapping or {})
     
-    # --- Magic Methods ---
+    # --- Representation ---
     def __repr__(self) -> str:
         """Return a string representation of the factory."""
-        return f"{self.__class__.__name__}(name={self._name}, items={self})"
+        return f"{self.__class__.__name__}(name={self._name}, items={self.items()})"
     
     # --- Properties ---
     @property
@@ -99,15 +101,15 @@ class Factory(dict):
         """Register a class under a registry key.
 
         Args:
-            module: The class to register.
+            module: The class or function to register.
             name: Optional key; inferred when None.
             replace: Overwrite an existing entry when True.
 
         Raises:
             ValueError: If ``module`` is not a class.
         """
-        if not inspect.isclass(module):
-            raise ValueError(f"``module`` must be a class, got {type(module)}.")
+        if not (inspect.isclass(module) or inspect.isfunction(module)):
+            raise ValueError(f"``module`` must be a class or function, got {type(module)}.")
         
         key = (
             name
@@ -178,16 +180,18 @@ class ModelFactory(Factory):
     
     @property
     def models(self) -> list[str]:
-        """Return a list of all registered model names."""
+        """Returns a ``list`` of all registered model names."""
         return [
             model for models in self.values()
             if isinstance(models, dict)
             for model in models
         ]
-    
+        
     @property
     def flatten_dict(self) -> dict:
-        """Return a flattened mapping of model name to class with arch metadata."""
+        """Return a flattened mapping of model variant name to class with model
+        metadata.
+        """
         return {
             k2: {**v2, "arch": k1} if isinstance(v2, dict) else v2
             for k1, v1 in self.items()
@@ -199,14 +203,16 @@ class ModelFactory(Factory):
         self,
         name   : str  = None,
         arch   : str  = None,
+        variant: str  = None,
         module : Any  = None,
         replace: bool = False,
     ) -> Callable[[type], type]:
         """Register a model class under an architecture or return a decorator.
 
         Args:
-            name: Optional model name.
-            arch: Optional architecture name.
+            name: Model fullname = arch + variant. If None, automatically inferred.
+            arch: Architecture name.
+            variant: Model variant name.
             module: Class to register immediately.
             replace: Overwrite existing entry when True.
 
@@ -216,6 +222,9 @@ class ModelFactory(Factory):
         Raises:
             TypeError: If ``name`` is not a str or None.
         """
+        if name is None and (arch is None or variant is None):
+            raise ValueError("Either ``name`` or both ``arch`` and ``variant`` must be provided.")
+        
         if name and not isinstance(name, str):
             raise TypeError(f"``name`` must be str or None, got {type(name).__name__}.")
         
@@ -290,5 +299,6 @@ class ModelFactory(Factory):
 
 # --- Domain Factories ---
 ALBUMENTATIONS = Factory(name="Albumentations")
-DATASETS       = Factory(name="Datasets", decamelize=True)
+DATASETS       = Factory(name="Datasets",  decamelize=True)
+BACKBONES      = Factory(name="Backbones", decamelize=True)
 MODELS         = ModelFactory(name="Models", decamelize=True)

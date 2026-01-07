@@ -55,6 +55,7 @@ class SimpleGate(nn.Module):
         - Paper: https://arxiv.org/pdf/2204.04676.pdf
     """
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -77,6 +78,7 @@ class Sine(nn.Module):
         - Code: https://github.com/lucidrains/siren-pytorch/blob/master/siren_pytorch/siren_pytorch.py
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, w0: float = 1.0):
         """Initialize a new instance.
         
@@ -86,6 +88,7 @@ class Sine(nn.Module):
         super().__init__()
         self.w0 = w0
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         

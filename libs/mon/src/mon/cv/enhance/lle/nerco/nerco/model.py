@@ -26,7 +26,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="nerco", arch="nerco")
+@MODELS.register(variant="nerco", name="nerco")
 class NeRCo(NeRComodel, nn.ModelMetadataMixin):
     """NeRCo model for low-light image enhancement.
     

@@ -11,7 +11,7 @@ __all__ = [
     "DarkFace",
 ]
 
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="darkface")

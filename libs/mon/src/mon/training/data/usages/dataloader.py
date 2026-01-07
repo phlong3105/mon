@@ -31,6 +31,7 @@ from ..base import Dataset
 class DataLoader(dataloader.DataLoader):
     """An extended DataLoader class for loading datasets."""
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         dataset    : Dataset | dict | box.Box,

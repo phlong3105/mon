@@ -38,7 +38,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-@MODELS.register(name="retinexnet", arch="retinexnet")
+@MODELS.register(variant="retinexnet", name="retinexnet")
 class RetinexNet(nn.Module):
     """RetinexNet model for low-light image enhancement.
     

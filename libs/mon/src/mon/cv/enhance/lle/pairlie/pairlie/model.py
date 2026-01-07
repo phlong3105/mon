@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="pairlie", arch="pairlie")
+@MODELS.register(variant="pairlie", name="pairlie")
 class PairLIE(net, nn.ModelMetadataMixin):
     """PairLIE model for low-light image enhancement.
     

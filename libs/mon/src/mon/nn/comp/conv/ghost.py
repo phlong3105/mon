@@ -55,6 +55,7 @@ def hard_sigmoid(x: torch.Tensor, inplace: bool = False) -> torch.Tensor:
 # --- Modules ---
 class SqueezeExcite(nn.Module):
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels     : int,
@@ -73,6 +74,7 @@ class SqueezeExcite(nn.Module):
         self.act1        = act_layer(inplace=True)
         self.conv_expand = nn.Conv2d(reduced_channels, in_channels, 1, bias=True)
 
+    # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x_se = self.avg_pool(x)
         x_se = self.conv_reduce(x_se)
@@ -84,6 +86,7 @@ class SqueezeExcite(nn.Module):
     
 class ConvBnAct(nn.Module):
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels : int,
@@ -97,6 +100,7 @@ class ConvBnAct(nn.Module):
         self.bn1  = nn.BatchNorm2d(out_channels)
         self.act1 = act_layer(inplace=True)
 
+    # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.conv(x)
         x = self.bn1(x)
@@ -113,6 +117,7 @@ class GhostModule(nn.Module):
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnet_pytorch
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels : int,
@@ -139,6 +144,7 @@ class GhostModule(nn.Module):
             nn.ReLU(inplace=True) if relu else nn.Sequential(),
         )
 
+    # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x1 = self.primary_conv(x)
         x2 = self.cheap_operation(x1)
@@ -154,6 +160,7 @@ class GhostBottleneck(nn.Module):
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnet_pytorch
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels   : int,
@@ -212,6 +219,7 @@ class GhostBottleneck(nn.Module):
                 nn.BatchNorm2d(out_channels),
             )
 
+    # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         residual = x
         # 1st ghost bottleneck
@@ -239,6 +247,7 @@ class GhostModuleV2(nn.Module):
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels : int,
@@ -293,6 +302,7 @@ class GhostModuleV2(nn.Module):
         else:
             raise NotImplementedError(f"Not implemented mode: {self.mode}.")
       
+    # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mode in ["original"]:
             x1 = self.primary_conv(x)
@@ -315,6 +325,7 @@ class GhostBottleneckV2(nn.Module):
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels   : int,
@@ -376,6 +387,7 @@ class GhostBottleneckV2(nn.Module):
                 nn.BatchNorm2d(out_channels),
             )
             
+    # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         residual = x
         x = self.ghost1(x)

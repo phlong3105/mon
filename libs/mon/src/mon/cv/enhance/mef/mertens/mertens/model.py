@@ -130,7 +130,7 @@ def compute_well_exposedness(images: torch.Tensor) -> torch.Tensor:
 
 
 # --- Model ---
-@MODELS.register(name="mertens", arch="mertens")
+@MODELS.register(variant="mertens", name="mertens")
 class Mertens(nn.Module, nn.ModelMetadataMixin):
     """Mertens et. al Exposure Fusion method.
     

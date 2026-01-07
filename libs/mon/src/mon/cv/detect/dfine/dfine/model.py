@@ -92,8 +92,8 @@ class DFINE(nn.Module, nn.ModelMetadataMixin):
         return outputs
     
 
-MODELS.register(name="dfine_n", arch="dfine", module=DFINE)
-MODELS.register(name="dfine_s", arch="dfine", module=DFINE)
-MODELS.register(name="dfine_m", arch="dfine", module=DFINE)
-MODELS.register(name="dfine_l", arch="dfine", module=DFINE)
-MODELS.register(name="dfine_x", arch="dfine", module=DFINE)
+MODELS.register(variant="dfine_n", name="dfine", module=DFINE)
+MODELS.register(variant="dfine_s", name="dfine", module=DFINE)
+MODELS.register(variant="dfine_m", name="dfine", module=DFINE)
+MODELS.register(variant="dfine_l", name="dfine", module=DFINE)
+MODELS.register(variant="dfine_x", name="dfine", module=DFINE)

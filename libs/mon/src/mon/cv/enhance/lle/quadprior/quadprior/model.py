@@ -23,7 +23,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="quadprior", arch="quadprior")
+@MODELS.register(variant="quadprior", name="quadprior")
 class QuadPrior(ControlLDM, nn.ModelMetadataMixin):
     """QuadPrior model for low-light image enhancement.
     

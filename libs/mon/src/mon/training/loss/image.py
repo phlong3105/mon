@@ -49,6 +49,7 @@ class ExposureControlLoss(BaseLoss):
         pool (nn.AvgPool2d): Average pooling layer for patch-wise mean calculation.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         patch_size   : int   = 16,
@@ -74,6 +75,7 @@ class ExposureControlLoss(BaseLoss):
         self.mean_val     = nn.Parameter(torch.full([1], mean_val), requires_grad=required_grad)
         self.pool         = nn.AvgPool2d(patch_size)
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between the input and the well-exposedness level.
         
@@ -105,6 +107,7 @@ class ExposureValueControlLoss(BaseLoss):
         pool (nn.AvgPool2d): Average pooling layer for patch-wise mean calculation.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         patch_size   : int   = 16,
@@ -130,6 +133,7 @@ class ExposureValueControlLoss(BaseLoss):
         self.mean_val     = nn.Parameter(torch.full([1], mean_val), requires_grad=required_grad)
         self.pool         = nn.AvgPool2d(patch_size)
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between the input and the well-exposedness level.
         
@@ -166,6 +170,7 @@ class ColorConstancyLoss(BaseLoss):
         eps (float): Small constant for numerical stability.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-6, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -177,6 +182,7 @@ class ColorConstancyLoss(BaseLoss):
         super().__init__(reduction=reduction)
         self.eps = eps
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Calculate the loss for the input.
         
@@ -213,6 +219,7 @@ class PSNRLoss(BaseLoss):
             the input device.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, to_y: bool = False, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -226,6 +233,7 @@ class PSNRLoss(BaseLoss):
         self.coef  = torch.tensor([65.481, 128.553, 24.966]).reshape(1, 3, 1, 1)
         self.first = True
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between input and target.
         
@@ -293,6 +301,7 @@ class SpatialConsistencyLoss(BaseLoss):
         weight_down2right1 (torch.nn.Parameter): Convolution kernel for down-right gradient (mixed).
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         num_regions: Literal[4, 8, 16, 24] = 4,
@@ -497,6 +506,7 @@ class SpatialConsistencyLoss(BaseLoss):
         
         self.pool = nn.AvgPool2d(patch_size)  # Default 4
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between input and target.
         
@@ -682,6 +692,7 @@ class TotalVariationLoss(BaseLoss):
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -691,6 +702,7 @@ class TotalVariationLoss(BaseLoss):
         """
         super().__init__(reduction=reduction)
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Calculate the loss for the input tensor.
         
@@ -722,6 +734,7 @@ class EdgeLoss(BaseLoss):
         loss (CharbonnierLoss): Charbonnier loss function instance.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -734,6 +747,7 @@ class EdgeLoss(BaseLoss):
         self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
         self.loss   = CharbonnierLoss()
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between input and target.
         
@@ -803,6 +817,7 @@ class DepthAwareIlluminationLoss(BaseLoss):
         alpha (float): Weighting factor for depth influence.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, alpha: float = 1.0, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -814,6 +829,7 @@ class DepthAwareIlluminationLoss(BaseLoss):
         super().__init__(reduction=reduction)
         self.alpha = alpha
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between illumination map and depth map.
         
@@ -860,6 +876,7 @@ class StructureTextureDecompositionLoss(nn.Module):
         sigma (list[float]): Standard deviation for the Gaussian kernel.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, kernel_size: int = 3, sigma: float = 1.0):
         """Initialize a new instance.
         
@@ -871,6 +888,7 @@ class StructureTextureDecompositionLoss(nn.Module):
         self.kernel_size = [kernel_size, kernel_size]
         self.sigma       = [sigma, sigma]
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Calculate the loss for the input tensor.
         

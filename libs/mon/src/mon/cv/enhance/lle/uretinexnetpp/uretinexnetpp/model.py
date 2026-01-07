@@ -46,7 +46,7 @@ def get_params(decom_low, r, l, adjust, fusion):
     return param
 
 
-@MODELS.register(name="uretinexnet++", arch="uretinexnet++")
+@MODELS.register(variant="uretinexnet++", name="uretinexnet++")
 class URetinexNetPP(nn.Module, nn.ModelMetadataMixin):
     """URetinex-Net++ model for low-light image enhancement.
     

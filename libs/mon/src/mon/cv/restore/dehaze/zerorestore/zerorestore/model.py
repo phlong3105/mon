@@ -103,7 +103,7 @@ class ZeroRestore(nn.Module, abc.ABC):
         return image
     
 
-@MODELS.register(name="zerorestore_dehaze", arch="zerorestore")
+@MODELS.register(variant="zerorestore_dehaze", name="zerorestore")
 class ZeroRestoreDehaze(ZeroRestore, nn.ModelMetadataMixin):
     """Zero-Restore model for image dehazing.
     
@@ -127,7 +127,7 @@ class ZeroRestoreDehaze(ZeroRestore, nn.ModelMetadataMixin):
         self.state_dict = self.model.state_dict()
 
 
-@MODELS.register(name="zerorestore_lle", arch="zerorestore")
+@MODELS.register(variant="zerorestore_lle", name="zerorestore")
 class ZeroRestoreLLE(ZeroRestore, nn.ModelMetadataMixin):
     """Zero-Restore model for low-light image enhancement.
     
@@ -151,7 +151,7 @@ class ZeroRestoreLLE(ZeroRestore, nn.ModelMetadataMixin):
         self.state_dict = self.model.state_dict()
 
 
-@MODELS.register(name="zerorestore_uie", arch="zerorestore")
+@MODELS.register(variant="zerorestore_uie", name="zerorestore")
 class ZeroRestoreUE(ZeroRestore, nn.ModelMetadataMixin):
     """Zero-Restore model for underwater image enhancement.
     

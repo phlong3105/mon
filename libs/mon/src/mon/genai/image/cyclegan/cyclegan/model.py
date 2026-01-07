@@ -32,7 +32,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-@MODELS.register(name="cyclegan", arch="cyclegan")
+@MODELS.register(variant="cyclegan", name="cyclegan")
 class CycleGAN(CycleGANModel, nn.ModelMetadataMixin):
     """CycleGAN model for image-to-image translation.
     
@@ -56,7 +56,7 @@ class CycleGAN(CycleGANModel, nn.ModelMetadataMixin):
         self.setup(path, opt)
         
 
-@MODELS.register(name="pix2pix", arch="pix2pix")
+@MODELS.register(variant="pix2pix", name="pix2pix")
 class Pix2Pix(Pix2PixModel, nn.ModelMetadataMixin):
     """Pix2Pix model for image-to-image translation.
     

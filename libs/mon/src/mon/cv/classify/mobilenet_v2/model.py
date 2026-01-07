@@ -24,7 +24,7 @@ root_dir     = current_file.parents[0]
 
 
 # --- Model ---
-@MODELS.register(name="mobilenet_v2", arch="mobilenet")
+@MODELS.register(variant="mobilenet_v2", name="mobilenet")
 class MobileNetV2(tvm.MobileNetV2, nn.ModelMetadataMixin):
     """MobileNetV2 model for image classification.
 

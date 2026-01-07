@@ -48,6 +48,7 @@ class MobileOneBlock(nn.Module):
         - Code: https://github.com/apple/ml-mobileone/tree/main
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels      : int,
@@ -125,15 +126,16 @@ class MobileOneBlock(nn.Module):
             if kernel_size > 1:
                 self.rbr_scale = self._conv_bn(kernel_size=1, padding=0)
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
         Args:
-            input: Input tensor with dimensions (N, C_in, H, W) and values ranging
+            input: Input tensor with dimensions (B, C_in, H, W) and values ranging
                 from 0.0 to 1.0.
             
         Returns:
-            Output tensor with dimensions (N, C_out, H_out, W_out) and values
+            Output tensor with dimensions (B, C_out, H_out, W_out) and values
                 ranging from 0.0 to 1.0.
         """
         # Inference mode forward pass.

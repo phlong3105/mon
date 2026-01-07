@@ -27,7 +27,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="colie_mamba", arch="colie_mamba")
+@MODELS.register(variant="colie_mamba", name="colie_mamba")
 class CoLIEMamba(nn.Module, nn.ModelMetadataMixin):
     """CoLIE-Mamba model for low-light image enhancement.
 

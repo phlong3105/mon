@@ -75,6 +75,7 @@ class ImageQualityAssessment(nn.Module):
         mean_pool (nn.Sequential): Mean pooling layer.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, exposed_level: float = 0.5, pool_size: int = 25):
         """Initialize a new instance.
         
@@ -90,6 +91,7 @@ class ImageQualityAssessment(nn.Module):
             torch.nn.AvgPool2d(self.pool_size, stride=1)
         )
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Compute the IQA score for input.
         

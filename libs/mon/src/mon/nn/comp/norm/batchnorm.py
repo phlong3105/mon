@@ -34,6 +34,7 @@ class AdaptiveBatchNorm2d(nn.Module):
         - Code: https://github.com/nrupatunga/Fast-Image-Filters
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         num_features: int,
@@ -57,6 +58,7 @@ class AdaptiveBatchNorm2d(nn.Module):
         self.w1 = nn.Parameter(torch.tensor(0.0))
         self.bn = nn.BatchNorm2d(num_features, eps, momentum, *args, **kwargs)
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         

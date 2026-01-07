@@ -31,7 +31,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="indi_deband", arch="indi_deband")
+@MODELS.register(variant="indi_deband", name="indi_deband")
 class InDiDeband(nn.Module, nn.ModelMetadataMixin):
     """Implements InDi-Deband model for image/video debanding.
     

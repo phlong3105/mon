@@ -76,7 +76,7 @@ def query_vram_usage(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> tuple
     pynvml.nvmlInit()
     unit  = MemoryUnit(unit)
     info  = pynvml.nvmlDeviceGetMemoryInfo(pynvml.nvmlDeviceGetHandleByIndex(device))
-    ratio = MemoryUnit.name_to_byte()[unit]
+    ratio = MemoryUnit.names_to_bytes()[unit]
     return (
         info.total / ratio,  # total
         info.used  / ratio,  # used
@@ -94,7 +94,7 @@ def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[int, int, int]:
         A tuple of (total, used, free) RAM values in the requested unit.
     """
     memory = psutil.virtual_memory()
-    ratio  = MemoryUnit.name_to_byte()[MemoryUnit(unit)]
+    ratio  = MemoryUnit.names_to_bytes()[MemoryUnit(unit)]
     return (
         memory.total     / ratio,  # total
         memory.used      / ratio,  # used

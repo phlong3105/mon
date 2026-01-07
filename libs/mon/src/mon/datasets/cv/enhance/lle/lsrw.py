@@ -10,7 +10,7 @@ __all__ = [
     "LSRW",
 ]
 
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="lsrw")

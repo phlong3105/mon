@@ -57,7 +57,7 @@ class EfficientNet(tvm.EfficientNet, nn.ModelMetadataMixin, abc.ABC):
             self.load_state_dict(weights)
     
 
-@MODELS.register(name="efficientnet_b0", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b0", name="efficientnet")
 class EfficientNet_B0(EfficientNet):
     
     _name: str  = "efficientnet_b0"
@@ -82,7 +82,7 @@ class EfficientNet_B0(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b1", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b1", name="efficientnet")
 class EfficientNet_B1(EfficientNet):
     
     _name: str  = "efficientnet_b1"
@@ -112,7 +112,7 @@ class EfficientNet_B1(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b2", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b2", name="efficientnet")
 class EfficientNet_B2(EfficientNet):
 
     _name: str  = "efficientnet_b2"
@@ -137,7 +137,7 @@ class EfficientNet_B2(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b3", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b3", name="efficientnet")
 class EfficientNet_B3(EfficientNet):
 
     _name: str  = "efficientnet_b3"
@@ -162,7 +162,7 @@ class EfficientNet_B3(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b4", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b4", name="efficientnet")
 class EfficientNet_B4(EfficientNet):
     
     _name: str  = "efficientnet_b4"
@@ -187,7 +187,7 @@ class EfficientNet_B4(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b5", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b5", name="efficientnet")
 class EfficientNet_B5(EfficientNet):
 
     _name: str  = "efficientnet_b5"
@@ -214,7 +214,7 @@ class EfficientNet_B5(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_b6", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b6", name="efficientnet")
 class EfficientNet_B6(EfficientNet):
 
     _name: str  = "efficientnet_b6"
@@ -241,7 +241,7 @@ class EfficientNet_B6(EfficientNet):
         )
    
    
-@MODELS.register(name="efficientnet_b7", arch="efficientnet")
+@MODELS.register(variant="efficientnet_b7", name="efficientnet")
 class EfficientNet_B7(EfficientNet):
 
     _name: str  = "efficientnet_b7"
@@ -268,7 +268,7 @@ class EfficientNet_B7(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_v2_s", arch="efficientnet")
+@MODELS.register(variant="efficientnet_v2_s", name="efficientnet")
 class EfficientNet_V2_S(EfficientNet):
 
     _name: str  = "efficientnet_v2_s"
@@ -295,7 +295,7 @@ class EfficientNet_V2_S(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_v2_m", arch="efficientnet")
+@MODELS.register(variant="efficientnet_v2_m", name="efficientnet")
 class EfficientNet_V2_M(EfficientNet):
 
     _name: str  = "efficientnet_v2_m"
@@ -322,7 +322,7 @@ class EfficientNet_V2_M(EfficientNet):
         )
 
 
-@MODELS.register(name="efficientnet_v2_l", arch="efficientnet")
+@MODELS.register(variant="efficientnet_v2_l", name="efficientnet")
 class EfficientNet_V2_L(EfficientNet):
 
     _name: str  = "efficientnet_v2_l"

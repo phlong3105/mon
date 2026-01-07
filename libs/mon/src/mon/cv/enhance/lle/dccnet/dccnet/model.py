@@ -26,7 +26,7 @@ root_dir     = current_file.parents[1]
 
 
 # --- Model ---
-@MODELS.register(name="dccnet", arch="dccnet")
+@MODELS.register(variant="dccnet", name="dccnet")
 class DCCNet(nn.Module, nn.ModelMetadataMixin):
     """DCC-Net model for low-light image enhancement.
 

@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="uec", arch="uec")
+@MODELS.register(variant="uec", name="uec")
 class UEC(UECModel, nn.ModelMetadataMixin):
     """UEC model for unsupervised exposure correction.
     

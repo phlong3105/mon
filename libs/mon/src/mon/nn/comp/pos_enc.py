@@ -23,6 +23,7 @@ import torch.nn as nn
 class PosEncodingFourier(nn.Module):
     """Positional Encoding (PE) using Fourier features."""
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, in_features: int, B: float = 20.0):
         """Initialize a new instance.
         
@@ -40,6 +41,7 @@ class PosEncodingFourier(nn.Module):
         else:
             self.register_buffer("B", torch.randn((in_features, 2)) * B)
         
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -66,6 +68,7 @@ class PosEncodingNeRF(nn.Module):
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features    : int,
@@ -117,6 +120,7 @@ class PosEncodingNeRF(nn.Module):
         nyquist_rate = 1 / (2 * (2 * 1 / samples))
         return int(math.floor(math.log(nyquist_rate, 2)))
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         

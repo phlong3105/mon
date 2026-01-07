@@ -10,5 +10,5 @@ dataloaders, etc.).
 
 # __all__ = []  # Prevent accidental imports of submodules.
 
-# from .datapool import *
+from .datapool import *
 from .dataset import *

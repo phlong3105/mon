@@ -62,6 +62,7 @@ class ClassList(list[Class]):
           like a Python list.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, data: list[dict] | Path = ()):
         """Initialize a new instance.
         
@@ -157,6 +158,7 @@ class Probabilities(TensorOrArray):
         _num_classes (int): Total number of classes.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, data: np.ndarray | int, num_classes: int = None):
         """Initialize a new instance.
         

@@ -22,7 +22,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="snr", arch="snr")
+@MODELS.register(variant="snr", name="snr")
 class SNR(VideoBaseModel, nn.ModelMetadataMixin):
     """SNR model for low-light image enhancement.
     

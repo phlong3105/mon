@@ -76,6 +76,7 @@ class Dataset(dataset.Dataset, abc.ABC):
     
     _classlist: ClassList = None
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         datapoints: dict[str, list[Any]] = None,
@@ -96,9 +97,21 @@ class Dataset(dataset.Dataset, abc.ABC):
         super().__init__(*args, **kwargs)
         self.verbose     = verbose
         self.classlist   = classlist
-        self._datapoints = datapoints if datapoints is not None else {}
+        self._datapoints = datapoints or {}
     
-    # --- Magic Methods ---
+    @abc.abstractmethod
+    def __del__(self):
+        """Close the dataset loading mechanism and releases resources."""
+        pass
+    
+    # --- Representation ---
+    def __repr__(self) -> str:
+        """Return the string representation of the dataset."""
+        lines  = ["Dataset " + self.__class__.__name__]
+        lines += [f"Number of datapoints: {self.__len__()}"]
+        return "\n".join(lines)
+    
+    # --- Container / Sequence Methods ---
     @abc.abstractmethod
     def __len__(self) -> int:
         """Return the length of the dataset (i.e., number of datapoints)."""
@@ -136,17 +149,6 @@ class Dataset(dataset.Dataset, abc.ABC):
             return item
         else:
             raise StopIteration
-    
-    def __repr__(self) -> str:
-        """Return the string representation of the dataset."""
-        lines  = ["Dataset " + self.__class__.__name__]
-        lines += [f"Number of datapoints: {self.__len__()}"]
-        return "\n".join(lines)
-    
-    @abc.abstractmethod
-    def __del__(self):
-        """Close the dataset loading mechanism and releases resources."""
-        pass
     
     # --- Properties ---
     @property

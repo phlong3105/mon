@@ -30,6 +30,7 @@ class DepthAwareLinear(nn.Module):
     layer.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features   : int,
@@ -64,6 +65,7 @@ class DepthAwareLinear(nn.Module):
         self.alpha        = alpha
         self.linear       = nn.Linear(self.in_features, self.out_features, bias=bias)
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
         if input.dim() != 3 or depth.dim() != 3:
             raise ValueError(f"``input`` and ``depth`` must be 3D tensors, got {input.dim()}D and {depth.dim()}D.")

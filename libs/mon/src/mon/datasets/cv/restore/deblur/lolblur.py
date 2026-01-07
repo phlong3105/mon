@@ -19,7 +19,7 @@ __all__ = [
 import abc
 
 from mon.core import rich
-from ....meta import *
+from ....api import *
 
 
 class LOLBlur(ImageDataset, abc.ABC):

@@ -40,6 +40,7 @@ class BoxFilter(nn.Module):
         kernel_size (int): Kernel size (e.g., 3, 5, 7, 9).
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, kernel_size: int):
         """Initialize a new instance.
         
@@ -48,7 +49,8 @@ class BoxFilter(nn.Module):
         """
         super().__init__()
         self.kernel_size = kernel_size
-
+    
+    # --- Callable & Context Manager ---
     def forward(self, image: torch.Tensor) -> torch.Tensor:
         """Perform box filtering on an image.
         
@@ -147,6 +149,7 @@ class GuidedFilter(nn.Module):
         - Code: https://github.com/wuhuikai/DeepGuidedFilter/blob/master/GuidedFilteringLayer/GuidedFilter_PyTorch/guided_filter_pytorch/guided_filter.py
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, kernel_size: int, eps: float = 1e-8):
         """Initialize a new instance.
         
@@ -158,7 +161,8 @@ class GuidedFilter(nn.Module):
         self.box_filter  = BoxFilter(kernel_size=kernel_size)
         self.kernel_size = kernel_size
         self.eps         = eps
-
+    
+    # --- Callable & Context Manager ---
     def forward(self, image: torch.Tensor, guide: torch.Tensor) -> torch.Tensor:
         """Filter an image using a guidance image.
         
@@ -198,6 +202,7 @@ class FastGuidedFilter(nn.Module):
         eps (float): Sharpness control value.
      """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, kernel_size: int, eps: float = 1e-8):
         """Initialize a new instance.
         
@@ -210,6 +215,7 @@ class FastGuidedFilter(nn.Module):
         self.kernel_size = kernel_size
         self.eps         = eps
         
+    # --- Callable & Context Manager ---
     def forward(self, x_lr: torch.Tensor, y_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
         """Filter a high-resolution image using a low-resolution image and guide.
         
@@ -249,6 +255,7 @@ class ConvGuidedFilter(nn.Module):
             coefficients.
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, kernel_size: int, norm: nn.Module = nn.BatchNorm2d):
         """Initialize a new instance.
         
@@ -270,6 +277,7 @@ class ConvGuidedFilter(nn.Module):
         )
         self.box_filter.weight.data[...] = 1.0
 
+    # --- Callable & Context Manager ---
     def forward(self, x_lr: torch.Tensor, y_lr: torch.Tensor, x_hr: torch.Tensor) -> torch.Tensor:
         """Filter a high-resolution image using a low-resolution image and guide.
 

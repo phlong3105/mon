@@ -26,7 +26,10 @@ from ...base import Dataset
 from ...comp import BatchCollateMixin, RootLoadMixin
 
 
-# --- Video Loader ---
+# ==============================================================================
+# LOADERS
+# ==============================================================================
+
 class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
     """A concrete class for loading a single video or stream using OpenCV.
     
@@ -41,6 +44,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         _transform (albumentations.Compose): Transformations for input/target.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         root     : Path,
@@ -74,11 +78,22 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         )
         self.transform = transform
     
-    # --- Magic Methods ---
     def __del__(self):
         """Close the dataset loading mechanism and releases resources."""
         if isinstance(self._video_capture, cv2.VideoCapture):
             self._video_capture.release()
+    
+    # --- Container / Sequence Methods ---
+    def __len__(self) -> int:
+        """Return the length of the dataset (i.e., number of frames)."""
+        return self._num_frames
+    
+    def __iter__(self):
+        """Initialize a new iterator."""
+        self._iter_idx = 0
+        if isinstance(self._video_capture, cv2.VideoCapture):
+            self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        return self
     
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return the datapoint at the specified ``index`` in ``_datapoints``.
@@ -103,17 +118,6 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
                     data[k] = v.astype(np.float32)
                     
         return data | {"meta": meta}
-    
-    def __iter__(self):
-        """Initialize a new iterator."""
-        self._iter_idx = 0
-        if isinstance(self._video_capture, cv2.VideoCapture):
-            self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        return self
-    
-    def __len__(self) -> int:
-        """Return the length of the dataset (i.e., number of frames)."""
-        return self._num_frames
     
     # --- Properties ---
     @property
@@ -251,7 +255,11 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         return datapoint
 
 
-# --- Validation Check ---
+# ==============================================================================
+# UTILITIES
+# ==============================================================================
+
+# --- Validation & Sanitization ---
 def is_video_dataset(dataset: Dataset) -> bool:
     """Check if a dataset is a video dataset.
 

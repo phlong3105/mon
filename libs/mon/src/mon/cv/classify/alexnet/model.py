@@ -19,7 +19,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[0]
 
 
-@MODELS.register(name="alexnet", arch="alexnet")
+@MODELS.register(variant="alexnet", name="alexnet")
 class AlexNet(tvm.AlexNet, nn.ModelMetadataMixin):
     """AlexNet model for image classification.
     

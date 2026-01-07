@@ -90,7 +90,7 @@ class DEIMv2(nn.Module, nn.ModelMetadataMixin):
         return outputs
     
 
-MODELS.register(name="deimv2_dinov3_s", arch="deimv2", module=DEIMv2)
-MODELS.register(name="deimv2_dinov3_m", arch="deimv2", module=DEIMv2)
-MODELS.register(name="deimv2_dinov3_l", arch="deimv2", module=DEIMv2)
-MODELS.register(name="deimv2_dinov3_x", arch="deimv2", module=DEIMv2)
+MODELS.register(variant="deimv2_dinov3_s", name="deimv2", module=DEIMv2)
+MODELS.register(variant="deimv2_dinov3_m", name="deimv2", module=DEIMv2)
+MODELS.register(variant="deimv2_dinov3_l", name="deimv2", module=DEIMv2)
+MODELS.register(variant="deimv2_dinov3_x", name="deimv2", module=DEIMv2)

@@ -23,7 +23,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="neurop", arch="neurop")
+@MODELS.register(variant="neurop", name="neurop")
 class NeurOP(FinetuneModel, nn.ModelMetadataMixin):
     """NeurOP model for image retouching.
     

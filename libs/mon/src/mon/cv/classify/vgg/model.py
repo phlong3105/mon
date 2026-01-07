@@ -53,7 +53,7 @@ class VGG(tvm.VGG, nn.ModelMetadataMixin, abc.ABC):
             self.load_state_dict(weights)
     
 
-@MODELS.register(name="vgg11", arch="vgg")
+@MODELS.register(variant="vgg11", name="vgg")
 class VGG11(VGG):
 
     _name: str  = "vgg11"
@@ -74,7 +74,7 @@ class VGG11(VGG):
         )
         
 
-@MODELS.register(name="vgg13", arch="vgg")
+@MODELS.register(variant="vgg13", name="vgg")
 class VGG13(VGG):
     
     _name: str  = "vgg13"
@@ -95,7 +95,7 @@ class VGG13(VGG):
         )
     
 
-@MODELS.register(name="vgg16", arch="vgg")
+@MODELS.register(variant="vgg16", name="vgg")
 class VGG16(VGG):
 
     _name: str  = "vgg16"
@@ -116,7 +116,7 @@ class VGG16(VGG):
         )
     
 
-@MODELS.register(name="vgg19", arch="vgg")
+@MODELS.register(variant="vgg19", name="vgg")
 class VGG19(VGG):
     
     _name: str  = "vgg19"
@@ -137,7 +137,7 @@ class VGG19(VGG):
         )
     
 
-@MODELS.register(name="vgg11_bn", arch="vgg")
+@MODELS.register(variant="vgg11_bn", name="vgg")
 class VGG11_BN(VGG):
     
     _name: str  = "vgg11_bn"
@@ -158,7 +158,7 @@ class VGG11_BN(VGG):
         )
         
             
-@MODELS.register(name="vgg13_bn", arch="vgg")
+@MODELS.register(variant="vgg13_bn", name="vgg")
 class VGG13_BN(VGG):
     
     _name: str  = "vgg13_bn"
@@ -179,7 +179,7 @@ class VGG13_BN(VGG):
         )
         
             
-@MODELS.register(name="vgg16_bn", arch="vgg")
+@MODELS.register(variant="vgg16_bn", name="vgg")
 class VGG16_BN(VGG):
   
     _name: str  = "vgg16_bn"
@@ -200,7 +200,7 @@ class VGG16_BN(VGG):
         )
     
 
-@MODELS.register(name="vgg19_bn", arch="vgg")
+@MODELS.register(variant="vgg19_bn", name="vgg")
 class VGG19_BN(VGG):
   
     _name: str  = "vgg19_bn"

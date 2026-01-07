@@ -165,6 +165,7 @@ class ICPAugmentation:
     
     _suffix = _SUFFIX  # Suffix for the new image and label files
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         image_dir     : Path,

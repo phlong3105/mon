@@ -44,6 +44,7 @@ class BaseLoss(_Loss, abc.ABC):
     
     reductions = ["none", "mean", "sum"]
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -60,12 +61,12 @@ class BaseLoss(_Loss, abc.ABC):
         # Initialize the parent class and assign attributes
         super().__init__(reduction=reduction)
         
-    # --- Magic Methods ---
+    # --- Representation ---
     def __str__(self):
         """Return the string representation of the loss class."""
         return depascalize(self.__class__.__name__).lower()
     
-    # --- Core Methods ---
+    # --- Callable & Context Manager ---
     @abc.abstractmethod
     def forward(self, *args, **kwargs) -> torch.Tensor:
         """Calculate the loss.

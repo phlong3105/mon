@@ -22,7 +22,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="srno", arch="srno")
+@MODELS.register(variant="srno", name="srno")
 class SRNO(sronet.SRNO, nn.ModelMetadataMixin):
     """SRNO model for super-resolution.
     

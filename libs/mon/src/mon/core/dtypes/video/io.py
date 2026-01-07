@@ -116,6 +116,7 @@ class VideoWriter(abc.ABC):
         verbose (bool): Enable verbosity.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         dst		  : Path,
@@ -139,11 +140,17 @@ class VideoWriter(abc.ABC):
         self._frame_rate = frame_rate
         self._init()
      
-     # --- Magic Methods ---
+    @abc.abstractmethod
+    def __del__(self):
+        """Close resources held by the writer."""
+        pass
+    
+    # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the number of written frames."""
         return self._cur_idx
     
+    # --- Callable & Context Manager ---
     @abc.abstractmethod
     def __call__(self, frame: np.ndarray | torch.Tensor, path: Path = None, *args, **kwargs):
         """Write a frame to the video output.
@@ -155,11 +162,6 @@ class VideoWriter(abc.ABC):
                 ranging from 0.0 to 1.0.
             path: Optional path to also save the frame as an image.
         """
-        pass
-    
-    @abc.abstractmethod
-    def __del__(self):
-        """Close resources held by the writer."""
         pass
     
     # --- Properties ---
@@ -197,6 +199,7 @@ class VideoWriterCV(VideoWriter):
     class.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         dst		  : Path,
@@ -226,7 +229,12 @@ class VideoWriterCV(VideoWriter):
             *args, **kwargs
         )
     
-    # ---- Magic Methods ---
+    def __del__(self):
+        """Close video writer."""
+        if self._video_writer:
+            self._video_writer.release()
+    
+    # --- Callable & Context Manager ---
     def __call__(self, frame: np.ndarray | torch.Tensor, path: Path = None, *args, **kwargs):
         """Write a frame to the video output.
 
@@ -242,11 +250,6 @@ class VideoWriterCV(VideoWriter):
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         self._video_writer.write(frame)
         self._cur_idx += 1
-    
-    def __del__(self):
-        """Close video writer."""
-        if self._video_writer:
-            self._video_writer.release()
     
     # ---- Initialize ---
     def _init(self):
@@ -275,6 +278,7 @@ class VideoWriterFFmpeg(VideoWriter):
     Extend VideoWriter to implement video writing using FFmpeg.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         dst		  : Path,
@@ -305,7 +309,15 @@ class VideoWriterFFmpeg(VideoWriter):
             *args, **kwargs
         )
     
-    # ---- Magic Methods ---
+    def __del__(self):
+        """Close video writer."""
+        if self._ffmpeg_process:
+            self._ffmpeg_process.stdin.close()
+            self._ffmpeg_process.terminate()
+            self._ffmpeg_process.wait()
+            self._ffmpeg_process = None
+    
+    # --- Callable & Context Manager ---
     def __call__(self, frame: np.ndarray | torch.Tensor, path: Path = None, *args, **kwargs):
         """Write a frame to the video output.
 
@@ -319,14 +331,6 @@ class VideoWriterFFmpeg(VideoWriter):
         frame = I.to_array(frame)
         write_video_ffmpeg(self._ffmpeg_process, frame)
         self._cur_idx += 1
-        
-    def __del__(self):
-        """Close video writer."""
-        if self._ffmpeg_process:
-            self._ffmpeg_process.stdin.close()
-            self._ffmpeg_process.terminate()
-            self._ffmpeg_process.wait()
-            self._ffmpeg_process = None
         
     # ---- Initialize ---
     def _init(self):

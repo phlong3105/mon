@@ -8,7 +8,7 @@ This package includes concrete dataset implementations.
 
 __all__ = []  # Prevent accidental imports of submodules.
 
+from .ai_systems import *
 from .challenges import *
 from .cv import *
-from .cv_system import *
 from .efficiency import *

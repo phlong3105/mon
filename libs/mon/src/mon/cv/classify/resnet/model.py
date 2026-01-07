@@ -59,7 +59,7 @@ class ResNet(tvm.ResNet, nn.ModelMetadataMixin, abc.ABC):
             self.load_state_dict(weights)
             
 
-@MODELS.register(name="resnet18", arch="resnet")
+@MODELS.register(variant="resnet18", name="resnet")
 class ResNet18(ResNet):
     """ResNet-18 model for image classification.
 
@@ -86,7 +86,7 @@ class ResNet18(ResNet):
         )
         
 
-@MODELS.register(name="resnet34", arch="resnet")
+@MODELS.register(variant="resnet34", name="resnet")
 class ResNet34(ResNet):
     """ResNet-34 model for image classification.
 
@@ -113,7 +113,7 @@ class ResNet34(ResNet):
         )
 
 
-@MODELS.register(name="resnet50", arch="resnet")
+@MODELS.register(variant="resnet50", name="resnet")
 class ResNet50(ResNet):
     """ResNet-50 model for image classification.
 
@@ -145,7 +145,7 @@ class ResNet50(ResNet):
         )
 
 
-@MODELS.register(name="resnet101", arch="resnet")
+@MODELS.register(variant="resnet101", name="resnet")
 class ResNet101(ResNet):
     """ResNet-101 model for image classification.
 
@@ -177,7 +177,7 @@ class ResNet101(ResNet):
         )
 
 
-@MODELS.register(name="resnet152", arch="resnet")
+@MODELS.register(variant="resnet152", name="resnet")
 class ResNet152(ResNet):
     """ResNet-152 model for image classification.
 
@@ -210,7 +210,7 @@ class ResNet152(ResNet):
         
 
 # --- ResNeXt ---
-@MODELS.register(name="resnext50_32x4d", arch="resnet")
+@MODELS.register(variant="resnext50_32x4d", name="resnet")
 class ResNeXt50_32X4D(ResNet):
     """ResNeXt-50-32x4d model for image classification.
 
@@ -244,7 +244,7 @@ class ResNeXt50_32X4D(ResNet):
         )
 
 
-@MODELS.register(name="resnext101_32x8d", arch="resnet")
+@MODELS.register(variant="resnext101_32x8d", name="resnet")
 class ResNeXt101_32X8D(ResNet):
     """ResNeXt-101-32x8d model for image classification.
 
@@ -278,7 +278,7 @@ class ResNeXt101_32X8D(ResNet):
         )
 
 
-@MODELS.register(name="resnext101_64x4d", arch="resnet")
+@MODELS.register(variant="resnext101_64x4d", name="resnet")
 class ResNeXt101_64X4D(ResNet):
     """ResNeXt-101-64x4d model for image classification.
 
@@ -308,7 +308,7 @@ class ResNeXt101_64X4D(ResNet):
         
 
 # --- WideResNet ---
-@MODELS.register(name="wide_resnet50_2", arch="resnet")
+@MODELS.register(variant="wide_resnet50_2", name="resnet")
 class WideResNet50_2(ResNet):
     """WideResNet-50-2 model for image classification.
 
@@ -341,7 +341,7 @@ class WideResNet50_2(ResNet):
         )
 
 
-@MODELS.register(name="wide_resnet101_2", arch="resnet")
+@MODELS.register(variant="wide_resnet101_2", name="resnet")
 class WideResNet101_2(ResNet):
     """WideResNet-101-2 model for image classification.
 

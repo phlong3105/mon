@@ -49,7 +49,7 @@ class ConvNeXt(tvm.ConvNeXt, nn.ModelMetadataMixin, abc.ABC):
             self.load_state_dict(weights)
     
     
-@MODELS.register(name="convnext_base", arch="convnext")
+@MODELS.register(variant="convnext_base", name="convnext")
 class ConvNeXtBase(ConvNeXt):
 
     _name: str  = "convnext_base"
@@ -78,7 +78,7 @@ class ConvNeXtBase(ConvNeXt):
         )
         
 
-@MODELS.register(name="convnext_tiny", arch="convnext")
+@MODELS.register(variant="convnext_tiny", name="convnext")
 class ConvNeXtTiny(ConvNeXt):
     
     _name: str  = "convnext_tiny"
@@ -107,7 +107,7 @@ class ConvNeXtTiny(ConvNeXt):
         )
 
 
-@MODELS.register(name="convnext_small", arch="convnext")
+@MODELS.register(variant="convnext_small", name="convnext")
 class ConvNeXtSmall(ConvNeXt):
     """ConvNeXt Small model for image classification.
 
@@ -141,7 +141,7 @@ class ConvNeXtSmall(ConvNeXt):
         )
 
 
-@MODELS.register(name="convnext_large", arch="convnext")
+@MODELS.register(variant="convnext_large", name="convnext")
 class ConvNeXtLarge(ConvNeXt):
     """ConvNeXt Large model for image classification.
 

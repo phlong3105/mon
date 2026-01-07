@@ -30,7 +30,7 @@ def get_relative_path(root, *args):
     return os.path.join(os.path.dirname(root), *args)
 
 
-@MODELS.register(name="enlightengan", arch="enlightengan")
+@MODELS.register(variant="enlightengan", name="enlightengan")
 class EnlightenOnnxModel(nn.ModelMetadataMixin):
     """EnlightenGAN model for low-light image enhancement.
     

@@ -26,6 +26,7 @@ class SEBlock(nn.Module):
         - Code: https://github.com/hujie-frank/SENet
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, in_channels: int, rd_ratio: float = 0.0625):
         """Initialize a new instance.
         
@@ -37,6 +38,7 @@ class SEBlock(nn.Module):
         self.reduce = nn.Conv2d(in_channels, int(in_channels * rd_ratio), 1, 1, bias=True)
         self.expand = nn.Conv2d(int(in_channels * rd_ratio), in_channels, 1, 1, bias=True)
 
+    # --- Callable & Context Manager ---
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -66,6 +68,7 @@ class SimAM(nn.Module):
         - Code: https://github.com/ZjjConan/SimAM
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, e_lambda: float = 1e-4):
         """Initialize a new instance.
         
@@ -76,6 +79,7 @@ class SimAM(nn.Module):
         self.e_lambda = e_lambda
         self.sigmoid  = nn.Sigmoid()
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         

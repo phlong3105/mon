@@ -47,7 +47,8 @@ class CustomEnumMeta(enum.EnumMeta):
     Enable flexible enum construction so subclasses accept names or indices
     when constructing members.
     """
-
+    
+    # --- Callable & Context Manager ---
     def __call__(cls, value: Any, *args, **kwargs):
         """Construct or convert a value into an enum member.
 
@@ -71,25 +72,36 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     Attributes:
         _names (list[Enum]): Cached list of enum members in declaration order.
         _values (list[Any]): Cached list of enum values in declaration order.
-        _int_to_enum (dict[int, Enum]): Mapping from integer indices to members.
-        _value_to_enum (dict[Any, Enum]): Mapping from values to members.
-        _str_to_enum (dict[str, Enum]): Mapping from lowercase names to members.
+        _ints_to_enums (dict[int, Enum]): Mapping from integer indices to members.
+        _values_to_enums (dict[Any, Enum]): Mapping from values to members.
+        _strs_to_enums (dict[str, Enum]): Mapping from lowercase names to members.
     """
-
+    
+    # --- Lifecycle & Initialization ---
     @classmethod
     def __init_subclass__(cls):
         """Initialize cached helper mappings on subclass definition."""
         cls._names         = list(cls)
         cls._values        = [member.value for member in cls]
-        cls._int_to_enum   = {i: member for i, member in enumerate(cls)}
-        cls._value_to_enum = {member.value: member for member in cls}
-        cls._str_to_enum   = {str(member.name).lower(): member for member in cls}
-
+        cls._ints_to_enums = {i: member for i, member in enumerate(cls)}
+        cls._strs_to_enums = {str(member.name).lower(): member for member in cls}
+        
+        if len(cls._values) > 0 and isinstance(cls._values[0], str | int):
+            cls._values_to_enums = {member.value: member for member in cls}
+        else:
+            cls._values_to_enums = {}
+    
+    # --- Representation ---
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self._name_}"
+    
+    # --- Container / Sequence Methods ---
     @classmethod
     def __contains__(cls, value: Any) -> bool:
         """Return True if the value is represented by the enum."""
         return value in cls or value in cls._values
-
+    
+    # --- Properties ---
     @classmethod
     def random(cls):
         """Return a random enum member.
@@ -123,58 +135,27 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
         return cls._values
 
     @classmethod
-    def int_to_enum(cls) -> dict:
+    def ints_to_members(cls) -> dict:
         """Return a mapping from integer indices to enum members.
 
         Indices correspond to declaration order, starting at zero.
         """
-        return cls._int_to_enum
+        return cls._ints_to_enums
 
     @classmethod
-    def value_to_enum(cls) -> dict:
-        """Return a mapping from enum values to enum members."""
-        return cls._value_to_enum
-
-    @classmethod
-    def str_to_enum(cls) -> dict:
+    def strs_to_members(cls) -> dict:
         """Return a mapping from lowercase member names to enum members."""
-        return cls._str_to_enum
-
+        return cls._strs_to_enums
+    
+    @classmethod
+    def values_to_members(cls) -> dict:
+        """Return a mapping from enum values to enum members."""
+        return cls._values_to_enums
+    
     # --- Initialize ---
     @classmethod
-    def from_str(cls, a_str: str):
-        """Convert a name string to an enum member.
-
-        Args:
-            a_str: Member name (case-insensitive).
-
-        Raises:
-            ValueError: If ``a_str`` is not valid.
-        """
-        str_to_enum = cls.str_to_enum()
-        value_lower = a_str.lower()
-        if value_lower not in str_to_enum:
-            raise ValueError(f"``a_str`` must be one of {list(str_to_enum)}, got {value_lower}.")
-        return str_to_enum[value_lower]
-
-    @classmethod
-    def from_int(cls, an_int: int):
-        """Convert an integer index to an enum member.
-
-        Args:
-            an_int: Index corresponding to declaration order.
-
-        Raises:
-            ValueError: If ``an_int`` is out of range.
-        """
-        int_to_enum = cls.int_to_enum()
-        if an_int not in int_to_enum:
-            raise ValueError(f"``an_int`` must be one of {list(int_to_enum)}, got {an_int}.")
-        return int_to_enum[an_int]
-
-    @classmethod
     def from_value(cls, value: Any):
-        """Convert a supported input into an enum member.
+        """Create an enum member from a given value.
 
         Args:
             value: Enum member, name, or index.
@@ -182,13 +163,32 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
         Raises:
             TypeError: If ``value``'s type is unsupported.
         """
+        # Check if value is already an instance of this Enum
         if isinstance(value, cls):
             return value
-        if isinstance(value, str):
-            return cls.from_str(value)
+        
+        # Try to lookup by value
+        try:
+            return cls._values_to_enums[value]
+        except KeyError:
+            pass
+        
+        # Try to lookup by index
         if isinstance(value, int):
-            return cls.from_int(value)
-        raise TypeError(f"``value`` must be a str or int, got {type(value)}.")
+            try:
+                return cls._ints_to_enums[value]
+            except KeyError:
+                pass
+        
+        # Try to lookup by name (case-insensitive)
+        if isinstance(value, str):
+            try:
+                return cls[value.replace(cls.__name__ + ".", "").upper()]
+            except KeyError:
+                pass
+        
+        # Fallback or Raise
+        raise ValueError(f"'{value}' is not a valid {cls.__name__}")
 
 
 # ==============================================================================
@@ -462,7 +462,7 @@ class MemoryUnit(Enum):
     '''
 
     @classmethod
-    def name_to_byte(cls) -> dict:
+    def names_to_bytes(cls) -> dict:
         """Return mapping of this enum to byte multipliers.
 
         Map each enum member to the number of bytes represented by one unit.

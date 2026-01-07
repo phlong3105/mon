@@ -91,6 +91,7 @@ class NormalizeWithMask(BasicTransform):
                 )
             return self
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         mean: tuple[float, ...] | float | None = (0.485, 0.456, 0.406),

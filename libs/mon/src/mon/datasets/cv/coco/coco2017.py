@@ -11,7 +11,7 @@ __all__ = [
     "COCO91",
 ]
 
-from ...meta import *
+from ...api import *
 
 
 @DATASETS.register(name="coco80")

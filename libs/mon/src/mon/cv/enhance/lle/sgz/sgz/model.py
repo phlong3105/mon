@@ -25,7 +25,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="sgz", arch="sgz")
+@MODELS.register(variant="sgz", name="sgz")
 class SGZ(enhance_net_nopool, nn.ModelMetadataMixin):
     """SGZ model for low-light image enhancement.
     

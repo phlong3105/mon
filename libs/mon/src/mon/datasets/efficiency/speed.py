@@ -10,7 +10,7 @@ __all__ = [
     "Speed1K",
 ]
 
-from ..meta import *
+from ..api import *
 
 
 @DATASETS.register(name="speed10")

@@ -60,6 +60,7 @@ class Frame(Data, DataLoadMixin):
         _index (int): Index of the frame in the video.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         data : np.ndarray,
@@ -87,7 +88,7 @@ class Frame(Data, DataLoadMixin):
         self._index = index
         super().__init__(data=data, path=path, root=root, persist=True)  # This will call the data setter
         
-    #---- Magic Methods ---
+    # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the logical length of the container. For a frame, this is always 1."""
         return 1

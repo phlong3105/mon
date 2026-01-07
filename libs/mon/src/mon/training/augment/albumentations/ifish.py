@@ -460,6 +460,7 @@ class iFishTransform(DualTransform):
         aspect_thres: float = Field(ge=0.0)
         p           : float = 1.0
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         distortion  : float = 1.0,

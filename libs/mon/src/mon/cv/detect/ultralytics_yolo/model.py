@@ -75,7 +75,7 @@ class YOLOv11(YOLO, nn.ModelMetadataMixin):
         super().__init__(model=path, *args, **kwargs)
         
 
-@MODELS.register(name="yolov11n", arch="yolov11")
+@MODELS.register(variant="yolov11n", name="yolov11")
 class YOLOv11n(YOLOv11):
     
     _name: str  = "yolov11n"
@@ -93,7 +93,7 @@ class YOLOv11n(YOLOv11):
     })
     
 
-@MODELS.register(name="yolov11s", arch="yolov11")
+@MODELS.register(variant="yolov11s", name="yolov11")
 class YOLOv11s(YOLOv11):
     
     _name: str  = "yolov11s"
@@ -111,7 +111,7 @@ class YOLOv11s(YOLOv11):
     })
 
 
-@MODELS.register(name="yolov11m", arch="yolov11")
+@MODELS.register(variant="yolov11m", name="yolov11")
 class YOLOv11m(YOLOv11):
     
     _name: str  = "yolov11m"
@@ -124,7 +124,7 @@ class YOLOv11m(YOLOv11):
     })
 
 
-@MODELS.register(name="yolov11l", arch="yolov11")
+@MODELS.register(variant="yolov11l", name="yolov11")
 class YOLOv11l(YOLOv11):
     
     _name: str  = "yolov11l"
@@ -137,7 +137,7 @@ class YOLOv11l(YOLOv11):
     })
 
 
-@MODELS.register(name="yolov11x", arch="yolov11")
+@MODELS.register(variant="yolov11x", name="yolov11")
 class YOLOv11x(YOLOv11):
     
     _name: str  = "yolov11x"
@@ -170,7 +170,7 @@ class YOLOv11_OBB(YOLO, nn.ModelMetadataMixin):
         super().__init__(model=path, *args, **kwargs)
         
         
-@MODELS.register(name="yolov11n_obb", arch="yolov11_obb")
+@MODELS.register(variant="yolov11n_obb", name="yolov11_obb")
 class YOLOv11n_OBB(YOLOv11_OBB):
     
     _name: str  = "yolov11n_obb"
@@ -183,7 +183,7 @@ class YOLOv11n_OBB(YOLOv11_OBB):
     })
 
 
-@MODELS.register(name="yolov11s_obb", arch="yolov11_obb")
+@MODELS.register(variant="yolov11s_obb", name="yolov11_obb")
 class YOLOv11s_OBB(YOLOv11_OBB):
     
     _name: str  = "yolov11s_obb"
@@ -196,7 +196,7 @@ class YOLOv11s_OBB(YOLOv11_OBB):
     })
 
 
-@MODELS.register(name="yolov11m_obb", arch="yolov11_obb")
+@MODELS.register(variant="yolov11m_obb", name="yolov11_obb")
 class YOLOv11m_OBB(YOLOv11_OBB):
     
     _name: str  = "yolov11m_obb"
@@ -209,7 +209,7 @@ class YOLOv11m_OBB(YOLOv11_OBB):
     })
 
 
-@MODELS.register(name="yolov11l_obb", arch="yolov11_obb")
+@MODELS.register(variant="yolov11l_obb", name="yolov11_obb")
 class YOLOv11l_OBB(YOLOv11_OBB):
     
     _name: str  = "yolov11l_obb"
@@ -222,7 +222,7 @@ class YOLOv11l_OBB(YOLOv11_OBB):
     })
 
 
-@MODELS.register(name="yolov11x_obb", arch="yolov11_obb")
+@MODELS.register(variant="yolov11x_obb", name="yolov11_obb")
 class YOLOv11x_OBB(YOLOv11_OBB):
     
     _name: str  = "yolov11x_obb"
@@ -255,7 +255,7 @@ class YOLOv11_SEG(YOLO, nn.ModelMetadataMixin):
         super().__init__(model=path, *args, **kwargs)
         
         
-@MODELS.register(name="yolov11n_seg", arch="yolov11_seg")
+@MODELS.register(variant="yolov11n_seg", name="yolov11_seg")
 class YOLOv11n_SEG(YOLOv11_SEG):
     
     _name: str  = "yolov11n_seg"
@@ -268,7 +268,7 @@ class YOLOv11n_SEG(YOLOv11_SEG):
     })
 
 
-@MODELS.register(name="yolov11s_seg", arch="yolov11_seg")
+@MODELS.register(variant="yolov11s_seg", name="yolov11_seg")
 class YOLOv11s_SEG(YOLOv11_SEG):
     
     _name: str  = "yolov11s_seg"
@@ -281,7 +281,7 @@ class YOLOv11s_SEG(YOLOv11_SEG):
     })
     
     
-@MODELS.register(name="yolov11m_seg", arch="yolov11_seg")
+@MODELS.register(variant="yolov11m_seg", name="yolov11_seg")
 class YOLOv11m_SEG(YOLOv11_SEG):
     
     _name: str  = "yolov11m_seg"
@@ -294,7 +294,7 @@ class YOLOv11m_SEG(YOLOv11_SEG):
     })
 
 
-@MODELS.register(name="yolov11l_seg", arch="yolov11_seg")
+@MODELS.register(variant="yolov11l_seg", name="yolov11_seg")
 class YOLOv11l_SEG(YOLOv11_SEG):
     
     _name: str  = "yolov11l_seg"
@@ -307,7 +307,7 @@ class YOLOv11l_SEG(YOLOv11_SEG):
     })
 
 
-@MODELS.register(name="yolov11x_seg", arch="yolov11_seg")
+@MODELS.register(variant="yolov11x_seg", name="yolov11_seg")
 class YOLOv11x_SEG(YOLOv11_SEG):
     
     _name: str  = "yolov11l_seg"
@@ -340,7 +340,7 @@ class YOLOv11_CLS(YOLO, nn.ModelMetadataMixin):
         super().__init__(model=path, *args, **kwargs)
         
         
-@MODELS.register(name="yolov11n_cls", arch="yolov11_cls")
+@MODELS.register(variant="yolov11n_cls", name="yolov11_cls")
 class YOLOv11n_CLS(YOLOv11_CLS):
     
     _name: str  = "yolov11n_cls"
@@ -353,7 +353,7 @@ class YOLOv11n_CLS(YOLOv11_CLS):
     })
 
 
-@MODELS.register(name="yolov11s_cls", arch="yolov11_cls")
+@MODELS.register(variant="yolov11s_cls", name="yolov11_cls")
 class YOLOv11s_CLS(YOLOv11_CLS):
     
     _name: str  = "yolov11s_cls"
@@ -366,7 +366,7 @@ class YOLOv11s_CLS(YOLOv11_CLS):
     })
 
 
-@MODELS.register(name="yolov11m_cls", arch="yolov11_cls")
+@MODELS.register(variant="yolov11m_cls", name="yolov11_cls")
 class YOLOv11m_CLS(YOLOv11_CLS):
     
     _name: str  = "yolov11m_cls"
@@ -379,7 +379,7 @@ class YOLOv11m_CLS(YOLOv11_CLS):
     })
 
 
-@MODELS.register(name="yolov11l_cls", arch="yolov11_cls")
+@MODELS.register(variant="yolov11l_cls", name="yolov11_cls")
 class YOLOv11l_CLS(YOLOv11_CLS):
     
     _name: str  = "yolov11l_cls"
@@ -392,7 +392,7 @@ class YOLOv11l_CLS(YOLOv11_CLS):
     })
 
 
-@MODELS.register(name="yolov11x_cls", arch="yolov11_cls")
+@MODELS.register(variant="yolov11x_cls", name="yolov11_cls")
 class YOLOv11x_CLS(YOLOv11_CLS):
     
     _name: str  = "yolov11x_cls"
@@ -425,7 +425,7 @@ class YOLOv11_POSE(YOLO, nn.ModelMetadataMixin):
         super().__init__(model=path, *args, **kwargs)
         
         
-@MODELS.register(name="yolov11n_pose", arch="yolov11_pose")
+@MODELS.register(variant="yolov11n_pose", name="yolov11_pose")
 class YOLOv11n_POSE(YOLOv11_POSE):
     
     _name: str  = "yolov11n_pose"
@@ -438,7 +438,7 @@ class YOLOv11n_POSE(YOLOv11_POSE):
     })
 
 
-@MODELS.register(name="yolov11s_pose", arch="yolov11_pose")
+@MODELS.register(variant="yolov11s_pose", name="yolov11_pose")
 class YOLOv11s_POSE(YOLOv11_POSE):
     
     _name: str  = "yolov11s_pose"
@@ -451,7 +451,7 @@ class YOLOv11s_POSE(YOLOv11_POSE):
     })
 
 
-@MODELS.register(name="yolov11m_pose", arch="yolov11_pose")
+@MODELS.register(variant="yolov11m_pose", name="yolov11_pose")
 class YOLOv11m_POSE(YOLOv11_POSE):
     
     _name: str  = "yolov11m_pose"
@@ -464,7 +464,7 @@ class YOLOv11m_POSE(YOLOv11_POSE):
     })
 
 
-@MODELS.register(name="yolov11l_pose", arch="yolov11_pose")
+@MODELS.register(variant="yolov11l_pose", name="yolov11_pose")
 class YOLOv11l_POSE(YOLOv11_POSE):
     
     _name: str  = "yolov11l_pose"
@@ -477,7 +477,7 @@ class YOLOv11l_POSE(YOLOv11_POSE):
     })
     
 
-@MODELS.register(name="yolov11x_pose", arch="yolov11_pose")
+@MODELS.register(variant="yolov11x_pose", name="yolov11_pose")
 class YOLOv11x_POSE(YOLOv11_POSE):
     
     _name: str  = "yolov11x_pose"
@@ -510,7 +510,7 @@ class YOLOv12(YOLO, nn.ModelMetadataMixin):
         super().__init__(model=path, *args, **kwargs)
         
 
-@MODELS.register(name="yolov12n", arch="yolov12")
+@MODELS.register(variant="yolov12n", name="yolov12")
 class YOLOv12n(YOLOv12):
     
     _name: str  = "yolov12n"
@@ -523,7 +523,7 @@ class YOLOv12n(YOLOv12):
     })
     
 
-@MODELS.register(name="yolov12s", arch="yolov12")
+@MODELS.register(variant="yolov12s", name="yolov12")
 class YOLOv12s(YOLOv12):
     
     _name: str  = "yolov12s"
@@ -536,7 +536,7 @@ class YOLOv12s(YOLOv12):
     })
 
 
-@MODELS.register(name="yolov12m", arch="yolov12")
+@MODELS.register(variant="yolov12m", name="yolov12")
 class YOLOv12m(YOLOv12):
     
     _name: str  = "yolov12m"
@@ -549,7 +549,7 @@ class YOLOv12m(YOLOv12):
     })
 
 
-@MODELS.register(name="yolov12l", arch="yolov12")
+@MODELS.register(variant="yolov12l", name="yolov12")
 class YOLOv12l(YOLOv12):
     
     _name: str  = "yolov12l"
@@ -562,7 +562,7 @@ class YOLOv12l(YOLOv12):
     })
 
 
-@MODELS.register(name="yolov12x", arch="yolov12")
+@MODELS.register(variant="yolov12x", name="yolov12")
 class YOLOv12x(YOLOv12):
     
     _name: str  = "yolov12x"

@@ -3,7 +3,7 @@
 
 """<Name> utility functions.
 
-This module provides various utility functions for <Name> components.
+This module provides various utility functions for <Name>.
 """
 
 __all__ = []

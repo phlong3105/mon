@@ -10,7 +10,7 @@ __all__ = [
     "LightEffect",
 ]
 
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="lighteffect")

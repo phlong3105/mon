@@ -42,6 +42,7 @@ class SineLinear(nn.Module):
         - Code: https://github.com/vishwa91/wire/blob/main/modules/siren.py
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features : int,
@@ -85,6 +86,7 @@ class SineLinear(nn.Module):
                      np.sqrt(6.0 / self.in_features) / self.omega_0
                 )
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -102,6 +104,7 @@ class SineLinear(nn.Module):
 class SineLinearBN(nn.Module):
     """Sine linear layer with batch normalization."""
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features : int,
@@ -146,6 +149,7 @@ class SineLinearBN(nn.Module):
                      np.sqrt(6.0 / self.in_features) / self.omega_0
                 )
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -164,6 +168,7 @@ class SineLinearBN(nn.Module):
 class DepthAwareSineLinear(nn.Module):
     """Depth-aware sine linear layer."""
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features   : int,
@@ -220,6 +225,7 @@ class DepthAwareSineLinear(nn.Module):
                      np.sqrt(6.0 / self.in_features) / self.omega_0
                 )
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -251,6 +257,7 @@ class FINERLinear(nn.Module):
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
     """
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features     : int,
@@ -317,6 +324,7 @@ class FINERLinear(nn.Module):
         with torch.no_grad():
             return torch.abs(linear) + 1
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -341,6 +349,7 @@ class FINERLinear(nn.Module):
 class GaussLinear(nn.Module):
     """Gaussian linear layer."""
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features : int,
@@ -361,6 +370,7 @@ class GaussLinear(nn.Module):
         self.scale  = scale
         self.linear = nn.Linear(in_features, out_features, bias=bias)
 
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -393,6 +403,7 @@ class RealGaborLayer(nn.Module):
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features : int,
@@ -422,7 +433,8 @@ class RealGaborLayer(nn.Module):
         self.in_features = in_features
         self.freqs       = nn.Linear(in_features, out_features, bias=bias)
         self.scale       = nn.Linear(in_features, out_features, bias=bias)
-        
+      
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
@@ -449,6 +461,7 @@ class ComplexGaborLayer(nn.Module):
     the exponential function.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_features : int,
@@ -487,6 +500,7 @@ class ComplexGaborLayer(nn.Module):
         self.scale_0 = nn.Parameter(self.scale_0*torch.ones(1), trainable)
         self.linear  = nn.Linear(in_features, out_features, bias=bias, dtype=dtype)
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         

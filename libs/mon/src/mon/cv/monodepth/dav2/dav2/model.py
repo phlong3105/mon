@@ -45,7 +45,7 @@ class DAV2(DepthAnythingV2, nn.ModelMetadataMixin):
     _zoo      : dict         = {}
     
 
-@MODELS.register(name="dav2_vits", arch="dav2")
+@MODELS.register(variant="dav2_vits", name="dav2")
 class DAV2_ViTS(DAV2):
     
     _name: str  = "dav2_vits"
@@ -64,7 +64,7 @@ class DAV2_ViTS(DAV2):
         self.load_state_dict(torch.load(str(weights), weights_only=True))
 
 
-@MODELS.register(name="dav2_vitb", arch="dav2")
+@MODELS.register(variant="dav2_vitb", name="dav2")
 class DAV2_ViTB(DAV2):
     
     _name: str = "dav2_vitb"
@@ -83,7 +83,7 @@ class DAV2_ViTB(DAV2):
         self.load_state_dict(torch.load(str(weights), weights_only=True))
         
 
-@MODELS.register(name="dav2_vitl", arch="dav2")
+@MODELS.register(variant="dav2_vitl", name="dav2")
 class DAV2_ViTL(DAV2):
     
     _name: str = "dav2_vitl"

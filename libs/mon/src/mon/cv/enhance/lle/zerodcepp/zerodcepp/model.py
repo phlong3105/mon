@@ -65,7 +65,7 @@ class DSConv(nn.Module):
 
 
 # --- Model ---
-@MODELS.register(name="zerodce++", arch="zerodce++")
+@MODELS.register(variant="zerodce++", name="zerodce++")
 class ZeroDCEpp(nn.Module, nn.ModelMetadataMixin):
     """Zero-DCE++ model for low-light image enhancement.
     

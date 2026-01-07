@@ -132,7 +132,7 @@ class MobileOne(nn.Module, nn.ModelMetadataMixin, abc.ABC):
         return x
     
         
-@MODELS.register(name="mobileone_s0", arch="mobileone")
+@MODELS.register(variant="mobileone_s0", name="mobileone")
 class MobileOneS0(MobileOne):
     
     _name: str  = "mobileone_s0",
@@ -161,7 +161,7 @@ class MobileOneS0(MobileOne):
             self.load_state_dict(weights)
 
 
-@MODELS.register(name="mobileone_s1", arch="mobileone")
+@MODELS.register(variant="mobileone_s1", name="mobileone")
 class MobileOneS1(MobileOne):
     
     _name: str  = "mobileone_s1",
@@ -189,7 +189,7 @@ class MobileOneS1(MobileOne):
             self.load_state_dict(weights)
 
 
-@MODELS.register(name="mobileone_s2", arch="mobileone")
+@MODELS.register(variant="mobileone_s2", name="mobileone")
 class MobileOneS2(MobileOne):
     
     _name: str  = "mobileone_s2",
@@ -217,7 +217,7 @@ class MobileOneS2(MobileOne):
             self.load_state_dict(weights)
 
 
-@MODELS.register(name="mobileone_s3", arch="mobileone")
+@MODELS.register(variant="mobileone_s3", name="mobileone")
 class MobileOneS3(MobileOne):
     
     _name: str  = "mobileone_s3",
@@ -245,7 +245,7 @@ class MobileOneS3(MobileOne):
             self.load_state_dict(weights)
 
 
-@MODELS.register(name="mobileone_s4", arch="mobileone")
+@MODELS.register(variant="mobileone_s4", name="mobileone")
 class MobileOneS4(MobileOne):
     
     _name: str  = "mobileone_s4",

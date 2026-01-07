@@ -10,7 +10,7 @@ __all__ = [
     "GTSnow",
 ]
 
-from ....meta import *
+from ....api import *
 
 
 @DATASETS.register(name="gtsnow")

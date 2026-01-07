@@ -28,7 +28,7 @@ current_file = Path(__file__).absolute()
 root_dir     = current_file.parents[1]
 
 
-@MODELS.register(name="lime", arch="lime")
+@MODELS.register(variant="lime", name="lime")
 class LIME(nn.ModelMetadataMixin):
     """LIME model for low-light image enhancement.
 

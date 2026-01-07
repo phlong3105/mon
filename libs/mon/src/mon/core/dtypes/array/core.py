@@ -54,7 +54,8 @@ class TensorOrArray(Data, DeviceManagementMixin):
     Attributes:
         _data (np.ndarray | torch.Tensor): Either a torch.Tensor or numpy.ndarray.
     """
-
+    
+    # --- Lifecycle & Initialization ---
     def __init__(self, data: np.ndarray | torch.Tensor, *args, **kwargs):
         """Initialize a new instance.
 
@@ -64,7 +65,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
         # Initialize parent classes and assign attributes
         super().__init__(data=data)  # This will call the data setter
 
-    # --- Magic Methods ---
+    # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the logical length."""
         return len(self.data)

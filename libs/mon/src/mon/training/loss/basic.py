@@ -55,6 +55,7 @@ class CharbonnierLoss(BaseLoss):
         eps2 (float): Small constant for numerical stability.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-6, reduction: str = "mean"):
         """Initializes the CharbonnierLoss instance.
         
@@ -66,6 +67,7 @@ class CharbonnierLoss(BaseLoss):
         super().__init__(reduction=reduction)
         self.eps2 = eps ** 2
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the Charbonnier loss between input and target.
         
@@ -91,6 +93,7 @@ class CosineSimilarityLoss(BaseLoss):
         cos (nn.CosineSimilarity): Cosine similarity module.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, dim: int = 1, eps: float = 1e-6, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -103,6 +106,7 @@ class CosineSimilarityLoss(BaseLoss):
         super().__init__(reduction=reduction)
         self.cos = nn.CosineSimilarity(dim=dim, eps=eps)
     
+    # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculates the Cosine Similarity loss between input and target.
         
@@ -131,6 +135,7 @@ class ExtendedL1Loss(BaseLoss):
         loss_l1 (L1Loss): L1 loss module.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, reduction: str = "mean"):
         """Initialize a new instance.
         
@@ -141,6 +146,7 @@ class ExtendedL1Loss(BaseLoss):
         super().__init__(reduction=reduction)
         self.loss_l1 = L1Loss()
     
+    # --- Callable & Context Manager ---
     # noinspection PyMethodOverriding
     def forward(
         self,

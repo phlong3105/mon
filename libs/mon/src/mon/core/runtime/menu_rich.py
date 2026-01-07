@@ -52,6 +52,7 @@ class Prompt:
         value (str): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, text: str, default: str, choices: Sequence | Collection = None):
         """Initialize a new instance.
 
@@ -65,6 +66,7 @@ class Prompt:
         self.choices = choices
         self.value   = None
     
+    # --- Properties ---
     @property
     def default(self) -> str:
         """Return the default as a displayable string."""
@@ -111,6 +113,7 @@ class Prompt:
         """
         self._choices = to_list(choices) or None
     
+    # --- Callable & Context Manager ---
     def prompt(self) -> Any:
         """Display the prompt and return the user's response."""
         kwargs = {
@@ -140,6 +143,7 @@ class Confirm:
         value (bool): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, text: str, default: bool = True):
         """Initialize a new instance.
 
@@ -151,6 +155,7 @@ class Confirm:
         self.default = default
         self.value   = default
     
+    # --- Callable & Context Manager ---
     def prompt(self) -> bool:
         """Ask for confirmation and return the result."""
         self.value = prompt.Confirm().ask(prompt=self.text, default=self.default)
@@ -169,6 +174,7 @@ class NumberPrompt:
         value (int | None): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, text: str, default: int = -1):
         """Initialize a new instance.
 
@@ -180,6 +186,7 @@ class NumberPrompt:
         self.default = default
         self.value   = default
 
+    # --- Properties ---
     @property
     def default(self):
         """Return the normalized numeric default."""
@@ -212,6 +219,7 @@ class NumberPrompt:
         value       = to_int(value)
         self._value = None if isinstance(value, int | float) and value < 0 else value
         
+    # --- Callable & Context Manager ---
     def prompt(self) -> int:
         """Prompt for an integer and return the normalized value."""
         self.value = prompt.IntPrompt().ask(prompt=self.text, default=self.default)
@@ -235,6 +243,7 @@ class TaskPrompt(Prompt):
         value (str): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         project_root: str | Path,
@@ -266,6 +275,7 @@ class ArchPrompt(Prompt):
         value (str): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         task        : str,
@@ -301,6 +311,7 @@ class ModelPrompt(Prompt):
         value (str): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         task        : str,
@@ -322,7 +333,7 @@ class ModelPrompt(Prompt):
             default: Default model.
             choices: Optional override list of choices.
         """
-        choices = choices or list_models(task=task, mode=mode, arch=arch, project_root=project_root)
+        choices = choices or list_models(task=task, mode=mode, name=arch, project_root=project_root)
         super().__init__(text=text, default=default, choices=choices)
 
 
@@ -338,6 +349,7 @@ class ConfigPrompt(Prompt):
         value (str): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         project_root: str | Path,
@@ -379,6 +391,7 @@ class WeightsPrompt(Prompt):
         value (str | list[str] | None): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         model       : str,
@@ -402,6 +415,7 @@ class WeightsPrompt(Prompt):
         choices = [str(c) for c in choices]
         super().__init__(text=text, default=default, choices=choices)
     
+    # --- Properties ---
     @property
     def value(self):
         """Return the normalized weights selection."""
@@ -424,6 +438,7 @@ class WeightsPrompt(Prompt):
             value = value[0] if len(value) == 1 else value
         self._value = value
 
+    # --- Callable & Context Manager ---
     def prompt(self) -> Any:
         """Display weights prompt allowing empty input."""
         kwargs = {
@@ -453,6 +468,7 @@ class DataPrompt(Prompt):
         value (list[str]): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         task        : str,
@@ -475,6 +491,7 @@ class DataPrompt(Prompt):
         choices = choices or list_datasets(task=task, mode="predict", project_root=project_root)
         super().__init__(text=text, default=default, choices=choices)
     
+    # --- Properties ---
     @property
     def value(self) -> str:
         """Return the normalized data selection as a list."""
@@ -506,6 +523,7 @@ class FullnamePrompt(Prompt):
         value (str): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         config : str,
@@ -537,6 +555,7 @@ class DevicePrompt(Prompt):
         value (str): Last returned value from prompt().
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         model  : str,
@@ -577,6 +596,7 @@ class RunCLI:
         _config_args (dict): Loaded configuration arguments from the selected config.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, defaults: dict = None):
         """Initialize a new instance.
 
@@ -587,11 +607,13 @@ class RunCLI:
         self._args  = DEFAULT_ARGS
         self._args.update(defaults or {})
         self._config_args = {}
-    
+        
+    # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the total number of interactive steps."""
         return 27
 
+    # --- Properties ---
     @property
     def args(self) -> dict:
         """Return current in-progress arguments."""
@@ -602,14 +624,19 @@ class RunCLI:
         """Return loaded configuration arguments from the selected config."""
         return self._config_args
     
-    def _next(self):
-        """Advance the prompt index by one."""
-        self._index = (self._index + 1) % self.__len__()
+    # --- Callable & Context Manager ---
+    def prompt(self) -> dict | box.Box:
+        """Run the interactive menu until completion.
 
-    def _prev(self):
-        """Move the prompt index back by one."""
-        self._index = (self._index - 1) % self.__len__()
-
+        Returns:
+            The final arguments mapping (box.Box or dict).
+        """
+        while True:
+            self._display_prompt()
+            if self._index == self.__len__():
+                return self.args
+            self._next()
+    
     def _display_prompt(self):
         """Display and handle the current prompt step based on index."""
         if self._index == 0:
@@ -812,15 +839,11 @@ class RunCLI:
             finish = Confirm(text="Finish/Re-input", default=True).prompt()
             if finish:
                 self._index = self.__len__()
-    
-    def prompt(self) -> dict | box.Box:
-        """Run the interactive menu until completion.
+     
+    def _next(self):
+        """Advance the prompt index by one."""
+        self._index = (self._index + 1) % self.__len__()
 
-        Returns:
-            The final arguments mapping (box.Box or dict).
-        """
-        while True:
-            self._display_prompt()
-            if self._index == self.__len__():
-                return self.args
-            self._next()
+    def _prev(self):
+        """Move the prompt index back by one."""
+        self._index = (self._index - 1) % self.__len__()

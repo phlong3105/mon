@@ -42,7 +42,8 @@ class RegistrableMixin(abc.ABC):
         _tasks (list[Task]): A list of supported tasks. Defaults to an empty
             list and should be overridden in subclasses.
     """
-
+    
+    _name : str        = None
     _tasks: list[Task] = []
 
     # --- Properties ---

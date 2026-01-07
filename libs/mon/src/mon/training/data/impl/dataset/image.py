@@ -3,8 +3,8 @@
 
 """Image-based datasets.
 
-This module provides base classes for image datasets and data loaders, including
-functionality for loading images and applying transformations.
+This module implements base classes for image datasets and data loaders,
+including functionality for loading images and applying transformations.
 """
 
 __all__ = [
@@ -26,7 +26,10 @@ from ...base import Dataset, Modalities, Modality
 from ...comp import BatchCollateMixin, MultimodalDataLoadMixin, RegistrableMixin
 
 
-# --- Image Dataset ---
+# ==============================================================================
+# DATASETS
+# ==============================================================================
+
 class ImageDataset(
     Dataset,
     RegistrableMixin,
@@ -71,6 +74,7 @@ class ImageDataset(
     }
     _classlist : ClassList   = None
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         root     : Path,
@@ -108,10 +112,26 @@ class ImageDataset(
         )
         self.transform = transform
     
-    # --- Magic Methods ---
     def __del__(self):
         """Close the dataset loading mechanism and releases resources."""
         pass
+    
+    # --- Representation ---
+    def __repr__(self) -> str:
+        """Return the string representation of the dataset."""
+        lines  = ["Dataset " + self.__class__.__name__]
+        lines += [f"Number of datapoints: {self.__len__()}"]
+        if self.root:
+            lines += [f"Root location: {self.root}"]
+        if hasattr(self, "transform") and self.transform:
+            lines += [repr(self.transform)]
+        return "\n".join(lines)
+    
+    # --- Container / Sequence Methods ---
+    def __len__(self) -> int:
+        """Return the length of the dataset (i.e., number of datapoints)."""
+        pk, _ = self.primary_modality
+        return len(self.datapoints[pk])
     
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return the datapoint at the specified ``index`` in ``_datapoints``.
@@ -141,21 +161,6 @@ class ImageDataset(
                     data[k] = v.astype(np.float32)
                     
         return data | {"meta": meta}
-    
-    def __len__(self) -> int:
-        """Return the length of the dataset (i.e., number of datapoints)."""
-        pk, _ = self.primary_modality
-        return len(self._datapoints[pk])
-    
-    def __repr__(self) -> str:
-        """Return the string representation of the dataset."""
-        lines  = ["Dataset " + self.__class__.__name__]
-        lines += [f"Number of datapoints: {self.__len__()}"]
-        if self.root:
-            lines += [f"Root location: {self.root}"]
-        if hasattr(self, "transform") and self.transform:
-            lines += [repr(self.transform)]
-        return "\n".join(lines)
     
     # --- Properties ---
     @property
@@ -231,7 +236,7 @@ class ImageDataset(
             A dictionary containing all modalities for the specified datapoint.
         """
         datapoint = {}
-        for k, v in self._datapoints.items():
+        for k, v in self.datapoints.items():
             if v is not None:
                 datapoint[k] = v[index]
             else:
@@ -239,7 +244,10 @@ class ImageDataset(
         return datapoint
 
 
-# --- Image Loader ---
+# ==============================================================================
+# LOADERS
+# ==============================================================================
+
 class ImageLoader(ImageDataset):
     """A concrete class for image-only datasets.
     
@@ -249,6 +257,7 @@ class ImageLoader(ImageDataset):
     where no ground-truth labels are available.
     """
     
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         root     : Path,
@@ -309,3 +318,10 @@ class ImageLoader(ImageDataset):
                     images.append(Image(data=path, root=root))
         
         return images
+
+
+# ==============================================================================
+# UTILITIES
+# ==============================================================================
+
+# --- Validation & Sanitization ---
