@@ -3,15 +3,12 @@
 
 """Contour data structures.
 
-This module provides the base classes and mixins for contours.
+This module provides base classes and mixins for contours.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
-
 
 # ==============================================================================
 # region CONSTANTS

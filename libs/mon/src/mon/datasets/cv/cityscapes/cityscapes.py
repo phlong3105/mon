@@ -3,7 +3,7 @@
 
 """Cityscapes datasets.
 
-This module implements the Cityscapes' main dataset for semantic segmentation.
+This module provides the Cityscapes' main dataset for semantic segmentation.
 
 References:
 	- Data: https://www.cityscapes-dataset.com

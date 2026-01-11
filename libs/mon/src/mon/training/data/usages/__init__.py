@@ -6,6 +6,6 @@
 This package contains example usages of training data containers.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .dataloader import *

@@ -3,8 +3,10 @@
 
 """LSRW dataset.
 
-This module implements the LSRW dataset for low-light image enhancement.
+This module provides the LSRW dataset for low-light image enhancement.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "LSRW",
@@ -13,16 +15,36 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="lsrw")
-class LSRW(ImageDataset):
+@DATASETS.register()
+class LSRW(ImageDataset, RegistrableMixin):
     """LSRW dataset."""
     
-    _subset    : str         = "lsrw"
+    _name      : str         = "lsrw"
     _tasks     : list[Task]  = [Task.LLE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None

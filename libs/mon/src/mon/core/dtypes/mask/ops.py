@@ -3,14 +3,12 @@
 
 """Mask atomic operations.
 
-This module provides atomic operations for mask.
+This module provides atomic operations for masks.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

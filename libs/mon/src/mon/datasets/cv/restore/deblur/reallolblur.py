@@ -3,9 +3,11 @@
 
 """Real-LOL-Blur dataset.
 
-This module implements the Real-LOL-Blur dataset for image de-blurring and
+This module provides the Real-LOL-Blur dataset for image de-blurring and
 low-light enhancement.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "RealLOLBlur",
@@ -14,14 +16,22 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="reallolblur")
-class RealLOLBlur(ImageDataset):
+@DATASETS.register()
+class RealLOLBlur(ImageDataset, RegistrableMixin):
     """Real-LOL-Blur dataset."""
     
-    _subset    : str         = "reallolblur"
+    _name      : str         = "reallolblur"
     _tasks     : list[Task]  = [Task.DEBLUR, Task.LLE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
     _classlist : ClassList   = None

@@ -3,7 +3,7 @@
 
 """Depth data structures.
 
-This module provides the base classes and mixins for depth data.
+This module provides base classes and mixins for depth data.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ __all__ = [
 import cv2
 
 from mon.core.constants import SOURCE
-from mon.core.dtypes.image import Image
 from mon.core.enum import DepthSource
+from ..image import Image
 
 
 # ==============================================================================
@@ -58,7 +58,7 @@ from mon.core.enum import DepthSource
 # ==============================================================================
 
 class DepthMap(Image):
-    """A basic class for managing a depth map.
+    """Depth map management class.
 
     Extend Image to handle depth map data and provide properties and methods
     related to depth data.
@@ -77,8 +77,9 @@ class DepthMap(Image):
         """Initialize a new instance.
 
         Args:
-            source: Source of the depth data. Defaults to DepthSource.DAv2_ViTB.
-            flags: OpenCV flag to read the depth map. Defaults to cv2.IMREAD_GRAYSCALE.
+            source: Source of the depth data. Defaults to SOURCE.DEPTH.
+            flags: OpenCV flag to read the depth map. Defaults to
+                cv2.IMREAD_GRAYSCALE.
             *args: Additional positional arguments forwarded to Image.
             **kwargs: Additional keyword arguments forwarded to Image.
         """

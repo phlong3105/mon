@@ -9,6 +9,8 @@ dictionaries. It integrates with the mon framework's dataset building utilities
 and supports common DataLoader parameters.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "DataLoader",
 ]
@@ -17,17 +19,19 @@ from typing import Any
 
 import box
 import cv2
+from torch.utils.data import dataloader
+
+from mon.core import DATASETS
+from ..base import Dataset
+
 
 cv2.setNumThreads(0)
 # Optionally, disable OpenCL if not needed or causing issues
 # cv2.ocl.setUseOpenCL(False)
 
-from mon.core import DATASETS
-from torch.utils.data import dataloader
-from ..base import Dataset
-
 
 # --- DataLoader ---
+
 class DataLoader(dataloader.DataLoader):
     """An extended DataLoader class for loading datasets."""
 

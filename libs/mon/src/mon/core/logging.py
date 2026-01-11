@@ -4,8 +4,7 @@
 """Logging utility and context manager collection.
 
 This module provides logger creation and configuration, noisy library logger
-management, and a context manager for suppressing console output to enable
-consistent logging and output control across the codebase.
+management, and a context manager for suppressing console output.
 """
 
 from __future__ import annotations
@@ -25,6 +24,7 @@ import sys
 from rich import logging as r_logging
 
 from mon.core.pathlib import Path
+
 
 # Set a default log level for TensorFlow to reduce verbosity on import.
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -51,16 +51,20 @@ logger = logging.getLogger("rich")
 
 def get_logger(
     path: Path | str = None,
-    name: str = "global_logger"
+    name: str        = "global_logger"
 ) -> logging.Logger:
     """Return a configured logger.
 
-    Create a logger and, if a path is provided, attach a file handler that
+    Create a logger and, if ``path`` is provided, attach a file handler that
     writes INFO-level records with timestamps and file and line context.
 
     Args:
-        path: Optional path to a log file. If None, file logging is skipped.
-        name: The name of the logger. Defaults to "global_logger".
+        path: Optional path to a log file. If ``path`` is None, file logging is
+            skipped. Defaults to None.
+        name: Name of the logger. Defaults to "global_logger".
+
+    Returns:
+        Configured logger instance.
     """
     lgr = logging.getLogger(name)
 
@@ -74,7 +78,7 @@ def get_logger(
         ):
             file_handler = logging.FileHandler(path)
             file_handler.setLevel(logging.INFO)
-            formatter = logging.Formatter(
+            formatter    = logging.Formatter(
                 "%(asctime)s [%(filename)s:%(lineno)s] %(levelname)s: %(message)s"
             )
             file_handler.setFormatter(formatter)
@@ -90,12 +94,14 @@ def get_logger(
 # ==============================================================================
 
 class OutputSuppressor:
-    """A class to manage the state of stdout and stderr redirection.
+    """Stdout and stderr redirection state manager.
+
+    Manage the state of stdout and stderr redirection.
 
     Attributes:
-        _original_stdout (TextIO): The original stdout stream.
-        _original_stderr (TextIO): The original stderr stream.
-        _devnull (TextIO): The file handle for /dev/null.
+        _original_stdout (TextIO): Original stdout stream.
+        _original_stderr (TextIO): Original stderr stream.
+        _devnull (TextIO | None): File handle for /dev/null. Defaults to None.
     """
 
     _original_stdout = sys.stdout
@@ -121,8 +127,8 @@ class OutputSuppressor:
 def _enable_default_loggers():
     """Restore default logger levels to INFO.
 
-    This resets the logging levels for common libraries to restore standard
-    logging behavior.
+    Reset the logging levels for common libraries to restore standard logging
+    behavior.
     """
     noisy_loggers = [None, "torch", "tensorflow"]
     for name in noisy_loggers:
@@ -131,9 +137,10 @@ def _enable_default_loggers():
 
 
 def _disable_default_loggers():
-    """Silence noisy library loggers by setting their level to a high value.
+    """Silence noisy library loggers.
 
-    This reduces console noise from libraries that are overly verbose by default.
+    Set the level of noisy library loggers to a high value to reduce console
+    noise.
     """
     # Using a high integer value to ensure only critical errors are logged.
     SILENCE_LEVEL = 50
@@ -160,7 +167,7 @@ def enable_print():
 
 
 def disable_print():
-    """Completely silence the console (stdout, stderr, and loggers)."""
+    """Completely silence the console."""
     OutputSuppressor.disable()
     _disable_default_loggers()
 

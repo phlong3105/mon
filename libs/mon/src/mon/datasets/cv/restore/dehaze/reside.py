@@ -3,8 +3,10 @@
 
 """RESIDE datasets.
 
-This module implements the theRESIDE dataset for image de-hazing.
+This module provides the theRESIDE dataset for image de-hazing.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "RESIDE_HSTSReal",
@@ -17,281 +19,264 @@ __all__ = [
     "RESIDE_URHI",
 ]
 
-from mon.core import rich
 from ....api import *
 
 
-@DATASETS.register(name="reside_hstsreal")
-class RESIDE_HSTSReal(ImageDataset):
+@DATASETS.register()
+class RESIDE_HSTSReal(ImageDataset, RegistrableMixin):
     """RESIDE-HSTS-Real dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_hstsreal"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = "hsts/real"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
     
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
         
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "hsts" / "real" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-        
-        return images
-        
-        
-@DATASETS.register(name="reside_hstssyn")
-class RESIDE_HSTSSyn(ImageDataset):
+@DATASETS.register()
+class RESIDE_HSTSSyn(ImageDataset, RegistrableMixin):
     """RESIDE-HSTS-Synthetic dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_hstssyn"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = "hsts/synthetic"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
     
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "hsts" / "synthetic" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-        
-        return images
-        
 
-@DATASETS.register(name="reside_its")
-class RESIDE_ITS(ImageDataset):
+@DATASETS.register()
+class RESIDE_ITS(ImageDataset, RegistrableMixin):
     """RESIDE-ITS dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_its"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = "its"
     _splits    : list[Split] = [Split.TRAIN]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None
-    
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "its" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
 
 
-@DATASETS.register(name="reside_ots")
-class RESIDE_OTS(ImageDataset):
+@DATASETS.register()
+class RESIDE_OTS(ImageDataset, RegistrableMixin):
     """RESIDE-OTS dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_ots"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = "ots"
     _splits    : list[Split] = [Split.TRAIN]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None
-    
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "ots" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
 
 
-@DATASETS.register(name="reside_rtts")
-class RESIDE_RTTS(ImageDataset):
+@DATASETS.register()
+class RESIDE_RTTS(ImageDataset, RegistrableMixin):
     """RESIDE-RTTS dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_rtts"
     _tasks     : list[Task]  = [Task.DEHAZE, Task.DETECT]
+    _subset    : str         = "rtts"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
     
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "rtts" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-        
-        return images
         
 
-@DATASETS.register(name="reside_sotsindoor")
-class RESIDE_SOTSIndoor(ImageDataset):
+@DATASETS.register()
+class RESIDE_SOTSIndoor(ImageDataset, RegistrableMixin):
     """RESIDE-SOTS-Indoor dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_sotsindoor"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = "sots/indoor"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
-    
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "sots" / "indoor" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
 
 
-@DATASETS.register(name="reside_sotsoutdoor")
-class RESIDE_SOTSOutdoor(ImageDataset):
+@DATASETS.register()
+class RESIDE_SOTSOutdoor(ImageDataset, RegistrableMixin):
     """RESIDE-SOTS-Outdoor dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_sotsoutdoor"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = "sots/outdoor"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
-    
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "sots" / "outdoor" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
 
 
-@DATASETS.register(name="reside_urhi")
-class RESIDE_URHI(ImageDataset):
+@DATASETS.register()
+class RESIDE_URHI(ImageDataset, RegistrableMixin):
     """RESIDE-URHI dataset."""
 
-    _subset    : str         = "reside"
+    _name      : str         = "reside_urhi"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = "urhi"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
-    
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "urhi" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-        
-        return images

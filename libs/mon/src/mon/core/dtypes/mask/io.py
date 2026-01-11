@@ -3,14 +3,12 @@
 
 """Mask I/O operations.
 
-This module provides input and output operations for mask.
+This module provides input and output operations for masks.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

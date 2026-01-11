@@ -3,22 +3,24 @@
 
 """NTIRE 2025 LLIE dataset.
 
-This module implements the NTIRE 2025 LLIE dataset for low-light image enhancement.
+This module provides the NTIRE 2025 LLIE dataset for low-light image enhancement.
 
 References:
-	- Data: https://codalab.lisn.upsaclay.fr/competitions/21636
+    - Data: https://codalab.lisn.upsaclay.fr/competitions/21636
 """
 
+from __future__ import annotations
+
 __all__ = [
-	"NTIRE2025LLIE",
+    "NTIRE2025LLIE",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ...api import *
 
 
 @DATASETS.register()
-class NTIRE2025LLIE(ImageDataset):
+class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
     """NTIRE 2025 LLIE dataset."""
     
     _name      : str         = "ntire2025llie"
@@ -26,11 +28,25 @@ class NTIRE2025LLIE(ImageDataset):
     _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None
 
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
         
@@ -43,14 +59,14 @@ class NTIRE2025LLIE(ImageDataset):
         if self.split in [Split.TRAIN]:
             patterns = [self.root / "train" / "image"]
         elif self.split in [Split.VAL]:
-            patterns = [self.root / "val"   / "image"]
+            patterns = [self.root / "val" / "image"]
         elif self.split in [Split.TEST]:
-            patterns = [self.root / "test"  / "image"]
+            patterns = [self.root / "test" / "image"]
         else:
             raise ValueError(f"``split`` invalid: [{self.split}]")
 
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
+        images = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 paths = sorted(pattern.rglob("*"))
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"

@@ -3,10 +3,10 @@
 
 """Image and video deblurring datasets.
 
-This package provides various datasets for image and video deblurring.
+This package contains various datasets for image and video deblurring tasks.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .lolblur import *
 from .realblur import *

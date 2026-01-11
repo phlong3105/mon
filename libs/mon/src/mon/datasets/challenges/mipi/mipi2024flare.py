@@ -3,22 +3,24 @@
 
 """MIPI 2024 Flare dataset.
 
-This module implements the MIPI 2024 Flare dataset for image de-flaring.
+This module provides the MIPI 2024 Flare dataset for image de-flaring.
 
 References:
-	- Data: https://mipi-challenge.org/MIPI2024/index.html
+    - Data: https://mipi-challenge.org/MIPI2024/index.html
 """
 
+from __future__ import annotations
+
 __all__ = [
-	"MIPI2024Flare",
+    "MIPI2024Flare",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ...api import *
 
 
 @DATASETS.register()
-class MIPI2024Flare(ImageDataset):
+class MIPI2024Flare(ImageDataset, RegistrableMixin):
     """MIPI 2024 Flare dataset."""
     
     _name      : str         = "mipi2024flare"
@@ -26,8 +28,21 @@ class MIPI2024Flare(ImageDataset):
     _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None
     
@@ -44,14 +59,14 @@ class MIPI2024Flare(ImageDataset):
         if self.split in [Split.TRAIN]:
             patterns = [self.root / "train" / "image"]
         elif self.split in [Split.VAL]:
-            patterns = [self.root / "val"   / "image"]
+            patterns = [self.root / "val" / "image"]
         elif self.split in [Split.TEST]:
-            patterns = [self.root / "test"  / "image"]
+            patterns = [self.root / "test" / "image"]
         else:
             raise ValueError(f"``split`` invalid: [{self.split}]")
         
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
+        images = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 paths = sorted(pattern.rglob("*"))
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"

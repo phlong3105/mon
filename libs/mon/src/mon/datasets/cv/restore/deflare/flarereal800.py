@@ -3,8 +3,10 @@
 
 """FlareReal800 dataset.
 
-This module implements the FlareReal800 dataset for image de-flaring.
+This module provides the FlareReal800 dataset for image de-flaring.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "FlareReal800",
@@ -13,15 +15,29 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="flarereal800")
-class FlareReal800(ImageDataset):
+@DATASETS.register()
+class FlareReal800(ImageDataset, RegistrableMixin):
     """FlareReal800 dataset."""
     
-    _subset    : str         = "flarereal800"
+    _name      : str         = "flarereal800"
     _tasks     : list[Task]  = [Task.DEFLARE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None

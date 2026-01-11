@@ -3,28 +3,44 @@
 
 """RealBlurTele dataset.
 
-This module implements the RealBlurTele dataset for image de-blurring.
+This module provides the RealBlurTele dataset for image de-blurring.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "RealBlurTeleJ",
     "RealBlurTeleR",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ....api import *
 
 
-@DATASETS.register(name="realblurtelej")
-class RealBlurTeleJ(ImageDataset):
+@DATASETS.register()
+class RealBlurTeleJ(ImageDataset, RegistrableMixin):
     """RealBlurTele-J dataset."""
     
-    _subset    : str         = "realblurtele"
+    _name      : str         = "realblurtelej"
     _tasks     : list[Task]  = [Task.DEBLUR]
+    _subset    : str         = "j"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None
 
@@ -35,30 +51,43 @@ class RealBlurTeleJ(ImageDataset):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / self.split_str / "j" / "image"]
+        pattern = self.root / self.split_str / "j" / "image"
 
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        images  = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
         
         return images
 
 
-@DATASETS.register(name="realblurteler")
-class RealBlurTeleR(ImageDataset):
+@DATASETS.register()
+class RealBlurTeleR(ImageDataset, RegistrableMixin):
     """RealBlurTele-R dataset."""
 
-    _subset    : str         = "realblurtele"
+    _name      : str         = "realblurteler"
     _tasks     : list[Task]  = [Task.DEBLUR]
+    _subset    : str         = "r"
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None
 
@@ -69,15 +98,14 @@ class RealBlurTeleR(ImageDataset):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / self.split_str / "r" / "image"]
+        pattern = self.root / self.split_str / "r" / "image"
 
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        images  = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
 
         return images

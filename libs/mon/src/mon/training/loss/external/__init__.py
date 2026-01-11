@@ -3,5 +3,7 @@
 
 """External loss functions.
 
-This package exposes loss functions from external libraries.
+This package exposes third-party loss functions into the framework.
 """
+
+from __future__ import annotations

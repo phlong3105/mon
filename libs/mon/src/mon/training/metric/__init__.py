@@ -3,26 +3,26 @@
 
 """Metrics.
 
-This package contains various metrics used for assessing the performance of
-machine learning models.
+This package contains various metrics for evaluating model performance.
 
 Notes:
     - Design Pattern: Template Method.
-    - Goal: Provide a structured way to define a family of methods or classes
-      that share a common interface/inheritance but aren't tied to the specific
-      "interchanged" requirement of the "Strategy Pattern".
+    - Goal: Define a family of algorithms that share a common processing pipeline.
     - Structure:
         ::
         
-            template/
-            ├── __init__.py    # Registry and factory logic
-            ├── base.py        # Base classes and mixins
-            ├── basic.py       # Basic functionalities
+            metric/
+            ├── __init__.py   # Registry and factory
+            ├── api.py        # External APIs
+            ├── base.py       # Base classes and mixins
+            ├── basic.py      # Basic functionalities
             ├── ...
-            ├── utils.py       # Utility functions and helpers
-            └── external/      # Expose external libraries
+            ├── utils.py      # Utilities and helpers
+            └── external/     # Integrate external libraries
                 └── ...
 """
+
+from __future__ import annotations
 
 from .base import *
 from .basic import *
@@ -33,10 +33,8 @@ from .utils import *
 
 
 # ==============================================================================
-# REGISTRY & FACTORY (Type Resolution)
+# region REGISTRY & FACTORY
 # ==============================================================================
 
-# --- Register (Adding new spokes to the hub) ---
 
-
-# --- Resolve (Retrieving spokes by name/key) ---
+# endregion

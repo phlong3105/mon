@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Array-like base classes and mixins.
+"""Array-like data structures.
 
-This module provides the base classes and mixins for array-like data.
+This module provides base classes and mixins for array-like data.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ __all__ = [
 import numpy as np
 import torch
 
-from mon.core.dtypes.base import Data, DeviceManagementMixin
+from ..base import Data, DeviceManagementMixin
 
 
 # ==============================================================================
@@ -87,7 +87,14 @@ class TensorOrArray(Data, DeviceManagementMixin):
         return len(self.data)
 
     def __getitem__(self, index: int | slice | list[int] | np.ndarray | torch.Tensor) -> TensorOrArray:
-        """Define behavior for when an item is accessed via the notation self[index]."""
+        """Return an item at the given ``index``.
+
+        Args:
+            index: Index to access.
+
+        Returns:
+            Item at the given ``index``.
+        """
         item = self.data[index]
         # Handle numpy scalars which are not ndarray instances
         if isinstance(item, (np.generic, int, float, bool)) and not isinstance(item, np.ndarray):
@@ -108,7 +115,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
             value: New data to store.
 
         Raises:
-            TypeError: If ``data`` is not a torch.Tensor or numpy.ndarray.
+            TypeError: If ``value`` is not a torch.Tensor or numpy.ndarray.
         """
         if not isinstance(value, (np.ndarray, torch.Tensor)):
             raise TypeError(
@@ -133,8 +140,17 @@ class TensorOrArray(Data, DeviceManagementMixin):
     
     # --- Device Management ---
     def to(self, *args, **kwargs) -> TensorOrArray:
-        """Move or cast data to a specific device (cpu, cuda, mps, etc.),
-        ensuring NumPy input is upgraded to Tensor.
+        """Move or cast data to a specific device.
+
+        Move or cast data to a specific device (cpu, cuda, mps, etc.), ensuring
+        numpy.ndarray input is upgraded to torch.Tensor.
+
+        Args:
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
+
+        Returns:
+            Data moved or cast to a specific device.
         """
         new_data = self.data
         if isinstance(new_data, np.ndarray):
@@ -142,26 +158,45 @@ class TensorOrArray(Data, DeviceManagementMixin):
         return self.__class__(new_data.to(*args, **kwargs))
 
     def cpu(self) -> TensorOrArray:
-        """Move data to CPU."""
+        """Move data to CPU.
+
+        Returns:
+            Data moved to CPU.
+        """
         if isinstance(self.data, np.ndarray):
             return self
         return self.__class__(self.data.cpu())
     
     def cuda(self) -> TensorOrArray:
-        """Move data to GPU, ensuring NumPy arrays are converted to Tensors."""
+        """Move data to GPU.
+
+        Move data to GPU, ensuring numpy.ndarray arrays are converted to
+        torch.Tensor.
+
+        Returns:
+            Data moved to GPU.
+        """
         if isinstance(self.data, np.ndarray):
             # torch.as_tensor is safer than torch.tensor as it avoids copying if possible
             return self.__class__(torch.as_tensor(self.data).cuda())
         return self.__class__(self.data.cuda())
     
     def mps(self) -> TensorOrArray:
-        """Move data to MPS."""
+        """Move data to MPS.
+
+        Returns:
+            Data moved to MPS.
+        """
         if isinstance(self.data, np.ndarray):
             return self.__class__(torch.as_tensor(self.data).to("mps"))
         return self.__class__(self.data.to("mps"))
     
     def numpy(self) -> TensorOrArray:
-        """Convert data to numpy."""
+        """Convert data to numpy.ndarray.
+
+        Returns:
+            Data converted to numpy.ndarray.
+        """
         if isinstance(self.data, np.ndarray):
             return self
         # .detach() is vital if the tensor is part of a computation graph

@@ -3,20 +3,10 @@
 
 """Nighttime image enhancement datasets.
 
-This package implements various datasets for nighttime image enhancement (NTE)
-tasks in computer vision. NTE focuses on improving the quality and visibility of
-images captured in nighttime conditions, addressing challenges such as low light,
-glare, glow, and uneven illumination.
-
-Notes:
-    Low-light enhancement (LLE) and nighttime enhancement are related but distinct.
-    LLE aims to improve general low-light images by boosting brightness, reducing
-    noise, and enhancing overall visibility. Nighttime image enhancement (NTE) is
-    a specialized form of LLIE that specifically addresses unique challenges present
-    in nighttime scenes, such as severe low light, glare, glow, and uneven illumination.
+This package contains various datasets for nighttime image enhancement tasks.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .darkface import *
 from .exdark import *

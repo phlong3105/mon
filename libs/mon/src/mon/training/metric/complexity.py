@@ -8,6 +8,8 @@ FLOPs of a given PyTorch model. It also includes a benchmarking function to log
 these statistics.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "benchmark",
     "compute_model_stats",
@@ -24,10 +26,9 @@ from mon.core import image as I, log
 
 
 # ==============================================================================
-# MODEL COMPLEXITY METRICS
+# region MODEL COMPLEXITY METRICS
 # ==============================================================================
 
-# --- Complexity Calculation ---
 def compute_model_stats(
     model   : nn.Module,
     imgsz   : int = 512,
@@ -64,7 +65,6 @@ def compute_model_stats(
     return params, macs, flops
     
 
-# --- Reporting ---
 def benchmark(
     model   : nn.Module,
     imgsz   : int = 512,
@@ -115,14 +115,17 @@ def benchmark(
     # log(f"MACs      : {macs:.4f}")
     # log(f"FLOPs     : {flops:.4f}")
 
+# endregion
+
 
 # ==============================================================================
-# UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Representation ---
 def _format_unit(val: float, target: str = "M") -> str:
     """Helper to format large numbers (e.g., 1.2G, 3.5M)."""
     if target == "G":
         return f"{val / 1e9:.2f} G"
     return f"{val / 1e6:.2f} M"
+
+# endregion

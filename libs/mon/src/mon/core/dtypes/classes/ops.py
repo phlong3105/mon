@@ -3,8 +3,7 @@
 
 """Classes atomic operations.
 
-This module provides pure functions that perform a single mathematical or
-structural change to the classes.
+This module provides atomic operations for classes.
 """
 
 from __future__ import annotations
@@ -95,18 +94,19 @@ import numpy as np
 
 
 # --- Encoding ---
+
 def class_id_to_one_hot(class_id: int, num_classes: int) -> np.ndarray:
     """Convert a class ID to a one-hot encoded probability array.
-    
+
     Args:
         class_id: Class ID.
         num_classes: Total number of classes.
-        
+
     Returns:
         An one-hot encoded probability array of shape (``num_classes``) where
-            the index corresponding to ``class_id`` is 1.0 and all other indices
-            are 0.0.
-            
+        the index corresponding to ``class_id`` is 1.0 and all other indices
+        are 0.0.
+        
     Raises:
         ValueError: If ``num_classes`` is not a positive integer.
         ValueError: If ``class_id`` is not in range [0, ``num_classes``).
@@ -124,14 +124,14 @@ def class_id_to_one_hot(class_id: int, num_classes: int) -> np.ndarray:
 
 def class_ids_to_one_hot(class_ids: np.ndarray, num_classes: int) -> np.ndarray:
     """Convert a batch of class IDs to one-hot encoded probability arrays.
-    
+
     Args:
         class_ids: Array of class IDs of shape (N,).
         num_classes: Total number of classes.
-    
+
     Returns:
         An array of shape (N, ``num_classes``) where each row is a one-hot
-            encoded probability array corresponding to the class ID in ``class_ids``.
+        encoded probability array corresponding to the class ID in ``class_ids``.
     
     Raises:
         ValueError: If ``num_classes`` is not a positive integer.

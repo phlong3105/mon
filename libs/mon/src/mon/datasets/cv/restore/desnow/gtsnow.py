@@ -3,8 +3,10 @@
 
 """GT-Snow dataset.
 
-This module implements GT-Snow dataset for image de-snowing.
+This module provides GT-Snow dataset for image de-snowing.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "GTSnow",
@@ -13,15 +15,29 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="gtsnow")
-class GTSnow(ImageDataset):
+@DATASETS.register()
+class GTSnow(ImageDataset, RegistrableMixin):
     """GTSnow dataset."""
     
-    _subset    : str         = "gtsnow"
+    _name      : str         = "gtsnow"
     _tasks     : list[Task]  = [Task.DESNOW]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None

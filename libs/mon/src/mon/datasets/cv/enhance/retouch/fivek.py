@@ -3,7 +3,7 @@
 
 """FiveK dataset.
 
-This module implements the FiveK dataset and its variants for image retouching.
+This module provides the FiveK dataset and its variants for image retouching.
 """
 
 __all__ = [

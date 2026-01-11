@@ -3,30 +3,47 @@
 
 """Rain1200 dataset.
 
-This module implements the Rain1200 dataset for image de-raining.
+This module provides the Rain1200 dataset for image de-raining.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Rain1200",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ....api import *
 
 
-@DATASETS.register(name="rain1200")
-class Rain1200(ImageDataset):
+@DATASETS.register()
+class Rain1200(ImageDataset, RegistrableMixin):
     """Rain1200 dataset."""
 
-    _subset    : str         = "rain1200"
+    _name      : str         = "rain1200"
     _tasks     : list[Task]  = [Task.DERAIN]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
     
+    # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
         
@@ -40,12 +57,10 @@ class Rain1200(ImageDataset):
                 self.root / self.split_str / "heavy"  / "image",
             ]
         else:
-            patterns = [
-                self.root / self.split_str / "image",
-            ]
+            patterns = [self.root / self.split_str / "image"]
         
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
+        images = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 paths = sorted(pattern.rglob("*"))
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"

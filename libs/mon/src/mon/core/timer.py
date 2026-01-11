@@ -3,8 +3,7 @@
 
 """Timer and profiling utility collection.
 
-This module provides lightweight timer and profiling helpers for measuring
-elapsed time and profiling pipeline stages.
+This module provides lightweight timer and profiling helpers.
 """
 
 from __future__ import annotations
@@ -22,35 +21,37 @@ from mon.core.console import console
 
 
 # ==============================================================================
-# CORE MEASUREMENT ENGINE
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Atomic Timer (The Timer class for tracking intervals) ---
 class Timer:
-    """A lightweight timer for measuring elapsed time.
+    """Lightweight timer for measuring elapsed time.
 
-    This class accumulates total time, counts calls, and provides statistics
-    like per-call average and the duration of the last interval. It can be used
-    as a context manager.
+    Accumulate total time, count calls, and provide statistics like per-call
+    average and the duration of the last interval. Use as a context manager.
 
     Attributes:
-        _name (str | None): An optional name for the timer instance.
-        start_time (float): The timestamp when the current interval started.
-        end_time (float): The timestamp when the current interval ended.
-        total (float): The accumulated total time across all intervals.
-        calls (int): The number of timing intervals recorded.
-        diff (float): The duration of the most recent interval.
-        avg (float): The running average duration per call.
-        duration (float): The last reported duration, which can be either the most
-            recent interval's duration or the running average.
+        _name (str | None): Optional name for the timer instance.
+            Defaults to None.
+        start_time (float): Timestamp when the current interval started.
+            Defaults to 0.0.
+        end_time (float): Timestamp when the current interval ended.
+            Defaults to 0.0.
+        total (float): Accumulated total time across all intervals.
+            Defaults to 0.0.
+        calls (int): Number of timing intervals recorded. Defaults to 0.
+        diff (float): Duration of the most recent interval. Defaults to 0.0.
+        avg (float): Running average duration per call. Defaults to 0.0.
+        duration (float): Last reported duration, which can be either the most
+            recent interval's duration or the running average. Defaults to 0.0.
     """
     
     # --- Lifecycle & Initialization ---
     def __init__(self, name: str | None = None):
-        """Initialize a new Timer instance.
-        
+        """Initialize a new instance.
+
         Args:
-            name: An optional name for the timer.
+            name: Optional name for the timer. Defaults to None.
         """
         self._name = name
         self._reset_stats()
@@ -107,7 +108,11 @@ class Timer:
         self.tick()
         
     def end(self) -> float:
-        """End the current timing interval and return the average time."""
+        """End the current timing interval and return the average time.
+
+        Returns:
+            Average time.
+        """
         self.tock()
         return self.avg
     
@@ -119,12 +124,12 @@ class Timer:
         """Record the end time of an interval and update statistics.
 
         Args:
-            average: If True, the `duration` attribute is set to the running
-                average. Otherwise, it's set to the duration of the most
-                recent interval.
+            average: If True, the ``duration`` attribute is set to the running
+                average. Otherwise, it is set to the duration of the most
+                recent interval. Defaults to True.
 
         Returns:
-            The resulting duration.
+            Resulting duration.
         """
         # Ensure all GPU operations are finished before stopping the clock.
         try:
@@ -148,7 +153,7 @@ class Timer:
         self.tick()
 
     def _reset_stats(self):
-        """Helper to initialize or reset statistics."""
+        """Initialize or reset statistics."""
         self.start_time: float = 0.0
         self.end_time  : float = 0.0
         self.total     : float = 0.0
@@ -158,28 +163,22 @@ class Timer:
         self.duration  : float = 0.0
 
 
-# ==============================================================================
-# PIPELINE INSTRUMENTATION
-# ==============================================================================
-
-# --- Stage Profiler ---
 class TimeProfiler:
-    """A profiler that holds timers for different stages of a pipeline.
+    """Profiler that holds timers for different stages of a pipeline.
 
-    This class provides separate `Timer` instances for preprocessing, inference,
-    postprocessing, and the total time, along with methods to compute and
-    display aggregate statistics.
+    Provide separate ``Timer`` instances for preprocessing, inference,
+    postprocessing, and the total time.
 
     Attributes:
-        preprocess (Timer): A `Timer` for the preprocessing stage.
-        infer (Timer): A `Timer` for the inference stage.
-        postprocess (Timer): A `Timer` for the postprocessing stage.
-        total (Timer): A `Timer` for the overall process.
+        preprocess (Timer): ``Timer`` for the preprocessing stage.
+        infer (Timer): ``Timer`` for the inference stage.
+        postprocess (Timer): ``Timer`` for the postprocessing stage.
+        total (Timer): ``Timer`` for the overall process.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(self):
-        """Initialize a new TimeProfiler instance."""
+        """Initialize a new instance."""
         self.preprocess  = Timer(name="Preprocess")
         self.infer       = Timer(name="Infer")
         self.postprocess = Timer(name="Postprocess")
@@ -188,7 +187,7 @@ class TimeProfiler:
     # --- Properties ---
     @property
     def process_time(self) -> float:
-        """Return the cumulative process time (preprocess + infer + postprocess)."""
+        """Return the cumulative process time."""
         return self.preprocess.total + self.infer.total + self.postprocess.total
 
     @property
@@ -198,7 +197,7 @@ class TimeProfiler:
     
     # --- Public Methods ---
     def print(self):
-        """Print a formatted summary of the timing statistics using `rich.table`."""
+        """Print a formatted summary of the timing statistics."""
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Stage", style="dim")
         table.add_column("Time (s)", justify="right")
@@ -252,3 +251,5 @@ class TimeProfiler:
                 else:
                     message += f"{v:<10.6f}\t"
         print(f"{message}\n")
+
+# endregion

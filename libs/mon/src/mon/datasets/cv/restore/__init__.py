@@ -3,11 +3,10 @@
 
 """Image restoration datasets.
 
-This package provides various datasets for image restoration tasks such as
-de-blurring, de-flaring, de-hazing, de-raining, and de-snowing.
+This package contains various datasets for image restoration tasks.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .deblur import *
 from .deflare import *

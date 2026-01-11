@@ -30,6 +30,7 @@ import torch.nn.functional as F
 # ==============================================================================
 
 # --- Linear Smoothing ---
+
 class BoxFilter(nn.Module):
     """A module that performs box filtering on an image.
     
@@ -132,6 +133,7 @@ class BoxFilter(nn.Module):
 
 
 # --- Edge Detection ---
+
 def sobel_filter(image: np.ndarray, kernel_size: int = 3) -> np.ndarray:
     """Apply Sobel filter to detect edges in an image.
 
@@ -172,6 +174,7 @@ def sobel_filter(image: np.ndarray, kernel_size: int = 3) -> np.ndarray:
     
 
 # --- Edge-Preserving & Joint Filters ---
+
 class GuidedFilter(nn.Module):
     """A class that applies guided filtering to an image.
     

@@ -3,8 +3,7 @@
 
 """CLI argument parsing and preparation utilities.
 
-This module provides helpers to build, parse, and merge CLI arguments for
-runtime workflows.
+This module provides helpers to build, parse, and merge CLI arguments.
 """
 
 from __future__ import annotations
@@ -37,20 +36,23 @@ from .utils import (
 
 
 # ==============================================================================
-# BASIC PARSING OPERATIONS
+# region RETRIEVAL
 # ==============================================================================
 
-# --- Argument Reflection (Building argparse from metadata) ---
+# --- Accessing ---
+
 def parse_default_args(name: str = "main") -> box.Box:
     """Build and parse default CLI arguments.
 
-    Construct an ArgumentParser from CLI_OPTIONS and return parsed args.
+    Construct an argparse.ArgumentParser from ``CLI_OPTIONS`` and return
+    parsed arguments.
 
     Args:
-        name: Program description used in the ArgumentParser.
+        name: Program description used in the ArgumentParser. Defaults to
+            "main".
 
     Returns:
-        Parsed arguments as a Box.
+        Parsed arguments as a box.Box.
     """
     parser = argparse.ArgumentParser(description=name)
     
@@ -83,7 +85,6 @@ def parse_default_args(name: str = "main") -> box.Box:
     return box.Box(vars(parser.parse_args()))
     
 
-# --- CLI Orchestration (Handling the switch between direct and interactive) ---
 def parse_cli_args(
     cli : box.Box | None = None,
     root: Path | None    = None,
@@ -91,12 +92,12 @@ def parse_cli_args(
 ) -> box.Box:
     """Parse CLI arguments and optionally run the interactive prompt.
 
-    If the interactive flag is present, launch RunCLI to gather values.
+    Launch RunCLI to gather values if the ``p`` flag is present.
 
     Args:
-        cli: Pre-parsed CLI or None.
-        root: Project root to attach to parsed args or None.
-        name: Program description for parser (used if parsing defaults).
+        cli: Pre-parsed CLI arguments. Defaults to None.
+        root: Project root to attach to parsed arguments. Defaults to None.
+        name: Program description for the parser. Defaults to "main".
 
     Returns:
         Normalized CLI arguments.
@@ -119,11 +120,6 @@ def parse_cli_args(
     return cli
 
 
-# ==============================================================================
-# RUNTIME CONTEXT PREPARATION
-# ==============================================================================
-
-# --- Train Logic ---
 def parse_train_args(
     cli       : box.Box | None = None,
     root      : Path | None    = None,
@@ -132,14 +128,15 @@ def parse_train_args(
 ) -> box.Box:
     """Parse and prepare training arguments.
 
-    Merge CLI and config values, resolve paths and devices, and prepare the
-    save directory.
+    Merge ``cli`` and configuration values, resolve paths and devices, and
+    prepare the save directory.
 
     Args:
-        cli: CLI arguments or None.
-        root: Project root path.
-        model_root: Model root path for config resolution or None.
-        verbose: If True, print helpful logs.
+        cli: CLI arguments. Defaults to None.
+        root: Project root path. Defaults to None.
+        model_root: Model root path for configuration resolution. Defaults to
+            None.
+        verbose: If True, print helpful logs. Defaults to False.
 
     Returns:
         Finalized training arguments.
@@ -189,7 +186,6 @@ def parse_train_args(
     return args
 
 
-# --- Predict Logic ---
 def parse_predict_args(
     cli       : box.Box | None = None,
     root      : Path | None    = None,
@@ -198,14 +194,15 @@ def parse_predict_args(
 ) -> box.Box:
     """Parse and prepare prediction arguments.
 
-    Merge CLI and config values, resolve devices and weights, and adjust
-    image size. Prepare save directories as required.
+    Merge ``cli`` and configuration values, resolve devices and weights, and
+    adjust image size.
 
     Args:
-        cli: CLI arguments or None.
-        root: Project root path.
-        model_root: Model root path for config resolution or None.
-        verbose: If True, print helpful logs.
+        cli: CLI arguments. Defaults to None.
+        root: Project root path. Defaults to None.
+        model_root: Model root path for configuration resolution. Defaults to
+            None.
+        verbose: If True, print helpful logs. Defaults to False.
 
     Returns:
         Finalized prediction arguments.
@@ -259,3 +256,5 @@ def parse_predict_args(
         console.log(f"[green]Run directory:[/green] {args.save_dir}")
       
     return args
+
+# endregion

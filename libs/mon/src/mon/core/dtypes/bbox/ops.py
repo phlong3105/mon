@@ -3,8 +3,7 @@
 
 """Bounding box atomic operations.
 
-This module provides pure functions that perform a single mathematical or
-structural change to the bounding boxes.
+This module provides atomic operations for bounding boxes.
 """
 
 from __future__ import annotations
@@ -176,6 +175,7 @@ def is_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> bool:
 
 
 # --- Selection ---
+
 def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
     """Filter bounding boxes by IoU threshold using a simple area comparison.
     
@@ -259,6 +259,7 @@ def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
 
 
 # --- Geometric ---
+
 def center(bbox: np.ndarray) -> np.ndarray:
     """Calculate the center point(s) of bounding box(es).
 
@@ -628,6 +629,7 @@ def iou_matrix(bbox: np.ndarray, self_match: bool = False) -> np.ndarray:
 # ==============================================================================
 
 # --- Casting ---
+
 def xywh_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from XYWH to CXCYWHN format.
 
@@ -913,6 +915,7 @@ def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.nda
 
 
 # --- Structural ---
+
 def to_2d(bbox: Union[np.ndarray, list, tuple]) -> np.ndarray:
     """Convert bounding boxes to a 2-D numpy.ndarray.
 
@@ -1058,6 +1061,7 @@ def split(image: np.ndarray, bbox : np.ndarray, n: int = 2) -> tuple[list[np.nda
 
 
 # --- Statistical ---
+
 def normalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Normalize bounding boxes by image size.
 
@@ -1129,6 +1133,7 @@ def denormalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
 
 
 # --- Geometric ---
+
 def crop_center(
     image: np.ndarray,
     bbox : np.ndarray,

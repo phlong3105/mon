@@ -3,12 +3,14 @@
 
 """ExDark dataset.
 
-This module implements the ExDark dataset for nighttime object enhancement and
+This module provides the ExDark dataset for nighttime object enhancement and
 detection.
 
 References:
     - Data: https://github.com/cs-chan/Exclusively-Dark-Image-Dataset
 """
+
+from __future__ import annotations
 
 __all__ = [
     "ExDark",
@@ -17,16 +19,30 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="exdark")
-class ExDark(ImageDataset):
+@DATASETS.register()
+class ExDark(ImageDataset, RegistrableMixin):
     """ExDark dataset."""
     
-    _subset    : str         = "exdark"
+    _name      : str         = "exdark"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = ClassList([
         {"name": "Bicycle"  , "id":  1, "coco80_id":  2, "color": [138, 183,  33]},

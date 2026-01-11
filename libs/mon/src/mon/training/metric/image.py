@@ -7,6 +7,8 @@ This module provides functions and classes to evaluate the quality of images
 based on various criteria such as exposedness, contrast, and saturation.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "ImageQualityAssessment",
     "scale_gt_mean",
@@ -20,54 +22,11 @@ import torch.nn as nn
 
 
 # ==============================================================================
-# IMAGE PRE-PROCESSING & NORMALIZATION
-# ==============================================================================
-
-# --- Normalization ---
-def scale_gt_mean(
-    image : torch.Tensor | np.ndarray,
-    target: torch.Tensor | np.ndarray,
-    eps   : float = 1e-6
-) -> torch.Tensor | np.ndarray:
-    """Scale image to match target's mean intensity.
-    
-    References:
-        - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/measure.py
-        
-    Args:
-        image: Input image, formatted as a torch.Tensor of shape
-            (B, C, H, W) and values ranging from 0.0 to 1.0; or as a np.ndarray
-            of shape (H, W, C) with values ranging from 0 to 255.
-        target: Target image, formatted as a torch.Tensor of shape
-            (B, C, H, W) and values ranging from 0.0 to 1.0; or as a np.ndarray
-            of shape (H, W, C) with values ranging from 0 to 255.
-        eps: Small constant for numerical stability. Defaults to 1e-6.
-        
-    Returns:
-        Scaled image with mean intensity matching the target.
-        
-    Raises:
-        TypeError: If input types are not torch.Tensor or np.ndarray.
-    """
-    if isinstance(image, torch.Tensor) and isinstance(target, torch.Tensor):
-        mean_image  = kornia.color.rgb_to_grayscale(image).mean()
-        mean_target = kornia.color.rgb_to_grayscale(target).mean()
-        scale       = (mean_target + eps) / (mean_image + eps)
-        return torch.clamp(image * scale, 0, 1)
-    elif isinstance(image, np.ndarray) and isinstance(target, np.ndarray):
-        mean_image  = cv2.cvtColor(image,  cv2.COLOR_RGB2GRAY).mean()
-        mean_target = cv2.cvtColor(target, cv2.COLOR_RGB2GRAY).mean()
-        scale       = (mean_target + eps) / (mean_image + eps)
-        return np.clip(image * scale, 0, 255)
-    else:
-        raise TypeError(f"Expected torch.Tensor or np.ndarray, but got {type(image)} and {type(target)}.")
-
-
-# ==============================================================================
-# NON-REFERENCE QUALITY ASSESSMENT
+# region NON-REFERENCE IAQ
 # ==============================================================================
 
 # --- Perceptual Metrics ---
+
 class ImageQualityAssessment(nn.Module):
     """Image Quality Assessment (IQA) metric.
 
@@ -143,3 +102,50 @@ class ImageQualityAssessment(nn.Module):
         contrast    = self.mean_pool(x * x).mean(dim=1, keepdim=True) - mean_rgb ** 2
         return torch.mean((saturation * contrast) / exposedness, dim=[1], keepdim=True)
         """
+
+# endregion
+
+
+# ==============================================================================
+# region UTILITIES
+# ==============================================================================
+
+def scale_gt_mean(
+    image : torch.Tensor | np.ndarray,
+    target: torch.Tensor | np.ndarray,
+    eps   : float = 1e-6
+) -> torch.Tensor | np.ndarray:
+    """Scale image to match target's mean intensity.
+    
+    References:
+        - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/measure.py
+        
+    Args:
+        image: Input image, formatted as a torch.Tensor of shape
+            (B, C, H, W) and values ranging from 0.0 to 1.0; or as a np.ndarray
+            of shape (H, W, C) with values ranging from 0 to 255.
+        target: Target image, formatted as a torch.Tensor of shape
+            (B, C, H, W) and values ranging from 0.0 to 1.0; or as a np.ndarray
+            of shape (H, W, C) with values ranging from 0 to 255.
+        eps: Small constant for numerical stability. Defaults to 1e-6.
+        
+    Returns:
+        Scaled image with mean intensity matching the target.
+        
+    Raises:
+        TypeError: If input types are not torch.Tensor or np.ndarray.
+    """
+    if isinstance(image, torch.Tensor) and isinstance(target, torch.Tensor):
+        mean_image  = kornia.color.rgb_to_grayscale(image).mean()
+        mean_target = kornia.color.rgb_to_grayscale(target).mean()
+        scale       = (mean_target + eps) / (mean_image + eps)
+        return torch.clamp(image * scale, 0, 1)
+    elif isinstance(image, np.ndarray) and isinstance(target, np.ndarray):
+        mean_image  = cv2.cvtColor(image,  cv2.COLOR_RGB2GRAY).mean()
+        mean_target = cv2.cvtColor(target, cv2.COLOR_RGB2GRAY).mean()
+        scale       = (mean_target + eps) / (mean_image + eps)
+        return np.clip(image * scale, 0, 255)
+    else:
+        raise TypeError(f"Expected torch.Tensor or np.ndarray, but got {type(image)} and {type(target)}.")
+
+# endregion

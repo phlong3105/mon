@@ -3,9 +3,11 @@
 
 """LOL-Blur dataset.
 
-This module implements LOL-Blur dataset for image deblurring, denoising, and
+This module provides LOL-Blur dataset for image deblurring, denoising, and
 low-light enhancement.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "LOLBlurB",
@@ -18,180 +20,89 @@ __all__ = [
 
 import abc
 
-from mon.core import rich
 from ....api import *
 
 
 class LOLBlur(ImageDataset, abc.ABC):
     """LOL-Blur dataset."""
     
-    _subset    : str         = "lolblur"
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",      type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName,    type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",        type="image", module=Image,           train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
 
 
-@DATASETS.register(name="lolblurb")
-class LOLBlurB(LOLBlur):
+@DATASETS.register()
+class LOLBlurB(LOLBlur, RegistrableMixin):
     """LOL-Blur-B (Blur) dataset."""
-
-    _tasks: list[Task] = [Task.DEBLUR]
     
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "b" / self.split_str / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
+    _name  : str        = "lolblurb"
+    _tasks : list[Task] = [Task.DEBLUR]
+    _subset: str        = "b"
 
 
-@DATASETS.register(name="lolblurbn")
-class LOLBlurBN(LOLBlur):
+@DATASETS.register()
+class LOLBlurBN(LOLBlur, RegistrableMixin):
     """LOL-Blur-BN (Blur + Noise) dataset."""
-
-    _tasks: list[Task] = [Task.DEBLUR, Task.DENOISE]
-
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "bn" / self.split_str / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
+    
+    _name  : str        = "lolblurbn"
+    _tasks : list[Task] = [Task.DEBLUR, Task.DENOISE]
+    _subset: str        = "bn"
 
 
-@DATASETS.register(name="lolblurl")
-class LOLBlurL(LOLBlur):
+@DATASETS.register()
+class LOLBlurL(LOLBlur, RegistrableMixin):
     """LOL-Blur-L (Low-Light) dataset."""
-
-    _tasks: list[Task] = [Task.LLE]
-
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "l" / self.split_str / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-        
-        return images
+    
+    _name  : str        = "lolblurl"
+    _tasks : list[Task] = [Task.LLE]
+    _subset: str        = "l"
 
 
-@DATASETS.register(name="lolblurlb")
-class LOLBlurLB(LOLBlur):
+@DATASETS.register()
+class LOLBlurLB(LOLBlur, RegistrableMixin):
     """LOL-Blur-LB (Low-Light + Blur) dataset."""
-
-    _tasks: list[Task] = [Task.DEBLUR, Task.LLE]
-
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "lb" / self.split_str / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-        
-        return images
+    
+    _name  : str        = "lolblurlb"
+    _tasks : list[Task] = [Task.DEBLUR, Task.LLE]
+    _subset: str        = "lb"
 
 
-@DATASETS.register(name="lolblurlbn")
-class LOLBlurLBN(LOLBlur):
+@DATASETS.register()
+class LOLBlurLBN(LOLBlur, RegistrableMixin):
     """LOL-Blur-LBN (Low-Light + Blur + Noise) dataset."""
-
-    _tasks: list[Task] = [Task.DEBLUR, Task.DENOISE, Task.LLE]
-
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "lbn" / self.split_str / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
+    
+    _name  : str        = "lolblurlbn"
+    _tasks : list[Task] = [Task.DEBLUR, Task.DENOISE, Task.LLE]
+    _subset: str        = "lbn"
 
 
-@DATASETS.register(name="lolblurn")
-class LOLBlurN(LOLBlur):
+@DATASETS.register()
+class LOLBlurN(LOLBlur, RegistrableMixin):
     """LOL-Blur-N (Noise) dataset."""
-
-    _tasks: list[Task] = [Task.DENOISE]
-
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "n" / self.split_str / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-
-        return images
+    
+    _name  : str        = "lolblurn"
+    _tasks : list[Task] = [Task.DENOISE]
+    _subset: str        = "n"

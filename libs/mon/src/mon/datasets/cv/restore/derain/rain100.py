@@ -3,8 +3,10 @@
 
 """Rain100 dataset.
 
-This module implements the Rain100 dataset for image de-raining.
+This module provides the Rain100 dataset for image de-raining.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Rain100",
@@ -15,43 +17,85 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="rain100")
-class Rain100(ImageDataset):
+@DATASETS.register()
+class Rain100(ImageDataset, RegistrableMixin):
     """Rain100 dataset."""
 
-    _subset    : str         = "rain100"
+    _name      : str         = "rain100"
     _tasks     : list[Task]  = [Task.DERAIN]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
 
 
-@DATASETS.register(name="rain100h")
-class Rain100H(ImageDataset):
+@DATASETS.register()
+class Rain100H(ImageDataset, RegistrableMixin):
     """Rain100H dataset."""
 
-    _subset    : str         = "rain100h"
+    _name      : str         = "rain100h"
     _tasks     : list[Task]  = [Task.DERAIN]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
 
 
-@DATASETS.register(name="rain100l")
-class Rain100L(ImageDataset):
+@DATASETS.register()
+class Rain100L(ImageDataset, RegistrableMixin):
     """Rain100L dataset."""
 
-    _subset    : str         = "rain100l"
+    _name      : str         = "rain100l"
     _tasks     : list[Task]  = [Task.DERAIN]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None

@@ -3,14 +3,12 @@
 
 """Video atomic operations.
 
-This module provides atomic operations for video.
+This module provides atomic operations for video data.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

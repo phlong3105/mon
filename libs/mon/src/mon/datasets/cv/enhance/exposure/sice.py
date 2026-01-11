@@ -3,7 +3,7 @@
 
 """SICE dataset.
 
-This module implements the SICE dataset for exposure enhancement.
+This module provides the SICE dataset for exposure enhancement.
 
 References:
     - Paper: "Learning a Deep Single Image Contrast Enhancer from Multi-Exposure
@@ -29,38 +29,74 @@ Notices:
         - If there are 9 images, then it is number 6. (My assumption)
 """
 
+from __future__ import annotations
+
 __all__ = [
     "SICE",
     "SICEME",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ....api import *
 
 
-@DATASETS.register(name="sice")
-class SICE(ImageDataset):
-    """SICE dataset. We use the under-exposure images as the primary input
-    modality.
+@DATASETS.register()
+class SICE(ImageDataset, RegistrableMixin):
+    """SICE dataset.
+    
+    We use the under-exposure images as the primary input modality.
     """
     
-    _subset    : str         = "sice"
+    _name      : str         = "sice"
     _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF, Task.LLE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image"      : Modality(name="image_under", type="image", module=Image,           train=True, test=True, primary=True),
-        "image_under": Modality(name="image_under", type="image", module=Image,           train=True, test=False),
-        "image_over" : Modality(name="image_over",  type="image", module=Image,           train=True, test=False),
-        "depth"      : Modality(name=DepthName,     type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"        : Modality(name="ref",         type="image", module=Image,           train=True, test=True),
+        "image"      : Modality(
+            name    = "image_under",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "image_under": Modality(
+            name    = "image_under",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
+        "image_over" : Modality(
+            name    = "image_over",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
+        "depth"      : Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"        : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
     
+    # --- Lifecycle & Initialization ---
     def __init__(self, lr: bool = True, *args, **kwargs):
-        """Initializes the SICE dataset.
+        """Initializes a new instance.
         
         Args:
-            lr (bool): If True, use the low-resolution version of the dataset.
+            lr: If True, use the low-resolution version of the dataset.
                 Default is True.
         """
         self.lr = lr
@@ -73,56 +109,55 @@ class SICE(ImageDataset):
         Returns:
             A list of Image instances for the primary modality.
         """
-        if self.lr:
-            patterns = [self.root / "sice_lr" / self.split_str / "image_under"]
-        else:
-            patterns = [self.root / "sice"    / self.split_str / "image_under"]
+        base_dir = "sice_lr" if self.lr else "sice"
+        pattern  = self.root / base_dir / self.split_str / "image_under"
         
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        images   = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
         
         return images
 
 
-@DATASETS.register(name="siceme")
-class SICEME(ImageDataset):
-    """SICE-ME dataset includes multi-exposure training images. This dataset is
-    used in unsupervised curve-estimation methods for low-light enhancement
-    (e.g., Zero-DCE, Zero-DCE++, etc.).
+@DATASETS.register()
+class SICEME(ImageDataset, RegistrableMixin):
+    """SICE-ME dataset includes multi-exposure training images.
+    
+    This dataset is used in unsupervised curve-estimation methods for low-light
+    enhancement (e.g., Zero-DCE, Zero-DCE++, etc.).
     """
     
-    _subset    : str         = "sice"
+    _name      : str         = "siceme"
     _tasks     : list[Task]  = [Task.LLE]
+    _subset    : str         = "me"
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True,  test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True,  test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=False, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = False,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
     
-    # --- Data Loading ---
-    def _load_primary_data(self) -> list[Image]:
-        """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of Image instances for the primary modality.
-        """
-        patterns = [self.root / "me" / self.split_str / "image"]
-        
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
-    
-        return images

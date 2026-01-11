@@ -63,16 +63,15 @@ _PIL_MODE_TO_CHANNELS = {
 def read(path: Path | str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray:
     """Read an image from a file path.
 
-    Read an image from a file path using OpenCV. Also add support for raw
-    images.
+    Read an image from a ``path`` using OpenCV. Also add support for raw images.
 
     Args:
         path: Absolute path to the image file.
         flags: OpenCV flag to read image. Defaults to cv2.IMREAD_COLOR.
 
     Returns:
-        RGB or grayscale image, formatted as a numpy.ndarray of shape
-        (H, W, C) and pixel values ranging from 0 to 255.
+        RGB or grayscale image, formatted as a numpy.ndarray of shape (H, W, C)
+        and pixel values ranging from 0 to 255.
 
     Raises:
         RuntimeError: If OpenCV could not decode the image.
@@ -108,13 +107,10 @@ def read(path: Path | str, flags: int = cv2.IMREAD_COLOR) -> np.ndarray:
 
 
 def read_shape(path: Path | str) -> tuple[int, int, int]:
-    """Read the image's shape from a file path.
+    """Read the image's shape as (H, W, C) from a file path.
 
     Args:
         path: Absolute path to the image file.
-
-    Returns:
-        Image's shape as (H, W, C).
 
     Raises:
         ValueError: If image mode is unsupported for non-RAW images.
@@ -141,13 +137,10 @@ def read_shape(path: Path | str) -> tuple[int, int, int]:
 
 
 def read_size(path: Path | str) -> tuple[int, int]:
-    """Read the image's size from a file path.
+    """Read the image's size as (H, W) from a file path.
 
     Args:
         path: Absolute path to the image file.
-
-    Returns:
-        Image's size as (H, W).
     """
     h, w, _ = read_shape(path=path)
     return h, w
@@ -160,15 +153,15 @@ def read_size(path: Path | str) -> tuple[int, int]:
 # ==============================================================================
 
 def write(image: np.ndarray | torch.Tensor, path: Path | str):
-    """Save an image to disk.
+    """Save an ``image`` to a ``path`` on disk.
 
     Args:
         image: RGB or grayscale image, formatted as a numpy.ndarray of shape
             (H, W, C) and pixel values ranging from 0 to 255; or as a
-            torch.Tensor with dimensions (B, C, H, W) and pixel values
-            ranging from 0.0 to 1.0.
-        path: Absolute path to save the image. The parent directories will be
-            created if they do not exist.
+            torch.Tensor of shape (B, C, H, W) and pixel values ranging from
+            0.0 to 1.0.
+        path: Absolute path to save the ``image``. The parent directories will
+            be created if they do not exist.
 
     Raises:
         TypeError: If ``image`` is not a torch.Tensor or numpy.ndarray.

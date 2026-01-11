@@ -3,7 +3,7 @@
 
 """Bounding box data structures.
 
-This module provides the base classes and mixins for bounding boxes.
+This module provides base classes and mixins for bounding boxes.
 """
 
 from __future__ import annotations
@@ -15,11 +15,11 @@ __all__ = [
 
 import numpy as np
 
-from mon.core.dtypes.array import TensorOrArray
-from mon.core.dtypes.base import PersistentData
-from mon.core.dtypes import image as I
 from mon.core.enum import BBoxFormat
 from mon.core.pathlib import Path
+from .. import image as I
+from ..array import TensorOrArray
+from ..base import PersistentData
 
 
 # ==============================================================================
@@ -134,47 +134,27 @@ class BBox(TensorOrArray):
         
     @property
     def imgsz(self) -> tuple[int, int]:
-        """Return the image size.
-
-        Returns:
-            Image size as (H, W).
-        """
+        """Return the image size."""
         return self._imgsz
     
     @property
     def conf(self) -> float:
-        """Return the confidence score.
-
-        Returns:
-            Confidence score.
-        """
+        """Return the confidence score."""
         return float(self._data[5])
     
     @property
     def cls(self) -> int:
-        """Return the class identifier.
-
-        Returns:
-            Class identifier.
-        """
+        """Return the class identifier."""
         return int(self._data[6])
     
     @property
     def id(self) -> int:
-        """Return the tracking identifier.
-
-        Returns:
-            Tracking identifier.
-        """
+        """Return the tracking identifier."""
         return int(self._data[7]) if len(self._data) > 7 else -1
 
     @property
     def cxcywhn(self) -> np.ndarray:
-        """Return the bounding box in CXCYWHN format.
-
-        Returns:
-            Bounding box in CXCYWHN format.
-        """
+        """Return the bounding box in CXCYWHN format."""
         return self._data
     
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
@@ -209,11 +189,7 @@ class BBox(TensorOrArray):
     
     @property
     def area(self) -> float:
-        """Compute the area of the bounding box in pixels.
-
-        Returns:
-            Area of the bounding box in pixels.
-        """
+        """Compute the area of the bounding box in pixels."""
         # Using normalization factors: (W_norm * W_img) * (H_norm * H_img)
         h0, w0 = self._imgsz
         return float((self._data[2] * w0) * (self._data[3] * h0))
@@ -256,7 +232,7 @@ class BBoxList(PersistentData):
             path: Label file path. Defaults to None.
             root: Root directory of the label file. Defaults to None.
             fmt: Bounding box format in the label file or conversion code.
-                Defaults to ``BBoxFormat.CXCYWHN``.
+                Defaults to BBoxFormat.CXCYWHN.
             persist: If True, persist loaded data in memory. Defaults to True.
         """
         # Validate and set image size
@@ -318,11 +294,8 @@ class BBoxList(PersistentData):
     # --- Properties ---
     @property
     def data(self) -> np.ndarray:
-        """Return a batch of bounding boxes.
-
-        Returns:
-            Batch of bounding boxes, formatted as a numpy.ndarray of shape
-            (N, 7+) and in CXCYWHN format.
+        """Return a batch of bounding boxes, formatted as a numpy.ndarray of
+        shape (N, 7+) and in CXCYWHN format.
         """
         # Use super's behavior to load data from a file if needed.
         # This is implemented because we want to redefine the setter below.
@@ -365,20 +338,12 @@ class BBoxList(PersistentData):
     
     @property
     def shape(self) -> tuple[int, ...]:
-        """Return the data shape.
-
-        Returns:
-            Data shape.
-        """
+        """Return the data shape."""
         return self.data.shape
 
     @property
     def meta(self) -> dict:
-        """Return metadata describing the data.
-
-        Returns:
-            Metadata describing the data.
-        """
+        """Return metadata describing the data."""
         return {
             "shape": self.shape,
             "dtype": self.data.dtype,
@@ -387,20 +352,12 @@ class BBoxList(PersistentData):
     
     @property
     def imgsz(self) -> tuple[int, int]:
-        """Return the image size.
-
-        Returns:
-            Image size as (H, W).
-        """
+        """Return the image size."""
         return self._imgsz
     
     @property
     def fmt(self) -> BBoxFormat:
-        """Return label file format.
-
-        Returns:
-            Label file format.
-        """
+        """Return label file format."""
         return self._fmt
     
     def _set_fmt(self, fmt: BBoxFormat):
@@ -427,46 +384,30 @@ class BBoxList(PersistentData):
     
     @property
     def conf(self) -> np.ndarray:
-        """Return confidence scores for all bounding boxes.
-
-        Returns:
-            Confidence scores for all bounding boxes.
-        """
+        """Return confidence scores for all bounding boxes."""
         return self.data[:, 5:6]
 
     @property
     def cls(self) -> np.ndarray:
-        """Return class identifiers for all bounding boxes.
-
-        Returns:
-            Class identifiers for all bounding boxes.
-        """
+        """Return class identifiers for all bounding boxes."""
         return self.data[:, 6:7]
 
     @property
     def id(self) -> np.ndarray:
-        """Return tracking identifiers for all bounding boxes.
-
-        Returns:
-            Tracking identifiers for all bounding boxes.
-        """
+        """Return tracking identifiers for all bounding boxes."""
         return self.data[:, 7:8] if self.data.shape[1] > 7 else None
     
     @property
     def cxcywhn(self) -> np.ndarray:
-        """Return all bounding boxes in CXCYWHN format.
-
-        Returns:
-            All bounding boxes in CXCYWHN format.
-        """
+        """Return all bounding boxes in CXCYWHN format."""
         return self.data
     
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
         """Convert all bounding boxes from CXCYWHN to XYXY format.
 
         Args:
-            imgsz: Image size as (H, W). If omitted, uses the stored ``_imgsz``.
-                Defaults to None.
+            imgsz: Optional image size as (H, W). If omitted, uses the stored
+                ``_imgsz``. Defaults to None.
 
         Returns:
             Bounding boxes in XYXY format.
@@ -480,8 +421,8 @@ class BBoxList(PersistentData):
         """Convert all bounding boxes from CXCYWHN to XYWH format.
 
         Args:
-            imgsz: Image size as (H, W). If omitted, uses the stored ``_imgsz``.
-                Defaults to None.
+            imgsz: Optional image size as (H, W). If omitted, uses the stored
+                ``_imgsz``. Defaults to None.
 
         Returns:
             Bounding boxes in XYWH format.

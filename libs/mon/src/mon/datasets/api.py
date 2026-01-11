@@ -7,13 +7,14 @@ This module collects all classes and functions that are commonly used in
 datasets. It is intended to be imported by other dataset modules for convenience.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "BBox",
     "BBoxList",
     "Class",
     "ClassList",
     "DATASETS",
-    "DEPTH_SOURCE",
     "Data",
     "DataLoader",
     "Dataset",
@@ -24,7 +25,6 @@ __all__ = [
     "DepthSource",
     "DeviceManagementMixin",
     "Frame",
-    "INFRARED_SOURCE",
     "Image",
     "ImageDataset",
     "ImageEvalDataset",
@@ -38,6 +38,7 @@ __all__ = [
     "PersistentData",
     "Probabilities",
     "RegistrableMixin",
+    "SOURCE",
     "SemanticMask",
     "Split",
     "Task",
@@ -51,9 +52,8 @@ from functools import partial
 
 from mon.core import (
     DATASETS,
-    DEPTH_SOURCE,
+    SOURCE,
     DepthSource,
-    INFRARED_SOURCE,
     InfraredSource,
     Split,
     Task,
@@ -90,7 +90,7 @@ from mon.training.data import (
 )
 
 # Constants for convenience
-DepthName          = f"{DEPTH_SOURCE.value}"
-InfraredName       = f"{INFRARED_SOURCE.value}"
-DefaultDepthMap    = partial(DepthMap,    source=DEPTH_SOURCE)
-DefaultInfraredMap = partial(InfraredMap, source=INFRARED_SOURCE)
+DepthName          = f"{SOURCE.DEPTH.value}"
+InfraredName       = f"{SOURCE.INFRARED.value}"
+DefaultDepthMap    = partial(DepthMap,    source=SOURCE.DEPTH)
+DefaultInfraredMap = partial(InfraredMap, source=SOURCE.INFRARED)

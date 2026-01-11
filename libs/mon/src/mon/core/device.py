@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""CPU and CUDA device management utilities.
+"""Device management utilities.
 
-This module provides utilities for listing devices, parsing device specifiers,
-normalizing device objects, and querying system and CUDA memory and model device
-placement.
+This module provides utilities for listing, parsing, and querying devices.
 """
 
 from __future__ import annotations
@@ -63,8 +61,8 @@ def list_devices() -> list[str]:
     """List available device specifiers.
 
     Returns:
-         A list containing "auto", "cpu", "mps" (if available), and all
-         available CUDA device specifiers and combinations if CUDA is available.
+        List containing "auto", "cpu", "mps" (if available), and all available
+        CUDA device specifiers and combinations if CUDA is available.
     """
     devices = ["auto", "cpu"]
     if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
@@ -96,16 +94,15 @@ def list_devices() -> list[str]:
 def create_device(device: torch.device | str | int | None) -> torch.device | str:
     """Create a torch.device object from a flexible device input.
 
-    This function acts as a factory, converting various device specifiers into
-    a final `torch.device` object or the special "auto" string for libraries
-    like PyTorch Lightning.
+    Convert various device specifiers into a final torch.device object or the
+    special "auto" string for libraries like PyTorch Lightning.
 
     Args:
-        device: Device specifier, such as a `torch.device` object, an integer,
+        device: Device specifier, such as a torch.device object, an integer,
             a string like "cuda:0", or "auto".
 
     Returns:
-        A `torch.device` object or the special string "auto".
+        A torch.device object or the special string "auto".
 
     Raises:
         ValueError: If the ``device`` specifier is unsupported.
@@ -143,18 +140,19 @@ def create_device(device: torch.device | str | int | None) -> torch.device | str
 # ==============================================================================
 
 # --- Accessing ---
-def inspect_model_device(model: nn.Module) -> torch.device:
-    """Inspect the model parameters and return the device used by the first
-    parameter.
 
-    This is a reliable way to determine where a model is located.
+def inspect_model_device(model: nn.Module) -> torch.device:
+    """Return the device used by the first parameter of the model.
+
+    Inspect the model parameters and return the device used by the first
+    parameter. This is a reliable way to determine where a model is located.
 
     Args:
-        model: The model whose parameter device is queried.
+        model: Model whose parameter device is queried.
 
     Returns:
-        The device where the ``model``'s parameters reside. Defaults to "cpu" if
-        the ``model`` has no parameters or buffers.
+        Device where the ``model``'s parameters reside. Defaults to "cpu" if the
+        ``model`` has no parameters or buffers.
     """
     try:
         # Check parameters first
@@ -172,18 +170,19 @@ def query_vram_usage(
     device: int        = 0,
     unit  : MemoryUnit = MemoryUnit.GB
 ) -> tuple[float, float, float]:
-    """Query NVML for the specified CUDA device and return memory totals in the
-    requested unit.
+    """Query NVML for the specified CUDA device memory usage.
+
+    Return memory totals in the requested unit.
 
     Args:
-        device: CUDA device index to query.
-        unit: Unit to report memory in.
+        device: CUDA device index to query. Defaults to 0.
+        unit: Unit to report memory in. Defaults to MemoryUnit.GB.
 
     Returns:
-        A tuple of (total, used, free) VRAM values in the requested unit.
+        Tuple of (total, used, free) VRAM values in the requested unit.
         
     Raises:
-        ImportError: If ``pynvml`` is not installed.
+        ImportError: If pynvml is not installed.
         NVMLError: If there is an error communicating with the NVIDIA driver.
     """
     if not pynvml_available:
@@ -205,13 +204,15 @@ def query_vram_usage(
 
 
 def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[float, float, float]:
-    """Query system RAM usage and return totals in the requested unit.
+    """Query system RAM usage.
+
+    Return totals in the requested unit.
 
     Args:
-        unit: Unit to report memory in.
+        unit: Unit to report memory in. Defaults to MemoryUnit.GB.
 
     Returns:
-        A tuple of (total, used, free) RAM values in the requested unit.
+        Tuple of (total, used, free) RAM values in the requested unit.
     """
     memory = psutil.virtual_memory()
     ratio  = MemoryUnit.names_to_bytes()[MemoryUnit(unit)]
@@ -227,15 +228,15 @@ def parse_device(
 ) -> torch.device | str | list[str]:
     """Parse a device input into a canonical representation.
 
-    This function handles various device formats, including torch.device objects,
-    integers, strings (e.g., "cpu", "cuda", "cuda:0,1"), and None.
+    Handle various device formats, including torch.device objects, integers,
+    strings (e.g., "cpu", "cuda", "cuda:0,1"), and None.
 
     Args:
-        device: The device specifier to parse.
+        device: Device specifier to parse.
 
     Returns:
-        A canonical representation: "cpu", "auto", a torch.device, or a
-        list of CUDA indices as strings.
+        Canonical representation: "cpu", "auto", a torch.device, or a list of
+        CUDA indices as strings.
     """
     if isinstance(device, torch.device):
         return device

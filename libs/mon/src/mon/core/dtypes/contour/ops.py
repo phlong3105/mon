@@ -3,8 +3,7 @@
 
 """Contour atomic operations.
 
-This module provides pure functions that perform a single mathematical or
-structural change to the contours.
+This module provides atomic operations for contours.
 """
 
 from __future__ import annotations
@@ -17,8 +16,8 @@ __all__ = [
 
 import numpy as np
 
-from mon.core.dtypes import image as I
 from mon.core.enum import BBoxFormat
+from .. import image as I
 
 
 # ==============================================================================
@@ -96,6 +95,7 @@ from mon.core.enum import BBoxFormat
 # ==============================================================================
 
 # --- Casting ---
+
 def convert(
     contour: np.ndarray,
     fmt    : BBoxFormat,
@@ -103,12 +103,12 @@ def convert(
 ) -> np.ndarray:
     """Convert contour points between supported formats.
 
-    Dispatch conversion based on the provided BBoxFormat. Supported conversions
+    Dispatch conversion based on the provided ``fmt``. Supported conversions
     include normalization and denormalization. If the format is not recognized,
-    return the input contour unchanged.
+    return the input ``contour`` unchanged.
 
     Args:
-        contour: Contour points as a numpy.ndarray of shape (N, 2).
+        contour: Contour points, formatted as a numpy.ndarray of shape (N, 2).
         fmt: Target conversion format.
         imgsz: Image size as (H, W).
 
@@ -135,20 +135,21 @@ def convert(
 
 
 # --- Statistical ---
+
 def normalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Normalize contour points to the range [0, 1].
 
     Convert contour coordinates from pixel units to normalized coordinates
-    using the provided image size.
+    using the provided ``imgsz``.
 
     Args:
-        contour: Contour points as a numpy.ndarray of shape (N, 2) in pixel
-            coordinates.
+        contour: Contour points, formatted as a numpy.ndarray of shape (N, 2)
+            in pixel coordinates.
         imgsz: Image size as (H, W).
 
     Returns:
-        Normalized contour points a numpy.ndarray of shape (N, 2) with values
-            in the range [0, 1].
+        Normalized contour points, formatted as a numpy.ndarray of shape (N, 2)
+        and values ranging from 0.0 to 1.0.
     """
     # Standardize image size
     h, w = I.imgsz(imgsz)
@@ -169,22 +170,23 @@ def denormalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Denormalize contour points from [0, 1] to pixel coordinates.
 
     Convert contour coordinates from normalized space to pixel coordinates
-    using the provided image size.
+    using the provided ``imgsz``.
 
     Args:
-        contour: Normalized contour points as a numpy.ndarray of shape (N, 2)
-            and values ranging from 0.0 to 1.0
+        contour: Normalized contour points, formatted as a numpy.ndarray of
+            shape (N, 2) and values ranging from 0.0 to 1.0.
         imgsz: Image size as (H, W).
 
     Returns:
-        Denormalized contour points in pixel coordinates.
+        Denormalized contour points, formatted as a numpy.ndarray of shape
+        (N, 2) in pixel coordinates.
     """
     # Standardize image size
     h, w = I.imgsz(imgsz)
     
     # Standardize input to (N, 2)
-    orig_shape = contour.shape
-    contour    = contour.reshape(-1, 2)
+    orig_shape   = contour.shape
+    contour      = contour.reshape(-1, 2)
     
     # Vectorized multiplication: [x_norm, y_norm] * [w, h]
     scale        = np.array([w, h], dtype=np.float32)

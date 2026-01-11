@@ -3,11 +3,10 @@
 
 """Image and video enhancement datasets.
 
-This package includes various datasets for image enhancement tasks such as
-exposure correction, low-light image enhancement (LLE), and image retouching.
+This package contains various datasets for image and video enhancement tasks.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .exposure import *
 from .lle import *

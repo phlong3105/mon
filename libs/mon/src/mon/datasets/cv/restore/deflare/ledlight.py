@@ -3,8 +3,10 @@
 
 """LEDLight dataset.
 
-This module implements the LEDLight dataset for image de-flaring.
+This module provides the LEDLight dataset for image de-flaring.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "LEDLight",
@@ -13,15 +15,29 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="ledlight")
-class LEDLight(ImageDataset):
+@DATASETS.register()
+class LEDLight(ImageDataset, RegistrableMixin):
     """LEDLight dataset."""
     
-    _subset    : str         = "ledlight"
+    _name      : str         = "ledlight"
     _tasks     : list[Task]  = [Task.DEFLARE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None

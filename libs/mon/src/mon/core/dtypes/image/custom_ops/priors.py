@@ -28,6 +28,7 @@ import torch.nn.functional as F
 # ==============================================================================
 
 # --- Lighting Guidance ---
+
 class BrightnessAttentionMap(nn.Module):
     """A module that computes the Brightness Attention Map (BAM) prior.
     
@@ -93,6 +94,7 @@ class BrightnessAttentionMap(nn.Module):
         
 
 # --- Atmospheric ---
+
 def apsf(
     image: torch.Tensor,
     q    : float = 0.2,
@@ -152,6 +154,7 @@ def apsf(
 # ==============================================================================
 
 # --- Boundary Detection ---
+
 class BoundaryAwarePrior(nn.Module):
     """A module to get the boundary prior from an RGB or grayscale image.
     

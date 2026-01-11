@@ -3,9 +3,10 @@
 
 """Image-based datasets.
 
-This module implements base classes for image datasets and data loaders,
-including functionality for loading images and applying transformations.
+This module provides base classes for image datasets and data loaders.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "ImageDataset",
@@ -27,78 +28,88 @@ from ...comp import BatchCollateMixin, MultimodalDataLoadMixin
 
 
 # ==============================================================================
-# DATASETS
+# region IMAGE DATASETS
 # ==============================================================================
 
-class ImageDataset(
-    Dataset,
-    MultimodalDataLoadMixin,
-    BatchCollateMixin
-):
-    """A base class for datasets where images are the primary modality.
-    
-    This class defines a concrete implementation for image-based datasets. It
-    extends ``Dataset`` with mixins for metadata handling, multimodal data
-    loading, and DataLoader's functionality. It also defines transformation
-    operations using the albumentations library. For vision tasks, this is the
-    primary dataset class to extend from.
-    
+class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
+    """Image dataset base class.
+
+    Extend ``Dataset`` with mixins for metadata handling, multimodal data
+    loading, and batch collation. Define transformation operations using the
+    albumentations library.
+
     Attributes:
-        _subset (str): The name of the dataset's subset directory. Since the
+        _subset (str | None): Name of the dataset's subset directory. Since the
             given attribute ``root`` may only set the dataset root directory,
             this attribute defines the actual folder name of the sub-dataset
             within the root directory (e.g., dataset with multiple versions).
-            Defaults to None and should be overridden in subclasses.
-        _splits (list[Split]): A list of supported splits. This is used to
-            validate the given attribute ``split``. Defaults to all four splits:
-            Split.TRAIN, Split.VAL, Split.TEST, and Split.PREDICT. Should be
-            overridden in subclasses if needed.
-        _modalities (Modalities): A dictionary defining the dataset modalities.
-            Should be overridden in subclasses to accommodate additional
-            modalities (e.g., depth maps, segmentation masks, bounding boxes,
-            captions, or other sensor data).
-        _classlist (ClassList): The dataset object classes. Defaults to None and
-            should be overridden in subclasses.
-        _transform (albumentations.Compose): Transformations to apply to the data.
-        verbose (bool): If True, enables verbose output.
+            Defaults to None.
+        _splits (list[mon.core.enum.Split]): List of supported splits. Defaults
+            to [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT].
+        _modalities (Modalities): Dictionary defining the dataset modalities.
+            Defaults to {"image": ...}.
+        _classlist (ClassList | None): Dataset object classes. Defaults to None.
+        _transform (albumentations.Compose | None): Transformations to apply to
+            the data. Defaults to None.
+        verbose (bool): If True, enable verbose output. Defaults to True.
     """
     
-    _subset    : str         = None
+    _subset    : str | None  = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
-    _classlist : ClassList   = None
+    _classlist : ClassList | None = None
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         root     : Path,
-        split    : Split            = Split.TRAIN,
-        transform: A.Compose        = None,
-        classlist: Path | ClassList = None,
-        verbose  : bool             = True,
+        split    : Split                    = Split.TRAIN,
+        transform: A.Compose | None         = None,
+        classlist: Path | ClassList | None  = None,
+        verbose  : bool                     = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
             root: Absolute path to the dataset root directory.
-            split: Data split subset to use. One of: Split.TRAIN, Split.VAL,
-                Split.TEST, or Split.PREDICT. Defaults to Split.TRAIN.
+            split: Data split subset to use. Defaults to Split.TRAIN.
             transform: Transformations to apply. Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
-                or a ``ClassList`` instance. If given, this will override any
-                ``classes`` defined in the subclass. Defaults to None.
-            verbose: If True, enables verbose output. Defaults to True.
-        
+                or a ClassList instance. Defaults to None.
+            verbose: If True, enable verbose output. Defaults to True.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
+
         Raises:
-            ValueError: If ``modalities`` has no defined attributes.
+            TypeError: If ``root``, ``split``, or ``verbose`` is invalid.
+            ValueError: If ``_modalities`` is empty.
         """
+        if not isinstance(root, (str, Path)):
+            raise TypeError(
+                f"Expected 'root' to be a str or Path, but got {type(root).__name__}."
+            )
+        if not isinstance(split, (str, Split)):
+            raise TypeError(
+                f"Expected 'split' to be a str or Split, but got {type(split).__name__}."
+            )
+        if not isinstance(verbose, bool):
+            raise TypeError(
+                f"Expected 'verbose' to be a bool, but got {type(verbose).__name__}."
+            )
+            
         # Validate modalities
         if not self._modalities:
-            raise ValueError("Expected 'modalities' to have at least one attribute,"
-                             " but got empty.")
+            raise ValueError(f"Expected '_modalities' to be a non-empty dict.")
         
         # Continue the initialization chain
         super().__init__(
@@ -111,14 +122,17 @@ class ImageDataset(
         self.transform = transform
     
     def __del__(self):
-        """Close the dataset loading mechanism and releases resources."""
+        """Finalize the object.
+
+        Close the dataset loading mechanism and release resources.
+        """
         pass
     
     # --- Representation ---
     def __repr__(self) -> str:
-        """Official string representation for developers (eval-able)."""
-        lines  = ["Dataset " + self.__class__.__name__]
-        lines += [f"Number of datapoints: {self.__len__()}"]
+        """Return the official string representation for developers."""
+        lines  = [f"Dataset {self.__class__.__name__}"]
+        lines += [f"Number of datapoints: {len(self)}"]
         if self._root:
             lines += [f"Root location: {self._root}"]
         if self._transform:
@@ -127,14 +141,14 @@ class ImageDataset(
     
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
-        """Return the length of the container (i.e., number of datapoints)."""
+        """Return the length of the container."""
         # Optimization: Use the internal dict directly to avoid property overhead
         # and search only for the primary modality key once.
         pk = next(k for k, v in self._modalities.items() if v.primary)
         return len(self._datapoints[pk])
     
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Define behavior for when an item is accessed via the notation self[index]."""
+        """Return an item at the given ``index``."""
         # Fetch datapoint
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
@@ -170,20 +184,19 @@ class ImageDataset(
     
     # --- Properties ---
     @property
-    def transform(self) -> A.Compose:
+    def transform(self) -> A.Compose | None:
         """Return the transformation operations."""
         return self._transform
     
     @transform.setter
     def transform(self, value: Any = None):
         """Set the transformation operations.
-        
+
         Args:
-            value: Transformations to apply.
-            
+            value: Transformations to apply. Defaults to None.
+
         Raises:
-            TypeError: If ``transform`` is not None or an instance of
-                albumentations.Compose.
+            TypeError: If ``value`` is not an instance of albumentations.Compose.
         """
         if value is None:
             self._transform = None
@@ -192,13 +205,14 @@ class ImageDataset(
         if isinstance(value, (dict, box.Box)):
             value = A.Compose(**value)
         if not isinstance(value, A.Compose):
-            raise TypeError(f"Expected 'transform' to be either None, a dict/box.Box, "
-                            f"or an instance of albumentations.Compose, but got "
-                            f"{type(value).__name__}.")
+            raise TypeError(
+                f"Expected 'transform' to be an instance of albumentations.Compose, "
+                f"but got {type(value).__name__}."
+            )
         
         # Add additional targets to A.Compose if needed.
         existing_targets = value.processors.get("additional_targets", {})
-        new_targets = {
+        new_targets      = {
             k: v.type for k, v in self._modalities.items()
             if v.type and v.module and k not in A.TARGET_TYPES and k not in existing_targets
         }
@@ -211,37 +225,39 @@ class ImageDataset(
     # --- Data Loading ---
     def verify(self):
         """Verify dataset integrity.
-        
+
         Raises:
-            RuntimeError: If no datapoints or attributes invalid.
+            RuntimeError: If no datapoints are found or if modality lengths are
+                inconsistent.
         """
-        if self.__len__() <= 0:
-            raise RuntimeError("No datapoints in the dataset!")
+        if len(self) <= 0:
+            raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
         
         pk, _ = self.primary_modality
         for k, v in self._datapoints.items():
             if k not in self._modalities:
-                raise RuntimeError(f"Expected 'datapoints' to have only defined "
-                                   f"modalities, but got unexpected key: {k}")
+                raise RuntimeError(
+                    f"Expected 'datapoints' to have only defined modalities, "
+                    f"but got unexpected key: {k}."
+                )
             if self._modalities[k]:
                 if v in [None, []]:
-                    raise RuntimeError(f"Datapoint modality ``{k}`` is empty!")
-                elif len(v) != self.__len__():
-                    raise RuntimeError(f"Datapoint modality ``{k}`` has inconsistent"
-                                       f"length with the dataset: {len(v)} != {self.__len__()}.")
+                    raise RuntimeError(f"Datapoint modality '{k}' is empty.")
+                elif len(v) != len(self):
+                    raise RuntimeError(
+                        f"Datapoint modality '{k}' has inconsistent length with the dataset: "
+                        f"{len(v)} != {len(self)}."
+                    )
         
         if self.verbose:
-            log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
+            log(f"Number of {self.split_str} datapoints: {len(self)}.")
     
     # --- Access ---
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
-        
+
         Args:
             index: Index of datapoint.
-            
-        Returns:
-            A dictionary containing all modalities for the specified datapoint.
         """
         # Efficiency: Use dict comprehension for faster construction
         return {
@@ -250,42 +266,52 @@ class ImageDataset(
         }
 
 
-# ==============================================================================
-# LOADERS
-# ==============================================================================
-
 class ImageLoader(ImageDataset):
-    """A concrete class for image-only datasets.
-    
-    Extend ``ImageDataset`` and is designed to load images from a specified
-    ``root``. The ``root`` can be a single image file, a directory, or a glob
-    pattern. This class is primarily used for inference/prediction pipelines
-    where no ground-truth labels are available.
+    """Image-only dataset loader.
+
+    Extend ``ImageDataset`` to load images from a specified ``root``. Support
+    single image files, directories, or glob patterns. Use primarily for
+    inference pipelines where no ground-truth labels are available.
     """
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         root     : Path,
-        split    : Split            = Split.PREDICT,
-        transform: A.Compose        = None,
-        classlist: Path | ClassList = None,
-        verbose  : bool             = True,
+        split    : Split                    = Split.PREDICT,
+        transform: A.Compose | None         = None,
+        classlist: Path | ClassList | None  = None,
+        verbose  : bool                     = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
-            root: Root path to load images from. Can be a file, directory, or
-                glob pattern.
-            split: Data split subset to use. One of: Split.TRAIN, Split.VAL,
-                Split.TEST, or Split.PREDICT. Defaults to Split.TRAIN.
+            root: Root path to load images from.
+            split: Data split subset to use. Defaults to Split.PREDICT.
             transform: Transformations to apply. Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
-                or a ``ClassList`` instance. If given, this will override any
-                ``classes`` defined in the subclass. Defaults to None.
-            verbose: If True, enables verbose output. Defaults to True.
+                or a ClassList instance. Defaults to None.
+            verbose: If True, enable verbose output. Defaults to True.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
+
+        Raises:
+            TypeError: If ``root``, ``split``, or ``verbose`` is invalid.
         """
+        if not isinstance(root, (str, Path)):
+            raise TypeError(
+                f"Expected 'root' to be a str or Path, but got {type(root).__name__}."
+            )
+        if not isinstance(split, (str, Split)):
+            raise TypeError(
+                f"Expected 'split' to be a str or Split, but got {type(split).__name__}."
+            )
+        if not isinstance(verbose, bool):
+            raise TypeError(
+                f"Expected 'verbose' to be a bool, but got {type(verbose).__name__}."
+            )
+            
         super().__init__(
             root      = root,
             split     = split,
@@ -298,12 +324,9 @@ class ImageLoader(ImageDataset):
     # --- Data Loading ----
     def _load_primary_data(self) -> list:
         """Load primary modality data files in the dataset.
-        
-        Returns:
-            A list of primary modality data files.
-            
+
         Raises:
-            IOError: If the ``root`` path is invalid.
+            FileNotFoundError: If the ``root`` path is invalid.
         """
         root = self._root
         
@@ -315,7 +338,7 @@ class ImageLoader(ImageDataset):
         elif root.is_dir() and root.exists():
             paths = list(root.rglob("*"))
         else:
-            raise IOError(f"Invalid 'root' path: {root}")
+            raise FileNotFoundError(f"Dataset root not found at: {root}")
         
         if not paths:
             return []
@@ -333,9 +356,12 @@ class ImageLoader(ImageDataset):
         
         return images
 
+# endregion
+
 
 # ==============================================================================
-# UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Validation & Sanitization ---
+
+# endregion

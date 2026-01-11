@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Datasets for various challenges.
+"""Challenge datasets.
 
-This package includes modules for handling datasets from different challenges,
-such as AI City, MIPI, and NTIRE. Each module provides specific functionalities
-and classes to work with the respective datasets.
+This package contains datasets for various challenges.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .aicity import *
 from .mipi import *

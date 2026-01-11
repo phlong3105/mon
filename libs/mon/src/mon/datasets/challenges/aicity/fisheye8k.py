@@ -3,8 +3,10 @@
 
 """FishEye8K dataset.
 
-This module implements the FishEye8K dataset for fisheye object detection.
+This module provides the FishEye8K dataset for fisheye object detection.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "FishEye8K",
@@ -14,7 +16,7 @@ from ...api import *
 
 
 @DATASETS.register()
-class FishEye8K(ImageDataset):
+class FishEye8K(ImageDataset, RegistrableMixin):
     """FishEye8K dataset."""
     
     _name      : str         = "fisheye8k"
@@ -22,7 +24,14 @@ class FishEye8K(ImageDataset):
     _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
     _classlist : ClassList   = ClassList([
         {"name": "bus",        "id": 0, "color": [140,  24, 143]},

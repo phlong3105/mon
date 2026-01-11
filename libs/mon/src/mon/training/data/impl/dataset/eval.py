@@ -4,11 +4,10 @@
 """Evaluation datasets.
 
 This module provides dataset classes specifically designed for evaluation
-purposes, such as image quality assessment (IQA). These datasets support
-loading input and target data, applying transformations, and preparing data
-for evaluation pipelines outside the standard training/evaluation/testing
-loops.
+purposes.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "ImageEvalDataset",
@@ -28,40 +27,42 @@ from ...comp import BatchCollateMixin, InputTargetLoadMixin
 
 
 # ==============================================================================
-# DATASETS
+# region IMAGE EVAL DATASETS
 # ==============================================================================
 
 class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
-    """A concrete class for image quality assessment (IQA) datasets.
-    
-    Define two main modalities: ``image`` and ``target`` (also an image, optional).
-    Primarily used for separated evaluation pipelines outside the train/eval/test
-    loop.
-    
+    """Image quality assessment (IQA) dataset.
+
+    Define two main modalities: ``image`` and ``target``. Primarily used for
+    separated evaluation pipelines outside the train/eval/test loop.
+
     Attributes:
-        _transform (albumentations.Compose): Transformations for input/target.
+        _transform (albumentations.Compose | None): Transformations for input
+            and target. Defaults to None.
     """
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         input_dir : Path,
-        target_dir: Path             = None,
-        transform : A.Compose        = None,
-        classlist : Path | ClassList = None,
-        verbose   : bool             = True,
+        target_dir: Path | None             = None,
+        transform : A.Compose | None        = None,
+        classlist : Path | ClassList | None = None,
+        verbose   : bool                    = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
-            input_dir: Absolute path to the input/predict data directory.
+            input_dir: Absolute path to the input data directory.
             target_dir: Absolute path to the target directory. Defaults to None.
-            transform: Transformations to apply to input/target. Defaults to None.
+            transform: Transformations to apply to input and target.
+                Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
-                or a ``ClassList`` instance. If given, this will override any
-                ``classes`` defined in the subclass. Defaults to None.
-            verbose: If True, enables verbose output. Defaults to True.
+                or a ClassList instance. Defaults to None.
+            verbose: If True, enable verbose output. Defaults to True.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
         """
         super().__init__(
             input_dir  = input_dir,
@@ -70,31 +71,35 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             verbose    = verbose,
             *args, **kwargs
         )
-        self.transform  = transform
+        self.transform = transform
     
     def __del__(self):
-        """Finalizer called when the object is about to be destroyed.
-        
-        Close the dataset loading mechanism and releases resources.
+        """Finalize the object.
+
+        Close the dataset loading mechanism and release resources.
         """
         pass
     
     # --- Representation ---
     def __repr__(self) -> str:
-        """Official string representation for developers (eval-able)."""
-        lines  = ["Dataset " + self.__class__.__name__]
-        lines += [f"Number of datapoints: {self.__len__()}"]
+        """Return the official string representation for developers."""
+        lines  = [f"Dataset {self.__class__.__name__}"]
+        lines += [f"Number of datapoints: {len(self)}"]
         if self._transform:
             lines += [repr(self._transform)]
         return "\n".join(lines)
     
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
-        """Return the length of the container (i.e., number of datapoints)."""
+        """Return the length of the container."""
         return len(self._datapoints["image"])
     
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Define behavior for when an item is accessed via the notation self[index]."""
+        """Return an item at the given ``index``.
+
+        Args:
+            index: Index to access.
+        """
         # Fetch datapoint
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
@@ -124,20 +129,19 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
     
     # --- Properties ---
     @property
-    def transform(self) -> A.Compose:
+    def transform(self) -> A.Compose | None:
         """Return the transformation operations."""
         return self._transform
     
     @transform.setter
     def transform(self, value: Any):
         """Set the transformation operations.
-        
+
         Args:
-            value: Transformations for input/target.
-            
+            value: Transformations for input and target.
+
         Raises:
-            TypeError: If ``transform`` is not None or an instance of
-                albumentations.Compose.
+            TypeError: If ``value`` is not an instance of albumentations.Compose.
         """
         if value is None:
             self._transform = None
@@ -146,8 +150,10 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         if isinstance(value, (dict, box.Box)):
             value = A.Compose(**value)
         if not isinstance(value, A.Compose):
-            raise TypeError(f"Expected 'transform' to be an instance of "
-                            f"albumentations.Compose, but got {type(value)}.")
+            raise TypeError(
+                f"Expected 'transform' to be an instance of albumentations.Compose, "
+                f"but got {type(value).__name__}."
+            )
         
         # Add additional targets to A.Compose if needed.
         if self.has_target:
@@ -160,7 +166,11 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         
     # --- Data Loading ---
     def _load_data(self) -> dict[str, Any]:
-        """Core data loading mechanism for the dataset."""
+        """Load core data for the dataset.
+
+        Returns:
+            Dictionary containing lists of datapoints for each modality.
+        """
         disable_pbar = self.disable_pbar
         input_dir    = self._input_dir
         has_target   = self.has_target
@@ -197,32 +207,32 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
     
     def verify(self):
         """Verify dataset integrity.
-        
+
         Raises:
-            RuntimeError: If no datapoints or attributes invalid.
+            RuntimeError: If no datapoints are found or if modality lengths are
+                inconsistent.
         """
-        if self.__len__() <= 0:
-            raise RuntimeError("No datapoints in the dataset!")
+        if len(self) <= 0:
+            raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
         
         for k, v in self._datapoints.items():
             if v in [None, []]:
-                raise RuntimeError(f"Datapoint modality ``{k}`` is empty!")
-            elif len(v) != self.__len__():
-                raise RuntimeError(f"Datapoint modality ``{k}`` has inconsistent "
-                                   f"length with the dataset: {len(v)} != {self.__len__()}.")
+                raise RuntimeError(f"Datapoint modality '{k}' is empty!")
+            elif len(v) != len(self):
+                raise RuntimeError(
+                    f"Datapoint modality '{k}' has inconsistent length with the dataset: "
+                    f"{len(v)} != {len(self)}."
+                )
         
         if self.verbose:
-            log(f"Number of datapoints: {self.__len__()}.")
+            log(f"Number of datapoints: {len(self)}.")
     
     # --- Access ---
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
-        
+
         Args:
             index: Index of datapoint.
-            
-        Returns:
-            A dictionary containing all modalities for the specified datapoint.
         """
         # Efficiency: Use dict comprehension for faster construction
         return {
@@ -230,9 +240,12 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             for k, v in self._datapoints.items()
         }
 
+# endregion
+
 
 # ==============================================================================
 # UTILITIES
 # ==============================================================================
 
-# --- Validation & Sanitization ---
+
+# endregion

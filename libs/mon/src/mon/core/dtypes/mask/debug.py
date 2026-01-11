@@ -3,14 +3,12 @@
 
 """Mask debugging utilities.
 
-This module provides debugging utilities for mask.
+This module provides debugging utilities for masks.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

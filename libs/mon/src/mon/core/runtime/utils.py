@@ -4,15 +4,18 @@
 """Configuration and project utilities for CLI runtime.
 
 This module provides helpers for listing, resolving, and loading runtime
-configuration, models, datasets, and output directories.
+configuration.
 """
 
-_all__ = [
-    "find_archs",
-    "find_config_files",
-    "find_datasets",
-    "find_models",
-    "find_weights_files",
+from __future__ import annotations
+
+__all__ = [
+    "list_archs",
+    "list_config_files",
+    "list_datasets",
+    "list_models",
+    "list_tasks",
+    "list_weights_files",
     "load_config",
     "load_project_defaults",
     "parse_config_file",
@@ -38,14 +41,13 @@ from mon.core.constants import ROOT_DIR, ZOO_DIR
 from mon.core.enum import MLType, Split, Task
 from mon.core.factory import DATASETS, MODELS
 from mon.core.pathlib import Path
-from mon.core.utils import depascalize, to_list, unique
+from mon.core.utils import depascalize, to_list
 
 
 # ==============================================================================
-# DISCOVERY & REGISTRY LOOKUP
+# region DISCOVERY
 # ==============================================================================
 
-# --- Resource Finders (Listing architectures, models, and tasks) ---
 def list_archs(
     task        : str | None  = None,
     mode        : str | None  = None,
@@ -57,12 +59,13 @@ def list_archs(
     a list of architecture names.
 
     Args:
-        task: Task name to filter architectures.
-        mode: Run mode to filter architectures.
+        task: Task name to filter architectures. Defaults to None.
+        mode: Run mode to filter architectures. Defaults to None.
         project_root: Optional project root to apply project defaults.
+            Defaults to None.
 
     Returns:
-        A sorted list of architecture names.
+        Sorted list of architecture names.
     """
     # Get base model list
     models = list_models(task=task, mode=mode, project_root=project_root)
@@ -103,13 +106,14 @@ def list_models(
     project defaults.
 
     Args:
-        task: Task name to filter models.
-        mode: Run mode to filter models.
-        arch: Architecture name to filter models.
+        task: Task name to filter models. Defaults to None.
+        mode: Run mode to filter models. Defaults to None.
+        arch: Architecture name to filter models. Defaults to None.
         project_root: Optional project root to apply project defaults.
+            Defaults to None.
 
     Returns:
-        A sorted list of model names.
+        Sorted list of model names.
     """
     # Access the flat registry view
     flatten_models = MODELS.flatten_dict
@@ -148,9 +152,10 @@ def list_tasks(project_root: Path | None = None) -> list[str]:
 
     Args:
         project_root: Optional project root to consult project defaults.
+            Defaults to None.
 
     Returns:
-        A sorted list of task names.
+        Sorted list of task names.
     """
     # Start with global defaults
     # Assuming Task.names() returns a list of Enum objects or strings
@@ -175,7 +180,6 @@ def list_tasks(project_root: Path | None = None) -> list[str]:
     return sorted(list(output))
 
 
-# --- Weight & Data Locators (Searching project runs and the global zoo) ---
 def list_config_files(
     project_root : Path,
     model_root   : Path | None = None,
@@ -189,13 +193,13 @@ def list_config_files(
 
     Args:
         project_root: Project root path.
-        model_root: Optional model-specific root to include.
-        model: Optional model name to filter results.
+        model_root: Optional model-specific root to include. Defaults to None.
+        model: Optional model name to filter results. Defaults to None.
         absolute_path: If True, return absolute Paths; otherwise return
-            names.
+            names. Defaults to False.
 
     Returns:
-        A sorted list of configuration file paths or filenames.
+        Sorted list of configuration file paths or filenames.
     """
     def is_valid(x) -> bool:
         return x is not None and str(x).lower() not in ["", "none"]
@@ -248,9 +252,10 @@ def list_datasets(task: str, mode: str, project_root: Path | None = None) -> lis
         task: Task name.
         mode: Run mode, e.g., "train" or "predict".
         project_root: Optional project root to apply defaults.
+            Defaults to None.
 
     Returns:
-        A list of dataset names supporting the task and split.
+        List of dataset names supporting the task and split.
     """
     # Standardize inputs to Enums
     task_enum = Task(task)
@@ -292,9 +297,10 @@ def list_weights_files(model: str, project_root: Path | None = None) -> list[Pat
     Args:
         model: Model name to filter weights.
         project_root: Optional project root to include run/train outputs.
+            Defaults to None.
 
     Returns:
-        A sorted list of matching weight file paths.
+        Sorted list of matching weight file paths.
     """
     def is_valid_root(r) -> bool:
         return r is not None and str(r).lower() not in ["", "none"]
@@ -327,24 +333,25 @@ def list_weights_files(model: str, project_root: Path | None = None) -> list[Pat
     # Return sorted unique paths
     return sorted(list(set(filtered)))
 
+# endregion
+
 
 # ==============================================================================
-# PATH RESOLUTION
+# region INPUT
 # ==============================================================================
 
-# --- Serialization Ops ---
 def load_config(config: Any, verbose: bool = True) -> dict | box.Box:
     """Load configuration from a path, module, or mapping.
 
-    Accept a mapping, a Box, or a filesystem path pointing to a Python or
+    Accept a mapping, a box.Box, or a filesystem path pointing to a Python or
     YAML configuration and return a loaded configuration mapping.
 
     Args:
         config: Mapping or path to a config file.
-        verbose: If True, log load success or failure.
+        verbose: If True, log load success or failure. Defaults to True.
 
     Returns:
-        The loaded configuration as a Box. Returns an empty Box if nothing
+        Loaded configuration as a box.Box. Returns an empty box.Box if nothing
         is found.
     """
     data = None
@@ -395,8 +402,8 @@ def load_project_defaults(project_root: Path | None) -> dict:
         project_root: Project root path.
 
     Returns:
-        The defaults mapping loaded from the project's default.py, or an
-        empty mapping if none is present.
+        Defaults mapping loaded from the project's default.py, or an empty
+        mapping if none is present.
     """
     # Validate Input
     if not project_root or str(project_root).lower() == "none":
@@ -430,12 +437,15 @@ def load_project_defaults(project_root: Path | None) -> dict:
         # Log the error but return empty dict to prevent total system crash
         return {}
 
+# endregion
+
 
 # ==============================================================================
-# PATH RESOLUTION
+# region RETRIEVAL
 # ==============================================================================
 
-# --- Directory Parsers ---
+# --- Accessing ---
+
 def parse_data_dir(root: Path | None, data_dir: Path | str = "") -> Path:
     """Resolve an absolute data directory path from candidates.
 
@@ -444,10 +454,10 @@ def parse_data_dir(root: Path | None, data_dir: Path | str = "") -> Path:
 
     Args:
         root: Project root.
-        data_dir: Candidate data directory name or path.
+        data_dir: Candidate data directory name or path. Defaults to "".
 
     Returns:
-        The first candidate directory path that exists.
+        First candidate directory path that exists.
 
     Raises:
         FileNotFoundError: If no candidate data directory is found.
@@ -499,7 +509,7 @@ def parse_model_dir(arch: str, model: str) -> Optional[Path]:
         model: Model name.
 
     Returns:
-        The path to the model directory, or None if unspecified.
+        Path to the model directory, or None if unspecified.
     """
     # Validation & Normalization
     if not arch or not model:
@@ -538,10 +548,10 @@ def parse_model_fullname(name: str, data: str, suffix: str | None = None) -> str
     Args:
         name: Base model name.
         data: Dataset or data identifier to append.
-        suffix: Optional suffix to append.
+        suffix: Optional suffix to append. Defaults to None.
 
     Returns:
-        The composed fullname string.
+        Composed fullname string.
     """
     if not name or str(name).lower() == "none":
         # Using a default or raising is often better than just logging
@@ -581,12 +591,12 @@ def parse_save_dir(
 
     Args:
         root: Base root path.
-        arch: Optional architecture name.
-        model: Optional model name.
-        data: Optional data name or path.
+        arch: Optional architecture name. Defaults to None.
+        model: Optional model name. Defaults to None.
+        data: Optional data name or path. Defaults to None.
 
     Returns:
-        The constructed save directory path.
+        Constructed save directory path.
     """
     # Start with the base root (e.g., 'project/runs/train')
     save_dir = Path(root).normalize()
@@ -629,10 +639,12 @@ def parse_output_dir(
         subdir_name: Optional subdirectory under root to place outputs.
         src_path: Source file path used to preserve subdir structure.
         keep_subdirs: If True, preserve subdirectories from src_path.
+            Defaults to False.
         save_nearby: If True, save outputs near the source path instead.
+            Defaults to False.
 
     Returns:
-        The resolved output directory path.
+        Resolved output directory path.
     """
     root        = Path(root).normalize()
     dirname     = Path(dirname)
@@ -684,7 +696,7 @@ def parse_weights_dir(root: Path, weights: Path | Sequence[Path]) -> Path | Sequ
         weights: Weight name or iterable of weight names.
 
     Returns:
-        A resolved path, a list of resolved paths, or None if nothing was found.
+        Resolved path, a list of resolved paths, or None if nothing was found.
     """
     root = Path(root).normalize(exist=True)
     # Ensure weights is always a list of Path objects
@@ -715,7 +727,6 @@ def parse_weights_dir(root: Path, weights: Path | Sequence[Path]) -> Path | Sequ
     return resolved[0] if len(resolved) == 1 else resolved
 
 
-# --- Artifact Resolvers ---
 def parse_config_file(config: Path, project_root: Path, model_root: Path | None = None) -> Path | None:
     """Resolve a config file path from given components.
 
@@ -725,10 +736,10 @@ def parse_config_file(config: Path, project_root: Path, model_root: Path | None 
     Args:
         config: Candidate config name or path.
         project_root: Project root to search under.
-        model_root: Optional model root to search under.
+        model_root: Optional model root to search under. Defaults to None.
 
     Returns:
-        The resolved config path if found, otherwise None.
+        Resolved config path if found, otherwise None.
     """
     if not config or str(config).lower() == "none":
         return None
@@ -780,7 +791,7 @@ def parse_weights_file(root: Path, weights: Path | Sequence[Path]) -> Path | Seq
         weights: Weight file name or iterable of names.
 
     Returns:
-        A resolved path, a list of resolved paths, or None if nothing was found.
+        Resolved path, a list of resolved paths, or None if nothing was found.
     """
     root = Path(root).normalize(exist=True)
     # Convert input to a standardized list of Path objects
@@ -822,7 +833,7 @@ def parse_weights_from_config(config: Path | dict) -> Path | None:
         config: Path to config or dict-like config.
 
     Returns:
-        The weights path if present, otherwise None.
+        Weights path if present, otherwise None.
     """
     if config is None:
         return None
@@ -855,20 +866,23 @@ def parse_weights_from_config(config: Path | dict) -> Path | None:
             
     return weights_path
 
+# endregion
+
 
 # ==============================================================================
-# UTILS
+# region DEBUGGING
 # ==============================================================================
 
-# --- Print ---
+# --- Basic Logging ---
+
 def print_run_summary(args: dict | box.Box, full: bool = False):
     """Print a concise summary of run arguments.
 
     Print a compact run summary or the full configuration when requested.
 
     Args:
-        args: Arguments mapping (Box or dict).
-        full: If True, pretty-print the full args and config.
+        args: Arguments mapping (box.Box or dict).
+        full: If True, pretty-print the full args and config. Defaults to False.
     """
     # Handle Full Configuration Output
     if full:
@@ -899,3 +913,5 @@ def print_run_summary(args: dict | box.Box, full: bool = False):
             log(f"{label:<10}: {display_val}")
     
     console.rule() # Add a closing line for visual polish
+
+# endregion

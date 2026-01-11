@@ -3,39 +3,37 @@
 
 """Optimizers and learning rate schedulers.
 
-This package contains various optimization algorithms and learning rate
-schedulers commonly used in training machine learning models.
+This package contains various optimizers and learning rate schedulers used for
+training machine learning models.
 
 Notes:
     - Design Pattern: Template Method.
-    - Goal: Provide a structured way to define a family of methods or classes
-      that share a common interface/inheritance but aren't tied to the specific
-      "interchanged" requirement of the "Strategy Pattern".
+    - Goal: Define a family of algorithms that share a common processing pipeline.
     - Structure:
         ::
         
-            template/
-            ├── __init__.py    # Registry and factory logic
-            ├── base.py        # Base classes and mixins
-            ├── basic.py       # Basic functionalities
+            optim/
+            ├── __init__.py   # Registry and factory
+            ├── api.py        # External APIs
+            ├── base.py       # Base classes and mixins
+            ├── basic.py      # Basic functionalities
             ├── ...
-            ├── utils.py       # Utility functions and helpers
-            └── external/      # Expose external libraries
+            ├── utils.py      # Utilities and helpers
+            └── external/     # Integrate external libraries
                 └── ...
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .base import *
 from .basic import *
 from .external import *
 from .utils import *
 
+
 # ==============================================================================
-# REGISTRY & FACTORY (Type Resolution)
+# region REGISTRY & FACTORY
 # ==============================================================================
 
-# --- Register (Adding new spokes to the hub) ---
 
-
-# --- Resolve (Retrieving spokes by name/key) ---
+# endregion

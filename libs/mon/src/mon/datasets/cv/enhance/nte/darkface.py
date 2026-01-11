@@ -3,9 +3,11 @@
 
 """DarkFace dataset.
 
-This module implements the DarkFace dataset for nighttime face enhancement and
+This module provides the DarkFace dataset for nighttime face enhancement and
 detection.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "DarkFace",
@@ -14,17 +16,31 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="darkface")
-class DarkFace(ImageDataset):
+@DATASETS.register()
+class DarkFace(ImageDataset, RegistrableMixin):
     """DarkFace dataset."""
 
-    _subset    : str         = "darkface"
+    _name      : str         = "darkface"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = ClassList([
-        {"name": "face", "id": 0, "color": [ 81, 120, 228]},
+        {"name": "face", "id": 0, "color": [81, 120, 228]},
     ])

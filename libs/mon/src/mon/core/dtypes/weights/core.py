@@ -3,7 +3,7 @@
 
 """Model weights data structures.
 
-This module provides the base classes and mixins for model weights.
+This module provides base classes and mixins for model weights.
 """
 
 from __future__ import annotations
@@ -21,7 +21,6 @@ import torch
 
 from mon.core.enum import Enum
 from mon.core.pathlib import download_url_to_file, Path
-
 
 # ==============================================================================
 # region CONSTANTS

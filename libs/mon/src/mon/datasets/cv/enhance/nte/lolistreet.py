@@ -3,8 +3,10 @@
 
 """LoLI-Street dataset.
 
-This module implements the LoLI-Street dataset for nighttime image enhancement.
+This module provides the LoLI-Street dataset for nighttime image enhancement.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "LoLIStreet",
@@ -15,21 +17,41 @@ __all__ = [
     "LoLIStreetVal_Moderate",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ....api import *
 
 
-@DATASETS.register(name="lolistreet")
-class LoLIStreet(ImageDataset):
+@DATASETS.register()
+class LoLIStreet(ImageDataset, RegistrableMixin):
     """LoLI-Street dataset."""
     
-    _subset    : str         = "lolistreet"
+    _name      : str         = "lolistreet"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = ClassList([
         {"id": 0 , "name": "person"        , "supercategory": "person",     "color": [ 81, 120, 228]},
@@ -115,10 +137,12 @@ class LoLIStreet(ImageDataset):
     ])
 
 
-@DATASETS.register(name="lolistreetval")
+@DATASETS.register()
 class LoLIStreetVal(LoLIStreet):
     """LoLI-Street-Val subset."""
     
+    _name: str = "lolistreetval"
+    
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
@@ -126,24 +150,25 @@ class LoLIStreetVal(LoLIStreet):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / "val" / "image"]
+        pattern = self.root / "val" / "image"
         
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        images  = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
 
         return images
         
 
-@DATASETS.register(name="lolistreetval_light")
+@DATASETS.register()
 class LoLIStreetVal_Light(LoLIStreet):
     """LoLI-Street-Val subset."""
-
+    
+    _name: str = "lolistreetval_light"
+    
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
@@ -151,24 +176,25 @@ class LoLIStreetVal_Light(LoLIStreet):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / "val" / "image"]
+        pattern = self.root / "val" / "image"
         
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("light_*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        images  = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("light_*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
 
         return images
     
     
-@DATASETS.register(name="lolistreetval_moderate")
+@DATASETS.register()
 class LoLIStreetVal_Moderate(LoLIStreet):
     """LoLI-Street-Val subset."""
-
+    
+    _name: str = "lolistreetval_moderate"
+    
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
@@ -176,24 +202,25 @@ class LoLIStreetVal_Moderate(LoLIStreet):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / "val" / "image"]
+        pattern = self.root / "val" / "image"
         
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("moderate_*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        images  = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("moderate_*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
 
         return images
     
     
-@DATASETS.register(name="lolistreetval_dense")
+@DATASETS.register()
 class LoLIStreetVal_Dense(LoLIStreet):
     """LoLI-Street-Val subset."""
-
+    
+    _name: str = "lolistreetval_dense"
+    
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
@@ -201,24 +228,25 @@ class LoLIStreetVal_Dense(LoLIStreet):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / "val" / "image"]
+        pattern = self.root / "val" / "image"
         
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("dense_*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        images  = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("dense_*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
 
         return images
 
 
-@DATASETS.register(name="lolistreettest")
+@DATASETS.register()
 class LoLIStreetTest(LoLIStreet):
     """LoLI-Street-Test subset."""
 
+    _name: str = "lolistreettest"
+    
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
@@ -226,15 +254,14 @@ class LoLIStreetTest(LoLIStreet):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / "test" / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        images.append(Image(data=path, root=pattern))
+        pattern = self.root / "test" / "image"
+        
+        images  = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(pattern.rglob("*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    images.append(Image(data=path, root=pattern))
 
         return images

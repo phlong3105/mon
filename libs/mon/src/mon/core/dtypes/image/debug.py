@@ -3,14 +3,12 @@
 
 """Image debugging utilities.
 
-This module provides debugging utilities for image.
+This module provides debugging utilities for images.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

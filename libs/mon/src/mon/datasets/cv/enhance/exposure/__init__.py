@@ -3,10 +3,10 @@
 
 """Exposure enhancement datasets.
 
-This package includes various datasets for exposure correction and enhancement.
+This package contains various datasets for exposure correction and enhancement.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .msec import *
 from .rcd import *

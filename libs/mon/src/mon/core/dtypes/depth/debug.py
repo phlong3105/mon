@@ -32,18 +32,18 @@ def to_color(depth: np.ndarray, color_map: int = cv2.COLORMAP_JET) -> np.ndarray
     """Convert a depth map to a color-coded image.
 
     Args:
-        depth: A depth map, formatted as a numpy.ndarray of shape (H, W) and
-            pixel values ranging from 0.0 to 1.0 or in absolute depth units
-            (e.g., mm).
+        depth: Depth map, formatted as a numpy.ndarray with shape (H, W) or
+            (H, W, 1) and pixel values ranging from 0.0 to 1.0 or in absolute
+            depth units.
         color_map: OpenCV colormap to use for coloring. Defaults to
-            ``cv2.COLORMAP_JET``.
+            cv2.COLORMAP_JET.
 
     Returns:
         Color-coded depth image, formatted as a numpy.ndarray with shape
         (H, W, 3) and pixel values ranging from 0 to 255.
     
     Raises:
-        TypeError: If the input depth is not a numpy.ndarray.
+        TypeError: If ``depth`` is not a numpy.ndarray.
     """
     if not isinstance(depth, np.ndarray):
         raise TypeError(f"Expected 'depth' to be a numpy.ndarray, but got {type(depth)}.")
@@ -54,7 +54,7 @@ def to_color(depth: np.ndarray, color_map: int = cv2.COLORMAP_JET) -> np.ndarray
     
     # Normalize to 0-255 (Standardizes contrast)
     # cv2.normalize is faster and handles min/max scaling efficiently
-    depth_8bit = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    depth_8bit  = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
     
     # Apply Colormap
     color_depth = cv2.applyColorMap(depth_8bit, color_map)

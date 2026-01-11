@@ -3,10 +3,13 @@
 
 """Speed benchmarking datasets.
 
-This module implements datasets for efficiency benchmarking.
+This module provides dataset classes for speed benchmarking.
 """
 
+from __future__ import annotations
+
 __all__ = [
+    "Speed10",
     "Speed1K",
 ]
 
@@ -19,11 +22,24 @@ class Speed10(ImageDataset, RegistrableMixin):
     
     _name      : str         = "speed10"
     _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = "speed10"
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None
     
@@ -34,10 +50,23 @@ class Speed1K(ImageDataset, RegistrableMixin):
 
     _name      : str         = "speed1k"
     _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = "speed1k"
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None

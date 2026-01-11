@@ -50,11 +50,11 @@ def draw(
         fill: Fill transparency. If ``fill`` is True, it defaults to 0.5. If it
             is a float, it should be between 0.0 and 1.0. Defaults to False.
         kwargs: Additional keyword arguments for text rendering:
-            - font_face: Font face (default: cv2.FONT_HERSHEY_SIMPLEX).
-            - font_scale: Font scale (default: 0.5).
-            - line_type: Line type (default: cv2.LINE_AA).
-            - shift: Number of fractional bits in the point coordinates
-                (default: 0).
+            - font_face: Font face. Defaults to cv2.FONT_HERSHEY_SIMPLEX.
+            - font_scale: Font scale. Defaults to 0.5.
+            - line_type: Line type. Defaults to cv2.LINE_AA.
+            - shift: Number of fractional bits in the point coordinates.
+                Defaults to 0.
 
     Returns:
         Image with drawn bounding box.

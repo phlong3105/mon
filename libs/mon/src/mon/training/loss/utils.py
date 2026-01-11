@@ -6,17 +6,14 @@
 This module provides shared utilities for loss functions.
 """
 
+from __future__ import annotations
+
 __all__ = []
 
 
 # ==============================================================================
-# SHARED UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Data Sanitization (Input Validation, Reshaping) ---
 
-
-# --- Performance Monitoring (Timing, Memory Tracking) ---
-
-
-# --- Error Handling (Custom Exceptions, Warnings) ---
+# endregion

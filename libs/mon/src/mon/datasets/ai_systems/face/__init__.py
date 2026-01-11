@@ -3,10 +3,9 @@
 
 """Face recognition datasets.
 
-This package contains datasets used in face recognition tasks, such as face
-detection, face alignment, and face verification.
+This package contains datasets used in face recognition tasks.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .widerface import *

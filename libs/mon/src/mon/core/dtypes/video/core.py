@@ -3,7 +3,7 @@
 
 """Video data structures.
 
-This module provides the base classes and mixins for video.
+This module provides base classes and mixins for video data.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from typing import Any, Optional
 import numpy as np
 
 from mon.core.constants import EXT
-from mon.core.dtypes.base import PersistentData
 from mon.core.pathlib import Path
+from ..base import PersistentData
 
 
 # ==============================================================================
@@ -60,31 +60,30 @@ from mon.core.pathlib import Path
 # ==============================================================================
 
 class Frame(PersistentData):
-    """A basic class for managing a video frame.
+    """Video frame management class.
 
-    Extend Data to handle a single video frame and provide properties and
-    methods related to frame data.
+    Extend ``PersistentData`` to handle a single video frame and provide properties
+    and methods related to ``data``.
 
     Attributes:
-        _data (np.ndarray): An RGB or grayscale image, formatted as a
-            numpy.ndarray of shape (H, W, C) and pixel values ranging from 0 to
-            255.
+        _data (numpy.ndarray): RGB or grayscale image, formatted as a
+            numpy.ndarray of shape (H, W, C) and pixel values ranging from 0 to 255.
         _index (int): Index of the frame in the video.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        data : np.ndarray,
-        index: int,
-        path : Path | str | None = None,
-        root : Path | str | None = None,
+        data  : np.ndarray,
+        index : int,
+        path  : Path | str | None = None,
+        root  : Path | str | None = None,
     ):
         """Initialize a new instance.
 
         Args:
-            data: An RGB or grayscale image, formatted as a numpy.ndarray of
-                shape (H, W, C) and pixel values ranging from 0 to 255.
+            data: RGB or grayscale image, formatted as a numpy.ndarray of shape
+                (H, W, C) and pixel values ranging from 0 to 255.
             index: Index of the frame in the video.
             path: Video file path. Defaults to None.
             root: Root directory of the video (of a dataset). Defaults to None.
@@ -104,14 +103,11 @@ class Frame(PersistentData):
         
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
-        """Return the logical length of the container.
-        
-        For a frame, this is always 1.
-        """
+        """Return the logical length of the container."""
         return 1
     
     def __getitem__(self, index: int = 0) -> np.ndarray:
-        """Return the frame.
+        """Return the frame at the given ``index``.
 
         Args:
             index: Index to get the frame. Defaults to 0.
@@ -136,10 +132,9 @@ class Frame(PersistentData):
 
     @property
     def frame_path(self) -> Optional[Path]:
-        """Construct a path for the frame based on the video path and frame
-        index.
+        """Construct a path for the frame based on the video path and index.
         
-        If no video path is provided, return the stored ``path``.
+        Return the stored ``path`` if no video path is provided.
         """
         if self.path is not None:
             path = self.path
@@ -149,7 +144,7 @@ class Frame(PersistentData):
 
     @property
     def meta(self) -> dict:
-        """Return metadata describing the data."""
+        """Return metadata describing the ``data``."""
         return {
             "index"     : self._index,
             "path"      : self.frame_path,
@@ -161,10 +156,15 @@ class Frame(PersistentData):
     
     # --- Data Loading ---
     def load(self, reload: bool = False) -> Any:
-        """Load the data.
-        
-        Frames are expected to be provided directly and not loaded from the
-        disk.
+        """Load data from disk to memory.
+
+        Args:
+            reload: If True, force reloading even if ``data`` is already in
+                memory. Defaults to False.
+
+        Notes:
+            Frames are expected to be provided directly and not loaded from the
+            disk.
         """
         pass
 

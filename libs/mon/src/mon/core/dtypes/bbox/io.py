@@ -50,12 +50,12 @@ def _load_coco_label(
 
     Args:
         path: Path to the COCO .json label file.
-        remap: Optional mapping to remap class IDs. Defaults to None.
+        remap: Mapping to remap class IDs. Defaults to None.
         verbose: If True, print warnings to ``error_console``. Defaults to True.
 
     Returns:
-        Batch of bounding boxes, formatted as a numpy.ndarray of shape
-        (N, 7+) and in XYWH format.
+        Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
+        and in XYWH format.
 
     Raises:
         NotImplementedError: This method is not yet supported.
@@ -72,12 +72,12 @@ def _load_voc_label(
 
     Args:
         path: Path to the VOC .xml label file.
-        remap: Optional mapping to remap class IDs. Defaults to None.
+        remap: Mapping to remap class IDs. Defaults to None.
         verbose: If True, print warnings to ``error_console``. Defaults to True.
 
     Returns:
-        Batch of bounding boxes, formatted as a numpy.ndarray of shape
-        (N, 7+) and in XYXY format.
+        Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
+        and in XYXY format.
 
     Raises:
         NotImplementedError: This method is not yet supported.
@@ -104,15 +104,12 @@ def _load_yolo_label(
 
     Args:
         path: Path to the YOLO .txt label file.
-        remap: Optional mapping to remap class IDs. Defaults to None.
+        remap: Mapping to remap class IDs. Defaults to None.
         verbose: If True, print warnings to ``error_console``. Defaults to True.
 
     Returns:
-        Batch of bounding boxes, formatted as a numpy.ndarray of shape
-        (N, 7+) and in CXCYWHN format.
-
-    Raises:
-        ValueError: If ``path`` is invalid or contains no bounding boxes.
+        Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
+        and in CXCYWHN format.
     """
     path = Path(path).normalize()
     if not path.is_txt_file(exist=True):
@@ -222,7 +219,7 @@ def load(
         path: Label file path (YOLO .txt, VOC .xml, COCO .json).
         fmt: Desired target format or conversion code.
         imgsz: Image size as (H, W) required for format conversions.
-        remap: Optional remapping for class IDs or names. Defaults to None.
+        remap: Mapping for class IDs or names. Defaults to None.
         verbose: If True, print warnings to ``error_console``. Defaults to False.
 
     Returns:

@@ -3,8 +3,10 @@
 
 """Rain1400 dataset.
 
-This module implements the Rain1400 dataset for image de-raining.
+This module provides the Rain1400 dataset for image de-raining.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Rain1400",
@@ -13,15 +15,29 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="rain1400")
-class Rain1400(ImageDataset):
+@DATASETS.register()
+class Rain1400(ImageDataset, RegistrableMixin):
     """Rain1400 dataset."""
 
-    _subset    : str         = "rain1400"
+    _name      : str         = "rain1400"
     _tasks     : list[Task]  = [Task.DERAIN]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None

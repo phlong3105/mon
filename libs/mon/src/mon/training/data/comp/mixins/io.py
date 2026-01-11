@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mixins for I/O operations.
+"""I/O operation mixins for data containers.
 
 This module provides mixins for input and output operations for data containers.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "DataLoadMixin",
@@ -22,34 +24,36 @@ from ...base import Modalities, Modality
 
 
 # ==============================================================================
-# RESOURCE RESOLVERS (Path/URL Handling)
+# region DISCOVERY
 # ==============================================================================
 
-# --- Path Handling (Resolving URIs, Local Paths) ---
 
-
-# --- Backend Selection (Selecting PIL vs. OpenCV vs. TurboJPEG) ---
+# endregion
 
 
 # ==============================================================================
-# HYDRATION & DESERIALIZATION (Read/Load)
+# region CONNECTION
 # ==============================================================================
 
-# --- Deserialize (Bytes to Object) ---
+
+# endregion
 
 
-# --- Loaders (Standard Disk-to-RAM logic) ---
+# ==============================================================================
+# region INPUT
+# ==============================================================================
+
 class DataLoadMixin(abc.ABC):
-    """A mixin class that adds data loading functionality to data containers.
+    """Data loading mixin.
 
-    Define a skeleton for the data loading pipeline from disk to memory.
-    Allow subclasses to override specific steps without altering the overall
+    Define a skeleton for the data loading pipeline from disk to memory. Allow
+    subclasses to override specific steps without altering the overall
     structure.
 
     The calling sequence includes:
         1. ``load()``          : Main method to load all datapoints.
         2. ``_on_load_start()``: Hook before loading (extensible).
-        3. ``_core_load()``    : Core loading mechanism (extensible).
+        3. ``_load_data()``    : Core loading mechanism (extensible).
         4. ``_on_load_end()``  : Hook after loading (extensible).
         5. ``verify()``        : Verify dataset integrity (extensible).
     """
@@ -57,28 +61,27 @@ class DataLoadMixin(abc.ABC):
     # --- Data Loading ---
     # noinspection PyAttributeOutsideInit
     def load(self):
-        """Main method to load all datapoints in the dataset from the disk.
+        """Load all datapoints in the dataset from the disk.
 
-        Call ``_on_load_start()`` hook, then ``_load_data()`` (extensible),
-        then ``_on_load_end()`` hook. This method can be called internally or
-        externally to reload the data if needed. After calling this,
-        ``self._datapoints`` will be populated with all modalities' data lists.
-        For example, {"image": [...], ..., "meta": [...]}.
-        
-        This method should generally not be overridden; extend`` _load_data()``
-        instead.
+        Call ``_on_load_start()`` hook, then ``_load_data()``, then
+        ``_on_load_end()`` hook. After calling this, ``_datapoints`` will be
+        populated with all modalities' data lists.
+
+        Raises:
+            TypeError: If ``_load_data()`` does not return a dict.
         """
         # Ensure the container exists
         if not hasattr(self, "_datapoints"):
-             self._datapoints = {}
+            self._datapoints = {}
             
         self._on_load_start()
         
         # Core loading
         datapoints = self._load_data()
         if not isinstance(datapoints, dict):
-            raise TypeError(f"Expected ``_load_data()`` to return a dict, "
-                            f"but got {type(datapoints).__name__}.")
+            raise TypeError(
+                f"Expected '_load_data' to return a dict, but got {type(datapoints).__name__}."
+            )
         
         self._datapoints = datapoints
         
@@ -89,60 +92,43 @@ class DataLoadMixin(abc.ABC):
 
     @abc.abstractmethod
     def _load_data(self) -> dict[str, Any]:
-        """Core data loading method for the dataset.
-
-        This method is abstract and must be implemented by subclasses.
+        """Load core data for the dataset.
 
         Returns:
-            A dictionary containing lists of datapoints for each modality.
+            Dictionary containing lists of datapoints for each modality.
         """
         pass
 
     def _on_load_start(self):
-        """A hook method called at the start of the data loading process.
-
-        This method can be overridden by subclasses to perform additional
-        operations before the dataset is loaded.
-        """
+        """Execute hook at the start of the data loading process."""
         pass
 
     def _on_load_end(self):
-        """A hook method called at the end of the data loading process.
-
-        This method can be overridden by subclasses to perform additional
-        operations after the dataset has been loaded.
-        """
+        """Execute hook at the end of the data loading process."""
         pass
 
     def verify(self):
-        """Verify dataset integrity after loading.
-
-        This method can be overridden by subclasses to perform additional
-        operations after the dataset has been loaded.
-        """
+        """Verify dataset integrity after loading."""
         pass
 
 
 class RootLoadMixin(DataLoadMixin, abc.ABC):
-    """A mixin class that adds data loading functionality from a given ``root``
-    directory to data containers.
+    """Root directory data loading mixin.
 
     Extend ``DataLoadMixin`` by introducing ``root`` and ``split`` attributes,
-    along with validation for these attributes. The data is located at:
-    ``root/subset/split/...``.
+    along with validation for these attributes.
 
     Attributes:
-        _subset (str): The name of the dataset's subset directory. Since the
-            given attribute ``root`` may only set the dataset root directory,
-            this attribute defines the actual folder name of the sub-dataset
-            within the root directory (e.g., dataset with multiple versions).
-            Defaults to None and should be overridden in subclasses.
-        _splits (list[Split]): A list of supported splits. This is used to
-            validate the given attribute ``split``. Defaults to an empty list
-            and should be overridden in subclasses.
+        _subset (str | None): Name of the dataset's subset directory.
+            Defaults to None.
+        _splits (list[Split]): List of supported splits. Defaults to [].
+        _root (mon.core.pathlib.Path | None): Dataset root directory.
+            Defaults to None.
+        _split (mon.core.enum.Split | None): Current dataset split.
+            Defaults to None.
     """
     
-    _subset: str         = None
+    _subset: str | None  = None
     _splits: list[Split] = []
 
     # --- Lifecycle & Initialization ---
@@ -152,6 +138,8 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
         Args:
             root: Absolute path to the dataset root directory.
             split: Data split subset to use.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
         """
         # Initialize attributes to None first to avoid AttributeError
         # during setter logic if super().__init__ triggers something
@@ -166,23 +154,29 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
         super().__init__(*args, **kwargs)
         
     def __init_subclass__(cls, *args, **kwargs):
-        """Called when inheriting from this class."""
+        """Validate subclass attributes on inheritance.
+
+        Args:
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
+
+        Raises:
+            TypeError: If ``_splits`` is not defined in the subclass.
+        """
         super().__init_subclass__(*args, **kwargs)
         
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["_splits"]:
             if attr not in cls.__dict__:
-                raise AttributeError(f"Class {cls.__name__} must explicitly define "
-                                     f"class attribute ``{attr}``.")
+                raise TypeError(f"Class {cls.__name__} must define '{attr}' attribute.")
         
         # Ensure that any class using RootLoadMixin defines its splits
         if not cls._splits:
-            raise AttributeError(f"Expected '{cls.__name__}' to define '_splits' "
-                                 f"attribute, but got None.")
+            raise TypeError(f"Class {cls.__name__} must define '_splits' attribute.")
     
     # --- Properties ---
     @property
-    def subset(self) -> str:
+    def subset(self) -> str | None:
         """Return the dataset's subset name."""
         return self._subset
 
@@ -198,7 +192,7 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
 
     @root.setter
     def root(self, value: Path | str):
-        """Setter for the dataset root directory.
+        """Set the dataset root directory.
 
         Args:
             value: Absolute path to the dataset root directory.
@@ -217,10 +211,10 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
                     root = sub_path
                     
         if not root.is_dir():
-            raise FileNotFoundError(f"Dataset root directory not found: {root}")
+            raise FileNotFoundError(f"Dataset root not found at: {root}")
         
         self._root = root
-
+    
     @property
     def split(self) -> Split:
         """Return the current dataset split."""
@@ -228,11 +222,11 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
 
     @split.setter
     def split(self, split: Split | str):
-        """Setter for the current dataset split.
+        """Set the current dataset split.
 
         Args:
-            split: Data split subset to use. One of: Split.TRAIN, Split.VAL,
-                Split.TEST, or Split.PREDICT.
+            split: Data split subset to use. One of: [Split.TRAIN,  Split.VAL,
+                Split.TEST, Split.PREDICT].
 
         Raises:
             ValueError: If ``split`` is not one of the supported splits.
@@ -240,7 +234,7 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
         # Cast to Enum if it's a string
         split = Split(split)
         if split not in self._splits:
-            raise ValueError(f"Expected 'split' in {self._splits}, but got '{split}'.")
+            raise ValueError(f"Unsupported 'split': {split}. Must be one of: {self._splits}.")
         self._split = split
 
     @property
@@ -250,16 +244,16 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
 
 
 class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
-    """A mixin class that adds data loading functionality from two given
-    ``input_dir`` and ``target_dir`` directories to data containers.
+    """Input and target directory data loading mixin.
 
     Extend ``DataLoadMixin`` by introducing ``input_dir`` and ``target_dir``
-    attributes, along with validation for these attributes. The data is located
-    at: ``input_dir/...`` and ``target_dir/...``.
+    attributes, along with validation for these attributes.
 
     Attributes:
-        input_dir (Path): Absolute path to the input directory.
-        target_dir (Path): Absolute path to the target directory.
+        _input_dir (Path | None): Absolute path to the input directory.
+            Defaults to None.
+        _target_dir (Path | None): Absolute path to the target directory.
+            Defaults to None.
     """
 
     # --- Lifecycle & Initialization ---
@@ -269,6 +263,8 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
         Args:
             input_dir: Absolute path to the input directory.
             target_dir: Absolute path to the target directory.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
         """
         # Initialize attributes to None first to avoid AttributeError
         # during setter logic if super().__init__ triggers something
@@ -290,33 +286,36 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
 
     @input_dir.setter
     def input_dir(self, value: Path | str):
-        """Setter for the input directory.
+        """Set the input directory.
 
         Args:
             value: Path to the input directory.
 
         Raises:
+            TypeError: If ``value`` is None.
             FileNotFoundError: If the ``input_dir`` directory does not exist.
         """
         if value is None:
-            raise ValueError("Expected 'input_dir' to be a valid path, but got None.")
+            raise TypeError(
+                f"Expected 'input_dir' to be a Path or str, but got {type(value).__name__}."
+            )
         
         input_dir = Path(value).normalize(exist=True)
         if not input_dir.is_dir():
-            raise FileNotFoundError(f"Input directory not found: {input_dir}.")
+            raise FileNotFoundError(f"Input directory not found at: {input_dir}")
         self._input_dir = input_dir
 
     @property
-    def target_dir(self) -> Path:
+    def target_dir(self) -> Path | None:
         """Return the target directory."""
         return self._target_dir
 
     @target_dir.setter
-    def target_dir(self, value: Path | str):
-        """Setter for the target directory.
+    def target_dir(self, value: Path | str | None):
+        """Set the target directory.
 
         Args:
-            value: Path to the target directory.
+            value: Path to the target directory. Defaults to None.
 
         Raises:
             FileNotFoundError: If the ``target_dir`` directory does not exist.
@@ -324,29 +323,24 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
         if value is not None:
             target_dir = Path(value).normalize(exist=True)
             if not target_dir.is_dir():
-                raise FileNotFoundError(f"Target directory not found: {target_dir}.")
+                raise FileNotFoundError(f"Target directory not found at: {target_dir}")
             self._target_dir = target_dir
         else:
             self._target_dir = None
     
     @property
     def has_target(self) -> bool:
-        """Indicates whether the dataset has target data.
-        
-        Returns:
-            bool: True if target data is available, False otherwise.
-        """
+        """Check if the dataset has target data."""
         return self._target_dir is not None and self._target_dir.is_dir()
     
     @property
-    def label_dir(self) -> Path:
+    def label_dir(self) -> Path | None:
         """An alias to ``target_dir`` for better readability in certain contexts."""
         return self._target_dir
 
 
 class MultimodalDataLoadMixin(RootLoadMixin):
-    """A mixin class that adds multimodal data loading functionality from a
-    given ``root`` directory to data containers.
+    """Multimodal data loading mixin.
 
     Define a skeleton for a multimodal data loading pipeline while allowing
     subclasses to override specific steps without altering the overall
@@ -363,29 +357,33 @@ class MultimodalDataLoadMixin(RootLoadMixin):
         7. ``verify()``             : Verify dataset integrity (extensible).
 
     Attributes:
-        _modalities (Modalities): A dictionary defining the dataset modalities.
-            Defaults to an empty dictionary and should be overridden in
-            subclasses to accommodate additional modalities (e.g., depth maps,
-            segmentation masks, bounding boxes, captions, or other sensor data).
+        _modalities (Modalities): Dictionary defining the dataset modalities.
+            Defaults to {}.
     """
 
     _modalities: Modalities = {}
     
     # --- Lifecycle & Initialization ---
     def __init_subclass__(cls, *args, **kwargs):
-        """Called when inheriting from this class."""
+        """Validate subclass attributes on inheritance.
+
+        Args:
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
+
+        Raises:
+            TypeError: If ``_modalities`` is not defined in the subclass.
+        """
         super().__init_subclass__(*args, **kwargs)
         
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["_modalities"]:
             if attr not in cls.__dict__:
-                raise TypeError(f"Class {cls.__name__} must explicitly define class "
-                                f"attribute '{attr}' of type Modalities.")
+                raise TypeError(f"Class {cls.__name__} must define '{attr}' attribute.")
         
         # Check for VALID values
         if not cls._modalities:  # Checks for None, empty list [], or empty tuple ()
-            raise ValueError(f"Expected '{cls.__name__}' to define non-empty '_modalities' "
-                             f"attribute, but got None or empty list or tuple.")
+            raise TypeError(f"Class {cls.__name__} must define '_modalities' attribute.")
         
     # --- Properties ---
     @property
@@ -395,8 +393,7 @@ class MultimodalDataLoadMixin(RootLoadMixin):
 
     @property
     def primary_modality(self) -> tuple[str, Modality]:
-        """Return a tuple containing the key and Modality instance of the
-        primary modality.
+        """Return the primary modality.
 
         Raises:
             ValueError: If no primary modality is defined.
@@ -404,19 +401,22 @@ class MultimodalDataLoadMixin(RootLoadMixin):
         try:
             return next((k, v) for k, v in self._modalities.items() if v.primary)
         except StopIteration:
-            raise ValueError(f"Expected '{self.__class__.__name__}' to define a "
-                             f"primary modality, but got none.")
+            raise ValueError(f"Primary modality not found in {self.__class__.__name__}.")
 
     # --- Data Loading ---
     def _load_data(self) -> dict[str, list[Any]]:
-        """Core data loading mechanism for the dataset."""
+        """Load core data for the dataset.
+
+        Returns:
+            Dictionary containing lists of datapoints for each modality.
+        """
         pk, _ = self.primary_modality
         
         # Initialize empty datapoints dictionary with modalities
         datapoints = {
             k: [] for k, v in self._modalities.items()
             if v.type and v.module and (
-                (v.train is not False  if self._split in [Split.TRAIN, Split.VAL]
+                (v.train is not False if self._split in [Split.TRAIN, Split.VAL]
                  else v.test is not False)
             )
         }
@@ -438,35 +438,40 @@ class MultimodalDataLoadMixin(RootLoadMixin):
         """Load primary modality data files in the dataset.
 
         Returns:
-            A list of primary modality data files.
+            List of primary modality data files.
         """
         disable_pbar = getattr(self, "disable_pbar", False)
         
         pk, pk_modality = self.primary_modality
         pk_name   = pk_modality.name
         pk_module = pk_modality.module
-        patterns  = [self._root / self.split_str / pk_name]
-        files     = []
+        pattern   = self._root / self.split_str / pk_name
+        
+        files = []
         with create_progress_bar(disable=disable_pbar) as pbar:
-            for pattern in patterns:
-                paths = sorted(pattern.rglob("*"))
-                desc  = f"Listing {self.__class__.__name__} {self.split_str} {pk}(s)"
-                for path in pbar.track(sequence=paths, description=desc):
-                    if path.is_image_file():
-                        files.append(pk_module(data=path, root=pattern))
+            paths = sorted(pattern.rglob("*"))
+            desc  = f"Listing {self.__class__.__name__} {self.split_str} {pk}(s)"
+            for path in pbar.track(sequence=paths, description=desc):
+                if path.is_image_file():
+                    files.append(pk_module(data=path, root=pattern))
         
         return files
 
-    def _load_modality_data(self, primary_data: list[Any], key: str, pk_key: str) -> list[Any]:
+    def _load_modality_data(
+        self,
+        primary_data: list[Any],
+        key         : str,
+        pk_key      : str
+    ) -> list[Any]:
         """Load modality data files in the dataset.
 
         Args:
-            primary_data: A list of primary modality data files.
-            key: The modality key to load.
-            pk_key: The primary modality key.
+            primary_data: List of primary modality data files.
+            key: Modality key to load.
+            pk_key: Primary modality key.
 
         Returns:
-            A list of modality data files.
+            List of modality data files.
         """
         disable_pbar = getattr(self, "disable_pbar", False)
         
@@ -487,12 +492,12 @@ class MultimodalDataLoadMixin(RootLoadMixin):
         
         return files
 
+# endregion
+
 
 # ==============================================================================
-# PERSISTENCE & EXPORT (Write/Commit)
+# region OUTPUT
 # ==============================================================================
 
-# --- Serialize (Object to Bytes) ---
 
-
-# --- Commit (Saving to Disk/Cloud) ---
+# endregion

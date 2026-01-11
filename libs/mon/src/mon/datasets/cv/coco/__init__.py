@@ -3,9 +3,9 @@
 
 """COCO datasets.
 
-This package implements various COCO datasets.
+This package contains various COCO dataset implementations.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .coco2017 import *

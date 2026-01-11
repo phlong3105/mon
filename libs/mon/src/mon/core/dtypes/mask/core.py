@@ -3,7 +3,7 @@
 
 """Mask data structures.
 
-This module provides the base classes and mixins for mask.
+This module provides base classes and mixins for masks.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ __all__ = [
 
 import cv2
 
-from mon.core.dtypes.image import Image
+from ..image import Image
 
 
 # ==============================================================================
@@ -56,10 +56,10 @@ from mon.core.dtypes.image import Image
 # ==============================================================================
 
 class SemanticMask(Image):
-    """A basic class for managing a semantic segmentation mask.
+    """Semantic segmentation mask management class.
     
-    Extend Image to handle semantic mask data and provide properties and methods
-    related to mask data.
+    Extend ``Image`` to handle semantic mask data and provide properties and
+    methods related to mask data.
     """
     
     # --- Lifecycle & Initialization ---
@@ -68,6 +68,8 @@ class SemanticMask(Image):
 
         Args:
             flags: OpenCV flag to read the mask. Defaults to cv2.IMREAD_GRAYSCALE.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
         """
         # Continue the initialization chain
         super().__init__(flags=flags, *args, **kwargs)

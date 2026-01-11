@@ -3,7 +3,7 @@
 
 """External metrics.
 
-This package exposes metrics from external libraries.
+This package exposes third-party metrics into the framework.
 """
 
-# from .torchmetrics import *
+from __future__ import annotations

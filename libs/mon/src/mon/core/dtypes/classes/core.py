@@ -3,7 +3,7 @@
 
 """Classes data structures.
 
-This module provides the base classes and mixins for classes.
+This module provides base classes and mixins for classes.
 """
 
 from __future__ import annotations
@@ -19,9 +19,10 @@ from typing import Any
 import numpy as np
 
 from mon.core.console import log, rprint_list_dicts
-from mon.core.dtypes.array import TensorOrArray
 from mon.core.pathlib import Path
 from mon.core.runtime import load_config
+from ..array import TensorOrArray
+
 
 # ==============================================================================
 # region CONSTANTS
@@ -36,6 +37,7 @@ from mon.core.runtime import load_config
 # ==============================================================================
 
 # --- Type Aliases ---
+
 Class = dict[str, Any]  # An alias for a dictionary of arbitrary key-value pairs.
 
 
@@ -63,14 +65,10 @@ Class = dict[str, Any]  # An alias for a dictionary of arbitrary key-value pairs
 # ==============================================================================
 
 class ClassList(list[Class]):
-    """A basic class for managing a list of classes.
+    """Basic class for managing a list of classes.
     
-    Extend the built-in list to handle a list of class dictionaries and provide
-    properties and methods related to class management.
-    
-    Notes:
-        - I choose the "List" suffix to indicate that this class will behave
-          like a Python list.
+    Extend the built-in ``list`` to handle a list of class dictionaries and
+    provide properties and methods related to class management.
     """
     
     # --- Lifecycle & Initialization ---
@@ -150,7 +148,7 @@ class ClassList(list[Class]):
     
     @property
     def palette(self) -> np.ndarray:
-        """Return a numpy palette for segmentation masks or drawing."""
+        """Return a palette for segmentation masks or drawing."""
         # Generates a (256, 3) array where index = ID
         palette = np.zeros((256, 3), dtype=np.uint8)
         for item in self:
@@ -160,14 +158,29 @@ class ClassList(list[Class]):
     
     # --- Access ---
     def get_by_id(self, class_id: int) -> dict | None:
-        """Safe retrieval of a class dict by ID."""
+        """Retrieve a class dictionary by ID safely.
+
+        Args:
+            class_id: Class ID.
+
+        Returns:
+            Class dictionary or None.
+        """
         for item in self:
             if item.get("id") == class_id:
                 return item
         return None
 
     def get_color(self, class_id: int, default: tuple = (255, 255, 255)) -> tuple:
-        """Retrieves color for drawing, falling back to white if ID is missing."""
+        """Retrieve color for drawing.
+
+        Args:
+            class_id: Class ID.
+            default: Default color. Defaults to (255, 255, 255).
+
+        Returns:
+            Color for drawing.
+        """
         item = self.get_by_id(class_id)
         if item and "color" in item:
             return tuple(item["color"])
@@ -184,15 +197,15 @@ class ClassList(list[Class]):
 
 
 class Probabilities(TensorOrArray):
-    """A basic class for managing classification probabilities.
+    """Basic class for managing classification probabilities.
 
-    This class extends BaseTensorOrArray to handle classification probabilities.
-    It provides properties to access top-1 and top-5 class indices, and their
-    confidence scores.
+    Extend ``TensorOrArray`` to handle classification probabilities. Provide
+    properties to access top-1 and top-5 class indices, and their confidence
+    scores.
     
     Attributes:
-        _data: Probability vector of shape (``_num_classes``).
-        _num_classes: Total number of classes.
+        _data (numpy.ndarray): Probability vector of shape (``_num_classes``).
+        _num_classes (int): Total number of classes.
     """
     
     # --- Lifecycle & Initialization ---
@@ -200,11 +213,9 @@ class Probabilities(TensorOrArray):
         """Initialize a new instance.
         
         Args:
-            data: Probability vector as a numpy.ndarray of shape (``num_classes``),
-                or an integer representing the class ID. If an integer is
-                provided, it will be converted to a one-hot encoded vector.
-            num_classes: Total number of classes. Required if ``data`` is
-                provided as an integer. Defaults to None.
+            data: Probability vector as a numpy.ndarray of shape
+                (``num_classes``), or an integer representing the class ID.
+            num_classes: Total number of classes. Defaults to None.
         
         Raises:
             ValueError: If ``num_classes`` is provided and is not a positive
@@ -232,14 +243,13 @@ class Probabilities(TensorOrArray):
         """Setter for the probability vector.
         
         Args:
-            value: Probability vector as a numpy.ndarray of shape (``num_classes``),
-                or an integer representing the class ID. If an integer is provided,
-                it will be converted to a one-hot encoded vector.
+            value: Probability vector as a numpy.ndarray of shape
+                (``num_classes``), or an integer representing the class ID.
         
         Raises:
-            ValueError: If ``data`` is an integer and ``num_classes`` is not
+            ValueError: If ``value`` is an integer and ``num_classes`` is not
                 provided or is invalid.
-            TypeError: If ``data`` is not a numpy.ndarray or int.
+            TypeError: If ``value`` is not a numpy.ndarray or int.
         """
         if isinstance(value, int):
             if self.num_classes is None:

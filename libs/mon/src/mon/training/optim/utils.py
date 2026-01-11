@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Optimizers utilities.
+"""Optimizer utilities.
 
-This module provides shared utilities for optimizers and learning rate schedulers.
+This module provides various utilities for optimizers.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
 
 # ==============================================================================
-# SHARED UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Data Sanitization (Input Validation, Reshaping) ---
 
-
-# --- Performance Monitoring (Timing, Memory Tracking) ---
-
-
-# --- Error Handling (Custom Exceptions, Warnings) ---
+# endregion

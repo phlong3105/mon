@@ -6,6 +6,8 @@
 This package includes concrete dataset implementations.
 """
 
+from __future__ import annotations
+
 __all__ = []  # Prevent accidental imports of submodules.
 
 from .ai_systems import *

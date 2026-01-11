@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A collection of complex data types.
+"""Complex data types.
 
-This package provides custom and complex data types used across the project.
-This package exposes common, flat aliases for frequent types and groups
-domain-specific implementations under subpackages. This package enables
-consistent data representation and manipulation for downstream modules.
+This package contains custom and complex data types used across the project.
 
 Notes:
     - Design Pattern: Multiple Toolkits.
     - Goal: Encapsulate multiple "Toolkits" for multiple data types.
     - Structure:
         ::
-        
+
             dtypes/
             ├── __init__.py        # Unified entry point
             ├── base.py            # Global base classes and mixins

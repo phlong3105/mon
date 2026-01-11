@@ -3,7 +3,7 @@
 
 """Object instance data structures.
 
-This module provides the base classes and mixins for object instance.
+This module provides base classes and mixins for object instances.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ __all__ = [
 import numpy as np
 
 from mon.core.dtypes import bbox as B, image as I
-from mon.core.dtypes.array import TensorOrArray
 from mon.core.pathlib import Path
+from ..array import TensorOrArray
 
 
 # ==============================================================================
@@ -58,41 +58,35 @@ from mon.core.pathlib import Path
 # ==============================================================================
 
 class Instance(TensorOrArray):
-    """A base class for instance annotations.
-    
-    Extend TensorOrArray to encapsulate per-object annotations (i.e., bbox,
-    mask, polygon, keypoints, cuboid, class, confidence, tracking id) and
-    provide convenient accessors.
+    """Instance annotation base class.
 
-    One instance can have these kinds of annotations (i.e., attributes):
-        - bbox     : bounding box, support both OBB and HBB (*primary).
-        - mask     : instance mask (i.e., pixels that belong to the object).
-        - polygon  : points to outline the object's shape.
-        - keypoints: points on key parts, like eyes or joints.
-        - cuboid   : 3D bounding box with depth.
-        - cls      : the type of object, like "car".
-    
-    The bounding boxes are expected to in the following format:
-            <cx, cy, w, h, a, conf, cls, id, ...>
-        where:
-            - <cx, cy, w, h> are the bounding box coordinates in CXCYWHN format.
-            - <a> is the angle.
-            - <conf> is the confidence score (optional).
-            - <cls> is the class ID (optional).
-            - <id> is the tracking ID (optional).
-    
-    Notes:
-        I am in the process of adding more annotations to this class, so it
-        may subject to changes in the future.
-    
+    Extend ``TensorOrArray`` to encapsulate per-object annotations and provide
+    convenient accessors. Encapsulate these kinds of annotations:
+        - ``bbox``: Bounding box, support both OBB and HBB (*primary).
+        - ``mask``: Instance mask (i.e., pixels that belong to the object).
+        - ``polygon``: Points to outline the object's shape.
+        - ``keypoints``: Points on key parts, like eyes or joints.
+        - ``cuboid``: 3D bounding box with depth.
+        - ``cls``: Type of object, like "car".
+
+    Expect bounding boxes in the following format:
+        <cx, cy, w, h, a, conf, cls, id, ...>
+    where:
+        - <cx, cy, w, h> are the bounding box coordinates in CXCYWHN format.
+        - <a> is the angle.
+        - <conf> is the confidence score (optional).
+        - <cls> is the class ID (optional).
+        - <id> is the tracking ID (optional).
+
     Attributes:
-        _data (numpy.ndarray): A bounding box, formatted as a numpy.ndarray
-            of shape (7+) and in CXCYWHN format.
-        _mask (numpy.ndarray): Instance mask, formatted as a numpy.ndarray
-            of shape (H, W, C) and pixel values ranging from 0 to 255.
+        _data (numpy.ndarray): Bounding box, formatted as a numpy.ndarray of
+            shape (7+) and in CXCYWHN format.
+        _mask (numpy.ndarray | None): Instance mask, formatted as a
+            numpy.ndarray of shape (H, W, C) and pixel values ranging from 0 to
+            255.
         _imgsz (tuple[int, int]): Image size as (H, W).
-        _image_path (Path): Associated image file path.
-        _root (Path): Root directory for the label file.
+        _image_path (Path | None): Associated image file path.
+        _root (Path | None): Root directory for the label file.
     """
 
     # --- Lifecycle & Initialization ---
@@ -105,18 +99,19 @@ class Instance(TensorOrArray):
         root      : Path | str | None      = None,
     ):
         """Initialize a new instance.
-        
+
         Args:
-            data: A bounding box, formatted as a numpy.ndarray of shape (7+) and
+            data: Bounding box, formatted as a numpy.ndarray of shape (7+) and
                 in CXCYWHN format.
-            imgsz: Image size as (H, W).
+            imgsz: Image size as (H, W). Defaults to None.
             mask: Instance mask, formatted as a numpy.ndarray of shape (H, W, C)
-                and pixel values ranging from 0 to 255.
-            image_path: Associated image file path.
-            root: Root directory for the label file.
+                and pixel values ranging from 0 to 255. Defaults to None.
+            image_path: Associated image file path. Defaults to None.
+            root: Root directory for the label file. Defaults to None.
 
         Raises:
-            ValueError: If ``imgsz`` is not provided and ``image_path`` is not valid.
+            ValueError: If ``imgsz`` is not provided and ``image_path`` is not
+                valid.
         """
         # Validate paths
         image_path = Path(image_path).normalize(exist=True) if image_path else None
@@ -146,20 +141,21 @@ class Instance(TensorOrArray):
     @property
     def data(self) -> np.ndarray:
         """Return the bounding box, formatted as a numpy.ndarray of shape (7+)
-        and in CXCYWHN format."""
+        and in CXCYWHN format.
+        """
         return self._data
     
     @data.setter
     def data(self, value: np.ndarray):
         """Set the bounding box data.
-        
+
         Args:
-            value: A bounding box, formatted as a numpy.ndarray of shape (7+)
-                and in CXCYWHN format.
-                
+            value: Bounding box, formatted as a numpy.ndarray of shape (7+) and
+                in CXCYWHN format.
+
         Raises:
-            TypeError: If ``data`` is not a numpy.ndarray.
-            ValueError: If ``data`` has incorrect shape.
+            TypeError: If ``value`` is not a numpy.ndarray.
+            ValueError: If ``value`` has incorrect shape.
         """
         # Ensure we are working with a float ndarray for normalization precision
         if not isinstance(value, np.ndarray):
@@ -233,6 +229,7 @@ class Instance(TensorOrArray):
 
         Args:
             imgsz: Image size as (H, W). If omitted, uses the stored ``_imgsz``.
+                Defaults to None.
 
         Returns:
             Bounding box in XYXY format.
@@ -245,6 +242,7 @@ class Instance(TensorOrArray):
 
         Args:
             imgsz: Image size as (H, W). If omitted, uses the stored ``_imgsz``.
+                Defaults to None.
 
         Returns:
             Bounding box in XYWH format.

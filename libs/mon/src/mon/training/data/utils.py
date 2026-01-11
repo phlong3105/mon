@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Data container utility functions.
+"""Data container utilities.
 
-This module provides various utility functions for data containers.
+This module provides various utilities for data containers.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
 
 # ==============================================================================
-# SHARED UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Data Sanitization (Input Validation, Reshaping) ---
 
-
-# --- Performance Monitoring (Timing, Memory Tracking) ---
-
-
-# --- Error Handling (Custom Exceptions, Warnings) ---
+# endregion

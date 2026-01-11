@@ -3,32 +3,54 @@
 
 """NightCity dataset.
 
-This module implements the NightCity dataset for nighttime scene parsing.
+This module provides the NightCity dataset for nighttime scene parsing.
 
 References:
     - Paper: "Night-time Scene Parsing with a Large Real Dataset".
-	- Data: https://dmcv.sjtu.edu.cn/people/phd/tanxin/NightCity/index.html
+    - Data: https://dmcv.sjtu.edu.cn/people/phd/tanxin/NightCity/index.html
 """
 
+from __future__ import annotations
+
 __all__ = [
-	"NightCity",
+    "NightCity",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ....api import *
 
 
-@DATASETS.register(name="nightcity")
-class NightCity(ImageDataset):
+@DATASETS.register()
+class NightCity(ImageDataset, RegistrableMixin):
     """NightCity dataset."""
     
-    _subset    : str         = "nightcity"
+    _name      : str         = "nightcity"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.SEGMENT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",    type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName,  type="image", module=DefaultDepthMap, train=True, test=True),
-        "mask" : Modality(name="labelIds", type="image", module=SemanticMask,    train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "mask" : Modality(
+            name    = "labelIds",
+            type    = "image",
+            module  = SemanticMask,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = ClassList([
         {"name": "unlabeled"           , "id": 0 , "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": [0  , 0  ,   0]},
@@ -80,8 +102,8 @@ class NightCity(ImageDataset):
         else:
             patterns = [self.root / self.split_str / "image"]
 
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
+        images = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 paths = sorted(pattern.rglob("*"))
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"

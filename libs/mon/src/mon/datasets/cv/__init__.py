@@ -3,11 +3,10 @@
 
 """Computer vision datasets.
 
-This package includes various datasets for tasks such as object detection,
-image enhancement, and image restoration.
+This package contains various datasets for computer vision tasks.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .coco import *
 from .enhance import *

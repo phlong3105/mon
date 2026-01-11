@@ -3,9 +3,11 @@
 
 """YDLD dataset.
 
-This module implements the YDLD (YouTube Driving Light Detection) dataset for
+This module provides the YDLD (YouTube Driving Light Detection) dataset for
 nighttime light detection and enhancement.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "YDLD",
@@ -14,16 +16,23 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="ydld")
-class YDLD(ImageDataset):
+@DATASETS.register()
+class YDLD(ImageDataset, RegistrableMixin):
     """YDLD dataset."""
 
-    _subset    : str         = "ydld"
+    _name      : str         = "ydld"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        # "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
     _classlist : ClassList   = ClassList([
         {"name": "car_light",            "id": 0, "color": (255,   0,   0)},

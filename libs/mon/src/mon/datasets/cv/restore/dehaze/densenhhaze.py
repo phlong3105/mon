@@ -3,8 +3,10 @@
 
 """Dense-NH-Haze dataset.
 
-This module implements the Dense-NH-Haze dataset for image de-hazing.
+This module provides the Dense-NH-Haze dataset for image de-hazing.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "DenseNHHaze",
@@ -13,16 +15,36 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="densenhhaze")
-class DenseNHHaze(ImageDataset):
+@DATASETS.register()
+class DenseNHHaze(ImageDataset, RegistrableMixin):
     """Dense-NH-Haze dataset."""
     
-    _subset    : str         = "densenhhaze"
+    _name      : str         = "densenhhaze"
     _tasks     : list[Task]  = [Task.DEHAZE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
-        "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
-        "ref"  : Modality(name="ref",     type="image", module=Image,           train=True, test=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "depth": Modality(
+            name    = DepthName,
+            type    = "image",
+            module  = DefaultDepthMap,
+            train   = True,
+            test    = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+        ),
     }
     _classlist : ClassList   = None

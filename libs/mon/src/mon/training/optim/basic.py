@@ -7,6 +7,8 @@ This module provides various optimizers and learning rate schedulers commonly
 used in training machine learning models.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "ASGD",
     "Adadelta",

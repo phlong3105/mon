@@ -3,14 +3,12 @@
 
 """Mask complex operations.
 
-This module provides complex operations and processing workflows for mask.
+This module provides complex operations and processing workflows for masks.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

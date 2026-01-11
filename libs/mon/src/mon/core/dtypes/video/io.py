@@ -3,7 +3,7 @@
 
 """Video I/O operations.
 
-This module provides input and output operations for video.
+This module provides input and output operations for video data.
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ import cv2
 import numpy as np
 import torch
 
-from mon.core.dtypes import image as I
 from mon.core.pathlib import Path
+from .. import image as I
 
 
 # ==============================================================================
@@ -52,10 +52,9 @@ from mon.core.pathlib import Path
 # ==============================================================================
 
 class VideoWriter(abc.ABC):
-    """An abstract class for video writers.
+    """Abstract class for video writers.
 
-    Define the interface for writing frames to video files; subclasses must
-    implement initialization, closing, and frame writing.
+    Define the interface for writing frames to video files.
 
     Attributes:
         _dst (Path): Destination path or directory for the video output.
@@ -78,9 +77,9 @@ class VideoWriter(abc.ABC):
 
         Args:
             dst: Destination path or directory for the video output.
-            imgsz: Output video size as (H, W).
-            frame_rate: Output video frame rate.
-            verbose: Enable verbosity.
+            imgsz: Output video size as (H, W). Defaults to (480, 640).
+            frame_rate: Output video frame rate. Defaults to 30.
+            verbose: Enable verbosity. Defaults to False.
         """
         if not isinstance(dst, (str, Path)):
             raise TypeError(f"Expected 'dst' to be a str or Path, but got {type(dst).__name__}.")
@@ -110,14 +109,17 @@ class VideoWriter(abc.ABC):
         path : Path | str | None = None,
         *args, **kwargs
     ):
-        """Write a frame to the video output.
+        """Write a ``frame`` to the video output.
 
         Args:
-            frame: A video frame, formatted as a numpy.ndarray of shape
-                (H, W, C) and pixel values ranging from 0 to 255; or as a
-                torch.Tensor of shape (B, C, H, W) with pixel values
-                ranging from 0.0 to 1.0.
-            path: Optional path to also save the frame as an image.
+            frame: Video frame, formatted as a numpy.ndarray of shape (H, W, C)
+                and pixel values ranging from 0 to 255; or as a torch.Tensor of
+                shape (B, C, H, W) with pixel values ranging from 0.0 to 1.0.
+            path: Optional path to also save the ``frame`` as an image.
+                Defaults to None.
+
+        Raises:
+            TypeError: If ``frame`` is not a numpy.ndarray or torch.Tensor.
         """
         if not isinstance(frame, (np.ndarray, torch.Tensor)):
             raise TypeError(
@@ -173,19 +175,18 @@ class VideoWriter(abc.ABC):
         """Internal method for backend-specific writing logic.
         
         Args:
-            frame: A video frame, formatted as a numpy.ndarray of shape
-                (H, W, C) and pixel values ranging from 0 to 255; or as a
-                torch.Tensor of shape (B, C, H, W) with pixel values
-                ranging from 0.0 to 1.0.
+            frame: Video frame, formatted as a numpy.ndarray of shape (H, W, C)
+                and pixel values ranging from 0 to 255; or as a torch.Tensor of
+                shape (B, C, H, W) with pixel values ranging from 0.0 to 1.0.
         """
         pass
         
 
 class VideoWriterCV(VideoWriter):
-    """A video writer using OpenCV.
+    """Video writer using OpenCV.
 
-    Extend VideoWriter to implement video writing using OpenCV's VideoWriter
-    class.
+    Extend ``VideoWriter`` to implement video writing using OpenCV's
+    ``VideoWriter`` class.
     """
     
     # --- Lifecycle & Initialization ---
@@ -202,10 +203,11 @@ class VideoWriterCV(VideoWriter):
 
         Args:
             dst: Destination path or directory for the video output.
-            imgsz: Output video size as a tuple of (H, W).
-            frame_rate: Output video frame rate.
-            fourcc: FourCC code for the video codec.
-            verbose: Enable verbosity.
+            imgsz: Output video size as a tuple of (H, W). Defaults to
+                (480, 640).
+            frame_rate: Output video frame rate. Defaults to 30.
+            fourcc: FourCC code for the video codec. Defaults to "mp4v".
+            verbose: Enable verbosity. Defaults to False.
         """
         if not isinstance(fourcc, str):
             raise TypeError(f"Expected 'fourcc' to be a str, but got {type(fourcc).__name__}.")
@@ -266,10 +268,9 @@ class VideoWriterCV(VideoWriter):
         """Internal method for backend-specific writing logic.
         
         Args:
-            frame: A video frame, formatted as a numpy.ndarray of shape
-                (H, W, C) and pixel values ranging from 0 to 255; or as a
-                torch.Tensor of shape (B, C, H, W) with pixel values
-                ranging from 0.0 to 1.0.
+            frame: Video frame, formatted as a numpy.ndarray of shape (H, W, C)
+                and pixel values ranging from 0 to 255; or as a torch.Tensor of
+                shape (B, C, H, W) with pixel values ranging from 0.0 to 1.0.
         """
         # Convert to NumPy uint8 RGB [H, W, 3]
         if isinstance(frame, torch.Tensor):

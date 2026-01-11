@@ -3,11 +3,8 @@
 
 """Rich-based progress and prompt utility collection.
 
-This module provides helpers to construct Progress instances and custom
-ProgressColumn and prompt subclasses for interactive command-line flows,
-including download and general-purpose progress bars, memory and processing
-columns, and a prompt class that accepts either selection indices or free-form
-input.
+This module provides helpers to construct progress bars and custom prompt
+subclasses.
 """
 
 from __future__ import annotations
@@ -50,20 +47,24 @@ from mon.core.utils import is_int, to_int_list, to_list
 
 
 # ==============================================================================
-# region DATA STRUCTURES
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Columns ---
-class MemoryUsageColumn(ProgressColumn):
-    """A progress column that displays memory usage.
 
-    This column shows either system RAM or aggregated GPU VRAM usage, depending
-    on whether CUDA is available.
+class MemoryUsageColumn(ProgressColumn):
+    """Progress column that displays memory usage.
+
+    Display either system RAM or aggregated GPU VRAM usage, depending on whether
+    CUDA is available.
 
     Attributes:
-        devices (list[int]): A list of GPU device indices to query.
-        unit (MemoryUnit): The memory unit to use for reporting (e.g., "GB").
-        update_interval (float): The minimum time in seconds between updates.
+        devices (list[int]): List of GPU device indices to query.
+            Defaults to [0].
+        unit (MemoryUnit): Memory unit to use for reporting.
+            Defaults to MemoryUnit.GB.
+        update_interval (float): Minimum time in seconds between updates.
+            Defaults to 1.0.
     """
 
     # --- Lifecycle & Initialization ---
@@ -77,10 +78,13 @@ class MemoryUsageColumn(ProgressColumn):
         """Initialize the memory usage column.
 
         Args:
-            devices: A device index or a list of indices to monitor.
-            unit: The memory unit for display ("GB", "MB", etc.).
-            update_interval: The minimum time in seconds between updates.
-            table_column: An optional `rich.table.Column` for custom styling.
+            devices: Device index or a list of indices to monitor.
+                Defaults to 0.
+            unit: Memory unit for display. Defaults to "GB".
+            update_interval: Minimum time in seconds between updates.
+                Defaults to 1.0.
+            table_column: Optional rich.table.Column for custom styling.
+                Defaults to None.
         """
         super().__init__(table_column=table_column)
         self.devices         = to_int_list(devices)
@@ -92,14 +96,11 @@ class MemoryUsageColumn(ProgressColumn):
     def render(self, task: Task) -> Text:
         """Render the current memory usage.
 
-        This method is called by the `Progress` object. It caches the result
-        to reduce the frequency of hardware queries.
-
         Args:
-            task: The `rich.progress.Task` being rendered.
+            task: The rich.progress.Task being rendered.
 
         Returns:
-            A `Text` object displaying the memory usage.
+            Text object displaying the memory usage.
         """
         current_time = time.time()
         if current_time - self._last_update > self.update_interval:
@@ -109,7 +110,7 @@ class MemoryUsageColumn(ProgressColumn):
         
     @property
     def machine_memory_text(self) -> Text:
-        """Format system RAM usage into a `Text` object."""
+        """Format system RAM usage into a Text object."""
         # Import locally to avoid circular dependencies.
         from mon.core.device import query_ram_usages
         
@@ -119,7 +120,7 @@ class MemoryUsageColumn(ProgressColumn):
     
     @property
     def gpu_memory_text(self) -> Text:
-        """Format and aggregate GPU VRAM usage into a `Text` object."""
+        """Format and aggregate GPU VRAM usage into a Text object."""
         # Import locally to avoid circular dependencies.
         from mon.core.device import query_vram_usage
         
@@ -135,25 +136,30 @@ class MemoryUsageColumn(ProgressColumn):
 
 
 class ProcessedItemsColumn(ProgressColumn):
-    """A progress column that displays the count of processed items.
+    """Progress column that displays the count of processed items.
 
-    This column shows a "completed/total" count in a fixed-width field to
-    prevent the progress bar from resizing during updates.
+    Show a \"completed/total\" count in a fixed-width field to prevent the
+    progress bar from resizing during updates.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(self, table_column: Column = None):
-        """Initialize a new instance."""
+        """Initialize a new instance.
+
+        Args:
+            table_column: Optional rich.table.Column for custom styling.
+                Defaults to None.
+        """
         super().__init__(table_column=table_column)
     
     def render(self, task: Task) -> Text:
         """Render the processed items count for the task.
 
         Args:
-            task: The `rich.progress.Task` being rendered.
+            task: The rich.progress.Task being rendered.
 
         Returns:
-            A `Text` object showing "completed/total" items.
+            Text object showing \"completed/total\" items.
         """
         completed = int(task.completed)
         
@@ -169,20 +175,20 @@ class ProcessedItemsColumn(ProgressColumn):
 
 
 class ProcessingSpeedColumn(ProgressColumn):
-    """A progress column that displays processing speed.
+    """Progress column that displays processing speed.
 
-    This column shows the speed in items per second (it/s) or, if the speed is
-    less than 1 it/s, it shows the latency in milliseconds per item (ms/it).
+    Show the speed in items per second (it/s) or, if the speed is less than 1
+    it/s, show the latency in milliseconds per item (ms/it).
     """
 
     def render(self, task: Task) -> Text:
         """Render the processing speed for the task.
 
         Args:
-            task: The `rich.progress.Task` being rendered.
+            task: The rich.progress.Task being rendered.
 
         Returns:
-            A `Text` object displaying the processing speed.
+            Text object displaying the processing speed.
         """
         speed = task.speed
         if speed is None or speed == 0:
@@ -199,16 +205,19 @@ class ProcessingSpeedColumn(ProgressColumn):
 
 
 # --- Prompts ---
-class SelectionOrInputPrompt(Prompt):
-    """A prompt that supports selection by index, direct value, or free-form input.
 
-    This class extends `rich.prompt.Prompt` to create a flexible prompt that
-    can present a list of choices for selection while also accepting arbitrary
-    input if it doesn't match a choice.
+class SelectionOrInputPrompt(Prompt):
+    """Prompt that supports selection by index, direct value, or free-form input.
+
+    Extend ``rich.prompt.Prompt`` to create a flexible prompt that can present a
+    list of choices for selection while also accepting arbitrary input if it
+    doesn't match a choice.
 
     Attributes:
-        allow_empty (bool): If True, allows an empty string as a valid response.
-        column_first (bool): If True, prints choices in column-first order.
+        allow_empty (bool): If True, allow an empty string as a valid response.
+            Defaults to False.
+        column_first (bool): If True, print choices in column-first order.
+            Defaults to False.
     """
 
     response_type: type = str
@@ -230,15 +239,19 @@ class SelectionOrInputPrompt(Prompt):
         """Initialize the prompt.
 
         Args:
-            prompt: The text to display for the prompt.
-            console: An optional `Console` object.
-            password: If True, input will be hidden.
-            choices: A list of choices to display for selection.
+            prompt: Text to display for the prompt.
+            console: Optional Console object. Defaults to None.
+            password: If True, hide input. Defaults to False.
+            choices: List of choices to display for selection. Defaults to None.
             case_sensitive: If True, choice matching is case-sensitive.
-            show_default: If True, displays the default value.
-            show_choices: If True, displays the list of choices.
-            column_first: If True, prints choices in column-first order.
-            allow_empty: If True, an empty string is a valid response.
+                Defaults to True.
+            show_default: If True, display the default value. Defaults to True.
+            show_choices: If True, display the list of choices.
+                Defaults to True.
+            column_first: If True, print choices in column-first order.
+                Defaults to False.
+            allow_empty: If True, allow an empty string as a valid response.
+                Defaults to False.
         """
         self.allow_empty  = allow_empty
         self.column_first = column_first
@@ -253,10 +266,7 @@ class SelectionOrInputPrompt(Prompt):
         )
 
     def print_choices(self):
-        """Print available choices in columns.
-
-        Print the available choices as aligned columns to the console.
-        """
+        """Print available choices in columns."""
         choices_ = []
         for i, choice in enumerate(self.choices):
             choices_.append(f"{f'{i}.':>6} {choice}")
@@ -279,22 +289,25 @@ class SelectionOrInputPrompt(Prompt):
         default       : Any                 = ...,
         stream        : Optional[TextIO]    = None,
     ) -> Any:
-        """Create and run a `SelectionOrInputPrompt` instance.
-
-        This is a convenience class method to create and run the prompt in one call.
+        """Create and run a SelectionOrInputPrompt instance.
 
         Args:
-            prompt: The text to display for the prompt.
-            console: An optional `Console` object.
-            password: If True, input will be hidden.
-            choices: A list of choices to display for selection.
+            prompt: Text to display for the prompt. Defaults to \"\".
+            console: Optional Console object. Defaults to None.
+            password: If True, hide input. Defaults to False.
+            choices: List of choices to display for selection. Defaults to None.
             case_sensitive: If True, choice matching is case-sensitive.
-            show_default: If True, displays the default value.
-            show_choices: If True, displays the list of choices.
-            allow_empty: If True, an empty string is a valid response.
-            column_first: If True, prints choices in column-first order.
-            default: The default value to use if the user enters nothing.
-            stream: An optional text stream for I/O.
+                Defaults to True.
+            show_default: If True, display the default value. Defaults to True.
+            show_choices: If True, display the list of choices.
+                Defaults to True.
+            allow_empty: If True, allow an empty string as a valid response.
+                Defaults to False.
+            column_first: If True, print choices in column-first order.
+                Defaults to False.
+            default: Default value to use if the user enters nothing.
+                Defaults to ....
+            stream: Optional text stream for I/O. Defaults to None.
 
         Returns:
             Processed user response.
@@ -370,9 +383,6 @@ class SelectionOrInputPrompt(Prompt):
     def process_response(self, value: str) -> PromptType:
         """Validate and convert the user's response.
 
-        Accept indices or values, convert indices to choices, and raise an
-        InvalidResponse for invalid input.
-
         Args:
             value: Raw user input string.
 
@@ -418,11 +428,10 @@ class SelectionOrInputPrompt(Prompt):
     def __call__(self, *, default: Any = ..., stream: Optional[TextIO] = None) -> Any:
         """Prompt until a valid response is obtained.
 
-        Loop until the response validates, then return the processed value.
-
         Args:
             default: Default value to use when input is empty.
-            stream: Optional text stream for input/output.
+                Defaults to ....
+            stream: Optional text stream for input/output. Defaults to None.
 
         Returns:
             Processed user response.
@@ -442,7 +451,6 @@ class SelectionOrInputPrompt(Prompt):
             else:
                 return return_value
 
-
 # endregion
 
 
@@ -455,10 +463,12 @@ def create_download_bar(transient: bool = False, disable: bool = False) -> Progr
 
     Args:
         transient: If True, remove the progress display after completion.
+            Defaults to False.
         disable: If True, disable the progress display entirely.
+            Defaults to False.
 
     Returns:
-        A configured `Progress` instance for download tasks.
+        Configured Progress instance for download tasks.
     """
     columns = [
         TextColumn(console.get_datetime().strftime("[%X]"), justify="left", style="log.time"),
@@ -486,11 +496,14 @@ def create_progress_bar(
 
     Args:
         transient: If True, remove the progress display after completion.
+            Defaults to False.
         disable: If True, disable the progress display entirely.
+            Defaults to False.
         show_memory: If True, include a column for memory usage.
+            Defaults to True.
 
     Returns:
-        A configured `Progress` instance for general tasks.
+        Configured Progress instance for general tasks.
     """
     columns = [
         TextColumn(console.get_datetime().strftime("[%X]"), justify="left", style="log.time"),

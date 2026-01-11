@@ -4,8 +4,7 @@
 """Enhanced console logging and pretty-printing utilities.
 
 This module provides rich Console instances and helpers for logging and rendering
-structured data (mappings and lists of mappings) with consistent styling and
-alignment.
+structured data.
 """
 
 from __future__ import annotations
@@ -35,6 +34,7 @@ from mon.core.utils import to_dict
 # ==============================================================================
 
 # --- Defaults ---
+
 rich_console_theme = Theme({
     "debug"    : "dark_green",
     "info"     : "green",
@@ -62,6 +62,7 @@ error_console = Console(
 )
 
 # --- Shortcuts ---
+
 log       = console.log
 log_error = error_console.log
 
@@ -73,15 +74,13 @@ log_error = error_console.log
 # ==============================================================================
 
 # --- Basic Logging ---
+
 def pprint_dict(a_dict: dict | box.Box, title: str = ""):
     """Pretty-print a mapping inside a panel.
 
-    Print a mapping (dictionary or box.Box) in a visually appealing panel using
-    the rich library.
-
     Args:
         a_dict: Mapping to print.
-        title: Optional title for the panel.
+        title: Optional title for the panel. Defaults to "".
 
     Raises:
         TypeError: If ``a_dict`` is not a dict or box.Box.
@@ -102,12 +101,9 @@ def pprint_dict(a_dict: dict | box.Box, title: str = ""):
 def rprint_dict(a_dict: dict | box.Box, title: str = ""):
     """Render a mapping as a two-column table.
 
-    Display a mapping (dictionary or box.Box) as a two-column table using the
-    rich library.
-
     Args:
         a_dict: Mapping to print.
-        title: Optional table title.
+        title: Optional table title. Defaults to "".
 
     Raises:
         TypeError: If ``a_dict`` is not a dict or box.Box.
@@ -133,15 +129,12 @@ def rprint_dict(a_dict: dict | box.Box, title: str = ""):
 def rprint_list_dicts(list_of_dicts: list[dict]):
     """Render a list of dictionaries as a table with shared columns.
 
-    Display a list of dictionaries as a table, where each dictionary must have
-    identical keys.
-
     Args:
-        list_of_dicts: List of dicts that must share identical keys.
+        list_of_dicts: List of dictionaries that must share identical keys.
 
     Raises:
         ValueError: If ``list_of_dicts`` is not a non-empty list, or if the
-            dicts do not share identical keys.
+            dictionaries do not share identical keys.
     """
     if not isinstance(list_of_dicts, list) or not list_of_dicts:
         raise ValueError(

@@ -12,7 +12,7 @@ Notes:
     - Goal: Encapsulate related functionalities for a specific data type.
     - Structure:
         ::
-        
+
             contour/
             ├── __init__.py    # Exposes all
             ├── api.py         # External APIs
@@ -24,8 +24,6 @@ Notes:
 """
 
 from __future__ import annotations
-
-# __all__ = []  # Prevent accidental imports of submodules.
 
 from .core import *
 from .debug import *

@@ -3,10 +3,9 @@
 
 """AI system datasets.
 
-This package contains datasets used in AI systems, such as autonomous driving,
-robotics, and surveillance.
+This package contains datasets used in AI systems.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .face import *

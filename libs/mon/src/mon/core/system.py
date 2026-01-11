@@ -3,9 +3,7 @@
 
 """System-wise utilities.
 
-This module provides helpers for terminal control and for setting reproducible
-seeds across Python, NumPy, and PyTorch to enable consistent terminal clearing
-and experiment reproducibility in the codebase.
+This module provides helpers for terminal control and random seed management.
 """
 
 from __future__ import annotations
@@ -28,14 +26,17 @@ import torch
 # region CONTROL
 # ==============================================================================
 
-def set_random_seed(seed: int | tuple[int, int], deterministic: bool = False):
-    """Set random seeds for Python, NumPy, and PyTorch to ensure reproducibility.
+def set_random_seed(
+    seed         : int | tuple[int, int],
+    deterministic: bool = False,
+):
+    """Set random seeds for Python, NumPy, and PyTorch.
 
     Args:
-        seed: A single integer seed or a two-element tuple `(min, max)` from
-            which a seed will be randomly sampled.
-        deterministic: If True, configures PyTorch for deterministic
-            operations, which may have a performance cost.
+        seed: Single integer seed or a two-element tuple (min, max) from which a
+            value for ``seed`` will be randomly sampled.
+        deterministic: If ``deterministic`` is True, configure PyTorch for
+            deterministic operations. Defaults to False.
     """
     if isinstance(seed, Sequence):
         # If a range is provided, sample a seed from it.
@@ -64,12 +65,7 @@ def set_random_seed(seed: int | tuple[int, int], deterministic: bool = False):
 # ==============================================================================
 
 def clear_terminal():
-    """Clear the terminal screen using platform-specific commands.
-
-    This function uses ANSI escape codes for POSIX systems (Linux, macOS) and
-    the `cls` command for Windows, providing a more efficient and secure
-    alternative to `os.system("clear")`.
-    """
+    """Clear the terminal screen."""
     if platform.system() == "Windows":
         # For Windows, 'cls' is the standard command.
         os.system("cls")

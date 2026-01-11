@@ -3,8 +3,7 @@
 
 """Default CLI options and normalization helpers.
 
-This module provides CLI option metadata, default argument values, and
-coercion helpers for argument normalization.
+This module provides CLI option metadata and default argument values.
 """
 
 from __future__ import annotations
@@ -21,15 +20,20 @@ import box
 from mon.core.device import list_devices
 from mon.core.enum import RunMode, Task, TRTPrecision
 
+
 # ==============================================================================
-# TYPE COERCION HELPERS
+# region UTILITIES
 # ==============================================================================
 
 T = TypeVar("T")
 
 
 def _is_null(value: Any) -> bool:
-    """Check if a value should be treated as a Python None."""
+    """Check if a value should be treated as a Python None.
+
+    Args:
+        value: Value to check.
+    """
     # Added .strip() check for string types to catch "  "
     if isinstance(value, str):
         value = value.strip()
@@ -37,7 +41,12 @@ def _is_null(value: Any) -> bool:
 
 
 def _safe_convert(value: Any, constructor: Callable[[Any], T]) -> T | None:
-    """Base helper to handle null checking and conversion errors."""
+    """Convert a value using a constructor with null checking.
+
+    Args:
+        value: Value to convert.
+        constructor: Constructor function to use for conversion.
+    """
     if _is_null(value):
         return None
     try:
@@ -50,25 +59,40 @@ def _safe_convert(value: Any, constructor: Callable[[Any], T]) -> T | None:
 
 
 def _str_or_none(value: Any) -> str | None:
-    """Convert value to string, returning None if null-like."""
+    """Convert a value to a string or None.
+
+    Args:
+        value: Value to convert.
+    """
     return _safe_convert(value, str)
 
 
 def _int_or_none(value: Any) -> int | None:
-    """Convert value to int, returning None if null-like or invalid."""
+    """Convert a value to an integer or None.
+
+    Args:
+        value: Value to convert.
+    """
     return _safe_convert(value, int)
 
 
 def _float_or_none(value: Any) -> float | None:
-    """Convert value to float, returning None if null-like or invalid."""
+    """Convert a value to a float or None.
+
+    Args:
+        value: Value to convert.
+    """
     return _safe_convert(value, float)
+
+# endregion
 
 
 # ==============================================================================
-# CLI OPTION SCHEMA
+# region CONSTANTS
 # ==============================================================================
 
 # --- Option Registry ---
+
 CLI_OPTIONS = {
     "p"            : {
         "action"     : "store_true",
@@ -291,13 +315,12 @@ CLI_OPTIONS = {
 CLI_OPTIONS = box.Box(CLI_OPTIONS)
 
 
-# ==============================================================================
-# DEFAULT ARGUMENT GENERATION
-# ==============================================================================
-
 # --- State Initialization ---
+
 DEFAULT_ARGS = {
     k: False if v.get("action") in ["store_true"] else v.get("default", None)
     for k, v in CLI_OPTIONS.items()
 }
 DEFAULT_ARGS = box.Box(DEFAULT_ARGS)
+
+# endregion

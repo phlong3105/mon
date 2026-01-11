@@ -7,6 +7,8 @@ This module provides various metrics used for assessing the performance of
 machine learning models.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "AUROC",
     "Accuracy",

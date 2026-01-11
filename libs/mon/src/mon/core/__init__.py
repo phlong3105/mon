@@ -4,8 +4,7 @@
 """Core utilities and consolidated public API.
 
 This package contains foundational data types, device and logging helpers,
-configuration parsers, runtime utilities, and other common helpers used across
-the project.
+configuration parsers, runtime utilities, and other common helpers.
 """
 
 from __future__ import annotations

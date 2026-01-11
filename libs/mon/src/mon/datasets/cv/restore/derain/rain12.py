@@ -3,26 +3,41 @@
 
 """Rain12 dataset.
 
-This module implements the Rain12 dataset for image de-raining.
+This module provides the Rain12 dataset for image de-raining.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Rain12",
 ]
 
-from mon.core import rich
 from ....api import *
 
 
-@DATASETS.register(name="rain12")
-class Rain12(ImageDataset):
+@DATASETS.register()
+class Rain12(ImageDataset, RegistrableMixin):
     """Rain12 dataset."""
 
-    _subset    : str         = "rain12"
+    _name      : str         = "rain12"
     _tasks     : list[Task]  = [Task.DERAIN]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
-        "ref"  : Modality(name="ref",   type="image", module=Image, train=True, test=False),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
+        "ref"  : Modality(
+            name    = "ref",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = False,
+        ),
     }
     _classlist : ClassList   = None

@@ -3,7 +3,7 @@
 
 """Thermal data structures.
 
-This module provides the base classes and mixins for thermal data.
+This module provides base classes and mixins for thermal data.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ __all__ = [
 import cv2
 
 from mon.core.constants import SOURCE
-from mon.core.dtypes.image import Image
 from mon.core.enum import InfraredSource
+from ..image import Image
 
 
 # ==============================================================================
@@ -58,10 +58,10 @@ from mon.core.enum import InfraredSource
 # ==============================================================================
 
 class InfraredMap(Image):
-    """A basic class for managing an infrared map.
+    """Infrared map management class.
 
-    Extend Image to handle infrared map data and provide properties and methods
-    related to infrared data.
+    Extend ``Image`` to handle infrared map data and provide properties and
+    methods related to infrared data.
 
     Attributes:
         _source (InfraredSource): Source of the infrared data.
@@ -77,8 +77,11 @@ class InfraredMap(Image):
         """Initialize a new instance.
 
         Args:
-            source: Source of the infrared data. Defaults to InfraredSource.INFRARED.
-            flags: OpenCV flag used to read the infrared map. Defaults to cv2.IMREAD_GRAYSCALE.
+            source: Source of the infrared data. Defaults to SOURCE.INFRARED.
+            flags: OpenCV flag used to read the infrared map.
+                Defaults to cv2.IMREAD_GRAYSCALE.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
         """
         # Validate and set the depth source
         self._source = InfraredSource(source)

@@ -1,33 +1,42 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Optimizer base classes and mixins.
+"""Base classes and mixins for optimizers and learning rate schedulers."""
 
-This module provides the base classes and mixins for optimizers and learning rate
-schedulers.
-"""
+from __future__ import annotations
 
 __all__ = []
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion

@@ -3,7 +3,7 @@
 
 """Image atomic operations.
 
-This module provides atomic operations for image.
+This module provides atomic operations for images.
 """
 
 from __future__ import annotations
@@ -181,6 +181,7 @@ def is_normalized(image: np.ndarray | torch.Tensor) -> bool:
 # ==============================================================================
 
 # --- Accessing ---
+
 def shape(image: np.ndarray | torch.Tensor) -> tuple[int, int, int]:
     """Extract the shape of an image as (H, W, C).
 
@@ -323,6 +324,7 @@ def num_channels(image: np.ndarray | torch.Tensor) -> int:
 
 
 # --- Geometric ---
+
 def center(image: np.ndarray | torch.Tensor, integer: bool = True) -> np.ndarray | torch.Tensor:
     """Extract the center coordinates of an image.
 
@@ -332,9 +334,7 @@ def center(image: np.ndarray | torch.Tensor, integer: bool = True) -> np.ndarray
             torch.Tensor of shape (B, C, H, W) and pixel values ranging from
             0.0 to 1.0.
         integer: If True, rounds the center coordinates to the nearest integer.
-        
-    Returns:
-        The center of an image as (H/2, W/2).
+            Defaults to True.
     """
     h, w = imgsz(image)
     
@@ -352,6 +352,7 @@ def center(image: np.ndarray | torch.Tensor, integer: bool = True) -> np.ndarray
 # ==============================================================================
 
 # --- Casting ---
+
 def to_array(image: torch.Tensor) -> np.ndarray:
     """Convert an image from torch.Tensor to numpy.ndarray.
     
@@ -425,6 +426,7 @@ def to_tensor(image: np.ndarray, normalize: bool = False) -> torch.Tensor:
 
 
 # --- Structural ---
+
 def split(image: np.ndarray, n: int = 2) -> list[np.ndarray]:
     """Split an image into ``n`` equal parts.
 
@@ -481,6 +483,7 @@ def split(image: np.ndarray, n: int = 2) -> list[np.ndarray]:
 
 
 # --- Geometric ---
+
 def pad_square(
     image    : np.ndarray,
     pad_value: int = 0,
@@ -498,7 +501,7 @@ def pad_square(
         Padded square image of shape (S, S, C), where S is the maximum of (H, W).
     
     Raises:
-        ValueError: If ``image`` is not a 2D or 3D numpy array.
+        ValueError: If ``image`` is not a 2D or 3D numpy.ndarray.
     """
     if image.ndim not in [2, 3]:
         raise ValueError(f"Expected 'image' to be a 2D or 3D numpy.ndarray, "
@@ -537,7 +540,7 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
             (B, C, H, W) and pixel values ranging from 0.0 to 1.0.
 
     Returns:
-        A tuple containing two downsampled images of shape (B, C, H/2, W/2).
+        Tuple containing two downsampled images.
     
     Raises:
         TypeError: If ``image`` is not a 4D torch.Tensor.

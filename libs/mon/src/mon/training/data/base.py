@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base data container classes and mixins.
+"""Base classes and mixins for data containers."""
 
-Provides a skeleton for defining datasets and mixins for various operations on
-data containers.
-"""
+from __future__ import annotations
 
 __all__ = [
     "Dataset",
@@ -14,9 +12,8 @@ __all__ = [
 ]
 
 import abc
-from collections import namedtuple
 from types import MappingProxyType
-from typing import Any, Dict, TypeAlias
+from typing import Any, Dict, NamedTuple, TypeAlias
 
 from torch.utils.data import dataset
 
@@ -25,76 +22,106 @@ from mon.core.dtypes import ClassList
 
 
 # ==============================================================================
-# GLOBAL CONFIGURATIONS (Constants)
+# region CONSTANTS
 # ==============================================================================
 
-# --- Constants (Global defaults, versioning) ---
 
-
-# --- Environment ---
+# endregion
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
-Modality  = namedtuple(
-    typename    = "Modality",
-    field_names = [
-        "name",     # The name of the directory that contains the modality data.
-        "type",     # Albumentations target type (e.g. "image", "mask", ...) for augmentations.
-        "module",   # The tensor class that performs I/O operations.
-        "train",    # If ``True``, this modality is included in train/val set.
-        "test",     # If ``True``, this modality is included in test set.
-        "primary"   # If ``True``, this is the primary modality.
-    ],
-    defaults    = [None, None, True, False, False])
-Modalities: TypeAlias = Dict[str, Modality]
 
-# --- Structural Protocols ---
+class Modality(NamedTuple):
+    """Data structure representing a modality in a dataset.
 
-
-# ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
-# ==============================================================================
-
-# --- Structural Bases ---
-class Dataset(dataset.Dataset, abc.ABC):
-    """An abstract class for all datasets.
-    
-    A class representing a dataset. This is an abstract class that should be
-    subclassed to create specific dataset implementations.
-    
     Attributes:
-        _datapoints (dict): A dictionary containing lists of datapoints for
-            each modality. For example, it can be:
-            {"image": [...], "mask": [...], "meta": [...], ...}
-        _classlist (ClassList): The dataset object classes. Defaults to None and
-            should be overridden in subclasses.
-        verbose (bool): If True, enables verbose output.
+        name (str): Name of the directory that contains the modality data.
+        type (str | None): Albumentations target type for augmentations.
+            Defaults to None.
+        module (typing.Any): Tensor class that performs I/O operations.
+            Defaults to None.
+        train (bool): If True, this modality is included in the train/val set.
+            Defaults to True.
+        test (bool): If True, this modality is included in the test set.
+            Defaults to False.
+        primary (bool): If True, this is the primary modality. Defaults to False.
     """
     
-    _classlist: ClassList = None
+    name   : str
+    type   : str | None = None
+    module : Any        = None
+    train  : bool       = True
+    test   : bool       = False
+    primary: bool       = False
+
+
+Modalities: TypeAlias = Dict[str, Modality]
+
+
+# --- Protocols ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region BASE CLASSES & MIXINS
+# ==============================================================================
+
+# --- Base Classes ---
+
+class Dataset(dataset.Dataset, abc.ABC):
+    """Abstract class for all datasets.
+
+    Represent a dataset. Subclass this abstract class to create specific
+    dataset implementations.
+
+    Attributes:
+        _datapoints (dict): Dictionary containing lists of datapoints for each
+            modality.
+        _classlist (ClassList | None): Dataset object classes. Defaults to None.
+        verbose (bool): If True, enable verbose output. Defaults to True.
+    """
+    
+    _classlist: ClassList | None = None
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        datapoints: dict[str, list[Any]] = None,
-        classlist : Path | ClassList     = None,
-        verbose   : bool                 = True,
+        datapoints: dict[str, list[Any]] | None = None,
+        classlist : Path | ClassList | None     = None,
+        verbose   : bool                        = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
-            datapoints: A dictionary containing lists of datapoints for each
+            datapoints: Dictionary containing lists of datapoints for each
                 modality. Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
-                or a ``ClassList`` instance. If given, this will override any
-                ``classes`` defined in the subclass. Defaults to None.
-            verbose: If True, enables verbose output. Defaults to True.
+                or a ClassList instance. Defaults to None.
+            verbose: If True, enable verbose output. Defaults to True.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
+
+        Raises:
+            TypeError: If ``datapoints`` is not a dict or None.
+            TypeError: If ``verbose`` is not a bool.
         """
+        if datapoints is not None and not isinstance(datapoints, dict):
+            raise TypeError(
+                f"Expected 'datapoints' to be a dict or None, "
+                f"but got {type(datapoints).__name__}."
+            )
+        if not isinstance(verbose, bool):
+            raise TypeError(
+                f"Expected 'verbose' to be a bool, but got {type(verbose).__name__}."
+            )
+            
         super().__init__(*args, **kwargs)
         self.verbose     = verbose
         self.classlist   = classlist
@@ -102,103 +129,85 @@ class Dataset(dataset.Dataset, abc.ABC):
     
     @abc.abstractmethod
     def __del__(self):
-        """Finalizer called when the object is about to be destroyed.
-        
-        Close the dataset loading mechanism and releases resources.
+        """Finalize the object.
+
+        Close the dataset loading mechanism and release resources.
         """
         pass
     
     # --- Representation ---
     def __repr__(self) -> str:
-        """Official string representation for developers (eval-able)."""
-        lines  = ["Dataset " + self.__class__.__name__]
-        lines += [f"Number of datapoints: {self.__len__()}"]
+        """Return the official string representation for developers."""
+        lines  = [f"Dataset {self.__class__.__name__}"]
+        lines += [f"Number of datapoints: {len(self)}"]
         return "\n".join(lines)
     
     # --- Container / Sequence Methods ---
     @abc.abstractmethod
     def __len__(self) -> int:
-        """Return the length of the container (i.e., number of datapoints)."""
+        """Return the length of the container."""
         pass
     
     @abc.abstractmethod
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Define behavior for when an item is accessed via the notation self[index]."""
+        """Return an item at the given ``index``.
+
+        Args:
+            index: Index to access.
+        """
         pass
     
     def __iter__(self):
         """Return an iterator for the container."""
-        self._iter_idx = 0
-        # Cache length locally for the duration of the iteration
-        self._cached_len = len(self)
-        return self
-
-    def __next__(self) -> dict[str, Any]:
-        """Return the next datapoint in the dataset iteration.
-        
-        Returns:
-            A dictionary containing the datapoint and its metadata.
-        
-        Raises:
-            StopIteration: If ``_iter_idx`` exceeds the dataset length.
-        """
-        if self._iter_idx < self._cached_len:
-            item = self[self._iter_idx]  # Uses __getitem__
-            self._iter_idx += 1
-            return item
-        raise StopIteration
+        for i in range(len(self)):
+            yield self[i]
     
     # --- Properties ---
     @property
     def datapoints(self) -> MappingProxyType:
-        """Return a read-only view of datapoints.
-        
-        Returns:
-            A dictionary containing lists of datapoints for each modality.
-        """
-        # MappingProxyType provides a read-only dict view (from types import MappingProxyType)
+        """Return a read-only view of datapoints."""
         return MappingProxyType(self._datapoints)
     
     @property
-    def classlist(self) -> ClassList:
+    def classlist(self) -> ClassList | None:
         """Return the dataset's class definitions."""
         return self._classlist
     
     @classlist.setter
-    def classlist(self, value: Path | ClassList):
+    def classlist(self, value: Path | ClassList | None):
         """Set the dataset's class definitions.
-        
+
         Args:
             value: Either a .yaml file containing the classes definitions,
-                or a ``ClassList`` instance. If given, this will override any
-                ``classes`` defined in the subclass. Defaults to None.
-        
+                or a ClassList instance. Defaults to None.
+
         Raises:
             TypeError: If ``value`` is not a valid type.
         """
-        changed = False
-        if value is not None and isinstance(value, (Path, ClassList)):
+        if value is None:
+            self._classlist = None
+        elif isinstance(value, (Path, ClassList)):
             self._classlist = ClassList(value)
-            changed  = True
-        
-        if self.verbose and changed:
-            log(f"'_classlist' set with {len(self._classlist)} classes.")
+            if self.verbose:
+                log(f"'_classlist' set with {len(self._classlist)} classes.")
+        else:
+            raise TypeError(
+                f"Expected 'value' to be a Path, ClassList, or None, "
+                f"but got {type(value).__name__}."
+            )
     
     @property
     def disable_pbar(self) -> bool:
-        """Return True if progress bars are disabled, False otherwise."""
+        """Check if progress bars are disabled."""
         return not self.verbose
     
     # --- Access ---
     @abc.abstractmethod
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
-        
+
         Args:
             index: Index of datapoint.
-            
-        Returns:
-            A dictionary containing all modalities for the specified datapoint.
         """
         pass
     
@@ -207,22 +216,25 @@ class Dataset(dataset.Dataset, abc.ABC):
 
         Args:
             index: Index of datapoint.
-            
-        Returns:
-            A dictionary containing the datapoint's underlying data.
+
+        Raises:
+            TypeError: If ``index`` is not an int.
+            IndexError: If ``index`` is out of range.
         """
+        if not isinstance(index, int):
+            raise TypeError(f"Expected 'index' to be an int, but got {type(index).__name__}.")
+        if index < 0 or index >= len(self):
+            raise IndexError(f"Index {index} out of range for dataset of size {len(self)}.")
+
         datapoint = self._get_datapoint(index=index)
-        
-        for k, v in datapoint.items():
-            if v is not None:
-                # Optimized 'data' extraction: avoid hasattr which is slow
-                # Try to get 'data' attribute, default to the object itself
-                datapoint[k] = getattr(v, "data", v)
-                
-        return datapoint
+        # Optimized 'data' extraction using dictionary comprehension
+        return {
+            k: getattr(v, "data", v) if v is not None else None
+            for k, v in datapoint.items()
+        }
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion

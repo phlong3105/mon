@@ -3,15 +3,12 @@
 
 """<Name> data structures.
 
-This module provides the base classes and mixins for <name>.
+This module provides base classes and mixins for <name>.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
-
 
 # ==============================================================================
 # region CONSTANTS

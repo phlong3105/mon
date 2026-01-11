@@ -3,6 +3,7 @@
 
 """External optimizers and learning rate schedulers.
 
-This package exposes optimizers and learning rate schedulers from external
-libraries.
+This package exposes third-party optimizers into the framework.
 """
+
+from __future__ import annotations

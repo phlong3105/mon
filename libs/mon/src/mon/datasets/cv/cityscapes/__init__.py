@@ -3,12 +3,9 @@
 
 """Cityscapes datasets.
 
-This package implements various Cityscapes datasets.
-
-References:
-	- Data: https://www.cityscapes-dataset.com
+This package contains various Cityscapes dataset implementations.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .cityscapes import *

@@ -3,8 +3,10 @@
 
 """COCO-2017 dataset.
 
-This module implements the COCO-2017 dataset for object detection.
+This module provides the COCO-2017 dataset for object detection.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "COCO80",
@@ -14,15 +16,23 @@ __all__ = [
 from ...api import *
 
 
-@DATASETS.register(name="coco80")
-class COCO80(ImageDataset):
+@DATASETS.register()
+class COCO80(ImageDataset, RegistrableMixin):
     """COCO-80-classes dataset."""
     
-    _subset    : str         = "coco2017"
+    _name      : str         = "coco80"
     _tasks     : list[Task]  = [Task.DETECT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
     _classlist : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": (  0,   0,   0)},
@@ -109,15 +119,23 @@ class COCO80(ImageDataset):
     ])
     
 
-@DATASETS.register(name="coco91")
-class COCO91(ImageDataset):
+@DATASETS.register()
+class COCO91(ImageDataset, RegistrableMixin):
     """COCO-91-classes dataset."""
     
-    _subset    : str         = "coco2017"
+    _name      : str         = "coco91"
     _tasks     : list[Task]  = [Task.DETECT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
     _classlist : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": [  0,   0,   0]},

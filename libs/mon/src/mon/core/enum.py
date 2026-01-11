@@ -3,10 +3,7 @@
 
 """Enumeration helpers and project-specific enumerations.
 
-This module provides an extended Enum base class with lookup and construction
-utilities, as well as a collection of project-specific enums for colors,
-formats, tasks, memory units, and more to enable consistent identifiers and
-conversions across the codebase.
+This module provides an extended Enum base class and project-specific enums.
 """
 
 from __future__ import annotations
@@ -43,8 +40,9 @@ from typing import Any
 # ==============================================================================
 
 # --- Base Classes ---
+
 class CustomEnumMeta(enum.EnumMeta):
-    """A metaclass for flexible enum construction.
+    """Metaclass for flexible enum construction.
 
     Enable flexible enum construction so subclasses accept names or indices
     when constructing members.
@@ -55,7 +53,12 @@ class CustomEnumMeta(enum.EnumMeta):
         """Construct or convert a value into an enum member.
 
         Accept the usual Enum construction calls and delegate single-argument
-        conversions to from_value for convenience.
+        conversions to ``from_value`` for convenience.
+
+        Args:
+            value: Value to convert.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
         """
         if args or kwargs:
             # Fallback for standard enum construction if multiple args are given
@@ -68,7 +71,7 @@ class CustomEnumMeta(enum.EnumMeta):
 
 
 class Enum(enum.Enum, metaclass=CustomEnumMeta):
-    """An extended enum with convenience utilities.
+    """Extended enum with convenience utilities.
 
     Add caching, random selection, and conversion helpers for names, indices,
     and values to simplify common enum operations.
@@ -100,54 +103,43 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     
     # --- Representation ---
     def __repr__(self) -> str:
-        """Official string representation for developers (eval-able)."""
+        """Return the official string representation for developers."""
         return f"{self.__class__.__name__}.{self._name_}"
     
     # --- Container / Sequence Methods ---
     @classmethod
     def __contains__(cls, value: Any) -> bool:
-        """Return True if the value is a member or value of the enum."""
+        """Check if the value is a member or value of the enum.
+
+        Args:
+            value: Value to check.
+        """
         return isinstance(value, cls) or value in cls._values
     
     # --- Properties ---
     @classmethod
     def random(cls):
-        """Return a random enum member.
-
-        Choose one member uniformly at random.
-        """
+        """Return a random enum member."""
         return random.choice(cls._names)
 
     @classmethod
     def random_value(cls):
-        """Return the value of a random enum member.
-
-        This is equivalent to calling random().value.
-        """
+        """Return the value of a random enum member."""
         return cls.random().value
 
     @classmethod
     def names(cls) -> list:
-        """Return a list of all enum members.
-
-        Preserve declaration order.
-        """
+        """Return a list of all enum members."""
         return cls._names
 
     @classmethod
     def values(cls) -> list[Any]:
-        """Return a list of all enum values.
-
-        Preserve declaration order.
-        """
+        """Return a list of all enum values."""
         return cls._values
 
     @classmethod
     def ints_to_members(cls) -> dict:
-        """Return a mapping from integer indices to enum members.
-
-        Indices correspond to the declaration order, starting at zero.
-        """
+        """Return a mapping from integer indices to enum members."""
         return cls._ints_to_enums
 
     @classmethod
@@ -164,9 +156,6 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     @classmethod
     def from_value(cls, value: Any):
         """Create an enum member from a given value.
-
-        This method provides a flexible way to create an enum member from its
-        value, name (case-insensitive), or index.
 
         Args:
             value: Enum member, name, value, or index.
@@ -216,8 +205,9 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
 # ==============================================================================
 
 # --- Color Palettes ---
+
 class RGB(Enum):
-    """An enumeration of standard RGB colors.
+    """Enumeration of standard RGB colors.
 
     Provide (R, G, B) tuples for named colors.
     """
@@ -364,7 +354,7 @@ class RGB(Enum):
 
 
 class RGB12(Enum):
-    """A small basic RGB palette.
+    """Small basic RGB palette.
 
     Provide a compact set of common RGB tuples for simple palettes.
     """
@@ -388,7 +378,7 @@ class RGB12(Enum):
 
 
 class AppleRGB(Enum):
-    """An Apple UI color palette.
+    """Apple UI color palette.
 
     Provide named Apple-specific RGB tuples commonly used in UI palettes.
     """
@@ -433,8 +423,9 @@ class AppleRGB(Enum):
 
 
 # --- Units ---
+
 class MemoryUnit(Enum):
-    """A memory unit enumeration.
+    """Memory unit enumeration.
 
     Provide names for common memory units and helpers to convert to bytes.
     """
@@ -448,10 +439,7 @@ class MemoryUnit(Enum):
 
     @classmethod
     def names_to_bytes(cls) -> dict:
-        """Return mapping of this enum to byte multipliers.
-
-        Map each enum member to the number of bytes represented by one unit.
-        """
+        """Return mapping of this enum to byte multipliers."""
         return {
             cls.B : 1024 ** 0,
             cls.KB: 1024 ** 1,
@@ -463,8 +451,9 @@ class MemoryUnit(Enum):
 
 
 # --- Extensions ---
+
 class ConfigExtension(Enum):
-    """A set of configuration file extensions.
+    """Set of configuration file extensions.
 
     Provide common config filename suffixes including the leading dot.
     """
@@ -480,7 +469,7 @@ class ConfigExtension(Enum):
 
 
 class ImageExtension(Enum):
-    """A set of common image file extensions.
+    """Set of common image file extensions.
 
     Provide common image file suffixes including the leading dot.
     """
@@ -498,7 +487,7 @@ class ImageExtension(Enum):
 
 
 class VideoExtension(Enum):
-    """A set of common video file extensions.
+    """Set of common video file extensions.
 
     Provide common video file suffixes including the leading dot.
     """
@@ -514,7 +503,7 @@ class VideoExtension(Enum):
 
 
 class WeightExtension(Enum):
-    """A set of model weight file extensions.
+    """Set of model weight file extensions.
 
     Provide typical suffixes used for model checkpoints and weights.
     """
@@ -528,8 +517,9 @@ class WeightExtension(Enum):
 
 
 # --- Machine Learning ---
+
 class RunMode(Enum):
-    """A set of pipeline run modes.
+    """Set of pipeline run modes.
 
     Indicate whether the code is running training, prediction, or metrics.
     """
@@ -541,7 +531,7 @@ class RunMode(Enum):
 
 
 class Split(Enum):
-    """A set of dataset split identifiers.
+    """Set of dataset split identifiers.
 
     Represent dataset subsets such as train, val, test, predict.
     """
@@ -553,7 +543,7 @@ class Split(Enum):
 
 
 class ActiveLearningPhase(Enum):
-    """A set of active learning workflow phases.
+    """Set of active learning workflow phases.
 
     Enumerate the discrete experiment workflow stages.
     """
@@ -566,7 +556,7 @@ class ActiveLearningPhase(Enum):
     
     
 class Task(Enum):
-    """A set of supported task identifiers.
+    """Set of supported task identifiers.
 
     Enumerate the high-level tasks that models in the project implement.
     """
@@ -610,12 +600,20 @@ class Task(Enum):
     # Validation & Sanitization
     @classmethod
     def is_enhancement(cls, task: Any) -> bool:
-        """Check if a task is an enhancement task."""
+        """Check if a task is an enhancement task.
+
+        Args:
+            task: Task to check.
+        """
         return cls.from_value(task) in _ENHANCEMENT_TASKS
 
     @classmethod
     def is_restoration(cls, task: Any) -> bool:
-        """Check if a task is a restoration task."""
+        """Check if a task is a restoration task.
+
+        Args:
+            task: Task to check.
+        """
         return cls.from_value(task) in _RESTORATION_TASKS
 
 
@@ -631,7 +629,7 @@ _RESTORATION_TASKS = {
 
 
 class MLType(Enum):
-    """A set of machine learning approach types.
+    """Set of machine learning approach types.
 
     Categorize models by their ML paradigm.
     """
@@ -645,15 +643,12 @@ class MLType(Enum):
 
     @classmethod
     def trainable(cls) -> list:
-        """Return ML types that are trainable.
-
-        Return MLType members suitable for training.
-        """
+        """Return ML types that are trainable."""
         return [cls.SELF_SUPERVISED, cls.SUPERVISED, cls.UNSUPERVISED]
 
 
 class TRTPrecision(Enum):
-    """A set of TensorRT numeric precision modes.
+    """Set of TensorRT numeric precision modes.
 
     Specify desired precision for TensorRT optimizations.
     """
@@ -666,8 +661,9 @@ class TRTPrecision(Enum):
 
 
 # --- Computer Vision Domain ---
+
 class BBoxFormat(Enum):
-    """A set of bounding box formats and conversion codes.
+    """Set of bounding box formats and conversion codes.
 
     Include format identifiers and conversion code members.
     """
@@ -695,10 +691,7 @@ class BBoxFormat(Enum):
 
     @classmethod
     def formats(cls) -> list:
-        """Return a list of standard bounding box formats.
-
-        Include common format identifiers such as XYXY and XYWH.
-        """
+        """Return a list of standard bounding box formats."""
         return [
             cls.XYXY,
             cls.XYWH,
@@ -710,10 +703,7 @@ class BBoxFormat(Enum):
 
     @classmethod
     def conversion_codes(cls) -> list:
-        """Return a list of bounding box conversion code members.
-
-        Include members whose values indicate conversion operations.
-        """
+        """Return a list of bounding box conversion code members."""
         return [
             cls.XYXY2XYWH,
             cls.XYXY2CXCYWHN,
@@ -731,7 +721,7 @@ class BBoxFormat(Enum):
 
 
 class DepthSource(Enum):
-    """A set of depth data source identifiers.
+    """Set of depth data source identifiers.
 
     Indicate which model or pipeline produced depth data.
     """
@@ -745,7 +735,7 @@ class DepthSource(Enum):
 
 
 class InfraredSource(Enum):
-    """A set of infrared data source identifiers.
+    """Set of infrared data source identifiers.
 
     Provide identifiers for infrared data sources.
     """
@@ -754,7 +744,7 @@ class InfraredSource(Enum):
 
 
 class TrackState(Enum):
-    """A set of object tracking lifecycle states.
+    """Set of object tracking lifecycle states.
 
     Define integer codes representing stages such as NEW, TRACKED, and LOST.
     """

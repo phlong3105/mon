@@ -4,7 +4,7 @@
 """Type extension and conversion utility collection.
 
 This module provides helpers for creating combinations, merging dictionaries,
-sorting collections, and converting or validating types for downstream use.
+sorting collections, and converting or validating types.
 """
 
 from __future__ import annotations
@@ -48,13 +48,13 @@ _WHITESPACE_RE = re.compile(r"\s+")
 # ==============================================================================
 
 def is_int(value: Any) -> bool:
-    """Return True if a value can be safely converted to an integer.
+    """Check if ``value`` can be safely converted to an integer.
 
     Args:
-        value: The value to test.
+        value: Value to test.
 
     Returns:
-        True if the value can be converted to an int, False otherwise.
+        True if ``value`` can be converted to an int, False otherwise.
     """
     if isinstance(value, int):
         return True
@@ -66,13 +66,13 @@ def is_int(value: Any) -> bool:
 
 
 def is_float(value: Any) -> bool:
-    """Return True if a value can be safely converted to a float.
+    """Check if ``value`` can be safely converted to a float.
 
     Args:
-        value: The value to test.
+        value: Value to test.
 
     Returns:
-        True if the value can be converted to a float, False otherwise.
+        True if ``value`` can be converted to a float, False otherwise.
     """
     if isinstance(value, float):
         return True
@@ -93,17 +93,18 @@ def is_float(value: Any) -> bool:
 
 
 # --- Selection ---
+
 def unique(seq: Sequence) -> Sequence:
-    """Return unique items from a sequence while preserving order and type.
+    """Return unique items from ``seq`` while preserving order and type.
 
     Args:
-        seq: A list or tuple.
+        seq: List or tuple.
 
     Returns:
-        A sequence of the same type containing unique items in order.
+        Sequence of the same type containing unique items in order.
 
     Raises:
-        TypeError: If `seq` is not a list or tuple.
+        TypeError: If ``seq`` is not a list or tuple.
     """
     if not isinstance(seq, (list, tuple)):
         raise TypeError(f"Expected 'seq' to be a list or tuple, but got {type(seq).__name__}.")
@@ -112,14 +113,14 @@ def unique(seq: Sequence) -> Sequence:
 
 
 def create_combinations(seq: Sequence) -> list[list]:
-    """Generate all non-empty combinations of elements from a sequence.
+    """Generate all non-empty combinations of elements from ``seq``.
 
     Args:
-        seq: A sequence of elements.
+        seq: Sequence of elements.
 
     Returns:
-        A list of lists, where each inner list is a unique, non-empty
-        combination of elements from the input sequence.
+        List of lists, where each inner list is a unique, non-empty
+        combination of elements from ``seq``.
     """
     # Use itertools.chain.from_iterable for a memory-efficient and readable way
     # to generate combinations of all lengths.
@@ -143,18 +144,19 @@ def create_combinations(seq: Sequence) -> list[list]:
 
 
 # --- Rearrangement ---
+
 def sort(col: Collection, reverse: bool = False) -> Any:
-    """Return a sorted collection, preserving the input type where possible.
+    """Sort ``col``, preserving the input type where possible.
 
     Args:
-        col: The collection to sort (list, tuple, or dict).
-        reverse: If True, sort in descending order.
+        col: Collection to sort (list, tuple, or dict).
+        reverse: If True, sort in descending order. Defaults to False.
 
     Returns:
-        A sorted collection of the same type as the input.
+        Sorted collection of the same type as ``col``.
 
     Raises:
-        TypeError: If `col` is not a list, tuple, or dict.
+        TypeError: If ``col`` is not a list, tuple, or dict.
     """
     if isinstance(col, (list, tuple)):
         return type(col)(sorted(col, reverse=reverse))
@@ -179,14 +181,15 @@ def sort(col: Collection, reverse: bool = False) -> Any:
 # ==============================================================================
 
 # --- Casting ---
+
 def to_int(value: Any) -> int | None:
-    """Convert a value to an integer, returning None if the value is None.
+    """Convert ``value`` to an integer.
 
     Args:
-        value: The value to convert.
+        value: Value to convert.
 
     Returns:
-        An integer or None.
+        Integer or None.
 
     Raises:
         ValueError: If the conversion fails for a non-None value.
@@ -200,13 +203,13 @@ def to_int(value: Any) -> int | None:
 
 
 def to_float(value: Any) -> float | None:
-    """Convert a value to a float, returning None if the value is None.
+    """Convert ``value`` to a float.
 
     Args:
-        value: The value to convert.
+        value: Value to convert.
 
     Returns:
-        A float or None.
+        Float or None.
 
     Raises:
         ValueError: If the conversion fails for a non-None value.
@@ -220,14 +223,14 @@ def to_float(value: Any) -> float | None:
 
 
 def to_str(value: Any, sep: str = ",") -> str:
-    """Convert a value to a string, joining iterables with a separator.
+    """Convert ``value`` to a string.
 
     Args:
-        value: The value to convert (can be a dict, list, tuple, or scalar).
-        sep: The separator to use when joining iterable elements.
+        value: Value to convert.
+        sep: Separator to use when joining iterable elements. Defaults to ",".
 
     Returns:
-        A string representation of the value.
+        String representation of ``value``.
     """
     if not value:
         return ""
@@ -239,17 +242,15 @@ def to_str(value: Any, sep: str = ",") -> str:
 
 
 def to_list(value: Any, sep: str | tuple[str, ...] = (",", ";", ":")) -> list:
-    """Normalize a value to a list.
-
-    This function handles lists, tuples, dictionaries (by taking values), and
-    strings (by splitting).
+    """Normalize ``value`` to a list.
 
     Args:
-        value: The input value.
-        sep: A delimiter or tuple of delimiters to use for splitting strings.
+        value: Input value.
+        sep: Delimiter or tuple of delimiters to use for splitting strings.
+            Defaults to (",", ";", ":").
 
     Returns:
-        A list representation of the input.
+        List representation of ``value``.
     """
     if isinstance(value, list):
         return value
@@ -265,42 +266,41 @@ def to_list(value: Any, sep: str | tuple[str, ...] = (",", ";", ":")) -> list:
 
 
 def to_int_list(value: Any, sep: str | tuple[str, ...] = (",", ";", ":")) -> list[int]:
-    """Convert a value to a list of integers.
+    """Convert ``value`` to a list of integers.
 
     Args:
-        value: The input value to normalize and convert.
+        value: Input value to normalize and convert.
         sep: Delimiters for splitting if the input is a string.
+            Defaults to (",", ";", ":").
 
     Returns:
-        A list of integers.
+        List of integers.
     """
     return list(int(i) for i in to_list(value, sep=sep))
 
 
 def to_float_list(value: Any, sep: str | tuple[str, ...] = (",", ";", ":")) -> list[float]:
-    """Convert a value to a list of floats.
+    """Convert ``value`` to a list of floats.
 
     Args:
-        value: The input value to normalize and convert.
+        value: Input value to normalize and convert.
         sep: Delimiters for splitting if the input is a string.
+            Defaults to (",", ";", ":").
 
     Returns:
-        A list of floats.
+        List of floats.
     """
     return [float(i) for i in to_list(value, sep=sep)]
 
 
 def to_ntuple(n: int) -> Callable[[Any], tuple]:
-    """Return a function that converts an input to a tuple of length `n`.
-
-    If the input is an iterable, it will be repeated or truncated to match `n`.
-    If it's a scalar, it will be repeated `n` times.
+    """Return a function that converts an input to a tuple of length ``n``.
 
     Args:
-        n: The desired tuple length.
+        n: Desired tuple length.
 
     Returns:
-        A function that performs the conversion.
+        Function that performs the conversion.
     """
     def parse(x: Any) -> tuple:
         if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
@@ -313,16 +313,13 @@ def to_ntuple(n: int) -> Callable[[Any], tuple]:
 
 
 def to_dict(value: Any) -> dict:
-    """Convert a value to a dictionary.
-
-    This function handles dictionaries and objects with a `.to_dict()` method
-    (like `box.Box`).
+    """Convert ``value`` to a dictionary.
 
     Args:
-        value: The input value to convert.
+        value: Input value to convert.
 
     Returns:
-        A dictionary.
+        Dictionary.
 
     Raises:
         TypeError: If the conversion is not possible.
@@ -343,17 +340,15 @@ def to_dict(value: Any) -> dict:
 
 
 # --- Structural ---
-def merge_dicts(*dicts: dict) -> box.Box:
-    """Merge multiple dictionaries, filtering out None-like values.
 
-    Later dictionaries override keys from earlier ones, unless the new value is
-    `None`, `"None"`, or an empty string.
+def merge_dicts(*dicts: dict) -> box.Box:
+    """Merge multiple dictionaries in ``*dicts``, filtering out None-like values.
 
     Args:
-        *dicts: A sequence of dictionaries to merge.
+        *dicts: Sequence of dictionaries to merge.
 
     Returns:
-        A `box.Box` instance containing the merged key-value pairs.
+        box.Box instance containing the merged key-value pairs.
     """
     if not dicts:
         return box.Box()

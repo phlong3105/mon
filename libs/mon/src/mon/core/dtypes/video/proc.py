@@ -3,14 +3,12 @@
 
 """Video complex operations.
 
-This module provides complex operations and processing workflows for video.
+This module provides complex operations and processing workflows for video data.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

@@ -3,14 +3,12 @@
 
 """Video debugging utilities.
 
-This module provides debugging utilities for video.
+This module provides debugging utilities for video data.
 """
 
 from __future__ import annotations
 
 __all__ = []
-
-from .api import *
 
 
 # ==============================================================================

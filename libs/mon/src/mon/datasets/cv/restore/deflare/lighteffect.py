@@ -3,8 +3,10 @@
 
 """LightEffect dataset.
 
-This module implements the LightEffect dataset for image de-flaring.
+This module provides the LightEffect dataset for image de-flaring.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "LightEffect",
@@ -13,14 +15,22 @@ __all__ = [
 from ....api import *
 
 
-@DATASETS.register(name="lighteffect")
-class LightEffect(ImageDataset):
+@DATASETS.register()
+class LightEffect(ImageDataset, RegistrableMixin):
     """LightEffect dataset."""
     
-    _subset    : str         = "lighteffect"
+    _name      : str         = "lighteffect"
     _tasks     : list[Task]  = [Task.DEFLARE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
     _classlist : ClassList   = None

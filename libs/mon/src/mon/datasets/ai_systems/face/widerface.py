@@ -3,20 +3,22 @@
 
 """WiderFace dataset.
 
-This module implements the WiderFace dataset for face recognition.
+This module provides the WiderFace dataset for face detection.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "WiderFace",
     "WiderFaceVal",
 ]
 
-from mon.core import rich
+from mon.core import create_progress_bar
 from ...api import *
 
 
 @DATASETS.register()
-class WiderFace(ImageDataset):
+class WiderFace(ImageDataset, RegistrableMixin):
     """WiderFace dataset."""
     
     _name      : str         = "widerface"
@@ -24,15 +26,22 @@ class WiderFace(ImageDataset):
     _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
-        "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
+        "image": Modality(
+            name    = "image",
+            type    = "image",
+            module  = Image,
+            train   = True,
+            test    = True,
+            primary = True,
+        ),
     }
     _classlist : ClassList   = ClassList([
-        {"name": "face", "id": 0, "color": [ 81, 120, 228]},
+        {"name": "face", "id": 0, "color": [81, 120, 228]},
     ])
 
 
 @DATASETS.register()
-class WiderFaceVal(WiderFace):
+class WiderFaceVal(WiderFace, RegistrableMixin):
     """WiderFace-Val subset."""
     
     _name: str = "widerfaceval"
@@ -42,12 +51,12 @@ class WiderFaceVal(WiderFace):
         """Load primary modality data files in the dataset.
         
         Returns:
-            A list of Image instances for the primary modality.
+            A list of primary modality data files.
         """
         patterns = [self._root / "val" / "image"]
-
-        images: list[Image] = []
-        with rich.create_progress_bar(disable=self.disable_pbar) as pbar:
+        
+        images   = []
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 paths = sorted(pattern.rglob("*"))
                 desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"

@@ -3,8 +3,7 @@
 
 """Project-wide constant definitions.
 
-This module provides project-wide constants and default directory and file
-extensions for configuration and I/O operations.
+This module provides project-wide constants and default directory and file extensions.
 """
 
 from __future__ import annotations
@@ -35,9 +34,11 @@ from mon.core.pathlib import Path
 # ==============================================================================
 
 # --- Paths ---
+
 # Robustly find the project root (first pyproject.toml up)
 current_file = Path(__file__).normalize()
 ROOT_DIR     = current_file
+
 for parent in current_file.parents:
     if (parent / "pyproject.toml").exists():
         ROOT_DIR = parent
@@ -49,6 +50,7 @@ MONO_ROOT_DIR = _all_roots[-1] if _all_roots else ROOT_DIR
 
 # Zoo directory (prefer root-level zoo if it exists)
 _zoo_dir_in_root = ROOT_DIR / "zoo"
+
 if _zoo_dir_in_root.exists():
     ZOO_DIR = _zoo_dir_in_root
 else:
@@ -56,6 +58,7 @@ else:
 
 
 # --- Values ---
+
 DIRS = SimpleNamespace(
     DEBUG     = "debug",
     IMAGE     = "pred",
@@ -75,6 +78,7 @@ SOURCE = SimpleNamespace(
 )
 
 # --- Execution Flags  ---
+
 VERBOSE = True  # Global verbosity flag for internal logging
 
 # endregion
