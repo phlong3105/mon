@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Pre-trained weights base classes and mixins.
+"""Model weights data structures.
 
-This module provides the base classes and mixins for pre-trained weights,
-which can be a torch.Tensor or numpy.ndarray.
+This module provides the base classes and mixins for model weights.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Weights",
@@ -23,46 +24,57 @@ from mon.core.pathlib import download_url_to_file, Path
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
 @dataclass
 class Weights:
     """A class that groups important attributes associated with the pre-trained
     weights.
 
     Attributes:
-        url (Path): The location where we find the weights.
-        path (Path): The local path where the weights are stored.
-        transforms (Callable): A callable that constructs the preprocessing
-            method (or validation preset transforms) needed to use the model.
-            The reason we attach a constructor method rather than an already
-            constructed object is because the specific object might have memory,
-            and thus we want to delay initialization until needed.
+        url (Optional[Path | str]): The location where we find the weights.
+        path (Optional[Path | str]): The local path where the weights are stored.
+        num_classes (Optional[int]): The number of classes.
+        transforms (Optional[Callable]): A callable that constructs the
+            preprocessing method (or validation preset transforms) needed to use
+            the model. The reason we attach a constructor method rather than an
+            already constructed object is because the specific object might have
+            memory, and thus we want to delay initialization until needed.
         meta (dict[str, Any]): Stores meta-data related to the weights of the
             model and its configuration. These can be informative attributes
             (for example, the number of parameters/flops, recipe link/methods
@@ -105,6 +117,7 @@ class Weights:
         if self.meta != other.meta:
             return False
 
+        # Compares transforms, handling partial application case
         if isinstance(self.transforms, partial) and isinstance(other.transforms, partial):
             return (
                     self.transforms.func     == other.transforms.func
@@ -121,9 +134,6 @@ class WeightsEnum(Enum):
     Each model building method receives an optional ``weights`` parameter with
     its associated pre-trained weights. It inherits from `Enum` and its values
     should be of the type ``Weights``.
-
-    Attributes:
-        value (Weights): The data class entry with the weight information.
     """
     
     # --- Properties ---
@@ -165,16 +175,30 @@ class WeightsEnum(Enum):
         
         Args:
             overwrite: If True, force re-downloading the weights. Defaults to False.
-            weights_only: If True, only load the weights and return a dict. Defaults to False.
+            weights_only: If True, only load the weights and return a dict.
+                Defaults to False.
             
         Returns:
             The state dictionary containing the weights.
+            
+        Raises:
+            ValueError: If neither a URL nor a local file path is provided.
+            RuntimeError: If loading the weights fails.
         """
-        if self.url and self.path and not Path(self.path).is_weights_file(exist=True):
-            print(self.path)
-            download_url_to_file(self.url, self.path, overwrite)
+        # Check/Download Logic
+        path = Path(self.path)
+        if not path.exists():
+            if not self.url:
+                raise ValueError(f"No URL or local file found for {self.name}")
+            download_url_to_file(self.url, path, overwrite)
+            # Use torch hub or custom downloader
+            # torch.hub.download_url_to_file(self.url, str(self.path), progress=progress)
+            # print(self.path)
         
-        if self.path and Path(self.path).is_weights_file(exist=True):
-            return torch.load(self.path, weights_only=weights_only, *args, **kwargs)
-        else:
-            raise FileNotFoundError(f"Weights file not found: {self.path}.")
+        # Load with safety checks
+        try:
+            return torch.load(str(path), weights_only=weights_only, **kwargs)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load weights from {path}: {e}")
+
+# endregion

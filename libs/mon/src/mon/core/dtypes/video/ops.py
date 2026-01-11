@@ -3,54 +3,114 @@
 
 """Video atomic operations.
 
-This module provides pure functions that perform a single mathematical or
-structural change to the videos.
+This module provides atomic operations for video.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
-
-# ==============================================================================
-# VALIDATION & SANITIZATION (Integrity Checks)
-# ==============================================================================
-
-# --- Verify (Schema and range checking) ---
-
-
-# --- Clean (Fixing corrupt values/nulls) ---
+from .api import *
 
 
 # ==============================================================================
-# CONVERSIONS (Backend Interop)
+# region CREATION
 # ==============================================================================
 
-# --- Formats (Channel shuffling) ---
 
-
-# --- Types (Data type casting) ---
+# endregion
 
 
 # ==============================================================================
-# GEOMETRIC TRANSFORMATIONS (Resizing, Warping)
+# region VALIDATION
 # ==============================================================================
 
-# --- Analytics (Area, Perimeter, Centroid calculations) ---
 
-
-# --- Metrics ---
-
-
-# --- Project (Affine, Perspective, and Coordinate space transforms) ---
-
-
-# --- Reshape (Resize, Crop, Padding) ---
+# endregion
 
 
 # ==============================================================================
-# STATISTICAL OPERATIONS (Normalization, Scaling)
+# region RETRIEVAL
 # ==============================================================================
 
-# --- Normalize (Mean/Std, Min-Max scaling) ---
+# --- Accessing ---
 
 
-# --- Standardize (Unit conversion) ---
+# --- Selection ---
+
+
+# --- Aggregation ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region MUTATION
+# ==============================================================================
+
+# --- Alternation ---
+
+
+# --- Rearrangement ---
+
+
+# --- Addition ---
+
+
+# --- Removal ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region COMPUTATION
+# ==============================================================================
+
+# --- Arithmetic ---
+
+
+# --- Comparison ---
+
+
+# --- Logical ---
+
+
+# --- Geometric ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region TRANSFORMATION
+# ==============================================================================
+
+# --- Casting ---
+
+
+# --- Encoding ---
+
+
+# --- Standardization ---
+
+
+# --- Structural ---
+
+
+# --- Statistical ---
+
+
+# --- Geometric ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region DESTRUCTION
+# ==============================================================================
+
+
+# endregion

@@ -1,41 +1,55 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Contour base classes and mixins.
+"""Contour data structures.
 
 This module provides the base classes and mixins for contours.
 """
 
+from __future__ import annotations
+
 __all__ = []
 
-from ..base import Data, DataLoadMixin, DeviceManagementMixin
+from .api import *
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
+
+# endregion

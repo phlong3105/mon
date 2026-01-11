@@ -13,12 +13,13 @@ __all__ = [
 from ...api import *
 
 
-@DATASETS.register(name="fisheye8k")
+@DATASETS.register()
 class FishEye8K(ImageDataset):
     """FishEye8K dataset."""
     
-    _subset    : str         = "fisheye8k"
+    _name      : str         = "fisheye8k"
     _tasks     : list[Task]  = [Task.DETECT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),

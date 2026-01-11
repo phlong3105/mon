@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Class base classes and mixins.
+"""Classes data structures.
 
 This module provides the base classes and mixins for classes.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Class",
@@ -17,40 +19,49 @@ from typing import Any
 import numpy as np
 
 from mon.core.console import log, rprint_list_dicts
+from mon.core.dtypes.array import TensorOrArray
 from mon.core.pathlib import Path
 from mon.core.runtime import load_config
-from ..array import TensorOrArray
+
+# ==============================================================================
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 Class = dict[str, Any]  # An alias for a dictionary of arbitrary key-value pairs.
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
 class ClassList(list[Class]):
     """A basic class for managing a list of classes.
     
@@ -63,14 +74,15 @@ class ClassList(list[Class]):
     """
     
     # --- Lifecycle & Initialization ---
-    def __init__(self, data: list[dict] | Path = ()):
+    def __init__(self, data: list[dict] | Path | str = ()):
         """Initialize a new instance.
         
         Args:
             data: Either a list of class dictionaries or a Path to a YAML file
                 defining the classes. Defaults to ().
         """
-        if isinstance(data, Path | str):
+        # Validate and load classes
+        if isinstance(data, (Path, str)):
             classes = load_config(config=data, verbose=False)
             classes = classes.get("classes", [])
         elif data in [None, ()]:
@@ -78,12 +90,12 @@ class ClassList(list[Class]):
         else:
             classes = data
         
-        # Initialize parent classes and assign attributes
+        # Continue the initialization chain
         super().__init__(classes)
     
     # --- Properties ---
     @property
-    def trainable_classes(self) -> "ClassList":
+    def trainable_classes(self) -> ClassList:
         """Return a ClassList of trainable class IDs (IDs in [0, 254])."""
         return ClassList([item for item in self if 0 <= item["id"] < 255])
     
@@ -136,6 +148,31 @@ class ClassList(list[Class]):
         """Return the number of trainable classes."""
         return len(self.trainable_classes)
     
+    @property
+    def palette(self) -> np.ndarray:
+        """Return a numpy palette for segmentation masks or drawing."""
+        # Generates a (256, 3) array where index = ID
+        palette = np.zeros((256, 3), dtype=np.uint8)
+        for item in self:
+            if 0 <= item["id"] < 256:
+                palette[item["id"]] = item.get("color", [0, 0, 0])
+        return palette
+    
+    # --- Access ---
+    def get_by_id(self, class_id: int) -> dict | None:
+        """Safe retrieval of a class dict by ID."""
+        for item in self:
+            if item.get("id") == class_id:
+                return item
+        return None
+
+    def get_color(self, class_id: int, default: tuple = (255, 255, 255)) -> tuple:
+        """Retrieves color for drawing, falling back to white if ID is missing."""
+        item = self.get_by_id(class_id)
+        if item and "color" in item:
+            return tuple(item["color"])
+        return default
+    
     # --- Utils ---
     def print(self):
         """Print class labels in a formatted table."""
@@ -154,8 +191,8 @@ class Probabilities(TensorOrArray):
     confidence scores.
     
     Attributes:
-        _data (np.ndarray): Probability vector of shape (``_num_classes``).
-        _num_classes (int): Total number of classes.
+        _data: Probability vector of shape (``_num_classes``).
+        _num_classes: Total number of classes.
     """
     
     # --- Lifecycle & Initialization ---
@@ -174,11 +211,15 @@ class Probabilities(TensorOrArray):
                 integer.
         """
         # Validate and set num_classes if provided
-        if num_classes is not None and num_classes <= 0:
-            raise ValueError(f"``num_classes`` must be a positive integer, got {num_classes}.")
-        self._num_classes = num_classes
+        if num_classes and num_classes <= 0:
+            raise ValueError(f"Expected 'num_classes' to be a positive integer, but got {num_classes}.")
         
-        super().__init__(data=data)  # This will call the data setter
+        self._num_classes = num_classes
+        # Call the setter to ensure type validation on init
+        self.data         = data
+        
+        # Continue the initialization chain
+        super().__init__(data=self.data)
         
     # ---- Properties ---
     @property
@@ -187,35 +228,42 @@ class Probabilities(TensorOrArray):
         return self._data
     
     @data.setter
-    def data(self, data: np.ndarray | int):
+    def data(self, value: np.ndarray | int):
         """Setter for the probability vector.
         
         Args:
-            data: Probability vector as a numpy.ndarray of shape (``num_classes``),
-                or an integer representing the class ID. If an integer is
-                provided, it will be converted to a one-hot encoded vector.
+            value: Probability vector as a numpy.ndarray of shape (``num_classes``),
+                or an integer representing the class ID. If an integer is provided,
+                it will be converted to a one-hot encoded vector.
         
         Raises:
             ValueError: If ``data`` is an integer and ``num_classes`` is not
                 provided or is invalid.
             TypeError: If ``data`` is not a numpy.ndarray or int.
         """
-        if isinstance(data, int):
+        if isinstance(value, int):
             if self.num_classes is None:
-                raise ValueError("``num_classes`` must be provided when ``data`` is an integer representing class ID.")
+                raise ValueError(
+                    f"Expected 'num_classes' to be provided when 'data' is an integer, but got None."
+                )
             from .ops import class_id_to_one_hot
-            data = class_id_to_one_hot(class_id=data, num_classes=self.num_classes)
-        elif isinstance(data, np.ndarray):
+            value = class_id_to_one_hot(class_id=value, num_classes=self.num_classes)
+        elif isinstance(value, np.ndarray):
             # Set num_classes if not already set
             if self.num_classes is None:
-                self._num_classes = data.shape[0]
+                self._num_classes = value.shape[0]
             # Validate data shape
-            elif data.ndim != 1 or data.shape[0] != self.num_classes:
-                raise ValueError(f"``data`` must be a 1D array of shape ({self.num_classes}), got {data.shape}.")
+            elif value.ndim != 1 or value.shape[0] != self.num_classes:
+                raise ValueError(
+                    f"Expected 'data' to be a numpy.ndarray of shape ({self.num_classes},), "
+                    f"but got {value.shape}."
+                )
         else:
-            raise TypeError(f"``data`` must be a numpy.ndarray or int, got {type(data)}.")
+            raise TypeError(
+                f"Expected 'data' to be a numpy.ndarray or int, but got {type(value).__name__}."
+            )
         
-        self._data = data
+        self._data = value
     
     @property
     def num_classes(self) -> int:
@@ -224,7 +272,8 @@ class Probabilities(TensorOrArray):
     
     @property
     def top1_idx(self) -> int:
-        """Return the index of the class with the highest probability."""
+        """Return the index of the top-1 class."""
+        # argmax is fast, but it's still an O(N) operation
         return int(np.argmax(self.data))
     
     @property
@@ -235,9 +284,13 @@ class Probabilities(TensorOrArray):
     @property
     def top1(self) -> float:
         """Return the confidence score of the top-1 class."""
-        return self.data[self.top1_idx]
+        # Instead of calling top1_idx (which calls argmax again),
+        # use np.max for the value directly.
+        return float(np.max(self.data))
     
     @property
     def top5(self) -> np.ndarray:
         """Return the confidence scores of the top-5 classes."""
         return self.data[self.top5_idxes]
+
+# endregion

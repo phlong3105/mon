@@ -14,6 +14,8 @@ References:
     - Code-V2: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
 """
 
+from __future__ import annotations
+
 __all__ = [
     "GhostBottleneck",
     "GhostBottleneckV2",
@@ -29,7 +31,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-# --- Utils ---
+# ==============================================================================
+# region UTILITIES
+# ==============================================================================
+
 def _make_divisible(v: int, divisor: int, min_value: int = None) -> int:
     """Ensure that all layers have a channel number that is divisible by 8.
     
@@ -46,14 +51,21 @@ def _make_divisible(v: int, divisor: int, min_value: int = None) -> int:
 
 
 def hard_sigmoid(x: torch.Tensor, inplace: bool = False) -> torch.Tensor:
+    """Hard sigmoid function."""
     if inplace:
         return x.add_(3.0).clamp_(0.0, 6.0).div_(6.0)
     else:
         return F.relu6(x + 3.0) / 6.0
 
+# endregion
 
-# --- Modules ---
+
+# ==============================================================================
+# region MODULES
+# ==============================================================================
+
 class SqueezeExcite(nn.Module):
+    """Squeeze-and-Excitation block."""
     
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -83,8 +95,9 @@ class SqueezeExcite(nn.Module):
         x    = x * self.gate_fn(x_se)
         return x
 
-    
+
 class ConvBnAct(nn.Module):
+    """Convolution-Batch Normalization-Activation block."""
     
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -107,8 +120,13 @@ class ConvBnAct(nn.Module):
         x = self.act1(x)
         return x
 
+# endregion
 
-# --- GhostModule ---
+
+# ==============================================================================
+# region GHOST MODULES
+# ==============================================================================
+
 class GhostModule(nn.Module):
     """Ghost module.
     
@@ -149,7 +167,7 @@ class GhostModule(nn.Module):
         x1 = self.primary_conv(x)
         x2 = self.cheap_operation(x1)
         y  = torch.cat([x1, x2], dim=1)
-        return y[:,:self.out_channels, :, :]
+        return y[:, :self.out_channels, :, :]
 
 
 class GhostBottleneck(nn.Module):
@@ -169,7 +187,7 @@ class GhostBottleneck(nn.Module):
         dw_kernel_size: int   = 3,
         stride        : int   = 1,
         se_ratio      : float = 0.0,
-        relu          : bool = True
+        relu          : bool  = True
     ):
         super().__init__()
         has_se      = se_ratio is not None and se_ratio > 0.0
@@ -200,7 +218,7 @@ class GhostBottleneck(nn.Module):
         # Point-wise linear projection
         self.ghost2 = GhostModule(mid_channels, out_channels, relu=False)
         
-        # shortcut
+        # Shortcut
         if in_channels == out_channels and self.stride == 1:
             self.shortcut = nn.Sequential()
         else:
@@ -238,7 +256,6 @@ class GhostBottleneck(nn.Module):
         return x
 
 
-# --- GhostModuleV2 ---
 class GhostModuleV2(nn.Module):
     """Ghost module V2 with long-range attention.
     
@@ -257,40 +274,27 @@ class GhostModuleV2(nn.Module):
         dw_size     : int  = 3,
         stride      : int  = 1,
         relu        : bool = True,
-        mode        : Literal["original", "attn"] = None,
+        mode        : Literal["original", "attn"] = "original",
     ):
         super().__init__()
-        self.mode    = mode
-        self.gate_fn = nn.Sigmoid()
+        self.mode         = mode
+        self.out_channels = out_channels
+        init_channels     = math.ceil(out_channels / ratio)
+        new_channels      = init_channels * (ratio - 1)
 
-        if self.mode in ["original"]:
-            self.out_channels = out_channels
-            init_channels     = math.ceil(out_channels / ratio)
-            new_channels      = init_channels * (ratio - 1)
-            self.primary_conv = nn.Sequential(
-                nn.Conv2d(in_channels, init_channels, kernel_size, stride, kernel_size // 2, bias=False),
-                nn.BatchNorm2d(init_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
-            )
-            self.cheap_operation = nn.Sequential(
-                nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size // 2, groups=init_channels, bias=False),
-                nn.BatchNorm2d(new_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
-            )
-        elif self.mode in ["attn"]:
-            self.out_channels = out_channels
-            init_channels     = math.ceil(out_channels / ratio)
-            new_channels      = init_channels * (ratio - 1)
-            self.primary_conv = nn.Sequential(
-                nn.Conv2d(in_channels, init_channels, kernel_size, stride, kernel_size // 2, bias=False),
-                nn.BatchNorm2d(init_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
-            )
-            self.cheap_operation = nn.Sequential(
-                nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size // 2, groups=init_channels, bias=False),
-                nn.BatchNorm2d(new_channels),
-                nn.ReLU(inplace=True) if relu else nn.Sequential(),
-            )
+        self.primary_conv = nn.Sequential(
+            nn.Conv2d(in_channels, init_channels, kernel_size, stride, kernel_size // 2, bias=False),
+            nn.BatchNorm2d(init_channels),
+            nn.ReLU(inplace=True) if relu else nn.Sequential(),
+        )
+        self.cheap_operation = nn.Sequential(
+            nn.Conv2d(init_channels, new_channels, dw_size, 1, dw_size // 2, groups=init_channels, bias=False),
+            nn.BatchNorm2d(new_channels),
+            nn.ReLU(inplace=True) if relu else nn.Sequential(),
+        )
+        
+        if self.mode == "attn":
+            self.gate_fn    = nn.Sigmoid()
             self.short_conv = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, kernel_size, stride, kernel_size // 2, bias=False),
                 nn.BatchNorm2d(out_channels),
@@ -299,22 +303,21 @@ class GhostModuleV2(nn.Module):
                 nn.Conv2d(out_channels, out_channels, kernel_size=(5, 1), stride=1, padding=(2, 0), groups=out_channels, bias=False),
                 nn.BatchNorm2d(out_channels),
             )
-        else:
-            raise NotImplementedError(f"Not implemented mode: {self.mode}.")
       
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.mode in ["original"]:
-            x1 = self.primary_conv(x)
-            x2 = self.cheap_operation(x1)
-            y  = torch.cat([x1, x2], dim=1)
-            return y[:,:self.out_channels, :, :]
-        elif self.mode in ["attn"]:
+        x1 = self.primary_conv(x)
+        x2 = self.cheap_operation(x1)
+        y  = torch.cat([x1, x2], dim=1)
+        y  = y[:, :self.out_channels, :, :]
+        
+        if self.mode == "attn":
             residual = self.short_conv(F.avg_pool2d(x, kernel_size=2, stride=2))
-            x1 = self.primary_conv(x)
-            x2 = self.cheap_operation(x1)
-            y  = torch.cat([x1, x2], dim=1)
-            return y[:,:self.out_channels, :, :] * F.interpolate(self.gate_fn(residual), size=(y.shape[-2], y.shape[-1]), mode="nearest")
+            residual = self.gate_fn(residual)
+            residual = F.interpolate(residual, size=(y.shape[-2], y.shape[-1]), mode="nearest")
+            y        = y * residual
+            
+        return y
 
 
 class GhostBottleneckV2(nn.Module):
@@ -342,7 +345,9 @@ class GhostBottleneckV2(nn.Module):
         self.stride = stride
 
         # Point-wise expansion
-        if layer_id <= 1:
+        # DFC attention is usually applied in the first ghost module of the bottleneck
+        # and typically not in the very first layers of the network.
+        if layer_id is not None and layer_id <= 1:
             self.ghost1 = GhostModuleV2(in_channels, mid_channels, relu=relu, mode="original")
         else:
             self.ghost1 = GhostModuleV2(in_channels, mid_channels, relu=relu, mode="attn")
@@ -368,7 +373,7 @@ class GhostBottleneckV2(nn.Module):
             
         self.ghost2 = GhostModuleV2(mid_channels, out_channels, relu=False, mode="original")
         
-        # shortcut
+        # Shortcut
         if in_channels == out_channels and self.stride == 1:
             self.shortcut = nn.Sequential()
         else:
@@ -399,3 +404,5 @@ class GhostBottleneckV2(nn.Module):
         x  = self.ghost2(x)
         x += self.shortcut(residual)
         return x
+
+# endregion

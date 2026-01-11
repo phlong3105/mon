@@ -19,7 +19,7 @@ import cv2
 import numpy as np
 import torch
 
-from mon.core import log, Path, SAVE_IMAGE_EXT, Split, Task
+from mon.core import log, Path, EXT, Split, Task
 from mon.core.dtypes import ClassList, Frame
 from mon.training.augment import albumentations as A
 from ...base import Dataset
@@ -39,8 +39,10 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
     
     Attributes:
         _num_frames (int): Number of frames in the video.
+        _shape (tuple): Shape of video frames.
         _video_capture (cv2.VideoCapture): OpenCV video capture object.
         _video_meta (dict): Video metadata.
+        _curr_index (int): Track last accessed frame to avoid unnecessary seeks.
         _transform (albumentations.Compose): Transformations for input/target.
     """
     
@@ -66,9 +68,15 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
                 ``classes`` defined in the subclass. Defaults to None.
             verbose: If True, enables verbose output. Defaults to True.
         """
+        # Define default values to avoid potential attribute errors during
+        # the initialization chain
         self._num_frames    = 0
+        self._shape         = ()
         self._video_capture = None
         self._video_meta    = {}
+        self._curr_index    = -1
+        
+        # Continue the initialization chain
         super().__init__(
             root      = root,
             split     = split,
@@ -80,7 +88,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
     
     def __del__(self):
         """Close the dataset loading mechanism and releases resources."""
-        if isinstance(self._video_capture, cv2.VideoCapture):
+        if self._video_capture and self._video_capture.isOpened():
             self._video_capture.release()
     
     # --- Container / Sequence Methods ---
@@ -90,7 +98,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
     
     def __iter__(self):
         """Initialize a new iterator."""
-        self._iter_idx = 0
+        self._curr_index = 0
         if isinstance(self._video_capture, cv2.VideoCapture):
             self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
         return self
@@ -104,20 +112,27 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         Returns:
             A dictionary containing the datapoint and its metadata.
         """
+        # Fetch datapoint
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
         
-        if self.transform:
-            augmented     = self.transform(image=data["frame"])
+        transform = self._transform
+        
+        if transform:
+            # Albumentations usually uses the key 'image'
+            augmented     = transform(image=data["frame"])
             data["frame"] = augmented["frame"]
-            # Convert to float32 if necessary
+            
+            # Vectorized-style type casting
             for k, v in data.items():
-                if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
-                    data[k] = v.to(torch.float32)
-                elif isinstance(v, np.ndarray) and v.dtype != np.float32:
-                    data[k] = v.astype(np.float32)
+                if v is not None:
+                    # Converts non‑float tensors/arrays to float32
+                    if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
+                        data[k] = v.to(torch.float32)
+                    elif isinstance(v, np.ndarray) and v.dtype != np.float32:
+                        data[k] = v.astype(np.float32)
                     
-        return data | {"meta": meta}
+        return {**data, "meta": meta}
     
     # --- Properties ---
     @property
@@ -126,23 +141,23 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         return self._transform
     
     @transform.setter
-    def transform(self, transform: Any):
+    def transform(self, value: Any):
         """Setter for transformation operations.
         
         Args:
-            transform: Transformations for input/target.
+            value: Transformations for input/target.
             
         Raises:
             TypeError: If ``transform`` is not None or an instance of
                 albumentations.Compose.
         """
-        if isinstance(transform, dict | box.Box):
-            transform = A.Compose(**transform)
-        if transform is not None and not isinstance(transform, A.Compose):
-            raise TypeError(f"``transform`` must be None or an instance of "
-                            f"albumentations.Compose, got: {type(transform)}.")
+        if isinstance(value, (dict, box.Box)):
+            value = A.Compose(**value)
+        if value is not None and not isinstance(value, A.Compose):
+            raise TypeError(f"Expected 'transform' to be an instance of "
+                            f"albumentations.Compose, but got {type(value)}.")
 
-        self._transform = transform
+        self._transform = value
     
     @property
     def is_stream(self) -> bool:
@@ -170,25 +185,25 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
     def _load_data(self) -> dict[str, Any]:
         """Core data loading mechanism for the dataset."""
         # Validate video source
-        root = self.root
-        if root.is_video_file():
-            self._video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
-            num_frames = int(self._video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-        elif root.is_video_stream():
-            self._video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
-            num_frames = -1
-        else:
-            raise IOError(f"Invalid video source: {root}")
+        root = self._root
         
-        # Set number of frames
-        if self._num_frames != num_frames:
-            self._num_frames = num_frames
+        self._video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
+        
+        if not self._video_capture.isOpened():
+            raise IOError(f"Failed to open video source: {root}")
+        
+        # Cache values to avoid repeated C-calls
+        self._num_frames = int(self._video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        
+        h = int(self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        w = int(self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self._shape = (h, w, 3)
         
         # Retrieve video metadata
         self._video_meta = {
             "video_path"   : root,
-            "orig_shape"   : self.shape,
-            "shape"        : self.shape,
+            "orig_shape"   : self._shape,
+            "shape"        : self._shape,
             "format"       : self._video_capture.get(cv2.CAP_PROP_FORMAT),
             "fourcc"       : str(self._video_capture.get(cv2.CAP_PROP_FOURCC)),
             "fps"          : int(self._video_capture.get(cv2.CAP_PROP_FPS)),
@@ -227,32 +242,38 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             A dictionary containing all modalities for the specified datapoint.
 
         Raises:
-            StopIteration: If the end of the video stream is reached.
-            RuntimeError: If the video capture object is not initialized.
+            RuntimeError: If VideoCapture is not initialized.
+            IndexError: If frame at ``index`` could not be read.
         """
-        # Validate video reader
-        if not self.is_stream and index >= self._num_frames:
-            self._video_capture.release()
-            raise StopIteration
+        if not self._video_capture or not self._video_capture.isOpened():
+            raise RuntimeError(f"VideoCapture is not initialized.")
         
-        # Read raw data from video capture
-        if isinstance(self._video_capture, cv2.VideoCapture):
-            ret_val, frame = self._video_capture.read()
-        else:
-            raise RuntimeError("``video_capture`` has not been initialized.")
+        # Smart Seeking
+        # Only seek if the requested index is NOT the next sequential frame
+        if index != self._curr_index + 1:
+            self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, index)
         
-        # Wrap raw data into a Frame object
+        success, frame = self._video_capture.read()
+        
+        if not success:
+            if self.is_stream: raise StopIteration
+            raise IndexError(f"Could not read frame at index {index}")
+        
+        self._last_index = index
+        
+        # Format Conversion
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame = Frame(data=frame, index=index, path=self._root, root=self._root.parent)
+        
+        # Wrap in your Frame/Image object (assuming it handles metadata)
+        frame_obj = Frame(data=frame, index=index, path=self.root, root=self._root.parent)
         
         # Build datapoint dictionary
-        path      = self.root
-        meta      = {
+        path = self._root
+        meta = {
             "index": index,
-            "path" : path.parent / path.stem / f"{path.stem}_{index}{SAVE_IMAGE_EXT}",
+            "path" : path.parent / path.stem / f"{path.stem}_{index}{EXT.IMAGE}",
         } | self._video_meta
-        datapoint = {"frame": frame, "meta": meta}
-        return datapoint
+        return {"frame": frame_obj, "meta": meta}
 
 
 # ==============================================================================

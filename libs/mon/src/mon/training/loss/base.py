@@ -37,12 +37,9 @@ class BaseLoss(_Loss, abc.ABC):
     """A base class for all loss functions.
     
     Attributes:
-        reductions (List[str]): List of supported reduction methods.
-        reduction (str): Reduction method to apply to the loss. Can be one of
-            "none", "mean", or "sum".
+        _reduce_fn (Callable): Function to reduce the loss tensor based on the
+            specified reduction method.
     """
-    
-    reductions = ["none", "mean", "sum"]
     
     # --- Lifecycle & Initialization ---
     def __init__(self, reduction: str = "mean"):
@@ -55,11 +52,13 @@ class BaseLoss(_Loss, abc.ABC):
         Raises:
             ValueError: If the provided ``reduction`` method is not supported.
         """
-        if reduction not in self.reductions:
-            raise ValueError(f"``reduction`` must be one of: {self.reductions}, got {reduction}.")
-        
-        # Initialize the parent class and assign attributes
         super().__init__(reduction=reduction)
+        # Assign the function once to avoid repeated dict lookups
+        self._reduce_fn = {
+            "mean": torch.mean,
+            "sum" : torch.sum,
+            "none": lambda x: x
+        }[reduction]
         
     # --- Representation ---
     def __str__(self):
@@ -85,11 +84,7 @@ class BaseLoss(_Loss, abc.ABC):
         Returns:
             Reduced loss tensor.
         """
-        return {
-            "mean": torch.mean,
-            "sum" : torch.sum,
-            "none": lambda x: x
-        }[self.reduction](loss)
+        return self._reduce_fn(loss)
 
 
 # --- Lifecycle Mixins ---

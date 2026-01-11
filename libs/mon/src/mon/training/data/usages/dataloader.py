@@ -58,10 +58,17 @@ class DataLoader(dataloader.DataLoader):
             drop_last: If True, drops the last incomplete batch if the dataset
                 size is not divisible by the batch size. Defaults to False.
         """
-        if isinstance(dataset, dict | box.Box):
+        # Build dataset if it's a config object
+        if isinstance(dataset, (dict, box.Box)):
             dataset = DATASETS.build(**dataset)
+            
+        # Cache collate_fn to avoid repeated getattr calls
+        # We prioritize the dataset's internal collation logic if it exists
         collate_fn = getattr(dataset, "collate_fn", collate_fn)
-        pin_memory = True if collate_fn else pin_memory
+        
+        # Only pin memory if we are actually using a collate function that
+        # returns Tensors (usually implied if collate_fn exists)
+        pin_memory = pin_memory if collate_fn is not None else False
         
         super().__init__(
             dataset     = dataset,

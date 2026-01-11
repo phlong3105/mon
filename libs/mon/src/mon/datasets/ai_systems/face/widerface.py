@@ -15,12 +15,13 @@ from mon.core import rich
 from ...api import *
 
 
-@DATASETS.register(name="widerface")
+@DATASETS.register()
 class WiderFace(ImageDataset):
     """WiderFace dataset."""
     
-    _subset    : str         = "widerface"
+    _name      : str         = "widerface"
     _tasks     : list[Task]  = [Task.DETECT]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
@@ -30,9 +31,11 @@ class WiderFace(ImageDataset):
     ])
 
 
-@DATASETS.register(name="widerfaceval")
+@DATASETS.register()
 class WiderFaceVal(WiderFace):
     """WiderFace-Val subset."""
+    
+    _name: str = "widerfaceval"
     
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -41,7 +44,7 @@ class WiderFaceVal(WiderFace):
         Returns:
             A list of Image instances for the primary modality.
         """
-        patterns = [self.root / "val" / "image"]
+        patterns = [self._root / "val" / "image"]
 
         images: list[Image] = []
         with rich.create_progress_bar(disable=self.disable_pbar) as pbar:

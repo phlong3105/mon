@@ -3,37 +3,43 @@
 
 """Contour I/O operations.
 
-This module provides functions for input and output operations for contours.
+This module provides input and output operations for contours.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
-
-# ==============================================================================
-# RESOURCE RESOLVERS (Path/URL Handling)
-# ==============================================================================
-
-# --- Path Handling (Resolving URIs, Local Paths) ---
-
-
-# --- Backend Selection (Selecting PIL vs. OpenCV vs. TurboJPEG) ---
+from .api import *
 
 
 # ==============================================================================
-# HYDRATION & DESERIALIZATION (Read/Load)
+# region DISCOVERY
 # ==============================================================================
 
-# --- Deserialize (Bytes to Object) ---
 
-
-# --- Loaders (Standard Disk-to-RAM logic) ---
+# endregion
 
 
 # ==============================================================================
-# PERSISTENCE & EXPORT (Write/Commit)
+# region CONNECTION
 # ==============================================================================
 
-# --- Serialize (Object to Bytes) ---
+
+# endregion
 
 
-# --- Commit (Saving to Disk/Cloud) ---
+# ==============================================================================
+# region INPUT
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region OUTPUT
+# ==============================================================================
+
+
+# endregion

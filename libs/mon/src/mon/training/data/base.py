@@ -15,6 +15,7 @@ __all__ = [
 
 import abc
 from collections import namedtuple
+from types import MappingProxyType
 from typing import Any, Dict, TypeAlias
 
 from torch.utils.data import dataset
@@ -101,12 +102,15 @@ class Dataset(dataset.Dataset, abc.ABC):
     
     @abc.abstractmethod
     def __del__(self):
-        """Close the dataset loading mechanism and releases resources."""
+        """Finalizer called when the object is about to be destroyed.
+        
+        Close the dataset loading mechanism and releases resources.
+        """
         pass
     
     # --- Representation ---
     def __repr__(self) -> str:
-        """Return the string representation of the dataset."""
+        """Official string representation for developers (eval-able)."""
         lines  = ["Dataset " + self.__class__.__name__]
         lines += [f"Number of datapoints: {self.__len__()}"]
         return "\n".join(lines)
@@ -114,24 +118,19 @@ class Dataset(dataset.Dataset, abc.ABC):
     # --- Container / Sequence Methods ---
     @abc.abstractmethod
     def __len__(self) -> int:
-        """Return the length of the dataset (i.e., number of datapoints)."""
+        """Return the length of the container (i.e., number of datapoints)."""
         pass
     
     @abc.abstractmethod
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Return the datapoint at the specified ``index`` in ``_datapoints``.
-        
-        Args:
-            index: Index of datapoint.
-            
-        Returns:
-            A dictionary containing the datapoint and its metadata.
-        """
+        """Define behavior for when an item is accessed via the notation self[index]."""
         pass
     
     def __iter__(self):
-        """Initialize the dataset iterator."""
+        """Return an iterator for the container."""
         self._iter_idx = 0
+        # Cache length locally for the duration of the iteration
+        self._cached_len = len(self)
         return self
 
     def __next__(self) -> dict[str, Any]:
@@ -143,22 +142,22 @@ class Dataset(dataset.Dataset, abc.ABC):
         Raises:
             StopIteration: If ``_iter_idx`` exceeds the dataset length.
         """
-        if self._iter_idx < self.__len__():
-            item = self.__getitem__(self._iter_idx)
+        if self._iter_idx < self._cached_len:
+            item = self[self._iter_idx]  # Uses __getitem__
             self._iter_idx += 1
             return item
-        else:
-            raise StopIteration
+        raise StopIteration
     
     # --- Properties ---
     @property
-    def datapoints(self) -> dict[str, list[Any]]:
-        """Getter for the dataset datapoints.
+    def datapoints(self) -> MappingProxyType:
+        """Return a read-only view of datapoints.
         
         Returns:
             A dictionary containing lists of datapoints for each modality.
         """
-        return self._datapoints
+        # MappingProxyType provides a read-only dict view (from types import MappingProxyType)
+        return MappingProxyType(self._datapoints)
     
     @property
     def classlist(self) -> ClassList:
@@ -166,24 +165,24 @@ class Dataset(dataset.Dataset, abc.ABC):
         return self._classlist
     
     @classlist.setter
-    def classlist(self, classlist: Path | ClassList = None):
-        """Setter for the dataset classes.
+    def classlist(self, value: Path | ClassList):
+        """Set the dataset's class definitions.
         
         Args:
-            classlist: Either a .yaml file containing the classes definitions,
+            value: Either a .yaml file containing the classes definitions,
                 or a ``ClassList`` instance. If given, this will override any
                 ``classes`` defined in the subclass. Defaults to None.
         
         Raises:
-            TypeError: If ``classlist`` is not a valid type.
+            TypeError: If ``value`` is not a valid type.
         """
         changed = False
-        if classlist is not None and isinstance(classlist, Path | ClassList):
-            self._classlist = ClassList(classlist)
+        if value is not None and isinstance(value, (Path, ClassList)):
+            self._classlist = ClassList(value)
             changed  = True
         
         if self.verbose and changed:
-            log(f"``_classlist`` is updated with {classlist}.")
+            log(f"'_classlist' set with {len(self._classlist)} classes.")
     
     @property
     def disable_pbar(self) -> bool:
@@ -194,8 +193,6 @@ class Dataset(dataset.Dataset, abc.ABC):
     @abc.abstractmethod
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
-        
-        This method must be implemented by subclasses.
         
         Args:
             index: Index of datapoint.
@@ -215,11 +212,15 @@ class Dataset(dataset.Dataset, abc.ABC):
             A dictionary containing the datapoint's underlying data.
         """
         datapoint = self._get_datapoint(index=index)
+        
         for k, v in datapoint.items():
-            if v is not None and hasattr(v, "data"):
-                datapoint[k] = v.data
+            if v is not None:
+                # Optimized 'data' extraction: avoid hasattr which is slow
+                # Try to get 'data' attribute, default to the object itself
+                datapoint[k] = getattr(v, "data", v)
+                
         return datapoint
-    
+
 
 # --- Lifecycle Mixins ---
 

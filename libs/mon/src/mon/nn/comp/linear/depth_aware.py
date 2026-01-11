@@ -7,6 +7,8 @@ This module implements depth-aware linear layers that incorporate depth
 information into the linear transformation process.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "DepthAwareLinear",
 ]
@@ -15,6 +17,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
+# ==============================================================================
+# region DEPTH-AWARE LINEAR LAYERS
+# ==============================================================================
 
 class DepthAwareLinear(nn.Module):
     """A linear layer with depth-aware local RGB averaging.
@@ -67,59 +73,98 @@ class DepthAwareLinear(nn.Module):
     
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
-        if input.dim() != 3 or depth.dim() != 3:
-            raise ValueError(f"``input`` and ``depth`` must be 3D tensors, got {input.dim()}D and {depth.dim()}D.")
+        """Forward pass.
+
+        Args:
+            input: Image tensor of shape (H, W, C) or (B, H, W, C).
+            depth: Depth tensor of shape (H, W, C_D) or (B, H, W, C_D).
+
+        Returns:
+            Output tensor of shape (H, W, out_features) or (B, H, W, out_features).
+        """
+        # Handle dimensions: Ensure (B, H, W, C)
+        is_batched = input.dim() == 4
+        if input.dim() == 3:
+            input = input.unsqueeze(0)
+        if depth.dim() == 3:
+            depth = depth.unsqueeze(0)
+            
+        if input.dim() != 4 or depth.dim() != 4:
+             raise ValueError(f"Input and depth must be 3D (H, W, C) or 4D (B, H, W, C). "
+                              f"Got {input.shape} and {depth.shape}.")
+
+        B, H, W, C   = input.shape
+        _, _, _, C_D = depth.shape
         
-        H, W, C  = input.shape
-        C_D      = depth.shape[2]
-        r        = self.kernel_size // 2
-        k2       = self.kernel_size ** 2
-        L        = H * W
-        d_center = depth.permute(2, 0, 1).reshape(C_D, L).unsqueeze(0).unsqueeze(2)  # (1, depth_channels, 1, L)
+        # Permute to (B, C, H, W) for unfolding
+        input_nchw = input.permute(0, 3, 1, 2)
+        depth_nchw = depth.permute(0, 3, 1, 2)
         
-        # Prepare input
-        input_4d = input.permute(2, 0, 1).unsqueeze(0)  # (1, image_channels, H, W)
-        depth_4d = depth.permute(2, 0, 1).unsqueeze(0)  # (1, depth_channels, H, W)
-        # Use ReplicationPad2d for replicate padding on spatial dimensions
-        pad_layer    = nn.ReplicationPad2d((r, r, r, r))  # left, right, top, bottom
-        pad_image_4d = pad_layer(input_4d)
-        pad_depth_4d = pad_layer(depth_4d)
-        # Unfold to get flattened windows
-        window_image_flat = F.unfold(pad_image_4d, kernel_size=self.kernel_size, stride=1)  # (1, image_channels*k2, H*W)
-        window_depth_flat = F.unfold(pad_depth_4d, kernel_size=self.kernel_size, stride=1)  # (1, depth_channels*k2, H*W)
+        # Padding
+        pad = self.kernel_size // 2
+        input_padded = F.pad(input_nchw, (pad, pad, pad, pad), mode="replicate")
+        depth_padded = F.pad(depth_nchw, (pad, pad, pad, pad), mode="replicate")
         
-        # Depth Similarity
-        window_depth_reshaped = window_depth_flat.view(1, C_D, k2, L)  # (1, depth_channels, k2, L)
-        diff    = window_depth_reshaped - d_center
-        dist_sq = torch.sum(diff ** 2, dim=1)                  # Squared Euclidean distance: (1, k2, L)
-        sim     = torch.exp(-dist_sq / (2 * self.alpha ** 2))  # Similarities: (1, k2, L)
-        sum_sim = torch.sum(sim, dim=1)  # (1, L)
+        # Unfold: (B, C * k*k, L) where L = H*W
+        input_unfolded = F.unfold(input_padded, kernel_size=self.kernel_size)
+        depth_unfolded = F.unfold(depth_padded, kernel_size=self.kernel_size)
         
-        # Compute weighted sum: reshape and multiply
-        window_image_reshaped = window_image_flat.view(1, C, k2, L)             # (1, image_channels, k2, L)
-        sim_reshaped  = sim.unsqueeze(1)                                        # (1, 1, k2, L)
-        weighted_sum  = torch.sum(sim_reshaped * window_image_reshaped, dim=2)  # (1, image_channels, L)
-        # Normalize where sum_sim > 0, else fallback to original image
-        mask          = sum_sim > 0  # (1, L)
-        normalized    = weighted_sum / sum_sim.clamp(min=1e-6).unsqueeze(1)     # (1, image_channels, L)
-        image_flat    = input.permute(2, 0, 1).reshape(C, L).unsqueeze(0)       # (1, image_channels, L)
-        weighted_flat = torch.where(mask.unsqueeze(1), normalized, image_flat)  # (1, image_channels, L)
-        weighted      = weighted_flat.view(1, C, H, W).permute(0, 2, 3, 1).squeeze(0)  # (H, W, image_channels)
+        L  = H * W
+        k2 = self.kernel_size ** 2
         
-        # Apply linear
-        # Concatenate: (H, W, in_features) -> [image (C_img), depth (C_depth), weighted (C_img)]
-        input_data = torch.cat((input, depth, weighted), dim=2)  # (H, W, in_features)
-        flat_input = input_data.view(-1, self.in_features)  # Flatten for linear: (H*W, in_features)
-        y_flat     = self.linear(flat_input)
-        # Reshape back to (H, W, out_features)
-        output     = y_flat.view(H, W, self.out_features)
+        # Reshape for processing
+        input_windows = input_unfolded.view(B, C, k2, L)    # (B, C, k2, L)
+        depth_windows = depth_unfolded.view(B, C_D, k2, L)  # (B, C_D, k2, L)
         
+        # Center depth: (B, C_D, 1, L)
+        depth_center = depth_nchw.view(B, C_D, 1, L)
+        
+        # Similarity
+        diff    = depth_windows - depth_center
+        dist_sq = torch.sum(diff ** 2, dim=1, keepdim=True)  # (B, 1, k2, L)
+        sim     = torch.exp(-dist_sq / (2 * self.alpha ** 2))
+        
+        # Weighted sum of input
+        # sim: (B, 1, k2, L)
+        weighted_sum = torch.sum(input_windows * sim, dim=2)  # (B, C, L)
+        sum_sim      = torch.sum(sim, dim=2)                  # (B, 1, L)
+        
+        # Normalize
+        weighted_avg = weighted_sum / (sum_sim + 1e-8)
+        
+        # Reshape weighted_avg back to (B, H, W, C)
+        weighted_avg = weighted_avg.view(B, C, H, W).permute(0, 2, 3, 1)
+        
+        # Concatenate: (B, H, W, C + C_D + C)
+        combined = torch.cat([input, depth, weighted_avg], dim=-1)
+        
+        # Linear layer
+        output = self.linear(combined)
+        
+        if not is_batched:
+            output = output.squeeze(0)
+            
         return output
 
+# endregion
+
+
+# ==============================================================================
+# region UNIT TESTS
+# ==============================================================================
 
 if __name__ == "__main__":
+    # Test 3D input
     image  = torch.ones(256, 256, 49)
     depth  = torch.randn(256, 256, 1)
     linear = DepthAwareLinear(49, 256, 1, kernel_size=3, alpha=10.0)
     out    = linear(image, depth)
-    print(out.shape)
+    print(f"3D Input Output Shape: {out.shape}")
+    
+    # Test 4D input
+    image_batch = torch.ones(2, 256, 256, 49)
+    depth_batch = torch.randn(2, 256, 256, 1)
+    out_batch   = linear(image_batch, depth_batch)
+    print(f"4D Input Output Shape: {out_batch.shape}")
+
+# endregion

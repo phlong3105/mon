@@ -9,7 +9,7 @@ domain-specific implementations under subpackages. This package enables
 consistent data representation and manipulation for downstream modules.
 
 Notes:
-    - Design Pattern: Multiple Toolkits Pattern.
+    - Design Pattern: Multiple Toolkits.
     - Goal: Encapsulate multiple "Toolkits" for multiple data types.
     - Structure:
         ::
@@ -17,16 +17,18 @@ Notes:
             dtypes/
             ├── __init__.py        # Unified entry point
             ├── base.py            # Global base classes and mixins
-            ├── toolkit/           # A "Toolkit" for a specific data type
+            ├── toolkit/
             │   ├── __init__.py    # Exposes all
+            │   ├── api.py         # External APIs
             │   ├── core.py        # Base classes and mixins
-            │   ├── io.py          # Resource management
-            │   ├── meta.py        # Discovery and lookup
-            │   ├── ops.py         # Utility and algorithm
-            │   ├── proc.py        # Workflow orchestration
-            │   └── vis.py         # UI/UX rendering
-            └── ... (contour, depth, etc.)
+            │   ├── io.py          # I/O operations
+            │   ├── ops.py         # Atomic operations
+            │   ├── exec.py        # Execution logic
+            │   └── debug.py       # Debugging utilities
+            └── ...
 """
+
+from __future__ import annotations
 
 __all__ = [
     # Flat exposed APIs
@@ -35,19 +37,18 @@ __all__ = [
     "Class",
     "ClassList",
     "Data",
-    "DataLoadMixin",
     "DepthMap",
     "DeviceManagementMixin",
     "Frame",
     "Image",
     "InfraredMap",
     "Instance",
+    "PersistentData",
     "Probabilities",
     "SemanticMask",
     "TensorOrArray",
     "VideoWriter",
     "VideoWriterCV",
-    "VideoWriterFFmpeg",
     "Weights",
     "WeightsEnum",
     # Hierarchical exposed APIs
@@ -65,7 +66,7 @@ __all__ = [
 ]
 
 from .array import TensorOrArray
-from .base import Data, DataLoadMixin, DeviceManagementMixin
+from .base import Data, DeviceManagementMixin, PersistentData
 from .bbox import BBox, BBoxList
 from .classes import Class, ClassList, Probabilities
 from .depth import DepthMap
@@ -73,5 +74,5 @@ from .image import Image
 from .instance import Instance
 from .mask import SemanticMask
 from .thermal import InfraredMap
-from .video import Frame, VideoWriter, VideoWriterCV, VideoWriterFFmpeg
+from .video import Frame, VideoWriter, VideoWriterCV
 from .weights import Weights, WeightsEnum

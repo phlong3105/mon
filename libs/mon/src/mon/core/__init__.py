@@ -8,6 +8,8 @@ configuration parsers, runtime utilities, and other common helpers used across
 the project.
 """
 
+from __future__ import annotations
+
 from .console import *
 from .constants import *
 from .device import *
@@ -22,6 +24,7 @@ from .dtypes import (
     mask,
     thermal,
     video,
+    weights,
 )
 from .enum import *
 from .factory import *

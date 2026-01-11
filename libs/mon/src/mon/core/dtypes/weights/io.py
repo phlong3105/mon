@@ -1,40 +1,45 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Pre-trained weights I/O operations.
+"""Model weights I/O operations.
 
-This module provides functions for input and output operations for pre-trained
-weights.
+This module provides input and output operations for model weights.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
-
-# ==============================================================================
-# RESOURCE RESOLVERS (Path/URL Handling)
-# ==============================================================================
-
-# --- Path Handling (Resolving URIs, Local Paths) ---
-
-
-# --- Backend Selection (Selecting PIL vs. OpenCV vs. TurboJPEG) ---
+from .api import *
 
 
 # ==============================================================================
-# HYDRATION & DESERIALIZATION (Read/Load)
+# region DISCOVERY
 # ==============================================================================
 
-# --- Deserialize (Bytes to Object) ---
 
-
-# --- Loaders (Standard Disk-to-RAM logic) ---
+# endregion
 
 
 # ==============================================================================
-# PERSISTENCE & EXPORT (Write/Commit)
+# region CONNECTION
 # ==============================================================================
 
-# --- Serialize (Object to Bytes) ---
+
+# endregion
 
 
-# --- Commit (Saving to Disk/Cloud) ---
+# ==============================================================================
+# region INPUT
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region OUTPUT
+# ==============================================================================
+
+
+# endregion

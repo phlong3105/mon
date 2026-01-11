@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Concrete <Name> implementations.
+"""Concrete implementations of <name>.
 
-This package contains various concrete implementations of <Name> commonly used in
-<application domain>.
+This package contains various concrete implementations of <name>
+commonly used in <domain>.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
+# __all__ = []  # Prevent accidental imports of submodules.

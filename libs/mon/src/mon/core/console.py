@@ -3,9 +3,12 @@
 
 """Enhanced console logging and pretty-printing utilities.
 
-This module provides rich Console instances and helpers for logging and
-rendering structured data (mappings and lists of mappings).
+This module provides rich Console instances and helpers for logging and rendering
+structured data (mappings and lists of mappings) with consistent styling and
+alignment.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "console",
@@ -24,55 +27,52 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.theme import Theme
 
+from mon.core.utils import to_dict
+
 
 # ==============================================================================
-# CONSOLE CONFIGURATION
+# region CONSTANTS
 # ==============================================================================
 
-# --- Styles (Themes and style constants) ---
+# --- Defaults ---
 rich_console_theme = Theme({
-    "debug"   : "dark_green",
-    "info"    : "green",
-    "warning" : "yellow",
-    "error"   : "bright_red",
-    "critical": "bold red",
+    "debug"    : "dark_green",
+    "info"     : "green",
+    "warning"  : "yellow",
+    "error"    : "bright_red",
+    "critical" : "bold red",
 })
 
-
-# --- Instances ---
 console = Console(
     color_system    = "auto",
-    log_time_format = "[%X]",  # "[%m/%d/%Y %H:%M:%S]",
+    log_time_format = "[%X]",
     soft_wrap       = True,
-    width           = None,  # 120,
+    width           = None,
     theme           = rich_console_theme,
 )
 
 error_console = Console(
     color_system    = "auto",
-    log_time_format = "[%X]",  # "[%m/%d/%Y %H:%M:%S]",
+    log_time_format = "[%X]",
     soft_wrap       = False,
-    width           = None,  # 120,
+    width           = None,
     stderr          = True,
     style           = "bold red",
     theme           = rich_console_theme,
 )
 
-
-# ==============================================================================
-# LOGGING HANDLERS
-# ==============================================================================
-
 # --- Shortcuts ---
 log       = console.log
 log_error = error_console.log
 
+# endregion
+
 
 # ==============================================================================
-# STRUCTURED DATA RENDERING
+# region DEBUGGING
 # ==============================================================================
 
-# --- Mapping Views ---
+# --- Basic Logging ---
 def pprint_dict(a_dict: dict | box.Box, title: str = ""):
     """Pretty-print a mapping inside a panel.
 
@@ -86,22 +86,19 @@ def pprint_dict(a_dict: dict | box.Box, title: str = ""):
     Raises:
         TypeError: If ``a_dict`` is not a dict or box.Box.
     """
-    if isinstance(a_dict, box.Box):
-        a_dict = a_dict.to_dict()
-    if not isinstance(a_dict, dict):
-        raise TypeError(f"``a_dict`` must be a dict, got {type(a_dict)}.")
-    pr = pretty.Pretty(
+    a_dict = to_dict(a_dict)
+    # Create a Pretty object for structured rendering
+    pr     = pretty.Pretty(
         a_dict,
         expand_all    = True,
         indent_guides = True,
         insert_line   = True,
-        overflow      = "fold"
+        overflow      = "fold",
     )
-    p = Panel(pr, title=f"{title}")
+    p      = Panel(pr, title=title)
     console.log(p)
 
 
-# --- Tabular Views ---
 def rprint_dict(a_dict: dict | box.Box, title: str = ""):
     """Render a mapping as a two-column table.
 
@@ -115,22 +112,21 @@ def rprint_dict(a_dict: dict | box.Box, title: str = ""):
     Raises:
         TypeError: If ``a_dict`` is not a dict or box.Box.
     """
-    if isinstance(a_dict, box.Box):
-        a_dict = a_dict.to_dict()
-    if not isinstance(a_dict, dict):
-        raise TypeError(f"``a_dict`` must be a dict, got {type(a_dict)}.")
-    tab = Table(
+    a_dict = to_dict(a_dict)
+    # Initialize a two-column table
+    tab    = Table(
         title        = title,
         show_header  = True,
         row_styles   = ["dim", ""],
         header_style = "bold magenta",
         highlight    = True,
     )
-    tab.add_column("Key")
-    tab.add_column("Value")
+    tab.add_column("Key"   , justify="left")
+    tab.add_column("Value" , justify="left")
+
+    # Let rich handle rendering of keys and values for better formatting.
     for k, v in a_dict.items():
-        row = [f"{k}", f"{v}"]
-        tab.add_row(*row)
+        tab.add_row(str(k), v)
     console.log(tab)
 
 
@@ -144,19 +140,36 @@ def rprint_list_dicts(list_of_dicts: list[dict]):
         list_of_dicts: List of dicts that must share identical keys.
 
     Raises:
-        TypeError: If ``list_of_dicts`` is not a list of dicts.
-        ValueError: If ``list_of_dicts`` is empty or dicts have differing keys.
+        ValueError: If ``list_of_dicts`` is not a non-empty list, or if the
+            dicts do not share identical keys.
     """
-    if not isinstance(list_of_dicts, list) or not all(isinstance(d, dict) for d in list_of_dicts):
-        raise TypeError(f"``list_of_dicts`` must be a list of dicts, got {type(list_of_dicts)}.")
-    if not list_of_dicts:
-        raise ValueError("``list_of_dicts`` must not be empty.")
-    if not all(set(d.keys()) == set(list_of_dicts[0].keys()) for d in list_of_dicts):
-        raise ValueError("All dictionaries in ``list_of_dicts`` must have identical keys.")
-    tab = Table(show_header=True, header_style="bold magenta")
-    for k in list_of_dicts[0].keys():
-        tab.add_column(k, no_wrap=True)
+    if not isinstance(list_of_dicts, list) or not list_of_dicts:
+        raise ValueError(
+            f"Expected 'list_of_dicts' to be a non-empty list, "
+            f"but got {type(list_of_dicts).__name__}."
+        )
+
+    # Extract headers from the first dictionary and create a set for quick key
+    # comparison.
+    headers    = list(list_of_dicts[0].keys())
+    header_set = set(headers)
+    tab        = Table(
+        show_header  = True,
+        header_style = "bold magenta",
+    )
+
+    for k in headers:
+        tab.add_column(str(k), no_wrap=True)
+
     for d in list_of_dicts:
-        row = [f"{v}" for v in d.values()]
-        tab.add_row(*row)
+        if set(d.keys()) != header_set:
+            raise ValueError(
+                f"All dicts must have the same keys. Expected keys {header_set}, "
+                f"but got {set(d.keys())} in dict: {d}."
+            )
+        # Let rich handle rendering of values for better formatting.
+        tab.add_row(*(d[k] for k in headers))
+
     console.log(tab)
+
+# endregion

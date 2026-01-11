@@ -15,7 +15,6 @@ __all__ = [
     "DATASETS",
     "DEPTH_SOURCE",
     "Data",
-    "DataLoadMixin",
     "DataLoader",
     "Dataset",
     "DefaultDepthMap",
@@ -36,7 +35,9 @@ __all__ = [
     "Instance",
     "Modalities",
     "Modality",
+    "PersistentData",
     "Probabilities",
+    "RegistrableMixin",
     "SemanticMask",
     "Split",
     "Task",
@@ -44,7 +45,6 @@ __all__ = [
     "VideoLoader",
     "VideoWriter",
     "VideoWriterCV",
-    "VideoWriterFFmpeg",
 ]
 
 from functools import partial
@@ -64,19 +64,18 @@ from mon.core.dtypes import (
     Class,
     ClassList,
     Data,
-    DataLoadMixin,
     DepthMap,
     DeviceManagementMixin,
     Frame,
     Image,
     InfraredMap,
     Instance,
+    PersistentData,
     Probabilities,
     SemanticMask,
     TensorOrArray,
     VideoWriter,
     VideoWriterCV,
-    VideoWriterFFmpeg,
 )
 from mon.training.data import (
     DataLoader,
@@ -86,6 +85,7 @@ from mon.training.data import (
     ImageLoader,
     Modalities,
     Modality,
+    RegistrableMixin,
     VideoLoader,
 )
 

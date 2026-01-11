@@ -7,6 +7,8 @@ This package contains helpers for string case conversion, type coercion,
 collection utilities, and dictionary operations.
 """
 
+from __future__ import annotations
+
 # __all__ = []  # Prevent accidental imports of submodules.
 
 from .humps import *

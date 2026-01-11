@@ -17,12 +17,13 @@ from mon.core import rich
 from ...api import *
 
 
-@DATASETS.register(name="mipi2024flare")
+@DATASETS.register()
 class MIPI2024Flare(ImageDataset):
     """MIPI 2024 Flare dataset."""
     
-    _subset    : str         = "mipi2024flare"
+    _name      : str         = "mipi2024flare"
     _tasks     : list[Task]  = [Task.DEFLARE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),

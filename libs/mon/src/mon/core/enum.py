@@ -9,6 +9,8 @@ formats, tasks, memory units, and more to enable consistent identifiers and
 conversions across the codebase.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "ActiveLearningPhase",
     "AppleRGB",
@@ -37,10 +39,10 @@ from typing import Any
 
 
 # ==============================================================================
-# CORE INFRASTRUCTURE
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Metaclasses (The CustomEnumMeta logic) ---
+# --- Base Classes ---
 class CustomEnumMeta(enum.EnumMeta):
     """A metaclass for flexible enum construction.
 
@@ -56,13 +58,15 @@ class CustomEnumMeta(enum.EnumMeta):
         conversions to from_value for convenience.
         """
         if args or kwargs:
-            # Fallback for other unexpected calls
+            # Fallback for standard enum construction if multiple args are given
             return super().__call__(value, *args, **kwargs)
 
+        # Fast path: check if value is already a member of this enum type
+        if isinstance(value, cls):
+            return value
         return cls.from_value(value)
 
 
-# --- Base Classes (The extended Enum class) ---
 class Enum(enum.Enum, metaclass=CustomEnumMeta):
     """An extended enum with convenience utilities.
 
@@ -70,11 +74,11 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     and values to simplify common enum operations.
 
     Attributes:
-        _names (list[Enum]): Cached list of enum members in declaration order.
-        _values (list[Any]): Cached list of enum values in declaration order.
-        _ints_to_enums (dict[int, Enum]): Mapping from integer indices to members.
-        _values_to_enums (dict[Any, Enum]): Mapping from values to members.
-        _strs_to_enums (dict[str, Enum]): Mapping from lowercase names to members.
+        _names (list): Cached list of enum members in declaration order.
+        _values (list): Cached list of enum values in declaration order.
+        _ints_to_enums (dict): Mapping from integer indices to members.
+        _values_to_enums (dict): Mapping from enum values to members.
+        _strs_to_enums (dict): Mapping from lowercase member names to members.
     """
     
     # --- Lifecycle & Initialization ---
@@ -82,24 +86,28 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     def __init_subclass__(cls):
         """Initialize cached helper mappings on subclass definition."""
         cls._names         = list(cls)
-        cls._values        = [member.value for member in cls]
-        cls._ints_to_enums = {i: member for i, member in enumerate(cls)}
-        cls._strs_to_enums = {str(member.name).lower(): member for member in cls}
-        
-        if len(cls._values) > 0 and isinstance(cls._values[0], str | int):
-            cls._values_to_enums = {member.value: member for member in cls}
-        else:
-            cls._values_to_enums = {}
+        cls._values        = [m.value for m in cls]
+        cls._ints_to_enums = {i: m for i, m in enumerate(cls)}
+        cls._strs_to_enums = {m.name.lower(): m for m in cls}
+
+        # Only cache values if they are hashable to avoid runtime errors.
+        cls._values_to_enums = {}
+        for m in cls:
+            try:
+                cls._values_to_enums[m.value] = m
+            except TypeError:
+                pass
     
     # --- Representation ---
     def __repr__(self) -> str:
+        """Official string representation for developers (eval-able)."""
         return f"{self.__class__.__name__}.{self._name_}"
     
     # --- Container / Sequence Methods ---
     @classmethod
     def __contains__(cls, value: Any) -> bool:
-        """Return True if the value is represented by the enum."""
-        return value in cls or value in cls._values
+        """Return True if the value is a member or value of the enum."""
+        return isinstance(value, cls) or value in cls._values
     
     # --- Properties ---
     @classmethod
@@ -108,7 +116,7 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
 
         Choose one member uniformly at random.
         """
-        return random.choice(list(cls))
+        return random.choice(cls._names)
 
     @classmethod
     def random_value(cls):
@@ -138,7 +146,7 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     def ints_to_members(cls) -> dict:
         """Return a mapping from integer indices to enum members.
 
-        Indices correspond to declaration order, starting at zero.
+        Indices correspond to the declaration order, starting at zero.
         """
         return cls._ints_to_enums
 
@@ -157,42 +165,54 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     def from_value(cls, value: Any):
         """Create an enum member from a given value.
 
+        This method provides a flexible way to create an enum member from its
+        value, name (case-insensitive), or index.
+
         Args:
-            value: Enum member, name, or index.
+            value: Enum member, name, value, or index.
 
         Raises:
-            TypeError: If ``value``'s type is unsupported.
+            ValueError: If the ``value`` does not correspond to any member.
         """
-        # Check if value is already an instance of this Enum
+        # 1. Direct Member Return
         if isinstance(value, cls):
             return value
-        
-        # Try to lookup by value
+
+        # 2. Direct Value Lookup (fastest for hashable types)
         try:
-            return cls._values_to_enums[value]
-        except KeyError:
+            if value in cls._values_to_enums:
+                return cls._values_to_enums[value]
+        except TypeError:
+            # Value is not hashable (e.g., a list), so we can't use the dict.
+            # Fallback to a linear scan below.
             pass
-        
-        # Try to lookup by index
-        if isinstance(value, int):
-            try:
-                return cls._ints_to_enums[value]
-            except KeyError:
-                pass
-        
-        # Try to lookup by name (case-insensitive)
+
+        # 3. String/Name Lookup (case-insensitive)
         if isinstance(value, str):
-            try:
-                return cls[value.replace(cls.__name__ + ".", "").upper()]
-            except KeyError:
-                pass
+            val_lower = value.lower().split(".")[-1]
+            if val_lower in cls._strs_to_enums:
+                return cls._strs_to_enums[val_lower]
+
+        # 4. Integer/Index Lookup
+        if isinstance(value, int) and value in cls._ints_to_enums:
+            return cls._ints_to_enums[value]
         
-        # Fallback or Raise
-        raise ValueError(f"'{value}' is not a valid {cls.__name__}")
+        # 5. Fallback linear scan for unhashable or non-standard values
+        for member in cls._names:
+            if member.value == value:
+                return member
+        
+        raise ValueError(f"Expected '{value}' in {cls.values()}, but got '{value}'.")
+
+
+# --- Mixins ---
+
+
+# endregion
 
 
 # ==============================================================================
-# VISUAL & UI DOMAIN
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Color Palettes ---
@@ -200,9 +220,6 @@ class RGB(Enum):
     """An enumeration of standard RGB colors.
 
     Provide (R, G, B) tuples for named colors.
-
-    Attributes:
-        value (tuple[int, int, int]): RGB tuple for the color.
     """
     
     ALICE_BLUE              = (240, 248, 255)
@@ -350,9 +367,6 @@ class RGB12(Enum):
     """A small basic RGB palette.
 
     Provide a compact set of common RGB tuples for simple palettes.
-
-    Attributes:
-        value (tuple[int, int, int]): RGB tuple for the color.
     """
     
     BLACK   = (  0,   0,   0)
@@ -377,9 +391,6 @@ class AppleRGB(Enum):
     """An Apple UI color palette.
 
     Provide named Apple-specific RGB tuples commonly used in UI palettes.
-
-    Attributes:
-        value (tuple[int, int, int]): RGB tuple for the color.
     """
     
     BLACK       = (  0,   0,   0)
@@ -426,9 +437,6 @@ class MemoryUnit(Enum):
     """A memory unit enumeration.
 
     Provide names for common memory units and helpers to convert to bytes.
-
-    Attributes:
-        value (str): Unit string such as "B", "KB", "MB", etc.
     """
     
     B  = "B"
@@ -437,29 +445,6 @@ class MemoryUnit(Enum):
     GB = "GB"
     TB = "TB"
     PB = "PB"
-
-    '''
-    @classmethod
-    def str_to_enum(cls) -> dict:
-        """Return a dictionary mapping strings to ``MemoryUnit``.
-
-        This method provides a mapping from string representations of memory units
-        to their corresponding ``MemoryUnit`` enum values. This is useful for
-        converting string inputs to enum values in a consistent manner.
-
-        Returns:
-            A dictionary where the keys are string representations of memory
-            units and the values are the corresponding ``MemoryUnit`` enum values.
-        """
-        return {
-            "b" : cls.B,
-            "kb": cls.KB,
-            "mb": cls.MB,
-            "gb": cls.GB,
-            "tb": cls.TB,
-            "pb": cls.PB,
-        }
-    '''
 
     @classmethod
     def names_to_bytes(cls) -> dict:
@@ -477,18 +462,11 @@ class MemoryUnit(Enum):
         }
 
 
-# ==============================================================================
-# FILESYSTEM & IO DOMAIN
-# ==============================================================================
-
 # --- Extensions ---
 class ConfigExtension(Enum):
     """A set of configuration file extensions.
 
     Provide common config filename suffixes including the leading dot.
-
-    Attributes:
-        value (str): File extension string including the leading dot.
     """
     
     CFG    = ".cfg"
@@ -505,9 +483,6 @@ class ImageExtension(Enum):
     """A set of common image file extensions.
 
     Provide common image file suffixes including the leading dot.
-
-    Attributes:
-        value (str): Image file extension including the leading dot.
     """
     
     ARW  = ".arw"
@@ -526,9 +501,6 @@ class VideoExtension(Enum):
     """A set of common video file extensions.
 
     Provide common video file suffixes including the leading dot.
-
-    Attributes:
-        value (str): Video file extension including the leading dot.
     """
     
     AVI  = ".avi"
@@ -545,9 +517,6 @@ class WeightExtension(Enum):
     """A set of model weight file extensions.
 
     Provide typical suffixes used for model checkpoints and weights.
-
-    Attributes:
-        value (str): Weight/checkpoint file extension including the dot.
     """
     
     CKPT    = ".ckpt"
@@ -558,32 +527,23 @@ class WeightExtension(Enum):
     WEIGHTS = ".weights"
 
 
-# ==============================================================================
-# MACHINE LEARNING & WORKFLOW DOMAIN
-# ==============================================================================
-
-# --- Orchestration (RunMode, Split, ActiveLearningPhase) ---
+# --- Machine Learning ---
 class RunMode(Enum):
     """A set of pipeline run modes.
 
     Indicate whether the code is running training, prediction, or metrics.
-
-    Attributes:
-        value (str): String identifier for the run mode.
     """
     
     TRAIN   = "train"
     PREDICT = "predict"
     METRIC  = "metric"
+    SPEED   = "speed"
 
 
 class Split(Enum):
     """A set of dataset split identifiers.
 
     Represent dataset subsets such as train, val, test, predict.
-
-    Attributes:
-        value (str): String identifier for the dataset split.
     """
     
     TRAIN   = "train"
@@ -596,9 +556,6 @@ class ActiveLearningPhase(Enum):
     """A set of active learning workflow phases.
 
     Enumerate the discrete experiment workflow stages.
-
-    Attributes:
-        value (str): String identifier for the phase.
     """
     
     TRAINING         = "training"
@@ -608,14 +565,10 @@ class ActiveLearningPhase(Enum):
     DATA_INTEGRATION = "data_integration"
     
     
-# --- Paradigms (MLType, Task) ---
 class Task(Enum):
     """A set of supported task identifiers.
 
     Enumerate the high-level tasks that models in the project implement.
-
-    Attributes:
-        value (str): String identifier for the task.
     """
     
     # --- Generative AI ---
@@ -654,14 +607,33 @@ class Task(Enum):
     TRACK       = "track"               # Tracking
     VIDEO       = "video"               # Video Processing
 
+    # Validation & Sanitization
+    @classmethod
+    def is_enhancement(cls, task: Any) -> bool:
+        """Check if a task is an enhancement task."""
+        return cls.from_value(task) in _ENHANCEMENT_TASKS
+
+    @classmethod
+    def is_restoration(cls, task: Any) -> bool:
+        """Check if a task is a restoration task."""
+        return cls.from_value(task) in _RESTORATION_TASKS
+
+
+# Define task groups once after the class is created for performance
+_ENHANCEMENT_TASKS = {
+    Task.AWB, Task.COLORIZE, Task.EXPOSURE, Task.ISP, Task.LLE, Task.MEF,
+    Task.NTE, Task.RETOUCH, Task.UWE
+}
+_RESTORATION_TASKS = {
+    Task.DEBAND, Task.DEBLUR, Task.DEFLARE, Task.DEHAZE, Task.DENOISE,
+    Task.DERAIN, Task.DESNOW, Task.INPAINT, Task.SR
+}
+
 
 class MLType(Enum):
     """A set of machine learning approach types.
 
     Categorize models by their ML paradigm.
-
-    Attributes:
-        value (str): String identifier for the ML type.
     """
 
     INFERENCE       = "inference"        # Inference Only: we don't have training code.
@@ -680,14 +652,10 @@ class MLType(Enum):
         return [cls.SELF_SUPERVISED, cls.SUPERVISED, cls.UNSUPERVISED]
 
 
-# --- Optimization (TRTPrecision) ---
 class TRTPrecision(Enum):
     """A set of TensorRT numeric precision modes.
 
     Specify desired precision for TensorRT optimizations.
-
-    Attributes:
-        value (str): String identifier for the precision mode.
     """
     
     FP32    = "fp32"     # 32-bit floating point
@@ -697,18 +665,11 @@ class TRTPrecision(Enum):
     INT8    = "int8"     # 8-bit integer
 
 
-# ==============================================================================
-#COMPUTER VISION DOMAIN
-# ==============================================================================
-
-# --- Spatial Formats ---
+# --- Computer Vision Domain ---
 class BBoxFormat(Enum):
     """A set of bounding box formats and conversion codes.
 
     Include format identifiers and conversion code members.
-
-    Attributes:
-        value (str): String identifier for the bbox format or conversion.
     """
 
     # Format
@@ -769,14 +730,10 @@ class BBoxFormat(Enum):
         ]
 
 
-# --- Data Sources (DepthSource, InfraredSource) ---
 class DepthSource(Enum):
     """A set of depth data source identifiers.
 
     Indicate which model or pipeline produced depth data.
-
-    Attributes:
-        value (str): String identifier for the depth source.
     """
 
     DAAC_ViTS = "depth_daac_vits"       # Depth Anything at Any Condition with ViT-S encoder
@@ -791,22 +748,15 @@ class InfraredSource(Enum):
     """A set of infrared data source identifiers.
 
     Provide identifiers for infrared data sources.
-
-    Attributes:
-        value (str): String identifier for the infrared source.
     """
     
     INFRARED = "infrared"
 
 
-# --- State Management (TrackState) ---
 class TrackState(Enum):
     """A set of object tracking lifecycle states.
 
     Define integer codes representing stages such as NEW, TRACKED, and LOST.
-
-    Attributes:
-        value (int): Integer code representing the track state.
     """
     
     NEW      = 0
@@ -815,3 +765,5 @@ class TrackState(Enum):
     REMOVED  = 3
     REPLACED = 4
     COUNTED  = 5
+
+# endregion

@@ -8,6 +8,8 @@ normalizing device objects, and querying system and CUDA memory and model device
 placement.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "create_device",
     "inspect_model_device",
@@ -18,7 +20,7 @@ __all__ = [
     "query_vram_usage",
 ]
 
-from typing import Any, Union
+import re
 
 import psutil
 import torch
@@ -30,39 +32,146 @@ from mon.core.utils import create_combinations
 
 try:
     import pynvml
+    from pynvml.smi import NVMLError
     pynvml_available = True
 except ImportError:
+    pynvml           = None
     pynvml_available = False
+    # Define a placeholder for the exception if pynvml is not installed
+    class NVMLError(Exception):
+        pass
+
+
+# ==============================================================================
+# region CONSTANTS
+# ==============================================================================
 
 CUDA_PREFIX = "cuda:"
 
+# Pre-compile regex for cleaning device strings to improve performance.
+# Inside [], ( and ) are literals and do not need escaping.
+_DEVICE_CLEAN_RE = re.compile(r"[\[\]()\s'\"]")
+
+# endregion
+
 
 # ==============================================================================
-# DISCOVERY & INSPECTION
+# region DISCOVERY
 # ==============================================================================
 
-# --- Hardware Enumeration (Listing what exists on the system) ---
 def list_devices() -> list[str]:
     """List available device specifiers.
 
     Returns:
-         A list containing "auto", "cpu", and all available CUDA device
-        specifiers and combinations if CUDA is available.
+         A list containing "auto", "cpu", "mps" (if available), and all
+         available CUDA device specifiers and combinations if CUDA is available.
     """
     devices = ["auto", "cpu"]
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        devices.append("mps")
+    
     if torch.cuda.is_available():
-        num_devices = torch.cuda.device_count()
-        if num_devices <= 0:
-            return devices
-        # Add all CUDA device combinations (e.g., ``cuda:0``, ``cuda:1``, ``cuda:0,1``, etc.)
-        cuda_indices      = list(range(num_devices))
-        cuda_combinations = create_combinations(cuda_indices)
-        devices.extend([f"{CUDA_PREFIX}{','.join(str(i) for i in comb)}" for comb in cuda_combinations])
+        num_devices  = torch.cuda.device_count()
+        # Add primary indices first (fastest path)
+        cuda_indices = list(range(num_devices))
+        devices.extend([f"cuda:{i}" for i in cuda_indices])
+
+        # Only create combinations if more than 1 GPU exists
+        if num_devices > 1:
+            cuda_combinations = create_combinations(cuda_indices)
+            # Filter out combinations of length 1 as we already added them
+            devices.extend([
+                f"{CUDA_PREFIX}{','.join(map(str, comb))}"
+                for comb in cuda_combinations if len(comb) > 1
+            ])
     return devices
 
+# endregion
 
-# --- Telemetry (Querying RAM/VRAM usage) ---
-def query_vram_usage(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> tuple[int, int, int]:
+
+# ==============================================================================
+# region CREATION
+# ==============================================================================
+
+def create_device(device: torch.device | str | int | None) -> torch.device | str:
+    """Create a torch.device object from a flexible device input.
+
+    This function acts as a factory, converting various device specifiers into
+    a final `torch.device` object or the special "auto" string for libraries
+    like PyTorch Lightning.
+
+    Args:
+        device: Device specifier, such as a `torch.device` object, an integer,
+            a string like "cuda:0", or "auto".
+
+    Returns:
+        A `torch.device` object or the special string "auto".
+
+    Raises:
+        ValueError: If the ``device`` specifier is unsupported.
+    """
+    if isinstance(device, torch.device):
+        return device
+
+    parsed = parse_device(device)
+
+    if isinstance(parsed, torch.device):
+        return parsed
+
+    if parsed == "auto":  # Common in libraries like PyTorch Lightning
+        return parsed
+    elif parsed == "cuda":
+        return torch.device("cuda")
+    elif parsed == "cpu":
+        return torch.device("cpu")
+    elif parsed == "mps":
+        return torch.device("mps")
+    elif isinstance(parsed, list):  # Handle lists of device indices
+        if len(parsed) > 1:
+            log(f"Device    : {parsed[0]} is used among {parsed}.")
+        else:
+            log(f"Device    : {parsed[0]} is used.")
+        return torch.device(f"cuda:{parsed[0]}")
+    else:
+        raise ValueError(f"Unsupported 'device': {device}.")
+
+# endregion
+
+
+# ==============================================================================
+# region RETRIEVAL
+# ==============================================================================
+
+# --- Accessing ---
+def inspect_model_device(model: nn.Module) -> torch.device:
+    """Inspect the model parameters and return the device used by the first
+    parameter.
+
+    This is a reliable way to determine where a model is located.
+
+    Args:
+        model: The model whose parameter device is queried.
+
+    Returns:
+        The device where the ``model``'s parameters reside. Defaults to "cpu" if
+        the ``model`` has no parameters or buffers.
+    """
+    try:
+        # Check parameters first
+        return next(model.parameters()).device
+    except StopIteration:
+        # Fallback to checking buffers (e.g., for BatchNorm running stats)
+        try:
+            return next(model.buffers()).device
+        except StopIteration:
+            # If no parameters or buffers, default to CPU
+            return torch.device("cpu")
+
+
+def query_vram_usage(
+    device: int        = 0,
+    unit  : MemoryUnit = MemoryUnit.GB
+) -> tuple[float, float, float]:
     """Query NVML for the specified CUDA device and return memory totals in the
     requested unit.
 
@@ -72,19 +181,30 @@ def query_vram_usage(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> tuple
 
     Returns:
         A tuple of (total, used, free) VRAM values in the requested unit.
+        
+    Raises:
+        ImportError: If ``pynvml`` is not installed.
+        NVMLError: If there is an error communicating with the NVIDIA driver.
     """
-    pynvml.nvmlInit()
-    unit  = MemoryUnit(unit)
-    info  = pynvml.nvmlDeviceGetMemoryInfo(pynvml.nvmlDeviceGetHandleByIndex(device))
-    ratio = MemoryUnit.names_to_bytes()[unit]
-    return (
-        info.total / ratio,  # total
-        info.used  / ratio,  # used
-        info.free  / ratio   # free
-    )
+    if not pynvml_available:
+        raise ImportError("Please install 'nvidia-ml-py3' to use 'pynvml'.")
+    try:
+        pynvml.nvmlInit()
+        handle = pynvml.nvmlDeviceGetHandleByIndex(device)
+        info   = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        # Cache the ratio to avoid repeated lookups
+        ratio  = MemoryUnit.names_to_bytes()[MemoryUnit(unit)]
+        return info.total / ratio, info.used / ratio, info.free / ratio
+    finally:
+        # Crucial: Always shut down NVML to release driver handles, even if errors occur.
+        try:
+            pynvml.nvmlShutdown()
+        except NVMLError:
+            # This can happen if the driver is already shut down or unavailable.
+            pass
 
 
-def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[int, int, int]:
+def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[float, float, float]:
     """Query system RAM usage and return totals in the requested unit.
 
     Args:
@@ -102,91 +222,50 @@ def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[int, int, int]:
     )
 
 
-# --- State Inspection (Checking where a model currently lives) ---
-def inspect_model_device(model: nn.Module) -> torch.device:
-    """Inspect the model parameters and return the device used by the first
-    parameter.
+def parse_device(
+    device: torch.device | str | int | None
+) -> torch.device | str | list[str]:
+    """Parse a device input into a canonical representation.
+
+    This function handles various device formats, including torch.device objects,
+    integers, strings (e.g., "cpu", "cuda", "cuda:0,1"), and None.
 
     Args:
-        model: The model whose parameter device is queried.
+        device: The device specifier to parse.
 
     Returns:
-        The device where the model's parameters reside.
-    """
-    return next(model.parameters()).device
-
-
-# ==============================================================================
-# RESOLUTION & NORMALIZATION
-# ==============================================================================
-
-# --- Parsing (String/Int to Intermediate representation) ---
-def parse_device(device: Any) -> Union[torch.device, str, list[str]]:
-    """Parse device input into a canonical representation.
-
-    Args:
-        device: Accept torch.device, integers, common strings, and
-            comma-separated device lists and convert them into a canonical form
-            suitable for downstream use.
-
-    Returns:
-        The parsed device representation: "cpu", "auto", a torch.device, or a
+        A canonical representation: "cpu", "auto", a torch.device, or a
         list of CUDA indices as strings.
     """
     if isinstance(device, torch.device):
         return device
-    if device in [None, "", "cpu"]:
+    
+    if device is None:
         return "cpu"
-    if device in ["auto", "cuda"]:
-        return device
-
+    
     if isinstance(device, int):
-        device = [str(device)]
+        return [str(device)]
+    
     if isinstance(device, str):
-        device = (device.lower()
-                        .replace("cuda:", "")
-                        .translate(str.maketrans("", "", "()[ ]' ")))
-        device = device.split(",")
-        device = [str(i) for i in device]
+        device = device.lower().strip()
+        if not device or device == "cpu":
+            return "cpu"
+        if device in ("auto", "cuda", "mps"):
+            return device
+        if device.startswith("cpu") or device.startswith("mps"):
+            return torch.device(device)
+        
+        # Clean the string by removing brackets, spaces, quotes, and "cuda:" prefix
+        clean_str = _DEVICE_CLEAN_RE.sub("", device).replace("cuda:", "")
+        return [x for x in clean_str.split(",") if x]
 
     return device
 
 
-# --- Factory (Final conversion to torch.device objects) ---
-def create_device(device: Any) -> torch.device | str:
-    """Convert device input into a normalized representation suitable for
-    downstream use.
-
-    Args:
-        device: Device specifier in supported forms, such as a device object,
-            integer, or a string like "cuda:0" or "auto".
-
-    Returns:
-        Either a torch.device or the special string "auto" when applicable.
-
-    Raises:
-        ValueError: If an unsupported ``device`` value is provided.
-    """
-    if isinstance(device, torch.device):
-        return device
-
-    device = parse_device(device)
-
-    if device == "auto":  # Used in PyTorch Lighting's Trainer.
-        return device
-    elif device == "cuda":
-        return torch.device("cuda")
-    elif device == "cpu":
-        return torch.device("cpu")
-    elif isinstance(device, list):  # Use the first CUDA device.
-        log(f"Device    : {device[0]} is used among {device}.")
-        return torch.device(f"cuda:{device[0]}")
-    else:
-        raise ValueError(f"Unknown device: {device}.")
+# --- Selection ---
 
 
-# ==============================================================================
-# RESOURCE CLEANUP
-# ==============================================================================
+# --- Aggregation ---
 
-# --- Cache Management (Emptying CUDA cache, closing NVML) ---
+
+# endregion

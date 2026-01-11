@@ -7,20 +7,19 @@ This module provides project-wide constants and default directory and file
 extensions for configuration and I/O operations.
 """
 
+from __future__ import annotations
+
 __all__ = [
-    "DEPTH_SOURCE",
-    "INFRARED_SOURCE",
+    "DIRS",
+    "EXT",
+    "MONO_ROOT_DIR",
     "ROOT_DIR",
-    "SAVE_CKPT_EXT",
-    "SAVE_DEBUG_DIR",
-    "SAVE_IMAGE_DIR",
-    "SAVE_IMAGE_EXT",
-    "SAVE_LABEL_DIR",
-    "SAVE_VISUALIZE_DIR",
-    "SAVE_WEIGHTS_EXT",
+    "SOURCE",
     "VERBOSE",
     "ZOO_DIR",
 ]
+
+from types import SimpleNamespace
 
 from mon.core.enum import (
     DepthSource,
@@ -32,43 +31,50 @@ from mon.core.pathlib import Path
 
 
 # ==============================================================================
-# PATH ORCHESTRATION
+# region CONSTANTS
 # ==============================================================================
 
-# --- Roots (Calculating the absolute base of the project) ---
-current_file = Path(__file__).absolute()   # mon/shared/mon/mon/constants.py
-ROOT_DIR     = current_file.parents[5]     # ./mon
+# --- Paths ---
+# Robustly find the project root (first pyproject.toml up)
+current_file = Path(__file__).normalize()
+ROOT_DIR     = current_file
+for parent in current_file.parents:
+    if (parent / "pyproject.toml").exists():
+        ROOT_DIR = parent
+        break
+
+# Find the monorepo root (highest pyproject.toml up)
+_all_roots    = [p for p in ROOT_DIR.parents if (p / "pyproject.toml").exists()]
+MONO_ROOT_DIR = _all_roots[-1] if _all_roots else ROOT_DIR
+
+# Zoo directory (prefer root-level zoo if it exists)
+_zoo_dir_in_root = ROOT_DIR / "zoo"
+if _zoo_dir_in_root.exists():
+    ZOO_DIR = _zoo_dir_in_root
+else:
+    ZOO_DIR = MONO_ROOT_DIR / "zoo"
 
 
-# --- Resources ---
-ZOO_DIR = ROOT_DIR / "zoo"                 # ./mon/zoo
+# --- Values ---
+DIRS = SimpleNamespace(
+    DEBUG     = "debug",
+    IMAGE     = "pred",
+    LABEL     = "label",
+    VISUALIZE = "visualize",
+)
 
+EXT = SimpleNamespace(
+    CKPT    = WeightExtension.CKPT.value,
+    IMAGE   = ImageExtension.JPG.value,
+    WEIGHTS = WeightExtension.PT.value,
+)
 
-# ==============================================================================
-# IO & PERSISTENCE DEFAULTS
-# ==============================================================================
+SOURCE = SimpleNamespace(
+    DEPTH    = DepthSource.DAv2_ViTB,
+    INFRARED = InfraredSource.INFRARED,
+)
 
-# --- Directory Names (Standard folder names for outputs) ---
-SAVE_DEBUG_DIR     = "debug"
-SAVE_IMAGE_DIR     = "pred"
-SAVE_LABEL_DIR     = "label"
-SAVE_VISUALIZE_DIR = "visualize"
-
-
-# --- Extensions (Allowed/Default file formats) ---
-SAVE_CKPT_EXT    = WeightExtension.CKPT.value
-SAVE_IMAGE_EXT   = ImageExtension.JPG.value
-SAVE_WEIGHTS_EXT = WeightExtension.PT.value
-
-
-# ==============================================================================
-# IO & PERSISTENCE DEFAULTS
-# ==============================================================================
-
-# --- Execution Flags (Verbosity, debug modes) ---
+# --- Execution Flags  ---
 VERBOSE = True  # Global verbosity flag for internal logging
 
-
-# --- Algorithm Defaults (Source selection, model types) ---
-DEPTH_SOURCE    = DepthSource.DAv2_ViTB
-INFRARED_SOURCE = InfraredSource.INFRARED
+# endregion

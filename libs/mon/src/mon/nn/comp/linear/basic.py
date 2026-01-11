@@ -6,6 +6,8 @@
 This module implements various basic linear layers from PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "Bilinear",
     "Identity",

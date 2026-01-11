@@ -19,8 +19,6 @@ __all__ = [
     "TotalVariationLoss",
 ]
 
-from typing import Literal
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -44,9 +42,10 @@ class ExposureControlLoss(BaseLoss):
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
     
     Attributes:
-        channel_mean (bool): If True, compute the mean across channels before pooling.
-        mean_val (nn.Parameter): Learnable parameter representing the well-exposedness level.
-        pool (nn.AvgPool2d): Average pooling layer for patch-wise mean calculation.
+        channel_mean (bool): If True, compute mean across channels before pooling.
+        target_exposure (torch.Tensor): Well-exposedness level E; lower values
+            produce, brighter images.
+        pool (torch.nn.AvgPool2d): Pooling layer for computing local means.
     """
     
     # --- Lifecycle & Initialization ---
@@ -72,25 +71,45 @@ class ExposureControlLoss(BaseLoss):
         """
         super().__init__(reduction=reduction)
         self.channel_mean = channel_mean
-        self.mean_val     = nn.Parameter(torch.full([1], mean_val), requires_grad=required_grad)
-        self.pool         = nn.AvgPool2d(patch_size)
-    
+        
+        # Registering as a buffer if not learnable to ensure it moves to the correct device
+        if not required_grad:
+            self.register_buffer("target_exposure", torch.tensor([mean_val]))
+        else:
+            self.target_exposure = nn.Parameter(torch.tensor([mean_val]))
+            
+        self.pool = nn.AvgPool2d(kernel_size=patch_size, stride=patch_size)
+        
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between the input and the well-exposedness level.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Loss value, formatted according to the specified reduction method.
+        """
+        # Compute local means
+        x = torch.mean(input, dim=1, keepdim=True) if self.channel_mean else input
+        
+        # Patch-wise average intensity
+        local_mean = self.pool(x)
+        
+        # L2 distance to target exposure
+        loss = torch.pow(local_mean - self.target_exposure, 2)
+        
+        # TODO: Delete later
         """
         x = input
         if self.channel_mean:
             x = torch.mean(input, 1, keepdim=True)
         mean = self.pool(x)
         loss = torch.pow(mean - self.mean_val, 2)
+        loss = self.reduce(loss=loss)
+        """
+        
         loss = self.reduce(loss=loss)
         return loss
 
@@ -100,11 +119,12 @@ class ExposureValueControlLoss(BaseLoss):
     
     References:
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
-        
+    
     Attributes:
-        channel_mean (bool): If True, compute the mean across channels before pooling.
-        mean_val (nn.Parameter): Learnable parameter representing the well-exposedness level.
-        pool (nn.AvgPool2d): Average pooling layer for patch-wise mean calculation.
+        channel_mean (bool): If True, compute mean across channels before pooling.
+        target_exposure (torch.Tensor): Well-exposedness level E; lower values
+            produce, brighter images.
+        pool (torch.nn.AvgPool2d): Pooling layer for computing local means.
     """
     
     # --- Lifecycle & Initialization ---
@@ -112,6 +132,7 @@ class ExposureValueControlLoss(BaseLoss):
         self,
         patch_size   : int   = 16,
         mean_val     : float = 0.6,
+        eps          : float = 1e-6,
         required_grad: bool  = True,
         channel_mean : bool  = True,
         reduction    : str   = "mean",
@@ -122,6 +143,7 @@ class ExposureValueControlLoss(BaseLoss):
             patch_size: Kernel size for pooling layer. Defaults to 16.
             mean_val: Well-exposedness level E; lower values produce, brighter
                 images. Defaults to 0.6.
+            eps: Small constant for numerical stability. Defaults to 1e-6.
             required_grad: If True, ``mean_val`` is learnable. Defaults to True.
             channel_mean: If True, compute the mean across channels before pooling.
                 Defaults to True.
@@ -130,19 +152,39 @@ class ExposureValueControlLoss(BaseLoss):
         """
         super().__init__(reduction=reduction)
         self.channel_mean = channel_mean
-        self.mean_val     = nn.Parameter(torch.full([1], mean_val), requires_grad=required_grad)
-        self.pool         = nn.AvgPool2d(patch_size)
-    
+        self.eps = eps
+        
+        # Registering as a buffer if not learnable to ensure it moves to the correct device
+        if not required_grad:
+            self.register_buffer("target_exposure", torch.tensor([mean_val]))
+        else:
+            self.target_exposure = nn.Parameter(torch.tensor([mean_val]))
+            
+        self.pool = nn.AvgPool2d(kernel_size=patch_size, stride=patch_size)
+        
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between the input and the well-exposedness level.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Loss value, formatted according to the specified reduction method.
+        """
+        # Compute local means
+        x = torch.mean(input, dim=1, keepdim=True) if self.channel_mean else input
+        
+        # Non-linear patch pooling
+        # Adding eps prevents derivative issues at zero
+        pooled_mean     = self.pool(x)
+        non_linear_mean = torch.sqrt(pooled_mean + self.eps)
+        
+        # L2 distance to target exposure
+        loss = torch.pow(non_linear_mean - self.target_exposure, 2)
+        
+        # TODO: Delete later
         """
         x = input
         if self.channel_mean:
@@ -150,6 +192,9 @@ class ExposureValueControlLoss(BaseLoss):
         mean = self.pool(x) ** 0.5              # Pooled mean:       [B, 1, H, W]
         loss = torch.pow((mean - self.mean_val), 2)
         loss = torch.abs(torch.mean(loss))
+        """
+        
+        loss = self.reduce(loss=loss)
         return loss
     
 
@@ -187,11 +232,31 @@ class ColorConstancyLoss(BaseLoss):
         """Calculate the loss for the input.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Loss value, formatted according to the specified reduction method.
+        """
+        # Calculate the mean of each channel (B, C, 1, 1)
+        # Using [2, 3] flattens the spatial dimensions
+        mean_rgb = torch.mean(input, dim=[2, 3], keepdim=True)
+        
+        # Extract channels for clear pairwise comparison
+        # (Alternatively, one could use itertools.combinations for N-channels)
+        r, g, b = mean_rgb[:, 0:1], mean_rgb[:, 1:2], mean_rgb[:, 2:3]
+        
+        # Calculate squared differences
+        # Using L2 norm of the differences for stability and standard behavior
+        d_rg = (r - g) ** 2
+        d_rb = (r - b) ** 2
+        d_gb = (g - b) ** 2
+        
+        # Final loss: sqrt of the sum of squared differences
+        # This is essentially the standard deviation between channel means
+        loss = torch.sqrt(d_rg + d_rb + d_gb + self.eps)
+        
+        # TODO: Delete later
         """
         mean_rgb   = torch.mean(input, [2, 3], keepdim=True)
         mr, mg, mb = torch.split(mean_rgb, 1, dim=1)
@@ -203,7 +268,9 @@ class ColorConstancyLoss(BaseLoss):
         d_gb2      = torch.pow(d_gb, 2)
         loss       = d_rg2 + d_rb2 + d_gb2
         loss       = torch.pow(loss + self.eps, 0.5)
-        loss       = self.reduce(loss=loss)
+        """
+        
+        loss = self.reduce(loss=loss)
         return loss
 
 
@@ -214,9 +281,6 @@ class PSNRLoss(BaseLoss):
     
     Attributes:
         to_y (bool): If True, use Y-channel for computing PSNR.
-        coef (torch.Tensor): Coefficients for RGB to Y-channel conversion.
-        first (bool): Flag to indicate if the coefficients need to be moved to
-            the input device.
     """
     
     # --- Lifecycle & Initialization ---
@@ -229,37 +293,45 @@ class PSNRLoss(BaseLoss):
                 "none", "mean", or "sum". Defaults to "mean".
         """
         super().__init__(reduction=reduction)
-        self.to_y  = to_y
-        self.coef  = torch.tensor([65.481, 128.553, 24.966]).reshape(1, 3, 1, 1)
-        self.first = True
+        self.to_y = to_y
+        
+        # Registering as buffer handles device movement and serialization
+        coef = torch.tensor([65.481, 128.553, 24.966]).view(1, 3, 1, 1)
+        self.register_buffer("coef", coef)
 
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between input and target.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
-            target: Target image, formatted as a torch.Tensor of dimensions
+            target: Target image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Loss value, formatted according to the specified reduction method.
         """
+        # Handle Y-channel conversion if requested
         if self.to_y:
-            if self.first:
-                self.coef  = self.coef.to(input.device)
-                self.first = False
-            input  = (input  * self.coef).sum(dim=1).unsqueeze(dim=1) + 16.0
-            target = (target * self.coef).sum(dim=1).unsqueeze(dim=1) + 16.0
+            # Scaled RGB to Y conversion (BT.601)
+            input  = (input  * self.coef).sum(dim=1, keepdim=True) + 16.0
+            target = (target * self.coef).sum(dim=1, keepdim=True) + 16.0
             input  = input  / 255.0
             target = target / 255.0
-            pass
         
-        diff = input - target
-        rmse = ((diff ** 2).mean(dim=(1, 2, 3)) + 1e-8).sqrt()
-        loss = 20 * torch.log10(1 / rmse).mean()
-        loss = (50.0 - loss) / 100.0
+        # Calculate MSE per image in batch
+        # We don't use F.mse_loss here to maintain per-sample control before log
+        mse = torch.mean((input - target) ** 2, dim=(1, 2, 3))
+        
+        # Calculate PSNR
+        # 1e-8 prevents log10(0)
+        psnr = 20 * torch.log10(1.0 / (torch.sqrt(mse) + 1e-8))
+        
+        # Transform to Loss (Lower is better)
+        # Based on your logic: 50dB -> 0.0 loss, 0dB -> 0.5 loss
+        loss = (50.0 - psnr) / 100.0
+        
         loss = self.reduce(loss=loss)
         return loss
     
@@ -276,35 +348,15 @@ class SpatialConsistencyLoss(BaseLoss):
     in local gradients between the enhanced and input images.
     
     Attributes:
-        num_regions (int): Number of directional regions to consider for gradient comparison.
-        weight_left (torch.nn.Parameter): Convolution kernel for left gradient.
-        weight_right (torch.nn.Parameter): Convolution kernel for right gradient.
-        weight_up (torch.nn.Parameter): Convolution kernel for up gradient.
-        weight_down (torch.nn.Parameter): Convolution kernel for down gradient.
-        weight_upleft (torch.nn.Parameter): Convolution kernel for up-left gradient.
-        weight_upright (torch.nn.Parameter): Convolution kernel for up-right gradient.
-        weight_downleft (torch.nn.Parameter): Convolution kernel for down-left gradient.
-        weight_downright (torch.nn.Parameter): Convolution kernel for down-right gradient.
-        weight_left2 (torch.nn.Parameter): Convolution kernel for left gradient (2-pixel).
-        weight_right2 (torch.nn.Parameter): Convolution kernel for right gradient (2-pixel).
-        weight_up2 (torch.nn.Parameter): Convolution kernel for up gradient (2-pixel).
-        weight_down2 (torch.nn.Parameter): Convolution kernel for down gradient (2-pixel).
-        weight_up2left2 (torch.nn.Parameter): Convolution kernel for up-left gradient (2-pixel).
-        weight_up2right2 (torch.nn.Parameter): Convolution kernel for up-right gradient (2-pixel).
-        weight_down2left2 (torch.nn.Parameter): Convolution kernel for down-left gradient (2-pixel).
-        weight_down2right2 (torch.nn.Parameter): Convolution kernel for down-right gradient (2-pixel).
-        weight_up2left1 (torch.nn.Parameter): Convolution kernel for up-left gradient (mixed).
-        weight_up2right1 (torch.nn.Parameter): Convolution kernel for up-right gradient (mixed).
-        weight_up1left2 (torch.nn.Parameter): Convolution kernel for up-left gradient (mixed).
-        weight_up1right2 (torch.nn.Parameter): Convolution kernel for up-right gradient (mixed).
-        weight_down2left1 (torch.nn.Parameter): Convolution kernel for down-left gradient (mixed).
-        weight_down2right1 (torch.nn.Parameter): Convolution kernel for down-right gradient (mixed).
+        num_regions (int): Number of directional regions to consider for gradient
+            comparison. Can be one of 4, 8, 16, or 24.
+        pool (torch.nn.AvgPool2d): Pooling layer for blurring.
     """
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        num_regions: Literal[4, 8, 16, 24] = 4,
+        num_regions: int = 4,
         patch_size : int = 4,
         reduction  : str = "mean",
     ):
@@ -319,365 +371,68 @@ class SpatialConsistencyLoss(BaseLoss):
         """
         super().__init__(reduction=reduction)
         self.num_regions = num_regions
+        self.pool        = nn.AvgPool2d(patch_size)
         
-        kernel_left = torch.FloatTensor([
-            [ 0,  0, 0],
-            [-1,  1, 0],
-            [ 0,  0, 0]
-        ]).unsqueeze(0).unsqueeze(0)
-        kernel_right = torch.FloatTensor([
-            [0,  0,  0],
-            [0,  1, -1],
-            [0,  0,  0]
-        ]).unsqueeze(0).unsqueeze(0)
-        kernel_up = torch.FloatTensor([
-            [0, -1, 0],
-            [0,  1, 0],
-            [0,  0, 0]
-        ]).unsqueeze(0).unsqueeze(0)
-        kernel_down = torch.FloatTensor([
-            [0,  0, 0],
-            [0,  1, 0],
-            [0, -1, 0]
-        ]).unsqueeze(0).unsqueeze(0)
-        if self.num_regions in [8, 16]:
-            kernel_upleft = torch.FloatTensor([
-                [-1, 0, 0],
-                [ 0, 1, 0],
-                [ 0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_upright = torch.FloatTensor([
-                [0, 0, -1],
-                [0, 1,  0],
-                [0, 0,  0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_downleft = torch.FloatTensor([
-                [ 0, 0, 0],
-                [ 0, 1, 0],
-                [-1, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_downright = torch.FloatTensor([
-                [0, 0,  0],
-                [0, 1,  0],
-                [0, 0, -1]
-            ]).unsqueeze(0).unsqueeze(0)
-        if self.num_regions in [16, 24]:
-            kernel_left2 = torch.FloatTensor([
-                [0,  0,  0, 0, 0],
-                [0,  0,  0, 0, 0],
-                [-1, 0,  1, 0, 0],
-                [0,  0,  0, 0, 0],
-                [0,  0,  0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_right2 = torch.FloatTensor([
-                [0, 0,  0, 0,  0],
-                [0, 0,  0, 0,  0],
-                [0, 0,  1, 0, -1],
-                [0, 0,  0, 0,  0],
-                [0, 0,  0, 0,  0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2 = torch.FloatTensor([
-                [0, 0, -1, 0, 0],
-                [0, 0,  0, 0, 0],
-                [0, 0,  1, 0, 0],
-                [0, 0,  0, 0, 0],
-                [0, 0,  0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2 = torch.FloatTensor([
-                [0, 0,  0, 0, 0],
-                [0, 0,  0, 0, 0],
-                [0, 0,  1, 0, 0],
-                [0, 0,  0, 0, 0],
-                [0, 0, -1, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2left2 = torch.FloatTensor([
-                [-1, 0, 0, 0, 0],
-                [ 0, 0, 0, 0, 0],
-                [ 0, 0, 1, 0, 0],
-                [ 0, 0, 0, 0, 0],
-                [ 0, 0, 0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2right2 = torch.FloatTensor([
-                [0, 0, 0, 0, -1],
-                [0, 0, 0, 0,  0],
-                [0, 0, 1, 0,  0],
-                [0, 0, 0, 0,  0],
-                [0, 0, 0, 0,  0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2left2 = torch.FloatTensor([
-                [ 0, 0, 0, 0, 0],
-                [ 0, 0, 0, 0, 0],
-                [ 0, 0, 1, 0, 0],
-                [ 0, 0, 0, 0, 0],
-                [-1, 0, 0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2right2 = torch.FloatTensor([
-                [0, 0, 0, 0,  0],
-                [0, 0, 0, 0,  0],
-                [0, 0, 1, 0,  0],
-                [0, 0, 0, 0,  0],
-                [0, 0, 0, 0, -1]
-            ]).unsqueeze(0).unsqueeze(0)
-        if self.num_regions in [24]:
-            kernel_up2left1 = torch.FloatTensor([
-                [0, -1, 0, 0, 0],
-                [0,  0, 0, 0, 0],
-                [0,  0, 1, 0, 0],
-                [0,  0, 0, 0, 0],
-                [0,  0, 0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2right1 = torch.FloatTensor([
-                [0, 0, 0, -1, 0],
-                [0, 0, 0,  0, 0],
-                [0, 0, 1,  0, 0],
-                [0, 0, 0,  0, 0],
-                [0, 0, 0,  0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_up1left2 = torch.FloatTensor([
-                [0,  0, 0, 0, 0],
-                [-1, 0, 0, 0, 0],
-                [0,  0, 1, 0, 0],
-                [0,  0, 0, 0, 0],
-                [0,  0, 0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_up1right2 = torch.FloatTensor([
-                [0, 0, 0, 0,  0],
-                [0, 0, 0, 0, -1],
-                [0, 0, 1, 0,  0],
-                [0, 0, 0, 0,  0],
-                [0, 0, 0, 0,  0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2left1 = torch.FloatTensor([
-                [0,  0, 0, 0, 0],
-                [0,  0, 0, 0, 0],
-                [0,  0, 1, 0, 0],
-                [0,  0, 0, 0, 0],
-                [0, -1, 0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2right1 = torch.FloatTensor([
-                [0, 0, 0,  0, 0],
-                [0, 0, 0,  0, 0],
-                [0, 0, 1,  0, 0],
-                [0, 0, 0,  0, 0],
-                [0, 0, 0, -1, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_down1left2 = torch.FloatTensor([
-                [ 0, 0, 0, 0, 0],
-                [ 0, 0, 0, 0, 0],
-                [ 0, 0, 1, 0, 0],
-                [-1, 0, 0, 0, 0],
-                [ 0, 0, 0, 0, 0]
-            ]).unsqueeze(0).unsqueeze(0)
-            kernel_down1right2 = torch.FloatTensor([
-                [0, 0, 0, 0,  0],
-                [0, 0, 0, 0,  0],
-                [0, 0, 1, 0,  0],
-                [0, 0, 0, 0, -1],
-                [0, 0, 0, 0,  0]
-            ]).unsqueeze(0).unsqueeze(0)
-            
-        self.weight_left  = nn.Parameter(data=kernel_left,  requires_grad=False)
-        self.weight_right = nn.Parameter(data=kernel_right, requires_grad=False)
-        self.weight_up    = nn.Parameter(data=kernel_up,    requires_grad=False)
-        self.weight_down  = nn.Parameter(data=kernel_down,  requires_grad=False)
-        if self.num_regions in [8, 16]:
-            self.weight_upleft    = nn.Parameter(data=kernel_upleft,    requires_grad=False)
-            self.weight_upright   = nn.Parameter(data=kernel_upright,   requires_grad=False)
-            self.weight_downleft  = nn.Parameter(data=kernel_downleft,  requires_grad=False)
-            self.weight_downright = nn.Parameter(data=kernel_downright, requires_grad=False)
-        if self.num_regions in [16, 24]:
-            self.weight_left2       = nn.Parameter(data=kernel_left2,       requires_grad=False)
-            self.weight_right2      = nn.Parameter(data=kernel_right2,      requires_grad=False)
-            self.weight_up2         = nn.Parameter(data=kernel_up2,         requires_grad=False)
-            self.weight_down2       = nn.Parameter(data=kernel_down2,       requires_grad=False)
-            self.weight_up2left2    = nn.Parameter(data=kernel_up2left2,    requires_grad=False)
-            self.weight_up2right2   = nn.Parameter(data=kernel_up2right2,   requires_grad=False)
-            self.weight_down2left2  = nn.Parameter(data=kernel_down2left2,  requires_grad=False)
-            self.weight_down2right2 = nn.Parameter(data=kernel_down2right2, requires_grad=False)
-        if self.num_regions in [24]:
-            self.weight_up2left1    = nn.Parameter(data=kernel_up2left1,    requires_grad=False)
-            self.weight_up2right1   = nn.Parameter(data=kernel_up2right1,   requires_grad=False)
-            self.weight_up1left2    = nn.Parameter(data=kernel_up1left2,    requires_grad=False)
-            self.weight_up1right2   = nn.Parameter(data=kernel_up1right2,   requires_grad=False)
-            self.weight_down2left1  = nn.Parameter(data=kernel_down2left1,  requires_grad=False)
-            self.weight_down2right1 = nn.Parameter(data=kernel_down2right1, requires_grad=False)
-            self.weight_down1left2  = nn.Parameter(data=kernel_down1left2,  requires_grad=False)
-            self.weight_down1right2 = nn.Parameter(data=kernel_down1right2, requires_grad=False)
+        # Initialize all 24 kernels (5x5 grid to accommodate 2-pixel jumps)
+        kernels = self._get_24_kernels()
         
-        self.pool = nn.AvgPool2d(patch_size)  # Default 4
+        # Shape: [24, 1, 5, 5]
+        weight_stack = torch.stack(kernels).unsqueeze(1)
+        self.register_buffer("weight_stack", weight_stack)
+    
+    def _get_24_kernels(self) -> list[torch.Tensor]:
+        # Center of 5x5 grid is (2, 2)
+        base       = torch.zeros(5, 5)
+        base[2, 2] = 1
+        kernels    = []
+
+        # Coordinates for 24 neighbors relative to (2,2)
+        offsets = [
+            # 1-pixel neighbors (8)
+            (1,2), (3,2), (2,1), (2,3), (1,1), (1,3), (3,1), (3,3),
+            # 2-pixel neighbors (8)
+            (0,2), (4,2), (2,0), (2,4), (0,0), (0,4), (4,0), (4,4),
+            # Mixed / Knight moves (8)
+            (0,1), (0,3), (4,1), (4,3), (1,0), (1,4), (3,0), (3,4)
+        ]
+
+        for r, c in offsets[:self.num_regions]:
+            k       = base.clone()
+            k[r, c] = -1
+            kernels.append(k)
+        return kernels
     
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between input and target.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
-            target: Target image, formatted as a torch.Tensor of dimensions
+            target: Target image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Loss value, formatted according to the specified reduction method.
         """
-        # Ensure weights are on the same device as input
-        if self.weight_left.device != input.device:
-            self.weight_left = self.weight_left.to(input.device)
-        if self.weight_right.device != input.device:
-            self.weight_right = self.weight_right.to(input.device)
-        if self.weight_up.device != input.device:
-            self.weight_up = self.weight_up.to(input.device)
-        if self.weight_down.device != input.device:
-            self.weight_down = self.weight_down.to(input.device)
-        if self.num_regions in [8, 16]:
-            if self.weight_upleft.device != input.device:
-                self.weight_upleft = self.weight_upleft.to(input.device)
-            if self.weight_upright.device != input.device:
-                self.weight_upright = self.weight_upright.to(input.device)
-            if self.weight_downleft.device != input.device:
-                self.weight_downleft = self.weight_downleft.to(input.device)
-            if self.weight_downright.device != input.device:
-                self.weight_downright = self.weight_downright.to(input.device)
-        if self.num_regions in [16, 24]:
-            if self.weight_left2.device != input.device:
-                self.weight_left2 = self.weight_left2.to(input.device)
-            if self.weight_right2.device != input.device:
-                self.weight_right2 = self.weight_right2.to(input.device)
-            if self.weight_up2.device != input.device:
-                self.weight_up2 = self.weight_up2.to(input.device)
-            if self.weight_down2.device != input.device:
-                self.weight_down2 = self.weight_down2.to(input.device)
-            if self.weight_up2left2.device != input.device:
-                self.weight_up2left2 = self.weight_up2left2.to(input.device)
-            if self.weight_up2right2.device != input.device:
-                self.weight_up2right2 = self.weight_up2right2.to(input.device)
-            if self.weight_down2left2.device != input.device:
-                self.weight_down2left2 = self.weight_down2left2.to(input.device)
-            if self.weight_down2right2.device != input.device:
-                self.weight_down2right2 = self.weight_down2right2.to(input.device)
-        if self.num_regions == 24:
-            if self.weight_up2left1.device != input.device:
-                self.weight_up2left1 = self.weight_up2left1.to(input.device)
-            if self.weight_up2right1.device != input.device:
-                self.weight_up2right1 = self.weight_up2right1.to(input.device)
-            if self.weight_up1left2.device != input.device:
-                self.weight_up1left2 = self.weight_up1left2.to(input.device)
-            if self.weight_up1right2.device != input.device:
-                self.weight_up1right2 = self.weight_up1right2.to(input.device)
-            if self.weight_down2left1.device != input.device:
-                self.weight_down2left1 = self.weight_down2left1.to(input.device)
-            if self.weight_down2right1.device != input.device:
-                self.weight_down2right1 = self.weight_down2right1.to(input.device)
-            if self.weight_down1left2.device != input.device:
-                self.weight_down1left2 = self.weight_down1left2.to(input.device)
-            if self.weight_down1right2.device != input.device:
-                self.weight_down1right2 = self.weight_down1right2.to(input.device)
-                
-        # Compute mean across channels
-        org_mean     = torch.mean(input,  1, keepdim=True)
-        enhance_mean = torch.mean(target, 1, keepdim=True)
+        # Convert to luminance
+        mu_in  = torch.mean(input,  dim=1, keepdim=True)
+        mu_out = torch.mean(target, dim=1, keepdim=True)
+
+        # Patch-wise pooling
+        p_in, p_out = self.pool(mu_in), self.pool(mu_out)
+
+        # Single-pass 24-direction convolution
+        # We use padding=2 because our kernels are 5x5
+        grads_in  = F.conv2d(p_in,  self.weight_stack, padding=2)
+        grads_out = F.conv2d(p_out, self.weight_stack, padding=2)
+
+        # Squared difference across all 24 directions
+        loss = torch.pow(grads_in - grads_out, 2)
         
-        # Apply average pooling
-        org_pool     = self.pool(org_mean)
-        enhance_pool = self.pool(enhance_mean)
+        # Sum directions [B, 24, H, W] -> [B, 1, H, W]
+        # loss = self.reduce(loss.sum(dim=1, keepdim=True))
         
-        # Compute differences using convolutions
-        d_org_left   = F.conv2d(org_pool, self.weight_left,  padding=1)
-        d_org_right  = F.conv2d(org_pool, self.weight_right, padding=1)
-        d_org_up     = F.conv2d(org_pool, self.weight_up,    padding=1)
-        d_org_down   = F.conv2d(org_pool, self.weight_down,  padding=1)
-        if self.num_regions in [8, 16]:
-            d_org_upleft    = F.conv2d(org_pool, self.weight_upleft,    padding=1)
-            d_org_upright   = F.conv2d(org_pool, self.weight_upright,   padding=1)
-            d_org_downleft  = F.conv2d(org_pool, self.weight_downleft,  padding=1)
-            d_org_downright = F.conv2d(org_pool, self.weight_downright, padding=1)
-        if self.num_regions in [16, 24]:
-            d_org_left2       = F.conv2d(org_pool, self.weight_left2,       padding=2)
-            d_org_right2      = F.conv2d(org_pool, self.weight_right2,      padding=2)
-            d_org_up2         = F.conv2d(org_pool, self.weight_up2,         padding=2)
-            d_org_down2       = F.conv2d(org_pool, self.weight_down2,       padding=2)
-            d_org_up2left2    = F.conv2d(org_pool, self.weight_up2left2,    padding=2)
-            d_org_up2right2   = F.conv2d(org_pool, self.weight_up2right2,   padding=2)
-            d_org_down2left2  = F.conv2d(org_pool, self.weight_down2left2,  padding=2)
-            d_org_down2right2 = F.conv2d(org_pool, self.weight_down2right2, padding=2)
-        if self.num_regions == 24:
-            d_org_up2left1    = F.conv2d(org_pool, self.weight_up2left1,    padding=2)
-            d_org_up2right1   = F.conv2d(org_pool, self.weight_up2right1,   padding=2)
-            d_org_up1left2    = F.conv2d(org_pool, self.weight_up1left2,    padding=2)
-            d_org_up1right2   = F.conv2d(org_pool, self.weight_up1right2,   padding=2)
-            d_org_down2left1  = F.conv2d(org_pool, self.weight_down2left1,  padding=2)
-            d_org_down2right1 = F.conv2d(org_pool, self.weight_down2right1, padding=2)
-            d_org_down1left2  = F.conv2d(org_pool, self.weight_down1left2,  padding=2)
-            d_org_down1right2 = F.conv2d(org_pool, self.weight_down1right2, padding=2)
-        
-        d_enhance_left  = F.conv2d(enhance_pool, self.weight_left,  padding=1)
-        d_enhance_right = F.conv2d(enhance_pool, self.weight_right, padding=1)
-        d_enhance_up    = F.conv2d(enhance_pool, self.weight_up,    padding=1)
-        d_enhance_down  = F.conv2d(enhance_pool, self.weight_down,  padding=1)
-        if self.num_regions in [8, 16]:
-            d_enhance_upleft    = F.conv2d(enhance_pool, self.weight_upleft,    padding=1)
-            d_enhance_upright   = F.conv2d(enhance_pool, self.weight_upright,   padding=1)
-            d_enhance_downleft  = F.conv2d(enhance_pool, self.weight_downleft,  padding=1)
-            d_enhance_downright = F.conv2d(enhance_pool, self.weight_downright, padding=1)
-        if self.num_regions in [16, 24]:
-            d_enhance_left2       = F.conv2d(enhance_pool, self.weight_left2,       padding=2)
-            d_enhance_right2      = F.conv2d(enhance_pool, self.weight_right2,      padding=2)
-            d_enhance_up2         = F.conv2d(enhance_pool, self.weight_up2,         padding=2)
-            d_enhance_down2       = F.conv2d(enhance_pool, self.weight_down2,       padding=2)
-            d_enhance_up2left2    = F.conv2d(enhance_pool, self.weight_up2left2,    padding=2)
-            d_enhance_up2right2   = F.conv2d(enhance_pool, self.weight_up2right2,   padding=2)
-            d_enhance_down2left2  = F.conv2d(enhance_pool, self.weight_down2left2,  padding=2)
-            d_enhance_down2right2 = F.conv2d(enhance_pool, self.weight_down2right2, padding=2)
-        if self.num_regions == 24:
-            d_enhance_up2left1    = F.conv2d(enhance_pool, self.weight_up2left1,    padding=2)
-            d_enhance_up2right1   = F.conv2d(enhance_pool, self.weight_up2right1,   padding=2)
-            d_enhance_up1left2    = F.conv2d(enhance_pool, self.weight_up1left2,    padding=2)
-            d_enhance_up1right2   = F.conv2d(enhance_pool, self.weight_up1right2,   padding=2)
-            d_enhance_down2left1  = F.conv2d(enhance_pool, self.weight_down2left1,  padding=2)
-            d_enhance_down2right1 = F.conv2d(enhance_pool, self.weight_down2right1, padding=2)
-            d_enhance_down1left2  = F.conv2d(enhance_pool, self.weight_down1left2,  padding=2)
-            d_enhance_down1right2 = F.conv2d(enhance_pool, self.weight_down1right2, padding=2)
-        
-        # Compute squared differences
-        d_left  = torch.pow(d_org_left  - d_enhance_left,  2)
-        d_right = torch.pow(d_org_right - d_enhance_right, 2)
-        d_up    = torch.pow(d_org_up    - d_enhance_up,    2)
-        d_down  = torch.pow(d_org_down  - d_enhance_down,  2)
-        if self.num_regions in [8, 16]:
-            d_upleft    = torch.pow(d_org_upleft    - d_enhance_upleft,    2)
-            d_upright   = torch.pow(d_org_upright   - d_enhance_upright,   2)
-            d_downleft  = torch.pow(d_org_downleft  - d_enhance_downleft,  2)
-            d_downright = torch.pow(d_org_downright - d_enhance_downright, 2)
-        if self.num_regions in [16, 24]:
-            d_left2       = torch.pow(d_org_left2       - d_enhance_left2,       2)
-            d_right2      = torch.pow(d_org_right2      - d_enhance_right2,      2)
-            d_up2         = torch.pow(d_org_up2         - d_enhance_up2,         2)
-            d_down2       = torch.pow(d_org_down2       - d_enhance_down2,       2)
-            d_up2left2    = torch.pow(d_org_up2left2    - d_enhance_up2left2,    2)
-            d_up2right2   = torch.pow(d_org_up2right2   - d_enhance_up2right2,   2)
-            d_down2left2  = torch.pow(d_org_down2left2  - d_enhance_down2left2,  2)
-            d_down2right2 = torch.pow(d_org_down2right2 - d_enhance_down2right2, 2)
-        if self.num_regions == 24:
-            d_up2left1    = torch.pow(d_org_up2left1    - d_enhance_up2left1,    2)
-            d_up2right1   = torch.pow(d_org_up2right1   - d_enhance_up2right1,   2)
-            d_up1left2    = torch.pow(d_org_up1left2    - d_enhance_up1left2,    2)
-            d_up1right2   = torch.pow(d_org_up1right2   - d_enhance_up1right2,   2)
-            d_down2left1  = torch.pow(d_org_down2left1  - d_enhance_down2left1,  2)
-            d_down2right1 = torch.pow(d_org_down2right1 - d_enhance_down2right1, 2)
-            d_down1left2  = torch.pow(d_org_down1left2  - d_enhance_down1left2,  2)
-            d_down1right2 = torch.pow(d_org_down1right2 - d_enhance_down1right2, 2)
-        
-        # Aggregate loss
-        loss = d_left + d_right + d_up + d_down
-        if self.num_regions in [8, 16]:
-            loss += d_upleft + d_upright + d_downleft + d_downright
-        if self.num_regions in [16, 24]:
-            loss += (d_left2 + d_right2 + d_up2 + d_down2 +
-                     d_up2left2 + d_up2right2 + d_down2left2 + d_down2right2)
-        if self.num_regions == 24:
-            loss += (d_up2left1 + d_up2right1 + d_up1left2 + d_up1right2 +
-                     d_down2left1 + d_down2right1 + d_down1left2 + d_down1right2)
-        
-        # Apply reduction and weighting
         loss = self.reduce(loss=loss)
         return loss
 
@@ -707,11 +462,30 @@ class TotalVariationLoss(BaseLoss):
         """Calculate the loss for the input tensor.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Loss value, formatted according to the specified reduction method.
+        """
+        x = input
+        
+        # Calculate variations between adjacent pixels
+        # h_diff: (B, C, H-1, W)
+        # w_diff: (B, C, H, W-1)
+        h_diff = x[:, :, 1:, :] - x[:, :, :-1, :]
+        w_diff = x[:, :, :, 1:] - x[:, :, :, :-1]
+        
+        # L2-style Total Variation (Isotropic approximation)
+        # We calculate the mean over C, H, W for each image in the batch
+        # to keep the loss scale-invariant.
+        h_tv = torch.mean(torch.pow(h_diff, 2), dim=(1, 2, 3))
+        w_tv = torch.mean(torch.pow(w_diff, 2), dim=(1, 2, 3))
+        
+        # Combine and apply BaseLoss reduction (mean/sum/none)
+        loss = h_tv + w_tv
+        
+        # TODO: Delete later
         """
         x          = input
         b, c, h, w = x.size()
@@ -720,6 +494,9 @@ class TotalVariationLoss(BaseLoss):
         h_tv       = torch.pow((x[:, :, 1:,  :] - x[:, :, :h - 1, :]), 2).sum()
         w_tv       = torch.pow((x[:, :,  :, 1:] - x[:, :, :, :w - 1]), 2).sum()
         loss       = 2 * (h_tv / count_h + w_tv / count_w) / b
+        """
+        
+        loss = self.reduce(loss=loss)
         return loss
 
 
@@ -730,8 +507,8 @@ class EdgeLoss(BaseLoss):
     penalizing differences between the input and target images.
     
     Attributes:
-        kernel (torch.Tensor): Gaussian kernel for convolution.
-        loss (CharbonnierLoss): Charbonnier loss function instance.
+        charbonnier (CharbonnierLoss): Charbonnier loss instance for edge map
+            comparison.
     """
     
     # --- Lifecycle & Initialization ---
@@ -743,39 +520,68 @@ class EdgeLoss(BaseLoss):
                 "none", "mean", or "sum". Defaults to "mean".
         """
         super().__init__(reduction=reduction)
-        k           = torch.Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
-        self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
-        self.loss   = CharbonnierLoss()
+        # Create 5x5 Gaussian Kernel
+        k      = torch.Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
+        kernel = torch.matmul(k.t(), k).unsqueeze(0).unsqueeze(0)  # [1, 1, 5, 5]
+        # Register as buffer to handle device placement automatically
+        self.register_buffer("kernel", kernel.repeat(3, 1, 1, 1))
+        
+        self.charbonnier = CharbonnierLoss(eps=1e-3, reduction="none")
 
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the loss between input and target.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
-            target: Target image, formatted as a torch.Tensor of dimensions
+            target: Target image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
                 
         Returns:
             Loss value, formatted according to the specified reduction method.
         """
-        edge1 = self._laplacian_kernel(input)
-        edge2 = self._laplacian_kernel(target)
-        diff  = edge1 - edge2
-        loss  = torch.mean(torch.sqrt((diff * diff) + (self.eps * self.eps)))
-        loss  = self.reduce(loss=loss)
+        # Extract edge maps
+        input_edges  = self._laplacian(input)
+        target_edges = self._laplacian(target)
+        
+        # Calculate Charbonnier loss on the edge maps
+        # Using your existing class preserves architectural consistency
+        loss = self.charbonnier(input_edges, target_edges)
+        
+        loss = self.reduce(loss=loss)
         return loss
+    
+    def _laplacian(self, image: torch.Tensor) -> torch.Tensor:
+        """Compute the Laplacian edge map using a Gaussian pyramid.
+        
+        Args:
+            image: An image, formatted as a torch.Tensor of shape
+                (B, C, H, W) and values ranging from 0.0 to 1.0.
+        
+        Returns:
+            Laplacian edge map.
+        """
+        filtered = self._gauss_conv(image)
+        # Downsample and Upsample (Stride 2)
+        down = filtered[:, :, ::2, ::2]
+        up   = torch.zeros_like(filtered)
+        up[:, :, ::2, ::2] = down * 4
+        # Second blur to smooth the upsampled grid
+        up_blurred = self._gauss_conv(up)
+        return image - up_blurred
 
     def _gauss_conv(self, image: torch.Tensor) -> torch.Tensor:
         """Apply Gaussian convolution to the input image.
         
         Args:
-            image: An image, formatted as a torch.Tensor of dimensions
+            image: An image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Gaussian filtered image.
+        """
+        # TODO: Delete later
         """
         b, c, w, h  = self.kernel.shape
         self.kernel = self.kernel.to(image.device)
@@ -783,24 +589,11 @@ class EdgeLoss(BaseLoss):
         # gauss       = F.conv2d(image, self.kernel, groups=b)  # Old code
         gauss       = F.conv2d(image, self.kernel, groups=c)  # Groups=c for channel-wise convolution
         return gauss
-    
-    def _laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
-        """Compute the Laplacian edge map using a Gaussian pyramid.
-        
-        Args:
-            image: An image, formatted as a torch.Tensor of dimensions
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
-        
-        Returns:
-            Laplacian edge map.
         """
-        filtered   = self._gauss_conv(image)       # filter
-        down       = filtered[:, :, ::2, ::2]     # downsample
-        new_filter = torch.zeros_like(filtered)
-        new_filter[:, :, ::2, ::2] = down * 4     # upsample
-        filtered   = self._gauss_conv(new_filter)  # filter
-        diff       = image - filtered
-        return diff
+        # Replicate padding prevents edge artifacts in the laplacian map
+        x = F.pad(image, (2, 2, 2, 2), mode="replicate")
+        # groups=3 ensures each RGB channel is blurred independently
+        return F.conv2d(x, self.kernel, groups=3)
 
 
 # ==============================================================================
@@ -834,46 +627,51 @@ class DepthAwareIlluminationLoss(BaseLoss):
         """Calculate the loss between illumination map and depth map.
         
         Args:
-            input: Illumination map, formatted as a torch.Tensor of dimensions
+            input: Illumination map, formatted as a torch.Tensor of shape
                 (B, 1, H, W) and values ranging from 0.0 to 1.0.
-            depth: Depth map, formatted as a torch.Tensor of dimensions
+            depth: Depth map, formatted as a torch.Tensor of shape
                 (B, 1, H, W) and values ranging from 0.0 to 1.0.
                 
         Returns:
             Loss value, formatted according to the specified reduction method.
         """
-        # Calculate gradients of illumination map (L) in x and y directions
+        # Illumination gradients (L)
         L_dx = input[:, :, :, 1:] - input[:, :, :, :-1]
         L_dy = input[:, :, 1:, :] - input[:, :, :-1, :]
         
-        # Calculate gradients of depth map (D) in x and y directions
+        # Depth gGradients (D)
         D_dx = depth[:, :, :, 1:] - depth[:, :, :, :-1]
         D_dy = depth[:, :, 1:, :] - depth[:, :, :-1, :]
         
-        # Compute depth-weighted terms for x and y directions
+        # Calculate Weights
+        # Higher depth gradient -> Smaller weight -> Lower penalty for lighting changes
         weight_dx = torch.exp(-self.alpha * torch.abs(D_dx))
         weight_dy = torch.exp(-self.alpha * torch.abs(D_dy))
         
-        # Apply depth weights to illumination gradients and take the mean
-        loss_dx = torch.mean(weight_dx * torch.abs(L_dx))
-        loss_dy = torch.mean(weight_dy * torch.abs(L_dy))
+        # Apply Weights
+        # Using L1 variation (abs) is standard for edge-preserving smoothness
+        loss_x = weight_dx * torch.abs(L_dx)
+        loss_y = weight_dy * torch.abs(L_dy)
         
-        # Sum the losses from both directions
-        loss = loss_dx + loss_dy
+        # Pad gradients back to original size (optional but keeps shapes consistent)
+        # or simply average them. Here we sum the directional components:
+        # We take the mean over spatial dims for each image in batch first
+        loss = loss_x.mean(dim=(1, 2, 3)) + loss_y.mean(dim=(1, 2, 3))
+        
         loss = self.reduce(loss=loss)
         return loss
 
 
-class StructureTextureDecompositionLoss(nn.Module):
+class StructureTextureDecompositionLoss(BaseLoss):
     """A loss function for separating structural edges from fine details.
     
     Separates an image into structure and texture components using Gaussian
-    blurring, and penalizes the texture component to encourage smoother textures
+    blurring and penalizes the texture component to encourage smoother textures
     in the enhanced image.
     
     Attributes:
-        kernel_size (list[int]): Size of the Gaussian kernel for blurring.
-        sigma (list[float]): Standard deviation for the Gaussian kernel.
+        kernel_size (int): Size of the Gaussian kernel for blurring.
+        sigma (float): Standard deviation for the Gaussian kernel.
     """
     
     # --- Lifecycle & Initialization ---
@@ -885,6 +683,7 @@ class StructureTextureDecompositionLoss(nn.Module):
             sigma: Standard deviation for the Gaussian kernel. Defaults to 1.0.
         """
         super().__init__()
+        # Use a list for kernel/sigma if required by the functional blur
         self.kernel_size = [kernel_size, kernel_size]
         self.sigma       = [sigma, sigma]
 
@@ -893,15 +692,23 @@ class StructureTextureDecompositionLoss(nn.Module):
         """Calculate the loss for the input tensor.
         
         Args:
-            input: Predicted image, formatted as a torch.Tensor of dimensions
+            input: Predicted image, formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
         
         Returns:
             Loss value, formatted according to the specified reduction method.
         """
-        # Create a blurred version of the image to represent the "structure"
-        structure = gaussian_blur(input, kernel_size=self.kernel_size, sigma=self.sigma)
-        # The "texture" is the difference between the "input" and the "structure"
-        texture   = input - structure
-        # Penalize the L1 norm of the texture component
-        return torch.mean(torch.abs(texture))
+        # Extract the low-frequency "Structure"
+        # Note: Ensure you have torchvision.transforms.functional.gaussian_blur
+        # or similar imported as gaussian_blur
+        structure = gaussian_blur(input, self.kernel_size, self.sigma)
+        
+        # Extract the high-frequency "Texture"
+        texture = input - structure
+        
+        # Calculate L1 norm (Mean Absolute Error) of the texture
+        # We calculate mean over C, H, W for each batch element
+        loss = torch.mean(torch.abs(texture), dim=(1, 2, 3))
+        
+        loss = self.reduce(loss=loss)
+        return loss

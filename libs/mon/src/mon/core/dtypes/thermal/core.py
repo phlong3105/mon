@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Thermal base classes and mixins.
+"""Thermal data structures.
 
 This module provides the base classes and mixins for thermal data.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "InfraredMap",
@@ -12,38 +14,49 @@ __all__ = [
 
 import cv2
 
+from mon.core.constants import SOURCE
+from mon.core.dtypes.image import Image
 from mon.core.enum import InfraredSource
-from ..image import Image
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
 class InfraredMap(Image):
     """A basic class for managing an infrared map.
 
@@ -51,13 +64,13 @@ class InfraredMap(Image):
     related to infrared data.
 
     Attributes:
-        _source (InfraredSource): The infrared data source.
+        _source (InfraredSource): Source of the infrared data.
     """
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        source: InfraredSource = InfraredSource.INFRARED,
+        source: InfraredSource = SOURCE.INFRARED,
         flags : int            = cv2.IMREAD_GRAYSCALE,
         *args, **kwargs
     ):
@@ -66,21 +79,17 @@ class InfraredMap(Image):
         Args:
             source: Source of the infrared data. Defaults to InfraredSource.INFRARED.
             flags: OpenCV flag used to read the infrared map. Defaults to cv2.IMREAD_GRAYSCALE.
-
-        Raises:
-            ValueError: If ``source`` is not a valid InfraredSource.
         """
-        # Validate inputs
-        source = InfraredSource(source)
-        if source not in InfraredSource:
-            raise ValueError(f"``source`` must be one of {InfraredSource}, got {source}.")
+        # Validate and set the depth source
+        self._source = InfraredSource(source)
         
-        # Initialize parent classes and assign attributes
-        self._source = source
-        super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter
+        # Continue the initialization chain
+        super().__init__(flags=flags, *args, **kwargs)
         
     # ---- Properties ---
     @property
     def source(self) -> InfraredSource:
         """Return the infrared data source."""
         return self._source
+
+# endregion

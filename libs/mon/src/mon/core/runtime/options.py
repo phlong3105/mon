@@ -7,63 +7,61 @@ This module provides CLI option metadata, default argument values, and
 coercion helpers for argument normalization.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "CLI_OPTIONS",
     "DEFAULT_ARGS",
 ]
 
-from typing import Any
+from typing import Any, Callable, TypeVar
 
 import box
 
 from mon.core.device import list_devices
-from mon.core.enum import Task, TRTPrecision
-
+from mon.core.enum import RunMode, Task, TRTPrecision
 
 # ==============================================================================
 # TYPE COERCION HELPERS
 # ==============================================================================
 
-def _str_or_none(a_str: Any) -> str | None:
-    """Convert a value to a string or None.
-
-    Treat None, the string "None", and the empty string as None.
-
-    Args:
-        a_str: Value to convert.
-
-    Returns:
-        Normalized string or None.
-    """
-    return None if a_str in [None, "None", ""] else str(a_str)
+T = TypeVar("T")
 
 
-def _int_or_none(int_or_str: Any) -> int | None:
-    """Convert a value to an int or None.
-
-    Treat None, the string "None", and the empty string as None.
-
-    Args:
-        int_or_str: Value to convert.
-
-    Returns:
-        Converted integer or None.
-    """
-    return None if int_or_str in [None, "None", ""] else int(int_or_str)
+def _is_null(value: Any) -> bool:
+    """Check if a value should be treated as a Python None."""
+    # Added .strip() check for string types to catch "  "
+    if isinstance(value, str):
+        value = value.strip()
+    return value in [None, "None", "none", "NULL", ""]
 
 
-def _float_or_none(float_or_str: Any) -> float | None:
-    """Convert a value to a float or None.
+def _safe_convert(value: Any, constructor: Callable[[Any], T]) -> T | None:
+    """Base helper to handle null checking and conversion errors."""
+    if _is_null(value):
+        return None
+    try:
+        # Special case: int("1.0") fails in Python, so we float() first
+        if constructor is int:
+            return int(float(value))
+        return constructor(value)
+    except (ValueError, TypeError):
+        return None
 
-    Treat None, the string "None", and the empty string as None.
 
-    Args:
-        float_or_str: Value to convert.
+def _str_or_none(value: Any) -> str | None:
+    """Convert value to string, returning None if null-like."""
+    return _safe_convert(value, str)
 
-    Returns:
-        Converted float or None.
-    """
-    return None if float_or_str in [None, "None", ""] else float(float_or_str)
+
+def _int_or_none(value: Any) -> int | None:
+    """Convert value to int, returning None if null-like or invalid."""
+    return _safe_convert(value, int)
+
+
+def _float_or_none(value: Any) -> float | None:
+    """Convert value to float, returning None if null-like or invalid."""
+    return _safe_convert(value, float)
 
 
 # ==============================================================================
@@ -71,7 +69,7 @@ def _float_or_none(float_or_str: Any) -> float | None:
 # ==============================================================================
 
 # --- Option Registry ---
-CLI_OPTIONS  = {
+CLI_OPTIONS = {
     "p"            : {
         "action"     : "store_true",
         "help"       : "Run with interactive prompt.",
@@ -97,8 +95,8 @@ CLI_OPTIONS  = {
     "mode"         : {
         "default"    : None,
         "type"       : _str_or_none,
-        "choices"    : ["train", "predict", "speed"],  # RunMode.values(),
-        "help"       : f"Run mode: {['train', 'predict']}.",
+        "choices"    : RunMode.values(),
+        "help"       : f"Run mode: {RunMode.values()}.",
         "prompt_only": False,
         "i_cli_type" : str,
         "prompt_text": "Run Mode",
@@ -135,7 +133,7 @@ CLI_OPTIONS  = {
         "default"    : None,
         "type"       : _str_or_none,
         "help"       : "Full name of the current run.",
-        "prompt_only": False,  
+        "prompt_only": False,
         "prompt_text": "Fullname",
     },
     "save_dir"     : {
@@ -290,7 +288,7 @@ CLI_OPTIONS  = {
         "prompt_text": "TRT Precision",
     },
 }
-CLI_OPTIONS  = box.Box(CLI_OPTIONS)
+CLI_OPTIONS = box.Box(CLI_OPTIONS)
 
 
 # ==============================================================================

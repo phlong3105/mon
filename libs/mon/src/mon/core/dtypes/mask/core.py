@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Mask base classes and mixins.
+"""Mask data structures.
 
-This module provides the base classes and mixins for masks.
+This module provides the base classes and mixins for mask.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "SemanticMask",
@@ -12,37 +14,47 @@ __all__ = [
 
 import cv2
 
-from ..image import Image
+from mon.core.dtypes.image import Image
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
 class SemanticMask(Image):
     """A basic class for managing a semantic segmentation mask.
     
@@ -57,5 +69,7 @@ class SemanticMask(Image):
         Args:
             flags: OpenCV flag to read the mask. Defaults to cv2.IMREAD_GRAYSCALE.
         """
-        # Initialize parent classes and assign attributes
-        super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter
+        # Continue the initialization chain
+        super().__init__(flags=flags, *args, **kwargs)
+
+# endregion

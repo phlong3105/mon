@@ -17,12 +17,13 @@ from mon.core import rich
 from ...api import *
 
 
-@DATASETS.register(name="ntire2025llie")
+@DATASETS.register()
 class NTIRE2025LLIE(ImageDataset):
     """NTIRE 2025 LLIE dataset."""
     
-    _subset    : str         = "ntire2025llie"
+    _name      : str         = "ntire2025llie"
     _tasks     : list[Task]  = [Task.LLE]
+    _subset    : str         = None
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),

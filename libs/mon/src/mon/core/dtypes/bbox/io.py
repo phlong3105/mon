@@ -3,16 +3,14 @@
 
 """Bounding box I/O operations.
 
-This module provides functions for input and output operations for bounding
-boxes.
+This module provides input and output operations for bounding boxes.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "load",
 ]
-
-import json
-import xml.etree.ElementTree as ET
 
 import box
 import numpy as np
@@ -24,137 +22,70 @@ from .ops import convert
 
 
 # ==============================================================================
-# RESOURCE RESOLVERS (Path/URL Handling)
+# region DISCOVERY
 # ==============================================================================
 
-# --- Path Handling (Resolving URIs, Local Paths) ---
 
-
-# --- Backend Selection (Selecting PIL vs. OpenCV vs. TurboJPEG) ---
+# endregion
 
 
 # ==============================================================================
-# HYDRATION & DESERIALIZATION (Read/Load)
+# region CONNECTION
 # ==============================================================================
 
-# --- Deserialize (Bytes to Object) ---
+
+# endregion
 
 
-# --- Loaders (Standard Disk-to-RAM logic) ---
+# ==============================================================================
+# region INPUT
+# ==============================================================================
 
-def _read_coco(
+def _load_coco_label(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
 ) -> np.ndarray:
-    """Load COCO-format annotations from a JSON file.
+    """Load COCO-format labels from a JSON file.
 
     Args:
-        path: Path to the COCO JSON file.
-        remap: Optional mapping to remap class ids/names.
-        verbose: If True, print warnings to error_console.
+        path: Path to the COCO .json label file.
+        remap: Optional mapping to remap class IDs. Defaults to None.
+        verbose: If True, print warnings to ``error_console``. Defaults to True.
 
     Returns:
-        Numpy array of bounding boxes (N, 7+).
+        Batch of bounding boxes, formatted as a numpy.ndarray of shape
+        (N, 7+) and in XYWH format.
 
     Raises:
-        ValueError: If file is not a valid COCO JSON or contains no annotations.
+        NotImplementedError: This method is not yet supported.
     """
-    path = Path(path)
-    if not path.is_json_file(exist=True):
-        if verbose:
-            error_console.print(f"``path`` must be a valid .json file, got {path}.")
-
-    json_data = {}
-    with open(path, "r") as f:
-        json_data = json.load(f)
-
-    info        = json_data.get("info",        {})
-    licenses    = json_data.get("licenses",    [])
-    categories  = json_data.get("categories",  [])
-    images      = json_data.get("images",      [])
-    annotations = json_data.get("annotations", [])
-
-    if len(annotations) == 0:
-        if verbose:
-            error_console.print(f"No annotations found in {path}.")
+    raise NotImplementedError("This method is not yet supported.")
 
 
-def _read_voc(
+def _load_voc_label(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
 ) -> np.ndarray:
-    """Load Pascal VOC annotations from an XML file.
+    """Load VOC-format labels from an XML file.
 
     Args:
-        path: Path to the VOC XML file.
-        remap: Optional mapping to remap class ids/names.
-        verbose: If True, print warnings to error_console.
+        path: Path to the VOC .xml label file.
+        remap: Optional mapping to remap class IDs. Defaults to None.
+        verbose: If True, print warnings to ``error_console``. Defaults to True.
 
     Returns:
-        Numpy array of bounding boxes (N, 7+).
+        Batch of bounding boxes, formatted as a numpy.ndarray of shape
+        (N, 7+) and in XYXY format.
+
+    Raises:
+        NotImplementedError: This method is not yet supported.
     """
-    path = Path(path)
-    if not path.is_xml_file(exist=True):
-        if verbose:
-            error_console.print(f"``path`` must be a valid .xmls file, got {path}.")
-        return np.empty((0, 7), dtype=np.float32)
-
-    tree = ET.parse(str(path))
-    root = tree.getroot()
-
-    xml_data = {
-        "filename" : "",
-        "width"    : 0,
-        "height"   : 0,
-        "depth"    : 0,
-        "objects"  : [],
-        "segmented": 0
-    }
-
-    # Extract image metadata
-    xml_data["filename"] = root.find("filename").text
-    size = root.find("size")
-    xml_data["width"]    = int(size.find("width").text)
-    xml_data["height"]   = int(size.find("height").text)
-    xml_data["depth"]    = int(size.find("depth").text)
-
-    # Extract segmented flag (0 or 1)
-    segmented = root.find("segmented")
-    if segmented is not None:
-        xml_data["segmented"] = int(segmented.text)
-
-    # Extract objects
-    for obj in root.findall("object"):
-        obj_data = {
-            "name": obj.find("name").text,
-            "bbox": [
-                float(obj.find("bndbox/xmin").text),
-                float(obj.find("bndbox/ymin").text),
-                float(obj.find("bndbox/xmax").text),
-                float(obj.find("bndbox/ymax").text),
-            ],
-            "difficult": int(obj.find("difficult").text) if obj.find("difficult") is not None else 0,
-            "truncated": int(obj.find("truncated").text) if obj.find("truncated") is not None else 0,
-            "pose"     :     obj.find("pose").text       if obj.find("pose")      is not None else None
-        }
-        xml_data["objects"].append(obj_data)
-
-    # Extract bounding boxes
-    bs = []
-    for obj in xml_data["objects"]:
-        bs.append([obj["name"]] + obj["bbox"])
-
-    if remap and isinstance(remap, dict | box.Box):
-        bs = [[remap[int(b[0])]] + b[1:] for b in bs]
-
-    bs = np.array(bs, dtype=np.float32)
-    c, x1, y1, x2, y2, *rest = bs.T
-    return np.stack([x1, y1, x2, y2, 0, c] + rest, axis=-1)
+    raise NotImplementedError("This method is not yet supported.")
 
 
-def _read_yolo(
+def _load_yolo_label(
     path   : Path,
     remap  : dict | box.Box = None,
     verbose: bool = True
@@ -162,7 +93,7 @@ def _read_yolo(
     """Load YOLO-format labels from a text file.
 
     Each line in the file should contain:
-        <class_id> <center_x> <center_y> <width> <height> <angle> | Optional: <confidence>
+    <class_id> <center_x> <center_y> <width> <height> <angle> | Optional: <confidence>
     where:
         - <class_id> is the class index (0-based).
         - <x_center>, <y_center>, <width>, and <height> are normalized values
@@ -173,45 +104,106 @@ def _read_yolo(
 
     Args:
         path: Path to the YOLO .txt label file.
-        remap: Optional mapping to remap class ids.
-        verbose: If True, print warnings to error_console.
+        remap: Optional mapping to remap class IDs. Defaults to None.
+        verbose: If True, print warnings to ``error_console``. Defaults to True.
 
     Returns:
-        A batch of bounding boxes, formatted as a numpy.ndarray of dimensions
-        (N, 7+) and in CXCYWHN.
+        Batch of bounding boxes, formatted as a numpy.ndarray of shape
+        (N, 7+) and in CXCYWHN format.
 
     Raises:
-        ValueError: If file is invalid or contains no bounding boxes.
+        ValueError: If ``path`` is invalid or contains no bounding boxes.
     """
-    path = Path(path)
+    path = Path(path).normalize()
     if not path.is_txt_file(exist=True):
         if verbose:
-            error_console.print(f"``path`` must be a valid .txt file, got {path}.")
+            error_console.print(f"Path must be a valid .txt file: {path}")
         return np.empty((0, 7), dtype=np.float32)
-
-    with open(path, "r") as f:
-        ls = f.readlines()
-    ls = [l.strip().split(" ") for l in ls]
-    ls = [l for l in ls if len(l) >= 4]
-
-    if len(ls) == 0:
+    
+    try:
+        # Using np.loadtxt is significantly faster for large label files
+        # It handles whitespace stripping and conversion in one pass
+        raw_data = np.loadtxt(path, dtype=np.float32, ndmin=2)
+    except Exception as e:
         if verbose:
-            error_console.print(f"No bboxes found in {path}.")
+            error_console.print(f"Failed to parse {path}: {e}")
         return np.empty((0, 7), dtype=np.float32)
 
-    if len(ls[0]) == 4:
-        # If no class ID, add a dummy class ID of 0
-        ls = [[0] + l for l in ls]
+    # Standardize Columns
+    # YOLO Standard: [class, cx, cy, w, h]        -> 5 columns
+    # YOLO OBB:      [class, cx, cy, w, h, angle] -> 6 columns
+    # YOLO + Conf:   [class, cx, cy, w, h, conf]  -> 6 columns
+    if raw_data.size == 0:
+        return np.empty((0, 7), dtype=np.float32)
+    
+    num_cols = raw_data.shape[1]
+    
+    # If file only has [cx, cy, w, h], prepend a dummy class 0
+    if num_cols == 4:
+        raw_data = np.column_stack([np.zeros(len(raw_data)), raw_data])
+        num_cols = 5
+        
+    # Class Remapping
+    if remap:
+        # Efficiently remap all class IDs at once using np.vectorize or mapping
+        raw_data[:, 0] = np.array([remap.get(int(c), c) for c in raw_data[:, 0]])
+    
+    # Format Normalization (Building the N x 7+ matrix)
+    # Output Format: [cx_n, cy_n, w_n, h_n, angle, conf, class, ...id]
+    # Note: The docstring says CXCYWHN which usually implies [cx, cy, w, h, ...]
+    # The previous implementation had:
+    # final_bboxes[:, 5] = cls
+    # But standard mon/yolo usually expects: [cx, cy, w, h, conf, class] or similar.
+    # Let's check the BBox class definition in core.py (from previous turn).
+    # BBox attributes:
+    # conf -> index 5
+    # cls -> index 6
+    # id -> index 7
+    # So the target layout must be: [cx, cy, w, h, angle, conf, class, id]
+    
+    n_rows       = raw_data.shape[0]
+    # We need at least 7 columns for [cx, cy, w, h, angle, conf, class]
+    # Initialize with zeros
+    final_bboxes = np.zeros((n_rows, 7), dtype=np.float32)
+    
+    cls  = raw_data[:, 0]
+    cxcy = raw_data[:, 1:3]
+    wh   = raw_data[:, 3:5]
+    
+    final_bboxes[:, 0:2] = cxcy  # cx, cy
+    final_bboxes[:, 2:4] = wh    # w, h
+    final_bboxes[:, 6]   = cls   # class is at index 6 based on BBox class
+    
+    # Angle vs. Confidence Ambiguity Logic
+    if num_cols == 6:
+        col5 = raw_data[:, 5]
+        # Heuristic: YOLO confidence is usually 0.0-1.0.
+        # Angles are usually > 1.0 or 0.0.
+        if np.all((col5 >= 0) & (col5 <= 1.0)) and not np.any(col5 > 0.999):
+            # Likely confidence
+            final_bboxes[:, 4] = 0.0   # angle
+            final_bboxes[:, 5] = col5  # conf
+        else:
+            # Likely angle
+            final_bboxes[:, 4] = col5  # angle
+            final_bboxes[:, 5] = 1.0   # default conf
+    elif num_cols >= 7:
+        final_bboxes[:, 4] = raw_data[:, 5]  # angle
+        # If we have more columns, we might have conf and id
+        # But standard YOLO usually is [class, cx, cy, w, h, conf] or [class, cx, cy, w, h, angle, conf]
+        # The raw_data here is [class, cx, cy, w, h, angle, conf]
+        # So raw_data[:, 6] would be conf
+        if num_cols > 6:
+             final_bboxes[:, 5] = raw_data[:, 6] # conf
+        
+        # If there are even more columns, append them (e.g. track id)
+        if num_cols > 7:
+             final_bboxes = np.column_stack([final_bboxes, raw_data[:, 7:]])
+    else:
+        # Default confidence
+        final_bboxes[:, 5] = 1.0
 
-    if remap and isinstance(remap, dict | box.Box):
-        ls = [[remap[l[0]]] + l[1:] for l in ls]
-
-    ls = np.array(ls, dtype=np.float32)
-    c, cx_n, cy_n, w_n, h_n, a, *rest = ls.T
-    if 0.0 < a < 1.0:  # No given angle, so ``a`` is a confidence score.
-        rest = [a] + rest
-        a    = 0.0
-    return np.stack([cx_n, cy_n, w_n, h_n, a, c] + rest, axis=-1)
+    return final_bboxes
 
 
 def load(
@@ -221,56 +213,82 @@ def load(
     remap  : dict | box.Box = None,
     verbose: bool = False
 ) -> np.ndarray:
-    """Load bounding boxes from a label file and optionally convert to the
-    desired format.
+    """Load bounding boxes from a label file.
+
+    Load bounding boxes from a label file and optionally convert to the desired
+    format.
 
     Args:
         path: Label file path (YOLO .txt, VOC .xml, COCO .json).
-        fmt: Desired target format or conversion code (BBoxFormat).
+        fmt: Desired target format or conversion code.
         imgsz: Image size as (H, W) required for format conversions.
-        remap: Optional remapping for class ids/names.
-        verbose: If True, print warnings to ``error_console``.
+        remap: Optional remapping for class IDs or names. Defaults to None.
+        verbose: If True, print warnings to ``error_console``. Defaults to False.
 
     Returns:
-        A batch of bounding boxes, formatted as a numpy.ndarray of dimensions
-        (N, 7+) and in the desired format.
+        Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
+        and in the desired format.
 
     Raises:
-        ValueError: If ``fmt`` is unsupported or ``imgsz`` required but missing.
+        ValueError: If ``path`` is invalid or if conversion parameters are missing.
     """
-    fmt = BBoxFormat(value=fmt)
-    if fmt in BBoxFormat.conversion_codes():
-        src_fmt = fmt.value.split("_to_")[0]
-        src_fmt = BBoxFormat(value=src_fmt)
-    else:
-        src_fmt = fmt
-        fmt     = None
+    path = Path(path).normalize()  # Ensure absolute, clean path
     
-    bbox = None
-    match src_fmt:
-        case BBoxFormat.COCO | BBoxFormat.XYWH:
-            bbox = _read_coco(path, remap, verbose)
-        case BBoxFormat.VOC  | BBoxFormat.XYXY:
-            bbox = _read_voc(path, remap, verbose)
-        case BBoxFormat.YOLO | BBoxFormat.CXCYWHN:
-            bbox = _read_yolo(path, remap, verbose)
-        case _:
-            raise ValueError(f"``src_fmt`` must be one of {BBoxFormat.formats()}, got {src_fmt}.")
-
-    if fmt and imgsz is None:
-        raise ValueError("``imgsz`` must be provided when converting bboxes.")
-
-    if fmt:
-        bbox = convert(bbox=bbox, fmt=fmt, imgsz=imgsz)
-
+    # Determine Source vs Target Formats
+    # Use BBoxFormat internal logic to distinguish between a static format
+    # and a conversion instruction (e.g., 'voc_to_yolo')
+    fmt = BBoxFormat(value=fmt)
+    
+    if fmt in BBoxFormat.conversion_codes():
+        # Example: 'coco_to_cxcywhn' -> src_fmt = 'coco', target_fmt = 'cxcywhn'
+        src_fmt_str, target_fmt_str = fmt.value.split("_to_")
+        src_fmt    = BBoxFormat(src_fmt_str)
+        target_fmt = BBoxFormat(target_fmt_str)
+    else:
+        # No conversion requested, just load in original format
+        src_fmt    = fmt
+        target_fmt = None
+   
+    # Match Reader based on source format
+    # We use a mapping dictionary for cleaner expansion later
+    readers = {
+        BBoxFormat.COCO:    _load_coco_label,
+        BBoxFormat.XYWH:    _load_coco_label,
+        BBoxFormat.VOC:     _load_voc_label,
+        BBoxFormat.XYXY:    _load_voc_label,
+        BBoxFormat.YOLO:    _load_yolo_label,
+        BBoxFormat.CXCYWHN: _load_yolo_label,
+    }
+    
+    if src_fmt not in readers:
+        raise ValueError(
+            f"Unsupported bounding box format: {src_fmt.value}. "
+            f"Must be one of: {list(readers.keys())}."
+        )
+    
+    # Execute the read operation
+    bbox = readers[src_fmt](path, remap=remap, verbose=verbose)
+    
+    # Handle Conditional Conversion
+    if target_fmt:
+        if imgsz is None:
+            raise ValueError(
+                f"Expected 'imgsz' for conversion from {src_fmt.value} to {target_fmt.value}, "
+                f"but got None."
+            )
+        
+        # Build the specific conversion instruction for the convert() utility
+        conversion_code = BBoxFormat(f"{src_fmt.value}_to_{target_fmt.value}")
+        bbox            = convert(bbox=bbox, fmt=conversion_code, imgsz=imgsz)
+    
     return bbox
 
+# endregion
+
 
 # ==============================================================================
-# PERSISTENCE & EXPORT (Write/Commit)
+# region OUTPUT
 # ==============================================================================
 
-# --- Serialize (Object to Bytes) ---
 
-
-# --- Commit (Saving to Disk/Cloud) ---
+# endregion

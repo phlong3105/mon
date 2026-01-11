@@ -6,38 +6,53 @@
 This module provides the abstract base classes and mixins for data types.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "Data",
-    "DataLoadMixin",
     "DeviceManagementMixin",
+    "PersistentData",
 ]
 
 import abc
-from typing import Any
+from typing import Any, Iterator
+
+import torch
 
 from mon.core.pathlib import Path
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 class Data(abc.ABC):
     """An abstract base class for complex data objects.
 
     Attributes:
-        _data (Any): Underlying data object.
+        _data (Any): Underlying data.
     """
     
     # --- Lifecycle & Initialization ---
@@ -49,26 +64,32 @@ class Data(abc.ABC):
         """
         self._data = data
     
+    # --- Representation ---
+    def __repr__(self) -> str:
+        """Official string representation for developers (eval-able)."""
+        return f"{self.__class__.__name__}(shape={self.shape}, type={type(self.data)})"
+    
     # --- Container / Sequence Methods ---
     @abc.abstractmethod
     def __len__(self) -> int:
-        """Return the logical length."""
+        """Return the length of the container."""
         pass
-
+    
     @abc.abstractmethod
-    def __getitem__(self, idx: int) -> Any:
-        """Return element(s) at the given index.
-
-        Args:
-            idx: Index or slice to select from the underlying data.
-        """
+    def __getitem__(self, index: int) -> Any:
+        """Define behavior for when an item is accessed via the notation self[index]."""
         pass
 
+    def __iter__(self) -> Iterator:
+        """Return an iterator for the container."""
+        for i in range(len(self)):
+            yield self[i]
+    
     # --- Properties ---
     @property
     @abc.abstractmethod
     def data(self) -> Any:
-        """Return the underlying data object."""
+        """Return the underlying data."""
         pass
 
     @property
@@ -84,45 +105,55 @@ class Data(abc.ABC):
         pass
 
 
-# --- Lifecycle Mixins ---
-class DataLoadMixin(abc.ABC):
-    """A mixin for data loading operations (i.e., reading from disk and parsing).
+class PersistentData(Data, abc.ABC):
+    """An abstract base class for data that can be loaded from and saved to disk.
+    
+    Extend Data to add persistence capabilities and lazy loading.
     
     Attributes:
-        _path (Path): Path to load data from.
-        _root (Path): Root directory for relative paths.
-        _persist (bool): Whether to persist loaded data in memory. Defaults to False.
+        _path (Path | str | None): Path to load data from.
+        _root (Path | str | None): Root directory for relative paths. Defaults to None.
+        _persist (bool): If True, persist loaded data in memory. Defaults to False.
     """
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        path   : Path,
-        root   : Path = None,
-        persist: bool = False
+        data   : Any,
+        path   : Path | str | None,
+        root   : Path | str | None = None,
+        persist: bool              = False,
+        *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
+            data: Underlying data.
             path: Path to load data from.
             root: Root directory for relative paths. Defaults to None.
             persist: If True, persist loaded data in memory. Defaults to False.
         """
-        path = Path(path) if path is not None else None
-        root = Path(root) if root is not None else None
-        if path is not None and not path.exists():
-            raise FileNotFoundError(f"``path`` does not exist: {path}.")
-        if root is not None and not root.exists():
-            raise FileNotFoundError(f"``root`` does not exist: {root}.")
-            
-        self._path    = path
-        self._root    = root
+        # Validate and set paths and persistence flag
+        self._path    = Path(path).normalize(exist=True) if path else None
+        self._root    = Path(root).normalize(exist=True) if root else None
         self._persist = persist
+        
+        # Continue the initialization chain
+        super().__init__(data=data, *args, **kwargs)
     
     # --- Properties ---
     @property
+    def data(self) -> Any:
+        """Return the underlying data if persisted, else load from disk."""
+        if self._persist:
+            if self._data is None:
+                self._data = self.load()
+            return self._data
+        return self.load()
+    
+    @property
     def path(self) -> Path:
-        """Return the path to load data from."""
+        """Return the path to the data file."""
         return self._path
     
     @property
@@ -132,17 +163,17 @@ class DataLoadMixin(abc.ABC):
     
     @property
     def persist(self) -> bool:
-        """Return whether loaded data is persisted in memory."""
+        """Return whether the loaded data is persisted in memory."""
         return self._persist
     
     @persist.setter
-    def persist(self, persist: bool):
+    def persist(self, value: bool):
         """Set whether loaded data is persisted in memory.
 
         Args:
-            persist: If True, persist loaded data in memory.
+            value: If True, persist loaded data in memory. Else, clear it.
         """
-        self._persist = persist
+        self._persist = value
         if not self._persist:
             self.clear()
     
@@ -159,16 +190,24 @@ class DataLoadMixin(abc.ABC):
         """
         pass
     
-    @abc.abstractmethod
     def clear(self):
-        """Clear the loaded data from memory."""
-        pass
+        """Clear the loaded data from memory if not persisting."""
+        if (
+            not self._persist
+            and (self._path and self._path.exists())
+        ):
+            self._data = None
 
 
-# --- Compute Mixins ---
+# --- Mixins ---
 class DeviceManagementMixin(abc.ABC):
     """A mixin for device management operations."""
-
+    
+    @abc.abstractmethod
+    def to(self, device: str | torch.device, *args, **kwargs) -> Any:
+        """Move or cast data to a specific device (cpu, cuda, mps, etc.)."""
+        pass
+    
     @abc.abstractmethod
     def cpu(self) -> Any:
         """Move data to CPU."""
@@ -178,20 +217,23 @@ class DeviceManagementMixin(abc.ABC):
     def cuda(self) -> Any:
         """Move data to GPU."""
         pass
-
+    
+    @abc.abstractmethod
+    def mps(self) -> Any:
+        """Move data to MPS."""
+        pass
+    
     @abc.abstractmethod
     def numpy(self) -> Any:
         """Convert data to numpy."""
         pass
 
-    @abc.abstractmethod
-    def to(self, *args, **kwargs) -> Any:
-        """Move or cast data."""
-        pass
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
+
+# endregion

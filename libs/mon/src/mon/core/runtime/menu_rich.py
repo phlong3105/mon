@@ -94,7 +94,7 @@ class Prompt:
             value: The value to store.
         """
         if value:
-            value = value[0] if isinstance(value, list | tuple) and len(value) == 1 else value
+            value = value[0] if isinstance(value, (list, tuple)) and len(value) == 1 else value
         else:
             value = ""
         self._value = value
@@ -105,13 +105,13 @@ class Prompt:
         return self._choices
     
     @choices.setter
-    def choices(self, choices: Sequence | Collection = None):
+    def choices(self, value: Sequence | Collection = None):
         """Normalize and store choices.
 
         Args:
-            choices: The choices to store.
+            value: The choices to store.
         """
-        self._choices = to_list(choices) or None
+        self._choices = to_list(value) or None
     
     # --- Callable & Context Manager ---
     def prompt(self) -> Any:
@@ -193,15 +193,15 @@ class NumberPrompt:
         return self._default
     
     @default.setter
-    def default(self, default: int):
+    def default(self, value: int):
         """Normalize and set the numeric default.
 
         Args:
-            default: The default value to set.
+            value: The default value to set.
         """
-        default       = default[0] if isinstance(default, list | tuple) else default
-        default       = to_int(default)
-        self._default = default if isinstance(default, int | float) else -1
+        value       = value[0] if isinstance(value, (list, tuple)) else value
+        value       = to_int(value)
+        self._default = value if isinstance(value, (int, float)) else -1
 
     @property
     def value(self) -> int:
@@ -215,9 +215,9 @@ class NumberPrompt:
         Args:
             value: The value to set.
         """
-        value       = value[0] if isinstance(value, list | tuple) else value
+        value       = value[0] if isinstance(value, (list, tuple)) else value
         value       = to_int(value)
-        self._value = None if isinstance(value, int | float) and value < 0 else value
+        self._value = None if isinstance(value, (int, float)) and value < 0 else value
         
     # --- Callable & Context Manager ---
     def prompt(self) -> int:

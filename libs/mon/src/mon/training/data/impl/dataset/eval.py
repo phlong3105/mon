@@ -14,7 +14,7 @@ __all__ = [
     "ImageEvalDataset",
 ]
 
-from typing import Any, Optional
+from typing import Any
 
 import box
 import numpy as np
@@ -73,51 +73,54 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         self.transform  = transform
     
     def __del__(self):
-        """Close the dataset loading mechanism and releases resources."""
+        """Finalizer called when the object is about to be destroyed.
+        
+        Close the dataset loading mechanism and releases resources.
+        """
         pass
     
     # --- Representation ---
     def __repr__(self) -> str:
-        """Return the string representation of the dataset."""
+        """Official string representation for developers (eval-able)."""
         lines  = ["Dataset " + self.__class__.__name__]
         lines += [f"Number of datapoints: {self.__len__()}"]
-        if hasattr(self, "transform") and self._transform:
+        if self._transform:
             lines += [repr(self._transform)]
         return "\n".join(lines)
     
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
-        """Return the length of the dataset (i.e., number of datapoints)."""
-        return len(self.datapoints["image"])
+        """Return the length of the container (i.e., number of datapoints)."""
+        return len(self._datapoints["image"])
     
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Return the datapoint at the specified ``index`` in ``_datapoints``.
-        
-        Args:
-            index: Index of datapoint.
-            
-        Returns:
-            A dictionary containing the datapoint and its metadata.
-        """
+        """Define behavior for when an item is accessed via the notation self[index]."""
+        # Fetch datapoint
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
         
-        if self.transform:
+        transform = self._transform
+        
+        if transform:
+            # Optimized transformation branch
             if self.has_target:
-                augmented      = self.transform(image=data["image"], target=data["target"])
+                augmented      = transform(image=data["image"], target=data["target"])
                 data["image"]  = augmented["image"]
                 data["target"] = augmented["target"]
             else:
-                augmented      = self.transform(image=data["image"])
+                augmented      = transform(image=data["image"])
                 data["image"]  = augmented["image"]
+            
+            # Vectorized-style type casting
             for k, v in data.items():
-                # Converts non‑float tensors/arrays to float32
-                if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
-                    data[k] = v.to(torch.float32)
-                elif isinstance(v, np.ndarray) and v.dtype != np.float32:
-                    data[k] = v.astype(np.float32)
+                if v is not None:
+                    # Converts non‑float tensors/arrays to float32
+                    if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
+                        data[k] = v.to(torch.float32)
+                    elif isinstance(v, np.ndarray) and v.dtype != np.float32:
+                        data[k] = v.astype(np.float32)
                     
-        return data | {"meta": meta}
+        return {**data, "meta": meta}
     
     # --- Properties ---
     @property
@@ -126,56 +129,66 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         return self._transform
     
     @transform.setter
-    def transform(self, transform: Any):
-        """Setter for transformation operations.
+    def transform(self, value: Any):
+        """Set the transformation operations.
         
         Args:
-            transform: Transformations for input/target.
+            value: Transformations for input/target.
             
         Raises:
             TypeError: If ``transform`` is not None or an instance of
                 albumentations.Compose.
         """
-        if isinstance(transform, dict | box.Box):
-            transform = A.Compose(**transform)
-        if transform is not None and not isinstance(transform, A.Compose):
-            raise TypeError(f"``transform`` must be None or an instance of "
-                            f"albumentations.Compose, got: {type(transform)}.")
+        if value is None:
+            self._transform = None
+            return
+        
+        if isinstance(value, (dict, box.Box)):
+            value = A.Compose(**value)
+        if not isinstance(value, A.Compose):
+            raise TypeError(f"Expected 'transform' to be an instance of "
+                            f"albumentations.Compose, but got {type(value)}.")
         
         # Add additional targets to A.Compose if needed.
-        if transform and self.has_target:
-            transform.add_targets(additional_targets={"target": "image"})
-        
-        self._transform = transform
+        if self.has_target:
+            # Albumentations stores additional targets in a specific dict;
+            # check if 'target' is already there to avoid overhead.
+            if "target" not in value.processors.get("additional_targets", {}):
+                value.add_targets({"target": "image"})
+                
+        self._transform = value
         
     # --- Data Loading ---
     def _load_data(self) -> dict[str, Any]:
         """Core data loading mechanism for the dataset."""
-        # Initialize empty datapoints dictionary with modalities
-        datapoints = {}
+        disable_pbar = self.disable_pbar
+        input_dir    = self._input_dir
+        has_target   = self.has_target
+        target_dir   = self._target_dir if has_target else None
         
         # List image
-        images: list[Image] = []
-        with create_progress_bar(disable=self.disable_pbar) as pbar:
-            paths = sorted(self.input_dir.rglob("*"))
+        images = []
+        with create_progress_bar(disable=disable_pbar) as pbar:
+            paths = sorted(input_dir.rglob("*"))
             desc  = f"Listing {self.__class__.__name__} input image(s)"
             for path in pbar.track(sequence=paths, description=desc):
                 if path.is_image_file(exist=True):
-                    images.append(Image(data=path, root=self.input_dir))
-        datapoints["image"] = images
+                    images.append(Image(data=path, root=input_dir))
+        datapoints = {"image": images}
         
         # List target
-        targets: Optional[list[Image]] = None
-        if self.has_target:
-            targets: list[Image] = []
-            with create_progress_bar(disable=self.disable_pbar) as pbar:
+        if has_target:
+            targets = []
+            with create_progress_bar(disable=disable_pbar) as pbar:
                 desc = f"Listing {self.__class__.__name__} target image(s)"
                 for image in pbar.track(sequence=images, description=desc):
-                    target_file = self.target_dir / image.path.name
+                    target_file = target_dir / image.path.name
                     target_file = target_file.image_file(exist=True)
-                    if target_file.is_image_file():
-                        targets.append(Image(data=target_file, root=self.target_dir))
-        datapoints["target"] = targets
+                    if target_file.is_image_file(exist=True):
+                        targets.append(Image(data=target_file, root=target_dir))
+            datapoints["target"] = targets
+        else:
+            datapoints["target"] = None
         
         # List metadata
         datapoints["meta"] = [i.meta for i in images]
@@ -191,12 +204,12 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         if self.__len__() <= 0:
             raise RuntimeError("No datapoints in the dataset!")
         
-        for k, v in self.datapoints.items():
+        for k, v in self._datapoints.items():
             if v in [None, []]:
-                raise RuntimeError(f"``datapoints`` has no ``{k}`` attributes!")
+                raise RuntimeError(f"Datapoint modality ``{k}`` is empty!")
             elif len(v) != self.__len__():
-                raise RuntimeError(f"Number of ``{k}`` items does not match number "
-                                   f"of ``image``, got: {len(v)} != {self.__len__()}")
+                raise RuntimeError(f"Datapoint modality ``{k}`` has inconsistent "
+                                   f"length with the dataset: {len(v)} != {self.__len__()}.")
         
         if self.verbose:
             log(f"Number of datapoints: {self.__len__()}.")
@@ -211,13 +224,11 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         Returns:
             A dictionary containing all modalities for the specified datapoint.
         """
-        datapoint = {}
-        for k, v in self.datapoints.items():
-            if v is not None:
-                datapoint[k] = v[index]
-            else:
-                datapoint[k] = None
-        return datapoint
+        # Efficiency: Use dict comprehension for faster construction
+        return {
+            k: (v[index] if v is not None else None)
+            for k, v in self._datapoints.items()
+        }
 
 
 # ==============================================================================

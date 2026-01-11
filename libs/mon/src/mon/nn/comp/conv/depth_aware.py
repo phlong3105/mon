@@ -11,6 +11,8 @@ References:
     - Code: https://github.com/laughtervv/DepthAwareCNN
 """
 
+from __future__ import annotations
+
 __all__ = [
     "DepthAwareAvgPool2d",
     "DepthAwareConv2d",
@@ -21,8 +23,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+# ==============================================================================
+# region DEPTH-AWARE LAYERS
+# ==============================================================================
+
 class DepthAwareConv2d(nn.Module):
-    """Depth-aware 2D convolutional layer."""
+    """A depth-aware 2D convolution operation.
+
+    This class performs convolution by considering depth similarity, enabling the
+    model to incorporate depth information into the convolution process. It modifies
+    the standard 2D convolution by weighting it with depth-aware factors computed
+    from the depth tensor.
+
+    Attributes:
+        conv (nn.Conv2d): Convolutional layer used to perform standard 2D convolution.
+        kernel_size (int): Size of the convolutional kernel.
+        padding (int): Padding size to be applied to the convolution operation.
+        alpha (float): Scaling factor for depth similarity computation.
+    """
     
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -30,54 +48,54 @@ class DepthAwareConv2d(nn.Module):
         in_channels : int,
         out_channels: int,
         kernel_size : int,
-        alpha       : float = 8.3,
         padding     : int   = 0,
+        alpha       : float = 8.3,
     ):
         """Initialize a new instance.
         
         Args:
             in_channels: Number of channels in the input image.
             out_channels: Number of channels produced by the convolution.
-            kernel_size: Size of the convolving kernel.
-            alpha: Scaling factor for depth similarity. Defaults to 8.3 (from paper).
+            kernel_size: Size of the convolutional kernel.
             padding: Padding size for the convolution. Defaults to 0.
+            alpha: Scaling factor for depth similarity. Defaults to 8.3 (from paper).
         """
         super().__init__()
         self.conv        = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
-        self.alpha       = alpha
         self.kernel_size = kernel_size
         self.padding     = padding
+        self.alpha       = alpha
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
         Args:
-            input: Input tensor with dimensions (B, C_in, H, W) and values
-                ranging from 0.0 to 1.0.
-            depth: Depth tensor with dimensions (B, 1, H, W) and values ranging
+            x: Input tensor with dimensions (B, C_in, H, W) and values ranging
+                from 0.0 to 1.0.
+            d: Depth tensor with dimensions (B, 1, H, W) and values ranging
                 from 0.0 to 1.0.
             
         Returns:
             Output tensor with dimensions (B, C_out, H_out, W_out) and values
-                ranging from 0.0 to 1.0.
+            ranging from 0.0 to 1.0.
         """
         # input: [b, channels, h, w]
         # depth: [b, 1,        h, w]
-        b, _, h, w = input.size()
+        b, _, h, w = x.size()
 
         # Extract patches for depth similarity computation
         h_kernel, w_kernel = self.kernel_size, self.kernel_size
-        padding            = self.padding
-        depth_padded       = F.pad(depth, (padding, padding, padding, padding), mode="replicate")
-        depth_unfolded     = F.unfold(depth_padded, kernel_size=(h_kernel, w_kernel), stride=1, padding=0)
-        depth_unfolded     = depth_unfolded.view(b, 1, h_kernel * w_kernel, h * w)
+        padding    = self.padding
+        d_padded   = F.pad(d, (padding, padding, padding, padding), mode="replicate")
+        d_unfolded = F.unfold(d_padded, kernel_size=(h_kernel, w_kernel), stride=1, padding=0)
+        d_unfolded = d_unfolded.view(b, 1, h_kernel * w_kernel, h * w)
 
         # Center depth values
-        depth_center = depth.view(b, 1, 1, h * w)
+        d_center = d.view(b, 1, 1, h * w)
 
         # Compute depth difference and similarity
-        depth_diff = depth_unfolded - depth_center
+        depth_diff = d_unfolded - d_center
         F_D = torch.exp(-self.alpha * torch.abs(depth_diff))  # [batch, 1, kernel_size^2, h*w]
 
         # Reshape F_D to match conv output for element-wise multiplication.
@@ -86,27 +104,41 @@ class DepthAwareConv2d(nn.Module):
         F_D = F_D[:, :, padding:h + padding, padding:w + padding]  # Adjust for padding
         
         # Apply depth similarity to standard convolution output
-        return self.conv(input) * F_D
+        return self.conv(x) * F_D
 
 
 class DepthAwareAvgPool2d(nn.Module):
-    """Depth-aware 2D average pooling layer."""
+    """Depth-aware average pooling for 2D input tensors.
+
+    This class implements a custom pooling layer that computes an average pooling
+    operation by incorporating depth similarity as a weighting factor. The
+    depth-aware pooling assigns higher weights to spatial values closer in depth,
+    resulting in a more contextually aware aggregation of features. It is
+    particularly useful for tasks that demand depth-awareness, such as depth-guided
+    segmentation or reconstruction.
+
+    Attributes:
+        kernel_size (int): Size of the pooling kernel.
+        stride (int): Stride of the pooling operation.
+        padding (int): Padding size for the pooling operation.
+        alpha (float): Scaling factor for depth similarity.
+    """
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         kernel_size: int,
-        alpha      : float = 8.3,
         stride     : int   = 1,
-        padding    : int   = 0
+        padding    : int   = 0,
+        alpha      : float = 8.3,
     ):
         """Initialize a new instance.
         
         Args:
             kernel_size: Size of the pooling kernel.
-            alpha: Scaling factor for depth similarity. Defaults to 8.3 (from paper).
             stride: Stride of the pooling operation. Defaults to 1.
             padding: Padding size for the pooling operation. Defaults to 0.
+            alpha: Scaling factor for depth similarity. Defaults to 8.3 (from paper).
         """
         super().__init__()
         self.kernel_size = kernel_size
@@ -115,53 +147,59 @@ class DepthAwareAvgPool2d(nn.Module):
         self.alpha       = alpha
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor, depth: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
         """Forward pass.
         
         Args:
-            input: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-            depth: Depth tensor with dimensions (B, 1, H, W) and values ranging
+            d: Depth tensor with dimensions (B, 1, H, W) and values ranging
                 from 0.0 to 1.0.
             
         Returns:
             Output tensor with dimensions (B, C, H_out, W_out) and values ranging
-                from 0.0 to 1.0.
+            from 0.0 to 1.0.
         """
         # input: [b, c, h, w]
         # depth: [b, 1, h, w]
-        b, c, h, w = input.size()
+        b, c, h, w = x.size()
 
-        # Pad depth and input for pooling
-        depth_padded = F.pad(depth, (self.padding, self.padding, self.padding, self.padding), mode="replicate")
-        input_padded = F.pad(input, (self.padding, self.padding, self.padding, self.padding), mode="replicate")
-
+        # Pad input and depth for pooling
+        x_padded = F.pad(x, (self.padding, self.padding, self.padding, self.padding), mode="replicate")
+        d_padded = F.pad(d, (self.padding, self.padding, self.padding, self.padding), mode="replicate")
+        
         # Extract patches using unfold
-        input_unfolded = F.unfold(input_padded, kernel_size=self.kernel_size, stride=self.stride)
-        depth_unfolded = F.unfold(depth_padded, kernel_size=self.kernel_size, stride=self.stride)
+        x_unfolded = F.unfold(x_padded, kernel_size=self.kernel_size, stride=self.stride)
+        d_unfolded = F.unfold(d_padded, kernel_size=self.kernel_size, stride=self.stride)
 
         # Reshape for computation
-        b, c_in, h_out, w_out = input_unfolded.size(0), input_unfolded.size(1) // (self.kernel_size * self.kernel_size), input_unfolded.size(2), 1
-        input_unfolded = input_unfolded.view(b, c, self.kernel_size * self.kernel_size, h_out * w_out)
-        depth_unfolded = depth_unfolded.view(b, 1, self.kernel_size * self.kernel_size, h_out * w_out)
+        b, c_in, h_out, w_out = x_unfolded.size(0), x_unfolded.size(1) // (self.kernel_size * self.kernel_size), x_unfolded.size(2), 1
+        x_unfolded = x_unfolded.view(b, c, self.kernel_size * self.kernel_size, h_out * w_out)
+        d_unfolded = d_unfolded.view(b, 1, self.kernel_size * self.kernel_size, h_out * w_out)
 
         # Center depth values
-        depth_center = depth.unfold(2, self.stride, self.stride).unfold(3, self.stride, self.stride)
-        depth_center = depth_center.contiguous().view(b, 1, 1, h_out * w_out)
+        d_center = d.unfold(2, self.stride, self.stride).unfold(3, self.stride, self.stride)
+        d_center = d_center.contiguous().view(b, 1, 1, h_out * w_out)
 
         # Compute depth similarity
-        depth_diff = depth_unfolded - depth_center
-        F_D = torch.exp(-self.alpha * torch.abs(depth_diff))  # [b, 1, kernel_size^2, h_out*w_out]
+        d_diff = d_unfolded - d_center
+        F_D    = torch.exp(-self.alpha * torch.abs(d_diff))  # [b, 1, kernel_size^2, h_out*w_out]
 
         # Weighted average pooling
-        weighted_sum = torch.sum(F_D * input_unfolded, dim=2, keepdim=True)  # Sum over kernel
+        weighted_sum = torch.sum(F_D * x_unfolded, dim=2, keepdim=True)  # Sum over kernel
         fd_sum       = torch.sum(F_D, dim=2, keepdim=True)  # Normalize
-        output       = weighted_sum / (fd_sum + 1e-8)       # Avoid division by zero
+        y            = weighted_sum / (fd_sum + 1e-8)       # Avoid division by zero
         
         # Reshape to [b, c, h_out, w_out]
-        output = output.view(b, c, h_out, w_out)
-        return output
+        y = y.view(b, c, h_out, w_out)
+        return y
 
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
 
 if __name__ == "__main__":
     # Test DepthAwareConv2d
@@ -176,3 +214,5 @@ if __name__ == "__main__":
     dap        = DepthAwareAvgPool2d(kernel_size=3, padding=1)
     out_pool   = dap(x, depth)
     print("DepthAwareAvgPool2d output shape:", out_pool.shape)  # Expected: [b, c, h, w]
+
+# endregion

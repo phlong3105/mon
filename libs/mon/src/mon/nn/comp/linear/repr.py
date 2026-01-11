@@ -16,6 +16,8 @@ __all__ = [
     "SineLinearBN",
 ]
 
+from __future__ import annotations
+
 import numpy as np
 import torch
 import torch.nn as nn

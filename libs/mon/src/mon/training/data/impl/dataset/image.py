@@ -19,11 +19,11 @@ import box
 import numpy as np
 import torch
 
-from mon.core import create_progress_bar, log, Path, Split, Task
+from mon.core import create_progress_bar, log, Path, Split
 from mon.core.dtypes import ClassList, Image
 from mon.training.augment import albumentations as A
 from ...base import Dataset, Modalities, Modality
-from ...comp import BatchCollateMixin, MultimodalDataLoadMixin, RegistrableMixin
+from ...comp import BatchCollateMixin, MultimodalDataLoadMixin
 
 
 # ==============================================================================
@@ -32,7 +32,6 @@ from ...comp import BatchCollateMixin, MultimodalDataLoadMixin, RegistrableMixin
 
 class ImageDataset(
     Dataset,
-    RegistrableMixin,
     MultimodalDataLoadMixin,
     BatchCollateMixin
 ):
@@ -50,8 +49,6 @@ class ImageDataset(
             this attribute defines the actual folder name of the sub-dataset
             within the root directory (e.g., dataset with multiple versions).
             Defaults to None and should be overridden in subclasses.
-        _tasks (list[Task]): A list of supported tasks. Defaults to an empty
-            list and should be overridden in subclasses.
         _splits (list[Split]): A list of supported splits. This is used to
             validate the given attribute ``split``. Defaults to all four splits:
             Split.TRAIN, Split.VAL, Split.TEST, and Split.PREDICT. Should be
@@ -67,7 +64,6 @@ class ImageDataset(
     """
     
     _subset    : str         = None
-    _tasks     : list[Task]  = []
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
     _modalities: Modalities  = {
         "image": Modality(name="image", type="image", module=Image, train=True, test=True, primary=True),
@@ -100,9 +96,11 @@ class ImageDataset(
             ValueError: If ``modalities`` has no defined attributes.
         """
         # Validate modalities
-        if not self.modalities:
-            raise ValueError("``modalities`` has no defined attributes.")
+        if not self._modalities:
+            raise ValueError("Expected 'modalities' to have at least one attribute,"
+                             " but got empty.")
         
+        # Continue the initialization chain
         super().__init__(
             root      = root,
             split     = split,
@@ -118,41 +116,49 @@ class ImageDataset(
     
     # --- Representation ---
     def __repr__(self) -> str:
-        """Return the string representation of the dataset."""
+        """Official string representation for developers (eval-able)."""
         lines  = ["Dataset " + self.__class__.__name__]
         lines += [f"Number of datapoints: {self.__len__()}"]
-        if self.root:
-            lines += [f"Root location: {self.root}"]
-        if hasattr(self, "transform") and self.transform:
-            lines += [repr(self.transform)]
+        if self._root:
+            lines += [f"Root location: {self._root}"]
+        if self._transform:
+            lines += [repr(self._transform)]
         return "\n".join(lines)
     
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
-        """Return the length of the dataset (i.e., number of datapoints)."""
-        pk, _ = self.primary_modality
-        return len(self.datapoints[pk])
+        """Return the length of the container (i.e., number of datapoints)."""
+        # Optimization: Use the internal dict directly to avoid property overhead
+        # and search only for the primary modality key once.
+        pk = next(k for k, v in self._modalities.items() if v.primary)
+        return len(self._datapoints[pk])
     
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Return the datapoint at the specified ``index`` in ``_datapoints``.
-        
-        Args:
-            index: Index of datapoint.
-            
-        Returns:
-            A dictionary containing the datapoint and its metadata.
-        """
+        """Define behavior for when an item is accessed via the notation self[index]."""
+        # Fetch datapoint
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
         
-        if self._transform:
-            pk, _          = self.primary_modality
-            args           = {k: v for k, v in data.items() if v is not None}
-            args["image"]  = args.pop(pk)
-            augmented      = self._transform(**args)
-            augmented[pk]  = augmented.pop("image")
-            data          |= augmented
-            # Post-processing
+        transform = self._transform
+        
+        if transform:
+            pk, _ = self.primary_modality
+            
+            # Albumentations expects 'image'. We map pk -> 'image' without pop/merge overhead.
+            if pk != "image":
+                data["image"] = data.pop(pk)
+            
+            # Filter None values efficiently
+            augmented = transform(**{k: v for k, v in data.items() if v is not None})
+            
+            # Revert 'image' back to the primary modality key if necessary
+            if pk != "image":
+                augmented[pk] = augmented.pop("image")
+            
+            # Update data in-place (Faster than |= for small dicts)
+            data.update(augmented)
+            
+            # Optimized Type Casting
             for k, v in data.items():
                 # Converts non‑float tensors/arrays to float32
                 if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
@@ -160,7 +166,7 @@ class ImageDataset(
                 elif isinstance(v, np.ndarray) and v.dtype != np.float32:
                     data[k] = v.astype(np.float32)
                     
-        return data | {"meta": meta}
+        return {**data, "meta": meta}
     
     # --- Properties ---
     @property
@@ -169,36 +175,38 @@ class ImageDataset(
         return self._transform
     
     @transform.setter
-    def transform(self, transform: Any = None):
-        """Setter for transformation operations.
+    def transform(self, value: Any = None):
+        """Set the transformation operations.
         
         Args:
-            transform: Transformations to apply.
+            value: Transformations to apply.
             
         Raises:
             TypeError: If ``transform`` is not None or an instance of
                 albumentations.Compose.
         """
-        if isinstance(transform, dict | box.Box):
-            transform = A.Compose(**transform)
-        if transform is not None and not isinstance(transform, A.Compose):
-            raise TypeError(f"``transform`` must be None or an instance of "
-                            f"albumentations.Compose, got: {type(transform)}.")
+        if value is None:
+            self._transform = None
+            return
+        
+        if isinstance(value, (dict, box.Box)):
+            value = A.Compose(**value)
+        if not isinstance(value, A.Compose):
+            raise TypeError(f"Expected 'transform' to be either None, a dict/box.Box, "
+                            f"or an instance of albumentations.Compose, but got "
+                            f"{type(value).__name__}.")
         
         # Add additional targets to A.Compose if needed.
-        if transform:
-            additional_targets = {}
-            # Adds modality‑specific transform targets if needed
-            for k, v in self.modalities.items():
-                if v.type is None or v.module is None:
-                    continue
-                if (k not in A.TARGET_TYPES and
-                    k not in transform.additional_targets):
-                    additional_targets[k] = v.type
-            if len(additional_targets) > 0:
-                transform.add_targets(additional_targets=additional_targets)
+        existing_targets = value.processors.get("additional_targets", {})
+        new_targets = {
+            k: v.type for k, v in self._modalities.items()
+            if v.type and v.module and k not in A.TARGET_TYPES and k not in existing_targets
+        }
         
-        self._transform = transform
+        if new_targets:
+            value.add_targets(additional_targets=new_targets)
+        
+        self._transform = value
     
     # --- Data Loading ---
     def verify(self):
@@ -211,16 +219,16 @@ class ImageDataset(
             raise RuntimeError("No datapoints in the dataset!")
         
         pk, _ = self.primary_modality
-        for k, v in self.datapoints.items():
-            if k not in self.modalities:
-                raise RuntimeError(f"Modality ``{k}`` is not defined in ``modalities``. "
-                                   f"Define it in the class if intentional.")
-            if self.modalities[k]:
+        for k, v in self._datapoints.items():
+            if k not in self._modalities:
+                raise RuntimeError(f"Expected 'datapoints' to have only defined "
+                                   f"modalities, but got unexpected key: {k}")
+            if self._modalities[k]:
                 if v in [None, []]:
-                    raise RuntimeError(f"``datapoints`` has no ``{k}`` attributes!")
+                    raise RuntimeError(f"Datapoint modality ``{k}`` is empty!")
                 elif len(v) != self.__len__():
-                    raise RuntimeError(f"Number of ``{k}`` items does not match number "
-                                       f"of ``{pk}``, got: {len(v)} != {self.__len__()}")
+                    raise RuntimeError(f"Datapoint modality ``{k}`` has inconsistent"
+                                       f"length with the dataset: {len(v)} != {self.__len__()}.")
         
         if self.verbose:
             log(f"Number of {self.split_str} datapoints: {self.__len__()}.")
@@ -235,13 +243,11 @@ class ImageDataset(
         Returns:
             A dictionary containing all modalities for the specified datapoint.
         """
-        datapoint = {}
-        for k, v in self.datapoints.items():
-            if v is not None:
-                datapoint[k] = v[index]
-            else:
-                datapoint[k] = None
-        return datapoint
+        # Efficiency: Use dict comprehension for faster construction
+        return {
+            k: (v[index] if v is not None else None)
+            for k, v in self._datapoints.items()
+        }
 
 
 # ==============================================================================
@@ -299,22 +305,30 @@ class ImageLoader(ImageDataset):
         Raises:
             IOError: If the ``root`` path is invalid.
         """
-        root = self.root
+        root = self._root
+        
         if root.is_image_file():
             paths = [root]
+        elif "*" in str(root):
+            # Using iglob (iterator) is more memory efficient than glob.glob
+            paths = [Path(p) for p in glob.iglob(str(root), recursive=True)]
         elif root.is_dir() and root.exists():
             paths = list(root.rglob("*"))
-        elif "*" in str(root):
-            paths = [Path(i) for i in glob.glob(str(root))]
         else:
-            raise IOError(f"Invalid root path: {root}")
+            raise IOError(f"Invalid 'root' path: {root}")
+        
+        if not paths:
+            return []
         
         images: list[Image] = []
-        with create_progress_bar(disable=self.disable_pbar) as pbar:
+        disable_pbar = self.disable_pbar
+        split_str    = self.split_str
+        
+        with create_progress_bar(disable=disable_pbar) as pbar:
             paths = sorted(paths)
-            desc  = f"Listing {self.__class__.__name__} {self.split_str} image(s)"
+            desc  = f"Listing {self.__class__.__name__} {split_str} image(s)"
             for path in pbar.track(sequence=paths, description=desc):
-                if path.is_image_file():
+                if path.is_image_file(exist=True):
                     images.append(Image(data=path, root=root))
         
         return images

@@ -64,24 +64,33 @@ class BatchCollateMixin:
         Returns:
             Collated dictionary for torch.utils.data.dataset.DataLoader.
         """
-        zipped = {
-            k: list(v)
-            for k, v in zip(batch[0].keys(), zip(*[b.values() for b in batch]))
-        }
+        if not batch:
+            return {}
         
-        for k, v in zipped.items():
-            # Skip certain keys
-            if k in ["meta"]:
+        # Faster Transposition: Group items by key
+        # This replaces the complex zip(*[b.values()]) logic
+        keys     = batch[0].keys()
+        collated = {k: [d[k] for d in batch] for k in keys}
+        
+        for k, v in collated.items():
+            # Immutability for metadata
+            if k == "meta":
+                collated[k] = tuple(v)  # Freeze metadata to prevent runtime modification
                 continue
-            # Collates datapoints into stacked tensors or arrays
-            if v is None:
-                zipped[k] = None
-            elif all(isinstance(i, torch.Tensor) for i in v):
-                zipped[k] = torch.stack(v, dim=0)
-            elif all(isinstance(i, np.ndarray) for i in v):
-                zipped[k] = np.stack(v, axis=0)
+            
+            # Performance: O(1) Type Checking
+            # We check only the first element, assuming batch homogeneity
+            first_item = v[0]
+            
+            if first_item is None:
+                collated[k] = None
+            elif isinstance(first_item, torch.Tensor):
+                collated[k] = torch.stack(v, dim=0)
+            elif isinstance(first_item, np.ndarray):
+                collated[k] = np.stack(v, axis=0)
+            # v remains a list for other types (like strings or custom objects)
         
-        return zipped
+        return collated
 
 
 # --- Parallelize (Multi-processing/threading logic) ---

@@ -7,6 +7,8 @@ This module provides pure functions that perform a single mathematical or
 structural change to the contours.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "convert",
     "denormalize",
@@ -15,42 +17,90 @@ __all__ = [
 
 import numpy as np
 
+from mon.core.dtypes import image as I
 from mon.core.enum import BBoxFormat
-from .. import image as I
 
 
 # ==============================================================================
-# VALIDATION & SANITIZATION (Integrity Checks)
+# region CREATION
 # ==============================================================================
 
-# --- Verify (Schema and range checking) ---
 
-
-# --- Clean (Fixing corrupt values/nulls) ---
+# endregion
 
 
 # ==============================================================================
-# CONVERSIONS (Backend Interop)
+# region VALIDATION
 # ==============================================================================
 
-# --- Formats (Channel shuffling) ---
 
-
-# --- Types (Data type casting) ---
+# endregion
 
 
 # ==============================================================================
-# GEOMETRIC TRANSFORMATIONS (Resizing, Warping)
+# region RETRIEVAL
 # ==============================================================================
 
-# --- Analytics (Area, Perimeter, Centroid calculations) ---
+# --- Accessing ---
 
 
-# --- Metrics ---
+# --- Selection ---
 
 
-# --- Project (Affine, Perspective, and Coordinate space transforms) ---
-def convert(contour: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.ndarray:
+# --- Aggregation ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region MUTATION
+# ==============================================================================
+
+# --- Alternation ---
+
+
+# --- Rearrangement ---
+
+
+# --- Addition ---
+
+
+# --- Removal ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region COMPUTATION
+# ==============================================================================
+
+# --- Arithmetic ---
+
+
+# --- Comparison ---
+
+
+# --- Logical ---
+
+
+# --- Geometric ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region TRANSFORMATION
+# ==============================================================================
+
+# --- Casting ---
+def convert(
+    contour: np.ndarray,
+    fmt    : BBoxFormat,
+    imgsz  : tuple[int, int]
+) -> np.ndarray:
     """Convert contour points between supported formats.
 
     Dispatch conversion based on the provided BBoxFormat. Supported conversions
@@ -75,14 +125,16 @@ def convert(contour: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.
             return contour
 
 
-# --- Reshape (Resize, Crop, Padding) ---
+# --- Encoding ---
 
 
-# ==============================================================================
-# STATISTICAL OPERATIONS (Normalization, Scaling)
-# ==============================================================================
+# --- Standardization ---
 
-# --- Normalize (Mean/Std, Min-Max scaling) ---
+
+# --- Structural ---
+
+
+# --- Statistical ---
 def normalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Normalize contour points to the range [0, 1].
 
@@ -96,13 +148,21 @@ def normalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
 
     Returns:
         Normalized contour points a numpy.ndarray of shape (N, 2) with values
-        in the range [0, 1].
+            in the range [0, 1].
     """
-    h0, w0   = I.imgsz(imgsz)
-    x, y, *_ = contour.T
-    x_norm   = x / w0
-    y_norm   = y / h0
-    return np.stack((x_norm, y_norm), axis=-1)
+    # Standardize image size
+    h, w = I.imgsz(imgsz)
+    
+    # Standardize input to (N, 2)
+    orig_shape = contour.shape
+    contour    = contour.reshape(-1, 2)
+    
+    # Vectorized division: [x, y] / [w, h]
+    # Adding epsilon 1e-7 prevents division by zero
+    scale      = np.array([w, h], dtype=np.float32)
+    normalized = contour.astype(np.float32) / (scale + 1e-7)
+    
+    return normalized.reshape(orig_shape)
 
 
 def denormalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
@@ -112,15 +172,36 @@ def denormalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     using the provided image size.
 
     Args:
-        contour: Normalized contour points as a numpy.ndarray with shape (N, 2)
-            with values in the range [0, 1].
+        contour: Normalized contour points as a numpy.ndarray of shape (N, 2)
+            and values ranging from 0.0 to 1.0
         imgsz: Image size as (H, W).
 
     Returns:
         Denormalized contour points in pixel coordinates.
     """
-    h0, w0 = I.imgsz(imgsz)
-    x_n, y_n, *_ = contour.T
-    x = x_n * w0
-    y = y_n * h0
-    return np.stack((x, y), axis=-1)
+    # Standardize image size
+    h, w = I.imgsz(imgsz)
+    
+    # Standardize input to (N, 2)
+    orig_shape = contour.shape
+    contour    = contour.reshape(-1, 2)
+    
+    # Vectorized multiplication: [x_norm, y_norm] * [w, h]
+    scale        = np.array([w, h], dtype=np.float32)
+    denormalized = contour * scale
+    
+    return denormalized.reshape(orig_shape)
+
+
+# --- Geometric ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region DESTRUCTION
+# ==============================================================================
+
+
+# endregion

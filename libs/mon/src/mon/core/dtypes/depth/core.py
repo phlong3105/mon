@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Depth base classes and mixins.
+"""Depth data structures.
 
 This module provides the base classes and mixins for depth data.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "DepthMap",
@@ -12,38 +14,49 @@ __all__ = [
 
 import cv2
 
+from mon.core.constants import SOURCE
+from mon.core.dtypes.image import Image
 from mon.core.enum import DepthSource
-from ..image import Image
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
 class DepthMap(Image):
     """A basic class for managing a depth map.
 
@@ -51,13 +64,13 @@ class DepthMap(Image):
     related to depth data.
 
     Attributes:
-        _source (DepthSource): The depth data source.
+        _source (DepthSource): Source of the depth data.
     """
     
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        source: DepthSource = DepthSource.DAv2_ViTB,
+        source: DepthSource = SOURCE.DEPTH,
         flags : int         = cv2.IMREAD_GRAYSCALE,
         *args, **kwargs
     ):
@@ -68,21 +81,17 @@ class DepthMap(Image):
             flags: OpenCV flag to read the depth map. Defaults to cv2.IMREAD_GRAYSCALE.
             *args: Additional positional arguments forwarded to Image.
             **kwargs: Additional keyword arguments forwarded to Image.
-
-        Raises:
-            ValueError: If ``source`` is not a valid DepthSource.
         """
-        # Validate inputs
-        source = DepthSource(source)
-        if source not in DepthSource:
-            raise ValueError(f"``source`` must be one of {DepthSource}, got {source}.")
-            
-        # Initialize parent classes and assign attributes
-        self._source = source
-        super().__init__(flags=flags, *args, **kwargs)  # This will call the data setter
+        # Validate and set the depth source
+        self._source = DepthSource(source)
+        
+        # Continue the initialization chain
+        super().__init__(flags=flags, *args, **kwargs)
         
     # ---- Properties ---
     @property
     def source(self) -> DepthSource:
         """Return the depth data source."""
         return self._source
+
+# endregion

@@ -1,34 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Bounding box data type.
+"""Bounding box toolkit.
 
-This package contains a "full-stack" toolkit for bounding box data, including
-data structure, ingestion, analysis, atomic transformations, complex workflows,
-and rendering utilities.
+This package contains a "full-stack" toolkit for bounding box, including
+data structure, I/O operations, atomic operations, execution logic, and
+debugging utilities.
 
 Notes:
     - Design Pattern: Toolkit Pattern.
-    - Goal: Encapsulate related functionalities for a specific data type or
-      domain within a single package.
+    - Goal: Encapsulate related functionalities for a specific data type.
     - Structure:
         ::
-
-            toolkit/           # A "Toolkit" for a specific data type
+        
+            bbox/
             ├── __init__.py    # Exposes all
+            ├── api.py         # External APIs
             ├── core.py        # Base classes and mixins
-            ├── io.py          # Resource management
-            ├── meta.py        # Discovery and lookup
-            ├── ops.py         # Utility and algorithm
-            ├── proc.py        # Workflow orchestration
-            └── vis.py         # UI/UX rendering
+            ├── io.py          # I/O operations
+            ├── ops.py         # Atomic operations
+            ├── proc.py        # Execution logic
+            └── debug.py       # Debugging utilities
 """
+
+from __future__ import annotations
 
 # __all__ = []  # Prevent accidental imports of submodules.
 
 from .core import *
+from .debug import *
 from .io import *
-from .meta import *
 from .ops import *
 from .proc import *
-from .vis import *

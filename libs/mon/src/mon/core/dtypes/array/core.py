@@ -3,9 +3,10 @@
 
 """Array-like base classes and mixins.
 
-This module provides the base classes and mixins for array-like data types
-which can be a torch.Tensor or numpy.ndarray.
+This module provides the base classes and mixins for array-like data.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "TensorOrArray",
@@ -14,45 +15,55 @@ __all__ = [
 import numpy as np
 import torch
 
-from ..base import Data, DeviceManagementMixin
+from mon.core.dtypes.base import Data, DeviceManagementMixin
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
 class TensorOrArray(Data, DeviceManagementMixin):
-    """A basic class for tensor-like or ndarray-like data types.
-    
+    """Tensor-like or ndarray-like data structure.
+
     Extend Data to handle either torch.Tensor or numpy.ndarray and provide
     properties and methods related to both data types.
-    
+
     Attributes:
-        _data (np.ndarray | torch.Tensor): Either a torch.Tensor or numpy.ndarray.
+        _data (torch.Tensor | numpy.ndarray): Underlying data object.
     """
     
     # --- Lifecycle & Initialization ---
@@ -61,23 +72,28 @@ class TensorOrArray(Data, DeviceManagementMixin):
 
         Args:
             data: Either a torch.Tensor or numpy.ndarray.
+            *args: Positional arguments.
+            **kwargs: Keyword arguments.
         """
-        # Initialize parent classes and assign attributes
-        super().__init__(data=data)  # This will call the data setter
+        # Call the setter to ensure type validation on init
+        self.data = data
+        
+        # Continue the initialization chain
+        super().__init__(data=self.data, *args, **kwargs)
 
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
-        """Return the logical length."""
+        """Return the length of the container."""
         return len(self.data)
 
-    def __getitem__(self, idx: int | list[int] | torch.Tensor) -> "TensorOrArray":
-        """Return element(s) at the given index.
-
-        Args:
-            idx: Index or slice to select from the underlying data.
-        """
-        return self.__class__(self.data[idx])
-
+    def __getitem__(self, index: int | slice | list[int] | np.ndarray | torch.Tensor) -> TensorOrArray:
+        """Define behavior for when an item is accessed via the notation self[index]."""
+        item = self.data[index]
+        # Handle numpy scalars which are not ndarray instances
+        if isinstance(item, (np.generic, int, float, bool)) and not isinstance(item, np.ndarray):
+             item = np.array(item)
+        return self.__class__(item)
+    
     # --- Properties ---
     @property
     def data(self) -> np.ndarray | torch.Tensor:
@@ -85,50 +101,70 @@ class TensorOrArray(Data, DeviceManagementMixin):
         return self._data
 
     @data.setter
-    def data(self, data: np.ndarray | torch.Tensor):
+    def data(self, value: np.ndarray | torch.Tensor):
         """Set the underlying data.
 
         Args:
-            data: New data to store.
+            value: New data to store.
 
         Raises:
             TypeError: If ``data`` is not a torch.Tensor or numpy.ndarray.
         """
-        if not isinstance(data, (torch.Tensor, np.ndarray)):
-            raise TypeError(f"``data`` must be a torch.Tensor or numpy.ndarray, got {type(data)}.")
-        self._data = data
-
+        if not isinstance(value, (np.ndarray, torch.Tensor)):
+            raise TypeError(
+                f"Expected 'value' to be a torch.Tensor or numpy.ndarray, "
+                f"but got {type(value).__name__}."
+            )
+        self._data = value
+    
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the data shape."""
         return self.data.shape
-
+    
     @property
     def meta(self) -> dict:
-        """Return the metadata."""
+        """Return metadata describing the data."""
         return {
             "shape": self.shape,
             "dtype": self.data.dtype,
             "type" : type(self.data),
         }
-
+    
     # --- Device Management ---
-    def cpu(self) -> "TensorOrArray":
+    def to(self, *args, **kwargs) -> TensorOrArray:
+        """Move or cast data to a specific device (cpu, cuda, mps, etc.),
+        ensuring NumPy input is upgraded to Tensor.
+        """
+        new_data = self.data
+        if isinstance(new_data, np.ndarray):
+            new_data = torch.as_tensor(new_data)
+        return self.__class__(new_data.to(*args, **kwargs))
+
+    def cpu(self) -> TensorOrArray:
         """Move data to CPU."""
-        return self if isinstance(self.data, np.ndarray) else self.__class__(self.data.cpu())
-
-    def cuda(self) -> "TensorOrArray":
-        """Move data to GPU."""
         if isinstance(self.data, np.ndarray):
+            return self
+        return self.__class__(self.data.cpu())
+    
+    def cuda(self) -> TensorOrArray:
+        """Move data to GPU, ensuring NumPy arrays are converted to Tensors."""
+        if isinstance(self.data, np.ndarray):
+            # torch.as_tensor is safer than torch.tensor as it avoids copying if possible
             return self.__class__(torch.as_tensor(self.data).cuda())
-        else:
-            return self.__class__(self.data.cuda())
-
-    def numpy(self) -> "TensorOrArray":
+        return self.__class__(self.data.cuda())
+    
+    def mps(self) -> TensorOrArray:
+        """Move data to MPS."""
+        if isinstance(self.data, np.ndarray):
+            return self.__class__(torch.as_tensor(self.data).to("mps"))
+        return self.__class__(self.data.to("mps"))
+    
+    def numpy(self) -> TensorOrArray:
         """Convert data to numpy."""
-        return self if isinstance(self.data, np.ndarray) else self.__class__(self.data.numpy())
+        if isinstance(self.data, np.ndarray):
+            return self
+        # .detach() is vital if the tensor is part of a computation graph
+        return self.__class__(self.data.detach().cpu().numpy())
 
-    def to(self, *args, **kwargs) -> "TensorOrArray":
-        """Move or cast data."""
-        return self.__class__(torch.as_tensor(self.data).to(*args, **kwargs))
-
+# endregion

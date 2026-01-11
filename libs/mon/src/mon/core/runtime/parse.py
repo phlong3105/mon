@@ -7,6 +7,8 @@ This module provides helpers to build, parse, and merge CLI arguments for
 runtime workflows.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "parse_cli_args",
     "parse_default_args",
@@ -19,6 +21,7 @@ import socket
 
 import box
 
+from mon.core.console import console
 from mon.core.device import parse_device
 from mon.core.dtypes import image as I
 from mon.core.pathlib import Path
@@ -38,7 +41,7 @@ from .utils import (
 # ==============================================================================
 
 # --- Argument Reflection (Building argparse from metadata) ---
-def parse_default_args(name: str = "main") -> dict | box.Box:
+def parse_default_args(name: str = "main") -> box.Box:
     """Build and parse default CLI arguments.
 
     Construct an ArgumentParser from CLI_OPTIONS and return parsed args.
@@ -52,47 +55,40 @@ def parse_default_args(name: str = "main") -> dict | box.Box:
     parser = argparse.ArgumentParser(description=name)
     
     for opt_name, opt_params in CLI_OPTIONS.items():
-        action      = opt_params.get("action",      "store")
-        default     = opt_params.get("default",     None)
-        opt_type    = opt_params.get("type",        None)
-        choices     = opt_params.get("choices",     None)
-        required    = opt_params.get("required",    False)
-        help_text   = opt_params.get("help",        "")
-        prompt_only = opt_params.get("prompt_only", False)  # Use in interactive CLI only, not parse_args
-        
-        if prompt_only:
+        if opt_params.get("prompt_only", False):
             continue
-        '''
-        if opt_type == bool and default is None:
-            default = False
-        if action == "store_true" and default is None:
-            default = False
-        if action == "store_false" and default is None:
-            default = True
-        '''
         
+        action = opt_params.get("action", "store")
         kwargs = {
             "action"  : action,
-            "default" : default,
-            "required": required,
-            "help"    : help_text,
+            "help"    : opt_params.get("help", ""),
+            "required": opt_params.get("required", False),
         }
+        
+        # Boolean actions (store_true/store_false) do not take 'type' or 'choices'
         if action in ["store_true", "store_false"]:
-            kwargs.pop("default")
-            # kwargs["default"] = False if action == "store_true" else True
-        if opt_type:
-            kwargs["type"] = opt_type
-        if choices:
-            kwargs["choices"] = choices
+            # Default is usually False for store_true, True for store_false
+            kwargs["default"] = opt_params.get("default", action == "store_false")
+        else:
+            if "type" in opt_params:
+                kwargs["type"] = opt_params["type"]
+            if "choices" in opt_params:
+                kwargs["choices"] = opt_params["choices"]
+            kwargs["default"] = opt_params.get("default", None)
+        
         flag = f"--{opt_name.replace('_', '-')}"
         parser.add_argument(flag, **kwargs)
-
+        
     parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Additional arguments")
     return box.Box(vars(parser.parse_args()))
-
+    
 
 # --- CLI Orchestration (Handling the switch between direct and interactive) ---
-def parse_cli_args(cli: box.Box = None, root: Path = None, name: str = "main") -> dict | box.Box:
+def parse_cli_args(
+    cli : box.Box | None = None,
+    root: Path | None    = None,
+    name: str            = "main"
+) -> box.Box:
     """Parse CLI arguments and optionally run the interactive prompt.
 
     If the interactive flag is present, launch RunCLI to gather values.
@@ -105,12 +101,21 @@ def parse_cli_args(cli: box.Box = None, root: Path = None, name: str = "main") -
     Returns:
         Normalized CLI arguments.
     """
-    cli      = cli      or parse_default_args(name)  # Direct CLI
-    cli.root = cli.root or root
-    cli.root = Path(cli.root) if cli.root else None
-    if cli.p:  # Interactive CLI
+    # Initialize CLI if not provided
+    cli = cli or parse_default_args(name)
+    
+    # Path Normalization
+    # Prioritize root passed to function, then root in cli, then current working dir
+    raw_root = root or cli.get("root") or Path.cwd()
+    cli.root = Path(raw_root).resolve()
+    
+    # Interactive Switch
+    # Assuming 'p' is the flag for --prompt
+    if cli.get("p", False):
+        # RunCLI should return a updated box.Box
         cli   = RunCLI(cli).prompt()
-        cli.p = False  # Disable prompt flag after use
+        cli.p = False  # Prevent re-triggering
+    
     return cli
 
 
@@ -120,11 +125,11 @@ def parse_cli_args(cli: box.Box = None, root: Path = None, name: str = "main") -
 
 # --- Train Logic ---
 def parse_train_args(
-    cli       : box.Box = None,
-    root      : Path    = None,
-    model_root: Path    = None,
-    verbose   : bool    = False
-) -> dict | box.Box:
+    cli       : box.Box | None = None,
+    root      : Path | None    = None,
+    model_root: Path | None    = None,
+    verbose   : bool           = False
+) -> box.Box:
     """Parse and prepare training arguments.
 
     Merge CLI and config values, resolve paths and devices, and prepare the
@@ -139,53 +144,58 @@ def parse_train_args(
     Returns:
         Finalized training arguments.
     """
-    # CLI
-    cli        = parse_cli_args(cli, root=root)
-    cli.config = parse_config_file(cli.config, cli.root, model_root=model_root)
+    # Resolve CLI and Config Path
+    cli         = parse_cli_args(cli, root=root)
+    config_path = parse_config_file(cli.config, cli.root, model_root=model_root)
     
-    # Args
-    args = load_config(cli.config, verbose=verbose)
+    # Load and Merge
+    args = load_config(config_path, verbose=verbose)
     args = merge_dicts(args, cli)  # Prioritize cli -> args
-   
-    if args.fullname in [None, "None", ""]:
-        args.fullname = args.model
-        
-    if args.save_dir in [None, ""]:
-        if args.use_fullname:
-            args.save_dir = parse_save_dir(args.root/"run"/"train", args.arch, args.model, args.fullname)
-            # args.save_dir = _utils.parse_save_dir(root/"run"/"train", arch, fullname, None)
-        else:
-            args.save_dir = parse_save_dir(args.root/"run"/"train", args.arch, args.model, args.data)
+    
+    # Name and Directory Resolution
+    args.fullname = args.fullname or args.model or "unnamed_run"
+    
+    if not args.save_dir:
+        base_run_dir  = args.root / "run" / "train"
+        # Determine subdir based on user preference
+        subdir        = args.fullname if args.use_fullname else args.data
+        args.save_dir = parse_save_dir(base_run_dir, args.arch, args.model, subdir)
     else:
         args.save_dir = Path(args.save_dir)
-        # if str("run/train") not in str(args.save_dir):
-        #     args.save_dir = pathlib.Path(f"run/train/{args.save_dir}")
-        # if str(args.root) not in str(args.save_dir):
-        #     args.save_dir = args.root / args.save_dir
-
+    
+    # Resource Resolution
     args.hostname = socket.gethostname().lower()
-    args.weights  = parse_weights_file(args.root, args.weights)
-    args.resume   = parse_weights_file(args.root, args.resume)
-    args.tuning   = parse_weights_file(args.root, args.tuning)
     args.device   = parse_device(args.device)
-
-    # Save config file
-    if not args.exist_ok:
-        args.save_dir.rmdir()
+    # Resolve all potential weight paths
+    for key in ["weights", "resume", "tuning"]:
+        if key in args:
+            args[key] = parse_weights_file(args.root, args[key])
+           
+    # Save Directory Preparation (Atomic & Safe)
+    if args.save_dir.exists() and not args.exist_ok:
+        args.save_dir.rmdir(recursive=True)
+    
     args.save_dir.mkdir(parents=True, exist_ok=True)
-    if args.config and args.config.is_config_file():
-        args.config.copy_to(dst=args.save_dir / f"{args.config.name}")
-
+    
+    # Artifact Logging
+    if config_path and config_path.exists():
+        # Copying the config to the run dir ensures reproducibility
+        config_path.copy_to(dst=args.save_dir / config_path.name)
+        args.cli = config_path
+        
+    if verbose:
+        console.log(f"[green]Run directory:[/green] {args.save_dir}")
+        
     return args
 
 
 # --- Predict Logic ---
 def parse_predict_args(
-    cli       : box.Box = None,
-    root      : Path    = None,
-    model_root: Path    = None,
-    verbose   : bool    = False
-) -> dict | box.Box:
+    cli       : box.Box | None = None,
+    root      : Path | None    = None,
+    model_root: Path | None    = None,
+    verbose   : bool           = False
+) -> box.Box:
     """Parse and prepare prediction arguments.
 
     Merge CLI and config values, resolve devices and weights, and adjust
@@ -200,43 +210,52 @@ def parse_predict_args(
     Returns:
         Finalized prediction arguments.
     """
-    # CLI
-    cli        = parse_cli_args(cli, root=root)
-    cli.config = parse_config_file(cli.config, cli.root, model_root=model_root)
+    # Resolve CLI and Config Path
+    cli         = parse_cli_args(cli, root=root)
+    config_path = parse_config_file(cli.config, cli.root, model_root=model_root)
     
-    # Args
+    # Load and Merge
     args = load_config(cli.config, verbose=verbose)
     args = merge_dicts(args, cli)  # Prioritize cli -> args
     
-    if args.fullname in [None, "None", ""]:
-        args.fullname = args.model
-        
-    if args.save_dir in [None, ""]:
-        if args.use_fullname or args.save_nearby:
-            args.save_dir = parse_save_dir(args.root/"run"/"predict", args.arch, args.fullname, None)
-        else:
-            args.save_dir = parse_save_dir(args.root/"run"/"predict", args.arch, args.model, args.data)
+    # Name and Directory Resolution
+    args.fullname = args.fullname or args.model or "unnamed_prediction"
+    
+    if not args.save_dir:
+        base_run_dir  = args.root / "run" / "predict"
+        # Determine subdir grouping
+        subdir        = args.fullname if (args.use_fullname or args.save_nearby) else args.data
+        args.save_dir = parse_save_dir(base_run_dir, args.arch, args.model, subdir)
     else:
         args.save_dir = Path(args.save_dir)
-        # args.save_dir = args.save_dir.replace("run/train/", "")
-        # if str("run/predict") not in str(args.save_dir):
-        #     args.save_dir = pathlib.Path(f"run/predict/{args.save_dir}")
-        # if str(args.root) not in str(args.save_dir):
-        #     args.save_dir = args.root / args.save_dir
     
+    # Resource Resolution
     args.hostname = socket.gethostname().lower()
-    args.weights  = parse_weights_file(args.root, args.weights)
-    args.resume   = parse_weights_file(args.root, args.resume)
-    args.tuning   = parse_weights_file(args.root, args.tuning)
     args.device   = parse_device(args.device)
-    args.imgsz    = I.imgsz(args.imgsz)
+    # Resolve all potential weight paths
+    for key in ["weights", "resume", "tuning"]:
+        if key in args:
+            args[key] = parse_weights_file(args.root, args[key])
+    # Ensure imgsz is a list/tuple of [H, W] or a single int normalized to [H, W]
+    args.imgsz = I.imgsz(args.imgsz)
     
-    # Save config file
-    if not args.exist_ok:
-        args.save_dir.rmdir()
-    if not args.save_nearby and (args.save_result or args.save_image or args.save_debug):
+    # Save Logic (Conditional for Inference)
+    # Only create directories if we actually intend to save something and aren't saving 'nearby' the source
+    should_save = any([args.save_result, args.save_image, args.save_debug])
+    
+    if not args.save_nearby and should_save:
+        if args.save_dir.exists() and not args.get("exist_ok", False):
+            args.save_dir.rmdir(recursive=True)
+            
         args.save_dir.mkdir(parents=True, exist_ok=True)
-        if args.config and args.config.is_config_file():
-            args.config.copy_to(dst=args.save_dir / f"{args.config.name}")
-
+        
+        # Artifact Logging
+        if config_path and config_path.exists():
+            # Copying the config to the run dir for reproducibility of prediction settings
+            config_path.copy_to(dst=args.save_dir / config_path.name)
+            cli.config = config_path
+    
+    if verbose:
+        console.log(f"[green]Run directory:[/green] {args.save_dir}")
+      
     return args

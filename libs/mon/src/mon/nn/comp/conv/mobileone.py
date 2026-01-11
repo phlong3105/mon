@@ -8,6 +8,8 @@ networks. The block features a multi-branched structure during training and a
 re-parameterized single-branch structure for inference.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "MobileOneBlock",
 ]
@@ -19,6 +21,10 @@ import torch.nn as nn
 
 from ..attention import SEBlock
 
+
+# ==============================================================================
+# region UTILITIES
+# ==============================================================================
 
 def reparameterize_model(model: nn.Module) -> nn.Module:
     """Re-parameterize all re-parameterizable modules in the model for inference.
@@ -36,6 +42,12 @@ def reparameterize_model(model: nn.Module) -> nn.Module:
             module.reparameterize()
     return model
 
+# endregion
+
+
+# ==============================================================================
+# region BLOCKS
+# ==============================================================================
 
 class MobileOneBlock(nn.Module):
     """MobileOne building block.
@@ -292,3 +304,5 @@ class MobileOneBlock(nn.Module):
         )
         mod_list.add_module("bn", nn.BatchNorm2d(num_features=self.out_channels))
         return mod_list
+
+# endregion

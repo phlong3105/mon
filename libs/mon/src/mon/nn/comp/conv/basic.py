@@ -6,6 +6,8 @@
 This module implements standard convolutional layers from PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "Conv1d",
     "Conv2d",

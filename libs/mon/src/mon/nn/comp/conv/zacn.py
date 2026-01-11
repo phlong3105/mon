@@ -8,6 +8,8 @@ References:
     - Code: https://github.com/Zongwei97/Depth-Adapted-CNN
 """
 
+from __future__ import annotations
+
 __all__ = [
     "compute_offset",
 ]

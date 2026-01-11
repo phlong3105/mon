@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Instance annotation base classes and mixins.
+"""Object instance data structures.
 
-This module provides the base classes and mixins for instance annotations.
+This module provides the base classes and mixins for object instance.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Instance",
@@ -12,39 +14,49 @@ __all__ = [
 
 import numpy as np
 
+from mon.core.dtypes import bbox as B, image as I
+from mon.core.dtypes.array import TensorOrArray
 from mon.core.pathlib import Path
-from .. import bbox as B, image as I
-from ..array import TensorOrArray
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
 
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (The Concrete Classes)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Primary Data Types ---
 class Instance(TensorOrArray):
     """A base class for instance annotations.
     
@@ -61,12 +73,12 @@ class Instance(TensorOrArray):
         - cls      : the type of object, like "car".
     
     The bounding boxes are expected to in the following format:
-            <cx, cy, w, h, a, cls, conf, id, ...>
+            <cx, cy, w, h, a, conf, cls, id, ...>
         where:
             - <cx, cy, w, h> are the bounding box coordinates in CXCYWHN format.
             - <a> is the angle.
-            - <cls> is the class ID (optional).
             - <conf> is the confidence score (optional).
+            - <cls> is the class ID (optional).
             - <id> is the tracking ID (optional).
     
     Notes:
@@ -74,11 +86,11 @@ class Instance(TensorOrArray):
         may subject to changes in the future.
     
     Attributes:
-        _data (np.ndarray): A bounding box, formatted as a numpy.ndarray of
-            dimensions (7+) and in CXCYWHN format.
-        _mask (np.ndarray): Instance mask, formatted as a numpy.ndarray of
-            dimensions (H, W, C) and pixel values ranging from 0 to 255.
-        _imgsz (tuple[int, int]): Image size as (H, W) used for conversions.
+        _data (numpy.ndarray): A bounding box, formatted as a numpy.ndarray
+            of shape (7+) and in CXCYWHN format.
+        _mask (numpy.ndarray): Instance mask, formatted as a numpy.ndarray
+            of shape (H, W, C) and pixel values ranging from 0 to 255.
+        _imgsz (tuple[int, int]): Image size as (H, W).
         _image_path (Path): Associated image file path.
         _root (Path): Root directory for the label file.
     """
@@ -87,68 +99,83 @@ class Instance(TensorOrArray):
     def __init__(
         self,
         data      : np.ndarray,
-        imgsz     : tuple[int, int],
-        mask      : np.ndarray = None,
-        image_path: Path       = None,
-        root      : Path       = None,
+        imgsz     : tuple[int, int] | None = None,
+        mask      : np.ndarray | None      = None,
+        image_path: Path | str | None      = None,
+        root      : Path | str | None      = None,
     ):
         """Initialize a new instance.
         
         Args:
-            data: A bounding box, formatted as a numpy.ndarray of dimensions
-                (7+) and in CXCYWHN format.
+            data: A bounding box, formatted as a numpy.ndarray of shape (7+) and
+                in CXCYWHN format.
             imgsz: Image size as (H, W).
-            mask: Instance mask, formatted as a numpy.ndarray of dimensions
-                (H, W, C) and pixel values ranging from 0 to 255.
+            mask: Instance mask, formatted as a numpy.ndarray of shape (H, W, C)
+                and pixel values ranging from 0 to 255.
             image_path: Associated image file path.
             root: Root directory for the label file.
 
         Raises:
-            ValueError: If neither ``imgsz`` nor a valid ``image_path`` is provided.
-            TypeError: If ``data`` is not a numpy.ndarray.
+            ValueError: If ``imgsz`` is not provided and ``image_path`` is not valid.
         """
-        # Validate and set imgsz
-        if imgsz is None and Path(image_path).is_image_file(exist=True):
-            imgsz = I.read_size(image_path)
-        if imgsz is None:
-            raise ValueError("Either ``imgsz`` or a valid ``image_path`` must be provided to determine the original image size.")
-        imgsz = I.imgsz(imgsz)
+        # Validate paths
+        image_path = Path(image_path).normalize(exist=True) if image_path else None
+        root       = Path(root).normalize(exist=True)       if root       else None
         
-        # Initialize parent classes and assign attributes
+        # Infer image size if not provided
+        if imgsz is None:
+            if image_path and image_path.is_image_file(exist=True):
+                imgsz = I.read_size(image_path)
+            else:
+                raise ValueError(f"Expected either 'imgsz' or a valid 'image_path', "
+                                 f"but got both None.")
+        else:
+            imgsz = I.imgsz(imgsz)
+        
+        # Call the setter to ensure type validation on init
         self._imgsz      = imgsz
         self._mask       = mask
-        self._image_path = Path(image_path) if image_path is not None else None
-        self._root       = Path(root)       if root       is not None else None
-        super().__init__(data=data)  # This will call the data setter
+        self._image_path = image_path
+        self._root       = root
+        self.data        = data
+        
+        # Continue the initialization chain
+        super().__init__(data=self.data)
     
     # --- Properties ---
     @property
     def data(self) -> np.ndarray:
-        """Return the bounding box in CXCYWHN format."""
+        """Return the bounding box, formatted as a numpy.ndarray of shape (7+)
+        and in CXCYWHN format."""
         return self._data
     
     @data.setter
-    def data(self, data: np.ndarray):
+    def data(self, value: np.ndarray):
         """Set the bounding box data.
         
         Args:
-            data: A bounding box, formatted as a numpy.ndarray of dimensions
-                (7+) and in CXCYWHN format.
+            value: A bounding box, formatted as a numpy.ndarray of shape (7+)
+                and in CXCYWHN format.
                 
         Raises:
             TypeError: If ``data`` is not a numpy.ndarray.
             ValueError: If ``data`` has incorrect shape.
         """
-        if not isinstance(data, np.ndarray):
-            raise TypeError(f"``data`` must be a numpy.ndarray, got {type(data)}.")
-        if data.ndim != 1 or data.shape[0] < 7:
-            raise ValueError(f"``data`` must be of shape (7+), got {data.shape}.")
-        if B.is_xywh(data, self._imgsz):
-            data = B.xywh_to_cxcywhn(data[None, :], self._imgsz)[0]
-        elif B.is_xyxy(data, self._imgsz):
-            data = B.xyxy_to_cxcywhn(data[None, :], self._imgsz)[0]
+        # Ensure we are working with a float ndarray for normalization precision
+        if not isinstance(value, np.ndarray):
+            value = np.array(value, dtype=np.float32)
         
-        self._data = data
+        if value.ndim != 1 or value.shape[0] < 7:
+            raise ValueError(f"Expected 'data' to be a numpy.ndarray of shape (7+), "
+                             f"but got {value.shape}.")
+        
+        # Internal conversion logic
+        if B.is_xywh(value, self._imgsz):
+            value = B.xywh_to_cxcywhn(value, self._imgsz)[0]
+        elif B.is_xyxy(value):
+            value = B.xyxy_to_cxcywhn(value, self._imgsz)[0]
+        
+        self._data = value
     
     @property
     def mask(self) -> np.ndarray:
@@ -156,13 +183,13 @@ class Instance(TensorOrArray):
         return self._mask
     
     @mask.setter
-    def mask(self, mask: np.ndarray):
+    def mask(self, value: np.ndarray):
         """Set or update the instance segmentation mask.
 
         Args:
-            mask: Mask array of shape (H, W, C) or compatible shape.
+            value: Mask array of shape (H, W, C) or compatible shape.
         """
-        self._mask = mask
+        self._mask = value
     
     @property
     def imgsz(self) -> tuple[int, int]:
@@ -196,7 +223,9 @@ class Instance(TensorOrArray):
     
     @property
     def cxcywhn(self) -> np.ndarray:
-        """Return the bounding box in CXCYWHN format."""
+        """Return the bounding box, formatted as a numpy.ndarray of shape (7+)
+        and in CXCYWHN format.
+        """
         return self.data
     
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
@@ -208,7 +237,7 @@ class Instance(TensorOrArray):
         Returns:
             Bounding box in XYXY format.
         """
-        imgsz = I.imgsz(imgsz) if imgsz is not None else self.imgsz
+        imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return B.cxcywhn_to_xyxy(self.data, imgsz)[0]
     
     def xywh(self, imgsz: tuple[int, int] = None) -> np.ndarray:
@@ -220,5 +249,14 @@ class Instance(TensorOrArray):
         Returns:
             Bounding box in XYWH format.
         """
-        imgsz = I.imgsz(imgsz) if imgsz is not None else self.imgsz
+        imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return B.cxcywhn_to_xywh(self.data, imgsz)[0]
+    
+    @property
+    def area(self) -> float:
+        """Compute the area of the bounding box in pixels."""
+        # Using normalization factors: (W_norm * W_img) * (H_norm * H_img)
+        h0, w0 = self._imgsz
+        return float((self.data[2] * w0) * (self.data[3] * h0))
+
+# endregion
