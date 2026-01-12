@@ -6,6 +6,8 @@
 This module implements various ViT backbones using PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "ViT_B_16_Weights",
     "ViT_B_32_Weights",
@@ -24,41 +26,55 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.vision_transformer import VisionTransformer
 
-from mon.core import BACKBONES, Path, ROOT_DIR
+from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
 from mon.core.dtypes import Weights, WeightsEnum
+from ...base import RegistrableMixin
 
-current_file = Path(__file__).absolute()
-root_dir     = current_file.parents[0]
-
-
-# ==============================================================================
-# COMPONENTS (Building Blocks)
-# ==============================================================================
+current_file = Path(__file__).normalize()
+current_dir  = current_file.parents[0]
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
-class ViTBackBone(nn.Module):
-    """ViT backbone."""
-    
+# --- Base Classes ---
+
+class ViTBackBone(nn.Module, RegistrableMixin):
+    """ViT backbone.
+
+    Attributes:
+        patch_embed (torch.nn.Module): Patch embedding layer.
+        class_token (torch.nn.Parameter): Class token.
+        pos_embedding (torch.nn.Parameter): Positional embedding.
+        blocks (torch.nn.ModuleList): Transformer blocks.
+        out_indices (list): List of layer indices to extract features from.
+        embed_dim (int): Embedding dimension.
+    """
+
+    _arch     : str          = "vit"
+    _name     : str          = None
+    _tasks    : list[Task]   = [Task.BACKBONE]
+    _mltypes  : list[MLType] = []
+    _model_dir: Path         = current_dir
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
+        name       : str,
         patch_size : int,
         num_layers : int,
         num_heads  : int,
         hidden_dim : int,
         mlp_dim    : int,
-        weights    : WeightsEnum = None,
-        out_indices: list        = None,
+        weights    : WeightsEnum | None = None,
+        out_indices: list | None        = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
+            name: Name of the model variant.
             patch_size: Patch size of the backbone.
             num_layers: Number of transformer layers.
             num_heads: Number of attention heads.
@@ -70,12 +86,13 @@ class ViTBackBone(nn.Module):
             args: Additional positional arguments for the ResNet model.
             kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__()
+        super().__init__(name=name, *args, **kwargs)
+
         # Load the base model
-        if weights is not None:
+        if isinstance(weights, WeightsEnum):
             kwargs["num_classes"] = weights.num_classes
             kwargs["image_size"]  = weights.meta["min_size"][0]
-            
+
         base_model = VisionTransformer(
             patch_size = patch_size,
             num_layers = num_layers,
@@ -84,10 +101,10 @@ class ViTBackBone(nn.Module):
             mlp_dim    = mlp_dim,
             *args, **kwargs
         )
-        
-        if weights is not None:
+
+        if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.get_state_dict())
-        
+
         # In torchvision, ViT already has several components
         self.patch_embed   = base_model.conv_proj
         self.class_token   = base_model.class_token
@@ -96,27 +113,27 @@ class ViTBackBone(nn.Module):
         self.blocks        = base_model.encoder.layers
         self.out_indices   = out_indices or [2, 5, 8, 11]
         self.embed_dim     = base_model.hidden_dim
-    
+
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> list:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        """Forward the input through the network.
+
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             A list of feature maps from the specified layers.
         """
         # Patchify and add position
         x = self.patch_embed(x)
         x = x.flatten(2).transpose(1, 2)
-        
+
         # Add CLS token
         batch_class_token = self.class_token.expand(x.shape[0], -1, -1)
         x = torch.cat((batch_class_token, x), dim=1)
         x = x + self.pos_embedding
-        
+
         # If you need multi-scale features for a Neck (FPN):
         outputs = []
         for i, block in enumerate(self.blocks):
@@ -130,15 +147,23 @@ class ViTBackBone(nn.Module):
                 feat    = feat.transpose(1, 2).reshape(b, c, h, w)
                 outputs.append(feat)
         return outputs
-    
+
+
+# --- Mixins ---
+
+
+# endregion
+
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (Variants)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Pre-trained Weights ---
+
+@WEIGHTS.register(arch="vit", name="vit_b_16")
 class ViT_B_16_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_imagenet1k_v1.pth",
@@ -165,7 +190,7 @@ class ViT_B_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_E2E_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_16_swag-9ac1b537.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16_swag/imagenet1k_v1/vit_b_16_swag_imagenet1k_v1.pth",
+        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -189,7 +214,7 @@ class ViT_B_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_16_lc_swag-4e70ced5.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16_lc_swag/imagenet1k_v1/vit_b_16_lc_swag_imagenet1k_v1.pth",
+        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_lc_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -214,8 +239,9 @@ class ViT_B_16_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="vit", name="vit_b_32")
 class ViT_B_32_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_32-d86f8d99.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_32/imagenet1k_v1/vit_b_32_imagenet1k_v1.pth",
@@ -241,10 +267,11 @@ class ViT_B_32_Weights(WeightsEnum):
         }
     )
     DEFAULT = IMAGENET1K_V1
-    
 
+
+@WEIGHTS.register(arch="vit", name="vit_l_16")
 class ViT_L_16_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_16-852ce7e3.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_imagenet1k_v1.pth",
@@ -272,7 +299,7 @@ class ViT_L_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_E2E_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_16_swag-4f3808c9.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16_swag/imagenet1k_v1/vit_l_16_swag_imagenet1k_v1.pth",
+        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -296,7 +323,7 @@ class ViT_L_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_16_lc_swag-4d563306.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16_lc_swag/imagenet1k_v1/vit_l_16_lc_swag_imagenet1k_v1.pth",
+        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_lc_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -319,10 +346,11 @@ class ViT_L_16_Weights(WeightsEnum):
         }
     )
     DEFAULT = IMAGENET1K_V1
-    
 
+
+@WEIGHTS.register(arch="vit", name="vit_l_32")
 class ViT_L_32_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_32-c7638314.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_32/imagenet1k_v1/vit_l_32_imagenet1k_v1.pth",
@@ -350,11 +378,12 @@ class ViT_L_32_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="vit", name="vit_h_14")
 class ViT_H_14_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_h_14_swag-80465313.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_h_14_swag/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",
+        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -378,7 +407,7 @@ class ViT_H_14_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_h_14_lc_swag-c1eb923e.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_h_14_lc_swag/imagenet1k_v1/vit_h_14_lc_swag_imagenet1k_v1.pth",
+        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_lc_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -404,9 +433,28 @@ class ViT_H_14_Weights(WeightsEnum):
 
 
 # --- Model Variants ---
+
 @BACKBONES.register(name="vit_b_16")
-def vit_b_16(weights: WeightsEnum | str = ViT_B_16_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def vit_b_16(
+    weights    : WeightsEnum | str | None = ViT_B_16_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ViT-B/16 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ViT_B_16_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ViT-B/16 backbone model.
+    """
     return ViTBackBone(
+        name        = "vit_b_16",
         patch_size  = 16,
         num_layers  = 12,
         num_heads   = 12,
@@ -414,13 +462,31 @@ def vit_b_16(weights: WeightsEnum | str = ViT_B_16_Weights.DEFAULT, out_indices:
         mlp_dim     = 3072,
         weights     = ViT_B_16_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="vit_b_32")
-def vit_b_32(weights: WeightsEnum | str = ViT_B_32_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def vit_b_32(
+    weights    : WeightsEnum | str | None = ViT_B_32_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ViT-B/32 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ViT_B_32_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ViT-B/32 backbone model.
+    """
     return ViTBackBone(
+        name        = "vit_b_32",
         patch_size  = 32,
         num_layers  = 12,
         num_heads   = 12,
@@ -428,13 +494,31 @@ def vit_b_32(weights: WeightsEnum | str = ViT_B_32_Weights.DEFAULT, out_indices:
         mlp_dim     = 3072,
         weights     = ViT_B_32_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="vit_l_16")
-def vit_l_16(weights: WeightsEnum | str = ViT_L_16_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def vit_l_16(
+    weights    : WeightsEnum | str | None = ViT_L_16_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ViT-L/16 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ViT_L_16_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ViT-L/16 backbone model.
+    """
     return ViTBackBone(
+        name        = "vit_l_16",
         patch_size  = 16,
         num_layers  = 24,
         num_heads   = 16,
@@ -442,13 +526,31 @@ def vit_l_16(weights: WeightsEnum | str = ViT_L_16_Weights.DEFAULT, out_indices:
         mlp_dim     = 4096,
         weights     = ViT_L_16_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="vit_l_32")
-def vit_l_32(weights: WeightsEnum | str = ViT_L_32_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def vit_l_32(
+    weights    : WeightsEnum | str | None = ViT_L_32_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ViT-L/32 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ViT_L_32_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ViT-L/32 backbone model.
+    """
     return ViTBackBone(
+        name        = "vit_l_32",
         patch_size  = 32,
         num_layers  = 24,
         num_heads   = 16,
@@ -456,13 +558,31 @@ def vit_l_32(weights: WeightsEnum | str = ViT_L_32_Weights.DEFAULT, out_indices:
         mlp_dim     = 4096,
         weights     = ViT_L_32_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="vit_h_14")
-def vit_h_14(weights: WeightsEnum | str = ViT_H_14_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def vit_h_14(
+    weights    : WeightsEnum | str | None = ViT_H_14_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ViT-H/14 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ViT_H_14_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ViT-H/14 backbone model.
+    """
     return ViTBackBone(
+        name        = "vit_h_14",
         patch_size  = 14,
         num_layers  = 32,
         num_heads   = 16,
@@ -470,18 +590,22 @@ def vit_h_14(weights: WeightsEnum | str = ViT_H_14_Weights.DEFAULT, out_indices:
         mlp_dim     = 5120,
         weights     = ViT_H_14_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
+
+# endregion
 
 
 # ==============================================================================
-# DEBUGGING
+# region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
     model_ = vit_b_16(weights="default")
     x = torch.ones(1, 3, 224, 224)
     y = model_(x)
-    # print(model_.features)
-    # print(x)
+    print(model_.features)
+    print(x)
     print(y)
+
+# endregion

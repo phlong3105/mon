@@ -3,8 +3,10 @@
 
 """Basic normalization layers.
 
-This module implements various basic normalization layers from PyTorch.
+This module provides various basic normalization layers from PyTorch.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "CrossMapLRN2d",

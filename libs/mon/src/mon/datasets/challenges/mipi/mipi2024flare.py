@@ -15,7 +15,7 @@ __all__ = [
     "MIPI2024Flare",
 ]
 
-from mon.core import create_progress_bar
+
 from ...api import *
 
 

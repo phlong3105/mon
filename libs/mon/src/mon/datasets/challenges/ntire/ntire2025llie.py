@@ -15,7 +15,7 @@ __all__ = [
     "NTIRE2025LLIE",
 ]
 
-from mon.core import create_progress_bar
+
 from ...api import *
 
 

@@ -3,9 +3,11 @@
 
 """Pooling layers.
 
-This module implements various pooling layers used for reducing the spatial
+This module provides various pooling layers used for reducing the spatial
 dimensionality of feature maps.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "AdaptiveAvgPool1d",

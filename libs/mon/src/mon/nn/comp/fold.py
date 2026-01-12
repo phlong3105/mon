@@ -3,9 +3,11 @@
 
 """Fold and unfold layers.
 
-This module implements various fold and unfold layers used for reducing the
+This module provides various fold and unfold layers used for reducing the
 spatial dimensionality of feature maps.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Fold",

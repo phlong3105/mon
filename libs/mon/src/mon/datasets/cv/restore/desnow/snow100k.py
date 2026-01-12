@@ -12,7 +12,7 @@ __all__ = [
     "Snow100K",
 ]
 
-from mon.core import create_progress_bar
+
 from ....api import *
 
 

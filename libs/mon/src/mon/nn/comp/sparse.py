@@ -3,9 +3,11 @@
 
 """Sparse embedding layers.
 
-This module implements various sparse embedding layers used for learning sparse
+This module provides various sparse embedding layers used for learning sparse
 representations of words.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Embedding",

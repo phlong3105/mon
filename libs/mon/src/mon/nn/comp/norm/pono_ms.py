@@ -3,7 +3,7 @@
 
 """Positional Normalization and Moment Shortcut layers.
 
-This module implements Positional Normalization (PONO) and Moment Shortcut (MS)
+This module provides Positional Normalization (PONO) and Moment Shortcut (MS)
 layers.
 
 References:
@@ -25,9 +25,11 @@ Pseudocode:
         return x * gamma + beta
 """
 
+from __future__ import annotations
+
 __all__ = [
-    "PositionalNorm",
     "MomentShortcut",
+    "PositionalNorm",
 ]
 
 import torch
@@ -35,12 +37,18 @@ import torch.nn as nn
 
 
 class PositionalNorm(nn.Module):
-    """Positional normalization layer."""
-    
+    """Positional normalization layer.
+
+    Apply positional normalization to the input tensor.
+
+    Attributes:
+        eps (float): A small value to avoid division by zero.
+    """
+
     # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-5):
         """Initialize a new instance.
-        
+
         Args:
             eps: A small value to avoid division by zero. Defaults to 1e-5.
         """
@@ -49,17 +57,17 @@ class PositionalNorm(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        """Forward pass.
-        
+        """Forward the input through the layer.
+
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             A tuple containing:
-                - The normalized tensor with dimensions (B, C, H, W).
-                - The mean tensor with dimensions (B, 1, H, W).
-                - The standard deviation tensor with dimensions (B, 1, H, W).
+                - The normalized tensor of shape (B, C, H, W).
+                - The mean tensor of shape (B, 1, H, W).
+                - The standard deviation tensor of shape (B, 1, H, W).
         """
         mean = x.mean(dim=1, keepdim=True)
         std  = (x.var(dim=1, keepdim=True) + self.eps).sqrt()
@@ -68,29 +76,32 @@ class PositionalNorm(nn.Module):
 
 
 class MomentShortcut(nn.Module):
-    """Moment shortcut layer."""
-    
+    """Moment shortcut layer.
+
+    Apply moment shortcut to the input tensor.
+    """
+
     # --- Callable & Context Manager ---
     def forward(
         self,
         x    : torch.Tensor,
-        beta : torch.Tensor = None,
-        gamma: torch.Tensor = None
+        beta : torch.Tensor | None = None,
+        gamma: torch.Tensor | None = None
     ) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the layer.
+
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-            beta: The beta tensor with dimensions (B, 1, H, W). Defaults to None.
-            gamma: The gamma tensor with dimensions (B, 1, H, W). Defaults to None.
-        
+            beta: The beta tensor of shape (B, 1, H, W). Defaults to None.
+            gamma: The gamma tensor of shape (B, 1, H, W). Defaults to None.
+
         Returns:
-            Output tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging
+            from 0.0 to 1.0.
         """
         if gamma is not None:
-            x.mul_(gamma)
+            x = x * gamma
         if beta is not None:
-            x.add_(beta)
+            x = x + beta
         return x

@@ -3,9 +3,11 @@
 
 """Padding layers.
 
-This module implements various padding layers used for padding feature maps to
+This module provides various padding layers used for padding feature maps to
 ensure that they are of the same size without changing the spatial resolution.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "CircularPad1d",

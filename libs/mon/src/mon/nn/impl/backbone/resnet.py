@@ -6,6 +6,8 @@
 This module implements various ResNet backbones using PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "ResNeXt101_32X8D_Weights",
     "ResNeXt101_64X4D_Weights",
@@ -36,80 +38,91 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.resnet import BasicBlock, Bottleneck, ResNet
 
-from mon.core import BACKBONES, Path, ROOT_DIR
+from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
 from mon.core.dtypes import Weights, WeightsEnum
+from ...base import RegistrableMixin
 
-current_file = Path(__file__).absolute()
-root_dir     = current_file.parents[0]
-
-
-# ==============================================================================
-# COMPONENTS (Building Blocks)
-# ==============================================================================
+current_file = Path(__file__).normalize()
+current_dir  = current_file.parents[0]
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
-class ResNetBackBone(nn.Module):
+# --- Base Classes ---
+
+class ResNetBackBone(nn.Module, RegistrableMixin):
     """ResNet backbone.
 
     References:
         - Paper: https://arxiv.org/abs/1512.03385
+
+    Attributes:
+        features (torch.nn.Sequential): The feature extraction layers.
+        out_indices (list): List of layer indices to extract features from.
+        out_channels (list): List of output channels for each extracted layer.
     """
-    
+
+    _arch     : str          = "resnet"
+    _name     : str          = None
+    _tasks    : list[Task]   = [Task.BACKBONE]
+    _mltypes  : list[MLType] = []
+    _model_dir: Path         = current_dir
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        variant    : str,
+        name       : str,
         block      : type[Union[BasicBlock, Bottleneck]],
         layers     : list[int],
-        weights    : WeightsEnum = None,
-        out_indices: list        = None,
+        weights    : WeightsEnum | None = None,
+        out_indices: list | None        = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
-            variant: Variant of the ResNet model.
+            name: Variant of the ResNet model.
+            block: Block type to use (BasicBlock or Bottleneck).
+            layers: List of layer counts for each block.
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [4, 5, 6, 7].
             args: Additional positional arguments for the ResNet model.
             kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__()
+        super().__init__(name=name, *args, **kwargs)
+
         # Load the base model
-        if weights is not None:
+        if isinstance(weights, WeightsEnum):
             kwargs["num_classes"] = weights.num_classes
-        
+
         base_model = ResNet(block=block, layers=layers, *args, **kwargs)
-        
-        if weights is not None:
+
+        if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.get_state_dict())
-        
+
         # Remove the global average pool and classifier head
         # For ResNet, we usually want the features before the final layers
         self.features     = nn.Sequential(*list(base_model.children())[:-2])
         self.out_indices  = out_indices or [4, 5, 6, 7]
-        self.out_channels = self._get_out_channels(variant)
-    
-    def _get_out_channels(self, variant):
+        self.out_channels = self._get_out_channels(variant=name)
+
+    def _get_out_channels(self, variant: str) -> list[int]:
         # Bottleneck models (50+) have 4x more channels in the output of each stage
         if any(x in variant for x in ["50", "101", "152"]):
             return [256, 512, 1024, 2048]
         return [64, 128, 256, 512]
-    
+
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> list:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        """Forward the input through the network.
+
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             A list of feature maps from the specified layers.
         """
@@ -120,15 +133,23 @@ class ResNetBackBone(nn.Module):
             if i in self.out_indices:
                 outputs.append(x)
         return outputs
-    
+
+
+# --- Mixins ---
+
+
+# endregion
+
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (Variants)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Pre-trained Weights ---
+
+@WEIGHTS.register(arch="resnet", name="resnet18")
 class ResNet18_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet18-f37072fd.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pth",
@@ -153,8 +174,9 @@ class ResNet18_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="resnet", name="resnet34")
 class ResNet34_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet34-b627a593.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pth",
@@ -179,8 +201,9 @@ class ResNet34_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="resnet", name="resnet50")
 class ResNet50_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet50-0676ba61.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pth",
@@ -229,8 +252,9 @@ class ResNet50_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
+@WEIGHTS.register(arch="resnet", name="resnet101")
 class ResNet101_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet101-63fe2227.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pth",
@@ -277,10 +301,11 @@ class ResNet101_Weights(WeightsEnum):
         }
     )
     DEFAULT = IMAGENET1K_V2
-    
 
+
+@WEIGHTS.register(arch="resnet", name="resnet152")
 class ResNet152_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet152-394f9c45.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pth",
@@ -329,8 +354,9 @@ class ResNet152_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
+@WEIGHTS.register(arch="resnet", name="resnext50_32x4d")
 class ResNeXt50_32X4D_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pth",
@@ -379,8 +405,9 @@ class ResNeXt50_32X4D_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
+@WEIGHTS.register(arch="resnet", name="resnext101_32x8d")
 class ResNeXt101_32X8D_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pth",
@@ -427,10 +454,11 @@ class ResNeXt101_32X8D_Weights(WeightsEnum):
         }
     )
     DEFAULT = IMAGENET1K_V2
-    
 
+
+@WEIGHTS.register(arch="resnet", name="resnext101_64x4d")
 class ResNeXt101_64X4D_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "ttps://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pth",
@@ -458,8 +486,9 @@ class ResNeXt101_64X4D_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="resnet", name="wide_resnet50_2")
 class Wide_ResNet50_2_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/wide_resnet50_2/imagenet1k_v1/wide_resnet50_2_imagenet1k_v1.pth",
@@ -508,8 +537,9 @@ class Wide_ResNet50_2_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
+@WEIGHTS.register(arch="resnet", name="wide_resnet101_2")
 class Wide_ResNet101_2_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/resnet/wide_resnet101_2/imagenet1k_v1/wide_resnet101_2_imagenet1k_v1.pth",
@@ -556,145 +586,321 @@ class Wide_ResNet101_2_Weights(WeightsEnum):
         }
     )
     DEFAULT = IMAGENET1K_V2
-    
+
 
 # --- Model Variants ---
+
 @BACKBONES.register(name="resnet18")
-def resnet18(weights: WeightsEnum | str = ResNet18_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnet18(
+    weights: WeightsEnum | str | None = ResNet18_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNet-18 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNet18_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNet-18 backbone model.
+    """
     return ResNetBackBone(
-        variant     = "resnet18",
+        name        = "resnet18",
         block       = BasicBlock,
         layers      = [2, 2, 2, 2],
         weights     = ResNet18_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="resnet34")
-def resnet34(weights: WeightsEnum | str = ResNet34_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnet34(
+    weights    : WeightsEnum | str | None = ResNet34_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNet-34 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNet34_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNet-34 backbone model.
+    """
     return ResNetBackBone(
-        variant     = "resnet34",
+        name        = "resnet34",
         block       = BasicBlock,
         layers      = [3, 4, 6, 3],
         weights     = ResNet34_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="resnet50")
-def resnet50(weights: WeightsEnum | str = ResNet50_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnet50(
+    weights    : WeightsEnum | str | None = ResNet50_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNet-50 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNet50_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNet-50 backbone model.
+    """
     return ResNetBackBone(
-        variant     = "resnet50",
+        name        = "resnet50",
         block       = Bottleneck,
         layers      = [3, 4, 6, 3],
         weights     = ResNet50_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="resnet101")
-def resnet101(weights: WeightsEnum | str = ResNet101_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnet101(
+    weights    : WeightsEnum | str | None = ResNet101_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNet-101 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNet101_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNet-101 backbone model.
+    """
     return ResNetBackBone(
-        variant     = "resnet101",
+        name        = "resnet101",
         block       = Bottleneck,
         layers      = [3, 4, 23, 3],
         weights     = ResNet101_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="resnet152")
-def resnet152(weights: WeightsEnum | str = ResNet152_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnet152(
+    weights    : WeightsEnum | str | None = ResNet152_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNet-152 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNet152_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNet-152 backbone model.
+    """
     return ResNetBackBone(
-        variant     = "resnet152",
+        name        = "resnet152",
         block       = Bottleneck,
         layers      = [3, 8, 36, 3],
         weights     = ResNet152_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="resnext50_32x4d")
-def resnext50_32x4d(weights: WeightsEnum | str = ResNeXt50_32X4D_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnext50_32x4d(
+    weights    : WeightsEnum | str | None = ResNeXt50_32X4D_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNeXt-50 32x4d backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNeXt50_32X4D_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNeXt-50 32x4d backbone model.
+    """
     kwargs["groups"]          = 32
     kwargs["width_per_group"] = 4
     return ResNetBackBone(
-        variant     = "resnext50_32x4d",
+        name        = "resnext50_32x4d",
         block       = Bottleneck,
         layers      = [3, 4, 6, 3],
         weights     = ResNeXt50_32X4D_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="resnext101_32x8d")
-def resnext101_32x8d(weights: WeightsEnum | str = ResNeXt101_32X8D_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnext101_32x8d(
+    weights    : WeightsEnum | str | None = ResNeXt101_32X8D_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNeXt-101 32x8d backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNeXt101_32X8D_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNeXt-101 32x8d backbone model.
+    """
     kwargs["groups"]          = 32
     kwargs["width_per_group"] = 4
     return ResNetBackBone(
-        variant     = "resnext101_32x8d",
+        name        = "resnext101_32x8d",
         block       = Bottleneck,
         layers      = [3, 4, 23, 3],
         weights     = ResNeXt101_32X8D_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="resnext101_64x4d")
-def resnext101_64x4d(weights: WeightsEnum | str = ResNeXt101_64X4D_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def resnext101_64x4d(
+    weights    : WeightsEnum | str | None = ResNeXt101_64X4D_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a ResNeXt-101 64x4d backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            ResNeXt101_64X4D_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A ResNeXt-101 64x4d backbone model.
+    """
     kwargs["groups"]          = 64
     kwargs["width_per_group"] = 4
     return ResNetBackBone(
-        variant     = "resnext101_64x4d",
+        name        = "resnext101_64x4d",
         block       = Bottleneck,
         layers      = [3, 4, 23, 3],
         weights     = ResNeXt101_64X4D_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="wide_resnet50_2")
-def wide_resnet50_2(weights: WeightsEnum | str = Wide_ResNet50_2_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def wide_resnet50_2(
+    weights    : WeightsEnum | str | None = Wide_ResNet50_2_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a Wide ResNet-50-2 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            Wide_ResNet50_2_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A Wide ResNet-50-2 backbone model.
+    """
     kwargs["width_per_group"] = 64 * 2
     return ResNetBackBone(
-        variant     = "wide_resnet50_2",
+        name        = "wide_resnet50_2",
         block       = Bottleneck,
         layers      = [3, 4, 6, 3],
         weights     = Wide_ResNet50_2_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="wide_resnet101_2")
-def wide_resnet101_2(weights: WeightsEnum | str = Wide_ResNet101_2_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def wide_resnet101_2(
+    weights    : WeightsEnum | str | None = Wide_ResNet101_2_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a Wide ResNet-101-2 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            Wide_ResNet101_2_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A Wide ResNet-101-2 backbone model.
+    """
     kwargs["width_per_group"] = 64 * 2
     return ResNetBackBone(
-        variant     = "wide_resnet101_2",
+        name        = "wide_resnet101_2",
         block       = Bottleneck,
         layers      = [3, 4, 23, 3],
         weights     = Wide_ResNet101_2_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
+# endregion
+
+
 # ==============================================================================
-# DEBUGGING
+# region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
     model_ = resnet18(weights="default")
     x = torch.ones(1, 3, 224, 224)
     y = model_(x)
-    # print(model_.features)
-    # print(x)
+    print(model_.features)
+    print(x)
     print(y)
+
+# endregion

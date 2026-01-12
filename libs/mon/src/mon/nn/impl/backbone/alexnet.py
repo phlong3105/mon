@@ -6,6 +6,8 @@
 This module implements various AlexNet backbones using PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "AlexNet_Weights",
     "alexnet",
@@ -16,65 +18,77 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.alexnet import AlexNet
 
-from mon.core import BACKBONES, Path, ROOT_DIR
+from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
 from mon.core.dtypes import Weights, WeightsEnum
+from ...base import RegistrableMixin
 
-current_file = Path(__file__).absolute()
-root_dir     = current_file.parents[0]
-
-
-# ==============================================================================
-# COMPONENTS (Building Blocks)
-# ==============================================================================
+current_file = Path(__file__).normalize()
+current_dir  = current_file.parents[0]
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
-class AlexNetBackBone(nn.Module):
-    """AlexNet backbone."""
-    
+# --- Base Classes ---
+
+class AlexNetBackBone(nn.Module, RegistrableMixin):
+    """AlexNet backbone.
+
+    Attributes:
+        features (torch.nn.Sequential): The feature extraction layers.
+        out_indices (list): List of layer indices to extract features from.
+        out_channels (list): List of output channels for each extracted layer.
+    """
+
+    _arch     : str          = "alexnet"
+    _name     : str          = None
+    _tasks    : list[Task]   = [Task.BACKBONE]
+    _mltypes  : list[MLType] = []
+    _model_dir: Path         = current_dir
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        weights    : WeightsEnum = None,
-        out_indices: list        = None,
+        name       : str,
+        weights    : WeightsEnum | None = None,
+        out_indices: list | None        = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
+            name: Name of the backbone.
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [2, 5, 8, 10, 12].
             args: Additional positional arguments for the ResNet model.
             kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__()
+        super().__init__(name=name, *args, **kwargs)
+
         # Load the base model
-        if weights is not None:
+        if isinstance(weights, WeightsEnum):
             kwargs["num_classes"] = weights.num_classes
-            
+
         base_model = AlexNet(*args, **kwargs)
-        
-        if weights is not None:
+
+        if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.get_state_dict())
-        
+
         # In torchvision, AlexNet already has a 'features' block
         self.features     = base_model.features
         self.out_indices  = out_indices or [2, 5, 8, 10, 12]
         self.out_channels = [64, 192, 384, 256, 256]
-        
+
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> list:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        """Forward the input through the network.
+
         Args:
             x: Input tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             A list of feature maps from the specified layers.
         """
@@ -85,15 +99,23 @@ class AlexNetBackBone(nn.Module):
             if i in self.out_indices:
                 outputs.append(x)
         return outputs
-    
+
+
+# --- Mixins ---
+
+
+# endregion
+
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (Variants)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Pre-trained Weights ---
+
+@WEIGHTS.register(arch="alexnet", name="alexnet")
 class AlexNet_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
@@ -119,23 +141,46 @@ class AlexNet_Weights(WeightsEnum):
 
 
 # --- Model Variants ---
-@BACKBONES.register(name="resnet18")
-def alexnet(weights: WeightsEnum | str = AlexNet_Weights.DEFAULT, out_indices: list = None, **kwargs):
+
+@BACKBONES.register(name="alexnet")
+def alexnet(
+    weights    : WeightsEnum | str | None = AlexNet_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an AlexNet backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            AlexNet_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An AlexNet backbone model.
+    """
     return AlexNetBackBone(
+        name        = "alexnet",
         weights     = AlexNet_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+        *args, **kwargs
     )
+
+# endregion
 
 
 # ==============================================================================
-# DEBUGGING
+# region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
     model_ = alexnet(weights="default")
     x = torch.ones(1, 3, 224, 224)
     y = model_(x)
-    # print(model_.features)
-    # print(x)
+    print(model_.features)
+    print(x)
     print(y)
+
+# endregion

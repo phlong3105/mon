@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Usages of neural network components.
+"""Usages of neural networks.
 
-This package contains example usages of neural network components.
+This package contains direct usages of neural networks.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
-
+from __future__ import annotations

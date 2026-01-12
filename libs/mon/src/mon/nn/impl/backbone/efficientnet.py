@@ -6,6 +6,8 @@
 This module implements various EfficientNet V1 and V2 backbones using PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "EfficientNet_B0_Weights",
     "EfficientNet_B1_Weights",
@@ -44,41 +46,50 @@ from torchvision.models.efficientnet import (
     MBConvConfig,
 )
 
-from mon.core import BACKBONES, Path, ROOT_DIR
+from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
 from mon.core.dtypes import Weights, WeightsEnum
+from ...base import RegistrableMixin
 
-current_file = Path(__file__).absolute()
-root_dir     = current_file.parents[0]
-
-
-# ==============================================================================
-# COMPONENTS (Building Blocks)
-# ==============================================================================
+current_file = Path(__file__).normalize()
+current_dir  = current_file.parents[0]
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
-class EfficientNetBackBone(nn.Module):
-    """EfficientNet V1 and V2 backbone."""
-    
+# --- Base Classes ---
+
+class EfficientNetBackBone(nn.Module, RegistrableMixin):
+    """EfficientNet V1 and V2 backbone.
+
+    Attributes:
+        features (torch.nn.Sequential): The feature extraction layers.
+        out_indices (list): List of layer indices to extract features from.
+        out_channels (list): List of output channels for each extracted layer.
+    """
+
+    _arch     : str          = "efficientnet"
+    _name     : str          = None
+    _tasks    : list[Task]   = [Task.BACKBONE]
+    _mltypes  : list[MLType] = []
+    _model_dir: Path         = current_dir
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        variant     : str,
+        name                     : str,
         inverted_residual_setting: Sequence[Union[MBConvConfig, FusedMBConvConfig]],
-        dropout     : float,
-        last_channel: Optional[int],
-        weights     : WeightsEnum = None,
-        out_indices : list        = None,
+        dropout                  : float,
+        last_channel             : Optional[int],
+        weights                  : WeightsEnum | None = None,
+        out_indices              : list | None        = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
-            variant: Variant of EfficientNet to use.
+            name: Variant of EfficientNet to use.
             inverted_residual_setting: A list of InvertedResidualConfig to
                 construct blocks.
             dropout: Dropout rate before final classifier.
@@ -89,27 +100,27 @@ class EfficientNetBackBone(nn.Module):
             args: Additional positional arguments for the ResNet model.
             kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__()
+        super().__init__(name=name, *args, **kwargs)
         # Load the base model
-        if weights is not None:
+        if isinstance(weights, WeightsEnum):
             kwargs["num_classes"] = weights.num_classes
-        
+
         base_model = EfficientNet(
             inverted_residual_setting = inverted_residual_setting,
             dropout                   = dropout,
             last_channel              = last_channel,
             *args, **kwargs
         )
-        
-        if weights is not None:
+
+        if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.get_state_dict())
-        
+
         # In torchvision, DenseNet already has a 'features' block
         self.features     = base_model.features
         self.out_indices  = out_indices or [2, 3, 5, 8]
-        self.out_channels = self._get_out_channels(variant)
-    
-    def _get_out_channels(self, variant):
+        self.out_channels = self._get_out_channels(variant=name)
+
+    def _get_out_channels(self, variant: str) -> list[int]:
         # Channels grow as the variant (B0-B7) increases
         mapping = {
             "efficientnet_b0": [24, 40, 112, 1280],
@@ -118,15 +129,15 @@ class EfficientNetBackBone(nn.Module):
             "efficientnet_b7": [48, 80, 224, 2560],
         }
         return mapping.get(variant, [24, 40, 112, 1280])
-    
+
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> list:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        """Forward the input through the network.
+
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             A list of feature maps from the specified layers.
         """
@@ -137,15 +148,23 @@ class EfficientNetBackBone(nn.Module):
             if i in self.out_indices:
                 outputs.append(x)
         return outputs
-    
+
+
+# --- Mixins ---
+
+
+# endregion
+
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (Variants)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Pre-trained Weights ---
+
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b0")
 class EfficientNet_B0_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pth",
@@ -170,8 +189,9 @@ class EfficientNet_B0_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b1")
 class EfficientNet_B1_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b1_rwightman-bac287d4.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pth",
@@ -221,8 +241,9 @@ class EfficientNet_B1_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b2")
 class EfficientNet_B2_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b2_rwightman-c35c1473.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pth",
@@ -247,8 +268,9 @@ class EfficientNet_B2_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b3")
 class EfficientNet_B3_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pth",
@@ -273,8 +295,9 @@ class EfficientNet_B3_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b4")
 class EfficientNet_B4_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b4_rwightman-23ab8bcd.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pth",
@@ -299,8 +322,9 @@ class EfficientNet_B4_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b5")
 class EfficientNet_B5_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b5_lukemelas-1a07897c.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pth",
@@ -323,10 +347,11 @@ class EfficientNet_B5_Weights(WeightsEnum):
         }
     )
     DEFAULT = IMAGENET1K_V1
-    
- 
+
+
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b6")
 class EfficientNet_B6_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b6_lukemelas-24a108a5.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pth",
@@ -349,10 +374,11 @@ class EfficientNet_B6_Weights(WeightsEnum):
         }
     )
     DEFAULT = IMAGENET1K_V1
-    
- 
+
+
+@WEIGHTS.register(arch="efficientnet", name="efficientnet_b7")
 class EfficientNet_B7_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b7_lukemelas-c5b4e57e.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pth",
@@ -377,8 +403,9 @@ class EfficientNet_B7_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="efficientnet_v2", name="efficientnet_v2_s")
 class EfficientNet_V2_S_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth",
         path        = ROOT_DIR / "zoo/nn/backbone//efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pth",
@@ -407,8 +434,9 @@ class EfficientNet_V2_S_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="efficientnet_v2", name="efficientnet_v2_m")
 class EfficientNet_V2_M_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_v2_m-dc08266a.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pth",
@@ -437,8 +465,9 @@ class EfficientNet_V2_M_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
+@WEIGHTS.register(arch="efficientnet_v2", name="efficientnet_v2_l")
 class EfficientNet_V2_L_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pth",
@@ -464,174 +493,366 @@ class EfficientNet_V2_L_Weights(WeightsEnum):
 
 
 # --- Model Variants ---
+
 @BACKBONES.register(name="efficientnet_b0")
-def efficientnet_b0(weights: WeightsEnum | str = EfficientNet_B0_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b0(
+    weights    : WeightsEnum | str | None = EfficientNet_B0_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B0 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B0_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B0 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b0", width_mult=1.0, depth_mult=1.0)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b0",
+        name         = "efficientnet_b0",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.2),
         last_channel = last_channel,
         weights      = EfficientNet_B0_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_b1")
-def efficientnet_b1(weights: WeightsEnum | str = EfficientNet_B1_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b1(
+    weights    : WeightsEnum | str | None = EfficientNet_B1_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B1 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B1_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B1 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b1", width_mult=1.0, depth_mult=1.1)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b1",
+        name         = "efficientnet_b1",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.2),
         last_channel = last_channel,
         weights      = EfficientNet_B1_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_b2")
-def efficientnet_b2(weights: WeightsEnum | str = EfficientNet_B2_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b2(
+    weights    : WeightsEnum | str = EfficientNet_B2_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B2 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B2_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B2 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b2", width_mult=1.1, depth_mult=1.2)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b2",
+        name         = "efficientnet_b2",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.3),
         last_channel = last_channel,
         weights      = EfficientNet_B2_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_b3")
-def efficientnet_b3(weights: WeightsEnum | str = EfficientNet_B3_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b3(
+    weights    : WeightsEnum | str = EfficientNet_B3_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B3 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B3_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B3 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b3", width_mult=1.2, depth_mult=1.4)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b3",
+        name         = "efficientnet_b3",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.3),
         last_channel = last_channel,
         weights      = EfficientNet_B3_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_b4")
-def efficientnet_b4(weights: WeightsEnum | str = EfficientNet_B4_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b4(
+    weights    : WeightsEnum | str | None = EfficientNet_B4_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B4 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B4_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B4 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b4", width_mult=1.4, depth_mult=1.8)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b4",
+        name         = "efficientnet_b4",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.4),
         last_channel = last_channel,
         weights      = EfficientNet_B4_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_b5")
-def efficientnet_b5(weights: WeightsEnum | str = EfficientNet_B5_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b5(
+    weights    : WeightsEnum | str | None = EfficientNet_B5_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B5 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B5_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B5 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b5", width_mult=1.6, depth_mult=2.2)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b5",
+        name         = "efficientnet_b5",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.4),
         last_channel = last_channel,
         norm_layer   = partial(nn.BatchNorm2d, eps=0.001, momentum=0.01),
         weights      = EfficientNet_B5_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_b6")
-def efficientnet_b6(weights: WeightsEnum | str = EfficientNet_B6_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b6(
+    weights    : WeightsEnum | str | None = EfficientNet_B6_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B6 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B6_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B6 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b6", width_mult=1.8, depth_mult=2.6)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b6",
+        name         = "efficientnet_b6",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.5),
         last_channel = last_channel,
         norm_layer   = partial(nn.BatchNorm2d, eps=0.001, momentum=0.01),
         weights      = EfficientNet_B6_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_b7")
-def efficientnet_b7(weights: WeightsEnum | str = EfficientNet_B7_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_b7(
+    weights    : WeightsEnum | str | None = EfficientNet_B7_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-B7 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_B7_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-B7 backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b7", width_mult=2.0, depth_mult=3.1)
     return EfficientNetBackBone(
-        variant      = "efficientnet_b7",
+        name         = "efficientnet_b7",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.5),
         last_channel = last_channel,
         norm_layer   = partial(nn.BatchNorm2d, eps=0.001, momentum=0.01),
         weights      = EfficientNet_B7_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_v2_s")
-def efficientnet_v2_s(weights: WeightsEnum | str = EfficientNet_V2_S_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_v2_s(
+    weights    : WeightsEnum | str | None = EfficientNet_V2_S_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-V2-S backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_V2_S_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-V2-S backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_s")
     return EfficientNetBackBone(
-        variant      = "efficientnet_v2_s",
+        name         = "efficientnet_v2_s",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.2),
         last_channel = last_channel,
         norm_layer   = partial(nn.BatchNorm2d, eps=1e-03),
         weights      = EfficientNet_V2_S_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_v2_m")
-def efficientnet_v2_m(weights: WeightsEnum | str = EfficientNet_V2_M_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_v2_m(
+    weights    : WeightsEnum | str | None = EfficientNet_V2_M_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-V2-M backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_V2_M_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-V2-M backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_m")
     return EfficientNetBackBone(
-        variant      = "efficientnet_v2_m",
+        name         = "efficientnet_v2_m",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.3),
         last_channel = last_channel,
         norm_layer   = partial(nn.BatchNorm2d, eps=1e-03),
         weights      = EfficientNet_V2_M_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="efficientnet_v2_l")
-def efficientnet_v2_l(weights: WeightsEnum | str = EfficientNet_V2_L_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def efficientnet_v2_l(
+    weights    : WeightsEnum | str | None = EfficientNet_V2_L_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create an EfficientNet-V2-L backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            EfficientNet_V2_L_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        An EfficientNet-V2-L backbone model.
+    """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_l")
     return EfficientNetBackBone(
-        variant      = "efficientnet_v2_l",
+        name         = "efficientnet_v2_l",
         inverted_residual_setting = inverted_residual_setting,
         dropout      = kwargs.pop("dropout", 0.4),
         last_channel = last_channel,
         norm_layer   = partial(nn.BatchNorm2d, eps=1e-03),
         weights      = EfficientNet_V2_L_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
+
+# endregion
 
 
 # ==============================================================================
-# DEBUGGING
+# region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
     model_ = efficientnet_b0(weights="default")
     x = torch.ones(1, 3, 224, 224)
     y = model_(x)
-    # print(model_.features)
-    # print(x)
+    print(model_.features)
+    print(x)
     print(y)
+
+# endregion

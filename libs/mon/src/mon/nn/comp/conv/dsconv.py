@@ -3,7 +3,7 @@
 
 """Depthwise-separable convolutional layers.
 
-This module implements the depthwise separable convolutional layers used for
+This module provides the depthwise separable convolutional layers used for
 lightweight feature extraction.
 """
 
@@ -26,9 +26,12 @@ from torch.nn.common_types import _size_2_t
 
 class DSConv2d(nn.Module):
     """Depthwise separable convolutional layer.
-    
-    This layer consists of a depthwise convolution followed by a pointwise
-    convolution.
+
+    Apply a depthwise convolution followed by a pointwise convolution.
+
+    Attributes:
+        dw_conv (torch.nn.Conv2d): Depthwise convolutional layer.
+        pw_conv (torch.nn.Conv2d): Pointwise convolutional layer.
     """
 
     # --- Lifecycle & Initialization ---
@@ -92,17 +95,17 @@ class DSConv2d(nn.Module):
         )
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
         
         Args:
-            input: Input tensor with dimensions (B, C_in, H, W) and values
-                ranging from 0.0 to 1.0.
+            x: Input tensor of shape (B, C_in, H, W) and values ranging
+                from 0.0 to 1.0.
             
         Returns:
-            Output tensor with dimensions (B, C_out, H_out, W_out) and values
-                ranging from 0.0 to 1.0.
+            Output tensor of shape (B, C_out, H_out, W_out) and values ranging
+            from 0.0 to 1.0.
         """
-        return self.pw_conv(self.dw_conv(input))
+        return self.pw_conv(self.dw_conv(x))
 
 # endregion

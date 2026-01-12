@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Neural network base classes and mixins.
+"""Base classes and mixins for neural networks."""
 
-This module implements the base classes and mixins for neural networks.
-"""
+from __future__ import annotations
 
 __all__ = [
     "Container",
@@ -30,33 +29,35 @@ from mon.core import download_url_to_file, log, MLType, Path, Task, VERBOSE
 
 
 # ==============================================================================
-# GLOBAL CONFIGURATIONS (Constants)
+# region CONSTANTS
 # ==============================================================================
 
-# --- Constants (Global defaults, versioning) ---
 
-
-# --- Environment ---
+# endregion
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
+
 class RegistrableMixin:
     """A mixin class that adds metadata attribute to deep learning models for
     factory registration purposes.
@@ -83,7 +84,69 @@ class RegistrableMixin:
     _tasks    : list[Task]   = []
     _mltypes  : list[MLType] = []
     _model_dir: Path         = None
-    
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        arch : str | None        = None,
+        name : str | None        = None,
+        tasks: list[Task] | None = None,
+        *args, **kwargs
+    ):
+        """Initialize a new instance.
+
+        Args:
+            arch: Architecture of the data container. If provided, it overrides
+                class-level default. Defaults to None.
+            name: Name of the data container. If provided, it overrides the
+                class-level default. Defaults to None.
+            tasks: List of supported tasks. If provided, it overrides the
+                class-level default. Defaults to None.
+        """
+        if arch is not None and not isinstance(name, str):
+            raise TypeError(f"Expected 'arch' to be a str, but got {type(name).__name__}.")
+        if name is not None and not isinstance(name, str):
+            raise TypeError(f"Expected 'name' to be a str, but got {type(name).__name__}.")
+        if tasks is not None and not isinstance(tasks, list):
+            raise TypeError(f"Expected 'tasks' to be a list, but got {type(tasks).__name__}.")
+
+        # If provided, these instance variables will override the class-level defaults
+        if arch is not None:
+            self._arch = arch
+        if name is not None:
+            self._name = name
+        if tasks is not None:
+            # We use list() to create a copy, preventing shared state bugs
+            self._tasks = list(tasks)
+
+        # Continue the initialization chain
+        super().__init__(*args, **kwargs)
+
+    def __init_subclass__(cls, *args, **kwargs):
+        """Validate subclass attributes on inheritance."""
+        super().__init_subclass__(*args, **kwargs)
+
+        # Check for EXPLICIT definition in the subclass (not inherited)
+        for attr in ["_arch", "_name", "_tasks"]:
+            if attr not in cls.__dict__:
+                raise TypeError(f"Class {cls.__name__} must define '{attr}' attribute.")
+
+        # Check for VALID values
+        if not isinstance(cls._arch, str):
+            raise TypeError(f"Expected '_arch' to be a str, but got {type(cls._arch).__name__}.")
+        if not cls._arch:
+            raise ValueError(f"Expected '_arch' to be a non-empty str, but got '{cls._arch}'.")
+
+        if not isinstance(cls._name, str):
+            raise TypeError(f"Expected '_name' to be a str, but got {type(cls._name).__name__}.")
+        if not cls._name:
+            raise ValueError(f"Expected '_name' to be a non-empty str, but got '{cls._name}'.")
+
+        if not isinstance(cls._tasks, list):
+            raise TypeError(f"Expected '_tasks' to be a list, but got {type(cls._tasks).__name__}.")
+        if not cls._tasks:
+            raise ValueError(f"Expected '_tasks' to be a non-empty list, but got {cls._tasks}.")
+
     # --- Properties ---
     @property
     def arch(self) -> str:
@@ -204,5 +267,4 @@ class ModelAdapterMixin(RegistrableMixin, ModelZooMixin):
     """
     pass
 
-
-# --- Compute Mixins ---
+# endregion

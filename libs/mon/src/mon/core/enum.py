@@ -560,7 +560,11 @@ class Task(Enum):
 
     Enumerate the high-level tasks that models in the project implement.
     """
-    
+
+    # --- Neural Networks ---
+    # Backbone
+    BACKBONE   = "backbone"             # Backbone Network
+
     # --- Generative AI ---
     # Image Generation
     IMG2IMG     = "img2img"             # Image-to-Image Translation

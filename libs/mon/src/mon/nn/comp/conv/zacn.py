@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the depth-adapted convolutional layers.
+"""This module provides the depth-adapted convolutional layers.
 
 References:
     - Paper: "Depth-Adapted CNN for RGB-D Cameras," ACCV 2021.

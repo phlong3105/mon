@@ -11,12 +11,13 @@ from __future__ import annotations
 
 __all__ = [
     "Factory",
-    "ModelFactory",
+    "ArchModelFactory",
     # Constants
     "ALBUMENTATIONS",
     "BACKBONES",
     "DATASETS",
     "MODELS",
+    "WEIGHTS",
 ]
 
 import inspect
@@ -196,7 +197,7 @@ class Factory(dict):
 # region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-class ModelFactory(Factory):
+class ArchModelFactory(Factory):
     """Factory specialized for organizing models by architecture.
 
     Maintain a nested structure: ``arch -> {model_name: model_class}``. Provide
@@ -357,6 +358,7 @@ class ModelFactory(Factory):
 ALBUMENTATIONS = Factory(name="Albumentations")
 DATASETS       = Factory(name="Datasets",  decamelize=True)
 BACKBONES      = Factory(name="Backbones", decamelize=True)
-MODELS         = ModelFactory(name="Models", decamelize=True)
+MODELS         = ArchModelFactory(name="Models",  decamelize=True)
+WEIGHTS        = ArchModelFactory(name="Weights", decamelize=True)
 
 # endregion

@@ -6,6 +6,8 @@
 This module implements various MobileNetV2 backbones using PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "MobileNet_V2_Weights",
     "mobilenet_v2",
@@ -16,29 +18,39 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.mobilenetv2 import MobileNetV2
 
-from mon.core import BACKBONES, Path, ROOT_DIR
+from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
 from mon.core.dtypes import Weights, WeightsEnum
+from ...base import RegistrableMixin
 
-current_file = Path(__file__).absolute()
-root_dir     = current_file.parents[0]
-
-
-# ==============================================================================
-# COMPONENTS (Building Blocks)
-# ==============================================================================
+current_file = Path(__file__).normalize()
+current_dir  = current_file.parents[0]
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
-class MobileNetV2BackBone(nn.Module):
-    """MobileNetV2 backbone."""
-    
+# --- Base Classes ---
+
+class MobileNetV2BackBone(nn.Module, RegistrableMixin):
+    """MobileNetV2 backbone.
+
+    Attributes:
+        features (torch.nn.Sequential): The feature extraction layers.
+        out_indices (list): List of layer indices to extract features from.
+        out_channels (list): List of output channels for each extracted layer.
+    """
+
+    _arch     : str          = "mobilenet"
+    _name     : str          = None
+    _tasks    : list[Task]   = [Task.BACKBONE]
+    _mltypes  : list[MLType] = []
+    _model_dir: Path         = current_dir
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
+        name       : str,
         weights    : WeightsEnum = None,
         out_indices: list        = None,
         *args, **kwargs
@@ -46,20 +58,22 @@ class MobileNetV2BackBone(nn.Module):
         """Initialize a new instance.
         
         Args:
+            name: Name of the backbone.
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [3, 6, 13, 18].
             args: Additional positional arguments for the ResNet model.
             kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__()
+        super().__init__(name=name, *args, **kwargs)
+
         # Load the base model
-        if weights is not None:
+        if isinstance(weights, WeightsEnum):
             kwargs["num_classes"] = weights.num_classes
         
         base_model = MobileNetV2(*args, **kwargs)
         
-        if weights is not None:
+        if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.get_state_dict())
         
         # In torchvision, MobileNetV2 already has a 'features' block
@@ -68,11 +82,11 @@ class MobileNetV2BackBone(nn.Module):
         self.out_channels = [24, 32, 96, 1280]
     
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> list:
-        """Forward pass.
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        """Forward the input through the network.
         
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         
         Returns:
@@ -87,11 +101,19 @@ class MobileNetV2BackBone(nn.Module):
         return outputs
     
 
+# --- Mixins ---
+
+
+# endregion
+
+
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (Variants)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Pre-trained Weights ---
+
+@WEIGHTS.register(arch="mobilenet", name="mobilenet_v2")
 class MobileNet_V2_Weights(WeightsEnum):
     
     IMAGENET1K_V1 = Weights(
@@ -144,23 +166,46 @@ class MobileNet_V2_Weights(WeightsEnum):
 
 
 # --- Model Variants ---
+
 @BACKBONES.register(name="mobilenet_v2")
-def mobilenet_v2(weights: WeightsEnum | str = MobileNet_V2_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def mobilenet_v2(
+    weights    : WeightsEnum | str | None = MobileNet_V2_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a MobileNetV2 backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            MobileNet_V2_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A MobileNetV2 backbone model.
+    """
     return MobileNetV2BackBone(
+        name        = "mobilenet_v2",
         weights     = MobileNet_V2_Weights(weights),
         out_indices = out_indices,
-        **kwargs
+         *args, **kwargs
     )
+
+# endregion
 
 
 # ==============================================================================
-# DEBUGGING
+# region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
     model_ = mobilenet_v2(weights="default")
     x = torch.ones(1, 3, 224, 224)
     y = model_(x)
-    # print(model_.features)
-    # print(x)
+    print(model_.features)
+    print(x)
     print(y)
+
+# endregion

@@ -3,9 +3,11 @@
 
 """Shuffle operations.
 
-This module implements various shuffle operations used for rearranging
+This module provides various shuffle operations used for rearranging
 elements in tensors, such as channel shuffling and pixel shuffling.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "ChannelShuffle",

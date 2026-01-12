@@ -45,5 +45,41 @@ __all__ = [
     # "swa_utils",
 ]
 
-from torch.optim import *               # Expose all optimizers from ``torch.optim``
-from torch.optim.lr_scheduler import *  # Expose all schedulers from ``torch.optim.lr_scheduler``
+from torch.optim import (
+    Adafactor,
+    Adadelta,
+    Adagrad,
+    Adam,
+    Adamax,
+    AdamW,
+    ASGD,
+    LBFGS,
+    lr_scheduler,
+    Muon,
+    NAdam,
+    Optimizer,
+    RAdam,
+    RMSprop,
+    Rprop,
+    SGD,
+    SparseAdam,
+    swa_utils,
+)
+from torch.optim.lr_scheduler import (
+    LambdaLR,
+    MultiplicativeLR,
+    StepLR,
+    MultiStepLR,
+    ConstantLR,
+    LinearLR,
+    ExponentialLR,
+    SequentialLR,
+    CosineAnnealingLR,
+    ChainedScheduler,
+    ReduceLROnPlateau,
+    CyclicLR,
+    CosineAnnealingWarmRestarts,
+    OneCycleLR,
+    PolynomialLR,
+    LRScheduler,
+)

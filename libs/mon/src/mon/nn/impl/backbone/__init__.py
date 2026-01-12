@@ -7,7 +7,7 @@ This package contains various neural network backbones. It strictly outputs a
 list of feature maps (usually from different stages of the network).
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .alexnet import *
 from .convnext import *

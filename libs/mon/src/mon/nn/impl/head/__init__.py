@@ -7,4 +7,4 @@ This package contains various neural network heads. It takes the features from
 the Neck and maps them to the final output dimensions.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations

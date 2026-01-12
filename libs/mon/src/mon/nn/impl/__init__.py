@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Concrete neural network implementations.
+"""Concrete implementations of neural networks.
 
-This package contains various concrete implementations of neural network
-architectural features.
+This package contains various concrete implementations of neural networks
+commonly used in machine learning and deep learning.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .backbone import *
 from .head import *

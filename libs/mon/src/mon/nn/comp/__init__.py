@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Neural network components.
+"""Components for neural networks.
 
-This package contains various modular components which can be assembled together
-to form concrete neural network architectures.
+This package contains various modular components which can be assembled to form
+concrete neural network implementations.
 
 Notes:
     - Design Pattern: Multiple Template Methods.
@@ -14,18 +14,18 @@ Notes:
             
             comp/
             ├── __init__.py        # Unified entry point
-            ├── template_A/        # Break into a "Template Method" if the module becomes too large
-            │   ├── __init__.py    # Registry and factory logic
-            │   ├── base.py        # Base classes and mixins
-            │   ├── basic.py       # Basic functionalities
+            ├── template/
+            │   ├── __init__.py   # Registry and factory
+            │   ├── api.py        # External APIs
+            │   ├── base.py       # Base classes and mixins
+            │   ├── basic.py      # Basic functionalities
             │   ├── ...
-            │   ├── utils.py       # Utility functions and helpers
-            │   └── external/      # Expose external libraries
-            │       └── ...
+            │   ├── utils.py      # Utilities and helpers
+            │   └── external/     # Integrate external libraries
             └── ...
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
 
 from .act import *
 from .attention import *

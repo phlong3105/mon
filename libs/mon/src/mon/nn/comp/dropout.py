@@ -3,9 +3,11 @@
 
 """Dropout layers.
 
-This module implements various dropout layers used for regularization by randomly
+This module provides various dropout layers used for regularization by randomly
 setting activations to zero.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "AlphaDropout",

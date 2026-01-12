@@ -39,7 +39,30 @@ __all__ = [
 
 import torch
 import torch.nn as nn
-from torch.nn.modules.loss import *  # Expose all losses from ``torch.nn.modules.loss``
+from torch.nn.modules.loss import (
+    BCELoss,
+    BCEWithLogitsLoss,
+    CosineEmbeddingLoss,
+    CrossEntropyLoss,
+    CTCLoss,
+    GaussianNLLLoss,
+    HingeEmbeddingLoss,
+    HuberLoss,
+    KLDivLoss,
+    L1Loss,
+    MarginRankingLoss,
+    MSELoss,
+    MultiLabelMarginLoss,
+    MultiLabelSoftMarginLoss,
+    MultiMarginLoss,
+    NLLLoss,
+    NLLLoss2d,
+    PoissonNLLLoss,
+    SmoothL1Loss,
+    SoftMarginLoss,
+    TripletMarginLoss,
+    TripletMarginWithDistanceLoss,
+)
 
 from .base import BaseLoss
 

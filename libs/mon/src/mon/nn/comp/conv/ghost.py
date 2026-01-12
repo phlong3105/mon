@@ -3,7 +3,7 @@
 
 """GhostNet's modules.
 
-This module implements Ghost modules and Ghost bottlenecks as described in the
+This module provides Ghost modules and Ghost bottlenecks as described in the
 GhostNet and GhostNetV2 papers.
 
 References:
@@ -65,7 +65,17 @@ def hard_sigmoid(x: torch.Tensor, inplace: bool = False) -> torch.Tensor:
 # ==============================================================================
 
 class SqueezeExcite(nn.Module):
-    """Squeeze-and-Excitation block."""
+    """Squeeze-and-Excitation block.
+
+    Apply squeeze-and-excitation to the input tensor.
+
+    Attributes:
+        gate_fn (Callable): The gating function.
+        avg_pool (torch.nn.AdaptiveAvgPool2d): Adaptive average pooling layer.
+        conv_reduce (torch.nn.Conv2d): Reduction convolution layer.
+        act1 (Callable): Activation function.
+        conv_expand (torch.nn.Conv2d): Expansion convolution layer.
+    """
     
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -78,6 +88,16 @@ class SqueezeExcite(nn.Module):
         divisor         : int      = 4,
         **_
     ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels: Number of input channels.
+            se_ratio: Squeeze-and-excitation ratio. Defaults to 0.25.
+            reduced_channels: Number of reduced channels. Defaults to None.
+            act_layer: Activation layer. Defaults to nn.ReLU.
+            gate_fn: Gating function. Defaults to hard_sigmoid.
+            divisor: Divisor for channel number. Defaults to 4.
+        """
         super().__init__()
         self.gate_fn     = gate_fn
         reduced_channels = _make_divisible((reduced_channels or in_channels) * se_ratio, divisor)
@@ -88,6 +108,14 @@ class SqueezeExcite(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Output tensor.
+        """
         x_se = self.avg_pool(x)
         x_se = self.conv_reduce(x_se)
         x_se = self.act1(x_se)
@@ -97,7 +125,15 @@ class SqueezeExcite(nn.Module):
 
 
 class ConvBnAct(nn.Module):
-    """Convolution-Batch Normalization-Activation block."""
+    """Convolution-Batch Normalization-Activation block.
+
+    Apply convolution, batch normalization, and activation to the input tensor.
+
+    Attributes:
+        conv (torch.nn.Conv2d): Convolution layer.
+        bn1 (torch.nn.BatchNorm2d): Batch normalization layer.
+        act1 (Callable): Activation function.
+    """
     
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -108,6 +144,15 @@ class ConvBnAct(nn.Module):
         stride      : int      = 1,
         act_layer   : Callable = nn.ReLU
     ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels: Number of input channels.
+            out_channels: Number of output channels.
+            kernel_size: Size of the convolution kernel.
+            stride: Stride of the convolution. Defaults to 1.
+            act_layer: Activation layer. Defaults to nn.ReLU.
+        """
         super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, kernel_size // 2, bias=False)
         self.bn1  = nn.BatchNorm2d(out_channels)
@@ -115,6 +160,14 @@ class ConvBnAct(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Output tensor.
+        """
         x = self.conv(x)
         x = self.bn1(x)
         x = self.act1(x)
@@ -129,10 +182,17 @@ class ConvBnAct(nn.Module):
 
 class GhostModule(nn.Module):
     """Ghost module.
-    
+
+    Generate more features from cheap operations.
+
     References:
         - Paper: "GhostNet: More Features from Cheap Operations," CVPR 2020.
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnet_pytorch
+
+    Attributes:
+        out_channels (int): Number of output channels.
+        primary_conv (torch.nn.Sequential): Primary convolution layer.
+        cheap_operation (torch.nn.Sequential): Cheap operation layer.
     """
     
     # --- Lifecycle & Initialization ---
@@ -146,6 +206,17 @@ class GhostModule(nn.Module):
         stride      : int  = 1,
         relu        : bool = True
     ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels: Number of input channels.
+            out_channels: Number of output channels.
+            kernel_size: Size of the convolution kernel. Defaults to 1.
+            ratio: Ratio of primary to cheap channels. Defaults to 2.
+            dw_size: Size of the depthwise convolution kernel. Defaults to 3.
+            stride: Stride of the convolution. Defaults to 1.
+            relu: If True, apply ReLU activation. Defaults to True.
+        """
         super().__init__()
         self.out_channels = out_channels
         init_channels     = math.ceil(out_channels / ratio)
@@ -164,6 +235,14 @@ class GhostModule(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Output tensor.
+        """
         x1 = self.primary_conv(x)
         x2 = self.cheap_operation(x1)
         y  = torch.cat([x1, x2], dim=1)
@@ -172,10 +251,21 @@ class GhostModule(nn.Module):
 
 class GhostBottleneck(nn.Module):
     """Ghost bottleneck w/ optional SE.
-    
+
+    Apply Ghost bottleneck with optional Squeeze-and-Excitation.
+
     References:
         - Paper: "GhostNet: More Features from Cheap Operations," CVPR 2020.
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnet_pytorch
+
+    Attributes:
+        stride (int): Stride of the convolution.
+        ghost1 (GhostModule): First Ghost module.
+        conv_dw (torch.nn.Conv2d): Depthwise convolution layer.
+        bn_dw (torch.nn.BatchNorm2d): Batch normalization layer.
+        se (SqueezeExcite | None): Squeeze-and-Excitation block.
+        ghost2 (GhostModule): Second Ghost module.
+        shortcut (torch.nn.Sequential): Shortcut connection.
     """
 
     # --- Lifecycle & Initialization ---
@@ -189,6 +279,18 @@ class GhostBottleneck(nn.Module):
         se_ratio      : float = 0.0,
         relu          : bool  = True
     ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels: Number of input channels.
+            mid_channels: Number of middle channels.
+            out_channels: Number of output channels.
+            dw_kernel_size: Size of the depthwise convolution kernel. Defaults
+                to 3.
+            stride: Stride of the convolution. Defaults to 1.
+            se_ratio: Squeeze-and-excitation ratio. Defaults to 0.0.
+            relu: If True, apply ReLU activation. Defaults to True.
+        """
         super().__init__()
         has_se      = se_ratio is not None and se_ratio > 0.0
         self.stride = stride
@@ -239,6 +341,14 @@ class GhostBottleneck(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Output tensor.
+        """
         residual = x
         # 1st ghost bottleneck
         x = self.ghost1(x)
@@ -258,10 +368,20 @@ class GhostBottleneck(nn.Module):
 
 class GhostModuleV2(nn.Module):
     """Ghost module V2 with long-range attention.
-    
+
+    Generate more features from cheap operations with long-range attention.
+
     References:
         - Paper: "GhostNetV2: Enhance Cheap Operation with Long-Range Attention," NeurIPS 2022.
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
+
+    Attributes:
+        mode (str): Mode of operation ("original" or "attn").
+        out_channels (int): Number of output channels.
+        primary_conv (torch.nn.Sequential): Primary convolution layer.
+        cheap_operation (torch.nn.Sequential): Cheap operation layer.
+        gate_fn (torch.nn.Sigmoid): Gating function (only in "attn" mode).
+        short_conv (torch.nn.Sequential): Short convolution layer (only in "attn" mode).
     """
     
     # --- Lifecycle & Initialization ---
@@ -276,6 +396,19 @@ class GhostModuleV2(nn.Module):
         relu        : bool = True,
         mode        : Literal["original", "attn"] = "original",
     ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels: Number of input channels.
+            out_channels: Number of output channels.
+            kernel_size: Size of the convolution kernel. Defaults to 1.
+            ratio: Ratio of primary to cheap channels. Defaults to 2.
+            dw_size: Size of the depthwise convolution kernel. Defaults to 3.
+            stride: Stride of the convolution. Defaults to 1.
+            relu: If True, apply ReLU activation. Defaults to True.
+            mode: Mode of operation ("original" or "attn"). Defaults to
+                "original".
+        """
         super().__init__()
         self.mode         = mode
         self.out_channels = out_channels
@@ -306,6 +439,14 @@ class GhostModuleV2(nn.Module):
       
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Output tensor.
+        """
         x1 = self.primary_conv(x)
         x2 = self.cheap_operation(x1)
         y  = torch.cat([x1, x2], dim=1)
@@ -322,10 +463,22 @@ class GhostModuleV2(nn.Module):
 
 class GhostBottleneckV2(nn.Module):
     """Ghost bottleneck V2 with long-range attention and optional SE.
-    
+
+    Apply Ghost bottleneck V2 with long-range attention and optional
+    Squeeze-and-Excitation.
+
     References:
         - Paper: "GhostNetV2: Enhance Cheap Operation with Long-Range Attention," NeurIPS 2022.
         - Code: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
+
+    Attributes:
+        stride (int): Stride of the convolution.
+        ghost1 (GhostModuleV2): First Ghost module.
+        conv_dw (torch.nn.Conv2d): Depthwise convolution layer.
+        bn_dw (torch.nn.BatchNorm2d): Batch normalization layer.
+        se (SqueezeExcite | None): Squeeze-and-Excitation block.
+        ghost2 (GhostModuleV2): Second Ghost module.
+        shortcut (torch.nn.Sequential): Shortcut connection.
     """
     
     # --- Lifecycle & Initialization ---
@@ -340,6 +493,19 @@ class GhostBottleneckV2(nn.Module):
         layer_id      : int   = None,
         relu          : bool  = True
     ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels: Number of input channels.
+            mid_channels: Number of middle channels.
+            out_channels: Number of output channels.
+            dw_kernel_size: Size of the depthwise convolution kernel. Defaults
+                to 3.
+            stride: Stride of the convolution. Defaults to 1.
+            se_ratio: Squeeze-and-excitation ratio. Defaults to 0.0.
+            layer_id: Layer ID. Defaults to None.
+            relu: If True, apply ReLU activation. Defaults to True.
+        """
         super().__init__()
         has_se      = se_ratio is not None and se_ratio > 0.0
         self.stride = stride
@@ -394,6 +560,14 @@ class GhostBottleneckV2(nn.Module):
             
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Output tensor.
+        """
         residual = x
         x = self.ghost1(x)
         if self.stride > 1:

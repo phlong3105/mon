@@ -9,8 +9,6 @@ of convolutional neural networks.
 
 from __future__ import annotations
 
-# __all__ = []  # Prevent accidental imports of submodules.
-
 from .basic import *
 from .depth_aware import *
 from .dsconv import *

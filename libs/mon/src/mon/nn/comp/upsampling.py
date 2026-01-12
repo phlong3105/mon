@@ -3,9 +3,11 @@
 
 """Upsampling layers.
 
-This module implements various upsampling layers commonly used for increasing
+This module provides various upsampling layers commonly used for increasing
 the resolution of feature maps.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Upsample",

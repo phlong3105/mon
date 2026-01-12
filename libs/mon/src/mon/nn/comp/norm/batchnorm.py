@@ -3,9 +3,11 @@
 
 """Batch normalization layers.
 
-This module implements various batch normalization layers used for normalizing
+This module provides various batch normalization layers used for normalizing
 a batch of inputs in neural networks.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "AdaptiveBatchNorm2d",
@@ -20,18 +22,34 @@ __all__ = [
 
 import torch
 import torch.nn as nn
-from torch.nn.modules.batchnorm import *
+from torch.nn import (
+    BatchNorm1d,
+    BatchNorm2d,
+    BatchNorm3d,
+    LazyBatchNorm1d,
+    LazyBatchNorm2d,
+    LazyBatchNorm3d,
+    SyncBatchNorm,
+)
 
 
 class AdaptiveBatchNorm2d(nn.Module):
     r"""Adaptive batch normalization layer.
-    
+
+    Apply adaptive batch normalization to the input tensor.
+
     .. math::
         y = w_0 \cdot x + w_1 \cdot \text{BN}(x)
 
     References:
         - Paper: https://arxiv.org/abs/1709.00643
         - Code: https://github.com/nrupatunga/Fast-Image-Filters
+
+    Attributes:
+        w0 (torch.nn.parameter.Parameter): Weight for the identity connection.
+        w1 (torch.nn.parameter.Parameter): Weight for the batch normalization
+            connection.
+        bn (torch.nn.BatchNorm2d): Batch normalization layer.
     """
 
     # --- Lifecycle & Initialization ---
@@ -43,13 +61,13 @@ class AdaptiveBatchNorm2d(nn.Module):
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
             num_features: Number of features in the input tensor.
             eps: A value added to the denominator for numerical stability.
                 Defaults to 0.999.
-            momentum: The value used for the running mean and variance computation.
-                Defaults to 0.001.
+            momentum: The value used for the running mean and variance
+                computation. Defaults to 0.001.
             *args: Additional positional arguments for nn.BatchNorm2d.
             **kwargs: Additional keyword arguments for nn.BatchNorm2d.
         """
@@ -59,15 +77,15 @@ class AdaptiveBatchNorm2d(nn.Module):
         self.bn = nn.BatchNorm2d(num_features, eps, momentum, *args, **kwargs)
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
         Args:
-            input: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-            
+
         Returns:
-            Output tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging
+            from 0.0 to 1.0.
         """
-        return self.w0 * input + self.w1 * self.bn(input)
+        return self.w0 * x + self.w1 * self.bn(x)

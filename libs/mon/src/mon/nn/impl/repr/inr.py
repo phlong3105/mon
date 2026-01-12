@@ -7,6 +7,8 @@ This module implements various Implicit Neural Representation (INR) models used
 for modelling data like images, 3D shapes, or audio as continuous functions.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "FFN",
     "FINER",
@@ -49,8 +51,12 @@ class FFN(nn.Module):
 
     References:
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
+
+    Attributes:
+        encoding (PosEncodingFourier): Positional encoding layer.
+        net (torch.nn.Sequential): The MLP network.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -62,7 +68,7 @@ class FFN(nn.Module):
         bias         : bool  = True,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_features: Size of each input sample.
             out_features: Size of each output sample.
@@ -76,7 +82,7 @@ class FFN(nn.Module):
         """
         super().__init__()
         self.encoding = PosEncodingFourier(in_features=in_features, B=B)
-        
+
         # First layer
         net = []
         net.append(nn.Linear(self.encoding.out_features, hidden_dim, bias=bias))
@@ -88,19 +94,19 @@ class FFN(nn.Module):
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
         net.append(final_linear)
-        
+
         self.net = nn.Sequential(*net)
-        
+
     # --- Callable & Context Manager ---
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the network.
+
         Args:
-            coords: Input tensor with dimensions (..., in_features) and values
-                ranging from 0.0 to 1.0.
-            
+            coords: Input tensor of shape (..., in_features) and values ranging
+                from 0.0 to 1.0.
+
         Returns:
-            Output tensor with dimensions (..., out_features) and values ranging
+            Output tensor of shape (..., out_features) and values ranging
             from 0.0 to 1.0.
         """
         return self.net(self.encoding(coords))
@@ -108,11 +114,15 @@ class FFN(nn.Module):
 
 class PosEncodingMLP(nn.Module):
     """Positional Encoding (PE) MLP.
-    
+
     References:
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
+
+    Attributes:
+        encoding (PosEncodingNeRF): Positional encoding layer.
+        net (torch.nn.Sequential): The MLP network.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -124,7 +134,7 @@ class PosEncodingMLP(nn.Module):
         bias           : bool = True,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_features: Size of each input sample.
             out_features: Size of each output sample.
@@ -137,7 +147,7 @@ class PosEncodingMLP(nn.Module):
         """
         super().__init__()
         self.encoding = PosEncodingNeRF(in_features=in_features, num_frequencies=num_frequencies)
-        
+
         # First layer
         net = []
         net.append(nn.Linear(self.encoding.out_features, hidden_dim, bias=bias))
@@ -149,19 +159,19 @@ class PosEncodingMLP(nn.Module):
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
         net.append(final_linear)
-        
+
         self.net = nn.Sequential(*net)
-        
+
     # --- Callable & Context Manager ---
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the network.
+
         Args:
-            coords: Input tensor with dimensions (..., in_features) and values
-                ranging from 0.0 to 1.0.
-            
+            coords: Input tensor of shape (..., in_features) and values ranging
+                from 0.0 to 1.0.
+
         Returns:
-            Output tensor with dimensions (..., out_features) and values ranging
+            Output tensor of shape (..., out_features) and values ranging
             from 0.0 to 1.0.
         """
         return self.net(self.encoding(coords))
@@ -176,8 +186,11 @@ class SIREN(nn.Module):
           NeurIPS 2020.
         - Code: https://github.com/vsitzmann/siren
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
+
+    Attributes:
+        net (torch.nn.Sequential): The MLP network.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -190,7 +203,7 @@ class SIREN(nn.Module):
         bias          : bool  = True,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_features: Size of each input sample.
             out_features: Size of each output sample.
@@ -205,10 +218,26 @@ class SIREN(nn.Module):
         super().__init__()
         # First layer
         net = []
-        net.append(SineLinear(in_features, hidden_dim, bias, is_first=True, omega_0=first_omega_0))
+        net.append(
+            SineLinear(
+                in_features  = in_features,
+                out_features = hidden_dim,
+                bias         = bias,
+                is_first     = True,
+                omega_0      = first_omega_0
+            )
+        )
         # Hidden layers
         for i in range(hidden_layers):
-            net.append(SineLinear(hidden_dim, hidden_dim, bias, is_first=False, omega_0=hidden_omega_0))
+            net.append(
+                SineLinear(
+                    in_features  = hidden_dim,
+                    out_features = hidden_dim,
+                    bias         = bias,
+                    is_first     = False,
+                    omega_0      = hidden_omega_0
+                )
+            )
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
         with torch.no_grad():
@@ -217,19 +246,19 @@ class SIREN(nn.Module):
                  np.sqrt(6.0 / hidden_dim) / hidden_omega_0
             )
         net.append(final_linear)
-        
+
         self.net = nn.Sequential(*net)
-        
+
     # --- Callable & Context Manager ---
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the network.
+
         Args:
-            coords: Input tensor with dimensions (..., in_features) and values
-                ranging from 0.0 to 1.0.
-            
+            coords: Input tensor of shape (..., in_features) and values ranging
+                from 0.0 to 1.0.
+
         Returns:
-            Output tensor with dimensions (..., out_features) and values ranging
+            Output tensor of shape (..., out_features) and values ranging
             from 0.0 to 1.0.
         """
         return self.net(coords)
@@ -242,8 +271,11 @@ class FINER(nn.Module):
         - Paper: "FINER: Flexible spectral-bias tuning in Implicit NEural
           Representation by Variable-periodic Activation Functions," CVPR 2024.
         - Code: https://github.com/liuzhen0212/FINER
+
+    Attributes:
+        net (torch.nn.Sequential): The MLP network.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -253,12 +285,12 @@ class FINER(nn.Module):
         hidden_layers   : int,
         first_omega_0   : float = 30.0,
         hidden_omega_0  : float = 30.0,
-        first_bias_scale: float = None,
+        first_bias_scale: float | None = None,
         scale_req_grad  : bool  = False,
         bias            : bool  = True,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_features: Size of each input sample.
             out_features: Size of each output sample.
@@ -275,13 +307,31 @@ class FINER(nn.Module):
             scale_req_grad: Scale requires gradient if True. Defaults to False.
         """
         super().__init__()
-        
+
         # First layer
         net = []
-        net.append(FINERLinear(in_features, hidden_dim, bias, is_first=True, omega_0=first_omega_0, first_bias_scale=first_bias_scale, scale_req_grad=scale_req_grad))
+        net.append(
+            FINERLinear(
+                in_features      = in_features,
+                out_features     = hidden_dim,
+                bias             = bias,
+                is_first         = True,
+                omega_0          = first_omega_0,
+                first_bias_scale = first_bias_scale,
+                scale_req_grad   = scale_req_grad
+            )
+        )
         # Hidden layers
         for i in range(hidden_layers):
-            net.append(FINERLinear(hidden_dim, hidden_dim, bias, omega_0=hidden_omega_0, scale_req_grad=scale_req_grad))
+            net.append(
+                FINERLinear(
+                    in_features    = hidden_dim,
+                    out_features   = hidden_dim,
+                    bias           = bias,
+                    omega_0        = hidden_omega_0,
+                    scale_req_grad = scale_req_grad
+                )
+            )
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
         with torch.no_grad():
@@ -292,17 +342,17 @@ class FINER(nn.Module):
         net.append(final_linear)
 
         self.net = nn.Sequential(*net)
-    
+
     # --- Callable & Context Manager ---
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the network.
+
         Args:
-            coords: Input tensor with dimensions (..., in_features) and values
-                ranging from 0.0 to 1.0.
-            
+            coords: Input tensor of shape (..., in_features) and values ranging
+                from 0.0 to 1.0.
+
         Returns:
-            Output tensor with dimensions (..., out_features) and values ranging
+            Output tensor of shape (..., out_features) and values ranging
             from 0.0 to 1.0.
         """
         return self.net(coords)
@@ -310,13 +360,17 @@ class FINER(nn.Module):
 
 class FINER_PP(nn.Module):
     """FINER++ MLP.
-    
+
     References:
         - Paper: "FINER++: Building a Family of Variable-periodic Functions for
           Activating Implicit Neural Representation," arXiv 2025.
         - Code: https://github.com/liuzhen0212/FINER
+
+    Attributes:
+        out_features (int): Size of each output sample.
+        net (torch.nn.Sequential): The MLP network.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -331,7 +385,7 @@ class FINER_PP(nn.Module):
         bias            : bool  = True,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_features: Size of each input sample.
             out_features: Size of each output sample.
@@ -349,13 +403,31 @@ class FINER_PP(nn.Module):
         """
         super().__init__()
         self.out_features = out_features
-        
+
         # First layer
         net = []
-        net.append(FINERLinear(in_features, hidden_dim, bias, is_first=True, omega_0=first_omega_0, first_bias_scale=first_bias_scale, scale_req_grad=scale_req_grad))
+        net.append(
+            FINERLinear(
+                in_features      = in_features,
+                out_features     = hidden_dim,
+                bias             = bias,
+                is_first         = True,
+                omega_0          = first_omega_0,
+                first_bias_scale = first_bias_scale,
+                scale_req_grad   = scale_req_grad
+            )
+        )
         # Hidden layers
         for i in range(hidden_layers):
-            net.append(FINERLinear(hidden_dim, hidden_dim, bias, omega_0=hidden_omega_0, scale_req_grad=scale_req_grad))
+            net.append(
+                FINERLinear(
+                    in_features    = hidden_dim,
+                    out_features   = hidden_dim,
+                    bias           = bias,
+                    omega_0        = hidden_omega_0,
+                    scale_req_grad = scale_req_grad
+                )
+            )
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
         with torch.no_grad():
@@ -366,17 +438,17 @@ class FINER_PP(nn.Module):
         net.append(final_linear)
 
         self.net = nn.Sequential(*net)
-    
+
     # --- Callable & Context Manager ---
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the network.
+
         Args:
-            coords: Input tensor with dimensions (..., in_features) and values
-                ranging from 0.0 to 1.0.
-            
+            coords: Input tensor of shape (..., in_features) and values ranging
+                from 0.0 to 1.0.
+
         Returns:
-            Output tensor with dimensions (..., out_features) and values ranging
+            Output tensor of shape (..., out_features) and values ranging
             from 0.0 to 1.0.
         """
         output = self.net(coords)
@@ -389,8 +461,11 @@ class GAUSS(nn.Module):
 
     References:
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
+
+    Attributes:
+        net (torch.nn.Sequential): The MLP network.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -402,7 +477,7 @@ class GAUSS(nn.Module):
         bias         : bool  = True,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_features: Size of each input sample.
             out_features: Size of each output sample.
@@ -413,7 +488,7 @@ class GAUSS(nn.Module):
                 Defaults to True.
         """
         super().__init__()
-        
+
         # First layer
         net = []
         net.append(GaussLinear(in_features, hidden_dim, bias, scale=scale))
@@ -423,33 +498,40 @@ class GAUSS(nn.Module):
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
         net.append(final_linear)
-        
+
         self.net = nn.Sequential(*net)
-        
+
     # --- Callable & Context Manager ---
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the network.
+
         Args:
-            coords: Input tensor with dimensions (..., in_features) and values
-                ranging from 0.0 to 1.0.
-            
+            coords: Input tensor of shape (..., in_features) and values ranging
+                from 0.0 to 1.0.
+
         Returns:
-            Output tensor with dimensions (..., out_features) and values ranging
+            Output tensor of shape (..., out_features) and values ranging
             from 0.0 to 1.0.
         """
         return self.net(coords)
-    
-    
+
+
 class WIRE(nn.Module):
     """WIRE MLP with Gabor wavelet activations.
-    
+
     References:
         - Paper: "WIRE: Wavelet Implicit Neural Representations," CVPR 2023.
         - Code: https://github.com/vishwa91/wire
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
+
+    Attributes:
+        nonlin (type): The nonlinearity class used.
+        complex (bool): Whether the network uses complex numbers.
+        wavelet (str): The type of wavelet used.
+        pos_encode (bool): Whether positional encoding is used.
+        net (torch.nn.Sequential): The MLP network.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -463,7 +545,7 @@ class WIRE(nn.Module):
         bias          : bool  = True,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_features: Size of each input sample.
             out_features: Size of each output sample.
@@ -480,38 +562,57 @@ class WIRE(nn.Module):
         super().__init__()
         # All results in the paper were with the default complex 'gabor' nonlinearity
         self.nonlin  = ComplexGaborLayer
-        
+
         # Since complex numbers are two real numbers, reduce the number of hidden parameters by 2
         hidden_dim   = int(hidden_dim / np.sqrt(2))
         dtype        = torch.cfloat
         self.complex = True
         self.wavelet = "gabor"
-        
+
         # Legacy parameter
         self.pos_encode = False
-        
+
         # First layer
         net = []
-        net.append(self.nonlin(in_features, hidden_dim, bias, is_first=True, omega_0=first_omega_0, sigma_0=scale, trainable=False))
+        net.append(
+            self.nonlin(
+                in_features  = in_features,
+                out_features = hidden_dim,
+                bias         = bias,
+                is_first     = True,
+                omega_0      = first_omega_0,
+                sigma_0      = scale,
+                trainable    = False
+            )
+        )
         # Hidden layers
         for i in range(hidden_layers):
-            net.append(self.nonlin(hidden_dim, hidden_dim, bias, is_first=False, omega_0=hidden_omega_0, sigma_0=scale))
+            net.append(
+                self.nonlin(
+                    in_features  = hidden_dim,
+                    out_features = hidden_dim,
+                    bias         = bias,
+                    is_first     = False,
+                    omega_0      = hidden_omega_0,
+                    sigma_0      = scale
+                )
+            )
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features, bias=bias, dtype=dtype)
         net.append(final_linear)
-        
-        self.net = nn.Sequential(*self.net)
-        
+
+        self.net = nn.Sequential(*net)
+
     # --- Callable & Context Manager ---
     def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+        """Forward the input through the network.
+
         Args:
-            coords: Input tensor with dimensions (..., in_features) and values
-                ranging from 0.0 to 1.0.
-            
+            coords: Input tensor of shape (..., in_features) and values ranging
+                from 0.0 to 1.0.
+
         Returns:
-            Output tensor with dimensions (..., out_features) and values ranging
+            Output tensor of shape (..., out_features) and values ranging
             from 0.0 to 1.0.
         """
         output = self.net(coords)
@@ -527,12 +628,12 @@ class WIRE(nn.Module):
 # --- Coordinate Generation & Embedding ---
 def create_coords(size: int) -> torch.Tensor:
     """Create a normalized square coordinates grid.
-    
+
     Args:
         size: The size of the grid.
-    
+
     Returns:
-        A tensor with dimensions (size, size, 2) and values ranging from 0.0 to 1.0.
+        A tensor of shape (size, size, 2) and values ranging from 0.0 to 1.0.
     """
     h, w   = size, size
     coords = np.dstack(np.meshgrid(np.linspace(0, 1, h), np.linspace(0, 1, w)))
@@ -546,9 +647,9 @@ def create_noisy_coords(size: int, sigma: float = 0.5, lamda: float = 1.0) -> to
         size: The size of the grid.
         sigma: Standard deviation of the Gaussian noise. Defaults to 0.5.
         lamda: Lambda parameter for Poisson noise. Defaults to 1.0
-        
+
     Returns:
-        A tensor with dimensions (size, size, 2) and values ranging from 0.0 to 1.0.
+        A tensor of shape (size, size, 2) and values ranging from 0.0 to 1.0.
     """
     h, w   = size, size
     coords = np.dstack(np.meshgrid(np.linspace(0, 1, h), np.linspace(0, 1, w)))
@@ -557,26 +658,26 @@ def create_noisy_coords(size: int, sigma: float = 0.5, lamda: float = 1.0) -> to
     # Add Gaussian noise
     gaussian_noise = torch.normal(mean=0.0, std=sigma, size=coords.shape).to(coords.device)
     noisy_coords   = coords + gaussian_noise
-    
+
     # Add Poisson noise
     poisson_noise  = torch.poisson(torch.full(coords.shape, lamda)).to(coords.device) - lamda
     noisy_coords   = noisy_coords + poisson_noise * 0.1  # Scale noise
-    
+
     # Clip to ensure coordinates stay within [0, 1]
     noisy_coords = torch.clamp(noisy_coords, 0.0, 1.0)
 
     return noisy_coords
 
 
-def ff_embedding(p: torch.Tensor, B: torch.Tensor = None) -> torch.Tensor:
+def ff_embedding(p: torch.Tensor, B: torch.Tensor | None = None) -> torch.Tensor:
     """Apply Fourier feature embedding to input tensor.
 
     Args:
-        p: Input tensor with dimensions (..., D) and values ranging from 0.0 to 1.0.
-        B: Frequency matrix with dimensions (F, D). Default to None means no embedding.
+        p: Input tensor of shape (..., D) and values ranging from 0.0 to 1.0.
+        B: Frequency matrix of shape (F, D). Default to None means no embedding.
 
     Returns:
-        Embedded tensor with dimensions (..., 2 * F) if B is provided, otherwise
+        Embedded tensor of shape (..., 2 * F) if B is provided, otherwise
         returns the original tensor p.
     """
     if B is None:
@@ -592,20 +693,20 @@ def create_patches(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
     """Create a tensor where the channel contains patch information.
 
     Args:
-        image: Image, formatted as a torch.Tensor with dimensions (1, C, H, W)
+        image: Image, formatted as a torch.Tensor of shape (1, C, H, W)
             and pixel values ranging from 0.0 to 1.0.
         kernel_size: Size of square patches. Defaults to 7.
 
     Returns:
-        A tensor with dimensions (1, H', W', K^2) where H' and W' are the height
+        A tensor of shape (1, H', W', K^2) where H' and W' are the height
         and width after patch extraction, and K is the kernel_size.
-        
+
     Raises:
         ValueError: If the input ``image`` does not have 4 dimensions.
     """
     if image.ndim != 4:
-        raise ValueError(f"``image`` must be a torch.Tensor of shape (1, C, H, W), got {image.shape}.")
-    
+        raise ValueError(f"Expected 'image' to be a 4D tensor, but got {image.ndim}D.")
+
     b, c, h, w = image.shape
     kernel     = torch.zeros((kernel_size ** 2, c, kernel_size, kernel_size)).to(image.device)
     for i in range(kernel_size):
@@ -625,17 +726,17 @@ def create_depth_aware_patches(
     alpha      : float = 8.3
 ) -> torch.Tensor:
     """Create depth-aware patches for the given image and depth map.
-    
+
     Args:
-        image: Image, formatted as a torch.Tensor with dimensions (1, C, H, W)
+        image: Image, formatted as a torch.Tensor of shape (1, C, H, W)
             and pixel values ranging from 0.0 to 1.0.
-        depth: Depth, formatted as a torch.Tensor with dimensions (1, 1, H, W)
+        depth: Depth, formatted as a torch.Tensor of shape (1, 1, H, W)
             and pixel values ranging from 0.0 to 1.0.
         kernel_size: Size of square patches. Defaults to 7.
         alpha: Depth sensitivity parameter. Defaults to 8.3.
-        
+
     Returns:
-        A tensor with dimensions (1, H', W', K^2) where H' and W' are the height
+        A tensor of shape (1, H', W', K^2) where H' and W' are the height
         and width after patch extraction, and K is the kernel_size.
     """
     b, c, h, w = image.shape
@@ -653,11 +754,11 @@ def create_depth_aware_patches(
     # Compute center index in patch
     center_idx   = (kernel_size ** 2) // 2
     depth_center = depth_patches[center_idx, :, :].unsqueeze(0).repeat(kernel_size ** 2, 1, 1)
-    
+
     # FD = exp(-alpha * |depth_center - depth_neighbor|)
     depth_diff = torch.abs(depth_center - depth_patches)
     fd         = torch.exp(-alpha * depth_diff)  # Shape for multiplication
-    
+
     # Weight the image patches and normalize
     patches     = image_patches * fd
     weights_sum = fd.sum(dim=0, keepdim=True) + 1e-6  # Avoid division by zero
@@ -669,20 +770,20 @@ def create_depth_aware_patches(
 # --- Multi-scale & Sampling Operations ---
 def pair_downsampler(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """Downsample the image into two sub-images using learned filters.
-    
+
     Args:
-        image: Image, formatted as a torch.Tensor with dimensions (1, C, H, W)
+        image: Image, formatted as a torch.Tensor of shape (1, C, H, W)
             and pixel values ranging from 0.0 to 1.0.
-            
+
     Returns:
-        Two downsampled images, formatted as a torch.Tensor with dimensions
+        Two downsampled images, formatted as a torch.Tensor of shape
         (B, C, H/2, W/2) and pixel values ranging from 0.0 to 1.0.
     """
     c       = image.shape[1]
-    filter1 = torch.FloatTensor([[[[0, 0.5],[0.5, 0]]]]).to(image.device)
-    filter1 = filter1.repeat(c,1, 1, 1)
-    filter2 = torch.FloatTensor([[[[0.5, 0],[0, 0.5]]]]).to(image.device)
-    filter2 = filter2.repeat(c,1, 1, 1)
+    filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(image.device)
+    filter1 = filter1.repeat(c, 1, 1, 1)
+    filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(image.device)
+    filter2 = filter2.repeat(c, 1, 1, 1)
     output1 = F.conv2d(image, filter1, stride=2, groups=c)
     output2 = F.conv2d(image, filter2, stride=2, groups=c)
     return output1, output2
@@ -690,16 +791,15 @@ def pair_downsampler(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 
 def interpolate_image(image: torch.Tensor, size: int) -> torch.Tensor:
     """Resize the image to the specified size.
-    
+
     Args:
-        image: Image, formatted as a torch.Tensor with dimensions (1, C, H, W)
+        image: Image, formatted as a torch.Tensor of shape (1, C, H, W)
             and pixel values ranging from 0.0 to 1.0.
         size: The target size for both height and width.
-    
+
     Returns:
-        Resized image, formatted as a torch.Tensor with dimensions
-        (B, C, size, size) and pixel values ranging from 0.0 to 1.0.
+        Resized image, formatted as a torch.Tensor of shape (B, C, size, size)
+        and pixel values ranging from 0.0 to 1.0.
     """
     # return F.interpolate(image, size=(down_size, down_size), mode="bicubic")
     return F.interpolate(image, size=(size, size), mode="area")
-

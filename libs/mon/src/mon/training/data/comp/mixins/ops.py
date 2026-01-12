@@ -40,7 +40,6 @@ class RegistrableMixin(abc.ABC):
     _tasks: list[Task] = []
     
     # --- Lifecycle & Initialization ---
-
     def __init__(
         self,
         name : str | None        = None,

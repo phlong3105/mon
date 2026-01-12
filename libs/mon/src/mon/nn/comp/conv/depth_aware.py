@@ -3,7 +3,7 @@
 
 """Depth-aware convolutional layers.
 
-This module implements depth-aware convolutional and average pooling layers
+This module provides depth-aware convolutional and average pooling layers
 that incorporate depth information into the convolution and pooling operations.
 
 References:
@@ -30,13 +30,14 @@ import torch.nn.functional as F
 class DepthAwareConv2d(nn.Module):
     """A depth-aware 2D convolution operation.
 
-    This class performs convolution by considering depth similarity, enabling the
-    model to incorporate depth information into the convolution process. It modifies
-    the standard 2D convolution by weighting it with depth-aware factors computed
+    Perform convolution by considering depth similarity, enabling the model to
+    incorporate depth information into the convolution process. Modify the
+    standard 2D convolution by weighting it with depth-aware factors computed
     from the depth tensor.
 
     Attributes:
-        conv (nn.Conv2d): Convolutional layer used to perform standard 2D convolution.
+        conv (torch.nn.Conv2d): Convolutional layer used to perform standard 2D
+            convolution.
         kernel_size (int): Size of the convolutional kernel.
         padding (int): Padding size to be applied to the convolution operation.
         alpha (float): Scaling factor for depth similarity computation.
@@ -68,16 +69,16 @@ class DepthAwareConv2d(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
+        """Forward the input through the layer.
         
         Args:
-            x: Input tensor with dimensions (B, C_in, H, W) and values ranging
+            x: Input tensor of shape (B, C_in, H, W) and values ranging
                 from 0.0 to 1.0.
-            d: Depth tensor with dimensions (B, 1, H, W) and values ranging
+            d: Depth tensor of shape (B, 1, H, W) and values ranging
                 from 0.0 to 1.0.
             
         Returns:
-            Output tensor with dimensions (B, C_out, H_out, W_out) and values
+            Output tensor of shape (B, C_out, H_out, W_out) and values
             ranging from 0.0 to 1.0.
         """
         # input: [b, channels, h, w]
@@ -110,12 +111,9 @@ class DepthAwareConv2d(nn.Module):
 class DepthAwareAvgPool2d(nn.Module):
     """Depth-aware average pooling for 2D input tensors.
 
-    This class implements a custom pooling layer that computes an average pooling
-    operation by incorporating depth similarity as a weighting factor. The
-    depth-aware pooling assigns higher weights to spatial values closer in depth,
-    resulting in a more contextually aware aggregation of features. It is
-    particularly useful for tasks that demand depth-awareness, such as depth-guided
-    segmentation or reconstruction.
+    Compute an average pooling operation by incorporating depth similarity as a
+    weighting factor. Assign higher weights to spatial values closer in depth,
+    resulting in a more contextually aware aggregation of features.
 
     Attributes:
         kernel_size (int): Size of the pooling kernel.
@@ -148,16 +146,16 @@ class DepthAwareAvgPool2d(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
+        """Forward the input through the layer.
         
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-            d: Depth tensor with dimensions (B, 1, H, W) and values ranging
+            d: Depth tensor of shape (B, 1, H, W) and values ranging
                 from 0.0 to 1.0.
             
         Returns:
-            Output tensor with dimensions (B, C, H_out, W_out) and values ranging
+            Output tensor of shape (B, C, H_out, W_out) and values ranging
             from 0.0 to 1.0.
         """
         # input: [b, c, h, w]

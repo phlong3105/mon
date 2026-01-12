@@ -3,9 +3,11 @@
 
 """Transformer components.
 
-This module implements various transformer components used for sequence modeling
+This module provides various transformer components used for sequence modeling
 tasks.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "Transformer",

@@ -3,9 +3,11 @@
 
 """Attention layers.
 
-This module implements various attention layers used for extracting features from
+This module provides various attention layers used for extracting features from
 high-dimensional inputs.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "SEBlock",
@@ -14,13 +16,16 @@ __all__ = [
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
-# --- SE ---
+# --- Squeeze-and-Excitation ---
+
 class SEBlock(nn.Module):
     """Squeeze-and-Excitation (SE) block.
-    
+
+    Apply squeeze-and-excitation to the input tensor to adaptively recalibrate
+    channel-wise feature responses.
+
     References:
         - Paper: "Squeeze-and-Excitation Networks," CVPR 2018.
         - Code: https://github.com/hujie-frank/SENet
@@ -29,71 +34,81 @@ class SEBlock(nn.Module):
     # --- Lifecycle & Initialization ---
     def __init__(self, in_channels: int, rd_ratio: float = 0.0625):
         """Initialize a new instance.
-        
+
         Args:
             in_channels: Number of input channels.
-            rd_ratio: Reduction ratio for the intermediate channels. Defaults to 0.0625.
+            rd_ratio: Reduction ratio for the intermediate channels.
+                Defaults to 0.0625.
         """
         super().__init__()
-        self.reduce = nn.Conv2d(in_channels, int(in_channels * rd_ratio), 1, 1, bias=True)
-        self.expand = nn.Conv2d(int(in_channels * rd_ratio), in_channels, 1, 1, bias=True)
+        mid_channels  = int(in_channels * rd_ratio)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.reduce   = nn.Conv2d(in_channels, mid_channels, 1, 1, bias=True)
+        self.expand   = nn.Conv2d(mid_channels, in_channels, 1, 1, bias=True)
+        self.act      = nn.ReLU(inplace=True)
+        self.sigmoid  = nn.Sigmoid()
 
     # --- Callable & Context Manager ---
-    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
         Args:
-            inputs: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-                
+
         Returns:
             Output tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
-        b, c, h, w = inputs.size()
-        x = F.avg_pool2d(inputs, kernel_size=[h, w])
-        x = self.reduce(x)
-        x = F.relu(x)
-        x = self.expand(x)
-        x = torch.sigmoid(x)
-        x = x.view(-1, c, 1, 1)
-        return inputs * x
-    
+        y = self.avg_pool(x)
+        y = self.reduce(y)
+        y = self.act(y)
+        y = self.expand(y)
+        y = self.sigmoid(y)
+        return x * y
 
 # --- Parameter-Free Attention ---
+
 class SimAM(nn.Module):
     """Simple, Parameter-Free Attention Module (SimAM).
 
+    Apply a simple, parameter-free attention mechanism to the input tensor.
+
     References:
         - Code: https://github.com/ZjjConan/SimAM
+
+    Attributes:
+        e_lambda (float): A small constant to avoid division by zero.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(self, e_lambda: float = 1e-4):
         """Initialize a new instance.
-        
+
         Args:
-            e_lambda: A small constant to avoid division by zero. Defaults to 1e-4.
+            e_lambda: A small constant to avoid division by zero.
+                Defaults to 1e-4.
         """
         super().__init__()
         self.e_lambda = e_lambda
         self.sigmoid  = nn.Sigmoid()
-    
+
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the layer.
+
         Args:
-            input: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-                
+
         Returns:
             Output tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
-        b, c, h, w = input.shape
+        b, c, h, w = x.shape
         n          = w * h - 1
-        d          = (input - input.mean(dim=[2, 3], keepdim=True)).pow(2)  # [B, C, H, W]
-        v          = d.sum(dim=[2, 3], keepdim=True) / n   # [B, C, 1, 1]
-        e_inv      = d / (4 * (v + self.e_lambda)) + 0.5   # [B, C, H, W]
-        return input * self.sigmoid(e_inv)
+        x_minus_mu = x - x.mean(dim=[2, 3], keepdim=True)
+        d          = x_minus_mu.pow(2)
+        v          = d.sum(dim=[2, 3], keepdim=True) / n
+        e_inv      = d / (4 * (v + self.e_lambda)) + 0.5
+        return x * self.sigmoid(e_inv)

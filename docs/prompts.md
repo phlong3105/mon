@@ -5,7 +5,7 @@
 ## Optimize
 
 ```text
-Goal: Optimize code.
+Goal: Optimize code ONLY.
 
 Act as a Senior Python Architect. Revise and refactor the provided code following these strict rules:
 
@@ -13,8 +13,10 @@ Act as a Senior Python Architect. Revise and refactor the provided code followin
 - Add comments to help maintainers understand the code's intetions.
 - ALWAYS wrap lines at 100, can extend to 120 for readability. 
 - ALWAYS align code by assignment(=, +=, -=, *=, /=), colon(:) and comma(,). Also support function call.
+- DO NOT CHANGE the docstrings.
 
-Check and optimize the code in $CURRENT_FILE
+Please process with the following code: 
+$CURRENT_FILE
 ```
 
 ---
@@ -48,8 +50,8 @@ Act as a Senior Python Architect. Revise or generate raise statements for the pr
             - numpy.ndarray instead of np.ndarray.
             - str instead string.
     
- Please process with the following code: 
- $CURRENT_FILE
+Please process with the following code: 
+$CURRENT_FILE
 ```
 
 ---
@@ -87,6 +89,6 @@ Act as a Senior Python Architect. Revise or generate docstrings for the provided
         - Include a "Raises:" section for any explicitly raised exceptions.
         - When referring to an attribute or argument, put it between double quotes (e.g., ``name``). DO NOT PUT type between double quote (e.g., numpy.ndarray instead of ``numpy.ndarray``).
     
- Please process with the following code: 
- $CURRENT_FILE
+Please process with the following code: 
+$CURRENT_FILE
 ```

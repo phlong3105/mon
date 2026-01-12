@@ -13,7 +13,7 @@ __all__ = [
     "WiderFaceVal",
 ]
 
-from mon.core import create_progress_bar
+
 from ...api import *
 
 

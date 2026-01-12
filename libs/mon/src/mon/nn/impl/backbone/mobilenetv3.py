@@ -6,6 +6,8 @@
 This module implements various MobileNetV3 backbones using PyTorch.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "MobileNet_V3_Large_Weights",
     "MobileNet_V3_Small_Weights",
@@ -22,39 +24,49 @@ from torchvision.models.mobilenetv3 import (
     MobileNetV3,
 )
 
-from mon.core import BACKBONES, Path, ROOT_DIR
+from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
 from mon.core.dtypes import Weights, WeightsEnum
+from ...base import RegistrableMixin
 
-current_file = Path(__file__).absolute()
-root_dir     = current_file.parents[0]
-
-
-# ==============================================================================
-# COMPONENTS (Building Blocks)
-# ==============================================================================
+current_file = Path(__file__).normalize()
+current_dir  = current_file.parents[0]
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
-class MobileNetV3BackBone(nn.Module):
-    """MobileNetV3 backbone."""
-    
+# --- Base Classes ---
+
+class MobileNetV3BackBone(nn.Module, RegistrableMixin):
+    """MobileNetV3 backbone.
+
+    Attributes:
+        features (torch.nn.Sequential): The feature extraction layers.
+        out_indices (list): List of layer indices to extract features from.
+        out_channels (list): List of output channels for each extracted layer.
+    """
+
+    _arch     : str          = "mobilenet"
+    _name     : str          = None
+    _tasks    : list[Task]   = [Task.BACKBONE]
+    _mltypes  : list[MLType] = []
+    _model_dir: Path         = current_dir
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        variant     : str,
+        name                     : str,
         inverted_residual_setting: list[InvertedResidualConfig],
-        last_channel: int,
-        weights     : WeightsEnum = None,
-        out_indices : list        = None,
-        *args, **kwargs):
+        last_channel             : int,
+        weights                  : WeightsEnum | None = None,
+        out_indices              : list | None        = None,
+        *args, **kwargs
+    ):
         """Initialize a new instance.
-        
+
         Args:
-            variant: Variant of MobileNetV3 to use.
+            name: Variant of MobileNetV3 to use.
             inverted_residual_setting: A list of InvertedResidualConfig to
                 construct blocks.
             last_channel: Channel dimension of the last convolutional layer.
@@ -63,37 +75,39 @@ class MobileNetV3BackBone(nn.Module):
             args: Additional positional arguments for the ResNet model.
             kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__()
+        super().__init__(name=name, *args, **kwargs)
+
         # Load the base model
-        if weights is not None:
+        if isinstance(weights, WeightsEnum):
             kwargs["num_classes"] = weights.num_classes
-        
+
         base_model = MobileNetV3(
             inverted_residual_setting = inverted_residual_setting,
             last_channel              = last_channel,
             *args, **kwargs
         )
-        if weights is not None:
+
+        if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.get_state_dict())
-        
+
         # In torchvision, MobileNetV3 already has a 'features' block
         self.features = base_model.features
-    
-        if "large" in variant:
+
+        if "large" in name:
             self.out_indices  = out_indices or [3, 6, 12, 15]
             self.out_channels = [24, 40, 112, 160]
-        else: # Small variant
+        else:  # Small variant
             self.out_indices  = out_indices or [0, 3, 8, 11]
             self.out_channels = [16, 24, 48, 96]
-    
+
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> list:
-        """Forward pass.
-        
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        """Forward the input through the network.
+
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             A list of feature maps from the specified layers.
         """
@@ -104,15 +118,23 @@ class MobileNetV3BackBone(nn.Module):
             if i in self.out_indices:
                 outputs.append(x)
         return outputs
-    
+
+
+# --- Mixins ---
+
+
+# endregion
+
 
 # ==============================================================================
-# CONCRETE IMPLEMENTATIONS (Variants)
+# region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
 # --- Pre-trained Weights ---
+
+@WEIGHTS.register(arch="mobilenet", name="mobilenet_v3_large")
 class MobileNet_V3_Large_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pth",
@@ -162,8 +184,9 @@ class MobileNet_V3_Large_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
+@WEIGHTS.register(arch="mobilenet", name="mobilenet_v3_small")
 class MobileNet_V3_Small_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
         path        = ROOT_DIR / "zoo/nn/backbone/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pth",
@@ -189,40 +212,79 @@ class MobileNet_V3_Small_Weights(WeightsEnum):
 
 
 # --- Model Variants ---
+
 @BACKBONES.register(name="mobilenet_v3_large")
-def mobilenet_v3_large(weights: WeightsEnum | str = MobileNet_V3_Large_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def mobilenet_v3_large(
+    weights    : WeightsEnum | str | None = MobileNet_V3_Large_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a MobileNetV3 Large backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            MobileNet_V3_Large_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A MobileNetV3 Large backbone model.
+    """
     inverted_residual_setting, last_channel = _mobilenet_v3_conf("mobilenet_v3_large", **kwargs)
     return MobileNetV3BackBone(
-        variant      = "mobilenet_v3_large",
+        name         = "mobilenet_v3_large",
         inverted_residual_setting = inverted_residual_setting,
         last_channel = last_channel,
         weights      = MobileNet_V3_Large_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
 
 
 @BACKBONES.register(name="mobilenet_v3_small")
-def mobilenet_v3_small(weights: WeightsEnum | str = MobileNet_V3_Small_Weights.DEFAULT, out_indices: list = None, **kwargs):
+def mobilenet_v3_small(
+    weights    : WeightsEnum | str | None = MobileNet_V3_Small_Weights.DEFAULT,
+    out_indices: list | None = None,
+    *args, **kwargs
+):
+    """Create a MobileNetV3 Small backbone.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to
+            MobileNet_V3_Small_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults
+            to None.
+        args: Additional positional arguments for the ResNet model.
+        kwargs: Additional keyword arguments for the ResNet model.
+
+    Returns:
+        A MobileNetV3 Small backbone model.
+    """
     inverted_residual_setting, last_channel = _mobilenet_v3_conf("mobilenet_v3_small", **kwargs)
     return MobileNetV3BackBone(
-        variant      = "mobilenet_v3_small",
+        name         = "mobilenet_v3_small",
         inverted_residual_setting = inverted_residual_setting,
         last_channel = last_channel,
         weights      = MobileNet_V3_Small_Weights(weights),
         out_indices  = out_indices,
-        **kwargs
+        *args, **kwargs
     )
+
+# endregion
 
 
 # ==============================================================================
-# DEBUGGING
+# region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
     model_ = mobilenet_v3_large(weights="default")
     x = torch.ones(1, 3, 224, 224)
     y = model_(x)
-    # print(model_.features)
-    # print(x)
+    print(model_.features)
+    print(x)
     print(y)
+
+# endregion

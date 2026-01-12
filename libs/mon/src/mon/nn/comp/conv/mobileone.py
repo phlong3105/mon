@@ -3,7 +3,7 @@
 
 """MobileOne convolutional blocks.
 
-This module implements MobileOne building blocks used for efficient convolutional
+This module provides MobileOne building blocks used for efficient convolutional
 networks. The block features a multi-branched structure during training and a
 re-parameterized single-branch structure for inference.
 """

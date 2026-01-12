@@ -3,8 +3,10 @@
 
 """Recurrent neural networks (RNNs).
 
-This module implements various recurrent neural network (RNN) components.
+This module provides various recurrent neural network (RNN) components.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "GRU",

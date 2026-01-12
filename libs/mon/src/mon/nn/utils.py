@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Neural network utility functions.
+"""Neural network utilities.
 
-This module implements various utility functions for neural network components.
+This module provides various utilities for neural networks.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
 
 # ==============================================================================
-# SHARED UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Data Sanitization (Input Validation, Reshaping) ---
 
-
-# --- Performance Monitoring (Timing, Memory Tracking) ---
-
-
-# --- Error Handling (Custom Exceptions, Warnings) ---
+# endregion
