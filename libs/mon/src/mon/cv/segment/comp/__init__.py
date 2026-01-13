@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Image segmentation components.
+"""Components for image segmentation.
 
-This package contains various modular components which can be assembled together
-to form concrete image segmentation methods.
+This package contains various modular components which can be assembled to form
+concrete image segmentation implementations.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
-
+from __future__ import annotations

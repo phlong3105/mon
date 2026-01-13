@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""<Name> I/O operations.
+"""<Name> complex operations.
 
-This module provides input and output operations for <name>.
+This module provides complex operations and processing workflows for <name>.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from __future__ import annotations
 __all__ = []
 
 # ==============================================================================
-# region DISCOVERY
+# region CONTROL
 # ==============================================================================
 
 
@@ -19,7 +19,7 @@ __all__ = []
 
 
 # ==============================================================================
-# region CONNECTION
+# region PROCESSING
 # ==============================================================================
 
 
@@ -27,7 +27,7 @@ __all__ = []
 
 
 # ==============================================================================
-# region INPUT
+# region TRANSACTION
 # ==============================================================================
 
 
@@ -35,8 +35,10 @@ __all__ = []
 
 
 # ==============================================================================
-# region OUTPUT
+# region UNIT TEST
 # ==============================================================================
 
+if __name__ == "__main__":
+    pass
 
 # endregion

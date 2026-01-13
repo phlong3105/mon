@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for image segmentation."""
+"""<Name> resolution utilities.
+
+This module provides functionalities for resolving <name>, including discovery,
+validation, and retrieval.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +13,7 @@ __all__ = []
 
 
 # ==============================================================================
-# region CONSTANTS
+# region DISCOVERY
 # ==============================================================================
 
 
@@ -17,26 +21,34 @@ __all__ = []
 
 
 # ==============================================================================
-# region TYPE DEFINITIONS & PROTOCOLS
+# region VALIDATION
 # ==============================================================================
-
-# --- Type Aliases ---
-
-
-# --- Protocols ---
 
 
 # endregion
 
 
 # ==============================================================================
-# region BASE CLASSES & MIXINS
+# region RETRIEVAL
 # ==============================================================================
 
-# --- Base Classes ---
+# --- Accessing ---
 
 
-# --- Mixins ---
+# --- Selection ---
 
+
+# --- Aggregation ---
+
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

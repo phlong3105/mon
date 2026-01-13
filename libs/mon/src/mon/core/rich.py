@@ -92,7 +92,7 @@ class MemoryUsageColumn(ProgressColumn):
         self.update_interval = update_interval
         self._last_update    = 0.0
         self._cached_text    = Text("")
-    
+
     def render(self, task: Task) -> Text:
         """Render the current memory usage.
 
@@ -107,30 +107,30 @@ class MemoryUsageColumn(ProgressColumn):
             self._cached_text = self.gpu_memory_text if torch.cuda.is_available() else self.machine_memory_text
             self._last_update = current_time
         return self._cached_text
-        
+
     @property
     def machine_memory_text(self) -> Text:
         """Format system RAM usage into a Text object."""
         # Import locally to avoid circular dependencies.
         from mon.core.device import query_ram_usages
-        
+
         total, used, _ = query_ram_usages(unit=self.unit)
         memory_status  = f"{used:.1f}/{total:.1f}{self.unit.value} (CPU)"
         return Text(memory_status, style="bright_yellow")
-    
+
     @property
     def gpu_memory_text(self) -> Text:
         """Format and aggregate GPU VRAM usage into a Text object."""
         # Import locally to avoid circular dependencies.
         from mon.core.device import query_vram_usage
-        
+
         num_devices = len(self.devices)
         total_mem, used_mem = 0.0, 0.0
         for i in self.devices:
             total, used, _ = query_vram_usage(device=i, unit=self.unit)
             total_mem += total
             used_mem  += used
-            
+
         memory_status = f"{used_mem:.1f}/{total_mem:.1f}{self.unit.value} ({num_devices} GPUs)"
         return Text(memory_status, style="bright_yellow")
 
@@ -151,7 +151,7 @@ class ProcessedItemsColumn(ProgressColumn):
                 Defaults to None.
         """
         super().__init__(table_column=table_column)
-    
+
     def render(self, task: Task) -> Text:
         """Render the processed items count for the task.
 
@@ -162,14 +162,14 @@ class ProcessedItemsColumn(ProgressColumn):
             Text object showing \"completed/total\" items.
         """
         completed = int(task.completed)
-        
+
         if task.total is None or task.total == float("inf"):
             # Handle cases where the total is unknown (e.g., streaming).
             count = f"{completed}"
         else:
             total = int(task.total)
             count = f"{completed}/{total}"
-        
+
         # Use a fixed width to prevent the progress bar from "jumping" as numbers grow.
         return Text(f"{count:>14}", style="progress.download")
 
@@ -193,7 +193,7 @@ class ProcessingSpeedColumn(ProgressColumn):
         speed = task.speed
         if speed is None or speed == 0:
             return Text("?", style="progress.data.speed")
-        
+
         # If speed is slow, it's more intuitive to show latency.
         if speed < 1.0:
             latency_ms = (1.0 / speed) * 1000
@@ -225,7 +225,7 @@ class SelectionOrInputPrompt(Prompt):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        prompt        : TextType,
+        prompt        : TextType            = "",
         *,
         console       : Optional[Console]   = None,
         password      : bool                = False,
@@ -335,7 +335,7 @@ class SelectionOrInputPrompt(Prompt):
             Text instance that shows the provided default.
         """
         return Text(f"[{default}]", "prompt.default")
-    
+
     def make_prompt(self, default: DefaultType) -> Text:
         """Build the prompt text to display.
 
@@ -352,7 +352,7 @@ class SelectionOrInputPrompt(Prompt):
         else:
             prompt = self.prompt.copy()
         prompt.end = ""
-        
+
         if (
             default != ...
             and self.show_default
@@ -365,7 +365,7 @@ class SelectionOrInputPrompt(Prompt):
         prompt.append(self.prompt_suffix)
 
         return prompt
-    
+
     def check_choice(self, value: str) -> bool:
         """Validate that a value is among the valid choices.
 
@@ -379,7 +379,7 @@ class SelectionOrInputPrompt(Prompt):
         if self.case_sensitive:
             return value in self.choices
         return value.lower() in [choice.lower() for choice in self.choices]
-    
+
     def process_response(self, value: str) -> PromptType:
         """Validate and convert the user's response.
 
@@ -393,15 +393,15 @@ class SelectionOrInputPrompt(Prompt):
             InvalidResponse: When the provided ``value`` is not acceptable.
         """
         value = value.strip() if isinstance(value, str) else value
-        
+
         if self.choices:
             if not value and not self.allow_empty:
                 raise InvalidResponse(self.illegal_choice_message)
-            
+
             # Split input to support multi-index/multi-value selection (e.g., "0,2")
             input_parts      = to_list(value, sep=[",", ";"])
             processed_values = []
-            
+
             for part in input_parts:
                 part = part.strip()
                 # Check if part is a valid index
@@ -418,12 +418,12 @@ class SelectionOrInputPrompt(Prompt):
                 # Handle free-form input (if allowed) or error
                 else:
                     processed_values.append(part)
-    
+
             # Return single value if only one was selected, else the list
             return processed_values[0] if len(processed_values) == 1 else processed_values
-            
+
         return value
-        
+
     # --- Callable & Context Manager ---
     def __call__(self, *, default: Any = ..., stream: Optional[TextIO] = None) -> Any:
         """Prompt until a valid response is obtained.
@@ -485,7 +485,7 @@ def create_download_bar(transient: bool = False, disable: bool = False) -> Progr
         TimeElapsedColumn(),
     ]
     return Progress(*columns, console=console, transient=transient, disable=disable)
-    
+
 
 def create_progress_bar(
     transient  : bool = False,
@@ -518,7 +518,7 @@ def create_progress_bar(
     if show_memory:
         columns.extend(["•", MemoryUsageColumn()])
     columns.extend(["•", TimeRemainingColumn(), ">", TimeElapsedColumn(), SpinnerColumn()])
-    
+
     return Progress(*columns, console=console, transient=transient, disable=disable)
 
 # endregion

@@ -3,7 +3,7 @@
 
 """MobileNetV3 backbones.
 
-This module implements various MobileNetV3 backbones using PyTorch.
+This module provides various MobileNetV3 backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from torchvision.models.mobilenetv3 import (
     MobileNetV3,
 )
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -137,7 +137,7 @@ class MobileNet_V3_Large_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -158,7 +158,7 @@ class MobileNet_V3_Large_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/mobilenet_v3_large-5c1a4163.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v2/mobilenet_v3_large_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v2/mobilenet_v3_large_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -189,7 +189,7 @@ class MobileNet_V3_Small_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

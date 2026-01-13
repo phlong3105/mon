@@ -3,7 +3,7 @@
 
 """DenseNet backbones.
 
-This module implements various VGG backbones using PyTorch.
+This module provides various VGG backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.densenet import DenseNet
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -145,7 +145,7 @@ class DenseNet121_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/densenet121-a639ec97.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/densenet/densenet121/imagenet1k_v1/densenet121_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/densenet/densenet121/imagenet1k_v1/densenet121_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -172,7 +172,7 @@ class DenseNet161_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/densenet161-8d451a50.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/densenet/densenet161/imagenet1k_v1/densenet161_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/densenet/densenet161/imagenet1k_v1/densenet161_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -199,7 +199,7 @@ class DenseNet169_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/densenet/densenet169/imagenet1k_v1/densenet169_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/densenet/densenet169/imagenet1k_v1/densenet169_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -226,7 +226,7 @@ class DenseNet201_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/densenet201-c1103571.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/densenet/densenet201/imagenet1k_v1/densenet201_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/densenet/densenet201/imagenet1k_v1/densenet201_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

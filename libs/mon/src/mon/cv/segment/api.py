@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Image segmentation API.
+"""External APIs.
 
-This module collects all classes and functions that are commonly used in image
-segmentation. It is intended to be imported by submodules for convenience.
+This module collects all external functionalities that are commonly used in
+this package. It is intended to be imported by other modules for convenience.
 """
+
+from __future__ import annotations
 
 __all__ = []

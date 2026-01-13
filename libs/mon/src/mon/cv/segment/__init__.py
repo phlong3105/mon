@@ -8,31 +8,31 @@ computer vision.
 
 Notes:
     - Design Pattern: Component-Based Framework.
-    - Goal: Build systems from reusable, interchangeable components that can be
-      independently developed, tested, and maintained. Each component is a modular
-      unit with well-defined interfaces, encapsulating specific functionality
-      that can be assembled, replaced, or reused across applications.
+    - Goal: Define a collection of components that can be assembled to form
+      concrete <Name> implementations.
     - Structure:
         ::
-        
+
             segment/
             ├── __init__.py             # Exposes all
             ├── base.py                 # Base classes and mixins
-            ├── comp/                   # Reusable components
-            │   ├── __init__.py
-            │   ├── base.py             # Component base classes and mixins
-            │   └── ...                 # Concrete component
-            ├── impl/                   # Concrete classes using base + components
-            │   ├── __init__.py
-            │   ├── concrete_impl.py    # Example implementation
-            │   └── ...
-            ├── usages/                 # Example usages of concrete implementations
+            ├── comp/                   # Components
             │   ├── __init__.py
             │   └── ...
-            └── utils.py                # Utility functions and helpers
+            ├── impl/                   # Implementations
+            │   ├── __init__.py
+            │   └── ...
+            ├── usages/                 # Usages
+            │   ├── __init__.py
+            │   └── ...
+            └── utils.py                # Utilities and helpers
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
+from __future__ import annotations
+
+__all__ = [
+    "sam",
+]
 
 from .base import *
 from .comp import *
@@ -42,10 +42,8 @@ from .utils import *
 
 
 # ==============================================================================
-# REGISTRY & FACTORY (Type Resolution)
+# region REGISTRY & FACTORY
 # ==============================================================================
 
-# --- Register (Adding new spokes to the hub) ---
 
-
-# --- Resolve (Retrieving spokes by name/key) ---
+# endregion

@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for image segmentation."""
+"""<Name> debugging utilities.
+
+This module provides debugging utilities for <name>.
+"""
 
 from __future__ import annotations
 
 __all__ = []
 
-
 # ==============================================================================
-# region CONSTANTS
+# region BASIC LOGGING
 # ==============================================================================
 
 
@@ -17,26 +19,18 @@ __all__ = []
 
 
 # ==============================================================================
-# region TYPE DEFINITIONS & PROTOCOLS
+# region VISUALIZATION
 # ==============================================================================
-
-# --- Type Aliases ---
-
-
-# --- Protocols ---
 
 
 # endregion
 
 
 # ==============================================================================
-# region BASE CLASSES & MIXINS
+# region UNIT TEST
 # ==============================================================================
 
-# --- Base Classes ---
-
-
-# --- Mixins ---
-
+if __name__ == "__main__":
+    pass
 
 # endregion

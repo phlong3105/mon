@@ -3,7 +3,7 @@
 
 """Vision Transformer (ViT) backbones.
 
-This module implements various ViT backbones using PyTorch.
+This module provides various ViT backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.vision_transformer import VisionTransformer
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -166,7 +166,7 @@ class ViT_B_16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -190,7 +190,7 @@ class ViT_B_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_E2E_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_16_swag-9ac1b537.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_swag_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -214,7 +214,7 @@ class ViT_B_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_16_lc_swag-4e70ced5.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_lc_swag_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_lc_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -244,7 +244,7 @@ class ViT_B_32_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_b_32-d86f8d99.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_b_32/imagenet1k_v1/vit_b_32_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_b_32/imagenet1k_v1/vit_b_32_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -274,7 +274,7 @@ class ViT_L_16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_16-852ce7e3.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -299,7 +299,7 @@ class ViT_L_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_E2E_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_16_swag-4f3808c9.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_swag_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -323,7 +323,7 @@ class ViT_L_16_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_16_lc_swag-4d563306.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_lc_swag_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_lc_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -353,7 +353,7 @@ class ViT_L_32_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_l_32-c7638314.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_l_32/imagenet1k_v1/vit_l_32_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_l_32/imagenet1k_v1/vit_l_32_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -383,7 +383,7 @@ class ViT_H_14_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_h_14_swag-80465313.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -407,7 +407,7 @@ class ViT_H_14_Weights(WeightsEnum):
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
         url         = "https://download.pytorch.org/models/vit_h_14_lc_swag-c1eb923e.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_lc_swag_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_lc_swag_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

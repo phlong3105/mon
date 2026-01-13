@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Image segmentation utility functions.
+"""Image segmentation utilities.
 
-This module provides various utility functions for image segmentation.
+This module provides various utilities for image segmentation tasks.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
 
 # ==============================================================================
-# SHARED UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Data Sanitization (Input Validation, Reshaping) ---
 
-
-# --- Performance Monitoring (Timing, Memory Tracking) ---
-
-
-# --- Error Handling (Custom Exceptions, Warnings) ---
+# endregion

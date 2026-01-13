@@ -3,7 +3,7 @@
 
 """EfficientNet backbones.
 
-This module implements various EfficientNet V1 and V2 backbones using PyTorch.
+This module provides various EfficientNet V1 and V2 backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ from torchvision.models.efficientnet import (
     MBConvConfig,
 )
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -167,7 +167,7 @@ class EfficientNet_B0_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -194,7 +194,7 @@ class EfficientNet_B1_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b1_rwightman-bac287d4.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -215,7 +215,7 @@ class EfficientNet_B1_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b1-c27df63c.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone//efficientnet//efficientnet_b1/imagenet1k_v2//efficientnet_b1_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone//efficientnet//efficientnet_b1/imagenet1k_v2//efficientnet_b1_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -246,7 +246,7 @@ class EfficientNet_B2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b2_rwightman-c35c1473.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -273,7 +273,7 @@ class EfficientNet_B3_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -300,7 +300,7 @@ class EfficientNet_B4_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b4_rwightman-23ab8bcd.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -327,7 +327,7 @@ class EfficientNet_B5_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b5_lukemelas-1a07897c.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -354,7 +354,7 @@ class EfficientNet_B6_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b6_lukemelas-24a108a5.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -381,7 +381,7 @@ class EfficientNet_B7_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_b7_lukemelas-c5b4e57e.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -408,7 +408,7 @@ class EfficientNet_V2_S_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone//efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone//efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -439,7 +439,7 @@ class EfficientNet_V2_M_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_v2_m-dc08266a.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -470,7 +470,7 @@ class EfficientNet_V2_L_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

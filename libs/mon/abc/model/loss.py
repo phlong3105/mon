@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for image segmentation."""
+"""Loss functions.
+
+This module provides various loss functions.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +12,7 @@ __all__ = []
 
 
 # ==============================================================================
-# region CONSTANTS
+# region LOSS FUNCTIONS
 # ==============================================================================
 
 
@@ -17,26 +20,10 @@ __all__ = []
 
 
 # ==============================================================================
-# region TYPE DEFINITIONS & PROTOCOLS
+# region UNIT TEST
 # ==============================================================================
 
-# --- Type Aliases ---
-
-
-# --- Protocols ---
-
-
-# endregion
-
-
-# ==============================================================================
-# region BASE CLASSES & MIXINS
-# ==============================================================================
-
-# --- Base Classes ---
-
-
-# --- Mixins ---
-
+if __name__ == "__main__":
+    pass
 
 # endregion

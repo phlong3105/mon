@@ -3,8 +3,7 @@
 
 """Usages of image segmentation.
 
-This package contains example usages of image segmentation.
+This package contains direct usages of image segmentation algorithms.
 """
 
-# __all__ = []  # Prevent accidental imports of submodules.
-
+from __future__ import annotations

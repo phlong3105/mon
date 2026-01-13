@@ -3,7 +3,7 @@
 
 """ConvNeXt backbones.
 
-This module implements various ConvNeXt backbones using PyTorch.
+This module provides various ConvNeXt backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.convnext import CNBlockConfig, ConvNeXt
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -141,7 +141,7 @@ class ConvNeXt_Tiny_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -172,7 +172,7 @@ class ConvNeXt_Small_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/convnext_small-0c510722.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -203,7 +203,7 @@ class ConvNeXt_Base_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -234,7 +234,7 @@ class ConvNeXt_Large_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

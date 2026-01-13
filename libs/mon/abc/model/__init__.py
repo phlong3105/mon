@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Ultralytics SAM.
+"""<Model>.
 
-This package contains Ultralytics SAM implementations, pre-trained weights,
+This package contains <model> implementations, pre-trained weights,
 and utilities for training and inference.
 
 References:
-    - Code: https://github.com/ultralytics/ultralytics
+    - Paper:
+    - Code:
 """
 
 from __future__ import annotations
+
+__all__ = []
 
 from .model import *

@@ -3,7 +3,7 @@
 
 """MobileNetV2 backbones.
 
-This module implements various MobileNetV2 backbones using PyTorch.
+This module provides various MobileNetV2 backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.mobilenetv2 import MobileNetV2
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -56,7 +56,7 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
             name: Name of the backbone.
             weights: Pre-trained weights to load.
@@ -70,25 +70,25 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
         # Load the base model
         if isinstance(weights, WeightsEnum):
             kwargs["num_classes"] = weights.num_classes
-        
+
         base_model = MobileNetV2(*args, **kwargs)
-        
+
         if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.get_state_dict())
-        
+
         # In torchvision, MobileNetV2 already has a 'features' block
         self.features     = base_model.features
         self.out_indices  = out_indices or [3, 6, 13, 18]
         self.out_channels = [24, 32, 96, 1280]
-    
+
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         """Forward the input through the network.
-        
+
         Args:
             x: Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             A list of feature maps from the specified layers.
         """
@@ -99,7 +99,7 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
             if i in self.out_indices:
                 outputs.append(x)
         return outputs
-    
+
 
 # --- Mixins ---
 
@@ -115,10 +115,10 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
 
 @WEIGHTS.register(arch="mobilenet", name="mobilenet_v2")
 class MobileNet_V2_Weights(WeightsEnum):
-    
+
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -139,7 +139,7 @@ class MobileNet_V2_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/mobilenet_v2-7ebf99e0.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v2/mobilenet_v2_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v2/mobilenet_v2_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

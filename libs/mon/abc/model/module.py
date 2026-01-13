@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for image segmentation."""
+"""<Model> modules.
+
+This module provides various layers, blocks, and modules.
+"""
 
 from __future__ import annotations
 
 __all__ = []
 
 
+
 # ==============================================================================
-# region CONSTANTS
+# region MODULES
 # ==============================================================================
 
 
@@ -17,26 +21,10 @@ __all__ = []
 
 
 # ==============================================================================
-# region TYPE DEFINITIONS & PROTOCOLS
+# region UNIT TEST
 # ==============================================================================
 
-# --- Type Aliases ---
-
-
-# --- Protocols ---
-
-
-# endregion
-
-
-# ==============================================================================
-# region BASE CLASSES & MIXINS
-# ==============================================================================
-
-# --- Base Classes ---
-
-
-# --- Mixins ---
-
+if __name__ == "__main__":
+    pass
 
 # endregion

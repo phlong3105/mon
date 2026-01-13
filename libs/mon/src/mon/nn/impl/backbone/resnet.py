@@ -3,7 +3,7 @@
 
 """ResNet backbones.
 
-This module implements various ResNet backbones using PyTorch.
+This module provides various ResNet backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -38,7 +38,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.resnet import BasicBlock, Bottleneck, ResNet
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -152,7 +152,7 @@ class ResNet18_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet18-f37072fd.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -179,7 +179,7 @@ class ResNet34_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet34-b627a593.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -206,7 +206,7 @@ class ResNet50_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet50-0676ba61.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -227,7 +227,7 @@ class ResNet50_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/resnet50-11ad3fa6.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet50/imagenet1k_v2/resnet50_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet50/imagenet1k_v2/resnet50_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -257,7 +257,7 @@ class ResNet101_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet101-63fe2227.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -278,7 +278,7 @@ class ResNet101_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/resnet101-cd907fc2.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet101/imagenet1k_v2/resnet101_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet101/imagenet1k_v2/resnet101_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -308,7 +308,7 @@ class ResNet152_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnet152-394f9c45.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -329,7 +329,7 @@ class ResNet152_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/resnet152-f82ba261.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnet152/imagenet1k_v2/resnet152_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnet152/imagenet1k_v2/resnet152_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -359,7 +359,7 @@ class ResNeXt50_32X4D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -380,7 +380,7 @@ class ResNeXt50_32X4D_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/resnext50_32x4d-1a0047aa.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext50_32x4d/imagenet1k_v2/resnext50_32x4d_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v2/resnext50_32x4d_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -410,7 +410,7 @@ class ResNeXt101_32X8D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -431,7 +431,7 @@ class ResNeXt101_32X8D_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/resnext101_32x8d-110c445d.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext101_32x8d/imagenet1k_v2/resnext101_32x8d_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v2/resnext101_32x8d_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -461,7 +461,7 @@ class ResNeXt101_64X4D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "ttps://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -491,7 +491,7 @@ class Wide_ResNet50_2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/wide_resnet50_2/imagenet1k_v1/wide_resnet50_2_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v1/wide_resnet50_2_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -512,7 +512,7 @@ class Wide_ResNet50_2_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/wide_resnet50_2-9ba9bcbe.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -542,7 +542,7 @@ class Wide_ResNet101_2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/wide_resnet101_2/imagenet1k_v1/wide_resnet101_2_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet101_2/imagenet1k_v1/wide_resnet101_2_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -563,7 +563,7 @@ class Wide_ResNet101_2_Weights(WeightsEnum):
     )
     IMAGENET1K_V2 = Weights(
         url         = "https://download.pytorch.org/models/wide_resnet101_2-d733dc28.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
+        path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

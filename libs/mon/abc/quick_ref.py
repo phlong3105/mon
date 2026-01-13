@@ -19,17 +19,17 @@ from typing import Any, Iterator
 
 class RaiseStatements(abc.ABC):
     """A collection of raise statements."""
-    
+
     def type_error(self, name):
         # TypeError: Use when an object is of the wrong type
         raise TypeError(f"Expected 'name' to be a string, but got {type(name).__name__}.")
-    
+
     def value_error(self, split, valid_splits):
         # ValueError: Use when the type is correct, but the content is invalid
         # (e.g., an empty list or an unsupported string).
         raise ValueError(f"Expected 'split' in {valid_splits}, but got '{split}'")
         raise ValueError(f"Unsupported 'split': {split}. Must be one of: {valid_splits}.")
-    
+
     def assertion_error(self, images, labels):
         # AssertionError: Use assert for conditions that should be impossible
         # if the code is correct (internal sanity checks).
@@ -40,16 +40,16 @@ class RaiseStatements(abc.ABC):
         # missing a required attribute.
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '_datapoints'.")
         raise TypeError(f"Class {self.__name__} must define '_name' attribute.")
-    
+
     def file_not_found_error(self, path):
         # FileNotFoundError: The most specific error for missing files or directories.
         raise FileNotFoundError(f"Dataset root not found at: {path}")
-    
+
     def file_exist_error(self, path):
         # FileExistsError: Use when trying to save or create a directory that
         # already exists and shouldn't.
         raise FileExistsError(f"Export directory already exists: {path}")
-    
+
     def index_error(self, index):
         # IndexError: Use if a user requests a specific index from a dataset
         # that is out of bounds.
@@ -64,7 +64,7 @@ class RaiseStatements(abc.ABC):
         # NotImplementedError: Use for abstract methods or features you plan to
         # support but haven't written yet.
         raise NotImplementedError("This method is not yet supported.")
-    
+
     def import_error(self, path):
         # ImportError / ModuleNotFoundError: Use when an optional dependency is
         # missing
@@ -74,7 +74,7 @@ class RaiseStatements(abc.ABC):
         # RuntimeError: A "catch-all" for errors that don't fit elsewhere, often
         # used for hardware/logic failures.
         raise RuntimeError("CUDA out of memory during SAM mask generation.")
-    
+
 # endregion
 
 
@@ -84,145 +84,145 @@ class RaiseStatements(abc.ABC):
 
 class Foo:
     """A template class demonstrating the most common Python dunder methods."""
-    
+
     # --- Lifecycle & Initialization ---
     def __new__(cls, *args, **kwargs) -> Foo:
         """Called to create a new instance of the class."""
         instance = super().__new__(cls)
         return instance
-    
+
     def __init__(self, value: Any = None):
         """Initialize a new instance."""
         self.value = value
         self._data = []  # Internal storage for container methods
-    
+
     def __init_subclass__(cls, *args, **kwargs):
         """Called when inheriting from this class."""
         super().__init_subclass__(*args, **kwargs)
-    
+
     def __del__(self):
         """Finalizer called when the object is about to be destroyed."""
         pass
-    
+
     # --- Comparison Operators ---
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Foo):
             return NotImplemented
         return self.value == other.value
-    
+
     def __ne__(self, other: object) -> bool:
         if not isinstance(other, Foo):
             return NotImplemented
         return not self == other
-    
+
     def __lt__(self, other: Foo) -> bool:
         if not isinstance(other, Foo):
             return NotImplemented
         return self.value < other.value
-    
+
     def __gt__(self, other: Foo) -> bool:
         if not isinstance(other, Foo):
             return NotImplemented
         return self.value > other.value
-    
+
     def __le__(self, other: Foo) -> bool:
         if not isinstance(other, Foo):
             return NotImplemented
         return self.value <= other.value
-    
+
     def __ge__(self, other: Foo) -> bool:
         if not isinstance(other, Foo):
             return NotImplemented
         return self.value >= other.value
-    
+
     # --- Representation ---
     def __str__(self) -> str:
         """Informal string representation for end-users (print)."""
         return f"Foo with value: {self.value}"
-    
+
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
         return f"{self.__class__.__name__}(value={self.value!r})"
-    
+
     def __format__(self, format_spec: str) -> str:
         """Custom behavior for f-string formatting."""
         return format(str(self.value), format_spec)
-    
+
     def __hash__(self) -> int:
         """Allow the object to be used as a key in a dictionary or in a set."""
         return hash((self.__class__, self.value))
-    
+
     # --- Mathematical Operators ---
     def __add__(self, other: Foo) -> Foo:
         return Foo(self.value + other.value)
-    
+
     def __sub__(self, other: Foo) -> Foo:
         return Foo(self.value - other.value)
-    
+
     # --- Type Conversion ---
     def __bool__(self) -> bool:
         return bool(self.value)
-    
+
     def __int__(self) -> int:
         return int(self.value)
-    
+
     # --- Attribute Access ---
     def __getattr__(self, name: str) -> Any:
         """Called only if the attribute was not found in the usual places."""
         return f"Attribute {name} not found"
-    
+
     def __setattr__(self, name: str, value: Any):
         """Intercept every attribute assignment."""
         super().__setattr__(name, value)
-    
+
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the length of the container."""
         return len(self._data)
-    
+
     def __getitem__(self, index: int) -> Any:
         """Return an item at the given ``index``.
-        
+
         """
         return self._data[index]
-    
+
     def __setitem__(self, index: int, value: Any):
         """Define behavior for when an item is assigned to, using the notation
         self[key] = value.
         """
         self._data[index] = value
-    
+
     def __iter__(self) -> Iterator:
         """Return an iterator for the container."""
         return iter(self._data)
-    
+
     def __contains__(self, item: Any) -> bool:
         """Define behavior for membership tests using in and not in."""
         return item in self._data
-    
+
     # --- Callable & Context Manager ---
     def __call__(self, *args, **kwargs) -> Any:
         """Allow the instance to be called like a function: foo()."""
         print("Foo instance was called!")
         return self.value
-    
+
     def __enter__(self) -> Foo:
         """Setup for 'with' statement."""
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Teardown for 'with' statement."""
         pass
-    
+
     # --- Properties ---
     @property
     def value(self) -> Any:
         return self._value
-    
+
     @value.setter
     def value(self, value: Any):
         self._value = value
-    
+
 # endregion
 
 
@@ -236,7 +236,7 @@ pass
 - list  : Retrieve a list of items.
 - scan  : Scan the filesystem for new files.
 - find  : Return the first item matching specific criteria.
-- search: Return all items matching specific criteria.
+- search: Return all items matching specific criteria (return empty by default).
 """
 
 
@@ -314,7 +314,7 @@ pass
 - parse  : Extract and convert specific parts from the data into a structured format.
 
 # Selection (Find specific values in a collection)
-- filter : Select elements that meet specific criteria.
+- filter : Select elements that meet specific criteria (return all by default).
 - unique : Find the unique values in a collection.
 - sample : Randomly select a subset of data.
 - comb   : Generate all possible combinations of elements.
@@ -685,5 +685,15 @@ pass
 # region UTILITIES
 # ==============================================================================
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

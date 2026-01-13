@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""<Name> data structures.
+"""<Name> complex operations.
 
-This module provides base classes and mixins for <name>.
+This module provides complex operations and processing workflows for <name>.
 """
 
 from __future__ import annotations
 
 __all__ = []
 
+
 # ==============================================================================
-# region CONSTANTS
+# region CONTROL
 # ==============================================================================
 
 
@@ -19,34 +20,26 @@ __all__ = []
 
 
 # ==============================================================================
-# region TYPE DEFINITIONS & PROTOCOLS
+# region PROCESSING
 # ==============================================================================
-
-# --- Type Aliases ---
-
-
-# --- Protocols ---
 
 
 # endregion
 
 
 # ==============================================================================
-# region BASE CLASSES & MIXINS
+# region TRANSACTION
 # ==============================================================================
-
-# --- Base Classes ---
-
-
-# --- Mixins ---
 
 
 # endregion
 
 
 # ==============================================================================
-# region CONCRETE IMPLEMENTATIONS
+# region UNIT TEST
 # ==============================================================================
 
+if __name__ == "__main__":
+    pass
 
 # endregion

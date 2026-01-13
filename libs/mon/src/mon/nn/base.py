@@ -174,6 +174,7 @@ class RegistrableMixin:
         return self._model_dir
     
 
+# TODO: Delete later
 class ModelZooMixin:
     """A mixin class that adds model zoo functionality to a model.
     
@@ -259,8 +260,9 @@ class ModelZooMixin:
                     log(f"Loaded weights successfully from: {path}.")
             else:
                 raise NotImplementedError("The class using ModelMixin must implement ``load_state_dict()``.")
-   
 
+
+# TODO: Delete later
 class ModelAdapterMixin(RegistrableMixin, ModelZooMixin):
     """A mixin class that provide a unified interface to bridge any model to
     ``mon`` framework.

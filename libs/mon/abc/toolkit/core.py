@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for image segmentation."""
+"""<Name> data structures.
+
+This module provides base classes and mixins for <name>.
+"""
 
 from __future__ import annotations
 
 __all__ = []
-
 
 # ==============================================================================
 # region CONSTANTS
@@ -38,5 +40,23 @@ __all__ = []
 
 # --- Mixins ---
 
+
+# endregion
+
+
+# ==============================================================================
+# region CONCRETE IMPLEMENTATIONS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

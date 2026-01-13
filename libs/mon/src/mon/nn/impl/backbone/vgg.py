@@ -3,7 +3,7 @@
 
 """VGG backbones.
 
-This module implements various VGG backbones using PyTorch.
+This module provides various VGG backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.vgg import cfgs, make_layers, VGG
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -46,7 +46,7 @@ current_dir  = current_file.parents[0]
 
 # --- Base Classes ---
 
-class VGGBackBone(nn.Module):
+class VGGBackBone(nn.Module, RegistrableMixin):
     """VGG backbone.
 
     Attributes:
@@ -137,7 +137,7 @@ class VGG11_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg11-8a719046.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -164,7 +164,7 @@ class VGG11_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -191,7 +191,7 @@ class VGG13_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg13-19584684.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -218,7 +218,7 @@ class VGG13_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -245,7 +245,7 @@ class VGG16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg16-397923af.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -272,7 +272,7 @@ class VGG16_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -299,7 +299,7 @@ class VGG19_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -326,7 +326,7 @@ class VGG19_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

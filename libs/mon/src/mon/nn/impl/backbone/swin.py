@@ -3,7 +3,7 @@
 
 """Swin Transformer backbones.
 
-This module implements various Swin Transformer backbones using PyTorch.
+This module provides various Swin Transformer backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.swin_transformer import SwinTransformer
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -164,7 +164,7 @@ class Swin_T_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/swin_t-704ceda3.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/swin/swin_t/imagenet1k_v1/swin_t_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/swin/swin_t/imagenet1k_v1/swin_t_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -191,7 +191,7 @@ class Swin_S_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/swin_s-5e29d889.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/swin/swin_s/imagenet1k_v1/swin_s_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/swin/swin_s/imagenet1k_v1/swin_s_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -218,7 +218,7 @@ class Swin_B_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/swin_b-68c6b09e.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/swin/swin_b/imagenet1k_v1/swin_b_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/swin/swin_b/imagenet1k_v1/swin_b_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -245,7 +245,7 @@ class Swin_V2_T_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/swin_v2_t-b137f0e2.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/swin/swin_v2_t/imagenet1k_v1/swin_v2_t_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/swin/swin_v2_t/imagenet1k_v1/swin_v2_t_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -272,7 +272,7 @@ class Swin_V2_S_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/swin_v2_s-637d8ceb.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/swin/swin_v2_s/imagenet1k_v1/swin_v2_s_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/swin/swin_v2_s/imagenet1k_v1/swin_v2_s_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -299,7 +299,7 @@ class Swin_V2_B_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/swin_v2_b-781e5279.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/swin/swin_v2_b/imagenet1k_v1/swin_v2_b_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/swin/swin_v2_b/imagenet1k_v1/swin_v2_b_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {

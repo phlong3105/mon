@@ -3,7 +3,7 @@
 
 """AlexNet backbones.
 
-This module implements various AlexNet backbones using PyTorch.
+This module provides various AlexNet backbones using PyTorch.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.alexnet import AlexNet
 
-from mon.core import BACKBONES, MLType, Path, ROOT_DIR, Task, WEIGHTS
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum
 from ...base import RegistrableMixin
 
@@ -59,7 +59,7 @@ class AlexNetBackBone(nn.Module, RegistrableMixin):
 
         Args:
             name: Name of the backbone.
-            weights: Pre-trained weights to load.
+            weights: Pre-trained weights to load. Defaults to None.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [2, 5, 8, 10, 12].
             args: Additional positional arguments for the ResNet model.
@@ -118,7 +118,7 @@ class AlexNet_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
         url         = "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
-        path        = ROOT_DIR / "zoo/nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
+        path        = ZOO_DIR / "nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
