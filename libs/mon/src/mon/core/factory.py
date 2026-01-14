@@ -24,7 +24,7 @@ import inspect
 from typing import Any, Callable
 
 from mon.core.console import log_error
-from mon.core.enum import MLType, Task, Split
+from mon.core.enum import MLType, Split, Task
 from mon.core.utils import depascalize
 
 
@@ -227,7 +227,7 @@ class DatasetFactory(Factory):
         task: str | None = None,
         mode: str | None = None,
     ):
-        """Find all available dataset names that match a task and mode.
+        """Find all available dataset names matching a task and mode.
 
         Args:
             task: Task name to filter models. Defaults to None.
@@ -251,7 +251,7 @@ class DatasetFactory(Factory):
         task: str | None = None,
         mode: str | None = None,
     ):
-        """Filter and return all available dataset names that match a task and mode.
+        """Filter and return all available dataset names matching a task and mode.
 
         Args:
             task: Task name to filter datasets. If None, return all datasets.
@@ -443,7 +443,7 @@ class ModelFactory(Factory):
         mode: str | None = None,
         arch: str | None = None,
     ):
-        """Find all available model names that match a task, mode, and architecture.
+        """Find all available model names matching a task, mode, and architecture.
 
         Args:
             task: Task name to filter models. Defaults to None.
@@ -468,7 +468,7 @@ class ModelFactory(Factory):
         task: str | None = None,
         mode: str | None = None,
     ) -> list[str]:
-        """Return available architectures that match a task and mode.
+        """Return available architectures matching a task and mode.
 
         Args:
             task: Task name to filter architectures. Defaults to None.
@@ -549,7 +549,7 @@ class ModelFactory(Factory):
         mode: str | None = None,
         arch: str | None = None,
     ):
-        """Filter and return all available model names that match a task, mode,
+        """Filter and return all available model names matching a task, mode,
         and architecture.
 
         Args:

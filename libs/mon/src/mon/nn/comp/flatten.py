@@ -14,4 +14,4 @@ __all__ = [
     "Unflatten",
 ]
 
-from torch.nn.modules.flatten import *
+from torch.nn.modules.flatten import Flatten, Unflatten

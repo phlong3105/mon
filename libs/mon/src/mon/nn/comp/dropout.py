@@ -18,4 +18,11 @@ __all__ = [
     "FeatureAlphaDropout",
 ]
 
-from torch.nn.modules.dropout import *
+from torch.nn.modules.dropout import (
+    AlphaDropout,
+    Dropout,
+    Dropout1d,
+    Dropout2d,
+    Dropout3d,
+    FeatureAlphaDropout,
+)

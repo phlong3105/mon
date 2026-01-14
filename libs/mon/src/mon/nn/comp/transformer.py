@@ -17,4 +17,10 @@ __all__ = [
     "TransformerEncoderLayer",
 ]
 
-from torch.nn.modules.transformer import *
+from torch.nn.modules.transformer import (
+    Transformer,
+    TransformerDecoder,
+    TransformerDecoderLayer,
+    TransformerEncoder,
+    TransformerEncoderLayer,
+)

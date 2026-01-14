@@ -19,4 +19,13 @@ __all__ = [
     "RNNCellBase",
 ]
 
-from torch.nn.modules.rnn import *
+from torch.nn.modules.rnn import (
+    GRU,
+    GRUCell,
+    LSTM,
+    LSTMCell,
+    RNN,
+    RNNBase,
+    RNNCell,
+    RNNCellBase,
+)

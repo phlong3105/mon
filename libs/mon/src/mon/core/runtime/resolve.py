@@ -48,7 +48,7 @@ class ProjectResolver:
     def __init__(
         self,
         root   : Path | str | None = None,
-        verbose: bool = False,
+        verbose: bool       | None = False,
         *args, **kwargs
     ):
         self.verbose = verbose
@@ -73,7 +73,8 @@ class ProjectResolver:
         return self._root
 
     @root.setter
-    def root(self, value: Path | str):
+    def root(self, value: Path | str | None):
+        """Set the project root directory."""
         if isinstance(value, (Path, str)):
             value = Path(value).normalize()
             if not value.exists():
@@ -313,7 +314,11 @@ class ProjectResolver:
 
         return self._config_files
 
-    def list_weights_files(self, model: str | None = None, reload: bool = False):
+    def list_weights_files(
+        self,
+        model : str | None = None,
+        reload: bool       = False
+    ):
         """List available weights for a given model."""
         # If reload is True, clear the cache
         if reload:

@@ -20,7 +20,6 @@ import box
 from mon.core.device import list_devices
 from mon.core.enum import RunMode, Task, TRTPrecision
 
-
 # ==============================================================================
 # region UTILITIES
 # ==============================================================================

@@ -15,4 +15,8 @@ __all__ = [
     "UpsamplingNearest2d",
 ]
 
-from torch.nn.modules.upsampling import *
+from torch.nn.modules.upsampling import (
+    Upsample,
+    UpsamplingBilinear2d,
+    UpsamplingNearest2d,
+)

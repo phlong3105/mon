@@ -14,4 +14,4 @@ __all__ = [
     "Unfold",
 ]
 
-from torch.nn.modules.fold import *
+from torch.nn.modules.fold import Fold, Unfold

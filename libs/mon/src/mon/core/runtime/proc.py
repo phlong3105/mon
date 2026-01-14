@@ -46,8 +46,7 @@ def parse_default_args(name: str = "main") -> box.Box:
     parsed arguments.
 
     Args:
-        name: Program description used in the ArgumentParser. Defaults to
-            "main".
+        name: Program description used in the ArgumentParser. Defaults to "main".
 
     Returns:
         Parsed arguments as a box.Box.
@@ -84,9 +83,9 @@ def parse_default_args(name: str = "main") -> box.Box:
 
 
 def parse_cli_args(
-    cli : box.Box | None = None,
-    root: Path | None    = None,
-    name: str            = "main"
+    cli : box.Box    | None = None,
+    root: Path | str | None = None,
+    name: str               = "main"
 ) -> box.Box:
     """Parse CLI arguments and optionally run the interactive prompt.
 
@@ -106,7 +105,7 @@ def parse_cli_args(
     # Path Normalization
     # Prioritize root passed to function, then root in cli, then current working dir
     raw_root = root or cli.get("root") or Path.cwd()
-    cli.root = Path(raw_root).resolve()
+    cli.root = Path(raw_root).normalize()
 
     # Interactive Switch
     # Assuming 'p' is the flag for --prompt
@@ -119,10 +118,10 @@ def parse_cli_args(
 
 
 def parse_train_args(
-    cli       : box.Box | None = None,
-    root      : Path | None    = None,
-    model_root: Path | None    = None,
-    verbose   : bool           = False
+    cli       : box.Box    | None = None,
+    root      : Path | str | None = None,
+    model_root: Path | str | None = None,
+    verbose   : bool              = False
 ) -> box.Box:
     """Parse and prepare training arguments.
 
@@ -132,8 +131,7 @@ def parse_train_args(
     Args:
         cli: CLI arguments. Defaults to None.
         root: Project root path. Defaults to None.
-        model_root: Model root path for configuration resolution. Defaults to
-            None.
+        model_root: Model root path for configuration resolution. Defaults to None.
         verbose: If True, print helpful logs. Defaults to False.
 
     Returns:
@@ -185,10 +183,10 @@ def parse_train_args(
 
 
 def parse_predict_args(
-    cli       : box.Box | None = None,
-    root      : Path | None    = None,
-    model_root: Path | None    = None,
-    verbose   : bool           = False
+    cli       : box.Box    | None = None,
+    root      : Path | str | None = None,
+    model_root: Path | str | None = None,
+    verbose   : bool              = False
 ) -> box.Box:
     """Parse and prepare prediction arguments.
 
@@ -198,8 +196,7 @@ def parse_predict_args(
     Args:
         cli: CLI arguments. Defaults to None.
         root: Project root path. Defaults to None.
-        model_root: Model root path for configuration resolution. Defaults to
-            None.
+        model_root: Model root path for configuration resolution. Defaults to None.
         verbose: If True, print helpful logs. Defaults to False.
 
     Returns:
@@ -254,5 +251,15 @@ def parse_predict_args(
         console.log(f"[green]Run directory:[/green] {args.save_dir}")
 
     return args
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

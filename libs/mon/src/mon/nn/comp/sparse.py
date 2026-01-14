@@ -14,4 +14,4 @@ __all__ = [
     "EmbeddingBag",
 ]
 
-from torch.nn.modules.sparse import *
+from torch.nn.modules.sparse import Embedding, EmbeddingBag

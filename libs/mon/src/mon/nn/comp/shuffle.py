@@ -15,5 +15,5 @@ __all__ = [
     "PixelUnshuffle",
 ]
 
-from torch.nn.modules.channelshuffle import *
-from torch.nn.modules.pixelshuffle import *
+from torch.nn.modules.channelshuffle import ChannelShuffle
+from torch.nn.modules.pixelshuffle import PixelShuffle, PixelUnshuffle
