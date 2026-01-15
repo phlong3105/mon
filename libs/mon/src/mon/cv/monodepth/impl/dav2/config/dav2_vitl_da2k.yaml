@@ -4,11 +4,11 @@ root        : ~                                                                 
 task        : &task "depth"                                                     # Task name (e.g., detect, segment, classify).
 mode        : &mode "train"                                                     # Mode name (e.g., train, val, test, predict, export).
 arch        : &arch "dav2"                                                      # Model architecture or family (e.g., resnet).
-model       : &model "dav2_vitb"                                                # Model name (e.g., resnet50).
-data        : &data ~                                                           # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
-fullname    : &fullname "dav2_vitb"                                             # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
+model       : &model "dav2_vitl"                                                # Model name (e.g., resnet50).
+data        : &data "da2k"                                                      # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
+fullname    : &fullname "dav2_vitl_da2k"                                        # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
 save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "zoo/cv/monodepth/dav2/dav2_vitb/pretrained/dav2_vitb.pth"  # Path to the pretrained weights.
+weights     : &weights "cv/monodepth/dav2/dav2_vitl/da2k/dav2_vitl_da2k.pth"    # Path to the pretrained weights.
 device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
 seed        : &seed 2                                                           # Random seed.
 imgsz       : &imgsz 518                                                        # Image size for the model.
@@ -38,12 +38,7 @@ cfg         : ~                                                                 
 
 # --- Model ---
 # Network
-network:                                                                        # Network architecture.
-  encoder     : "vitb"
-  features    : 128
-  out_channels: [96, 192, 384, 768]
-  pred_only   : True
-  format      : 2  # 0: grayscale, 1: color, 2: both
+network: ~                                                                      # Network architecture.
 
 # Optimizer
 optimizer: ~                                                                    # Optimizer.

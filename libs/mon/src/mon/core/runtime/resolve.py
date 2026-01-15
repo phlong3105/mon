@@ -18,23 +18,24 @@ __all__ = [
     "parse_model_fullname",
     "parse_output_dir",
     "parse_save_dir",
+    "parse_weights",
     "parse_weights_dir",
     "parse_weights_file",
-    "parse_weights_from_config",
 ]
 
 import importlib.util
-from typing import Any, Optional, Sequence
+from typing import Any, Optional
 
 import box
 import yaml
 
 from mon.core.console import log, log_error
 from mon.core.constants import MONO_ROOT_DIR, ROOT_DIR, ZOO_DIR
+from mon.core.dtypes import Weights
 from mon.core.enum import Task
-from mon.core.factory import DATASETS, MODELS
+from mon.core.factory import DATASETS, MODELS, WEIGHTS
 from mon.core.pathlib import Path
-from mon.core.utils import depascalize, to_list
+from mon.core.utils import depascalize
 
 
 # ==============================================================================
@@ -417,7 +418,7 @@ class ProjectResolver:
         config_file = root / "config" / "default.py"
 
         # Check existence
-        if not config_file.is_file(exist=True):
+        if not config_file.is_file():
             return {}
 
         # Dynamic Execution
@@ -493,7 +494,7 @@ def load_config(config: Any, verbose: bool = True) -> dict | box.Box:
 
     Args:
         config: Mapping or path to a config file.
-        verbose: If True, log load success or failure. Defaults to True.
+        verbose: Verbosity mode. Defaults to True.
 
     Returns:
         Loaded configuration as a box.Box. Returns an empty box.Box if nothing
@@ -545,6 +546,45 @@ def load_config(config: Any, verbose: bool = True) -> dict | box.Box:
 # ==============================================================================
 
 # --- Accessing ---
+
+def parse_model_fullname(name: str, data: str, suffix: str | None = None) -> str:
+    """Compose a model fullname from name, data, and optional suffix.
+
+    Build a normalized fullname string by appending dataset and an
+    optional suffix if not already present.
+
+    Args:
+        name: Base model name.
+        data: Dataset or data identifier to append.
+        suffix: Optional suffix to append. Defaults to None.
+
+    Returns:
+        Composed fullname string.
+    """
+    if not name or str(name).lower() == "none":
+        # Using a default or raising is often better than just logging
+        return "unnamed_model"
+
+    # Start with the base architecture/model name
+    fullname = str(name).strip()
+
+    # Append dataset identifier
+    if data and str(data).lower() != "none":
+        data_tag = str(data).strip()
+        if data_tag not in fullname:
+            fullname = f"{fullname}_{data_tag}"
+
+    # Append optional suffix (e.g., 'nano', 'pretrained', 'v2')
+    if suffix and str(suffix).lower() != "none":
+        # Normalize casing (e.g., 'Nano' -> 'nano')
+        clean_suffix = depascalize(str(suffix).strip())
+
+        # Avoid duplicate tags
+        if clean_suffix not in fullname:
+            fullname = f"{fullname}_{clean_suffix}"
+
+    return fullname
+
 
 def parse_data_dir(root: Path | None, data_dir: Path | str = "") -> Path:
     """Resolve an absolute data directory path from candidates.
@@ -639,45 +679,6 @@ def parse_model_dir(arch: str, model: str) -> Optional[Path]:
         return None
 
     return None
-
-
-def parse_model_fullname(name: str, data: str, suffix: str | None = None) -> str:
-    """Compose a model fullname from name, data, and optional suffix.
-
-    Build a normalized fullname string by appending dataset and an
-    optional suffix if not already present.
-
-    Args:
-        name: Base model name.
-        data: Dataset or data identifier to append.
-        suffix: Optional suffix to append. Defaults to None.
-
-    Returns:
-        Composed fullname string.
-    """
-    if not name or str(name).lower() == "none":
-        # Using a default or raising is often better than just logging
-        return "unnamed_model"
-
-    # Start with the base architecture/model name
-    fullname = str(name).strip()
-
-    # Append dataset identifier
-    if data and str(data).lower() != "none":
-        data_tag = str(data).strip()
-        if data_tag not in fullname:
-            fullname = f"{fullname}_{data_tag}"
-
-    # Append optional suffix (e.g., 'nano', 'pretrained', 'v2')
-    if suffix and str(suffix).lower() != "none":
-        # Normalize casing (e.g., 'Nano' -> 'nano')
-        clean_suffix = depascalize(str(suffix).strip())
-
-        # Avoid duplicate tags
-        if clean_suffix not in fullname:
-            fullname = f"{fullname}_{clean_suffix}"
-
-    return fullname
 
 
 def parse_save_dir(
@@ -787,49 +788,37 @@ def parse_output_dir(
     return final_root
 
 
-def parse_weights_dir(
-    root   : Path,
-    weights: Path | Sequence[Path]
-) -> Path | Sequence[Path] | None:
-    """Resolve weight directories from root and weight names.
-
-    Convert relative weight names to absolute directories under the
-    project root or the global ROOT_DIR.
+def parse_weights_dir(root: Path, weights: Path | str) -> Path | None:
+    """Resolve the weight directory from the given root and weights name or
+    relative path.
 
     Args:
         root: Project root path.
-        weights: Weight name or iterable of weight names.
+        weights: Weights name or relative path.
 
     Returns:
-        Resolved path, a list of resolved paths, or None if nothing was found.
+        Absolute weights directory path or None if nothing was found.
     """
     root = Path(root).normalize(exist=True)
-    # Ensure weights is always a list of Path objects
-    weight_items = [Path(w) for w in to_list(weights) if w not in [None, "None", ""]]
+    # Ensure weights is always a Path object
+    weights = Path(weights) if weights not in [None, "None", ""] else None
 
-    resolved = []
-    for w in weight_items:
-        # Check if the weight provided is already an absolute path
-        if w.is_absolute() and w.is_dir():
-            resolved.append(w)
-            continue
+    # Check if the weight provided is already an absolute path
+    if weights.is_absolute() and weights.is_dir():
+        return weights
 
-        # Check Local Project Root (Highest Priority)
-        local_dir = root / w
-        if local_dir.is_dir():
-            resolved.append(local_dir)
-            continue
+    # Check Local Project Root (Highest Priority)
+    local_dir = root / weights
+    if local_dir.is_dir():
+        return local_dir
 
-        # Check Global Zoo Directory
-        global_dir = ROOT_DIR / w
-        if global_dir.is_dir():
-            resolved.append(global_dir)
-            continue
+    # Check Global Zoo Directory
+    global_dir = ZOO_DIR / weights
+    if global_dir.is_dir():
+        return global_dir
 
-    # Return formatted output based on quantity found
-    if not resolved:
-        return None
-    return resolved[0] if len(resolved) == 1 else resolved
+    # Return None if not found
+    return None
 
 
 def parse_config_file(
@@ -889,94 +878,70 @@ def parse_config_file(
     return None
 
 
-def parse_weights_file(
-    root   : Path,
-    weights: Path | Sequence[Path]
-) -> Path | Sequence[Path] | None:
-    """Resolve weight file paths given root and weight names.
-
-    Convert weight names to existing weight files under the project root
-    or the global ROOT_DIR.
+def parse_weights_file(root: Path, weights: Path) -> Path | None:
+    """Resolve the weight file from the given root and weights name or
+    relative path.
 
     Args:
         root: Project root path.
-        weights: Weight file name or iterable of names.
+        weights: Weights name or relative path.
 
     Returns:
-        Resolved path, a list of resolved paths, or None if nothing was found.
+        Absolute weight file path or None if nothing was found.
     """
     root = Path(root).normalize(exist=True)
-    # Convert input to a standardized list of Path objects
-    weight_items = [Path(w) for w in to_list(weights) if w not in [None, "None", ""]]
+    # Ensure weights is always a Path object
+    weights = Path(weights) if weights not in [None, "None", ""] else None
 
-    resolved = []
-    for w in weight_items:
-        # Handle Absolute Paths
-        if w.is_absolute() and w.is_file():
-            resolved.append(w)
-            continue
+    # Check if the weight provided is already an absolute path
+    if weights.is_absolute() and weights.is_weights_file():
+        return weights
 
-        # Search Local Project Root (Priority)
-        # Search specifically for the file in the project's training runs
-        local_file = root / w
-        if local_file.is_file() and local_file.is_weights_file():
-            resolved.append(local_file)
-            continue
+    # Check Local Project Root (Highest Priority)
+    # Search specifically for the file in the project's training runs
+    local_file = root / weights
+    if local_file.is_weights_file(exist=True):
+        return local_file
 
-        # Search Global Model Zoo
-        global_file = ROOT_DIR / w
-        if global_file.is_file() and global_file.is_weights_file():
-            resolved.append(global_file)
-            continue
+    # Check Global Zoo Directory
+    global_file = ZOO_DIR / weights
+    if global_file.is_weights_file(exist=True):
+        return weights
 
-    # Return formatted output
-    if not resolved:
-        return None
-    return resolved[0] if len(resolved) == 1 else resolved
+    # Return None if not found
+    return None
 
 
-def parse_weights_from_config(config: Path | dict) -> Path | None:
-    """Extract a weights path from a config file or mapping.
-
-    Inspect the provided config and return the configured weights path
-    if present.
+def parse_weights(
+    root       : Path,
+    weights    : Path,
+    num_classes: int | None = None,
+) -> Weights | None:
+    """Resolve a ``Weights`` object from the given root and weights name or
+    relative path.
 
     Args:
-        config: Path to config or dict-like config.
+        root: Project root path.
+        weights: Weights name or relative path.
+        num_classes: Optional number of classes to set in the Weights object.
+            Defaults to None.
 
     Returns:
-        Weights path if present, otherwise None.
+        ``Weights`` object if found, otherwise None.
     """
-    if config is None:
-        return None
+    weights = parse_weights_file(root=root, weights=weights)
 
-    # Handle if config is already a dictionary/Box
-    if isinstance(config, (dict, box.Box)):
-        weights = config.get("weights")
-        return Path(weights) if weights else None
+    # If a valid weights file was found, wrap it in a Weights object
+    if weights:
+        # Check if the weights object is already registered in WEIGHTS
+        if WEIGHTS.has(path=weights):
+            return WEIGHTS.find_weights_objs(path=weights)
+        # Otherwise, the weights object has not been registered yet.
+        else:
+            return Weights(path=weights, num_classes=num_classes)
 
-    # Handle if config is a path to a file
-    config_path = Path(config)
-    if not config_path.is_file():
-        return None
-
-    # Load the config (suppressing logs for this utility check)
-    args        = load_config(config_path, verbose=False)
-    weights_val = args.get("weights")
-
-    if not weights_val:
-        return None
-
-    weights_path = Path(weights_val)
-
-    # Smart Resolution: If the weights path is relative,
-    # check if it's relative to the config file's directory.
-    if not weights_path.is_absolute():
-        nearby_weights = config_path.parent / weights_path
-        if nearby_weights.exists():
-            return nearby_weights
-
-    return weights_path
+    # Return None if not found
+    return None
 
 
 # --- Selection ---

@@ -10,8 +10,10 @@ instantiating classes.
 from __future__ import annotations
 
 __all__ = [
+    "DatasetFactory",
     "Factory",
     "ModelFactory",
+    "WeightsFactory",
     # Constants
     "ALBUMENTATIONS",
     "BACKBONES",
@@ -24,7 +26,9 @@ import inspect
 from typing import Any, Callable
 
 from mon.core.console import log_error
+from mon.core.dtypes import Weights, WeightsEnum
 from mon.core.enum import MLType, Split, Task
+from mon.core.pathlib import Path
 from mon.core.utils import depascalize
 
 
@@ -51,9 +55,9 @@ class Factory(dict):
     def __init__(
         self,
         name      : str,
-        mapping   : dict = None,
-        decamelize: bool = False,
-        verbose   : bool = False,
+        mapping   : dict | None = None,
+        decamelize: bool        = False,
+        verbose   : bool        = False,
     ):
         """Initialize a new instance.
 
@@ -63,7 +67,7 @@ class Factory(dict):
                 Defaults to None.
             decamelize: If True, normalize class names to snake_case.
                 Defaults to False.
-            verbose: If True, enable verbose logging. Defaults to False.
+            verbose: Verbosity mode. Defaults to False.
 
         Raises:
             ValueError: If ``name`` is empty.
@@ -90,15 +94,17 @@ class Factory(dict):
     # --- Registering ---
     def register(
         self,
-        name   : str | None = None,
-        module : Any | None = None,
-        replace: bool       = False,
+        name     : str | None = None,
+        module   : Any | None = None,
+        metaclass: Any | None = None,
+        replace  : bool       = False,
     ) -> Callable:
         """Register a class or return a decorator for registration.
 
         Args:
             name: Optional name to register the class under. Defaults to None.
             module: Class to register immediately. Defaults to None.
+            metaclass: Metaclass to get metadata from. Defaults to None.
             replace: If True, overwrite any existing registration for the name.
                 Defaults to False.
 
@@ -106,22 +112,29 @@ class Factory(dict):
             Decorator if ``module`` is None, otherwise the registered class.
         """
         def _register(cls):
-            self._register_module(module=cls, name=name, replace=replace)
+            self._register_module(
+                module    = cls,
+                name      = name,
+                metaclass = metaclass,
+                replace   = replace
+            )
             return cls
 
         return _register(module) if module is not None else _register
 
     def _register_module(
         self,
-        module : Any,
-        name   : str | None = None,
-        replace: bool       = False
+        module   : Any,
+        name     : str | None = None,
+        metaclass: Any | None = None,
+        replace  : bool       = False
     ):
         """Register a class internally.
 
         Args:
             module: Class or function to register.
             name: Optional key to register under. Defaults to None.
+            metaclass: Metaclass to get metadata from. Defaults to None.
             replace: If True, overwrite an existing entry. Defaults to False.
 
         Raises:
@@ -140,10 +153,12 @@ class Factory(dict):
             key = depascalize(key)
 
         if not replace and key in self:
-            raise KeyError(f"'{key}' is already registered in the '{self._name}' factory.")
+            if self.verbose:
+                log_error(f"'{key}' is already registered in the '{self._name}' factory.")
+            return
 
         self[key] = module
-        self._try_set_name(module, key)
+        self._try_set_attr(module, attr_name="name", value=key)
 
     # --- Creation ---
     def build(self, name: str, *args, **kwargs) -> Any:
@@ -179,7 +194,7 @@ class Factory(dict):
     def _create_instance(self, cls: type, name: str, *args, **kwargs) -> Any:
         """Instantiate and tag the object with its registered name internally."""
         instance = cls(*args, **kwargs)
-        self._try_set_name(instance, name)
+        self._try_set_attr(instance, attr_name="name", value=name)
         return instance
 
     # --- Mutation ---
@@ -195,14 +210,25 @@ class Factory(dict):
 
     # --- Utils ---
     @staticmethod
-    def _try_set_name(module: Any, name: str):
-        """Attempt to set the ``name`` and ``_name`` attributes on the module."""
+    def _try_get_attr(module: Any, metaclass: Any, attr_name: str) -> Any:
+        """Attempt to get an attribute from a module or metaclass."""
+        try:
+            return (
+                   getattr(module,    f"_{attr_name}", getattr(module,    f"{attr_name}", None))
+                or getattr(metaclass, f"_{attr_name}", getattr(metaclass, f"{attr_name}", None))
+            )
+        except AttributeError:
+            return None
+
+    @staticmethod
+    def _try_set_attr(module: Any, attr_name: str, value: Any):
+        """Attempt to set an attribute on the module."""
         if inspect.isclass(module):
             try:
-                if not hasattr(module, "name") or getattr(module, "name") != name:
-                    module.name = name
-                if not hasattr(module, "_name") or getattr(module, "_name") != name:
-                    module._name = name
+                if not hasattr(module, f"{attr_name}") or getattr(module, f"{attr_name}") != value:
+                    setattr(module, f"{attr_name}", value)
+                if not hasattr(module, f"_{attr_name}") or getattr(module, f"_{attr_name}") != value:
+                    setattr(module, f"_{attr_name}", value)
             except (AttributeError, TypeError):
                 # Silently fail if the attribute is not settable (e.g., on built-ins).
                 pass
@@ -219,14 +245,18 @@ class Factory(dict):
 # ==============================================================================
 
 class DatasetFactory(Factory):
-    """Factory specialized for organizing datasets by task."""
+    """Factory specialized for organizing datasets by task.
+
+    Extend ``Factory`` to include discovery and retrieval methods specific to
+    datasets, such as filtering by task and run mode.
+    """
 
     # --- Discovery ---
     def search(
         self,
         task: str | None = None,
         mode: str | None = None,
-    ):
+    ) -> list[str]:
         """Find all available dataset names matching a task and mode.
 
         Args:
@@ -250,7 +280,7 @@ class DatasetFactory(Factory):
         self,
         task: str | None = None,
         mode: str | None = None,
-    ):
+    ) -> list[str]:
         """Filter and return all available dataset names matching a task and mode.
 
         Args:
@@ -289,6 +319,19 @@ class ModelFactory(Factory):
     specialized methods for registering and building models within this
     structure. Also, include discovery and retrieval functionality for models
     and architectures.
+
+    Examples:
+        self = {
+            "yolo": {
+                "yolov11": {
+                    "arch": ...,
+                    "model": ...,
+                    "tasks": ...,
+                    "module": ...,
+                    ...
+                }
+            }
+        }
     """
 
     # --- Properties ---
@@ -315,20 +358,20 @@ class ModelFactory(Factory):
             if not isinstance(models, dict):
                 continue
             for model_name, model_data in models.items():
-                if isinstance(model_data, dict):
-                    flat_dict[model_name] = {**model_data, "arch": arch}
-                else:
-                    flat_dict[model_name] = {"module": model_data, "arch": arch}
+                flat_dict[model_name] = model_data
+
+        # print(flat_dict)
         return flat_dict
 
     # --- Registering ---
     def register(
         self,
-        name   : str  | None = None,
-        arch   : str  | None = None,
-        variant: str  | None = None,
-        module : Any  | None = None,
-        replace: bool        = False,
+        name     : str  | None = None,
+        arch     : str  | None = None,
+        variant  : str  | None = None,
+        module   : Any  | None = None,
+        metaclass: Any  | None = None,
+        replace  : bool        = False,
     ) -> Callable[[type], type]:
         """Register a model class or return a decorator for registration.
 
@@ -337,6 +380,7 @@ class ModelFactory(Factory):
             arch: Architecture name. Defaults to None.
             variant: Model variant name. Defaults to None.
             module: Class to register immediately. Defaults to None.
+            metaclass: Metaclass to get metadata from. Defaults to None.
             replace: If True, overwrite any existing registration.
                 Defaults to False.
 
@@ -344,18 +388,26 @@ class ModelFactory(Factory):
             Decorator or the registered class.
         """
         def _register(cls: type) -> type:
-            self._register_module(cls, name, arch, variant, replace)
+            self._register_module(
+                module    = cls,
+                name      = name,
+                arch      = arch,
+                variant   = variant,
+                metaclass = metaclass,
+                replace   = replace,
+            )
             return cls
 
         return _register(module) if module is not None else _register
 
     def _register_module(
         self,
-        module : Any,
-        name   : str  | None = None,
-        arch   : str  | None = None,
-        variant: str  | None = None,
-        replace: bool        = False
+        module   : Any,
+        name     : str  | None = None,
+        arch     : str  | None = None,
+        variant  : str  | None = None,
+        metaclass: Any  | None = None,
+        replace  : bool        = False
     ):
         """Register a model class internally.
 
@@ -364,6 +416,7 @@ class ModelFactory(Factory):
             name: Full model name. Defaults to None.
             arch: Architecture name. Defaults to None.
             variant: Model variant name. Defaults to None.
+            metaclass: Metaclass to get metadata from. Defaults to None.
             replace: If True, overwrite an existing entry. Defaults to False.
 
         Raises:
@@ -374,8 +427,8 @@ class ModelFactory(Factory):
                 f"Expected 'module' to be a class or function, but got {type(module).__name__}."
             )
 
-        arch_name  = arch or getattr(module, "_arch", getattr(module, "arch", module.__name__))
-        model_name = name or getattr(module, "_name", getattr(module, "name", f"{arch_name}_{variant}" if variant else arch_name))
+        arch_name  = arch or self._try_get_attr(module, metaclass, "arch") or module.__name__
+        model_name = name or self._try_get_attr(module, metaclass, "name") or (f"{arch_name}_{variant}" if variant else arch_name)
 
         if self._decamelize:
             arch_name  = depascalize(arch_name)
@@ -384,13 +437,21 @@ class ModelFactory(Factory):
         self.setdefault(arch_name, {})
 
         if not replace and model_name in self[arch_name]:
-            # The model is already registered; silently return to avoid errors.
+            if self.verbose:
+                log_error(f"'{model_name}' is already registered in the '{self._name}' factory.")
             return
 
-        self[arch_name][model_name] = module
+        # Store metadata alongside the module
+        self[arch_name][model_name] = {
+            "arch"   : arch_name,
+            "name"   : model_name,
+            "tasks"  : self._try_get_attr(module, metaclass, "tasks"),
+            "mltypes": self._try_get_attr(module, metaclass, "mltypes"),
+            "module" : module,
+        }
 
-        self._try_set_arch(module, arch_name)
-        self._try_set_name(module, model_name)
+        self._try_set_attr(module, "arch", arch_name)
+        self._try_set_attr(module, "name", model_name)
 
     # --- Creation ---
     def build(self, name: str, arch: str = None, *args, **kwargs) -> Any:
@@ -421,7 +482,7 @@ class ModelFactory(Factory):
                 arch_models = self[arch_key]
                 for k in keys_to_try:
                     if k in arch_models:
-                        return self._create_instance(arch_models[k], k, *args, **kwargs)
+                        return self._create_instance(arch_models[k]["module"], k, *args, **kwargs)
 
         # If not found in the specified arch or if no arch was given, search all.
         for arch_models in self.values():
@@ -429,7 +490,7 @@ class ModelFactory(Factory):
                 continue
             for k in keys_to_try:
                 if k in arch_models:
-                    return self._create_instance(arch_models[k], k, *args, **kwargs)
+                    return self._create_instance(arch_models[k]["module"], k, *args, **kwargs)
 
         raise ValueError(
             f"Model '{name}' is not registered in the '{self._name}' factory. "
@@ -442,7 +503,7 @@ class ModelFactory(Factory):
         task: str | None = None,
         mode: str | None = None,
         arch: str | None = None,
-    ):
+    ) -> list[str]:
         """Find all available model names matching a task, mode, and architecture.
 
         Args:
@@ -487,8 +548,8 @@ class ModelFactory(Factory):
         for m in models:
             # Check if model exists in registry and has an 'arch' attribute
             entry = flattened_registry.get(m)
-            if entry and hasattr(entry, "arch"):
-                a = str(entry.arch).strip()
+            if entry and "arch" in entry:
+                a = str(entry["arch"]).strip()
                 if a and a.lower() != "none":
                     archs.add(a)
 
@@ -548,7 +609,7 @@ class ModelFactory(Factory):
         task: str | None = None,
         mode: str | None = None,
         arch: str | None = None,
-    ):
+    ) -> list[str]:
         """Filter and return all available model names matching a task, mode,
         and architecture.
 
@@ -570,33 +631,86 @@ class ModelFactory(Factory):
         # Filter by Task (e.g., Segmentation, Classification)
         if task and task in Task.values():
             task_enum = Task(task)
-            models    = [m for m in models if task_enum in flatten_models[m].tasks]
+            models    = [m for m in models if task_enum in flatten_models[m]["tasks"]]
 
         # Filter by Mode (e.g., can this model be trained?)
         if mode == "train":
             trainable_types = set(MLType.trainable())
             models = [m for m in models
-                      if any(lt in trainable_types for lt in flatten_models[m].mltypes)]
+                      if any(lt in trainable_types for lt in flatten_models[m]["mltypes"])]
 
         # Filter by Architecture (e.g., resnet50)
         if arch:
-            models = [m for m in models if arch == flatten_models[m].arch]
+            models = [m for m in models if arch == flatten_models[m]["arch"]]
 
         return sorted(models)
 
-    # --- Utils ---
-    @staticmethod
-    def _try_set_arch(module: Any, arch: str):
-        """Attempt to set the ``arch`` and ``_arch`` attributes on the module."""
-        if inspect.isclass(module):
-            try:
-                if not hasattr(module, "arch") or getattr(module, "arch") != arch:
-                    module.arch = arch
-                if not hasattr(module, "_arch") or getattr(module, "_arch") != arch:
-                    module._name = arch
-            except (AttributeError, TypeError):
-                # Silently fail if the attribute is not settable (e.g., on built-ins).
-                pass
+
+class WeightsFactory(Factory):
+    """Factory specialized for organizing weights enums by model name.
+
+    The registered objects are of the type ``WeightsEnum``.
+    """
+
+    @property
+    def weights_objs(self) -> list[Weights]:
+        """Return a list of all registered weights objects."""
+        weights_objs = []
+        for w_enum in self.values():
+            weights_objs.extend(w_enum.values())
+        return weights_objs
+
+    # --- Discovery ---
+    def find(self, path: Path | str) -> WeightsEnum | None:
+        """Find the ``WeightsEnum`` object for a given path.
+
+        Args:
+            path: Path to look for the weights object.
+
+        Returns:
+            ``WeightsEnum`` object if found, None otherwise.
+        """
+        path = Path(path).normalize() if path else None
+
+        # Global Discovery
+        if path:
+            for w_enum in self.values():
+                for w in w_enum.values():
+                    if path == w.path:
+                        return w_enum(w)
+
+        # Return None if no match is found
+        return None
+
+    def find_weights_objs(self, path: Path | str) -> Weights | None:
+        """Find the ``Weights`` object for a given path.
+
+        Args:
+            path: Path to look for the weights object.
+
+        Returns:
+            ``Weights`` object if found, None otherwise.
+        """
+        path = Path(path).normalize() if path else None
+
+        # Global Discovery
+        if path:
+            for w in self.weights_objs:
+                if path == w.path:
+                    return w
+
+        # Return None if no match is found
+        return None
+
+    # --- Validation ---
+    def has(self, path: Path | str) -> bool:
+        """Check there is a weights enum registered for a given path.
+
+        Args:
+            path: Path to look for the weights object.
+        """
+        return self.find(path) is not None
+
 
 # endregion
 
@@ -609,6 +723,6 @@ ALBUMENTATIONS = Factory(name="Albumentations")
 DATASETS       = DatasetFactory(name="Datasets", decamelize=True)
 BACKBONES      = Factory(name="Backbones", decamelize=True)
 MODELS         = ModelFactory(name="Models", decamelize=True)
-WEIGHTS        = Factory(name="Weights", decamelize=True)
+WEIGHTS        = WeightsFactory(name="Weights", decamelize=True)
 
 # endregion

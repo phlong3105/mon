@@ -295,7 +295,11 @@ class WeightsPrompt(Prompt):
             if self.choices and len(self.choices) > 0:
                 value = [self.choices[int(w)] if is_int(w) else w for w in value]
                 value = [w.replace("'", "") for w in value]
-            value = value[0] if len(value) == 1 else value
+
+            value = value[0] if isinstance(value, (list, tuple)) else value
+            # TODO: Delete later
+            # value = value[0] if len(value) == 1 else value
+
         self._value = value
 
     # --- Callable & Context Manager ---

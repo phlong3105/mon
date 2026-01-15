@@ -14,14 +14,34 @@ from __future__ import annotations
 
 __all__ = []
 
+import sys
+
 import torch
 
 from mon import nn
-from mon.core import MLType, MODELS, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import (
+    create_device,
+    log,
+    MLType,
+    MODELS,
+    Path,
+    Task,
+    WEIGHTS,
+    ZOO_DIR,
+)
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 
 current_file = Path(__file__).normalize()
 current_dir  = current_file.parents[0]
+extern_path  = current_dir / "extern" / "repo"
+if str(extern_path) not in sys.path:
+    sys.path.append(str(extern_path))
+
+try:
+    # Now we can safely import from the original repository
+    from repo import something
+except ImportError:
+    raise ImportError(f"Failed to import 'something' from the 'extern/repo' directory.")
 
 
 # ==============================================================================
@@ -48,7 +68,8 @@ class BaseModel(nn.Module, nn.RegistrableMixin):
     def __init__(
         self,
         name   : str,
-        weights: WeightsEnum | None = None,
+        weights: WeightsType | None = None,
+        verbose: bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -56,21 +77,29 @@ class BaseModel(nn.Module, nn.RegistrableMixin):
         Args:
             name: Name of the model variant.
             weights: Pre-trained weights to load. Defaults to None.
+            verbose: Verbosity mode. Defaults to True.
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        nn.RegistrableMixin.__init__(self, name=name)
 
-        # Update hyperparameters
-        if isinstance(weights, WeightsEnum):
+        self.verbose = verbose
+
+        # Load the base model
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
 
-        # Define the model architecture
-        self.network = nn.Sequential(*args, **kwargs)
+        self.model = nn.Sequential(*args, **kwargs)
 
-        # Load pre-trained weights
-        if isinstance(weights, WeightsEnum):
-            self.network.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            self.model.load_state_dict(weights.state_dict())
             # self.load_state_dict(weights.get_state_dict())
-
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor, *args, **kwargs):
@@ -98,12 +127,12 @@ class BaseModel(nn.Module, nn.RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="<arch>", name="")
+@WEIGHTS.register(name="")
 class Weights(WeightsEnum):
 
     DATASET = Weights(
-        url         = "",
         path        = ZOO_DIR / "",
+        url         = "",
         num_classes = None,
         transforms  = None,
         meta        = {}
@@ -113,7 +142,7 @@ class Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@MODELS.register(name="")
+@MODELS.register(name="", metaclass=BaseModel)
 def model(weights: WeightsEnum | str | None = Weights.DEFAULT, *args, **kwargs):
     """Create an <Model> model.
 

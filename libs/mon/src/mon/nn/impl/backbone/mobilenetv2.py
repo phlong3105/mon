@@ -18,8 +18,8 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.mobilenetv2 import MobileNetV2
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -39,6 +39,7 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "mobilenet"
@@ -51,8 +52,9 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
     def __init__(
         self,
         name       : str,
-        weights    : WeightsEnum = None,
-        out_indices: list        = None,
+        weights    : WeightsType | None = None,
+        out_indices: list[int]   | None = None,
+        verbose    : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -62,10 +64,16 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [3, 6, 13, 18].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
         if isinstance(weights, WeightsEnum):
@@ -74,7 +82,12 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
         base_model = MobileNetV2(*args, **kwargs)
 
         if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, MobileNetV2 already has a 'features' block
         self.features     = base_model.features
@@ -113,12 +126,12 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="mobilenet", name="mobilenet_v2")
+@WEIGHTS.register(name="mobilenet_v2")
 class MobileNet_V2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
         path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -138,8 +151,8 @@ class MobileNet_V2_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/mobilenet_v2-7ebf99e0.pth",
         path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v2/mobilenet_v2_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/mobilenet_v2-7ebf99e0.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -167,10 +180,10 @@ class MobileNet_V2_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="mobilenet_v2")
+@BACKBONES.register(name="mobilenet_v2", metaclass=MobileNetV2BackBone)
 def mobilenet_v2(
     weights    : WeightsEnum | str | None = MobileNet_V2_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a MobileNetV2 backbone.

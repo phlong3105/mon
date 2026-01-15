@@ -50,7 +50,7 @@ class Modality(NamedTuple):
             Defaults to False.
         primary (bool): If True, this is the primary modality. Defaults to False.
     """
-    
+
     name   : str
     type   : str | None = None
     module : Any        = None
@@ -86,9 +86,9 @@ class Dataset(dataset.Dataset, abc.ABC):
         _classlist (ClassList | None): Dataset object classes. Defaults to None.
         verbose (bool): If True, enable verbose output. Defaults to True.
     """
-    
+
     _classlist: ClassList | None = None
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -104,7 +104,7 @@ class Dataset(dataset.Dataset, abc.ABC):
                 modality. Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
                 or a ClassList instance. Defaults to None.
-            verbose: If True, enable verbose output. Defaults to True.
+            verbose: Verbosity mode. Defaults to True.
             *args: Positional arguments.
             **kwargs: Keyword arguments.
 
@@ -121,12 +121,12 @@ class Dataset(dataset.Dataset, abc.ABC):
             raise TypeError(
                 f"Expected 'verbose' to be a bool, but got {type(verbose).__name__}."
             )
-            
+
         super().__init__(*args, **kwargs)
         self.verbose     = verbose
         self.classlist   = classlist
         self._datapoints = datapoints or {}
-    
+
     @abc.abstractmethod
     def __del__(self):
         """Finalize the object.
@@ -134,20 +134,20 @@ class Dataset(dataset.Dataset, abc.ABC):
         Close the dataset loading mechanism and release resources.
         """
         pass
-    
+
     # --- Representation ---
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
         lines  = [f"Dataset {self.__class__.__name__}"]
         lines += [f"Number of datapoints: {len(self)}"]
         return "\n".join(lines)
-    
+
     # --- Container / Sequence Methods ---
     @abc.abstractmethod
     def __len__(self) -> int:
         """Return the length of the container."""
         pass
-    
+
     @abc.abstractmethod
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an item at the given ``index``.
@@ -156,23 +156,23 @@ class Dataset(dataset.Dataset, abc.ABC):
             index: Index to access.
         """
         pass
-    
+
     def __iter__(self):
         """Return an iterator for the container."""
         for i in range(len(self)):
             yield self[i]
-    
+
     # --- Properties ---
     @property
     def datapoints(self) -> MappingProxyType:
         """Return a read-only view of datapoints."""
         return MappingProxyType(self._datapoints)
-    
+
     @property
     def classlist(self) -> ClassList | None:
         """Return the dataset's class definitions."""
         return self._classlist
-    
+
     @classlist.setter
     def classlist(self, value: Path | ClassList | None):
         """Set the dataset's class definitions.
@@ -195,12 +195,12 @@ class Dataset(dataset.Dataset, abc.ABC):
                 f"Expected 'value' to be a Path, ClassList, or None, "
                 f"but got {type(value).__name__}."
             )
-    
+
     @property
     def disable_pbar(self) -> bool:
         """Check if progress bars are disabled."""
         return not self.verbose
-    
+
     # --- Access ---
     @abc.abstractmethod
     def _get_datapoint(self, index: int) -> dict[str, Any]:
@@ -210,7 +210,7 @@ class Dataset(dataset.Dataset, abc.ABC):
             index: Index of datapoint.
         """
         pass
-    
+
     def _get_underlying_data(self, index: int) -> dict[str, Any]:
         """Get the underlying data of a datapoint at the specified ``index``.
 

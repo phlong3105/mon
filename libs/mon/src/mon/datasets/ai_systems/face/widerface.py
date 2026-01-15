@@ -20,7 +20,7 @@ from ...api import *
 @DATASETS.register()
 class WiderFace(ImageDataset, RegistrableMixin):
     """WiderFace dataset."""
-    
+
     _name      : str         = "widerface"
     _tasks     : list[Task]  = [Task.DETECT]
     _subset    : str         = None
@@ -41,20 +41,20 @@ class WiderFace(ImageDataset, RegistrableMixin):
 
 
 @DATASETS.register()
-class WiderFaceVal(WiderFace, RegistrableMixin):
+class WiderFaceVal(ImageDataset, RegistrableMixin):
     """WiderFace-Val subset."""
-    
+
     _name: str = "widerfaceval"
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of primary modality data files.
         """
         patterns = [self._root / "val" / "image"]
-        
+
         images   = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:

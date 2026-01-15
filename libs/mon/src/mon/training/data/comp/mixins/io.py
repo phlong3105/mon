@@ -73,20 +73,20 @@ class DataLoadMixin(abc.ABC):
         # Ensure the container exists
         if not hasattr(self, "_datapoints"):
             self._datapoints = {}
-            
+
         self._on_load_start()
-        
+
         # Core loading
         datapoints = self._load_data()
         if not isinstance(datapoints, dict):
             raise TypeError(
                 f"Expected '_load_data' to return a dict, but got {type(datapoints).__name__}."
             )
-        
+
         self._datapoints = datapoints
-        
+
         self._on_load_end()
-        
+
         # Auto-verify after loading is complete
         self.verify()
 
@@ -122,12 +122,10 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
         _subset (str | None): Name of the dataset's subset directory.
             Defaults to None.
         _splits (list[Split]): List of supported splits. Defaults to [].
-        _root (mon.core.pathlib.Path | None): Dataset root directory.
-            Defaults to None.
-        _split (mon.core.enum.Split | None): Current dataset split.
-            Defaults to None.
+        _root (Path | None): Dataset root directory. Defaults to None.
+        _split (Split | None): Current dataset split. Defaults to None.
     """
-    
+
     _subset: str | None  = None
     _splits: list[Split] = []
 
@@ -145,14 +143,15 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
         # during setter logic if super().__init__ triggers something
         self._root  = None
         self._split = None
-        
+
         # Run setter logic
         self.root  = root
         self.split = split
-        
+
         # Continue the initialization chain
         super().__init__(*args, **kwargs)
-        
+
+    # TODO: Delete later
     def __init_subclass__(cls, *args, **kwargs):
         """Validate subclass attributes on inheritance.
 
@@ -164,16 +163,22 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
             TypeError: If ``_splits`` is not defined in the subclass.
         """
         super().__init_subclass__(*args, **kwargs)
-        
+
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["_splits"]:
-            if attr not in cls.__dict__:
-                raise TypeError(f"Class {cls.__name__} must define '{attr}' attribute.")
-        
+            if not hasattr(cls, attr):  # or getattr(cls, attr) is None:
+                raise TypeError(
+                    f"Class {cls.__name__} must define '{attr}' attribute "
+                    f"(defined locally or inherited)."
+                )
+
+        # TODO: Delete later
+        '''
         # Ensure that any class using RootLoadMixin defines its splits
         if not cls._splits:
             raise TypeError(f"Class {cls.__name__} must define '_splits' attribute.")
-    
+        '''
+
     # --- Properties ---
     @property
     def subset(self) -> str | None:
@@ -201,7 +206,7 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
             FileNotFoundError: If the ``root`` directory does not exist.
         """
         root = Path(value).normalize()  # Ensure absolute, clean path
-        
+
         # Logic for subset appending
         if self._subset not in [None, ""]:
             # Check if current root ends with subset; if not, try to append
@@ -209,12 +214,12 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
                 sub_path = root / self._subset
                 if sub_path.is_dir():
                     root = sub_path
-                    
+
         if not root.is_dir():
             raise FileNotFoundError(f"Dataset root not found at: {root}")
-        
+
         self._root = root
-    
+
     @property
     def split(self) -> Split:
         """Return the current dataset split."""
@@ -270,14 +275,14 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
         # during setter logic if super().__init__ triggers something
         self._input_dir  = None
         self._target_dir = None
-        
+
         # Run setter logic
         self.input_dir  = input_dir
         self.target_dir = target_dir
-        
+
         # Continue the initialization chain
         super().__init__(*args, **kwargs)
-        
+
     # --- Properties ---
     @property
     def input_dir(self) -> Path:
@@ -299,7 +304,7 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
             raise TypeError(
                 f"Expected 'input_dir' to be a Path or str, but got {type(value).__name__}."
             )
-        
+
         input_dir = Path(value).normalize(exist=True)
         if not input_dir.is_dir():
             raise FileNotFoundError(f"Input directory not found at: {input_dir}")
@@ -327,12 +332,12 @@ class InputTargetLoadMixin(DataLoadMixin, abc.ABC):
             self._target_dir = target_dir
         else:
             self._target_dir = None
-    
+
     @property
     def has_target(self) -> bool:
         """Check if the dataset has target data."""
         return self._target_dir is not None and self._target_dir.is_dir()
-    
+
     @property
     def label_dir(self) -> Path | None:
         """An alias to ``target_dir`` for better readability in certain contexts."""
@@ -357,13 +362,19 @@ class MultimodalDataLoadMixin(RootLoadMixin):
         7. ``verify()``             : Verify dataset integrity (extensible).
 
     Attributes:
+        _subset (str | None): Name of the dataset's subset directory.
+            Defaults to None.
+        _splits (list[Split]): List of supported splits. Defaults to [].
         _modalities (Modalities): Dictionary defining the dataset modalities.
             Defaults to {}.
     """
 
+    _subset    : str | None  = None
+    _splits    : list[Split] = []
     _modalities: Modalities = {}
-    
+
     # --- Lifecycle & Initialization ---
+
     def __init_subclass__(cls, *args, **kwargs):
         """Validate subclass attributes on inheritance.
 
@@ -375,16 +386,22 @@ class MultimodalDataLoadMixin(RootLoadMixin):
             TypeError: If ``_modalities`` is not defined in the subclass.
         """
         super().__init_subclass__(*args, **kwargs)
-        
+
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["_modalities"]:
-            if attr not in cls.__dict__:
-                raise TypeError(f"Class {cls.__name__} must define '{attr}' attribute.")
-        
+            if not hasattr(cls, attr):  #  or getattr(cls, attr) is None:
+                raise TypeError(
+                    f"Class {cls.__name__} must define '{attr}' attribute "
+                    f"(defined locally or inherited)."
+                )
+
+        # TODO: Delete later
+        '''
         # Check for VALID values
         if not cls._modalities:  # Checks for None, empty list [], or empty tuple ()
             raise TypeError(f"Class {cls.__name__} must define '_modalities' attribute.")
-        
+        '''
+
     # --- Properties ---
     @property
     def modalities(self) -> Modalities:
@@ -411,7 +428,7 @@ class MultimodalDataLoadMixin(RootLoadMixin):
             Dictionary containing lists of datapoints for each modality.
         """
         pk, _ = self.primary_modality
-        
+
         # Initialize empty datapoints dictionary with modalities
         datapoints = {
             k: [] for k, v in self._modalities.items()
@@ -420,16 +437,16 @@ class MultimodalDataLoadMixin(RootLoadMixin):
                  else v.test is not False)
             )
         }
-        
+
         # Load primary modality
         primary_data   = self._load_primary_data()
         datapoints[pk] = primary_data
-        
+
         # Load other modalities using the cached primary_data and key
         for k, v in datapoints.items():
             if k != pk:
                 datapoints[k] = self._load_modality_data(primary_data, k, pk)
-                
+
         # List metadata
         datapoints["meta"] = [d.meta for d in primary_data]
         return datapoints
@@ -441,12 +458,12 @@ class MultimodalDataLoadMixin(RootLoadMixin):
             List of primary modality data files.
         """
         disable_pbar = getattr(self, "disable_pbar", False)
-        
+
         pk, pk_modality = self.primary_modality
         pk_name   = pk_modality.name
         pk_module = pk_modality.module
         pattern   = self._root / self.split_str / pk_name
-        
+
         files = []
         with create_progress_bar(disable=disable_pbar) as pbar:
             paths = sorted(pattern.rglob("*"))
@@ -454,7 +471,7 @@ class MultimodalDataLoadMixin(RootLoadMixin):
             for path in pbar.track(sequence=paths, description=desc):
                 if path.is_image_file():
                     files.append(pk_module(data=path, root=pattern))
-        
+
         return files
 
     def _load_modality_data(
@@ -474,22 +491,22 @@ class MultimodalDataLoadMixin(RootLoadMixin):
             List of modality data files.
         """
         disable_pbar = getattr(self, "disable_pbar", False)
-        
+
         # Pre-calculate strings and lookup modules outside the loop
         pk_name      = self._modalities[pk_key].name
         target       = self._modalities[key]
         name, module = target.name, target.module
-        
+
         old_part = f"{os.sep}{pk_name}{os.sep}"
         new_part = f"{os.sep}{name}{os.sep}"
-        
+
         files = []
         with create_progress_bar(disable=disable_pbar) as pbar:
             desc = f"Listing {self.__class__.__name__} {self.split_str} {key}(s)"
             for file in pbar.track(sequence=primary_data, description=desc):
                 path = file.path.replace_part(old_part, new_part)
                 files.append(module(path=path, root=file.root))
-        
+
         return files
 
 # endregion

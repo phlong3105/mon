@@ -1,8 +1,8 @@
 <div align="center">
-	<h1 align="center">DataPrep: Data Pre-processing Package</h1>
+	<h1 align="center">Development Project</h1>
 </div>
 
-This repository contains a comprehensive data pre-processing package designed to streamline and enhance the data preparation phase of machine learning workflows. It includes various modules for data cleaning, transformation, feature engineering, and data augmentation.
+This project serves as the development environment for experimenting with new ideas, algorithms, and models. It is structured to facilitate rapid prototyping and testing.
 
 ## Repo Structure
 
@@ -10,7 +10,7 @@ This repository contains a comprehensive data pre-processing package designed to
   <summary>Directory Structure</summary>
 
   ```text
-  project/                 # Project root.
+  dev/                 # Project root.
   |__ archive              
   |__ config               # Configuration files for experiments.
   |__ data                 # Data-related files.

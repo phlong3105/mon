@@ -11,7 +11,7 @@ Notes:
     - Goal: Define a family of algorithms that share a common processing pipeline.
     - Structure:
         ::
-        
+
             optim/
             ├── __init__.py   # Registry and factory
             ├── api.py        # External APIs
@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from .base import *
 from .basic import *
-from .external import *
+from .extern import *
 from .utils import *
 
 

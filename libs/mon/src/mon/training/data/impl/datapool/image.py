@@ -26,11 +26,11 @@ from ...comp import BatchCollateMixin, InputTargetLoadMixin
 class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
     """A concrete class for data pools where one image can have multiple
     annotations.
-    
+
     Define two main modalities: ``image`` and ``label``. Primarily used for
     separated evaluation pipelines outside the train/eval/test loop.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -41,14 +41,14 @@ class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
             input_dir: Absolute path to the input/predict data directory.
             label_dir: Absolute path to the label directory.
             classlist: Either a .yaml file containing the classes definitions,
                 or a ``ClassList`` instance. If given, this will override any
                 ``classes`` defined in the subclass. Defaults to None.
-            verbose: If True, enables verbose output. Defaults to True.
+            verbose: Verbosity mode. Defaults to True.
         """
         super().__init__(
             input_dir  = input_dir,
@@ -57,34 +57,34 @@ class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             verbose    = verbose,
             *args, **kwargs
         )
-    
+
     def __del__(self):
         """Close the dataset loading mechanism and releases resources."""
         pass
-    
+
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the length of the dataset (i.e., number of datapoints)."""
         return len(self.datapoints["image"])
-    
+
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return the datapoint at the specified ``index`` in ``_datapoints``.
-        
+
         Args:
             index: Index of datapoint.
-            
+
         Returns:
             A dictionary containing the datapoint and its metadata.
         """
         data = self._get_underlying_data(index=index)
         return data
-    
+
     # --- Data Loading ---
     def _load_data(self) -> dict[str, Any]:
         """Core data loading mechanism for the dataset."""
         # Initialize empty datapoints dictionary with modalities
         datapoints = {}
-        
+
         # List image
         images: list[Image] = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
@@ -94,7 +94,7 @@ class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                 if path.is_image_file(exist=True):
                     images.append(Image(data=path, root=self.input_dir))
         datapoints["image"] = images
-        
+
         # List label
         labels: list[list[Instance]] = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
@@ -107,19 +107,19 @@ class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                 if label_file.is_txt_file(exist=True):
                     labels.append(self._load_label_file(label_file=label_file, image=image))
         datapoints["label"] = labels
-        
+
         # List metadata
         datapoints["meta"] = [i.meta for i in images]
-        
+
         return datapoints
-    
+
     def _load_label_file(self, label_file: Path, image: Image) -> list[Instance]:
         """Load all label instances from a label file.
-        
+
         Args:
             label_file: Path to the label file.
             image: The corresponding image object.
-        
+
         Returns:
             A list of Instance objects representing the labels.
         """
@@ -136,33 +136,33 @@ class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             )
             labels.append(label)
         return labels
-    
+
     def verify(self):
         """Verify dataset integrity.
-        
+
         Raises:
             RuntimeError: If no datapoints or attributes invalid.
         """
         if self.__len__() <= 0:
             raise RuntimeError("No datapoints in the dataset!")
-        
+
         for k, v in self.datapoints.items():
             if v in [None, []]:
                 raise RuntimeError(f"``datapoints`` has no ``{k}`` attributes!")
             elif len(v) != self.__len__():
                 raise RuntimeError(f"Number of ``{k}`` items does not match number "
                                    f"of ``image``, got: {len(v)} != {self.__len__()}")
-        
+
         if self.verbose:
             log(f"Number of datapoints: {self.__len__()}.")
-    
+
     # --- Access ---
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
-        
+
         Args:
             index: Index of datapoint.
-            
+
         Returns:
             A dictionary containing all modalities for the specified datapoint.
         """

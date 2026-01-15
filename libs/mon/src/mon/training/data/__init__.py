@@ -12,7 +12,7 @@ Notes:
       concrete <Name> implementations.
     - Structure:
         ::
-        
+
             component/
             ├── __init__.py             # Exposes all
             ├── base.py                 # Base classes and mixins
@@ -52,14 +52,14 @@ def build_dataset(
     **kwargs
 ) -> tuple[str, Dataset]:
     """Build a dataset from a given source.
-    
+
     Args:
         src: An input data source
         data_root: Dataset root dir. Defaults to None.
         transform: Transforms to apply to the dataset. Defaults to None.
-        verbose: If True, enables verbose output. Defaults to False.
+        verbose: Verbosity mode. Defaults to False.
         **kwargs: Additional keyword arguments for the dataset.
-        
+
     Returns:
         A tuple containing the dataset name and the dataset instance.
 
@@ -75,7 +75,7 @@ def build_dataset(
         )
     if not isinstance(verbose, bool):
         raise TypeError(f"Expected 'verbose' to be a bool, but got {type(verbose).__name__}.")
-        
+
     src = Path(src)
 
     # 1. src is a registered dataset name
@@ -133,7 +133,7 @@ def build_dataloader(
         data_root: Dataset root dir. Defaults to None.
         transform: Transforms to apply to the dataset. Defaults to None.
         batch_size: Number of samples per batch. Defaults to 1.
-        verbose: If True, enables verbose output. Defaults to False.
+        verbose: Verbosity mode. Defaults to False.
         **kwargs: Additional keyword arguments for the dataset.
 
     Returns:

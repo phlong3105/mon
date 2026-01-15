@@ -7,8 +7,6 @@ from __future__ import annotations
 
 __all__ = [
     "Container",
-    "ModelAdapterMixin",
-    "ModelZooMixin",
     "Module",
     "ModuleDict",
     "ModuleList",
@@ -135,9 +133,14 @@ class RegistrableMixin:
 
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["_arch", "_name", "_tasks"]:
-            if attr not in cls.__dict__:
-                raise TypeError(f"Class {cls.__name__} must define '{attr}' attribute.")
+            if not hasattr(cls, attr):  # or getattr(cls, attr) is None:
+                raise TypeError(
+                    f"Class {cls.__name__} must define '{attr}' attribute "
+                    f"(defined locally or inherited)."
+                )
 
+        # TODO: Delete later
+        '''
         # Check for VALID values
         if not isinstance(cls._arch, str):
             raise TypeError(f"Expected '_arch' to be a str, but got {type(cls._arch).__name__}.")
@@ -147,12 +150,13 @@ class RegistrableMixin:
         if not isinstance(cls._name, str):
             raise TypeError(f"Expected '_name' to be a str, but got {type(cls._name).__name__}.")
         if not cls._name:
-            raise ValueError(f"Expected '_name' to be a non-empty str, but got '{cls._name}'.")
+           raise ValueError(f"Expected '_name' to be a non-empty str, but got '{cls._name}'.")
 
         if not isinstance(cls._tasks, list):
             raise TypeError(f"Expected '_tasks' to be a list, but got {type(cls._tasks).__name__}.")
         if not cls._tasks:
-            raise ValueError(f"Expected '_tasks' to be a non-empty list, but got {cls._tasks}.")
+           raise ValueError(f"Expected '_tasks' to be a non-empty list, but got {cls._tasks}.")
+        '''
 
     # --- Properties ---
     @property
@@ -182,6 +186,7 @@ class RegistrableMixin:
 
 
 # TODO: Delete later
+'''
 class ModelZooMixin:
     """A mixin class that adds model zoo functionality to a model.
 
@@ -267,13 +272,16 @@ class ModelZooMixin:
                     log(f"Loaded weights successfully from: {path}.")
             else:
                 raise NotImplementedError("The class using ModelMixin must implement ``load_state_dict()``.")
+'''
 
 
 # TODO: Delete later
+'''
 class ModelAdapterMixin(RegistrableMixin, ModelZooMixin):
     """A mixin class that provide a unified interface to bridge any model to
     ``mon`` framework.
     """
     pass
+'''
 
 # endregion

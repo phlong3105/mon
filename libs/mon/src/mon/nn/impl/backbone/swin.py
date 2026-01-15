@@ -28,8 +28,8 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.swin_transformer import SwinTransformer
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -49,6 +49,7 @@ class SwinBackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "swin"
@@ -67,8 +68,9 @@ class SwinBackBone(nn.Module, RegistrableMixin):
         num_heads            : list[int],
         window_size          : list[int],
         stochastic_depth_prob: float,
-        weights              : WeightsEnum | None = None,
-        out_indices          : list | None        = None,
+        weights              : WeightsType | None = None,
+        out_indices          : list[int]   | None = None,
+        verbose              : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -84,13 +86,19 @@ class SwinBackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [1, 3, 5, 7].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
 
         base_model = SwinTransformer(
@@ -103,8 +111,13 @@ class SwinBackBone(nn.Module, RegistrableMixin):
             *args, **kwargs
         )
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, Swin features are organized into 4 hierarchical stages
         # stage 0-1: resolution 1/4
@@ -159,12 +172,12 @@ class SwinBackBone(nn.Module, RegistrableMixin):
 # --- Pre-trained Weights ---
 
 
-@WEIGHTS.register(arch="swin", name="swin_t")
+@WEIGHTS.register(name="swin_t")
 class Swin_T_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/swin_t-704ceda3.pth",
         path        = ZOO_DIR / "nn/backbone/swin/swin_t/imagenet1k_v1/swin_t_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/swin_t-704ceda3.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -186,12 +199,12 @@ class Swin_T_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="swin", name="swin_s")
+@WEIGHTS.register(name="swin_s")
 class Swin_S_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/swin_s-5e29d889.pth",
         path        = ZOO_DIR / "nn/backbone/swin/swin_s/imagenet1k_v1/swin_s_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/swin_s-5e29d889.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -213,12 +226,12 @@ class Swin_S_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="swin", name="swin_b")
+@WEIGHTS.register(name="swin_b")
 class Swin_B_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/swin_b-68c6b09e.pth",
         path        = ZOO_DIR / "nn/backbone/swin/swin_b/imagenet1k_v1/swin_b_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/swin_b-68c6b09e.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -240,12 +253,12 @@ class Swin_B_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="swin", name="swin_v2_t")
+@WEIGHTS.register(name="swin_v2_t")
 class Swin_V2_T_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/swin_v2_t-b137f0e2.pth",
         path        = ZOO_DIR / "nn/backbone/swin/swin_v2_t/imagenet1k_v1/swin_v2_t_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/swin_v2_t-b137f0e2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -267,12 +280,12 @@ class Swin_V2_T_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="swin", name="swin_v2_s")
+@WEIGHTS.register(name="swin_v2_s")
 class Swin_V2_S_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/swin_v2_s-637d8ceb.pth",
         path        = ZOO_DIR / "nn/backbone/swin/swin_v2_s/imagenet1k_v1/swin_v2_s_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/swin_v2_s-637d8ceb.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -294,12 +307,12 @@ class Swin_V2_S_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="swin", name="swin_v2_b")
+@WEIGHTS.register(name="swin_v2_b")
 class Swin_V2_B_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/swin_v2_b-781e5279.pth",
         path        = ZOO_DIR / "nn/backbone/swin/swin_v2_b/imagenet1k_v1/swin_v2_b_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/swin_v2_b-781e5279.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -323,10 +336,10 @@ class Swin_V2_B_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="swin_t")
+@BACKBONES.register(name="swin_t", metaclass=SwinBackBone)
 def swin_t(
     weights    : WeightsEnum | str | None = Swin_T_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Swin-T backbone.
@@ -356,10 +369,10 @@ def swin_t(
     )
 
 
-@BACKBONES.register(name="swin_s")
+@BACKBONES.register(name="swin_s", metaclass=SwinBackBone)
 def swin_s(
     weights    : WeightsEnum | str | None = Swin_S_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Swin-S backbone.
@@ -389,10 +402,10 @@ def swin_s(
     )
 
 
-@BACKBONES.register(name="swin_b")
+@BACKBONES.register(name="swin_b", metaclass=SwinBackBone)
 def swin_b(
     weights    : WeightsEnum | str | None = Swin_B_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Swin-B backbone.
@@ -422,10 +435,10 @@ def swin_b(
     )
 
 
-@BACKBONES.register(name="swin_v2_t")
+@BACKBONES.register(name="swin_v2_t", metaclass=SwinBackBone)
 def swin_v2_t(
     weights    : WeightsEnum | str | None = Swin_V2_T_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Swin-V2-T backbone.
@@ -455,10 +468,10 @@ def swin_v2_t(
     )
 
 
-@BACKBONES.register(name="swin_v2_s")
+@BACKBONES.register(name="swin_v2_s", metaclass=SwinBackBone)
 def swin_v2_s(
     weights    : WeightsEnum | str | None = Swin_V2_S_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Swin-V2-S backbone.
@@ -488,10 +501,10 @@ def swin_v2_s(
     )
 
 
-@BACKBONES.register(name="swin_v2_b")
+@BACKBONES.register(name="swin_v2_b", metaclass=SwinBackBone)
 def swin_v2_b(
     weights    : WeightsEnum | str | None = Swin_V2_B_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Swin-V2-B backbone.

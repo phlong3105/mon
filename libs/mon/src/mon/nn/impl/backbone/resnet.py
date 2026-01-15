@@ -38,8 +38,8 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.resnet import BasicBlock, Bottleneck, ResNet
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -62,6 +62,7 @@ class ResNetBackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "resnet"
@@ -76,8 +77,9 @@ class ResNetBackBone(nn.Module, RegistrableMixin):
         name       : str,
         block      : type[Union[BasicBlock, Bottleneck]],
         layers     : list[int],
-        weights    : WeightsEnum | None = None,
-        out_indices: list | None        = None,
+        weights    : WeightsType | None = None,
+        out_indices: list[int]   | None = None,
+        verbose    : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -89,19 +91,30 @@ class ResNetBackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [4, 5, 6, 7].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
 
         base_model = ResNet(block=block, layers=layers, *args, **kwargs)
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # Remove the global average pool and classifier head
         # For ResNet, we usually want the features before the final layers
@@ -147,12 +160,12 @@ class ResNetBackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="resnet", name="resnet18")
+@WEIGHTS.register(name="resnet18")
 class ResNet18_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/resnet18-f37072fd.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/resnet18-f37072fd.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -174,12 +187,12 @@ class ResNet18_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="resnet", name="resnet34")
+@WEIGHTS.register(name="resnet34")
 class ResNet34_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/resnet34-b627a593.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/resnet34-b627a593.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -201,12 +214,12 @@ class ResNet34_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="resnet", name="resnet50")
+@WEIGHTS.register(name="resnet50")
 class ResNet50_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/resnet50-0676ba61.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/resnet50-0676ba61.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -226,8 +239,8 @@ class ResNet50_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/resnet50-11ad3fa6.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet50/imagenet1k_v2/resnet50_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/resnet50-11ad3fa6.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -252,12 +265,12 @@ class ResNet50_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="resnet", name="resnet101")
+@WEIGHTS.register(name="resnet101")
 class ResNet101_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/resnet101-63fe2227.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/resnet101-63fe2227.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -277,8 +290,8 @@ class ResNet101_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/resnet101-cd907fc2.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet101/imagenet1k_v2/resnet101_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/resnet101-cd907fc2.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -303,12 +316,12 @@ class ResNet101_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="resnet", name="resnet152")
+@WEIGHTS.register(name="resnet152")
 class ResNet152_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/resnet152-394f9c45.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/resnet152-394f9c45.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -328,8 +341,8 @@ class ResNet152_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/resnet152-f82ba261.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnet152/imagenet1k_v2/resnet152_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/resnet152-f82ba261.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -354,12 +367,12 @@ class ResNet152_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="resnet", name="resnext50_32x4d")
+@WEIGHTS.register(name="resnext50_32x4d")
 class ResNeXt50_32X4D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -379,8 +392,8 @@ class ResNeXt50_32X4D_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/resnext50_32x4d-1a0047aa.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v2/resnext50_32x4d_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/resnext50_32x4d-1a0047aa.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -405,12 +418,12 @@ class ResNeXt50_32X4D_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="resnet", name="resnext101_32x8d")
+@WEIGHTS.register(name="resnext101_32x8d")
 class ResNeXt101_32X8D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -430,8 +443,8 @@ class ResNeXt101_32X8D_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/resnext101_32x8d-110c445d.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v2/resnext101_32x8d_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/resnext101_32x8d-110c445d.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -456,12 +469,12 @@ class ResNeXt101_32X8D_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="resnet", name="resnext101_64x4d")
+@WEIGHTS.register(name="resnext101_64x4d")
 class ResNeXt101_64X4D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "ttps://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pth",
+        url         = "ttps://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -486,12 +499,12 @@ class ResNeXt101_64X4D_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="resnet", name="wide_resnet50_2")
+@WEIGHTS.register(name="wide_resnet50_2")
 class Wide_ResNet50_2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v1/wide_resnet50_2_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -511,8 +524,8 @@ class Wide_ResNet50_2_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/wide_resnet50_2-9ba9bcbe.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/wide_resnet50_2-9ba9bcbe.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -537,12 +550,12 @@ class Wide_ResNet50_2_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="resnet", name="wide_resnet101_2")
+@WEIGHTS.register(name="wide_resnet101_2")
 class Wide_ResNet101_2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet101_2/imagenet1k_v1/wide_resnet101_2_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -562,8 +575,8 @@ class Wide_ResNet101_2_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/wide_resnet101_2-d733dc28.pth",
         path        = ZOO_DIR / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/wide_resnet101_2-d733dc28.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -590,10 +603,10 @@ class Wide_ResNet101_2_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="resnet18")
+@BACKBONES.register(name="resnet18", metaclass=ResNetBackBone)
 def resnet18(
     weights: WeightsEnum | str | None = ResNet18_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]     | None = None,
     *args, **kwargs
 ):
     """Create a ResNet-18 backbone.
@@ -619,10 +632,10 @@ def resnet18(
     )
 
 
-@BACKBONES.register(name="resnet34")
+@BACKBONES.register(name="resnet34", metaclass=ResNetBackBone)
 def resnet34(
     weights    : WeightsEnum | str | None = ResNet34_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ResNet-34 backbone.
@@ -648,10 +661,10 @@ def resnet34(
     )
 
 
-@BACKBONES.register(name="resnet50")
+@BACKBONES.register(name="resnet50", metaclass=ResNetBackBone)
 def resnet50(
     weights    : WeightsEnum | str | None = ResNet50_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ResNet-50 backbone.
@@ -677,10 +690,10 @@ def resnet50(
     )
 
 
-@BACKBONES.register(name="resnet101")
+@BACKBONES.register(name="resnet101", metaclass=ResNetBackBone)
 def resnet101(
     weights    : WeightsEnum | str | None = ResNet101_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ResNet-101 backbone.
@@ -706,10 +719,10 @@ def resnet101(
     )
 
 
-@BACKBONES.register(name="resnet152")
+@BACKBONES.register(name="resnet152", metaclass=ResNetBackBone)
 def resnet152(
     weights    : WeightsEnum | str | None = ResNet152_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ResNet-152 backbone.
@@ -735,10 +748,10 @@ def resnet152(
     )
 
 
-@BACKBONES.register(name="resnext50_32x4d")
+@BACKBONES.register(name="resnext50_32x4d", metaclass=ResNetBackBone)
 def resnext50_32x4d(
     weights    : WeightsEnum | str | None = ResNeXt50_32X4D_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ResNeXt-50 32x4d backbone.
@@ -766,10 +779,10 @@ def resnext50_32x4d(
     )
 
 
-@BACKBONES.register(name="resnext101_32x8d")
+@BACKBONES.register(name="resnext101_32x8d", metaclass=ResNetBackBone)
 def resnext101_32x8d(
     weights    : WeightsEnum | str | None = ResNeXt101_32X8D_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ResNeXt-101 32x8d backbone.
@@ -797,7 +810,7 @@ def resnext101_32x8d(
     )
 
 
-@BACKBONES.register(name="resnext101_64x4d")
+@BACKBONES.register(name="resnext101_64x4d", metaclass=ResNetBackBone)
 def resnext101_64x4d(
     weights    : WeightsEnum | str | None = ResNeXt101_64X4D_Weights.DEFAULT,
     out_indices: list | None = None,
@@ -828,10 +841,10 @@ def resnext101_64x4d(
     )
 
 
-@BACKBONES.register(name="wide_resnet50_2")
+@BACKBONES.register(name="wide_resnet50_2", metaclass=ResNetBackBone)
 def wide_resnet50_2(
     weights    : WeightsEnum | str | None = Wide_ResNet50_2_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Wide ResNet-50-2 backbone.
@@ -858,10 +871,10 @@ def wide_resnet50_2(
     )
 
 
-@BACKBONES.register(name="wide_resnet101_2")
+@BACKBONES.register(name="wide_resnet101_2", metaclass=ResNetBackBone)
 def wide_resnet101_2(
     weights    : WeightsEnum | str | None = Wide_ResNet101_2_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a Wide ResNet-101-2 backbone.

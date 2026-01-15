@@ -10,7 +10,7 @@ Notes:
     - Goal: Define a family of algorithms that share a common processing pipeline.
     - Structure:
         ::
-        
+
             metric/
             ├── __init__.py   # Registry and factory
             ├── api.py        # External APIs
@@ -27,7 +27,7 @@ from __future__ import annotations
 from .base import *
 from .basic import *
 from .complexity import *
-from .external import *
+from .extern import *
 from .image import *
 from .utils import *
 

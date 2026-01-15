@@ -399,7 +399,7 @@ class SelectionOrInputPrompt(Prompt):
                 raise InvalidResponse(self.illegal_choice_message)
 
             # Split input to support multi-index/multi-value selection (e.g., "0,2")
-            input_parts      = to_list(value, sep=[",", ";"])
+            input_parts      = to_list(value, sep=(",", ";"))
             processed_values = []
 
             for part in input_parts:

@@ -26,8 +26,8 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.vision_transformer import VisionTransformer
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -50,6 +50,7 @@ class ViTBackBone(nn.Module, RegistrableMixin):
         blocks (torch.nn.ModuleList): Transformer blocks.
         out_indices (list): List of layer indices to extract features from.
         embed_dim (int): Embedding dimension.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "vit"
@@ -67,8 +68,9 @@ class ViTBackBone(nn.Module, RegistrableMixin):
         num_heads  : int,
         hidden_dim : int,
         mlp_dim    : int,
-        weights    : WeightsEnum | None = None,
-        out_indices: list | None        = None,
+        weights    : WeightsType | None = None,
+        out_indices: list[int]   | None = None,
+        verbose    : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -83,13 +85,19 @@ class ViTBackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [3, 5, 7, 11].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
             kwargs["image_size"]  = weights.meta["min_size"][0]
 
@@ -102,8 +110,13 @@ class ViTBackBone(nn.Module, RegistrableMixin):
             *args, **kwargs
         )
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, ViT already has several components
         self.patch_embed   = base_model.conv_proj
@@ -161,12 +174,12 @@ class ViTBackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="vit", name="vit_b_16")
+@WEIGHTS.register(name="vit_b_16")
 class ViT_B_16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_b_16-c867db91.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -189,8 +202,8 @@ class ViT_B_16_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_SWAG_E2E_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_b_16_swag-9ac1b537.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_swag_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_b_16_swag-9ac1b537.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -213,8 +226,8 @@ class ViT_B_16_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_b_16_lc_swag-4e70ced5.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_b_16/imagenet1k_v1/vit_b_16_lc_swag_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_b_16_lc_swag-4e70ced5.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -239,12 +252,12 @@ class ViT_B_16_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vit", name="vit_b_32")
+@WEIGHTS.register(name="vit_b_32")
 class ViT_B_32_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_b_32-d86f8d99.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_b_32/imagenet1k_v1/vit_b_32_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_b_32-d86f8d99.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -269,12 +282,12 @@ class ViT_B_32_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vit", name="vit_l_16")
+@WEIGHTS.register(name="vit_l_16")
 class ViT_L_16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_l_16-852ce7e3.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_l_16-852ce7e3.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -298,8 +311,8 @@ class ViT_L_16_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_SWAG_E2E_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_l_16_swag-4f3808c9.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_swag_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_l_16_swag-4f3808c9.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -322,8 +335,8 @@ class ViT_L_16_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_l_16_lc_swag-4d563306.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_l_16/imagenet1k_v1/vit_l_16_lc_swag_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_l_16_lc_swag-4d563306.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -348,12 +361,12 @@ class ViT_L_16_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vit", name="vit_l_32")
+@WEIGHTS.register(name="vit_l_32")
 class ViT_L_32_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_l_32-c7638314.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_l_32/imagenet1k_v1/vit_l_32_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_l_32-c7638314.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -378,12 +391,12 @@ class ViT_L_32_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vit", name="vit_h_14")
+@WEIGHTS.register(name="vit_h_14")
 class ViT_H_14_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_h_14_swag-80465313.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_swag_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_h_14_swag-80465313.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -406,8 +419,8 @@ class ViT_H_14_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_SWAG_LINEAR_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vit_h_14_lc_swag-c1eb923e.pth",
         path        = ZOO_DIR / "nn/backbone/vit/vit_h_14/imagenet1k_v1/vit_h_14_lc_swag_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vit_h_14_lc_swag-c1eb923e.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -434,10 +447,10 @@ class ViT_H_14_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="vit_b_16")
+@BACKBONES.register(name="vit_b_16", metaclass=ViTBackBone)
 def vit_b_16(
     weights    : WeightsEnum | str | None = ViT_B_16_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ViT-B/16 backbone.
@@ -466,10 +479,10 @@ def vit_b_16(
     )
 
 
-@BACKBONES.register(name="vit_b_32")
+@BACKBONES.register(name="vit_b_32", metaclass=ViTBackBone)
 def vit_b_32(
     weights    : WeightsEnum | str | None = ViT_B_32_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ViT-B/32 backbone.
@@ -498,10 +511,10 @@ def vit_b_32(
     )
 
 
-@BACKBONES.register(name="vit_l_16")
+@BACKBONES.register(name="vit_l_16", metaclass=ViTBackBone)
 def vit_l_16(
     weights    : WeightsEnum | str | None = ViT_L_16_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ViT-L/16 backbone.
@@ -530,10 +543,10 @@ def vit_l_16(
     )
 
 
-@BACKBONES.register(name="vit_l_32")
+@BACKBONES.register(name="vit_l_32", metaclass=ViTBackBone)
 def vit_l_32(
     weights    : WeightsEnum | str | None = ViT_L_32_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ViT-L/32 backbone.
@@ -562,10 +575,10 @@ def vit_l_32(
     )
 
 
-@BACKBONES.register(name="vit_h_14")
+@BACKBONES.register(name="vit_h_14", metaclass=ViTBackBone)
 def vit_h_14(
     weights    : WeightsEnum | str | None = ViT_H_14_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ViT-H/14 backbone.

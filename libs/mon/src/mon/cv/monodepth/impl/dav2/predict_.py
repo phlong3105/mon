@@ -10,19 +10,30 @@ References:
 """
 
 import copy
+import sys
 
 import box
 import matplotlib
 import numpy as np
 import torch
 
-import dav2
 import mon
 
 mon.preload()
 
-current_file = mon.Path(__file__).absolute()
-root_dir     = current_file.parents[0]
+current_file = mon.Path(__file__).normalize()
+current_dir  = current_file.parents[0]
+
+# Add the project root to sys.path so 'import mon_sam2' works
+# even if you run this script from inside the folder
+sys.path.append(str(current_file.parent))
+
+try:
+    # Works when running as a module: python -m dav2.predict
+    from .model import DAV2
+except ImportError:
+    # Works when running as a script: python predict.py
+    from model import DAV2
 
 
 # --- Predict ---
@@ -47,7 +58,7 @@ def predict(args: dict | box.Box) -> str:
         raise ValueError(f"Invalid weights file: {pretrained}.")
 
     # Model
-    model = dav2.DAV2(
+    model = DAV2(
         encoder      = args.network.encoder,
         features     = args.network.features,
         out_channels = args.network.out_channels,
@@ -56,11 +67,11 @@ def predict(args: dict | box.Box) -> str:
     model.load_state_dict(torch.load(str(pretrained), map_location=device, weights_only=True))
     model = model.to(device)
     model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     # transform = A.Compose([
@@ -126,7 +137,7 @@ def predict(args: dict | box.Box) -> str:
 
 
 # --- Main ---
-def main() -> str:
+def main():
     cli  = mon.parse_cli_args(root=root_dir)
     data = mon.to_list(cli.data)
     for d in data:

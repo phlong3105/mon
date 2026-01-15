@@ -31,7 +31,7 @@ from .resolve import (
     load_config,
     parse_config_file,
     parse_save_dir,
-    parse_weights_file,
+    parse_weights,
 )
 
 
@@ -132,7 +132,7 @@ def parse_train_args(
         cli: CLI arguments. Defaults to None.
         root: Project root path. Defaults to None.
         model_root: Model root path for configuration resolution. Defaults to None.
-        verbose: If True, print helpful logs. Defaults to False.
+        verbose: Verbosity mode. Defaults to False.
 
     Returns:
         Finalized training arguments.
@@ -162,7 +162,11 @@ def parse_train_args(
     # Resolve all potential weight paths
     for key in ["weights", "resume", "tuning"]:
         if key in args:
-            args[key] = parse_weights_file(args.root, args[key])
+            args[key] = parse_weights(
+                root        = args.root,
+                weights     = args[key],
+                num_classes = args.num_classes,
+            )
 
     # Save Directory Preparation (Atomic & Safe)
     if args.save_dir.exists() and not args.exist_ok:
@@ -197,7 +201,7 @@ def parse_predict_args(
         cli: CLI arguments. Defaults to None.
         root: Project root path. Defaults to None.
         model_root: Model root path for configuration resolution. Defaults to None.
-        verbose: If True, print helpful logs. Defaults to False.
+        verbose: Verbosity mode. Defaults to False.
 
     Returns:
         Finalized prediction arguments.
@@ -227,7 +231,11 @@ def parse_predict_args(
     # Resolve all potential weight paths
     for key in ["weights", "resume", "tuning"]:
         if key in args:
-            args[key] = parse_weights_file(args.root, args[key])
+            args[key] = parse_weights(
+                root        = args.root,
+                weights     = args[key],
+                num_classes = args.num_classes,
+            )
     # Ensure imgsz is a list/tuple of [H, W] or a single int normalized to [H, W]
     args.imgsz = I.imgsz(args.imgsz)
 

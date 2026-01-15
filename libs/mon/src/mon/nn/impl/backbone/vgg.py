@@ -32,8 +32,8 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.vgg import cfgs, make_layers, VGG
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -53,6 +53,7 @@ class VGGBackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "vgg"
@@ -67,8 +68,9 @@ class VGGBackBone(nn.Module, RegistrableMixin):
         name       : str,
         cfg        : str,
         batch_norm : bool,
-        weights    : WeightsEnum | None = None,
-        out_indices: list | None        = None,
+        weights    : WeightsType | None = None,
+        out_indices: list[int]   | None = None,
+        verbose    : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -80,20 +82,31 @@ class VGGBackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [6, 13, 23, 33, 43].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["init_weights"] = False
             kwargs["num_classes"]  = weights.num_classes
 
         base_model = VGG(make_layers(cfgs[cfg], batch_norm=batch_norm), *args, **kwargs)
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, VGG already has a 'features' block
         self.features     = base_model.features
@@ -132,12 +145,12 @@ class VGGBackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="vgg", name="vgg11")
+@WEIGHTS.register(name="vgg11")
 class VGG11_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg11-8a719046.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg11-8a719046.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -159,12 +172,12 @@ class VGG11_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vgg", name="vgg11_bn")
+@WEIGHTS.register(name="vgg11_bn")
 class VGG11_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -186,12 +199,12 @@ class VGG11_BN_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vgg", name="vgg13")
+@WEIGHTS.register(name="vgg13")
 class VGG13_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg13-19584684.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg13-19584684.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -213,12 +226,12 @@ class VGG13_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vgg", name="vgg13_bn")
+@WEIGHTS.register(name="vgg13_bn")
 class VGG13_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -240,12 +253,12 @@ class VGG13_BN_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vgg", name="vgg16")
+@WEIGHTS.register(name="vgg16")
 class VGG16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg16-397923af.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg16-397923af.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -267,12 +280,12 @@ class VGG16_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vgg", name="vgg16_bn")
+@WEIGHTS.register(name="vgg16_bn")
 class VGG16_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -294,12 +307,12 @@ class VGG16_BN_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vgg", name="vgg19")
+@WEIGHTS.register(name="vgg19")
 class VGG19_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -321,12 +334,12 @@ class VGG19_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="vgg", name="vgg19_bn")
+@WEIGHTS.register(name="vgg19_bn")
 class VGG19_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
         path        = ZOO_DIR / "nn/backbone/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -350,10 +363,10 @@ class VGG19_BN_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="vgg11")
+@BACKBONES.register(name="vgg11", metaclass=VGGBackBone)
 def vgg11(
     weights    : WeightsEnum | str | None = VGG11_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG11 backbone.
@@ -379,10 +392,10 @@ def vgg11(
     )
 
 
-@BACKBONES.register(name="vgg11_bn")
+@BACKBONES.register(name="vgg11_bn", metaclass=VGGBackBone)
 def vgg11_bn(
     weights    : WeightsEnum | str | None = VGG11_BN_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG11-BN backbone.
@@ -408,10 +421,10 @@ def vgg11_bn(
     )
 
 
-@BACKBONES.register(name="vgg13")
+@BACKBONES.register(name="vgg13", metaclass=VGGBackBone)
 def vgg13(
     weights    : WeightsEnum | str | None = VGG13_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG13 backbone.
@@ -437,10 +450,10 @@ def vgg13(
     )
 
 
-@BACKBONES.register(name="vgg13_bn")
+@BACKBONES.register(name="vgg13_bn", metaclass=VGGBackBone)
 def vgg13_bn(
     weights    : WeightsEnum | str | None = VGG13_BN_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG13-BN backbone.
@@ -466,10 +479,10 @@ def vgg13_bn(
     )
 
 
-@BACKBONES.register(name="vgg16")
+@BACKBONES.register(name="vgg16", metaclass=VGGBackBone)
 def vgg16(
     weights    : WeightsEnum | str | None = VGG16_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG16 backbone.
@@ -495,10 +508,10 @@ def vgg16(
     )
 
 
-@BACKBONES.register(name="vgg16_bn")
+@BACKBONES.register(name="vgg16_bn", metaclass=VGGBackBone)
 def vgg16_bn(
     weights    : WeightsEnum | str | None = VGG16_BN_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG16-BN backbone.
@@ -524,10 +537,10 @@ def vgg16_bn(
     )
 
 
-@BACKBONES.register(name="vgg19")
+@BACKBONES.register(name="vgg19", metaclass=VGGBackBone)
 def vgg19(
     weights    : WeightsEnum | str | None = VGG19_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG19 backbone.
@@ -553,10 +566,10 @@ def vgg19(
     )
 
 
-@BACKBONES.register(name="vgg19_bn")
+@BACKBONES.register(name="vgg19_bn", metaclass=VGGBackBone)
 def vgg19_bn(
     weights    : WeightsEnum | str | None = VGG19_BN_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a VGG19-BN backbone.

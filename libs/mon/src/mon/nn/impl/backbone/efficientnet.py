@@ -46,8 +46,8 @@ from torchvision.models.efficientnet import (
     MBConvConfig,
 )
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR, log
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -67,6 +67,7 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "efficientnet"
@@ -82,8 +83,9 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
         inverted_residual_setting: Sequence[Union[MBConvConfig, FusedMBConvConfig]],
         dropout                  : float,
         last_channel             : Optional[int],
-        weights                  : WeightsEnum | None = None,
-        out_indices              : list | None        = None,
+        weights                  : WeightsType | None = None,
+        out_indices              : list[int]   | None = None,
+        verbose                  : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -97,12 +99,18 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [2, 3, 5, 8].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
+
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
 
         base_model = EfficientNet(
@@ -112,8 +120,13 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
             *args, **kwargs
         )
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, DenseNet already has a 'features' block
         self.features     = base_model.features
@@ -162,12 +175,12 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b0")
+@WEIGHTS.register(name="efficientnet_b0")
 class EfficientNet_B0_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -189,12 +202,12 @@ class EfficientNet_B0_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b1")
+@WEIGHTS.register(name="efficientnet_b1")
 class EfficientNet_B1_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b1_rwightman-bac287d4.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b1_rwightman-bac287d4.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -214,8 +227,8 @@ class EfficientNet_B1_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b1-c27df63c.pth",
         path        = ZOO_DIR / "nn/backbone//efficientnet//efficientnet_b1/imagenet1k_v2//efficientnet_b1_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b1-c27df63c.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -241,12 +254,12 @@ class EfficientNet_B1_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b2")
+@WEIGHTS.register(name="efficientnet_b2")
 class EfficientNet_B2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b2_rwightman-c35c1473.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b2_rwightman-c35c1473.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -268,12 +281,12 @@ class EfficientNet_B2_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b3")
+@WEIGHTS.register(name="efficientnet_b3")
 class EfficientNet_B3_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -295,12 +308,12 @@ class EfficientNet_B3_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b4")
+@WEIGHTS.register(name="efficientnet_b4")
 class EfficientNet_B4_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b4_rwightman-23ab8bcd.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b4_rwightman-23ab8bcd.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -322,12 +335,12 @@ class EfficientNet_B4_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b5")
+@WEIGHTS.register(name="efficientnet_b5")
 class EfficientNet_B5_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b5_lukemelas-1a07897c.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b5_lukemelas-1a07897c.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -349,12 +362,12 @@ class EfficientNet_B5_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b6")
+@WEIGHTS.register(name="efficientnet_b6")
 class EfficientNet_B6_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b6_lukemelas-24a108a5.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b6_lukemelas-24a108a5.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -376,12 +389,12 @@ class EfficientNet_B6_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet", name="efficientnet_b7")
+@WEIGHTS.register(name="efficientnet_b7")
 class EfficientNet_B7_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_b7_lukemelas-c5b4e57e.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_b7_lukemelas-c5b4e57e.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -403,12 +416,12 @@ class EfficientNet_B7_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet_v2", name="efficientnet_v2_s")
+@WEIGHTS.register(name="efficientnet_v2_s")
 class EfficientNet_V2_S_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth",
         path        = ZOO_DIR / "nn/backbone//efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -434,12 +447,12 @@ class EfficientNet_V2_S_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet_v2", name="efficientnet_v2_m")
+@WEIGHTS.register(name="efficientnet_v2_m")
 class EfficientNet_V2_M_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_v2_m-dc08266a.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_v2_m-dc08266a.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -465,12 +478,12 @@ class EfficientNet_V2_M_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="efficientnet_v2", name="efficientnet_v2_l")
+@WEIGHTS.register(name="efficientnet_v2_l")
 class EfficientNet_V2_L_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth",
         path        = ZOO_DIR / "nn/backbone/efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -494,10 +507,10 @@ class EfficientNet_V2_L_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="efficientnet_b0")
+@BACKBONES.register(name="efficientnet_b0", metaclass=EfficientNetBackBone)
 def efficientnet_b0(
     weights    : WeightsEnum | str | None = EfficientNet_B0_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B0 backbone.
@@ -525,10 +538,10 @@ def efficientnet_b0(
     )
 
 
-@BACKBONES.register(name="efficientnet_b1")
+@BACKBONES.register(name="efficientnet_b1", metaclass=EfficientNetBackBone)
 def efficientnet_b1(
     weights    : WeightsEnum | str | None = EfficientNet_B1_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list              | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B1 backbone.
@@ -556,10 +569,10 @@ def efficientnet_b1(
     )
 
 
-@BACKBONES.register(name="efficientnet_b2")
+@BACKBONES.register(name="efficientnet_b2", metaclass=EfficientNetBackBone)
 def efficientnet_b2(
-    weights    : WeightsEnum | str = EfficientNet_B2_Weights.DEFAULT,
-    out_indices: list | None = None,
+    weights    : WeightsEnum | str | None = EfficientNet_B2_Weights.DEFAULT,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B2 backbone.
@@ -587,10 +600,10 @@ def efficientnet_b2(
     )
 
 
-@BACKBONES.register(name="efficientnet_b3")
+@BACKBONES.register(name="efficientnet_b3", metaclass=EfficientNetBackBone)
 def efficientnet_b3(
-    weights    : WeightsEnum | str = EfficientNet_B3_Weights.DEFAULT,
-    out_indices: list | None = None,
+    weights    : WeightsEnum | str | None = EfficientNet_B3_Weights.DEFAULT,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B3 backbone.
@@ -618,10 +631,10 @@ def efficientnet_b3(
     )
 
 
-@BACKBONES.register(name="efficientnet_b4")
+@BACKBONES.register(name="efficientnet_b4", metaclass=EfficientNetBackBone)
 def efficientnet_b4(
     weights    : WeightsEnum | str | None = EfficientNet_B4_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B4 backbone.
@@ -649,10 +662,10 @@ def efficientnet_b4(
     )
 
 
-@BACKBONES.register(name="efficientnet_b5")
+@BACKBONES.register(name="efficientnet_b5", metaclass=EfficientNetBackBone)
 def efficientnet_b5(
     weights    : WeightsEnum | str | None = EfficientNet_B5_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B5 backbone.
@@ -681,10 +694,10 @@ def efficientnet_b5(
     )
 
 
-@BACKBONES.register(name="efficientnet_b6")
+@BACKBONES.register(name="efficientnet_b6", metaclass=EfficientNetBackBone)
 def efficientnet_b6(
     weights    : WeightsEnum | str | None = EfficientNet_B6_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B6 backbone.
@@ -713,10 +726,10 @@ def efficientnet_b6(
     )
 
 
-@BACKBONES.register(name="efficientnet_b7")
+@BACKBONES.register(name="efficientnet_b7", metaclass=EfficientNetBackBone)
 def efficientnet_b7(
     weights    : WeightsEnum | str | None = EfficientNet_B7_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-B7 backbone.
@@ -745,10 +758,10 @@ def efficientnet_b7(
     )
 
 
-@BACKBONES.register(name="efficientnet_v2_s")
+@BACKBONES.register(name="efficientnet_v2_s", metaclass=EfficientNetBackBone)
 def efficientnet_v2_s(
     weights    : WeightsEnum | str | None = EfficientNet_V2_S_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-V2-S backbone.
@@ -777,10 +790,10 @@ def efficientnet_v2_s(
     )
 
 
-@BACKBONES.register(name="efficientnet_v2_m")
+@BACKBONES.register(name="efficientnet_v2_m", metaclass=EfficientNetBackBone)
 def efficientnet_v2_m(
     weights    : WeightsEnum | str | None = EfficientNet_V2_M_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-V2-M backbone.
@@ -809,10 +822,10 @@ def efficientnet_v2_m(
     )
 
 
-@BACKBONES.register(name="efficientnet_v2_l")
+@BACKBONES.register(name="efficientnet_v2_l", metaclass=EfficientNetBackBone)
 def efficientnet_v2_l(
     weights    : WeightsEnum | str | None = EfficientNet_V2_L_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create an EfficientNet-V2-L backbone.

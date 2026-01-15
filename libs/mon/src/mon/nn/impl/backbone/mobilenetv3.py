@@ -24,8 +24,8 @@ from torchvision.models.mobilenetv3 import (
     MobileNetV3,
 )
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -45,6 +45,7 @@ class MobileNetV3BackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "mobilenet"
@@ -59,8 +60,9 @@ class MobileNetV3BackBone(nn.Module, RegistrableMixin):
         name                     : str,
         inverted_residual_setting: list[InvertedResidualConfig],
         last_channel             : int,
-        weights                  : WeightsEnum | None = None,
-        out_indices              : list | None        = None,
+        weights                  : WeightsType | None = None,
+        out_indices              : list[int]   | None = None,
+        verbose                  : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -72,13 +74,19 @@ class MobileNetV3BackBone(nn.Module, RegistrableMixin):
             last_channel: Channel dimension of the last convolutional layer.
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
 
         base_model = MobileNetV3(
@@ -87,8 +95,13 @@ class MobileNetV3BackBone(nn.Module, RegistrableMixin):
             *args, **kwargs
         )
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, MobileNetV3 already has a 'features' block
         self.features = base_model.features
@@ -132,12 +145,12 @@ class MobileNetV3BackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="mobilenet", name="mobilenet_v3_large")
+@WEIGHTS.register(name="mobilenet_v3_large")
 class MobileNet_V3_Large_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
         path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -157,8 +170,8 @@ class MobileNet_V3_Large_Weights(WeightsEnum):
         }
     )
     IMAGENET1K_V2 = Weights(
-        url         = "https://download.pytorch.org/models/mobilenet_v3_large-5c1a4163.pth",
         path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v2/mobilenet_v3_large_imagenet1k_v2.pth",
+        url         = "https://download.pytorch.org/models/mobilenet_v3_large-5c1a4163.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -184,12 +197,12 @@ class MobileNet_V3_Large_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V2
 
 
-@WEIGHTS.register(arch="mobilenet", name="mobilenet_v3_small")
+@WEIGHTS.register(name="mobilenet_v3_small")
 class MobileNet_V3_Small_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
         path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -213,10 +226,10 @@ class MobileNet_V3_Small_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="mobilenet_v3_large")
+@BACKBONES.register(name="mobilenet_v3_large", metaclass=MobileNetV3BackBone)
 def mobilenet_v3_large(
     weights    : WeightsEnum | str | None = MobileNet_V3_Large_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a MobileNetV3 Large backbone.
@@ -243,10 +256,10 @@ def mobilenet_v3_large(
     )
 
 
-@BACKBONES.register(name="mobilenet_v3_small")
+@BACKBONES.register(name="mobilenet_v3_small", metaclass=MobileNetV3BackBone)
 def mobilenet_v3_small(
     weights    : WeightsEnum | str | None = MobileNet_V3_Small_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a MobileNetV3 Small backbone.

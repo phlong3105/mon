@@ -48,6 +48,7 @@ __all__ = [
     "VideoWriterCV",
     "Weights",
     "WeightsEnum",
+    "WeightsType",
     # Hierarchical exposed APIs
     "array",
     "bbox",
@@ -72,4 +73,4 @@ from .instance import Instance
 from .mask import SemanticMask
 from .thermal import InfraredMap
 from .video import Frame, VideoWriter, VideoWriterCV
-from .weights import Weights, WeightsEnum
+from .weights import Weights, WeightsEnum, WeightsType

@@ -40,7 +40,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         _transform (albumentations.Compose | None): Transformations for input
             and target. Defaults to None.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -60,7 +60,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                 Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
                 or a ClassList instance. Defaults to None.
-            verbose: If True, enable verbose output. Defaults to True.
+            verbose: Verbosity mode. Defaults to True.
             *args: Positional arguments.
             **kwargs: Keyword arguments.
         """
@@ -72,14 +72,14 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             *args, **kwargs
         )
         self.transform = transform
-    
+
     def __del__(self):
         """Finalize the object.
 
         Close the dataset loading mechanism and release resources.
         """
         pass
-    
+
     # --- Representation ---
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
@@ -88,12 +88,12 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         if self._transform:
             lines += [repr(self._transform)]
         return "\n".join(lines)
-    
+
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the length of the container."""
         return len(self._datapoints["image"])
-    
+
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an item at the given ``index``.
 
@@ -103,9 +103,9 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         # Fetch datapoint
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
-        
+
         transform = self._transform
-        
+
         if transform:
             # Optimized transformation branch
             if self.has_target:
@@ -115,7 +115,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             else:
                 augmented      = transform(image=data["image"])
                 data["image"]  = augmented["image"]
-            
+
             # Vectorized-style type casting
             for k, v in data.items():
                 if v is not None:
@@ -124,15 +124,15 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                         data[k] = v.to(torch.float32)
                     elif isinstance(v, np.ndarray) and v.dtype != np.float32:
                         data[k] = v.astype(np.float32)
-                    
+
         return {**data, "meta": meta}
-    
+
     # --- Properties ---
     @property
     def transform(self) -> A.Compose | None:
         """Return the transformation operations."""
         return self._transform
-    
+
     @transform.setter
     def transform(self, value: Any):
         """Set the transformation operations.
@@ -146,7 +146,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         if value is None:
             self._transform = None
             return
-        
+
         if isinstance(value, (dict, box.Box)):
             value = A.Compose(**value)
         if not isinstance(value, A.Compose):
@@ -154,16 +154,16 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                 f"Expected 'transform' to be an instance of albumentations.Compose, "
                 f"but got {type(value).__name__}."
             )
-        
+
         # Add additional targets to A.Compose if needed.
         if self.has_target:
             # Albumentations stores additional targets in a specific dict;
             # check if 'target' is already there to avoid overhead.
             if "target" not in value.processors.get("additional_targets", {}):
                 value.add_targets({"target": "image"})
-                
+
         self._transform = value
-        
+
     # --- Data Loading ---
     def _load_data(self) -> dict[str, Any]:
         """Load core data for the dataset.
@@ -175,7 +175,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         input_dir    = self._input_dir
         has_target   = self.has_target
         target_dir   = self._target_dir if has_target else None
-        
+
         # List image
         images = []
         with create_progress_bar(disable=disable_pbar) as pbar:
@@ -185,7 +185,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                 if path.is_image_file(exist=True):
                     images.append(Image(data=path, root=input_dir))
         datapoints = {"image": images}
-        
+
         # List target
         if has_target:
             targets = []
@@ -199,12 +199,12 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             datapoints["target"] = targets
         else:
             datapoints["target"] = None
-        
+
         # List metadata
         datapoints["meta"] = [i.meta for i in images]
-        
+
         return datapoints
-    
+
     def verify(self):
         """Verify dataset integrity.
 
@@ -214,7 +214,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         """
         if len(self) <= 0:
             raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
-        
+
         for k, v in self._datapoints.items():
             if v in [None, []]:
                 raise RuntimeError(f"Datapoint modality '{k}' is empty!")
@@ -223,10 +223,10 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                     f"Datapoint modality '{k}' has inconsistent length with the dataset: "
                     f"{len(v)} != {len(self)}."
                 )
-        
+
         if self.verbose:
             log(f"Number of datapoints: {len(self)}.")
-    
+
     # --- Access ---
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.

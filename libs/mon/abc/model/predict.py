@@ -1,17 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""An adapter to run prediction using the package.
+"""<Model> prediction script.
+
+This script provides a command-line interface for running <model>
+prediction on a given dataset.
 
 References:
     - Paper:
     - Code:
 """
 
+from __future__ import annotations
+
+__all__ = []
+
 import copy
+import sys
 
 import box
 import cv2
+import numpy as np
 import torch
 
 import mon
@@ -19,107 +28,142 @@ from mon import albumentations as A
 
 mon.preload()
 
-current_file = mon.Path(__file__).absolute()
-root_dir     = current_file.parents[0]
+current_file = mon.Path(__file__).normalize()
+current_dir  = current_file.parents[0]
+if str(current_dir) not in sys.path:
+    # Add the project root to sys.path so 'import dav2' works
+    # even if you run this script from inside the folder
+    sys.path.append(str(current_dir))
+
+try:
+    # Works when running as a module: python -m dav2.predict
+    from .model import Model
+except ImportError:
+    # Works when running as a script: python predict.py
+    from model import Model
 
 
-# ----- Predict -----
+# ==============================================================================
+# region CONTROL
+# ==============================================================================
+
 @torch.no_grad()
-def predict(args: dict | box.Box) -> str:
-    # Start
-    mon.print_run_summary(args)
+def run(args: box.Box):
+    # Log a summary of the run
+    if args.verbose:
+        mon.print_run_summary(args)
 
-    # Device
+    # Setup environment
     device = mon.create_device(args.device)
-
-    # Seed
     mon.set_random_seed(args.seed)
 
-    # Pretrained
-    pretrained = args.resume
-    if args.weights and args.weights.is_weights_file(exist=True):
-        pretrained = args.weights
-    if pretrained and pretrained.is_weights_file(exist=True):
-        mon.log(f"Pretrained: {pretrained}.")
-    else:
-        raise ValueError(f"Invalid weights file: {pretrained}.")
+    # Prepare pre-trained weights
+    weights = args.weights or args.resume or args.tuning
 
-    # Model
-    model = ...  # Replace with actual model initialization.
+    # Define model
+    model = mon.MODELS.build(
+        name    = args.model,
+        arch    = args.arch,
+        weights = weights,
+        device  = device,
+        verbose = args.verbose,
+        **args.network,
+    )
     model = model.to(device)
     model.eval()
 
-    # Benchmark
+    # Run benchmark if specified
     if args.benchmark:
-        mon.metrics.benchmark(model)
+        mon.metric.benchmark(model)
 
-    # Data I/O
+    # Define data loader
     imgsz     = args.imgsz if args.resize else (0, 0)
+    '''
     transform = A.Compose([
-        A.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
+        A.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=1),
         A.Normalize(normalization="min_max"),
         A.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
+    '''
+    transform = None
+    data_name, dataset = mon.build_dataset(args.data, args.root, transform)
 
-    # Predict
+    # Processing loop
     timers = mon.TimeProfiler()
     timers.total.tick()
     with mon.create_progress_bar() as pbar:
         for i, datapoint in pbar.track(
-            sequence    = enumerate(dataloader),
-            total       = len(dataloader),
+            sequence    = enumerate(dataset),
+            total       = len(dataset),
             description = f"[bright_yellow]Predicting"
         ):
             # Preprocess
             timers.preprocess.tick()
-            meta   = datapoint["meta"][0]
+            meta   = datapoint["meta"]
             path   = mon.Path(meta["path"])
-            h0, w0 = mon.image.imgsz(meta["orig_shape"])
+            h0, w0 = mon.image.imgsz(meta["imgsz"])
             image  = datapoint["image"]
-            image  = image.to(device)
             timers.preprocess.tock()
 
-            # Infer
+            # Inference
             timers.infer.tick()
-            outputs = ...  # Replace with actual model inference.
+            outputs = model(image, args.imgsz[0])
             timers.infer.tock()
 
             # Postprocess
             timers.postprocess.tick()
-            enhanced = ...  # Replace with actual postprocessing to get enhanced image.
-            enhanced = mon.image.to_array(enhanced)
-            h1, w1   = mon.image.imgsz(enhanced)
-            if (h1, w1) != (h0, w0):
-                enhanced = cv2.resize(enhanced, (w0, h0))
+            # Already resized in model.infer_image()
+            # h1, w1  = mon.image.imgsz(outputs)
+            # if (h1, w1) != (h0, w0):
+            #     outputs = cv2.resize(outputs, (w0, h0))
+            depth   = outputs
+            depth   = ((depth - depth.min()) / (depth.max() - depth.min()) * 255.0).astype("uint8")
+            depth   = np.repeat(depth[..., np.newaxis], 3, axis=-1)
+            depth_c = (cmap(outputs)[:, :, :3] * 255).astype("uint8")
             timers.postprocess.tock()
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
-                out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
-                mon.image.write(enhanced, out_path)
-            if args.save_debug:
-                debug_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
-                debug_path = debug_dir / f"{path.stem}_debug{mon.SAVE_IMAGE_EXT}"
+                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.DIRS.IMAGE, path, args.keep_subdirs, args.save_nearby)
+                out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"
+                mon.image.write(depth, out_path)
 
+            if args.save_debug:
+                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.DIRS.DEBUG, path, args.keep_subdirs, args.save_nearby)
+                if args.save_nearby:
+                    out_dir = out_dir.parent / f"{out_dir.stem}_c"
+                out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"
+                mon.image.write(depth_c, out_path)
     timers.total.tock()
 
     # Finish
     timers.print()
-    return str(args.save_dir)
+
+# endregion
 
 
-# ----- Main -----
+# ==============================================================================
+# region MAIN
+# ==============================================================================
+
 def main():
-    cli  = mon.parse_cli_args(root=root_dir)
+    # Parse CLI arguments
+    cli  = mon.parse_cli_args(root=current_file)
     data = mon.to_list(cli.data)
+
+    # Run prediction for each dataset
     for d in data:
-        cli_ = copy.deepcopy(cli)
+        cli_      = copy.deepcopy(cli)
         cli_.data = d
-        args = mon.parse_predict_args(cli=cli_, root=root_dir, model_root=root_dir)
-        predict(args)
+        args_     = mon.parse_predict_args(
+            cli        = cli_,
+            root       = current_dir,
+            model_root = current_dir,
+        )
+        run(args_)
 
 
 if __name__ == "__main__":
     main()
+
+# endregion

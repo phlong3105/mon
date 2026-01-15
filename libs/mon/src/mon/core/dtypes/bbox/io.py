@@ -51,7 +51,7 @@ def _load_coco_label(
     Args:
         path: Path to the COCO .json label file.
         remap: Mapping to remap class IDs. Defaults to None.
-        verbose: If True, print warnings to ``error_console``. Defaults to True.
+        verbose: Verbosity mode. Defaults to True.
 
     Returns:
         Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
@@ -73,7 +73,7 @@ def _load_voc_label(
     Args:
         path: Path to the VOC .xml label file.
         remap: Mapping to remap class IDs. Defaults to None.
-        verbose: If True, print warnings to ``error_console``. Defaults to True.
+        verbose: Verbosity mode. Defaults to True.
 
     Returns:
         Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
@@ -105,7 +105,7 @@ def _load_yolo_label(
     Args:
         path: Path to the YOLO .txt label file.
         remap: Mapping to remap class IDs. Defaults to None.
-        verbose: If True, print warnings to ``error_console``. Defaults to True.
+        verbose: Verbosity mode. Defaults to True.
 
     Returns:
         Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
@@ -116,7 +116,7 @@ def _load_yolo_label(
         if verbose:
             error_console.print(f"Path must be a valid .txt file: {path}")
         return np.empty((0, 7), dtype=np.float32)
-    
+
     try:
         # Using np.loadtxt is significantly faster for large label files
         # It handles whitespace stripping and conversion in one pass
@@ -132,19 +132,19 @@ def _load_yolo_label(
     # YOLO + Conf:   [class, cx, cy, w, h, conf]  -> 6 columns
     if raw_data.size == 0:
         return np.empty((0, 7), dtype=np.float32)
-    
+
     num_cols = raw_data.shape[1]
-    
+
     # If file only has [cx, cy, w, h], prepend a dummy class 0
     if num_cols == 4:
         raw_data = np.column_stack([np.zeros(len(raw_data)), raw_data])
         num_cols = 5
-        
+
     # Class Remapping
     if remap:
         # Efficiently remap all class IDs at once using np.vectorize or mapping
         raw_data[:, 0] = np.array([remap.get(int(c), c) for c in raw_data[:, 0]])
-    
+
     # Format Normalization (Building the N x 7+ matrix)
     # Output Format: [cx_n, cy_n, w_n, h_n, angle, conf, class, ...id]
     # Note: The docstring says CXCYWHN which usually implies [cx, cy, w, h, ...]
@@ -157,20 +157,20 @@ def _load_yolo_label(
     # cls -> index 6
     # id -> index 7
     # So the target layout must be: [cx, cy, w, h, angle, conf, class, id]
-    
+
     n_rows       = raw_data.shape[0]
     # We need at least 7 columns for [cx, cy, w, h, angle, conf, class]
     # Initialize with zeros
     final_bboxes = np.zeros((n_rows, 7), dtype=np.float32)
-    
+
     cls  = raw_data[:, 0]
     cxcy = raw_data[:, 1:3]
     wh   = raw_data[:, 3:5]
-    
+
     final_bboxes[:, 0:2] = cxcy  # cx, cy
     final_bboxes[:, 2:4] = wh    # w, h
     final_bboxes[:, 6]   = cls   # class is at index 6 based on BBox class
-    
+
     # Angle vs. Confidence Ambiguity Logic
     if num_cols == 6:
         col5 = raw_data[:, 5]
@@ -192,7 +192,7 @@ def _load_yolo_label(
         # So raw_data[:, 6] would be conf
         if num_cols > 6:
              final_bboxes[:, 5] = raw_data[:, 6] # conf
-        
+
         # If there are even more columns, append them (e.g. track id)
         if num_cols > 7:
              final_bboxes = np.column_stack([final_bboxes, raw_data[:, 7:]])
@@ -220,7 +220,7 @@ def load(
         fmt: Desired target format or conversion code.
         imgsz: Image size as (H, W) required for format conversions.
         remap: Mapping for class IDs or names. Defaults to None.
-        verbose: If True, print warnings to ``error_console``. Defaults to False.
+        verbose: Verbosity mode. Defaults to False.
 
     Returns:
         Batch of bounding boxes, formatted as a numpy.ndarray of shape (N, 7+)
@@ -230,12 +230,12 @@ def load(
         ValueError: If ``path`` is invalid or if conversion parameters are missing.
     """
     path = Path(path).normalize()  # Ensure absolute, clean path
-    
+
     # Determine Source vs Target Formats
     # Use BBoxFormat internal logic to distinguish between a static format
     # and a conversion instruction (e.g., 'voc_to_yolo')
     fmt = BBoxFormat(value=fmt)
-    
+
     if fmt in BBoxFormat.conversion_codes():
         # Example: 'coco_to_cxcywhn' -> src_fmt = 'coco', target_fmt = 'cxcywhn'
         src_fmt_str, target_fmt_str = fmt.value.split("_to_")
@@ -245,7 +245,7 @@ def load(
         # No conversion requested, just load in original format
         src_fmt    = fmt
         target_fmt = None
-   
+
     # Match Reader based on source format
     # We use a mapping dictionary for cleaner expansion later
     readers = {
@@ -256,16 +256,16 @@ def load(
         BBoxFormat.YOLO:    _load_yolo_label,
         BBoxFormat.CXCYWHN: _load_yolo_label,
     }
-    
+
     if src_fmt not in readers:
         raise ValueError(
             f"Unsupported bounding box format: {src_fmt.value}. "
             f"Must be one of: {list(readers.keys())}."
         )
-    
+
     # Execute the read operation
     bbox = readers[src_fmt](path, remap=remap, verbose=verbose)
-    
+
     # Handle Conditional Conversion
     if target_fmt:
         if imgsz is None:
@@ -273,11 +273,11 @@ def load(
                 f"Expected 'imgsz' for conversion from {src_fmt.value} to {target_fmt.value}, "
                 f"but got None."
             )
-        
+
         # Build the specific conversion instruction for the convert() utility
         conversion_code = BBoxFormat(f"{src_fmt.value}_to_{target_fmt.value}")
         bbox            = convert(bbox=bbox, fmt=conversion_code, imgsz=imgsz)
-    
+
     return bbox
 
 # endregion

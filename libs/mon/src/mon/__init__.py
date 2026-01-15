@@ -16,6 +16,7 @@ __start = time.time()
 from .core import *
 from .training import *
 from . import nn
+import mon.training
 
 __end = time.time()
 console.log(f"`mon` loaded in: {__end - __start:.4f} seconds.")
@@ -29,11 +30,11 @@ def preload(verbose: bool = True):
     latency; optionally log the elapsed load time when verbose is True.
     """
     start = time.time()
-    
+
     import mon.cv
-    import mon.genai
+    # import mon.genai
     import mon.datasets
-    
+
     end = time.time()
     if verbose:
         console.log(f"`mon-dev` loaded in: {end - start:.4f} seconds.")

@@ -24,8 +24,8 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.convnext import CNBlockConfig, ConvNeXt
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).absolute()
@@ -45,6 +45,7 @@ class ConvNeXtBackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "convnext"
@@ -59,8 +60,9 @@ class ConvNeXtBackBone(nn.Module, RegistrableMixin):
         name                 : str,
         block_setting        : list[CNBlockConfig],
         stochastic_depth_prob: float,
-        weights              : WeightsEnum | None = None,
-        out_indices          : list | None        = None,
+        weights              : WeightsType | None = None,
+        out_indices          : list[int]   | None = None,
+        verbose              : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -72,13 +74,19 @@ class ConvNeXtBackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [1, 3, 5, 7].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
 
         base_model = ConvNeXt(
@@ -87,8 +95,13 @@ class ConvNeXtBackBone(nn.Module, RegistrableMixin):
             *args, **kwargs
         )
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, ConvNeXt already has a 'features' block
         self.features     = base_model.features
@@ -136,12 +149,12 @@ class ConvNeXtBackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="convnext", name="convnext_tiny")
+@WEIGHTS.register(name="convnext_tiny")
 class ConvNeXt_Tiny_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
         path        = ZOO_DIR / "nn/backbone/convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -167,12 +180,12 @@ class ConvNeXt_Tiny_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="convnext", name="convnext_small")
+@WEIGHTS.register(name="convnext_small")
 class ConvNeXt_Small_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/convnext_small-0c510722.pth",
         path        = ZOO_DIR / "nn/backbone/convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/convnext_small-0c510722.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -198,12 +211,12 @@ class ConvNeXt_Small_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="convnext", name="convnext_base")
+@WEIGHTS.register(name="convnext_base")
 class ConvNeXt_Base_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
         path        = ZOO_DIR / "nn/backbone/convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -229,12 +242,12 @@ class ConvNeXt_Base_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="convnext", name="convnext_large")
+@WEIGHTS.register(name="convnext_large")
 class ConvNeXt_Large_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
         path        = ZOO_DIR / "nn/backbone/convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -262,10 +275,10 @@ class ConvNeXt_Large_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="convnext_tiny")
+@BACKBONES.register(name="convnext_tiny", metaclass=ConvNeXtBackBone)
 def convnext_tiny(
-    weights    : WeightsEnum | str = ConvNeXt_Tiny_Weights.DEFAULT,
-    out_indices: list = None,
+    weights    : WeightsEnum | str | None = ConvNeXt_Tiny_Weights.DEFAULT,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ConvNeXt Tiny backbone.
@@ -298,10 +311,10 @@ def convnext_tiny(
     )
 
 
-@BACKBONES.register(name="convnext_small")
+@BACKBONES.register(name="convnext_small", metaclass=ConvNeXtBackBone)
 def convnext_small(
-    weights    : WeightsEnum | str | None  = ConvNeXt_Small_Weights.DEFAULT,
-    out_indices: list | None = None,
+    weights    : WeightsEnum | str | None = ConvNeXt_Small_Weights.DEFAULT,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ConvNeXt Small backbone.
@@ -334,10 +347,10 @@ def convnext_small(
     )
 
 
-@BACKBONES.register(name="convnext_base")
+@BACKBONES.register(name="convnext_base", metaclass=ConvNeXtBackBone)
 def convnext_base(
-    weights    : WeightsEnum | str | None  = ConvNeXt_Base_Weights.DEFAULT,
-    out_indices: list | None  = None,
+    weights    : WeightsEnum | str | None = ConvNeXt_Base_Weights.DEFAULT,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ConvNeXt Base backbone.
@@ -370,10 +383,10 @@ def convnext_base(
     )
 
 
-@BACKBONES.register(name="convnext_large")
+@BACKBONES.register(name="convnext_large", metaclass=ConvNeXtBackBone)
 def convnext_large(
-    weights    : WeightsEnum | str | None  = ConvNeXt_Large_Weights.DEFAULT,
-    out_indices: list | None  = None,
+    weights    : WeightsEnum | str | None = ConvNeXt_Large_Weights.DEFAULT,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a ConvNeXt Large backbone.

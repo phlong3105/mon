@@ -45,8 +45,16 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         _video_meta (dict): Video metadata.
         _transform (albumentations.Compose | None): Transformations for input and target.
         _curr_index (int): Track last accessed frame to avoid unnecessary seeks.
+
+    Attributes:
+        _subset (str | None): Name of the dataset's subset directory.
+            Defaults to None.
+        _splits (list[Split]): List of supported splits. Defaults to [].
     """
-    
+
+    _subset: str | None  = None
+    _splits: list[Split] = [Split.PREDICT]
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -65,7 +73,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             transform: Transformations to apply. Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
                 or a ClassList instance. Defaults to None.
-            verbose: If True, enable verbose output. Defaults to True.
+            verbose: Verbosity mode. Defaults to True.
             *args: Positional arguments.
             **kwargs: Keyword arguments.
         """
@@ -76,7 +84,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         self._video_capture = None
         self._video_meta    = {}
         self._curr_index    = -1
-        
+
         # Continue the initialization chain
         super().__init__(
             root      = root,
@@ -86,24 +94,24 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             *args, **kwargs
         )
         self.transform = transform
-    
+
     def __del__(self):
         """Close the dataset loading mechanism and release resources."""
         if self._video_capture and self._video_capture.isOpened():
             self._video_capture.release()
-    
+
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the length of the dataset."""
         return self._num_frames
-    
+
     def __iter__(self):
         """Initialize a new iterator."""
         self._curr_index = 0
         if isinstance(self._video_capture, cv2.VideoCapture):
             self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
         return self
-    
+
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return the item at the specified ``index``.
 
@@ -113,14 +121,14 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         # Fetch datapoint
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
-        
+
         transform = self._transform
-        
+
         if transform:
             # Albumentations usually uses the key 'image'
             augmented     = transform(image=data["frame"])
             data["frame"] = augmented["image"]
-            
+
             # Vectorized-style type casting
             for k, v in data.items():
                 if v is not None:
@@ -129,15 +137,15 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
                         data[k] = v.to(torch.float32)
                     elif isinstance(v, np.ndarray) and v.dtype != np.float32:
                         data[k] = v.astype(np.float32)
-                    
+
         return {**data, "meta": meta}
-    
+
     # --- Properties ---
     @property
     def transform(self) -> A.Compose | None:
         """Return the transformation operations."""
         return self._transform
-    
+
     @transform.setter
     def transform(self, value: Any):
         """Set the transformation operations.
@@ -157,7 +165,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             )
 
         self._transform = value
-    
+
     @property
     def is_stream(self) -> bool:
         """Check if the video source is a stream."""
@@ -171,7 +179,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             int(self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH)),
             3
         )
-    
+
     @property
     def imgsz(self) -> tuple[int, int]:
         """Return the size of video frames."""
@@ -179,7 +187,7 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             int(self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT)),
             int(self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         )
-    
+
     # --- Initialize ---
     def _load_data(self) -> dict[str, Any]:
         """Load core data for the dataset.
@@ -192,19 +200,19 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         """
         # Validate video source
         root = self._root
-        
+
         self._video_capture = cv2.VideoCapture(str(root), cv2.CAP_FFMPEG)
-        
+
         if not self._video_capture.isOpened():
             raise RuntimeError(f"Failed to open video source at: {root}")
-        
+
         # Cache values to avoid repeated C-calls
         self._num_frames = int(self._video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-        
+
         h = int(self._video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         w = int(self._video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
         self._shape = (h, w, 3)
-        
+
         # Retrieve video metadata
         self._video_meta = {
             "video_path"   : root,
@@ -220,11 +228,11 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             "pos_msec"     : int(self._video_capture.get(cv2.CAP_PROP_POS_MSEC)),
             "hash"         : root.stat().st_size if isinstance(root, Path) else None,
         }
-        
+
         # Return empty dict since frames are loaded on-the-fly via the
         # ``_get_datapoint()`` method.
         return {}
-    
+
     def verify(self):
         """Verify dataset integrity.
 
@@ -233,10 +241,10 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         """
         if len(self) == 0:
             raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
-        
+
         if self.verbose:
             log(f"Number of {self.split_str} datapoints: {len(self)}.")
-    
+
     # --- Data Retrieval ---
     def _get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
@@ -250,27 +258,27 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         """
         if not self._video_capture or not self._video_capture.isOpened():
             raise RuntimeError(f"VideoCapture is not initialized.")
-        
+
         # Smart Seeking
         # Only seek if the requested index is NOT the next sequential frame
         if index != self._curr_index + 1:
             self._video_capture.set(cv2.CAP_PROP_POS_FRAMES, index)
-        
+
         success, frame = self._video_capture.read()
-        
+
         if not success:
             if self.is_stream:
                 raise StopIteration
             raise IndexError(f"Index {index} out of range for dataset of size {len(self)}.")
-        
+
         self._curr_index = index
-        
+
         # Format Conversion
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
+
         # Wrap in your Frame/Image object (assuming it handles metadata)
         frame_obj = Frame(data=frame, index=index, path=self.root, root=self._root.parent)
-        
+
         # Build datapoint dictionary
         path = self._root
         meta = {

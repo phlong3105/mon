@@ -21,7 +21,7 @@ from mon.core import ALBUMENTATIONS
 def __register_transforms(module, prefix: str = ""):
     """Register all transformation classes from the given module and its
     submodules into the ALBUMENTATIONS registry.
-    
+
     Args:
         module: The module to inspect for transformation classes.
         prefix: The prefix for submodule names. Defaults to "".
@@ -33,12 +33,12 @@ def __register_transforms(module, prefix: str = ""):
             obj != BasicTransform and
             not inspect.isabstract(obj)
         )
-    
+
     for _, module_name, is_pkg in pkgutil.walk_packages(module.__path__, prefix=module.__name__ + "."):
         try:
             # Import the submodule
             sub_module = importlib.import_module(module_name)
-            
+
             # Inspect all members of the submodule
             for name, obj in inspect.getmembers(sub_module):
                 if is_transform_class(obj) and not name.startswith("_"):
@@ -46,8 +46,8 @@ def __register_transforms(module, prefix: str = ""):
                         # Add to __all__ and TRANSFORMS registry
                         # __all__.append(name)
                         globals()[name] = obj
-                        ALBUMENTATIONS.register(name=name, module=obj)
-            
+                        ALBUMENTATIONS.register(name=name, module=obj, replace=True)
+
             # If it's a package, recursively inspect its submodules
             if is_pkg:
                 __register_transforms(sub_module, prefix=module_name + ".")

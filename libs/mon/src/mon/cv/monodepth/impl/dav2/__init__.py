@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements DAV2 model prediction pipeline for monocular depth estimation.
+"""Depth Anything V2 (DAV2).
+
+This package contains Depth Anything V2 model implementations, pre-trained weights,
+and utilities for training and inference.
 
 References:
     - Paper: "Depth Anything V2. A More Capable Foundation Model for Monocular
@@ -9,11 +12,6 @@ References:
     - Code: https://github.com/DepthAnything/Depth-Anything-V2
 """
 
-__all__ = [
-    "DAV2",
-    "DAV2_ViTS",
-    "DAV2_ViTB",
-    "DAV2_ViTL",
-]
+from __future__ import annotations
 
-from .dav2 import DAV2, DAV2_ViTB, DAV2_ViTL, DAV2_ViTS
+from .model import *

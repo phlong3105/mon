@@ -24,8 +24,8 @@ import torch.nn as nn
 from torchvision.models._meta import _IMAGENET_CATEGORIES
 from torchvision.models.densenet import DenseNet
 
-from mon.core import BACKBONES, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
+from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
@@ -45,6 +45,7 @@ class DenseNetBackBone(nn.Module, RegistrableMixin):
         features (torch.nn.Sequential): The feature extraction layers.
         out_indices (list): List of layer indices to extract features from.
         out_channels (list): List of output channels for each extracted layer.
+        verbose (bool): Verbosity mode.
     """
 
     _arch     : str          = "densenet"
@@ -60,8 +61,9 @@ class DenseNetBackBone(nn.Module, RegistrableMixin):
         growth_rate      : int,
         block_config     : tuple[int, int, int, int],
         num_init_features: int,
-        weights          : WeightsEnum | None = None,
-        out_indices      : list | None        = None,
+        weights          : WeightsType | None = None,
+        out_indices      : list[int]   | None = None,
+        verbose          : bool               = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -75,13 +77,19 @@ class DenseNetBackBone(nn.Module, RegistrableMixin):
             weights: Pre-trained weights to load.
             out_indices: List of layer indices to extract features from.
                 If None, defaults to [3, 5, 7, 11].
-            args: Additional positional arguments for the ResNet model.
-            kwargs: Additional keyword arguments for the ResNet model
+            verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the ResNet model.
+            **kwargs: Additional keyword arguments for the ResNet model
         """
-        super().__init__(name=name, *args, **kwargs)
+        # Satisfy PyTorch's empty signature first.
+        super().__init__()
+        # Initialize RegistrableMixin
+        RegistrableMixin.__init__(self, name=name)
+
+        self.verbose = verbose
 
         # Load the base model
-        if isinstance(weights, WeightsEnum):
+        if isinstance(weights, WeightsType):
             kwargs["num_classes"] = weights.num_classes
 
         base_model = DenseNet(
@@ -91,8 +99,13 @@ class DenseNetBackBone(nn.Module, RegistrableMixin):
             *args, **kwargs
         )
 
-        if isinstance(weights, WeightsEnum):
-            base_model.load_state_dict(weights.get_state_dict())
+        if isinstance(weights, WeightsType):
+            base_model.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, DenseNet already has a 'features' block
         self.features     = base_model.features
@@ -140,12 +153,12 @@ class DenseNetBackBone(nn.Module, RegistrableMixin):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(arch="densenet", name="densenet121")
+@WEIGHTS.register(name="densenet121")
 class DenseNet121_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/densenet121-a639ec97.pth",
         path        = ZOO_DIR / "nn/backbone/densenet/densenet121/imagenet1k_v1/densenet121_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/densenet121-a639ec97.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -167,12 +180,12 @@ class DenseNet121_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="densenet", name="densenet161")
+@WEIGHTS.register(name="densenet161")
 class DenseNet161_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/densenet161-8d451a50.pth",
         path        = ZOO_DIR / "nn/backbone/densenet/densenet161/imagenet1k_v1/densenet161_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/densenet161-8d451a50.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -194,12 +207,12 @@ class DenseNet161_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="densenet", name="densenet169")
+@WEIGHTS.register(name="densenet169")
 class DenseNet169_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
         path        = ZOO_DIR / "nn/backbone/densenet/densenet169/imagenet1k_v1/densenet169_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -221,12 +234,12 @@ class DenseNet169_Weights(WeightsEnum):
     DEFAULT = IMAGENET1K_V1
 
 
-@WEIGHTS.register(arch="densenet", name="densenet201")
+@WEIGHTS.register(name="densenet201")
 class DenseNet201_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        url         = "https://download.pytorch.org/models/densenet201-c1103571.pth",
         path        = ZOO_DIR / "nn/backbone/densenet/densenet201/imagenet1k_v1/densenet201_imagenet1k_v1.pth",
+        url         = "https://download.pytorch.org/models/densenet201-c1103571.pth",
         num_classes = 1000,
         transforms  = None,
         meta        = {
@@ -250,10 +263,10 @@ class DenseNet201_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@BACKBONES.register(name="densenet121")
+@BACKBONES.register(name="densenet121", metaclass=DenseNetBackBone)
 def densenet121(
     weights    : WeightsEnum | str | None = DenseNet121_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a DenseNet-121 backbone.
@@ -280,10 +293,10 @@ def densenet121(
     )
 
 
-@BACKBONES.register(name="densenet161")
+@BACKBONES.register(name="densenet161", metaclass=DenseNetBackBone)
 def densenet161(
     weights    : WeightsEnum | str | None = DenseNet161_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a DenseNet-161 backbone.
@@ -310,10 +323,10 @@ def densenet161(
     )
 
 
-@BACKBONES.register(name="densenet169")
+@BACKBONES.register(name="densenet169", metaclass=DenseNetBackBone)
 def densenet169(
     weights    : WeightsEnum | str | None = DenseNet169_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a DenseNet-169 backbone.
@@ -340,10 +353,10 @@ def densenet169(
     )
 
 
-@BACKBONES.register(name="densenet201")
+@BACKBONES.register(name="densenet201", metaclass=DenseNetBackBone)
 def densenet201(
     weights    : WeightsEnum | str | None = DenseNet201_Weights.DEFAULT,
-    out_indices: list | None = None,
+    out_indices: list[int]         | None = None,
     *args, **kwargs
 ):
     """Create a DenseNet-201 backbone.

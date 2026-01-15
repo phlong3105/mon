@@ -16,9 +16,9 @@
 #   - uv            : https://docs.astral.sh/uv/
 
 [project]
-name            = "dataprep"
+name            = "dev"
 version         = "0.1.0"
-description     = "A data pre-processing toolkit for computer vision research."
+description     = "A development project for testing and experimentation."
 license         = "MIT"
 readme          = "README.md"
 requires-python = ">=3.12,<3.14"
@@ -49,4 +49,3 @@ mon = { path = "../../libs/mon", develop = true }
 [build-system]
 requires      = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
