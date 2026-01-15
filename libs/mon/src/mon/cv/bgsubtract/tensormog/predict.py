@@ -28,15 +28,15 @@ def predict(args: dict | box.Box) -> str:
     num_updates       = args.network.num_updates
     tau_rate          = args.network.tau_rate
     tau_updating_rate = args.network.tau_updating_rate
-    
+
     # Start
     mon.print_run_summary(args)
     # Device
     device = mon.create_device(args.device)
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Model
     model = tensormog.TensorMOG(
         height            = height,
@@ -50,11 +50,11 @@ def predict(args: dict | box.Box) -> str:
         tau_updating_rate = tau_updating_rate,
     )
     model = model.to(device)
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model.model)
-    
+
     # Data I/O
     transform = A.Compose([
         A.ResizeDivisibleBy(height=height, width=width, divisor=32),
@@ -62,7 +62,7 @@ def predict(args: dict | box.Box) -> str:
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -80,7 +80,7 @@ def predict(args: dict | box.Box) -> str:
             image  = datapoint["image"]
             image  = image.to(device)
             timers.preprocess.tock()
-            
+
             # Optimize and Infer
             timers.infer.tick()
             outputs = model(image)
@@ -94,16 +94,16 @@ def predict(args: dict | box.Box) -> str:
                 foreground = cv2.resize(foreground, (w0, h0))
                 background = cv2.resize(background, (w0, h0))
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(background, out_path)
-            
+
             # Save Debug
             if args.save_debug:
-                debug_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                debug_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 debug_path = debug_dir / f"{path.stem}_foreground{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(foreground, debug_path)
     timers.total.tock()

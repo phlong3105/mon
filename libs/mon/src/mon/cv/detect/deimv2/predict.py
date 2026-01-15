@@ -34,7 +34,7 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.resume
     if args.weights and args.weights.is_weights_file(exist=True):
@@ -58,7 +58,7 @@ def predict(args: dict | box.Box) -> str:
     model = model.eval()
     for param in model.parameters():
         param.requires_grad = False
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -67,7 +67,7 @@ def predict(args: dict | box.Box) -> str:
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     """
     # COCO JSON Format
@@ -116,10 +116,10 @@ def predict(args: dict | box.Box) -> str:
             labels = [l.cpu().numpy().astype(int)   for l in labels]  # batch_size = 1
             boxes  = [b.cpu().numpy().astype(float) for b in  boxes]  # batch_size = 1, XYWH format, change "deploy_out_fmt" in config file.
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_result:
-                out_dir    = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir    = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
                 label_path = out_dir / f"{path.stem}.txt"
                 label_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(str(label_path), "w") as f:

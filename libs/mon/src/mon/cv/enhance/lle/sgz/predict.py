@@ -48,7 +48,7 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.resume
     if args.weights and args.weights.is_weights_file(exist=True):
@@ -63,13 +63,13 @@ def predict(args: dict | box.Box) -> str:
     model = sgz.SGZ(scale, conv_type="dsc", weights=pretrained)
     model = model.to(device)
     model.eval()
-    
+
     # Benchmark
     if benchmark:
         h = int((512 // scale) * scale)
         w = int((512 // scale) * scale)
         benchmark(model, imgsz=(h, w))
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -113,7 +113,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()
@@ -121,7 +121,7 @@ def predict(args: dict | box.Box) -> str:
     # Finish
     timers.print()
     return str(args.save_dir)
-        
+
 
 # --- Main ---
 def main() -> str:

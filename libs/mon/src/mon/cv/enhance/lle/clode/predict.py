@@ -31,7 +31,7 @@ root_dir     = current_file.parents[0]
 def predict(args: dict | box.Box) -> str:
     # Start
     mon.print_run_summary(args)
-    
+
     # Device
     device = mon.create_device(args.device)
 
@@ -46,17 +46,17 @@ def predict(args: dict | box.Box) -> str:
         mon.log(f"Pretrained: {pretrained}.")
     else:
         raise ValueError(f"Invalid weights file: {pretrained}.")
-    
+
     # Model
     T     = torch.tensor([0, args.network.T]).float().to(device)
     model = clode.CLODE(weights=pretrained)
     model = model.to(device)
     model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -65,7 +65,7 @@ def predict(args: dict | box.Box) -> str:
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     cmap   = matplotlib.colormaps.get_cmap("RdBu")
     timers = mon.TimeProfiler()
@@ -84,7 +84,7 @@ def predict(args: dict | box.Box) -> str:
             image  = datapoint["image"]
             image  = image.to(device)
             timers.preprocess.tock()
-            
+
             # Infer
             timers.infer.tick()
             outputs = model(image, T, inference=True)
@@ -118,14 +118,14 @@ def predict(args: dict | box.Box) -> str:
                 else:
                     debug_image = cv2.hconcat([image, enhanced])
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
             if args.save_debug:
-                debug_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                debug_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 debug_path = debug_dir / f"{path.stem}_curve_map{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(curve_map, debug_path)
                 debug_path = debug_dir / f"{path.stem}_noise_map{mon.SAVE_IMAGE_EXT}"

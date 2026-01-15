@@ -58,7 +58,7 @@ def process(
     with torch.no_grad():
         detected_map = resize_image(HWC3(input_image), image_resolution)
         H, W, C      = detected_map.shape
-        
+
         if use_float16:
             control = torch.from_numpy(detected_map.copy()).cuda().to(dtype=torch.float16) / 255.0
         else:
@@ -66,14 +66,14 @@ def process(
         control = torch.stack([control for _ in range(num_samples)], dim=0)
         control = einops.rearrange(control, "b h w c -> b c h w").clone()
         ae_hs   = model.encode_first_stage(control * 2 - 1)[1]
-        
+
         if seed == -1:
             seed = random.randint(0, 65535)
         seed_everything(seed)
-        
+
         # if args.save_memory:
         #     model.low_vram_shift(is_diffusing=False)
-        
+
         cond    = {
             "c_concat"   : [control],
             "c_crossattn": [model.get_unconditional_conditioning(num_samples)]
@@ -83,10 +83,10 @@ def process(
             "c_crossattn": [model.get_unconditional_conditioning(num_samples)]
         }
         shape   = (4, H // 8, W // 8)
-        
+
         # if args.save_memory:
         #     model.low_vram_shift(is_diffusing=True)
-        
+
         model.control_scales   = [strength * (0.825 ** float(12 - i)) for i in range(13)] if guess_mode else ([strength] * 13)  # Magic number. IDK why. Perhaps because 0.825**12<0.01 but 0.826**12>0.01
         samples, intermediates = diffusion_sampler.sample(
             diffusion_steps, num_samples, shape, cond,
@@ -96,16 +96,16 @@ def process(
             unconditional_conditioning   = un_cond,
             dmp_order                    = 3,
         )
-        
+
         # if args.save_memory:
         #     model.low_vram_shift(is_diffusing=False)
-        
+
         if use_float16:
             x_samples = model.decode_new_first_stage(samples.to(dtype=torch.float16), ae_hs)
         else:
             x_samples = model.decode_new_first_stage(samples, ae_hs)
         x_samples = (einops.rearrange(x_samples, "b c h w -> b h w c") * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
-        
+
         results = [x_samples[i] for i in range(num_samples)]
     return results
 
@@ -153,17 +153,17 @@ def predict(args: dict | box.Box) -> str:
             new_state_dict[sd_name.replace("_forward_module.control_model.", "")] = sd_param
     model.control_model.load_state_dict(new_state_dict)
     model.change_first_stage(ae_ckpt)  # Load bypass decoder
-    
+
     if args.use_float16:
         model = model.to(device).to(dtype=torch.float16)
     else:
         model = model.to(device)
     diffusion_sampler = DPMSolverSampler(model)
-    
+
     # Benchmark
     if args.benchmark:
         benchmark(model)
-    
+
     # Data I/O
     data_name, dataloader = mon.build_dataloader(args.data, args.root)
 
@@ -195,7 +195,7 @@ def predict(args: dict | box.Box) -> str:
                 use_float16      = args.use_float16,
             )[0]
             timers.infer.tock()
-            
+
             # Postprocess
             timers.postprocess.tick()
             enhanced = outputs
@@ -203,10 +203,10 @@ def predict(args: dict | box.Box) -> str:
             if (h1, w1) != (h0, w0):
                 enhanced = cv2.resize(enhanced, (w0, h0))
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

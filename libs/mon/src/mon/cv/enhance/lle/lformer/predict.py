@@ -50,7 +50,7 @@ def predict(args: dict | box.Box) -> str:
     model = lformer.LFormer(weights=pretrained)
     model = model.to(device)
     model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
@@ -86,7 +86,7 @@ def predict(args: dict | box.Box) -> str:
             timers.infer.tick()
             outputs = model(image)
             timers.infer.tock()
-            
+
             # Postprocess
             timers.postprocess.tick()
             L, _, R, X, I = outputs
@@ -108,12 +108,12 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(I, out_path)
 
             if args.save_debug:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 mon.image.write(L, out_dir / f"{path.stem}_L{mon.SAVE_IMAGE_EXT}")
                 mon.image.write(R, out_dir / f"{path.stem}_R{mon.SAVE_IMAGE_EXT}")
                 mon.image.write(D, out_dir / f"{path.stem}_D{mon.SAVE_IMAGE_EXT}")

@@ -116,7 +116,7 @@ def train(args: dict | box.Box) -> str:
             )
     else:
         raise Exception("Should choose a scheduler.")
-    
+
     # Loss
     L1_loss = cidnet.L1Loss(loss_weight=L1_weight, reduction="mean").to(device)
     D_loss  = cidnet.SSIM(weight=D_weight).to(device)
@@ -126,10 +126,10 @@ def train(args: dict | box.Box) -> str:
         perceptual_weight = P_weight,
         criterion         = "mse"
     ).to(device)
-    
+
     # Data I/O
-    args["train_dataloader"]["dataset"]["root"] = mon.data.parse_data_dir(args.root)
-    args["val_dataloader"]["dataset"]["root"]   = mon.data.parse_data_dir(args.root)
+    args["train_dataloader"]["dataset"]["root"] = mon.data.resolve_data_dir(args.root)
+    args["val_dataloader"]["dataset"]["root"]   = mon.data.resolve_data_dir(args.root)
     train_dataloader = mon.data.DataLoader(**args.train_dataloader)
     val_dataloader   = mon.data.DataLoader(**args.val_dataloader)
 
@@ -151,7 +151,7 @@ def train(args: dict | box.Box) -> str:
                 # Input
                 image   = datapoint["image"].to(device)
                 ref_rgb = datapoint["ref_image"].to(device)
-                
+
                 # Enhance
                 if gamma:  # Use random gamma function (enhancement curve) to improve generalization
                     gamma = random.randint(start_gamma, end_gamma) / 100.0
@@ -160,7 +160,7 @@ def train(args: dict | box.Box) -> str:
                     enhanced_rgb = model(image)
                 enhanced_hvi = model.HVIT(enhanced_rgb)
                 ref_hvi      = model.HVIT(ref_rgb)
-                
+
                 # Loss
                 loss_hvi = (
                     L1_loss(enhanced_hvi, ref_hvi)
@@ -175,14 +175,14 @@ def train(args: dict | box.Box) -> str:
                     + P_weight * P_loss(enhanced_rgb, ref_rgb)[0]
                 )
                 loss  = loss_rgb + HVI_weight * loss_hvi
-                
+
                 # Backward
                 if grad_clip:
                     torch.nn.utils.clip_grad_norm_(model.parameters(), 0.01, norm_type=2)
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                
+
                 # Log (debug)
                 loss_print    = loss_print   + loss.item()
                 loss_last_10  = loss_last_10 + loss.item()
@@ -194,17 +194,17 @@ def train(args: dict | box.Box) -> str:
                     (args.save_dir / mon.SAVE_DEBUG_DIR).mkdir(parents=True, exist_ok=True)
                     enhanced_img.save(str(args.save_dir / mon.SAVE_DEBUG_DIR / "enhanced.jpg"))
                     ref_img.save(str(args.save_dir / mon.SAVE_DEBUG_DIR / "ref.jpg"))
-            
+
             scheduler.step()
-            
+
             # Log
             avg_loss = loss_last_10 / pic_last_10
             mon.log(f"===> Epoch[{i}]: Loss: {avg_loss:.4f} | "
                             f"Learning rate: lr={optimizer.param_groups[0]['lr']}.")
-            
+
             # Save the latest model
             torch.save(model.state_dict(), str(args.save_dir / "last.pt"))
-            
+
 
 # --- Main ---
 def main() -> str:

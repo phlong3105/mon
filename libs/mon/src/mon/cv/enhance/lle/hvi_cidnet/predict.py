@@ -62,7 +62,7 @@ def predict(args: dict | box.Box) -> str:
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -94,7 +94,7 @@ def predict(args: dict | box.Box) -> str:
             timers.infer.tick()
             outputs = model(image ** args["network"]["gamma"])
             timers.infer.tock()
-            
+
             # Postprocess
             timers.postprocess.tick()
             enhanced = outputs
@@ -106,7 +106,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

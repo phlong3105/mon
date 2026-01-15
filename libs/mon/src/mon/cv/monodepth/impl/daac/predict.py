@@ -37,7 +37,7 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.resume
     if args.weights and args.weights.is_weights_file(exist=True):
@@ -46,8 +46,8 @@ def predict(args: dict | box.Box) -> str:
         mon.log(f"Pretrained: {pretrained}.")
     else:
         raise ValueError(f"Invalid weights file: {pretrained}.")
-    args.network.dino_pretrained = mon.parse_weights_file(args.root, args.network.dino_pretrained)
-    
+    args.network.dino_pretrained = mon.resolve_weights_file(args.root, args.network.dino_pretrained)
+
     # Model
     model = daac.DAAC(
         config = {
@@ -66,7 +66,7 @@ def predict(args: dict | box.Box) -> str:
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -75,7 +75,7 @@ def predict(args: dict | box.Box) -> str:
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     cmap   = matplotlib.colormaps.get_cmap("Spectral_r")
     timers = mon.TimeProfiler()
@@ -112,15 +112,15 @@ def predict(args: dict | box.Box) -> str:
                 depth   = cv2.resize(depth,   (w0, h0))
                 depth_c = cv2.resize(depth_c, (w0, h0))
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(depth, out_path)
 
             if args.save_debug:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 if args.save_nearby:
                     out_dir = out_dir.parent / f"{out_dir.stem}_c"
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"

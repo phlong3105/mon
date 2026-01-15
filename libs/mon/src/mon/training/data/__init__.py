@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mon.core import DATASETS, parse_data_dir, Path, Split
+from mon.core import DATASETS, resolve_data_dir, Path, Split
 from .base import *
 from .comp import *
 from .impl import *
@@ -81,7 +81,7 @@ def build_dataset(
     # 1. src is a registered dataset name
     if src.stem in DATASETS:
         src       = src.stem
-        root      = parse_data_dir(root=data_root, data_dir=src)
+        root      = resolve_data_dir(root=data_root, data_dir=src)
         config    = kwargs | {
             "name"     : src,
             "root"     : root,

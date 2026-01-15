@@ -56,25 +56,25 @@ def predict(args: dict | box.Box) -> str:
 
     # Device
     device = mon.create_device(args.device)
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Model
     model = colie_mamba.CoLIEMamba(**args.network)
     model = model.to(device)
-    
+
     # Benchmark
     if args.benchmark:
         benchmark(model.model)
-    
+
     # Data I/O
     transform = A.Compose([
         A.Normalize(normalization="min_max"),
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -102,10 +102,10 @@ def predict(args: dict | box.Box) -> str:
             enhanced = outputs
             enhanced = mon.image.to_array(enhanced)
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

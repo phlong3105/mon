@@ -36,24 +36,24 @@ def predict(args: dict | box.Box) -> str:
     cfgs.serial_batches = True          # disable data shuffling; comment this line if results on randomly chosen images are needed.
     cfgs.no_flip        = True          # no flip; comment this line if results on flipped images are needed.
     cfgs.display_id     = -1            # no visdom display; the test code saves the results to a HTML file.
-    
+
     # Start
     mon.print_run_summary(args)
 
     # Device
     device      = mon.create_device(args.device)
     cfgs.device = device
-    
+
     # Seed
     mon.set_random_seed(args.seed)
 
     # Pretrained
-    pretrained = mon.parse_weights_dir(args.root, args.weights)
+    pretrained = mon.resolve_weights_dir(args.root, args.weights)
     if pretrained and pretrained.is_dir():
         mon.log(f"Pretrained: {pretrained}.")
     else:
         mon.log(f"Pretrained: {None}, training from scratch.")
-        
+
     # Model
     # model = create_model(cfgs)          # create a model given opt.model and other options
     # model = nerco.NeRCo(cfgs)           # create a model given opt.model and other options
@@ -62,11 +62,11 @@ def predict(args: dict | box.Box) -> str:
     model = model.to(device)
     if cfgs.eval:
         model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     data_name, dataloader = mon.build_dataloader(args.data, args.root)
     testB_dir   = root_dir / "nerco" / "dataset" / "testB"
@@ -74,7 +74,7 @@ def predict(args: dict | box.Box) -> str:
     testB_size  = len(testB_files)
     transform_A = nerco.get_transform(cfgs)
     transform_B = nerco.get_transform(cfgs)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -101,7 +101,7 @@ def predict(args: dict | box.Box) -> str:
                 "B_paths": testB_files[indexB]
             }
             timers.preprocess.tock()
-            
+
             # Infer
             timers.infer.tick()
             model.set_input(dp)
@@ -117,13 +117,13 @@ def predict(args: dict | box.Box) -> str:
             if (h1, w1) != (h0, w0):
                 enhanced = cv2.resize(enhanced, (w0, h0))
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
-            
+
             '''
             if save_debug:
                 if keep_subdirs:

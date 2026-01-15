@@ -34,34 +34,34 @@ def predict(args: dict | box.Box) -> str:
     cfgs.serial_batches = True          # disable data shuffling; comment this line if results on randomly chosen images are needed.
     cfgs.no_flip        = True          # no flip; comment this line if results on flipped images are needed.
     cfgs.display_id     = -1            # no visdom display; the test code saves the results to a HTML file.
-    
+
     # Start
     mon.print_run_summary(args)
 
     # Device
     device      = mon.create_device(args.device)
     cfgs.device = device
-    
+
     # Seed
     mon.set_random_seed(args.seed)
 
     # Pretrained
-    pretrained = mon.parse_weights_dir(args.root, args.weights)
+    pretrained = mon.resolve_weights_dir(args.root, args.weights)
     if pretrained and pretrained.is_dir():
         mon.log(f"Pretrained: {pretrained}.")
     else:
         mon.log(f"Pretrained: {None}, training from scratch.")
-    
+
     # Model
     model = uec.UEC(cfgs, pretrained)
     model = model.to(device)
     if cfgs.eval:
         model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     # imgsz     = args.imgsz if args.resize else (0, 0)
     imgsz     = 256 if args.resize else (0, 0)
@@ -71,12 +71,12 @@ def predict(args: dict | box.Box) -> str:
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     ref_image = root_dir / "uec" / "dataset" / "testB" / "a0001-jmac_DSC1459.jpg"
     ref_image = mon.image.read(ref_image)
     ref_image = transform(image=ref_image)["image"]
     ref_image = ref_image.unsqueeze(0).to(device)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -98,13 +98,13 @@ def predict(args: dict | box.Box) -> str:
                 "image_path": path
             }
             timers.preprocess.tock()
-            
+
             # Infer
             timers.infer.tick()
             model.set_input(dp)
             model.test()
             timers.infer.tock()
-            
+
             # Postprocess
             timers.postprocess.tick()
             outputs  = model.get_current_visuals()
@@ -125,15 +125,15 @@ def predict(args: dict | box.Box) -> str:
                 else:
                     debug_image = cv2.hconcat([image, enhanced])
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
             # Save Debug
             if args.save_debug:
-                debug_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                debug_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 debug_path = debug_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 debug_path.parent.mkdir(parents=True, exist_ok=True)
                 mon.image.write(debug_image, debug_path)

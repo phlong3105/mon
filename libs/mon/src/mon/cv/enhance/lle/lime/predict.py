@@ -46,14 +46,14 @@ def predict(args: dict | box.Box) -> str:
         be      = args["network"]["be"],
         eps     = args["network"]["eps"],
     )
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
         A.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -86,7 +86,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

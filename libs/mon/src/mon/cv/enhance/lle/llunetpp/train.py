@@ -73,14 +73,14 @@ def val_epoch(val_dataloader, model, criterion, device):
 def train(args: dict | box.Box) -> str:
     # Start
     mon.print_run_summary(args)
-    
+
     # Device
     device = mon.create_device(args.device)
     cudnn.benchmark = True
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.tuning
     if args.resume and args.resume.is_weights_file(exist=True):
@@ -96,14 +96,14 @@ def train(args: dict | box.Box) -> str:
     model = llunetpp.LLUnetPP(weights=pretrained)
     model = model.to(device)
     model.train()
-    
+
     # Optimizer
     optimizer = mon.optims.Adam(model.parameters(), **args.optimizer)
     scheduler = mon.optims.ExponentialLR(optimizer, 0.99)
-    
+
     # Loss
     criterion = llunetpp.Loss(*args.loss.loss_weights).to(device)
-    
+
     # Log
     writer = SummaryWriter(log_dir=str(args.save_dir))
     log    = OrderedDict([
@@ -116,10 +116,10 @@ def train(args: dict | box.Box) -> str:
     best_loss = 1000
     best_psnr = 0
     best_ssim = 0
-    
+
     # Data I/O
-    args["train_dataloader"]["dataset"]["root"] = mon.data.parse_data_dir(args.root)
-    args["val_dataloader"]["dataset"]["root"]   = mon.data.parse_data_dir(args.root)
+    args["train_dataloader"]["dataset"]["root"] = mon.data.resolve_data_dir(args.root)
+    args["val_dataloader"]["dataset"]["root"]   = mon.data.resolve_data_dir(args.root)
     train_dataloader = mon.data.DataLoader(**args.train_dataloader)
     val_dataloader   = mon.data.DataLoader(**args.val_dataloader)
 
@@ -135,7 +135,7 @@ def train(args: dict | box.Box) -> str:
             "Epoch [%d/%d] train/loss %.4f - val/loss %.4f - val/psnr %.4f - val/ssim %.4f\n"
             % (epoch, args.epochs, train_loss, val_loss, val_psnr, val_ssim)
         )
-        
+
         # Log
         log["epoch"].append(epoch)
         log["train/loss"].append(train_loss)
@@ -157,7 +157,7 @@ def train(args: dict | box.Box) -> str:
             },
             epoch,
         )
-        
+
         # Save
         if val_loss < best_loss:
             torch.save(model.state_dict(), str(args.save_dir / "best.pt"))
@@ -170,10 +170,10 @@ def train(args: dict | box.Box) -> str:
             best_ssim = val_ssim
         torch.save(model.state_dict(), str(args.save_dir / "last.pt"))
         torch.cuda.empty_cache()
-   
+
     writer.close()
-    
-    
+
+
 # --- Main ---
 def main() -> str:
     args = mon.parse_train_args(root=root_dir, model_root=root_dir)

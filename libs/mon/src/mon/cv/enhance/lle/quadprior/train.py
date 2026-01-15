@@ -53,7 +53,7 @@ def train(args: dict | box.Box) -> str:
             new_state_dict[s] = state_dict[s]
     model.load_state_dict(new_state_dict)
     model.add_new_layers()
-    
+
     if pretrained_ckpt != "":
         state_dict = load_state_dict(str(pretrained_ckpt), location="cpu")
     new_state_dict = {}
@@ -65,7 +65,7 @@ def train(args: dict | box.Box) -> str:
     model.learning_rate    = args.optimizer.lr
     model.sd_locked        = args.network.sd_locked
     model.only_mid_control = args.network.only_mid_control
-    
+
     # Callback
     logger = ImageLogger(save_dir=str(args.save_dir), batch_frequency=args.logger_freq)
     checkpoint_callback = ModelCheckpoint(
@@ -79,7 +79,7 @@ def train(args: dict | box.Box) -> str:
         every_n_train_steps     = 10000,  # How frequent to save checkpoint
         save_on_train_epoch_end = True,
     )
-    
+
     # Trainer
     strategy = DeepSpeedStrategy(
         stage             = 2,
@@ -97,9 +97,9 @@ def train(args: dict | box.Box) -> str:
         accelerator      = "gpu",
         callbacks        = [logger, checkpoint_callback],
     )
-    
+
     # Data I/O
-    data       = mon.data.parse_data_dir(args.root, data_dir=args.train_dataloader.dataset.root)
+    data       = mon.data.resolve_data_dir(args.root, data_dir=args.train_dataloader.dataset.root)
     dataset    = create_webdataset(data_dir=str(data))
     dataloader = wds.WebLoader(
         dataset         = dataset,
@@ -108,7 +108,7 @@ def train(args: dict | box.Box) -> str:
         pin_memory      = False,
         prefetch_factor = 2,
     )
-    
+
     # Train
     trainer.fit(model, dataloader)
 

@@ -41,7 +41,7 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.resume
     if args.weights and args.weights.is_weights_file(exist=True):
@@ -58,7 +58,7 @@ def predict(args: dict | box.Box) -> str:
         cfg.model = pretrained
 
     model = YOLO(cfg.model)
-    
+
     # Data I/O
     data_name, dataset = mon.build_dataset(args.data, args.root)
     # References: https://docs.ultralytics.com/quickstart/#modifying-settings
@@ -118,7 +118,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_result:
-                out_dir   = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir   = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
                 json_path = out_dir.parent / f"{data_name}.json"
 
                 # Append image

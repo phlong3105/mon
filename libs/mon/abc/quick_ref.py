@@ -311,7 +311,8 @@ pass
 - get    : Retrieve a single value.
 - query  : Retrieve multiple values.
 - extract: Extract specific parts from the data.
-- parse  : Extract and convert specific parts from the data into a structured format.
+- parse  : Extract and convert specific parts from a string or a text into a structured format.
+- resolve: Convert an identifier or reference into the actual object or value it points to.
 
 # Selection (Find specific values in a collection)
 - filter : Select elements that meet specific criteria (return all by default).

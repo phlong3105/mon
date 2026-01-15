@@ -47,7 +47,7 @@ class CustomEnumMeta(enum.EnumMeta):
     Enable flexible enum construction so subclasses accept names or indices
     when constructing members.
     """
-    
+
     # --- Callable & Context Manager ---
     def __call__(cls, value: Any, *args, **kwargs):
         """Construct or convert a value into an enum member.
@@ -83,7 +83,7 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
         _values_to_enums (dict): Mapping from enum values to members.
         _strs_to_enums (dict): Mapping from lowercase member names to members.
     """
-    
+
     # --- Lifecycle & Initialization ---
     @classmethod
     def __init_subclass__(cls):
@@ -100,12 +100,12 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
                 cls._values_to_enums[m.value] = m
             except TypeError:
                 pass
-    
+
     # --- Representation ---
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
         return f"{self.__class__.__name__}.{self._name_}"
-    
+
     # --- Container / Sequence Methods ---
     @classmethod
     def __contains__(cls, value: Any) -> bool:
@@ -115,7 +115,7 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
             value: Value to check.
         """
         return isinstance(value, cls) or value in cls._values
-    
+
     # --- Properties ---
     @classmethod
     def random(cls):
@@ -146,12 +146,12 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     def strs_to_members(cls) -> dict:
         """Return a mapping from lowercase member names to enum members."""
         return cls._strs_to_enums
-    
+
     @classmethod
     def values_to_members(cls) -> dict:
         """Return a mapping from enum values to enum members."""
         return cls._values_to_enums
-    
+
     # --- Initialize ---
     @classmethod
     def from_value(cls, value: Any):
@@ -179,18 +179,21 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
         # 3. String/Name Lookup (case-insensitive)
         if isinstance(value, str):
             val_lower = value.lower().split(".")[-1]
-            if val_lower in cls._strs_to_enums:
+            if val_lower in ["default", "DEFAULT"]:
+                # If "default", return the first enum member
+                return cls._values[0]
+            elif val_lower in cls._strs_to_enums:
                 return cls._strs_to_enums[val_lower]
 
         # 4. Integer/Index Lookup
         if isinstance(value, int) and value in cls._ints_to_enums:
             return cls._ints_to_enums[value]
-        
+
         # 5. Fallback linear scan for unhashable or non-standard values
         for member in cls._names:
             if member.value == value:
                 return member
-        
+
         raise ValueError(f"Expected '{value}' in {cls.values()}, but got '{value}'.")
 
 
@@ -211,7 +214,7 @@ class RGB(Enum):
 
     Provide (R, G, B) tuples for named colors.
     """
-    
+
     ALICE_BLUE              = (240, 248, 255)
     ANTIQUE_WHITE           = (250, 235, 215)
     AQUA                    = (  0, 255, 255)
@@ -358,7 +361,7 @@ class RGB12(Enum):
 
     Provide a compact set of common RGB tuples for simple palettes.
     """
-    
+
     BLACK   = (  0,   0,   0)
     WHITE   = (255, 255, 255)
     RED     = (255,   0,   0)
@@ -382,7 +385,7 @@ class AppleRGB(Enum):
 
     Provide named Apple-specific RGB tuples commonly used in UI palettes.
     """
-    
+
     BLACK       = (  0,   0,   0)
     BLUE        = (  0, 122, 255)
     BROWN       = (162, 132,  94)
@@ -429,7 +432,7 @@ class MemoryUnit(Enum):
 
     Provide names for common memory units and helpers to convert to bytes.
     """
-    
+
     B  = "B"
     KB = "KB"
     MB = "MB"
@@ -457,7 +460,7 @@ class ConfigExtension(Enum):
 
     Provide common config filename suffixes including the leading dot.
     """
-    
+
     CFG    = ".cfg"
     CONFIG = ".config"
     JSON   = ".json"
@@ -473,7 +476,7 @@ class ImageExtension(Enum):
 
     Provide common image file suffixes including the leading dot.
     """
-    
+
     ARW  = ".arw"
     BMP  = ".bmp"
     DNG  = ".dng"
@@ -491,7 +494,7 @@ class VideoExtension(Enum):
 
     Provide common video file suffixes including the leading dot.
     """
-    
+
     AVI  = ".avi"
     M4V  = ".m4v"
     MKV  = ".mkv"
@@ -507,7 +510,7 @@ class WeightExtension(Enum):
 
     Provide typical suffixes used for model checkpoints and weights.
     """
-    
+
     CKPT    = ".ckpt"
     ONNX    = ".onnx"
     PT      = ".pt"
@@ -523,7 +526,7 @@ class RunMode(Enum):
 
     Indicate whether the code is running training, prediction, or metrics.
     """
-    
+
     TRAIN   = "train"
     PREDICT = "predict"
     METRIC  = "metric"
@@ -535,7 +538,7 @@ class Split(Enum):
 
     Represent dataset subsets such as train, val, test, predict.
     """
-    
+
     TRAIN   = "train"
     VAL     = "val"
     TEST    = "test"
@@ -547,14 +550,14 @@ class ActiveLearningPhase(Enum):
 
     Enumerate the discrete experiment workflow stages.
     """
-    
+
     TRAINING         = "training"
     METROLOGY        = "metrology"
     QUERY            = "query"
     LABELING         = "labeling"
     DATA_INTEGRATION = "data_integration"
-    
-    
+
+
 class Task(Enum):
     """Set of supported task identifiers.
 
@@ -568,7 +571,7 @@ class Task(Enum):
     # --- Generative AI ---
     # Image Generation
     IMG2IMG     = "img2img"             # Image-to-Image Translation
-    
+
     # --- Computer Vision ---
     # Enhancement
     AWB         = "awb"                 # Auto White Balance
@@ -656,7 +659,7 @@ class TRTPrecision(Enum):
 
     Specify desired precision for TensorRT optimizations.
     """
-    
+
     FP32    = "fp32"     # 32-bit floating point
     FP16    = "fp16"     # 16-bit floating point
     FP16N32 = "fp16n32"  # 16-bit floating point with 32-bit normalization
@@ -743,7 +746,7 @@ class InfraredSource(Enum):
 
     Provide identifiers for infrared data sources.
     """
-    
+
     INFRARED = "infrared"
 
 
@@ -752,7 +755,7 @@ class TrackState(Enum):
 
     Define integer codes representing stages such as NEW, TRACKED, and LOST.
     """
-    
+
     NEW      = 0
     TRACKED  = 1
     LOST     = 2

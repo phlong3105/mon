@@ -54,7 +54,7 @@ def train(args: dict | box.Box) -> str:
     torch.cuda.manual_seed_all(args.seed)
 
     # Data I/O
-    data_root     = mon.parse_data_dir(args.root, data_dir=args.datamodule.root)
+    data_root     = mon.resolve_data_dir(args.root, data_dir=args.datamodule.root)
     train_dir     = data_root / "train"
     train_dataset = Dataload(data_dir=train_dir, patch_size=args.datamodule.patch_size_train)
     train_loader  = torch.utils.data.DataLoader(
@@ -109,7 +109,7 @@ def train(args: dict | box.Box) -> str:
         model_.load_state_dict(state_dict)
     functional.set_step_mode(model_, step_mode="m")
     functional.set_backend(model_,   backend="cupy")
-    
+
     # Loss
     # criterion = nn.MSELoss().to(device)
     criterion = utils.SSIM().to(device)
@@ -122,7 +122,7 @@ def train(args: dict | box.Box) -> str:
     scheduler        = mon.GradualWarmupScheduler(optimizer, multiplier=1, total_epoch=args.optimizer.warmup_epochs, after_scheduler=scheduler_cosine)
     if optim_state_dict is not None:
         optimizer.load_state_dict(optim_state_dict)
-        
+
     # Train
     writer          = SummaryWriter(args.save_dir)
     scaler          = torch.cuda.amp.GradScaler()
@@ -137,7 +137,7 @@ def train(args: dict | box.Box) -> str:
         scaled_loss      = 0
         train_psnrs      = []
         model_.train()
-        
+
         # Train
         with mon.create_progress_bar() as pbar:
             for i, data in pbar.track(
@@ -174,11 +174,11 @@ def train(args: dict | box.Box) -> str:
                     train_psnrs.append(utils.torchPSNR(res, tar))
                 train_psnr = torch.stack(train_psnrs).mean().item()
                 train_ssim = train_ssim.item()
-                
+
                 writer.add_scalar("loss/iter_loss",  loss.item(), iter)
                 writer.add_scalar("loss/epoch_loss", epoch_loss, epoch)
                 writer.add_scalar("lr/epoch_loss",   scheduler.get_lr()[0], epoch)
-                
+
             # Val
             if epoch % 1 == 0:
                 model_.eval()
@@ -186,11 +186,11 @@ def train(args: dict | box.Box) -> str:
                 for ii, data_val in enumerate(val_loader):
                     image = data_val[0].to(device)
                     ref   = data_val[1].to(device)
-                    
+
                     with torch.no_grad():
                         enhanced = model_(image)
                     functional.reset_net(model_)
-                    
+
                     for res, tar in zip(enhanced, ref):
                         val_psnrs.append(utils.torchPSNR(res, tar))
 
@@ -208,7 +208,7 @@ def train(args: dict | box.Box) -> str:
                     torch.save(model_.state_dict(), str(args.save_dir / f"{args.fullname}_best_ssim.pt"))
                 print("[Epoch %d Validating PSNR: %2.4f --- best_psnr_epoch %d Test_PSNR %2.4f]" % (epoch, val_psnr, best_psnr_epoch, best_psnr))
                 print("[Epoch %d Validating SSIM: %2.4f --- best_ssim_epoch %d Test_SSIM %2.4f]" % (epoch, val_ssim, best_ssim_epoch, best_ssim))
-            
+
             # Save
             torch.save(
                 {
@@ -242,7 +242,7 @@ def train(args: dict | box.Box) -> str:
             )
             print("-" * 150)
     writer.close()
-        
+
 
 # --- Main ---
 def main() -> str:

@@ -68,7 +68,7 @@ def get_beta_schedule(beta_schedule, *, beta_start, beta_end, num_diffusion_time
         )
     elif beta_schedule == "const":
         betas = beta_end * np.ones(num_diffusion_timesteps, dtype=np.float64)
-    elif beta_schedule == "jsd":  
+    elif beta_schedule == "jsd":
         betas = 1.0 / np.linspace(
             num_diffusion_timesteps, 1, num_diffusion_timesteps, dtype=np.float64
         )
@@ -173,7 +173,7 @@ class Diffusion(object):
 
         args.sigma_y = 2 * args.sigma_y  # to account for scaling to [-1,1]
         sigma_y      =     args.sigma_y
-        
+
         # print(f'Start from {args.subset_start}')
 
         pbar = tqdm.tqdm(data_loader)
@@ -236,7 +236,7 @@ class Diffusion(object):
                 n        = x.size(0)
                 x0_preds = []
                 xs       = [x]
-                
+
                 times = get_schedule_jump(
                     config.time_travel.T_sampling,
                     config.time_travel.travel_length,
@@ -308,7 +308,7 @@ class Diffusion(object):
                         xt_next = at_next.sqrt() * x0_t_hat + gamma_t * (c1 * torch.randn_like(x0_t) + c2 * et)
 
                         x0_preds.append(x0_t.to('cpu'))
-                        xs.append(xt_next.to('cpu'))    
+                        xs.append(xt_next.to('cpu'))
                     else:  # time-travel back
                         next_t  = (torch.ones(n) * j).to(x.device)
                         at_next = compute_alpha(self.betas, next_t.long())
@@ -331,13 +331,13 @@ class Diffusion(object):
 
             # tvu.save_image(x[0], os.path.join(self.args.image_folder, f"{name}"))
             if save_image:
-                output_dir  = mon.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, path, keep_subdirs, save_nearby)
+                output_dir  = mon.resolve_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, path, keep_subdirs, save_nearby)
                 output_path = output_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 tvu.save_image(x, str(output_path))
 
 
-# Code form RePaint   
+# Code form RePaint
 def get_schedule_jump(T_sampling, travel_length, travel_repeat):
     jumps = {}
     for j in range(0, T_sampling - travel_length, travel_length):

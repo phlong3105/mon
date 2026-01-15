@@ -29,24 +29,24 @@ root_dir     = current_file.parents[0]
 def predict(args: dict | box.Box) -> str:
     num_channels = args.network.num_channels
     iters        = args.network.iters
-    
+
     # Start
     mon.print_run_summary(args)
 
     # Device
     device = mon.create_device(args.device)
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Model
     model = zerorestore.ZeroRestoreLLE(num_channels=num_channels, iters=iters)
     model = model.to(device)
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model.model)
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -55,7 +55,7 @@ def predict(args: dict | box.Box) -> str:
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -87,10 +87,10 @@ def predict(args: dict | box.Box) -> str:
             if (h1, w1) != (h0, w0):
                 enhanced = cv2.resize(enhanced, (w0, h0))
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

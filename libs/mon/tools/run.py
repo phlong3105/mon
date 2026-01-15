@@ -26,13 +26,13 @@ current_dir  = current_file.parents[0]
 def run_train(args: dict | box.Box):
     # Parse arguments
     args.root    = Path(args.root)
-    model_root   = mon.parse_model_dir(args.arch, args.model)
-    args.config  = mon.parse_config_file(args.config, args.root, model_root=model_root)
+    model_root   = mon.resolve_model_dir(args.arch, args.model)
+    args.config  = mon.resolve_config_file(args.config, args.root, model_root=model_root)
     args.weights = mon.to_str(args.weights, ",")
-    
+
     if args.fullname in [None, "None", ""]:
         args.fullname = Path(args.config).stem
-    
+
     # Prepare kwargs and flags
     kwargs, flags = {}, []
     kwargs |= {"--root"           : str(args.root)}
@@ -74,7 +74,7 @@ def run_train(args: dict | box.Box):
         ]
         os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(device_)
         env = {**os.environ, "CUDA_VISIBLE_DEVICES": ",".join(device_), **env}
-    
+
     # Parse arguments
     args_call: list[str] = []
     for k, v in kwargs.items():
@@ -85,7 +85,7 @@ def run_train(args: dict | box.Box):
         else:
             args_call_ = [f"{k}={v}"]
         args_call += args_call_
-    
+
     # Run training
     if script_file.is_py_file():
         print("\n")
@@ -105,15 +105,15 @@ def run_train(args: dict | box.Box):
 def run_predict(args: dict | box.Box):
     # Parse arguments
     args.root    = Path(args.root)
-    model_root   = mon.parse_model_dir(args.arch, args.model)
+    model_root   = mon.resolve_model_dir(args.arch, args.model)
     args.data    = mon.to_list(args.data)
-    args.config  = mon.parse_config_file(args.config, args.root, model_root=model_root)
+    args.config  = mon.resolve_config_file(args.config, args.root, model_root=model_root)
     args.config  = args.config or ""
     args.weights = mon.to_str(args.weights, ",")
-    
+
     if args.fullname in [None, "None", ""]:
         args.fullname = args.model
-    
+
     # Prepare kwargs and flags
     for d in args.data:
         kwargs, flags = {}, []
@@ -144,7 +144,7 @@ def run_predict(args: dict | box.Box):
         # Parse script file
         script_file = mon.MODELS[args.arch][args.model].model_dir / "predict.py"
         python_call = ["python"]
-      
+
         # Parse arguments
         args_call: list[str] = []
         for k, v in kwargs.items():
@@ -155,7 +155,7 @@ def run_predict(args: dict | box.Box):
             else:
                 args_call_ = [f"{k}={v}"]
             args_call += args_call_
-        
+
         # Run prediction
         if script_file.is_py_file():
             print("\n")
@@ -176,7 +176,7 @@ def main():
     cli   = mon.parse_default_args()
     cli.p = True  # With prompt
     args  = mon.parse_cli_args(cli=cli, name="main")
- 
+
     # Run
     if args.mode in ["train"]:
         run_train(args=args)

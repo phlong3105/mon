@@ -45,10 +45,10 @@ def predict(args: dict | box.Box) -> str:
     device          = mon.create_device(args.device)
     cudnn.benchmark = True
     cudnn.enabled   = True
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-   
+
     # Pretrained
     pretrained = args.resume
     if args.weights and args.weights.is_weights_file(exist=True):
@@ -62,11 +62,11 @@ def predict(args: dict | box.Box) -> str:
     model = ruas.RUAS()
     model = model.to(device)
     model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-     
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -93,7 +93,7 @@ def predict(args: dict | box.Box) -> str:
             image  = datapoint["image"]
             image  = image.to(device)
             timers.preprocess.tock()
-            
+
             # Infer
             timers.infer.tick()
             outputs = model(image)
@@ -114,7 +114,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
                 """
@@ -129,7 +129,7 @@ def predict(args: dict | box.Box) -> str:
                 """
 
             if args.save_debug:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}_dark{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(debug, out_path)
                 # out_path.parent.mkdir(parents=True, exist_ok=True)

@@ -66,10 +66,10 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Data I/O
     data_name, data_loader = mon.parse_data_loader(args.data, args.root, True, verbose=False)
-    
+
     # Pretrained
     pretrained = args.resume
     if args.weights and args.weights.is_weights_file(exist=True):
@@ -162,7 +162,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_result:
-                out_dir    = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir    = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_LABEL_DIR, path, args.keep_subdirs, args.save_nearby)
                 label_path = out_dir / f"{path.stem}.txt"
                 label_path.parent.mkdir(parents=True, exist_ok=True)
                 with open(str(label_path), "w") as f:

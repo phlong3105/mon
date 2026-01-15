@@ -49,17 +49,17 @@ def split_image(
     overlap_size: int = 8
 ) -> tuple[list, list]:
     b, c, h, w = img_tensor.shape
-    
+
     h_starts = [x for x in range(0, h, crop_size - overlap_size)]
     while h_starts[-1] + crop_size >= h:
         h_starts.pop()
     h_starts.append(h - crop_size)
-    
+
     w_starts = [x for x in range(0, w, crop_size - overlap_size)]
     while w_starts[-1] + crop_size >= w:
         w_starts.pop()
     w_starts.append(w - crop_size)
-   
+
     starts     = []
     split_data = []
     for hs in h_starts:
@@ -121,7 +121,7 @@ def predict(args: dict | box.Box) -> str:
     # Benchmark
     if args.benchmark:
         benchmark(model)
-        
+
     # Predicting
     crop_size    = args.imgsz[0]  # 80
     overlap_size = 8              # 8
@@ -156,7 +156,7 @@ def predict(args: dict | box.Box) -> str:
             enhanced = merge_image(split_data, starts, crop_size=crop_size, shape=(b, c, h1, w1))
             enhanced = torch.clamp(enhanced, 0, 1)
             timers.infer.tock()
-            
+
             # Postprocess
             timers.postprocess.tick()
             enhanced = enhanced[:, :, pad_size:-pad_size, pad_size:-pad_size]
@@ -166,7 +166,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

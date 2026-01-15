@@ -39,27 +39,27 @@ def predict(args: argparse.Namespace):
     save_debug   = args.save_debug
     keep_subdirs = args.keep_subdirs
     opt_path     = str(root_dir / "model_config" / args.opt_path)
-    
+
     # Override options with args
     opt           = option.parse(opt_path, is_train=False)
     opt           = option.dict_to_nonedict(opt)
     opt["device"] = device
-    
+
     # Load model
     opt["path"]["pretrain_model_G"] = str(weights)
     model = create_model(opt)
-    
+
     # Measure efficiency score
     if benchmark:
         flops, params, avg_time = model.compute_model_stats()
         mon.log(f"FLOPs    : {flops:.4f}")
         mon.log(f"Params    : {params:.4f}")
         mon.log(f"Time   = {avg_time:.17f}")
-    
+
     # Data I/O
     mon.log(f"[bold red]{data}")
     data_name, data_loader = mon.parse_data_loader(data, root, True, verbose=False)
-    
+
     # Predicting
     timer = mon.Timer()
     with torch.no_grad():
@@ -83,7 +83,7 @@ def predict(args: argparse.Namespace):
                 image      = torch.from_numpy(np.ascontiguousarray(np.transpose(image,    (2, 0, 1)))).float()
                 image      = image.unsqueeze(0).to(device)
                 image_nf   = image_nf.unsqueeze(0).to(device)
-                
+
                 # Infer
                 timer.tick()
                 model.feed_data(
@@ -96,23 +96,23 @@ def predict(args: argparse.Namespace):
                 )
                 model.test()
                 timer.tock()
-                
+
                 # Post-processing
                 visuals        = model.get_current_visuals(need_GT=False)
                 enhanced_image = util.tensor2img(visuals["rlt"])  # uint8
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
-                
+
                 # Save
                 if save_image:
-                    output_dir  = mon.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
+                    output_dir  = mon.resolve_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
                     output_path = output_dir / f"{image_path.stem}{mon.SAVE_IMAGE_EXT}"
                     output_path.parent.mkdir(parents=True, exist_ok=True)
                     cv2.imwrite(str(output_path), enhanced_image)
                     # torchvision.utils.save_image(enhanced_image, str(output_path))
-        
+
         avg_time = float(timer.avg)
         mon.log(f"Average time: {avg_time}")
-    
+
 
 # --- Main ---
 def main() -> str:

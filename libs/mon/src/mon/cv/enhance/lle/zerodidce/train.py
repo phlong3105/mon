@@ -25,13 +25,13 @@ root_dir     = current_file.parents[0]
 def train(args: dict | box.Box) -> str:
     # Start
     mon.print_run_summary(args)
-    
+
     # Device
     device = mon.create_device(args.device)
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.tuning
     if args.resume and args.resume.is_weights_file(exist=True):
@@ -47,16 +47,16 @@ def train(args: dict | box.Box) -> str:
     model = zerodidce.ZeroDiDCE(weights=pretrained)
     model = model.to(device)
     model.train()
-    
+
     # Optimizer
     optimizer = mon.optims.Adam(model.parameters(), **args.optimizer)
-    
+
     # Loss
     L_piece = zerodidce.PiecewiseNonReferenceLoss().to(device)
-    
+
     # Data I/O
-    args["train_dataloader"]["dataset"]["root"] = mon.data.parse_data_dir(args.root)
-    args["val_dataloader"]["dataset"]["root"]   = mon.data.parse_data_dir(args.root)
+    args["train_dataloader"]["dataset"]["root"] = mon.data.resolve_data_dir(args.root)
+    args["val_dataloader"]["dataset"]["root"]   = mon.data.resolve_data_dir(args.root)
     train_dataloader = mon.data.DataLoader(**args.train_dataloader)
     val_dataloader   = mon.data.DataLoader(**args.val_dataloader)
 
@@ -79,14 +79,14 @@ def train(args: dict | box.Box) -> str:
                 outputs  = model(image)
                 enhanced = outputs[-1]
                 loss     = L_piece(enhanced, image)
-                
+
                 optimizer.zero_grad()
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm)
                 optimizer.step()
                 losses.append(loss.item())
             mean_loss = sum(losses) / len(losses)
-            
+
             # Validation
             model.eval()
             for j, datapoint in enumerate(val_dataloader):
@@ -101,11 +101,11 @@ def train(args: dict | box.Box) -> str:
                     psnr     = (1 / mse).log10().mean() * 10
                 val_psnrs.append(psnr.item())
             mean_psnr = sum(val_psnrs) / len(val_psnrs)
-            
+
             # Log
             if args.verbose:  # and ((i + 1) % display_iter) == 0:
                 mon.log(f"Epoch: {(i + 1):03} | Train Loss: {mean_loss:08.6f} | Val PSNR: {mean_psnr:08.6f}")
-            
+
             # Save
             torch.save(model.state_dict(), args.save_dir / "last.pt")
             if mean_loss < best_loss:

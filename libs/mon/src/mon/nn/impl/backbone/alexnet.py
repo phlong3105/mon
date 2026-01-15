@@ -20,7 +20,7 @@ from torchvision.models.alexnet import AlexNet
 
 from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
 from mon.core.dtypes import Weights, WeightsEnum, WeightsType
-from ...base import RegistrableMixin
+from mon.nn.base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
 current_dir  = current_file.parents[0]

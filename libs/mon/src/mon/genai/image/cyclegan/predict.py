@@ -38,24 +38,24 @@ def predict(args: dict | box.Box) -> str:
     opts.init_type      = args.network.init_type
     opts.init_gain      = args.network.init_gain
     opts.no_dropout     = args.network.no_dropout
-    
+
     # Start
     mon.print_run_summary(args)
-    
+
     # Device
     device      = mon.create_device(args.device)
     opts.device = device
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
-    pretrained = mon.parse_weights_dir(args.root, args.weights)
+    pretrained = mon.resolve_weights_dir(args.root, args.weights)
     if pretrained and pretrained.is_dir():
         mon.log(f"Pretrained: {pretrained}.")
     else:
         mon.log(f"Pretrained: {None}, training from scratch.")
-        
+
     # Model
     direction  = args.network.direction
     model_args = {
@@ -67,11 +67,11 @@ def predict(args: dict | box.Box) -> str:
     model = model.to(device)
     if opts.eval:
         model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     imgsz     = args.imgsz
     transform = A.Compose([
@@ -82,7 +82,7 @@ def predict(args: dict | box.Box) -> str:
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform=transform)
     # transform_A = cyclegan.get_transform(opts)
     # transform_B = cyclegan.get_transform(opts)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -110,7 +110,7 @@ def predict(args: dict | box.Box) -> str:
                 "B_paths": path_B
             }
             timers.preprocess.tock()
-            
+
             # Infer
             timers.infer.tick()
             model.set_input(input_)
@@ -127,15 +127,15 @@ def predict(args: dict | box.Box) -> str:
                 fake_A = cv2.resize(fake_A, (w0, h0))
                 fake_B = cv2.resize(fake_B, (w0, h0))
             timers.postprocess.tock()
-            
+
             # Save
             if args.save_image:
                 # A
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path_A, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path_A, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / "fake_A" / f"{path_A.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(fake_A, out_path)
                 # B
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path_B, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path_B, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / "fake_B" / f"{path_A.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(fake_B, out_path)
     timers.total.tock()

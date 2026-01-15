@@ -31,7 +31,7 @@ def predict(args: dict | box.Box) -> str:
     cfg_path = root_dir / "snr" / "options" / "test" / args.cfg
     cfgs     = option.parse(str(cfg_path), is_train=False)
     cfgs     = option.dict_to_nonedict(cfgs)
-    
+
     # Start
     mon.print_run_summary(args)
 
@@ -54,11 +54,11 @@ def predict(args: dict | box.Box) -> str:
 
     # Model
     model = create_model(cfgs)
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
@@ -114,7 +114,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

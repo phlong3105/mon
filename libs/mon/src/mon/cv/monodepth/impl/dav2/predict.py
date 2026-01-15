@@ -125,12 +125,12 @@ def run(args: box.Box):
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.DIRS.IMAGE, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.DIRS.IMAGE, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"
                 mon.image.write(depth, out_path)
 
             if args.save_debug:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.DIRS.DEBUG, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.DIRS.DEBUG, path, args.keep_subdirs, args.save_nearby)
                 if args.save_nearby:
                     out_dir = out_dir.parent / f"{out_dir.stem}_c"
                 out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"

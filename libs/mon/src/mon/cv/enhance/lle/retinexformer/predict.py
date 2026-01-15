@@ -31,10 +31,10 @@ root_dir     = current_file.parents[0]
 def predict(args: dict | box.Box) -> str:
     cfg_path = root_dir / "retinexformer" / "option" / args.cfg
     cfgs     = parse(str(cfg_path), is_train=False)
-    
+
     # Start
     mon.print_run_summary(args)
-    
+
     # Device
     # gpu_list = ",".join(str(x) for x in args.gpus)
     # os.environ["CUDA_VISIBLE_DEVICES"] = gpu_list
@@ -45,7 +45,7 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.resume
     if args.weights and args.weights.is_weights_file(exist=True):
@@ -67,7 +67,7 @@ def predict(args: dict | box.Box) -> str:
         model.load_state_dict(new_checkpoint)
     model = model.to(device)
     model.eval()
-    
+
     # Benchmark
     if args.benchmark:
         mon.metrics.benchmark(model)
@@ -80,7 +80,7 @@ def predict(args: dict | box.Box) -> str:
         A.ToTensorV2(transpose_mask=True),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     factor = 4
     timers = mon.TimeProfiler()
@@ -113,7 +113,7 @@ def predict(args: dict | box.Box) -> str:
             timers.infer.tick()
             outputs = model(image)
             timers.infer.tock()
-            
+
             # Postprocess
             timers.postprocess.tick()
             # Unpad images to original dimensions
@@ -126,7 +126,7 @@ def predict(args: dict | box.Box) -> str:
 
             # Save
             if args.save_image:
-                out_dir  = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
                 out_path = out_dir / f"{path.stem}{mon.SAVE_IMAGE_EXT}"
                 mon.image.write(enhanced, out_path)
     timers.total.tock()

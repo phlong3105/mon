@@ -46,12 +46,12 @@ def predict(args: argparse.Namespace):
             "batch_size": batch_size,
         }
     )
-    
+
     # Model
     model = AirNet(opt)
     model.load_state_dict(torch.load(str(weights), map_location="cpu", weights_only=True))
     model = model.to(device).eval()
-    
+
     # Benchmark
     if benchmark:
         params, macs, flops = mon.nn.compute_model_stats(
@@ -65,14 +65,14 @@ def predict(args: argparse.Namespace):
         mon.log(f"FLOPs    : {flops:.4f}")
         mon.log(f"Params    : {params:.4f}")
         mon.log(f"Time   = {avg_time:.17f}")
-    
+
     # Data I/O
     mon.log(f"[bold red]{data}")
     data_name, data_loader = mon.parse_data_loader(data, root, True, verbose=False)
-    
+
     save_dir = save_dir / data_name
     save_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Predicting
     timer = mon.Timer()
     with mon.create_progress_bar() as pbar:
@@ -87,14 +87,14 @@ def predict(args: argparse.Namespace):
             timer.tick()
             restored    = model(x_query=image, x_key=image)
             timer.tock()
-            
+
             # Save
             if save_image:
-                output_dir  = mon.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
+                output_dir  = mon.resolve_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
                 output_path = output_dir / f"{image_path.stem}{mon.SAVE_IMAGE_EXT}"
                 output_path.parent.mkdir(parents=True, exist_ok=True)
                 save_image_tensor(restored, output_path)
-   
+
     avg_time = float(timer.avg)
     mon.log(f"Average time: {avg_time}")
 

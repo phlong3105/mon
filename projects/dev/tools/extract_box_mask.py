@@ -22,19 +22,11 @@ data_dir     = current_dir.data_dir()
 
 
 # ==============================================================================
-# region PROCESSING
+# region CONTROL
 # ==============================================================================
 
-def run(args: argparse.Namespace | None = None):
-    """Run the box mask extraction process.
-
-    Args:
-        args: Parsed command line arguments. Defaults to None.
-    """
-    # Parse arguments if not provided
-    if args is None:
-        args = parse_args()
-
+def run(args: argparse.Namespace):
+    """Run the box mask extraction process."""
     # Resolve paths
     image_dirs = (data_dir / args.data).image_dirs(recursive=True)
 
@@ -58,7 +50,7 @@ def run(args: argparse.Namespace | None = None):
 
 
 # ==============================================================================
-# region ENTRY POINT
+# region MAIN
 # ==============================================================================
 
 def parse_args():
@@ -75,7 +67,11 @@ def parse_args():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
     run(parse_args())
+
+
+if __name__ == "__main__":
+    main()
 
 # endregion

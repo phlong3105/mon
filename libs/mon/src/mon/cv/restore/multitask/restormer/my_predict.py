@@ -77,15 +77,15 @@ def predict(args: argparse.Namespace):
     save_image   = args.save_image
     save_debug   = args.save_debug
     keep_subdirs = args.keep_subdirs
-    
+
     device    = device[0] if isinstance(device, list) else device
     os.environ["CUDA_VISIBLE_DEVICES"] = f"{device}"
     device    = torch.device(f"cuda:{device}" if torch.cuda.is_available() else "cpu")
-    
+
     # Override options with args
     opt           = parse(args.config, is_train=False)
     opt["device"] = device
-    
+
     # Load model
     '''
     parameters = {
@@ -110,18 +110,18 @@ def predict(args: argparse.Namespace):
     model = create_model(opt)
     model.to(device)
     model.eval()
-    
+
     # Measure efficiency score
     if benchmark:
         flops, params, avg_time = model.compute_model_stats()
         mon.log(f"FLOPs    : {flops:.4f}")
         mon.log(f"Params    : {params:.4f}")
         mon.log(f"Time   = {avg_time:.17f}")
-    
+
     # Data I/O
     mon.log(f"[bold red]{data}")
     data_name, data_loader = mon.parse_data_loader(data, root, True, verbose=False)
-    
+
     # Predicting
     timer = mon.Timer()
     img_multiple_of = 8
@@ -143,7 +143,7 @@ def predict(args: argparse.Namespace):
                 else:
                     image = load_img(image_path)
                 input = torch.from_numpy(image).float().div(255.0).permute(2, 0, 1).unsqueeze(0).to(device)
-                
+
                 # Pad the input if not_multiple_of 8
                 height, width = input.shape[2], input.shape[3]
                 H     = ((height + img_multiple_of) // img_multiple_of) * img_multiple_of
@@ -151,7 +151,7 @@ def predict(args: argparse.Namespace):
                 pad_h = H - height if height % img_multiple_of != 0 else 0
                 pad_w = W - width  if width  % img_multiple_of != 0 else 0
                 input = F.pad(input, (0, pad_w, 0, pad_h), "reflect")
-                
+
                 if args.tile is None:
                     # Test on the original resolution image
                     timer.tick()
@@ -178,26 +178,26 @@ def predict(args: argparse.Namespace):
                     timer.tick()
                     restored = E.div_(W)
                     timer.tock()
-                
+
                 restored = torch.clamp(restored, 0, 1)
                 # Unpad the output
                 restored = restored[:, :, :height, :width]
                 restored = restored.permute(0, 2, 3, 1).cpu().detach().numpy()
                 restored = img_as_ubyte(restored[0])
-                
+
                 # Save
                 if save_image:
-                    output_dir  = mon.parse_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
+                    output_dir  = mon.resolve_output_dir(save_dir, data_name, mon.SAVE_IMAGE_DIR, image_path, keep_subdirs, save_nearby)
                     output_path = output_dir / f"{image_path.stem}{mon.SAVE_IMAGE_EXT}"
                     output_path.parent.mkdir(parents=True, exist_ok=True)
                     if opt["image_color"] == "RGB":
                         save_img(output_path, restored)
                     else:
                         save_gray_img(output_path, restored)
-        
+
         avg_time = float(timer.avg)
         mon.log(f"Average time: {avg_time}")
-    
+
 
 
 

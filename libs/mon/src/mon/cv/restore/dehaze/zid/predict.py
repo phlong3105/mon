@@ -31,14 +31,14 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Data I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     transform = A.Compose([
         A.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
     ])
     data_name, dataloader = mon.build_dataloader(args.data, args.root, transform)
-    
+
     # Predict
     timers = mon.TimeProfiler()
     timers.total.tick()
@@ -57,14 +57,14 @@ def predict(args: dict | box.Box) -> str:
             timers.preprocess.tock()
 
             # Save
-            out_dir   = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
-            debug_dir = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
+            out_dir   = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+            debug_dir = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_DEBUG_DIR, path, args.keep_subdirs, args.save_nearby)
             out_dir.mkdir(parents=True, exist_ok=True)
             debug_dir.mkdir(parents=True, exist_ok=True)
             (debug_dir /    "t").mkdir(parents=True, exist_ok=True)
             (debug_dir /    "a").mkdir(parents=True, exist_ok=True)
             (debug_dir / "mask").mkdir(parents=True, exist_ok=True)
-            
+
             # Infer
             timers.infer.tick()
             dh = zid.ZID(str(path.stem), image, args.epochs, clip=True, output_path=str(out_dir))

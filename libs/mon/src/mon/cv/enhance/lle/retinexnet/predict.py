@@ -31,11 +31,11 @@ def predict(args: dict | box.Box) -> str:
 
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Model
     model = retinexnet.RetinexNet(args.imgsz, args.benchmark)
     model = model.to(device)
-    
+
     # Data I/O
     data_name, dataloader = mon.build_dataloader(args.data, args.root)
 
@@ -54,7 +54,7 @@ def predict(args: dict | box.Box) -> str:
             path   = mon.Path(meta["path"])
             timers.preprocess.tock()
 
-            out_dir = mon.parse_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
+            out_dir = mon.resolve_output_dir(args.save_dir, data_name, mon.SAVE_IMAGE_DIR, path, args.keep_subdirs, args.save_nearby)
             # out_dir = out_dir / mon.SAVE_IMAGE_DIR
             out_dir.mkdir(parents=True, exist_ok=True)
 

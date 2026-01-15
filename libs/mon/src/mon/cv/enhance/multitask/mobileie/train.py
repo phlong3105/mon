@@ -26,13 +26,13 @@ root_dir     = current_file.parents[0]
 def train(args: dict | box.Box) -> str:
     # Start
     mon.print_run_summary(args)
-    
+
     # Device
     device = mon.create_device(args.device)
-    
+
     # Seed
     mon.set_random_seed(args.seed)
-    
+
     # Pretrained
     pretrained = args.tuning
     if args.resume and args.resume.is_weights_file(exist=True):
@@ -48,20 +48,20 @@ def train(args: dict | box.Box) -> str:
     model = mobileie.MobileIELLE(weights=pretrained, inference=False, **args.network)
     model = model.to(device)
     model.train()
-    
+
     # Optimizer
     optimizer    = mon.optims.Adam(model.parameters(), **args.optimizer)
     lr_scheduler = mon.optims.CosineAnnealingWarmRestarts(optimizer, 50, 2, 1e-7)
-    
+
     # Loss
     lle_loss = mobileie.LLELoss(reduction="mean")
-    
+
     # Data I/O
-    args["train_dataloader"]["dataset"]["root"] = mon.data.parse_data_dir(args.root)
-    args["val_dataloader"]["dataset"]["root"]   = mon.data.parse_data_dir(args.root)
+    args["train_dataloader"]["dataset"]["root"] = mon.data.resolve_data_dir(args.root)
+    args["val_dataloader"]["dataset"]["root"]   = mon.data.resolve_data_dir(args.root)
     train_dataloader = mon.data.DataLoader(**args.train_dataloader)
     val_dataloader   = mon.data.DataLoader(**args.val_dataloader)
-    
+
     # Train: Warming-up
     if args.trainer.warmup:
         warmup_epochs = args.trainer.warmup_epoch
@@ -88,7 +88,7 @@ def train(args: dict | box.Box) -> str:
                 mon.log(f"Epoch: {i + 1} | Loss: {sum(loss_li) / len(loss_li)}")
                 torch.save(model.state_dict(), args.save_dir / "model_pre.pt")
             mon.log(f"Warming-up phase done.")
-    
+
     # Train: Warming-up
     best_psnr  = 0
     save_every = args.trainer.save_every
@@ -107,14 +107,14 @@ def train(args: dict | box.Box) -> str:
                 ref     = datapoint["ref"].to(device)
                 outputs = model(image)
                 loss    = lle_loss(outputs, ref)
-                
+
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
                 loss_li.append(loss.item())
             lr_scheduler.step()
             mean_loss = sum(loss_li) / len(loss_li)
-            
+
             # Validation
             model.eval()
             for j, datapoint in enumerate(val_dataloader):
@@ -126,7 +126,7 @@ def train(args: dict | box.Box) -> str:
                     psnr    = (1 / mse).log10().mean() * 10
                 val_psnr.append(psnr.item())
             mean_psnr = sum(val_psnr) / len(val_psnr)
-            
+
             # Log
             if args.verbose:
                 mon.log(f"Epoch: {(i + 1):03} | Train Loss: {mean_loss:.8f} | Val PSNR: {mean_psnr:.8f}")
@@ -134,13 +134,13 @@ def train(args: dict | box.Box) -> str:
             # Save
             if ((i + 1) % save_every) == 0:
                 torch.save(model.state_dict(), args.save_dir / "last.pt")
-            
+
             if mean_psnr > best_psnr:
                 best_psnr  = mean_psnr
                 model_slim = model.slim().to(device)
                 torch.save(model.state_dict(),      args.save_dir / "best.pt")
                 torch.save(model_slim.state_dict(), args.save_dir / "best_slim.pt")
-            
+
 
 # --- Main ---
 def main() -> str:

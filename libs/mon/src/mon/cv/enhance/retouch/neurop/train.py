@@ -28,14 +28,14 @@ def train(args: dict | box.Box) -> str:
     cfg_path = root_dir / "neurop" / "option" / "train" / args.cfg
     cfgs     = parse(str(cfg_path))
     cfgs     = dict_to_nonedict(cfgs)
-    cfgs["network_G"]["init_model"] = mon.parse_weights_file(mon.ROOT_DIR, cfgs.network_G.init_model)
-    
+    cfgs["network_G"]["init_model"] = mon.resolve_weights_file(mon.ROOT_DIR, cfgs.network_G.init_model)
+
     # Start
     mon.print_run_summary(args)
-    
+
     # Device
     device = mon.create_device(args.device)
-    
+
     # Seed
     seed = cfgs["train"]["manual_seed"]
     os.environ["PYTHONHASHSEED"] = str(seed)
@@ -43,17 +43,17 @@ def train(args: dict | box.Box) -> str:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    
+
     # Data I/O
     dataset_opt  = cfgs["datasets"]
     train_loader = build_train_loader(dataset_opt)
-    
+
     # Model
     model = build_model(cfgs)
-    
+
     # Data I/O
-    args["train_dataloader"]["dataset"]["root"] = mon.data.parse_data_dir(args.root)
-    args["val_dataloader"]["dataset"]["root"]   = mon.data.parse_data_dir(args.root)
+    args["train_dataloader"]["dataset"]["root"] = mon.data.resolve_data_dir(args.root)
+    args["val_dataloader"]["dataset"]["root"]   = mon.data.resolve_data_dir(args.root)
     train_dataloader = mon.data.DataLoader(**args.train_dataloader)
     val_dataloader   = mon.data.DataLoader(**args.val_dataloader)
 
@@ -74,7 +74,7 @@ def train(args: dict | box.Box) -> str:
                     break
                 model.feed_data(train_data)
                 model.optimize_parameters()
-            
+
             # Log
             logs    = model.get_current_log()
             message = "[epoch:{:3d}, iter:{:8,d}, ".format(epoch, current_step)
@@ -82,7 +82,7 @@ def train(args: dict | box.Box) -> str:
                 v /= len(train_loader)
                 message += "{:s}: {:.4e} ".format(k, v)
             model.log_dict = defaultdict(int)
-            
+
             # Save
             model.save("latest", save_dir=args.save_dir)
 
