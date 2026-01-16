@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
+from mon import is_valid_str
 from ._config import BaseConfig
 from .workspace import create
 from .yaml_utils import load_config, merge_config, merge_dict
@@ -20,7 +21,7 @@ class YAMLConfig(BaseConfig):
 
     def __init__(self, cfg_path: str, root: str = None, **kwargs) -> None:
         super().__init__()
-        root      = str(root) if root not in [None, "None", ""] else None
+        root      = str(root) if is_valid_str(root) else None
         self.root = root
 
         # cfg = load_config(cfg_path)

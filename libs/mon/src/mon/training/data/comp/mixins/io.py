@@ -19,7 +19,7 @@ import abc
 import os
 from typing import Any
 
-from mon.core import create_progress_bar, Path, Split
+from mon.core import create_progress_bar, is_valid_str, Path, Split
 from ...base import Modalities, Modality
 
 
@@ -208,7 +208,7 @@ class RootLoadMixin(DataLoadMixin, abc.ABC):
         root = Path(value).normalize()  # Ensure absolute, clean path
 
         # Logic for subset appending
-        if self._subset not in [None, ""]:
+        if is_valid_str(self._subset):
             # Check if current root ends with subset; if not, try to append
             if root.name != self._subset:
                 sub_path = root / self._subset

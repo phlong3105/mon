@@ -22,7 +22,8 @@ import torch
 
 from mon.core.console import log
 from mon.core.enum import Enum
-from mon.core.pathlib import download_url_to_file, Path
+from mon.core.filesystem import download_url_to_file
+from mon.core.pathlib import Path
 
 
 # ==============================================================================

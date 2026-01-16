@@ -15,8 +15,6 @@ __all__ = [
     "PurePosixPath",
     "PureWindowsPath",
     "WindowsPath",
-    "delete_files",
-    "download_url_to_file",
 ]
 
 import shutil
@@ -28,12 +26,10 @@ from pathlib import (
     PureWindowsPath,
     WindowsPath,
 )
-from typing import Iterator, Optional
+from typing import Optional
 
-import requests
 import validators
 
-from mon.core.console import console, error_console
 from mon.core.enum import (
     ConfigExtension,
     ImageExtension,
@@ -400,84 +396,5 @@ class Path(type(Path_())):
             shutil.rmtree(self)
         elif self.is_dir():
             super().rmdir()
-
-# endregion
-
-
-# ==============================================================================
-# region FILESYSTEM
-# ==============================================================================
-
-def delete_files(path: str | Path, regex: str = None, recursive: bool = False):
-    """Delete files matching a pattern under a given path.
-
-    Args:
-        path: Path or directory to delete from.
-        regex: Glob pattern to match files. Defaults to None.
-        recursive: If True, search recursively for matches. Defaults to False.
-    """
-    path = Path(path)
-
-    if not regex:
-        # If no pattern, delete the single path if it's a file.
-        try:
-            if path.is_file():
-                path.unlink(missing_ok=True)
-            elif path.is_dir():
-                # Safety check: Do not delete directories without a pattern.
-                console.log(f"Path is a directory. To delete, use `path.rmdir()`.")
-        except Exception as err:
-            error_console.log(f"Could not delete {path}: {err}")
-        return
-
-    # If a pattern is given, search for matching files and delete them.
-    search_root     = path if path.is_dir() else path.parent
-    files_to_delete = search_root.rglob(regex) if recursive else search_root.glob(regex)
-
-    for f in files_to_delete:
-        try:
-            if f.is_file():
-                f.unlink()
-        except Exception as err:
-            error_console.error(f"Failed to delete {f}: {err}")
-
-
-def download_url_to_file(url: str, path: str | Path, overwrite: bool = False) -> Path:
-    """Download a file from a URL to the local filesystem.
-
-    Args:
-        url: Source URL to download from.
-        path: Destination path to save the file.
-        overwrite: If True, overwrite the destination file if it exists.
-            Defaults to False.
-
-    Raises:
-        ValueError: If ``url`` is not a valid URL.
-        requests.HTTPError: If the download fails.
-    """
-    dest_path = Path(path)
-    if dest_path.exists() and not overwrite:
-        return dest_path
-
-    if not Path(url).is_url():
-        raise ValueError(f"Expected a valid URL, but got '{url}'.")
-
-    dest_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Import rich locally to avoid circular dependencies and keep it optional.
-    from mon.core.rich import create_download_bar
-
-    response   = requests.get(url, stream=True, timeout=30)
-    response.raise_for_status()  # Raise an exception for bad status codes
-    total_size = int(response.headers.get("content-length", 0))
-
-    with create_download_bar() as pbar:
-        task_id = pbar.add_task(f"[cyan]Downloading {dest_path.name}", total=total_size)
-        with open(dest_path, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
-                    f.write(chunk)
-                    pbar.update(task_id, advance=len(chunk))
-    return dest_path
 
 # endregion

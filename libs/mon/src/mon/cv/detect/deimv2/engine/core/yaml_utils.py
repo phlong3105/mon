@@ -9,6 +9,7 @@ from typing import Any, Dict, List
 
 import yaml
 
+from mon import is_valid_str
 from .workspace import GLOBAL_CONFIG
 
 __all__ = [
@@ -31,7 +32,7 @@ def load_config(file_path, cfg=dict(), updated_include: list = None):
         file_cfg = yaml.load(f, Loader=yaml.Loader)
         if file_cfg is None:
             return {}
-    
+
     '''
     if INCLUDE_KEY in file_cfg:
         base_yamls = list(file_cfg[INCLUDE_KEY])
@@ -46,10 +47,10 @@ def load_config(file_path, cfg=dict(), updated_include: list = None):
                 base_cfg = load_config(base_yaml, cfg)
                 merge_dict(cfg, base_cfg)
     '''
-    
+
     # My Modification 01: Update '__include__' in yaml
     base_yamls = []
-    if updated_include not in [None, "None", ""]:
+    if is_valid_str(updated_include):
         base_yamls = list(updated_include)
     elif INCLUDE_KEY in file_cfg:
         base_yamls = list(file_cfg[INCLUDE_KEY])

@@ -14,6 +14,7 @@ __all__ = [
 
 import cv2
 import numpy as np
+from mon.core.utils import is_valid_str
 
 
 # ==============================================================================
@@ -62,7 +63,7 @@ def draw(
     drawing = image.copy()
     h, w    = drawing.shape[:2]
     x1, y1, x2, y2 = map(int, bbox[:4])
-    
+
     # Ensure coordinates are within bounds and ordered
     x1, x2 = min(x1, x2), max(x1, x2)
     y1, y2 = min(y1, y2), max(y1, y2)
@@ -70,7 +71,7 @@ def draw(
     y1     = max(0, min(y1, h))
     x2     = max(0, min(x2, w))
     y2     = max(0, min(y2, h))
-    
+
     # Handle Translucent Fill
     if fill:
         alpha = 0.5 if fill is True else float(fill)
@@ -79,19 +80,19 @@ def draw(
             # Create a colored rectangle of the same size as ROI
             color_block = np.full_like(roi, color, dtype=np.uint8)
             cv2.addWeighted(roi, 1 - alpha, color_block, alpha, 0, roi)
-        
+
     # Draw Main Border
     cv2.rectangle(drawing, (x1, y1), (x2, y2), color, thickness)
-    
+
     # Draw Label
-    if label not in [None, "None", ""]:
+    if is_valid_str(label):
         font      = kwargs.get("font_face", cv2.FONT_HERSHEY_SIMPLEX)
         scale     = kwargs.get("font_scale", 0.5)
         line_type = kwargs.get("line_type", cv2.LINE_AA)
-        
+
         text      = str(label)
         (t_w, t_h), baseline = cv2.getTextSize(text, font, scale, 1)
-        
+
         # Adjust the label position if it goes off-top
         if y1 - t_h - 4 > 0:
             text_org = (x1, y1 - 4)
@@ -101,15 +102,15 @@ def draw(
             text_org = (x1, y1 + t_h + 2)
             bg_pt1   = (x1, y1)
             bg_pt2   = (x1 + t_w, y1 + t_h + 4)
-        
+
         # Draw text background
         cv2.rectangle(drawing, bg_pt1, bg_pt2, color, -1)
-        
+
         # Draw text (Black text for better contrast on light backgrounds)
         # Simple heuristic: if sum of RGB > 382, use black text
         txt_color = (0, 0, 0) if sum(color) > 382 else (255, 255, 255)
         cv2.putText(drawing, text, text_org, font, scale, txt_color, 1, line_type)
-        
+
     return drawing
 
 # endregion

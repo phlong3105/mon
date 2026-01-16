@@ -28,6 +28,7 @@ from .dtypes import (
 from .enum import *
 from .factory import *
 from .fileio import *
+from .filesystem import *
 from .logging import *
 from .pathlib import *
 from .rich import *

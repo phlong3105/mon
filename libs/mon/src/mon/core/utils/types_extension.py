@@ -13,6 +13,7 @@ __all__ = [
     "create_combinations",
     "is_float",
     "is_int",
+    "is_valid_str",
     "merge_dicts",
     "sort",
     "to_dict",
@@ -81,6 +82,14 @@ def is_float(value: Any) -> bool:
         return True
     except (ValueError, TypeError):
         return False
+
+
+def is_valid_str(value: Any) -> bool:
+    """Check if ``value`` is a valid string."""
+    if not isinstance(value, str):
+        return False
+    value = _WHITESPACE_RE.sub("", value)
+    return value.lower() not in ["", "none", "null", "nan", "inf"]
 
 # endregion
 

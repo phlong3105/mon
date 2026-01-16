@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mon.core import DATASETS, resolve_data_dir, Path, Split
+from mon.core import DATASETS, Path, resolve_data_dir, Split
 from .base import *
 from .comp import *
 from .impl import *
@@ -80,21 +80,19 @@ def build_dataset(
 
     # 1. src is a registered dataset name
     if src.stem in DATASETS:
-        src       = src.stem
-        root      = resolve_data_dir(root=data_root, data_dir=src)
-        config    = kwargs | {
+        src    = src.stem
+        root   = resolve_data_dir(root=data_root, data_dir=src)
+        config = kwargs | {
             "name"     : src,
             "root"     : root,
             "split"    : Split.TEST,
             "transform": transform,
             "verbose"  : verbose,
         }
-        data_name = src
-        dataset   = DATASETS.build(**config)
+        return src, DATASETS.build(**config)
     # 2. src is a directory of images
     elif src.is_dir():
-        data_name = src.name
-        dataset   = ImageLoader(
+        return src.name, ImageLoader(
             root      = src,
             transform = transform,
             verbose   = verbose,
@@ -102,8 +100,7 @@ def build_dataset(
         )
     # 3. src is a video file
     elif src.is_video_file():
-        data_name = src.name
-        dataset   = VideoLoader(
+        return src.name, VideoLoader(
             root      = src,
             transform = transform,
             verbose   = verbose,
@@ -114,8 +111,6 @@ def build_dataset(
             f"Unsupported 'src': {src}. Must be a registered dataset name, a directory, "
             f"or a video file."
         )
-
-    return data_name, dataset
 
 
 def build_dataloader(
