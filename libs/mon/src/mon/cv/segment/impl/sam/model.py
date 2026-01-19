@@ -21,6 +21,7 @@ __all__ = [
     "SAM2_L_Weights",
     "SAM2_S_Weights",
     "SAM2_T_Weights",
+    "SAM3_Weights",
     "SAM_B_Weights",
     "SAM_L_Weights",
     "sam2_1_b",
@@ -31,6 +32,7 @@ __all__ = [
     "sam2_l",
     "sam2_s",
     "sam2_t",
+    "sam3",
     "sam_b",
     "sam_l",
 ]
@@ -90,13 +92,16 @@ class SAM(nn.Module, nn.RegistrableMixin):
         # Initialize RegistrableMixin
         nn.RegistrableMixin.__init__(self, name=name)
 
+        self.verbose = verbose
+
         # Load the base model
         # if isinstance(weights, WeightsType):
         #     kwargs["num_classes"] = weights.num_classes
 
-        # Ultralytics SAM can be initialized with the weights path directly.
+        # Ultralytics SAM can be initialized with the weights path directly
         base_model = ultralytics.SAM(model=str(weights.path))
 
+        # Assign the base model
         self.model = base_model
 
     # --- Callable & Context Manager ---
@@ -250,6 +255,19 @@ class SAM2_1_L_Weights(WeightsEnum):
     DEFAULT = SA_V
 
 
+@WEIGHTS.register(name="sam3")
+class SAM3_Weights(WeightsEnum):
+
+    SA_CO = Weights(
+        path        = ZOO_DIR / "cv/ultralytics/sam3/sam3/saco/sam3_saco.pt",
+        url         = "https://huggingface.co/facebook/sam3/blob/main/sam3.pt",
+        num_classes = None,
+        transforms  = None,
+        meta        = {}
+    )
+    DEFAULT = SA_CO
+
+
 # --- Model Variants ---
 
 @MODELS.register(name="sam_b", metaclass=SAM)
@@ -401,6 +419,21 @@ def sam2_1_l(weights: WeightsEnum | str | None = SAM2_1_L_Weights.DEFAULT, *args
     """
     return SAM(name="sam2.1_l", weights=SAM2_1_L_Weights(weights),*args, **kwargs)
 
+
+@MODELS.register(name="sam3", metaclass=SAM)
+def sam3(weights: WeightsEnum | str | None = SAM3_Weights.DEFAULT, *args, **kwargs):
+    """Create an SAM model.
+
+    Args:
+        weights: Pre-trained weights to load. Defaults to SAM3_Weights.DEFAULT.
+        args: Additional positional arguments for the SAM model.
+        kwargs: Additional keyword arguments for the SAM model.
+
+    Returns:
+        An SAM model instance.
+    """
+    return SAM(name="sam3", weights=SAM3_Weights(weights),*args, **kwargs)
+
 # endregion
 
 
@@ -409,6 +442,7 @@ def sam2_1_l(weights: WeightsEnum | str | None = SAM2_1_L_Weights.DEFAULT, *args
 # ==============================================================================
 
 if __name__ == "__main__":
+    # sam3_ = ultralytics.SAM(model="sam3.pt")
     pass
 
 # endregion

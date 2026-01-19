@@ -3,7 +3,8 @@
 
 """Extended pathlib utilities and domain-specific Path subclass.
 
-This module provides a Path subclass and filesystem helpers.
+This module provides a Path subclass with additional methods for file-type
+validation, related-file resolution, and enhanced filesystem operations.
 """
 
 from __future__ import annotations

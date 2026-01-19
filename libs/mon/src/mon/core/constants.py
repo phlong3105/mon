@@ -61,15 +61,18 @@ else:
 
 DIRS = SimpleNamespace(
     DEBUG     = "debug",
-    IMAGE     = "pred",
+    DEPTH     = "depth",
+    IMAGE     = "image",
     LABEL     = "label",
+    PRED      = "pred",
     VISUALIZE = "visualize",
 )
 
 EXT = SimpleNamespace(
-    CKPT    = WeightExtension.CKPT.value,
-    IMAGE   = ImageExtension.JPG.value,
-    WEIGHTS = WeightExtension.PT.value,
+    CKPT       = WeightExtension.CKPT.value,
+    IMAGE      = ImageExtension.JPG.value,
+    POINTCLOUD = ".ply",
+    WEIGHTS    = WeightExtension.PT.value,
 )
 
 SOURCE = SimpleNamespace(

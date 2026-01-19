@@ -1,44 +1,43 @@
 # --- Global Settings & Hyperparameters ---
-# These settings can be overridden by the CLI.
+# The CLI can override these settings.
 root        : ~                                                                 # Root directory of the current run.
-task        : &task "depth"                                                     # Task name (e.g., detect, segment, classify).
-mode        : &mode "train"                                                     # Mode name (e.g., train, val, test, predict, export).
-arch        : &arch "dav2"                                                      # Model architecture or family (e.g., resnet).
-model       : &model "dav2_vitb"                                                # Model name (e.g., resnet50).
-data        : &data "da2k"                                                      # Dataset name (e.g., cifar10) or directory (e.g., data/cifar10).
-fullname    : &fullname "dav2_vitb_da2k"                                        # Full name of the current run (e.g., resnet50_cifar10_01). If not set, it will be this file's name.
-save_dir    : &save_dir ~                                                       # Saving directory. If not set, it will be `root/arch/model/data`.
-weights     : &weights "cv/monodepth/dav2/dav2_vitb/da2k/dav2_vitb_da2k.pth"    # Path to the pretrained weights.
-device      : &device 0                                                         # Running device (i.e., cuda:0 | cuda:0,1,2,3 | cpu).
+task        : &task "depth"                                                     # Task: detect, segment, classify, monodepth, etc.
+mode        : &mode "train"                                                     # Mode: train, predict, metric, speed.
+arch        : &arch "dav2"                                                      # Architecture (e.g., resnet).
+model       : &model "dav2_vitb"                                                # Model (e.g., resnet50).
+data        : &data "da2k"                                                      # Dataset (e.g., cifar10) or directory (e.g., data/cifar10).
+fullname    : &fullname "dav2_vitb_da2k"                                        # Fullname of the current run (e.g., resnet50_cifar10_01).
+save_dir    : &save_dir ~                                                       # Saving directory.
+weights     : &weights "cv/monodepth/dav2/dav2_vitb/da2k/dav2_vitb_da2k.pth"    # Pre-trained weights' path.
+device      : &device 0                                                         # Running device (e.g., 0 | cuda:0 | cuda:0,1,2,3 | cpu).
 seed        : &seed 2                                                           # Random seed.
-imgsz       : &imgsz 518                                                        # Image size for the model.
+imgsz       : &imgsz 518                                                        # Image size.
 # Train
-resume      : &resume ~                                                         # Resume from interrupted training.
-tuning      : &tuning ~                                                         # Fine-tuning from a pretrained model.
+resume      : &resume ~                                                         # Resuming checkpoint.
+tuning      : &tuning ~                                                         # Fine-tuning weights.
 epochs      : &epochs -1                                                        # Training epochs.
 batch_size  : &batch_size 1                                                     # Batch size.
-torchrun    : False                                                             # If ``True``, use torch.distributed.run to run the training script.
+torchrun    : False                                                             # Use torch.distributed.run to run the training script.
 master_port : 7777                                                              # Master port for distributed training.
 master_addr : "localhost"                                                       # Master address for distributed training.
 local_rank  : -1                                                                # Local rank for distributed training.
 # Predict
-resize      : False                                                             # Resize the input image to `imgsz`.
+resize      : False                                                             # Resize the input image to ``imgsz``.
 benchmark   : False                                                             # Benchmark the model.
 # Save & Visualize
-save_result : &save_result True                                                 # Save the result of the model.
-save_image  : &save_image True                                                  # Save the output image.
+save        : &save True                                                        # Save the results.
 save_debug  : &save_debug False                                                 # Save the debug information.
-use_fullname: True                                                              # Use the full name for the save_dir.
-keep_subdirs: False                                                             # Keep subdirectories in the save_dir.
-save_nearby : False                                                             # Save outputs nearby the source.
-exist_ok    : &exist_ok True                                                    # If ``False``, it will delete the saving directory if it already exists.
-verbose     : &verbose True                                                     # Verbosity.
+use_fullname: True                                                              # Use the full name for the ``save_dir``.
+keep_subdirs: False                                                             # Keep subdirectories in the ``save_dir``.
+save_nearby : False                                                             # Save nearby the ``data`` source.
+exist_ok    : &exist_ok True                                                    # If ``False``, delete the existing saving directory.
+verbose     : &verbose True                                                     # Verbosity mode.
 # Custom config.yaml
-cfg         : ~                                                                 # For overriding settings defined in this file.
+cfg         : ~                                                                 # Override the settings defined in this file.
 
 # --- Model ---
 # Network
-network: ~                                                                      # Network architecture.
+network: ~                                                                      # Network hyperparameters.
 
 # Optimizer
 optimizer: ~                                                                    # Optimizer.
@@ -53,10 +52,10 @@ val_dataloader: ~                                                               
 # --- Deploy ---
 # Export
 export:
-  format        : "onnx"                                                        # Export format (e.g., onnx, engine, torchscript, coreml, tflite, openvino).
-  opset         : 16                                                            # ONNX: opset version.
-  simplify      : False                                                         # ONNX: Simplify model using `onnxslim`.
-  trt_precision : "fp32"                                                        # TRT: Precision mode (e.g., fp32, fp16, int8).
-  max_batch_size: 32                                                            # TRT: Max batch size for export.
-  opt_batch_size: 16                                                            # TRT: Optimize batch size for export.
-  min_batch_size: 1                                                             # TRT: Min batch size for export.
+  format        : "onnx"                                                        # Export format: onnx, engine, torchscript, coreml, tflite, openvino.
+  opset         : 16                                                            # ONNX opset version.
+  simplify      : False                                                         # ONNX simplify model using ``onnxslim``.
+  trt_precision : "fp32"                                                        # TRT precision mode: fp32, fp16, int8.
+  max_batch_size: 32                                                            # TRT max batch size for export.
+  opt_batch_size: 16                                                            # TRT optimize batch size for export.
+  min_batch_size: 1                                                             # TRT min batch size for export.

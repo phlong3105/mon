@@ -1,13 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Data augmentation and transformation.
+"""Data augmentation.
 
-This package provides various data augmentation techniques to enhance the
-diversity of training datasets. These augmentations can help improve the
-robustness and generalization of machine learning models.
+This package contains various data augmentation and transformation techniques
+used in training machine learning models.
+
+Notes:
+    - Design Pattern: Component-Based Framework.
+    - Goal: Define a collection of components that can be assembled to form
+      concrete data augmentation implementations.
+    - Structure:
+        ::
+
+            augment/
+            ├── __init__.py             # Exposes all
+            ├── base.py                 # Base classes and mixins
+            ├── comp/                   # Components
+            │   ├── __init__.py
+            │   └── ...
+            ├── impl/                   # Implementations
+            │   ├── __init__.py
+            │   └── ...
+            ├── adapters/               # Adapters
+            │   ├── __init__.py
+            │   └── ...
+            └── utils.py                # Utilities and helpers
 """
 
-# __all__ = []  
+from __future__ import annotations
 
-# from .copy_paste import ICPAugmentation
+
+# ==============================================================================
+# region REGISTRY & FACTORY
+# ==============================================================================
+
+
+# endregion

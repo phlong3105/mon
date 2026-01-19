@@ -22,7 +22,7 @@ Notes:
             ├── impl/                   # Implementations
             │   ├── __init__.py
             │   └── ...
-            ├── usages/                 # Usages
+            ├── adapters/               # Adapters
             │   ├── __init__.py
             │   └── ...
             └── utils.py                # Utilities and helpers
@@ -34,10 +34,10 @@ __all__ = [
     "sam",
 ]
 
+from .adapters import *
 from .base import *
 from .comp import *
 from .impl import *
-from .usages import *
 from .utils import *
 
 

@@ -22,7 +22,7 @@ Notes:
             ├── impl/                   # Implementations
             │   ├── __init__.py
             │   └── ...
-            ├── usages/                 # Usages
+            ├── adapters/               # Adapters
             │   ├── __init__.py
             │   └── ...
             └── utils.py                # Utilities and helpers
@@ -33,10 +33,10 @@ from __future__ import annotations
 from typing import Any
 
 from mon.core import DATASETS, Path, resolve_data_dir, Split
+from .adapters import *
 from .base import *
 from .comp import *
 from .impl import *
-from .usages import *
 from .utils import *
 
 

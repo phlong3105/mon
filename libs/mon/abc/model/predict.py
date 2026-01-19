@@ -17,10 +17,10 @@ __all__ = []
 
 import copy
 import sys
+from functools import partial
 
 import box
 import cv2
-import numpy as np
 import torch
 
 import mon
@@ -49,7 +49,7 @@ except ImportError:
 
 @torch.no_grad()
 def run(args: box.Box):
-    # Log a summary of the run
+    # Summarize the current run
     if args.verbose:
         mon.print_run_summary(args)
 
@@ -57,7 +57,7 @@ def run(args: box.Box):
     device = mon.create_device(args.device)
     mon.set_random_seed(args.seed)
 
-    # Prepare pre-trained weights
+    # Resolve pre-trained weights
     weights = args.weights or args.resume or args.tuning
 
     # Define model
@@ -72,21 +72,34 @@ def run(args: box.Box):
     model = model.to(device)
     model.eval()
 
-    # Run benchmark if specified
+    # Run benchmark
     if args.benchmark:
         mon.metric.benchmark(model)
 
-    # Define data loader
+    # Resolve I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
-    '''
     transform = A.Compose([
         A.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=1),
         A.Normalize(normalization="min_max"),
         A.ToTensorV2(transpose_mask=True),
     ])
-    '''
-    transform = None
     data_name, dataset = mon.build_dataset(args.data, args.root, transform)
+    resolve_output_dir = partial(
+        mon.resolve_output_dir,
+        root         = args.save_dir,
+        dirname      = data_name,
+        subdir_name  = mon.DIRS.PRED,
+        keep_subdirs = args.keep_subdirs,
+        save_nearby  = args.save_nearby,
+    )
+    resolve_debug_dir = partial(
+        mon.resolve_output_dir,
+        root         = args.save_dir,
+        dirname      = data_name,
+        subdir_name  = mon.DIRS.DEBUG,
+        keep_subdirs = args.keep_subdirs,
+        save_nearby  = args.save_nearby,
+    )
 
     # Processing loop
     timers = mon.TimeProfiler()
@@ -113,27 +126,24 @@ def run(args: box.Box):
             # Postprocess
             timers.postprocess.tick()
             # Already resized in model.infer_image()
-            # h1, w1  = mon.image.imgsz(outputs)
-            # if (h1, w1) != (h0, w0):
-            #     outputs = cv2.resize(outputs, (w0, h0))
-            depth   = outputs
-            depth   = ((depth - depth.min()) / (depth.max() - depth.min()) * 255.0).astype("uint8")
-            depth   = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-            depth_c = (cmap(outputs)[:, :, :3] * 255).astype("uint8")
+            h1, w1  = mon.image.imgsz(outputs)
+            if (h1, w1) != (h0, w0):
+                outputs = cv2.resize(outputs, (w0, h0))
             timers.postprocess.tock()
 
             # Save
-            if args.save_image:
-                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.DIRS.IMAGE, path, args.keep_subdirs, args.save_nearby)
-                out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"
-                mon.image.write(depth, out_path)
+            if args.save:
+                # Save to: ".../pred/"
+                out_dir  = resolve_output_dir(src_path=path)
+                out_path = out_dir / mon.DIRS.IMAGE / f"{path.stem}{mon.EXT.IMAGE}"
+                mon.image.write(outputs, out_path)
 
+            # Save debug
             if args.save_debug:
-                out_dir  = mon.resolve_output_dir(args.save_dir, data_name, mon.DIRS.DEBUG, path, args.keep_subdirs, args.save_nearby)
-                if args.save_nearby:
-                    out_dir = out_dir.parent / f"{out_dir.stem}_c"
-                out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"
-                mon.image.write(depth_c, out_path)
+                # Save to: ".../debug/"
+                out_dir  = resolve_debug_dir(src_path=path)
+                out_path = out_dir / mon.DIRS.DEPTH / f"{path.stem}{mon.EXT.IMAGE}"
+                mon.image.write(outputs, out_path)
     timers.total.tock()
 
     # Finish

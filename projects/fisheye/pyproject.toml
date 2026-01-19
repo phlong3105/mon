@@ -23,7 +23,10 @@ license         = "MIT"
 readme          = "README.md"
 requires-python = ">=3.12,<3.14"
 authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
-keywords        = []
+keywords        = [
+    "fisheye lens", "surviellance", "active learning", "data augmentation",
+    "copy-paste"
+]
 classifiers     = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

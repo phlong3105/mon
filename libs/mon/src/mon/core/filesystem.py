@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extended pathlib utilities and domain-specific Path subclass.
+"""Filesystem utilities.
 
-This module provides a Path subclass and filesystem helpers.
+This module provides filesystem-related utilities.
 """
 
 from __future__ import annotations
