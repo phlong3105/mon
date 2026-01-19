@@ -78,6 +78,10 @@ from torch.nn.modules.activation import (
 )
 
 
+# ==============================================================================
+# region LAYERS
+# ==============================================================================
+
 class SimpleGate(nn.Module):
     """Simple-gate activation unit.
 
@@ -141,6 +145,8 @@ class Sine(nn.Module):
             to 1.0.
         """
         return torch.sin(self.w0 * x)
+
+# endregion
 
 
 # ==============================================================================

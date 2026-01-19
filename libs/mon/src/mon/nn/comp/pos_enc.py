@@ -22,6 +22,10 @@ import torch
 import torch.nn as nn
 
 
+# ==============================================================================
+# region LAYERS
+# ==============================================================================
+
 class PosEncodingFourier(nn.Module):
     """Positional Encoding (PE) using Fourier features.
 
@@ -163,6 +167,8 @@ class PosEncodingNeRF(nn.Module):
 
         # Concatenate original input with encodings
         return torch.cat([x, sin_enc, cos_enc], dim=-1)
+
+# endregion
 
 
 # ==============================================================================

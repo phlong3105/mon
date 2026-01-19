@@ -18,6 +18,10 @@ import torch
 import torch.nn as nn
 
 
+# ==============================================================================
+# region LAYERS
+# ==============================================================================
+
 # --- Squeeze-and-Excitation ---
 
 class SEBlock(nn.Module):
@@ -113,6 +117,8 @@ class SimAM(nn.Module):
         v          = d.sum(dim=[2, 3], keepdim=True) / n
         e_inv      = d / (4 * (v + self.e_lambda)) + 0.5
         return x * self.sigmoid(e_inv)
+
+# endregion
 
 
 # ==============================================================================
