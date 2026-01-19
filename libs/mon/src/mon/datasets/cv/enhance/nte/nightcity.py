@@ -20,6 +20,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class NightCity(ImageDataset, RegistrableMixin):
     """NightCity dataset."""
@@ -112,6 +116,8 @@ class NightCity(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

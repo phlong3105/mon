@@ -16,6 +16,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class YDLD(ImageDataset, RegistrableMixin):
     """YDLD dataset."""
@@ -39,6 +43,8 @@ class YDLD(ImageDataset, RegistrableMixin):
         {"name": "traffic_signal_light", "id": 1, "color": (0  , 128,   0)},
         {"name": "street_light",         "id": 2, "color": (0  ,   0, 255)},
     ])
+
+# endregion
 
 
 # ==============================================================================

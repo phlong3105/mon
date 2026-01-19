@@ -98,3 +98,13 @@ DepthName          = f"{SOURCE.DEPTH.value}"
 InfraredName       = f"{SOURCE.INFRARED.value}"
 DefaultDepthMap    = partial(DepthMap,    source=SOURCE.DEPTH)
 DefaultInfraredMap = partial(InfraredMap, source=SOURCE.INFRARED)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

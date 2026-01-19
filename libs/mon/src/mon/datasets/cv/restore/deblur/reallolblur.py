@@ -16,6 +16,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class RealLOLBlur(ImageDataset, RegistrableMixin):
     """Real-LOL-Blur dataset."""
@@ -35,6 +39,8 @@ class RealLOLBlur(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

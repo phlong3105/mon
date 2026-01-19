@@ -19,6 +19,10 @@ __all__ = [
 from ...api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
     """NTIRE 2025 LLIE dataset."""
@@ -75,6 +79,8 @@ class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

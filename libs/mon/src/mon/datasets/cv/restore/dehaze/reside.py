@@ -22,6 +22,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class RESIDE_HSTSReal(ImageDataset, RegistrableMixin):
     """RESIDE-HSTS-Real dataset."""
@@ -183,7 +187,6 @@ class RESIDE_RTTS(ImageDataset, RegistrableMixin):
     _classlist : ClassList   = None
 
 
-
 @DATASETS.register()
 class RESIDE_SOTSIndoor(ImageDataset, RegistrableMixin):
     """RESIDE-SOTS-Indoor dataset."""
@@ -280,6 +283,8 @@ class RESIDE_URHI(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

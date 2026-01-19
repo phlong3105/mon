@@ -16,6 +16,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class LOLv2Real(ImageDataset, RegistrableMixin):
     """LOL-v2 Real dataset."""
@@ -84,6 +88,8 @@ class LOLv2Syn(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

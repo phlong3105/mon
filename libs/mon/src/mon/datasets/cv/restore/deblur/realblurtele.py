@@ -13,9 +13,12 @@ __all__ = [
     "RealBlurTeleR",
 ]
 
-
 from ....api import *
 
+
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
 
 @DATASETS.register()
 class RealBlurTeleJ(ImageDataset, RegistrableMixin):
@@ -109,6 +112,8 @@ class RealBlurTeleR(ImageDataset, RegistrableMixin):
                     images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

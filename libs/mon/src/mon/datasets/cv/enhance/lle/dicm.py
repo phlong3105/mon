@@ -15,6 +15,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register(name="dicm")
 class DICM(ImageDataset, RegistrableMixin):
     """DICM dataset."""
@@ -41,6 +45,8 @@ class DICM(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

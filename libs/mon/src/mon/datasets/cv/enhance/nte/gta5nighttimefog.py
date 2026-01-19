@@ -18,6 +18,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class GTA5NighttimeFog(ImageDataset, RegistrableMixin):
     """GTA5NighttimeFog dataset."""
@@ -51,6 +55,8 @@ class GTA5NighttimeFog(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

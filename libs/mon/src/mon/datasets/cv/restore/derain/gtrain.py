@@ -15,6 +15,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class GTRain(ImageDataset, RegistrableMixin):
     """GTRain dataset."""
@@ -41,6 +45,8 @@ class GTRain(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

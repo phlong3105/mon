@@ -18,6 +18,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register(name="fivek")
 class FiveK(ImageDataset):
     """FiveK dataset."""
@@ -95,6 +99,8 @@ class FiveKE(FiveKA):
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_e",   type="image", module=Image,           train=True, test=True),
     }
+
+# endregion
 
 
 # ==============================================================================

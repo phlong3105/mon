@@ -20,6 +20,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class RCD(ImageDataset, RegistrableMixin):
     """RCD dataset."""
@@ -95,6 +99,8 @@ class RCD(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

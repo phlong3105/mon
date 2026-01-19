@@ -15,6 +15,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register(name="lime")
 class LIME(ImageDataset, RegistrableMixin):
     """LIME dataset."""
@@ -41,6 +45,8 @@ class LIME(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

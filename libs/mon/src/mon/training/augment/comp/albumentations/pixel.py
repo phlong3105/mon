@@ -251,3 +251,13 @@ class NormalizeWithMask(BasicTransform):
             numpy.ndarray: Normalized batch of volumes.
         """
         return self.apply(volumes, **params)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

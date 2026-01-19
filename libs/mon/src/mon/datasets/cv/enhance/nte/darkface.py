@@ -16,6 +16,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class DarkFace(ImageDataset, RegistrableMixin):
     """DarkFace dataset."""
@@ -44,6 +48,8 @@ class DarkFace(ImageDataset, RegistrableMixin):
     _classlist : ClassList   = ClassList([
         {"name": "face", "id": 0, "color": [81, 120, 228]},
     ])
+
+# endregion
 
 
 # ==============================================================================

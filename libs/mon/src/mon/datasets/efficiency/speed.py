@@ -16,6 +16,10 @@ __all__ = [
 from ..api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class Speed10(ImageDataset, RegistrableMixin):
     """Speed10 dataset."""
@@ -70,6 +74,8 @@ class Speed1K(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

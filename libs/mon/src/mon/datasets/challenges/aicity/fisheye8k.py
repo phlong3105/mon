@@ -15,6 +15,10 @@ __all__ = [
 from ...api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class FishEye8K(ImageDataset, RegistrableMixin):
     """FishEye8K dataset."""
@@ -40,6 +44,8 @@ class FishEye8K(ImageDataset, RegistrableMixin):
         {"name": "pedestrian", "id": 3, "color": [ 81, 120, 228]},
         {"name": "truck",      "id": 4, "color": [ 72, 153, 152]},
     ])
+
+# endregion
 
 
 # ==============================================================================

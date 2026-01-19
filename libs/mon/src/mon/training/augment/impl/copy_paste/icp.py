@@ -35,7 +35,7 @@ _SUFFIX = "icp"  # Suffix for the new image and label files
 # --- Dataset Utils ---
 def group_image_and_label_files(data_dir: str | Path):
     """Group image and label files to subdirectories by their file names.
-    
+
     Args:
         data_dir: Directory containing the images (i.e., ``data_dir/image``) and
             the corresponding labels are in the same directory (i.e., ``data_dir/label``).
@@ -44,7 +44,7 @@ def group_image_and_label_files(data_dir: str | Path):
     image_dir  = data_dir / "image"
     label_dir  = data_dir / "label"
     groups_dir = data_dir / "groups"
-    
+
     if not image_dir.exists():
         raise FileNotFoundError(f"``image_dir`` does not exist: {image_dir}.")
     if not label_dir.exists():
@@ -60,7 +60,7 @@ def group_image_and_label_files(data_dir: str | Path):
             stem   = image_file.stem
             parts  = stem.split("_")[0:2]  # Exclude the last part, which is the frame index (e.g., "_01")
             subdir = groups_dir / "_".join(parts)
-            
+
             new_image_file = subdir / "image" / image_file.name
             new_image_file.parent.mkdir(parents=True, exist_ok=True)
             image_file.copy_to(new_image_file)
@@ -68,31 +68,31 @@ def group_image_and_label_files(data_dir: str | Path):
             label_file     = label_dir / f"{stem}.txt"
             new_label_file = subdir / "label" / label_file.name
             label_file.copy_file(label_file, new_label_file)
-            
+
 
 def concat_image_and_label_files(data_dir: str | Path):
     """Concatenate image and label files from subdirectories into a single one.
-    
+
     Args:
         data_dir: Directory containing all subdirectories.
     """
     data_dir  = Path(data_dir)
     image_dir = data_dir / "all" / "image"
     label_dir = data_dir / "all" / "label"
-    
+
     if not data_dir.exists():
         raise FileNotFoundError(f"``data_dir`` does not exist: {data_dir}.")
-    
+
     image_dir.mkdir(parents=True, exist_ok=True)
     label_dir.mkdir(parents=True, exist_ok=True)
 
     for subdir in sorted(data_dir.subdirs()):
         if subdir.stem in ["all", "image", "label"]:
             continue
-            
+
         sub_image_dir = data_dir / subdir.stem / f"image_{_SUFFIX}"
         sub_label_dir = data_dir / subdir.stem / f"label_{_SUFFIX}"
-        
+
         if not sub_image_dir.exists():
             error_console.log(f"``sub_image_dir`` does not exist: {sub_image_dir}.")
             continue
@@ -120,7 +120,7 @@ def concat_image_and_label_files(data_dir: str | Path):
 # --- Augmentation ---
 class Label:
     """Candidate object for ``ICP`` augmentation.
-    
+
     Args:
         bbox: Bounding box as a ``numpy.ndarray`` of shape :math:`(N, 5+)` in
             ``XYXY`` format where the fifth element is the class ID.
@@ -133,21 +133,21 @@ class Label:
     def __init__(self, bbox: np.ndarray, mask: np.ndarray, image_path: Path):
         if len(bbox) < 5:
             raise ValueError(f"``bbox`` must have at least 5 elements, got {len(bbox)}.")
-        
+
         self.bbox       = bbox
         self.mask       = mask
         self.image_path = image_path
         self.class_id   = int(bbox[4])
         self.used       = 0
-        
+
 
 # noinspection PyMethodMayBeStatic
 class ICPAugmentation:
     """Inplace Copy-Paste augmentation for static cameras (ICP).
-    
+
     Attributes:
         _suffix: Suffix for the new image and label names.
-    
+
     Args:
         image_dir: Directory containing the images.
         label_dir: Directory containing the YOLO-format labels.
@@ -162,9 +162,9 @@ class ICPAugmentation:
         device: Device to run the SAM model on. Default: ``torch.device("cuda")``.
         verbose: Verbosity mode. Default: ``True``.
     """
-    
+
     _suffix = _SUFFIX  # Suffix for the new image and label files
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -185,7 +185,7 @@ class ICPAugmentation:
             raise FileNotFoundError(f"``image_dir`` does not exist: {image_dir}.")
         if not label_dir.exists():
             raise FileNotFoundError(f"``label_dir`` does not exist: {label_dir}.")
-        
+
         # Assign attributes
         self._image_dir      = image_dir
         self._label_dir      = label_dir
@@ -200,7 +200,7 @@ class ICPAugmentation:
         self.device          = device
         self.verbose         = verbose
         self._run            = 0  # Number of times this augmentation has been run (for naming output files)
-        
+
         # SAM model to generate instance masks
         self._sam_model = None
         self._init_sam_model(sam_model)
@@ -212,7 +212,7 @@ class ICPAugmentation:
         self._shadow_gen_model = None
         if self._shadow:
             self._shadow_gen_model = libcom.ShadowGenerationModel(device=0)
-        
+
         # Initialize
         labels, candidates = self._load_data()
         self._all_labels   = copy.deepcopy(labels)
@@ -220,7 +220,7 @@ class ICPAugmentation:
         self._candidates   = self._group_obj_per_class(candidates)
         self._counts       = self._count_obj_per_class(self.all_labels)
         self.ratio         = ratio
-        
+
         # Log
         if self.verbose:
             console.rule(f"[bold red]{image_dir.parent.stem}")
@@ -229,7 +229,7 @@ class ICPAugmentation:
             console.log(f"Number of candidates: {len(candidates)}")
             for k, v in self.candidates.items():
                 console.log(f"  |_ Class {k}: {len(v):<10}")
-    
+
     # --- Properties ---
     @property
     def ratio(self) -> dict[int, float]:
@@ -301,7 +301,7 @@ class ICPAugmentation:
             self._sam_model = model
         else:
             raise TypeError(f"``sam_model`` must be a string or an instance of ultralytics.SAM, got {type(model)}.")
-    
+
     def _load_data(self) -> tuple[list[Label], list[Label]]:
         """Load all labels from the label directory."""
         labels      = []
@@ -316,7 +316,7 @@ class ICPAugmentation:
                 # Read image
                 image = cv2.imread(str(image_file))
                 h, w, = I.imgsz(image)
-                
+
                 # Read YOLO label file
                 label_file = self._label_dir / f"{image_file.stem}.txt"
                 if not label_file.is_txt_file(exist=True):
@@ -340,12 +340,12 @@ class ICPAugmentation:
         """Generate foreground masks for the given bounding boxes using SAM."""
         sam_results = self._sam_model(image, bboxes=bbox[:, 0:4], device=torch.device("cuda"), verbose=False)
         sam_results = sam_results[0]
-        
+
         semantic_mask = np.zeros(image.shape, dtype=np.uint8)
         if sam_results.masks is not None:
             for m in sam_results.masks.xy:
                 semantic_mask = cv2.fillPoly(semantic_mask, [np.array(m, dtype=np.int32)], (1, 1, 1))
-        
+
         masks = []
         for b in bbox:
             x1, y1, x2, y2 = b[0:4].astype(int)
@@ -363,7 +363,7 @@ class ICPAugmentation:
                 ], dtype=np.uint8)
                 m = cv2.dilate(m, kernel, iterations=1)
                 masks.append(m)
-        
+
         return masks
 
     # --- Sampling ---
@@ -403,7 +403,7 @@ class ICPAugmentation:
                         f.write(f"{int(b[5])} {b[0]:.32f} {b[1]:.32f} {b[2]:.32f} {b[3]:.32f}\n")
 
         self._run += 1
-    
+
     def _get_new_samples(self, image_file: Path) -> tuple[list[Label], list[Label]]:
         """Get new samples for the given image file."""
         # Get all Labels for this image
@@ -480,7 +480,7 @@ class ICPAugmentation:
         roi_src           = src[y1:y2, x1:x2]
         roi_dst           = dst[y1:y2, x1:x2]
         dst[y1:y2, x1:x2] = roi_src * mask + roi_dst * (1 - mask)
-        
+
         # Style Transfer
         if self._style_transfer:
             # Make a white mask for the pasted area in dst
@@ -492,7 +492,7 @@ class ICPAugmentation:
             cv2.imwrite("comp_image.jpg", dst)
             # dst = libcom.color_transfer(dst, dst_mask)
             dst = libcom.color_transfer("comp_image.jpg", "comp_mask.jpg")
-        
+
         # Image Harmonization
         if self._harmonization:
             # Make a white mask for the pasted area in dst
@@ -504,7 +504,7 @@ class ICPAugmentation:
             cv2.imwrite("comp_image.jpg", dst)
             # dst = self._harmonization_model(dst, dst_mask)
             dst = self._harmonization_model("comp_image.jpg", "comp_mask.jpg")
-        
+
         # Shadow Generation
         if self._shadow:
             # Make a white mask for the pasted area in dst
@@ -516,7 +516,7 @@ class ICPAugmentation:
             cv2.imwrite("comp_image.jpg", dst)
             # dst = self._shadow_gen_model(dst, dst_mask)
             dst = self._shadow_gen_model("comp_image.jpg", "comp_mask.jpg")
-        
+
         return dst
 
     # --- Utils ---
@@ -550,3 +550,14 @@ class ICPAugmentation:
                 counts[c] = 0
             counts[c] += 1
         return counts
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion
+s

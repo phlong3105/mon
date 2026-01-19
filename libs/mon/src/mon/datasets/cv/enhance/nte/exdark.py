@@ -19,6 +19,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class ExDark(ImageDataset, RegistrableMixin):
     """ExDark dataset."""
@@ -58,6 +62,8 @@ class ExDark(ImageDataset, RegistrableMixin):
         {"name": "People"   , "id": 11, "coco80_id":  1, "color": [ 81, 120, 228]},
         {"name": "Table"    , "id": 12, "coco80_id": 61, "color": [216, 147, 179]},
     ])
+
+# endregion
 
 
 # ==============================================================================

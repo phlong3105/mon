@@ -204,3 +204,13 @@ class ResizeDivisibleBy(DualTransform):
         scale_x = self._width / new_w
         scale_y = self._height / new_h
         return fgeometric.keypoints_scale(keypoints, scale_x, scale_y)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

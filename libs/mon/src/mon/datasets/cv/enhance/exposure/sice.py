@@ -40,6 +40,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class SICE(ImageDataset, RegistrableMixin):
     """SICE dataset.
@@ -160,6 +164,8 @@ class SICEME(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

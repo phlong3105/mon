@@ -12,9 +12,12 @@ __all__ = [
     "Rain1200",
 ]
 
-
 from ....api import *
 
+
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
 
 @DATASETS.register()
 class Rain1200(ImageDataset, RegistrableMixin):
@@ -69,6 +72,8 @@ class Rain1200(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

@@ -21,6 +21,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class MSEC(ImageDataset, RegistrableMixin):
     """MSEC dataset."""
@@ -114,6 +118,8 @@ class MSEC(ImageDataset, RegistrableMixin):
                     images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

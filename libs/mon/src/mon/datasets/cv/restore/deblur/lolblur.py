@@ -23,6 +23,10 @@ import abc
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 class LOLBlur(ImageDataset, abc.ABC):
     """LOL-Blur dataset."""
 
@@ -106,6 +110,8 @@ class LOLBlurN(LOLBlur, RegistrableMixin):
     _name  : str        = "lolblurn"
     _tasks : list[Task] = [Task.DENOISE]
     _subset: str        = "n"
+
+# endregion
 
 
 # ==============================================================================

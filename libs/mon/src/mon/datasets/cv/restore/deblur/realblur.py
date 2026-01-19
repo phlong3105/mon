@@ -13,9 +13,12 @@ __all__ = [
     "RealBlurR",
 ]
 
-
 from ....api import *
 
+
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
 
 @DATASETS.register()
 class RealBlurJ(ImageDataset, RegistrableMixin):
@@ -109,6 +112,8 @@ class RealBlurR(ImageDataset, RegistrableMixin):
                     images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

@@ -16,6 +16,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 # @DATASETS.register()
 class UHD4K(ImageDataset, RegistrableMixin):
     """UHD-4K dataset."""
@@ -84,6 +88,8 @@ class UHD8K(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

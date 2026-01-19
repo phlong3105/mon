@@ -17,6 +17,10 @@ __all__ = [
 from ...api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class WiderFace(ImageDataset, RegistrableMixin):
     """WiderFace dataset."""
@@ -65,6 +69,8 @@ class WiderFaceVal(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

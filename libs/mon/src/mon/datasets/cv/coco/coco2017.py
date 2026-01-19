@@ -16,6 +16,10 @@ __all__ = [
 from ...api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class COCO80(ImageDataset, RegistrableMixin):
     """COCO-80-classes dataset."""
@@ -231,6 +235,8 @@ class COCO91(ImageDataset, RegistrableMixin):
         {"name": "toothbrush"    , "id": 90, "supercategory": "indoor"    , "color": [ 58, 228, 226]},
         {"name": "hair brush"    , "id": 91, "supercategory": "indoor"    , "color": [149, 108,  73]}
     ])
+
+# endregion
 
 
 # ==============================================================================

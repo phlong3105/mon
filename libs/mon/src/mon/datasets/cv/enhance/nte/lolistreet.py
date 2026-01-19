@@ -21,6 +21,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class LoLIStreet(ImageDataset, RegistrableMixin):
     """LoLI-Street dataset."""
@@ -265,6 +269,8 @@ class LoLIStreetTest(LoLIStreet):
                     images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

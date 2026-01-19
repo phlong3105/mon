@@ -460,3 +460,13 @@ class FisheyeTomographyTransform(DualTransform):
         log(f"X translation: {self._x_trans}.")
         log(f"Y translation: {self._y_trans}.")
         log(f"Z translation: {self._z_trans}.")
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

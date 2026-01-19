@@ -17,6 +17,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class Rain100(ImageDataset, RegistrableMixin):
     """Rain100 dataset."""
@@ -99,6 +103,8 @@ class Rain100L(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

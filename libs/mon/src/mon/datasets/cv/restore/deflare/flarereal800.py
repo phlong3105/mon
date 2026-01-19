@@ -15,6 +15,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class FlareReal800(ImageDataset, RegistrableMixin):
     """FlareReal800 dataset."""
@@ -41,6 +45,8 @@ class FlareReal800(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

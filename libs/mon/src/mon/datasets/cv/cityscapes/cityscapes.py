@@ -19,6 +19,10 @@ from mon.core import Path, rich
 from ...api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register(name="cityscapes")
 class Cityscapes(ImageDataset):
     """Cityscapes main dataset."""
@@ -122,6 +126,8 @@ class Cityscapes(ImageDataset):
 
         self._datapoints["image"]    = images
         self._datapoints["semantic"] = semantic
+
+# endregion
 
 
 # ==============================================================================

@@ -19,6 +19,10 @@ __all__ = [
 from ...api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class MIPI2024Flare(ImageDataset, RegistrableMixin):
     """MIPI 2024 Flare dataset."""
@@ -75,6 +79,8 @@ class MIPI2024Flare(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+# endregion
 
 
 # ==============================================================================

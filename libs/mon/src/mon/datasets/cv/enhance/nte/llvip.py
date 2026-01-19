@@ -20,6 +20,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class LLVIP(ImageDataset, RegistrableMixin):
     """LLVIP dataset."""
@@ -53,6 +57,8 @@ class LLVIP(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

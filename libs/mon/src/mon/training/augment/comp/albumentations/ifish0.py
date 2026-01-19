@@ -22,7 +22,7 @@ def fish_xn_yn(
 ) -> tuple[float, float]:
     """Converts a pixel's coordinates in the original image to its corresponding
     coordinates in fisheye image.
-    
+
     Args:
         source_x (np.ndarray): Image pixel coordinates.
         source_y (np.ndarray): Image pixel coordinates.
@@ -50,7 +50,7 @@ def reverse_fish_xn_yn(
 ) -> tuple[float, float]:
     """Converts a pixel's coordinates in fisheye image back to its corresponding
     coordinates in the original image.
-    
+
     Args:
         source_x (np.ndarray): Image pixel coordinates.
         source_y (np.ndarray): Image pixel coordinates.
@@ -69,11 +69,11 @@ def reverse_fish_xn_yn(
 
 def fish(image: np.ndarray, distortion: float) -> np.ndarray:
     """Converts an ordinary image to fisheye image.
-    
+
     Args:
         image (numpy.ndarray): The original image.
         distortion (float): Distortion coefficient.
-        
+
     Returns:
         numpy.ndarray: Newly generated fisheye image.
     """
@@ -82,13 +82,13 @@ def fish(image: np.ndarray, distortion: float) -> np.ndarray:
     # RGB to RGBA
     if len(image.shape) == 3 and image.shape[2] == 3:
         image = np.dstack((image, np.full((w, h), 255)))
-    
+
     # Prepare array for dst image
     fisheye = np.zeros_like(image)
 
     # Floats and calculations
     w, h = float(w), float(h)
-    
+
     # Easier calculation if we traverse x, y in dst image
     for x in range(len(fisheye)):
         for y in range(len(fisheye[x])):
@@ -103,17 +103,17 @@ def fish(image: np.ndarray, distortion: float) -> np.ndarray:
             # if new pixel is in bounds copy from source pixel to destination pixel
             if (0 <= xu) and (xu < image.shape[0]) and (0 <= yu) and (yu < image.shape[1]):
                 fisheye[x][y] = image[xu][yu]
-    
+
     return fisheye.astype(np.uint8)
 
 
 def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
     """Adds padding to make the image square.
-    
+
     Args:
         image (numpy.ndarray): The input image.
         pad_value (int): The padding value. Defaults to 0.
-        
+
     Returns:
         numpy.ndarray: The padded square image.
     """
@@ -130,12 +130,12 @@ def pad_square(image: np.ndarray, pad_value: int = 0) -> np.ndarray:
 # --- Transformation ---
 def convert_image(image: np.ndarray, distortion: float, crop: bool = True) -> np.ndarray:
     """Converts an ordinary image to fisheye image.
-    
+
     Args:
         image (numpy.ndarray): The original image.
         distortion (float): Distortion coefficient.
         crop (bool): Whether to crop the dark area around images. Defaults to True.
-        
+
     Returns:
         numpy.ndarray: Newly generated fisheye image.
     """
@@ -156,11 +156,11 @@ def convert_image(image: np.ndarray, distortion: float, crop: bool = True) -> np
     # Calculate the new coordinates
     new_left_x, new_left_y = reverse_fish_xn_yn(left[0], left[1], np.sqrt(left[0] ** 2 + left[1] ** 2), distortion)
     new_top_x, new_top_y   = reverse_fish_xn_yn(top[0],  top[1],  np.sqrt(top[0]  ** 2 + top[1]  ** 2), distortion)
-    
+
     # Un-normalize the new coordinates
     left = (int((new_left_x + 1) * w / 2), int((new_left_y + 1) * h / 2))
     top  = (int((new_top_x  + 1) * w / 2), int((new_top_y  + 1) * h / 2))
-    
+
     new_img = new_img[top[1]:(h - top[1]), left[0]:(w - left[0]), :]
     return new_img
 
@@ -173,7 +173,7 @@ def convert_bboxes(
     crop      : bool = True
 ) -> np.ndarray:
     """Converts bounding boxes from an ordinary image to fisheye image.
-    
+
     Args:
         bboxes (np.ndarray): The bounding boxes.
         old_size (tuple[int, int]): Original image size as (W, H).
@@ -188,14 +188,14 @@ def convert_bboxes(
     new_w, new_h = new_size
     left_margin  = int((old_w - new_w) // 2)
     top_margin   = int((old_h - new_h) // 2)
-    
+
     bboxes     = B.convert(bboxes, fmt=BBoxFormat.YOLO2VOC, imgsz=old_size)
     new_bboxes = []
     for bbox in bboxes:
         # top_left, top_right, bottom_left, bottom_right
         bbox_x = np.array([bbox[0], bbox[2], bbox[0], bbox[2]]).astype(float)
         bbox_y = np.array([bbox[1], bbox[1], bbox[3], bbox[3]]).astype(float)
-        
+
         rd = np.zeros_like(bbox_x)
         bbox_x_fish = np.zeros_like(bbox_x)
         bbox_y_fish = np.zeros_like(bbox_y)
@@ -220,7 +220,17 @@ def convert_bboxes(
             right_fish = int(max(bbox_x_fish))
             bot_fish   = int(max(bbox_y_fish))
             new_bboxes.append([left_fish, top_fish, right_fish, bot_fish, bbox[4]])
-    
+
     new_bboxes = np.array(new_bboxes)
     new_bboxes = B.convert(new_bboxes, fmt=BBoxFormat.VOC2YOLO, imgsz=new_size)
     return new_bboxes
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

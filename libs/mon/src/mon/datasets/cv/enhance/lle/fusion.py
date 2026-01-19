@@ -15,6 +15,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register(name="fusion")
 class Fusion(ImageDataset, RegistrableMixin):
     """Fusion dataset."""
@@ -41,6 +45,8 @@ class Fusion(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================

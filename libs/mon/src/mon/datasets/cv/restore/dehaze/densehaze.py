@@ -15,6 +15,10 @@ __all__ = [
 from ....api import *
 
 
+# ==============================================================================
+# region DATASETS
+# ==============================================================================
+
 @DATASETS.register()
 class DenseHaze(ImageDataset, RegistrableMixin):
     """Dense-Haze dataset."""
@@ -48,6 +52,8 @@ class DenseHaze(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+# endregion
 
 
 # ==============================================================================
