@@ -285,3 +285,13 @@ class ModelAdapterMixin(RegistrableMixin, ModelZooMixin):
 '''
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

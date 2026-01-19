@@ -1,23 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Albumentations utilities.
+"""Albumentations data augmentation utilities.
 
 This module provides utility functions and classes to support data augmentation
-using the Albumentations library.
+using the ``albumentations`` library.
 """
+
+from __future__ import annotations
 
 __all__ = []
 
 
 # ==============================================================================
-# SHARED UTILITIES
+# region UTILITIES
 # ==============================================================================
 
-# --- Data Sanitization (Input Validation, Reshaping) ---
+
+# endregion
 
 
-# --- Performance Monitoring (Timing, Memory Tracking) ---
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
 
+if __name__ == "__main__":
+    pass
 
-# --- Error Handling (Custom Exceptions, Warnings) ---
+# endregion

@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register()
 class GTRain(ImageDataset, RegistrableMixin):
     """GTRain dataset."""
-    
+
     _name      : str         = "gtrain"
     _tasks     : list[Task]  = [Task.DERAIN]
     _subset    : str         = None
@@ -41,3 +41,13 @@ class GTRain(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

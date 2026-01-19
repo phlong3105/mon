@@ -42,7 +42,7 @@ class ImageQualityAssessment(nn.Module):
         eps          : float = 1e-6
     ):
         """Initialize a new instance.
-        
+
         Args:
             exposed_level: Ideal exposure level. Defaults to 0.5.
             pool_size: Size of the pooling kernel. Defaults to 25.
@@ -51,19 +51,19 @@ class ImageQualityAssessment(nn.Module):
         super().__init__()
         self.exposed_level = exposed_level
         self.eps = eps
-        
+
         # Consolidate pooling to avoid repeated padding operations
         self.pad      = nn.ReflectionPad2d(pool_size // 2)
         self.avg_pool = nn.AvgPool2d(pool_size, stride=1)
-        
+
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Compute the IQA score for input.
-        
+
         Args:
             x: Input image, formatted as a torch.Tensor of shape (B, C, H, W)
                 and values ranging from 0.0 to 1.0.
-        
+
         Returns:
             IQA scores, formatted as a torch.Tensor of shape (B, 1, 1, 1).
         """
@@ -71,27 +71,27 @@ class ImageQualityAssessment(nn.Module):
         max_rgb, _ = torch.max(x, dim=1, keepdim=True)
         min_rgb, _ = torch.min(x, dim=1, keepdim=True)
         saturation = (max_rgb - min_rgb + self.eps) / (max_rgb + self.eps)
-        
+
         # Local Statistics (Using shared padded input)
         x_padded = self.pad(x)
         mu       = self.avg_pool(x_padded)     # E[X]
         mu2      = self.avg_pool(x_padded**2)  # E[X^2]
-        
+
         # Average across channels for local illumination/contrast
         mu_mean = mu.mean(dim=1, keepdim=True)
-        
+
         # Exposedness (Distance from target level)
         exposedness = torch.abs(mu_mean - self.exposed_level) + self.eps
-        
+
         # Contrast (Local Variance: Var = E[X^2] - E[X]^2)
         # Using channel-wise mean of variance for structural contrast
         contrast = (mu2 - mu**2).mean(dim=1, keepdim=True)
-        
+
         # Final Score Calculation
         # Reduce spatial dimensions to get a per-image score
         quality_map = (saturation * contrast) / exposedness
         return quality_map.mean(dim=[1, 2, 3], keepdim=True)
-        
+
         # TODO: Delete later
         """
         max_rgb     = torch.max(x, dim=1, keepdim=True)[0]
@@ -116,10 +116,10 @@ def scale_gt_mean(
     eps   : float = 1e-6
 ) -> torch.Tensor | np.ndarray:
     """Scale image to match target's mean intensity.
-    
+
     References:
         - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/measure.py
-        
+
     Args:
         image: Input image, formatted as a torch.Tensor of shape
             (B, C, H, W) and values ranging from 0.0 to 1.0; or as a np.ndarray
@@ -128,10 +128,10 @@ def scale_gt_mean(
             (B, C, H, W) and values ranging from 0.0 to 1.0; or as a np.ndarray
             of shape (H, W, C) with values ranging from 0 to 255.
         eps: Small constant for numerical stability. Defaults to 1e-6.
-        
+
     Returns:
         Scaled image with mean intensity matching the target.
-        
+
     Raises:
         TypeError: If input types are not torch.Tensor or np.ndarray.
     """
@@ -147,5 +147,15 @@ def scale_gt_mean(
         return np.clip(image * scale, 0, 255)
     else:
         raise TypeError(f"Expected torch.Tensor or np.ndarray, but got {type(image)} and {type(target)}.")
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

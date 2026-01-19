@@ -23,7 +23,7 @@ from ....api import *
 @DATASETS.register()
 class NightCity(ImageDataset, RegistrableMixin):
     """NightCity dataset."""
-    
+
     _name      : str         = "nightcity"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.SEGMENT]
     _subset    : str         = None
@@ -89,11 +89,11 @@ class NightCity(ImageDataset, RegistrableMixin):
         {"name": "bicycle"             , "id": 33, "train_id": 18 , "category": "vehicle"     , "category_id": 7, "ignore_in_eval": False, "color": [119, 11 ,  32]},
         {"name": "license plate"       , "id": -1, "train_id": -1 , "category": "vehicle"     , "category_id": 7, "ignore_in_eval": True , "color": [0  , 0  , 142]},
     ])
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
@@ -112,3 +112,13 @@ class NightCity(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

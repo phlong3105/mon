@@ -53,7 +53,7 @@ class AdaptiveInstanceNorm2d(nn.Module):
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
             num_features: Number of features in the input tensor.
             eps: A small value to avoid division by zero. Defaults to 0.999.
@@ -70,28 +70,28 @@ class AdaptiveInstanceNorm2d(nn.Module):
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
-        
+
         Args:
             x: Input tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-        
+
         Returns:
             Output tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
         return self.w0 * x + self.w1 * self.norm(x)
-    
+
 
 class HalfInstanceNorm2d(nn.Module):
     r"""Half-instance normalization layer.
-    
+
     Apply Instance Normalization on the first half of the input tensor and
     concatenate it with the second half.
-    
+
     .. math::
-        
+
         y = \text{IN}(x_1) \oplus x_2
-    
+
     where :math:`\oplus` is concatenation along the channel dimension.
 
     Attributes:
@@ -108,7 +108,7 @@ class HalfInstanceNorm2d(nn.Module):
         *args, **kwargs,
     ):
         """Initialize a new instance.
-        
+
         Args:
             num_features: Number of features in the input tensor.
             eps: A small value to avoid division by zero. Defaults to 1e-5.
@@ -118,26 +118,26 @@ class HalfInstanceNorm2d(nn.Module):
                 Defaults to True.
             *args: Additional positional arguments for nn.InstanceNorm2d.
             **kwargs: Additional keyword arguments for nn.InstanceNorm2d.
-            
+
         Raises:
             ValueError: If ``num_features`` is not even.
         """
         super().__init__()
         if num_features % 2 != 0:
             raise ValueError(f"``num_features`` must be even, got {num_features}.")
-        
+
         self.norm = nn.InstanceNorm2d(
             num_features // 2, eps, momentum, affine=affine, *args, **kwargs
         )
-        
+
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
-        
+
         Args:
             x: Input tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-                
+
         Returns:
             Output tensor with dimensions (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
@@ -145,3 +145,13 @@ class HalfInstanceNorm2d(nn.Module):
         y1, y2 = torch.chunk(x, chunks=2, dim=1)
         y1     = self.norm(y1)
         return torch.cat([y1, y2], dim=1)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

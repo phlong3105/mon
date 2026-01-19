@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register()
 class MEF(ImageDataset, RegistrableMixin):
     """MEF dataset."""
-    
+
     _name      : str         = "mef"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -41,3 +41,13 @@ class MEF(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

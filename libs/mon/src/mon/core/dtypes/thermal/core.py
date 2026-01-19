@@ -66,7 +66,7 @@ class InfraredMap(Image):
     Attributes:
         _source (InfraredSource): Source of the infrared data.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -85,14 +85,24 @@ class InfraredMap(Image):
         """
         # Validate and set the depth source
         self._source = InfraredSource(source)
-        
+
         # Continue the initialization chain
         super().__init__(flags=flags, *args, **kwargs)
-        
+
     # ---- Properties ---
     @property
     def source(self) -> InfraredSource:
         """Return the infrared data source."""
         return self._source
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

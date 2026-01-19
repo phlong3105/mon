@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for optimizers and learning rate schedulers."""
+"""Base classes and mixins for optimizers and learning rate schedulers.
+
+This module provides base classes and mixins for optimizers and learning rate
+schedulers.
+"""
 
 from __future__ import annotations
 
@@ -38,5 +42,15 @@ __all__ = []
 
 # --- Mixins ---
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

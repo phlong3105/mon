@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register(name="lime")
 class LIME(ImageDataset, RegistrableMixin):
     """LIME dataset."""
-    
+
     _name      : str         = "lime"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -41,3 +41,13 @@ class LIME(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

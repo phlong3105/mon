@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic convolutional layers.
+"""External APIs.
 
-This module provides standard convolutional layers from PyTorch.
+This module collects all external functionalities that are commonly used in
+this package. It is intended to be imported by other modules for convenience.
 """
 
 from __future__ import annotations
@@ -37,3 +38,13 @@ from torch.nn.modules.conv import (
     LazyConvTranspose2d,
     LazyConvTranspose3d,
 )
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

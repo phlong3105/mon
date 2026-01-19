@@ -17,3 +17,13 @@ __all__ = [
 
 from torch.nn.modules.channelshuffle import ChannelShuffle
 from torch.nn.modules.pixelshuffle import PixelShuffle, PixelUnshuffle
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -57,11 +57,11 @@ from ..image import Image
 
 class SemanticMask(Image):
     """Semantic segmentation mask management class.
-    
+
     Extend ``Image`` to handle semantic mask data and provide properties and
     methods related to mask data.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(self, flags: int = cv2.IMREAD_GRAYSCALE, *args, **kwargs):
         """Initialize a new instance.
@@ -73,5 +73,15 @@ class SemanticMask(Image):
         """
         # Continue the initialization chain
         super().__init__(flags=flags, *args, **kwargs)
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

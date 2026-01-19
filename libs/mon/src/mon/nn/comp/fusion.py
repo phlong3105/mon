@@ -22,7 +22,7 @@ import torch.nn as nn
 
 class DAF(nn.Module):
     """Direct-Add-Fuse (DAF) layer.
-    
+
     Add the input tensor and the residual tensor element-wise.
     """
 
@@ -241,3 +241,13 @@ class iAFF(nn.Module):
         x_lg2 = x_l2 + x_g2
         w2    = self.sigmoid(x_lg2)
         return x * w2 + residual * (1 - w2)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -71,7 +71,7 @@ class BBox(TensorOrArray):
             shape (7+) and in CXCYWHN format.
         _imgsz (tuple[int, int]): Image size as (H, W).
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(self, data: np.ndarray, imgsz: tuple[int, int]):
         """Initialize a new instance.
@@ -83,13 +83,13 @@ class BBox(TensorOrArray):
         """
         # Validate and set image size
         self._imgsz = I.imgsz(imgsz)
-        
+
         # Call the setter to ensure type validation on init
         self.data = data
-        
+
         # Continue the initialization chain
         super().__init__(data=self.data)
-    
+
     # ---- Properties ---
     @property
     def data(self) -> np.ndarray:
@@ -100,7 +100,7 @@ class BBox(TensorOrArray):
             CXCYWHN format.
         """
         return self._data
-    
+
     @data.setter
     def data(self, value: np.ndarray):
         """Set the bounding box data.
@@ -113,40 +113,40 @@ class BBox(TensorOrArray):
             ValueError: If ``value`` is invalid.
         """
         from .ops import is_xywh, is_xyxy, xywh_to_cxcywhn, xyxy_to_cxcywhn
-        
+
         # Ensure we are working with a float ndarray for normalization precision
         if not isinstance(value, np.ndarray):
             value = np.array(value, dtype=np.float32)
-        
+
         if value.ndim != 1 or value.shape[0] < 7:
             raise ValueError(
                 f"Expected 'data' to be a numpy.ndarray of shape (7+), "
                 f"but got {value.shape}."
             )
-        
+
         # Internal conversion logic
         if is_xywh(value, self._imgsz):
             value = xywh_to_cxcywhn(value, self._imgsz)[0]
         elif is_xyxy(value):
             value = xyxy_to_cxcywhn(value, self._imgsz)[0]
-        
+
         self._data = value
-        
+
     @property
     def imgsz(self) -> tuple[int, int]:
         """Return the image size."""
         return self._imgsz
-    
+
     @property
     def conf(self) -> float:
         """Return the confidence score."""
         return float(self._data[5])
-    
+
     @property
     def cls(self) -> int:
         """Return the class identifier."""
         return int(self._data[6])
-    
+
     @property
     def id(self) -> int:
         """Return the tracking identifier."""
@@ -156,7 +156,7 @@ class BBox(TensorOrArray):
     def cxcywhn(self) -> np.ndarray:
         """Return the bounding box in CXCYWHN format."""
         return self._data
-    
+
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
         """Convert the bounding box from CXCYWHN to XYXY format.
 
@@ -168,10 +168,10 @@ class BBox(TensorOrArray):
             Bounding box in XYXY format.
         """
         from .ops import cxcywhn_to_xyxy
-        
+
         imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return cxcywhn_to_xyxy(self._data, imgsz)[0]
-    
+
     def xywh(self, imgsz: tuple[int, int] = None) -> np.ndarray:
         """Convert the bounding box from CXCYWHN to XYWH format.
 
@@ -183,10 +183,10 @@ class BBox(TensorOrArray):
             Bounding box in XYWH format.
         """
         from .ops import cxcywhn_to_xywh
-        
+
         imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return cxcywhn_to_xywh(self._data, imgsz)[0]
-    
+
     @property
     def area(self) -> float:
         """Compute the area of the bounding box in pixels."""
@@ -211,7 +211,7 @@ class BBoxList(PersistentData):
         _fmt (BBoxFormat): Bounding box format in the label file.
         _cvt_fmt (BBoxFormat): Conversion code for bounding box format.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -237,7 +237,7 @@ class BBoxList(PersistentData):
         """
         # Validate and set image size
         self._imgsz = I.imgsz(imgsz)
-        
+
         # Validate data
         if data is None:
             pass
@@ -252,25 +252,25 @@ class BBoxList(PersistentData):
                 f"Expected 'data' to be a numpy.ndarray or a valid label file path, "
                 f"but got {type(data).__name__}."
             )
-        
+
         # Validate paths
         path = Path(path).normalize(exist=True) if path else None
         root = Path(root).normalize(exist=True) if root else None
         if data is None and path is not None:  # Load from path if data not provided
             if not path.is_txt_file(exist=True):
                 raise FileNotFoundError(f"Label file not found at: {path}")
-        
+
         # Ensure at least one of data or path is provided
         if all(v is None for v in [data, path]):
             raise ValueError(f"Expected 'data' or a valid label file path, but got both None.")
-        
+
         # Call the setter to ensure type validation on init
         self._set_fmt(fmt)
         self.data = data
-        
+
         # Continue the initialization chain
         super().__init__(data=self.data, path=path, root=root, persist=persist)
-        
+
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the length of the container.
@@ -290,7 +290,7 @@ class BBoxList(PersistentData):
             Bounding box.
         """
         return BBox(data=self.data[index], imgsz=self._imgsz)
-    
+
     # --- Properties ---
     @property
     def data(self) -> np.ndarray:
@@ -300,7 +300,7 @@ class BBoxList(PersistentData):
         # Use super's behavior to load data from a file if needed.
         # This is implemented because we want to redefine the setter below.
         return super().data
-    
+
     @data.setter
     def data(self, value: np.ndarray):
         """Set the bounding boxes.
@@ -317,25 +317,25 @@ class BBoxList(PersistentData):
             return
 
         from .ops import is_xywh, is_xyxy, xywh_to_cxcywhn, xyxy_to_cxcywhn
-        
+
         if not isinstance(value, np.ndarray):
             value = np.array(value, dtype=np.float32)
-        
+
         if value.ndim != 2 or value.shape[1] < 7:
             raise ValueError(
                 f"Expected 'data' to be a numpy.ndarray of shape (N, 7+), "
                 f"but got {value.shape}."
             )
-        
+
         # Internal conversion logic
         # Vectorized format detection and conversion
         if is_xywh(value, self._imgsz):
             value = xywh_to_cxcywhn(value, self._imgsz)
         elif is_xyxy(value):
             value = xyxy_to_cxcywhn(value, self._imgsz)
-        
+
         self._data = value
-    
+
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the data shape."""
@@ -349,17 +349,17 @@ class BBoxList(PersistentData):
             "dtype": self.data.dtype,
             "type" : type(self.data),
         }
-    
+
     @property
     def imgsz(self) -> tuple[int, int]:
         """Return the image size."""
         return self._imgsz
-    
+
     @property
     def fmt(self) -> BBoxFormat:
         """Return label file format."""
         return self._fmt
-    
+
     def _set_fmt(self, fmt: BBoxFormat):
         """Set the bounding box format in the label file and conversion code.
 
@@ -381,7 +381,7 @@ class BBoxList(PersistentData):
 
         self._fmt     = fmt
         self._cvt_fmt = cvt_fmt
-    
+
     @property
     def conf(self) -> np.ndarray:
         """Return confidence scores for all bounding boxes."""
@@ -396,12 +396,12 @@ class BBoxList(PersistentData):
     def id(self) -> np.ndarray:
         """Return tracking identifiers for all bounding boxes."""
         return self.data[:, 7:8] if self.data.shape[1] > 7 else None
-    
+
     @property
     def cxcywhn(self) -> np.ndarray:
         """Return all bounding boxes in CXCYWHN format."""
         return self.data
-    
+
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
         """Convert all bounding boxes from CXCYWHN to XYXY format.
 
@@ -413,10 +413,10 @@ class BBoxList(PersistentData):
             Bounding boxes in XYXY format.
         """
         from .ops import cxcywhn_to_xyxy
-        
+
         imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return cxcywhn_to_xyxy(self.data, imgsz)
-    
+
     def xywh(self, imgsz: tuple[int, int] = None) -> np.ndarray:
         """Convert all bounding boxes from CXCYWHN to XYWH format.
 
@@ -428,10 +428,10 @@ class BBoxList(PersistentData):
             Bounding boxes in XYWH format.
         """
         from .ops import cxcywhn_to_xywh
-        
+
         imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return cxcywhn_to_xywh(self.data, imgsz)
-    
+
     # --- Data Loading ---
     def load(self, reload: bool = False) -> np.ndarray:
         """Load all bounding boxes from a label file.
@@ -450,9 +450,19 @@ class BBoxList(PersistentData):
         # Load all bounding boxes from the label file
         from .io import load
         bbox = load(path=self._path, fmt=self._cvt_fmt, imgsz=self._imgsz)
-        
+
         # Cache the bounding boxes if needed
         self._data = bbox
         return self._data
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

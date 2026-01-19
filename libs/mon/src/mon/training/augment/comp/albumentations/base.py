@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Albumentations base classes and mixins.
+"""Base classes and mixins for Albumentations augmentations.
 
-This module provides the base classes and mixins for Albumentations-based data
-augmentation and transformations.
+This module provides base classes and mixins for Albumentations augmentations.
 """
+
+from __future__ import annotations
 
 __all__ = [
     "TARGET_TYPES",
@@ -13,10 +14,19 @@ __all__ = [
 
 
 # ==============================================================================
-# TYPE DEFINITIONS & PROTOCOLS (Interfaces)
+# region CONSTANTS
+# ==============================================================================
+
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS & PROTOCOLS
 # ==============================================================================
 
 # --- Type Aliases ---
+
 TARGET_TYPES = [
     "image",      # The primary input image(s) (e.g., [H, W, C]). Receives geometric, color, and intensity transforms. Uses standard interpolation for geometric transforms.
     "mask",       # Segmentation mask(s) (e.g., [H, W]). Receives geometric transforms using nearest-neighbor interpolation. Does not receive color/intensity transforms.
@@ -30,17 +40,30 @@ TARGET_TYPES = [
 ]
 
 
-# --- Structural Protocols ---
+# --- Protocols ---
+
+
+# endregion
 
 
 # ==============================================================================
-# BASE CLASSES & MIXINS (Behaviors)
+# region BASE CLASSES & MIXINS
 # ==============================================================================
 
-# --- Structural Bases ---
+# --- Base Classes ---
 
 
-# --- Lifecycle Mixins ---
+# --- Mixins ---
 
 
-# --- Compute Mixins ---
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

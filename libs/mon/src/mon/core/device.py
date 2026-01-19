@@ -67,7 +67,7 @@ def list_devices() -> list[str]:
     devices = ["auto", "cpu"]
     if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
         devices.append("mps")
-    
+
     if torch.cuda.is_available():
         num_devices  = torch.cuda.device_count()
         # Add primary indices first (fastest path)
@@ -180,7 +180,7 @@ def query_vram_usage(
 
     Returns:
         Tuple of (total, used, free) VRAM values in the requested unit.
-        
+
     Raises:
         ImportError: If pynvml is not installed.
         NVMLError: If there is an error communicating with the NVIDIA driver.
@@ -240,13 +240,13 @@ def parse_device(
     """
     if isinstance(device, torch.device):
         return device
-    
+
     if device is None:
         return "cpu"
-    
+
     if isinstance(device, int):
         return [str(device)]
-    
+
     if isinstance(device, str):
         device = device.lower().strip()
         if not device or device == "cpu":
@@ -255,7 +255,7 @@ def parse_device(
             return device
         if device.startswith("cpu") or device.startswith("mps"):
             return torch.device(device)
-        
+
         # Clean the string by removing brackets, spaces, quotes, and "cuda:" prefix
         clean_str = _DEVICE_CLEAN_RE.sub("", device).replace("cuda:", "")
         return [x for x in clean_str.split(",") if x]
@@ -268,5 +268,15 @@ def parse_device(
 
 # --- Aggregation ---
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

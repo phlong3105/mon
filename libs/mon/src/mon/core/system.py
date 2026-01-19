@@ -41,7 +41,7 @@ def set_random_seed(
     if isinstance(seed, Sequence):
         # If a range is provided, sample a seed from it.
         seed = random.randint(seed[0], seed[1]) if len(seed) == 2 else seed[-1]
-    
+
     # Set seeds for all relevant libraries.
     random.seed(seed)
     np.random.seed(seed)
@@ -49,7 +49,7 @@ def set_random_seed(
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
-    
+
     if deterministic:
         # Configure PyTorch for deterministic behavior.
         torch.backends.cudnn.deterministic = True
@@ -74,5 +74,15 @@ def clear_terminal():
         # \033[H moves the cursor to the top-left corner.
         # \033[2J clears the entire screen.
         print("\033[H\033[2J", end="", flush=True)
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

@@ -20,7 +20,7 @@ from ....api import *
 @DATASETS.register()
 class RealBlurJ(ImageDataset, RegistrableMixin):
     """RealBlur-J dataset."""
-    
+
     _name      : str         = "realblur"
     _tasks     : list[Task]  = [Task.DEBLUR]
     _subset    : str         = None
@@ -47,7 +47,7 @@ class RealBlurJ(ImageDataset, RegistrableMixin):
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
@@ -94,7 +94,7 @@ class RealBlurR(ImageDataset, RegistrableMixin):
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
@@ -109,3 +109,13 @@ class RealBlurR(ImageDataset, RegistrableMixin):
                     images.append(Image(data=path, root=pattern))
 
         return images
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -21,7 +21,7 @@ from ....api import *
 @DATASETS.register()
 class GTA5NighttimeFog(ImageDataset, RegistrableMixin):
     """GTA5NighttimeFog dataset."""
-    
+
     _name      : str         = "gta5nighttimefog"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DEHAZE]
     _subset    : str         = None
@@ -51,3 +51,13 @@ class GTA5NighttimeFog(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

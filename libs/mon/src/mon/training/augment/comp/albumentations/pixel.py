@@ -10,6 +10,8 @@ image-based normalization, and min-max scaling. This transform is useful for pre
 images for neural network input while ensuring that masks are appropriately normalized.
 """
 
+from __future__ import annotations
+
 __all__ = [
     "NormalizeWithMask",
 ]
@@ -33,7 +35,7 @@ class NormalizeWithMask(BasicTransform):
     """Applies various normalization techniques to an image and masks. The
     specific normalization technique can be selected with the ``normalization``
     parameter.
-    
+
     Standard normalization is applied using the formula:
         img = (img - mean * max_pixel_value) / (std * max_pixel_value).
         Other normalization techniques adjust the image based on global or per-channel statistics,
@@ -42,11 +44,11 @@ class NormalizeWithMask(BasicTransform):
     References:
         - ImageNet mean and std: https://pytorch.org/vision/stable/models.html
         - Inception preprocessing: https://keras.io/api/applications/inceptionv3/
-    
+
     Attributes:
         _targets (Tuple[Targets, ...]): Target types that the transform can be
             applied to. Supports image, mask, and volume.
-         
+
     Examples:
         >>> import numpy as np
         >>> import albumentations as A
@@ -64,9 +66,9 @@ class NormalizeWithMask(BasicTransform):
         >>> transform_minmax = A.Normalize(normalization="min_max", p=1.0)
         >>> normalized_image_minmax = transform_minmax(image=image)["image"]
     """
-    
+
     _targets = (Targets.IMAGE, Targets.MASK, Targets.VOLUME)
-    
+
     class InitSchema(BaseTransformInitSchema):
         mean: tuple[float, ...] | float | None
         std : tuple[float, ...] | float | None
@@ -107,7 +109,7 @@ class NormalizeWithMask(BasicTransform):
         p: float = 1.0,
     ):
         """Initializes the NormalizeWithMask transformation.
-        
+
         Args:
             mean (tuple[float, ...] or float, optional): Mean values for
                 standard normalization. Defaults to ImageNet mean values:
@@ -135,7 +137,7 @@ class NormalizeWithMask(BasicTransform):
                     values to a [0, 1] range based on the per-channel minimum
                     and maximum pixel values.
             p (float): Probability of applying the transform. Defaults to 1.0.
-        
+
         Note:
             - For "standard" normalization, ``mean``, ``std``, and ``max_pixel_value``
                 must be provided.
@@ -153,15 +155,15 @@ class NormalizeWithMask(BasicTransform):
         self._denominator     = np.reciprocal(np.array(std, dtype=np.float32) * max_pixel_value)
         self._max_pixel_value = max_pixel_value
         self._normalization   = normalization
-    
+
     # --- Properties ---
     @property
     def targets(self) -> dict[str, Callable[..., Any]]:
         """Getter for the targets mapping.
-        
+
         This property returns a dictionary that maps target types to their
         corresponding apply methods.
-        
+
         Returns:
             dict[str, Callable[..., Any]]: A dictionary mapping target types
                 ("image", "mask", "volume") to their respective apply methods.
@@ -174,7 +176,7 @@ class NormalizeWithMask(BasicTransform):
             "volume" : self.apply_to_volume,
             "volumes": self.apply_to_volumes,
         }
-    
+
     # --- Apply ---
     def apply(self, img: np.ndarray, **params: Any) -> np.ndarray:
         """Applies normalization to the input image.
@@ -182,14 +184,14 @@ class NormalizeWithMask(BasicTransform):
         Args:
             img (numpy.ndarray): Image to normalize.
             **params (Any): Additional parameters.
-            
+
         Returns:
             numpy.ndarray: Normalized image.
         """
         if self._normalization == "standard":
             return normalize(img, self._mean_np, self._denominator)
         return normalize_per_image(img, self._normalization)
-    
+
     def apply_to_images(self, images: np.ndarray, **params: Any) -> np.ndarray:
         """Applies normalization to a batch of images.
 
@@ -201,7 +203,7 @@ class NormalizeWithMask(BasicTransform):
             numpy.ndarray: Normalized batch of images.
         """
         return self.apply(images, **params)
-    
+
     def apply_to_mask(self, mask: np.ndarray, **params: Any) -> np.ndarray:
         """Applies normalization to a mask.
 
@@ -213,7 +215,7 @@ class NormalizeWithMask(BasicTransform):
             numpy.ndarray: Normalized mask.
         """
         return self.apply(mask, **params)
-    
+
     def apply_to_masks(self, masks: np.ndarray, **params: Any) -> np.ndarray:
         """Applies normalization to a batch of masks.
 
@@ -225,7 +227,7 @@ class NormalizeWithMask(BasicTransform):
             numpy.ndarray: Normalized batch of masks.
         """
         return self.apply(masks, **params)
-    
+
     def apply_to_volume(self, volume: np.ndarray, **params: Any) -> np.ndarray:
         """Applies normalization to a 3D volume.
 
@@ -237,7 +239,7 @@ class NormalizeWithMask(BasicTransform):
             numpy.ndarray: Normalized volume.
         """
         return self.apply(volume, **params)
-    
+
     def apply_to_volumes(self, volumes: np.ndarray, **params: Any) -> np.ndarray:
         """Applies normalization to a batch of 3D volumes.
 

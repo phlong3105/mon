@@ -20,3 +20,13 @@ from torch.nn.modules.upsampling import (
     UpsamplingBilinear2d,
     UpsamplingNearest2d,
 )
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

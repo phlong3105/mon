@@ -19,7 +19,7 @@ from ..api import *
 @DATASETS.register()
 class Speed10(ImageDataset, RegistrableMixin):
     """Speed10 dataset."""
-    
+
     _name      : str         = "speed10"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -42,7 +42,7 @@ class Speed10(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
-    
+
 
 @DATASETS.register()
 class Speed1K(ImageDataset, RegistrableMixin):
@@ -70,3 +70,13 @@ class Speed1K(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -23,7 +23,7 @@ from ....api import *
 @DATASETS.register()
 class LLVIP(ImageDataset, RegistrableMixin):
     """LLVIP dataset."""
-    
+
     _name      : str         = "llvip"
     _tasks     : list[Task]  = [Task.NTE, Task.DETECT]
     _subset    : str         = None
@@ -53,3 +53,13 @@ class LLVIP(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

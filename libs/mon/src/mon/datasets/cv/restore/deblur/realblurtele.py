@@ -20,7 +20,7 @@ from ....api import *
 @DATASETS.register()
 class RealBlurTeleJ(ImageDataset, RegistrableMixin):
     """RealBlurTele-J dataset."""
-    
+
     _name      : str         = "realblurtelej"
     _tasks     : list[Task]  = [Task.DEBLUR]
     _subset    : str         = "j"
@@ -47,7 +47,7 @@ class RealBlurTeleJ(ImageDataset, RegistrableMixin):
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
@@ -60,7 +60,7 @@ class RealBlurTeleJ(ImageDataset, RegistrableMixin):
             for path in pbar.track(sequence=paths, description=desc):
                 if path.is_image_file():
                     images.append(Image(data=path, root=pattern))
-        
+
         return images
 
 
@@ -94,7 +94,7 @@ class RealBlurTeleR(ImageDataset, RegistrableMixin):
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
@@ -109,3 +109,13 @@ class RealBlurTeleR(ImageDataset, RegistrableMixin):
                     images.append(Image(data=path, root=pattern))
 
         return images
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

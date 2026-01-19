@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register(name="lolv1")
 class LOLv1(ImageDataset, RegistrableMixin):
     """LOL-v1 dataset."""
-    
+
     _name      : str         = "lolv1"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -48,3 +48,13 @@ class LOLv1(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

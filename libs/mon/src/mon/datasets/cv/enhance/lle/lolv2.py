@@ -19,7 +19,7 @@ from ....api import *
 @DATASETS.register()
 class LOLv2Real(ImageDataset, RegistrableMixin):
     """LOL-v2 Real dataset."""
-    
+
     _name      : str         = "lolv2"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = "real"
@@ -49,12 +49,12 @@ class LOLv2Real(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
-    
+
 
 @DATASETS.register()
 class LOLv2Syn(ImageDataset, RegistrableMixin):
     """LOL-v2 Synthetic dataset."""
-    
+
     _name      : str         = "lolv2"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = "syn"
@@ -84,3 +84,13 @@ class LOLv2Syn(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register()
 class FlareReal800(ImageDataset, RegistrableMixin):
     """FlareReal800 dataset."""
-    
+
     _name      : str         = "flarereal800"
     _tasks     : list[Task]  = [Task.DEFLARE]
     _subset    : str         = None
@@ -41,3 +41,13 @@ class FlareReal800(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

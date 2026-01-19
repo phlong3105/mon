@@ -1742,3 +1742,13 @@ def print_run_summary(args: dict | box.Box, full: bool = False):
     console.rule() # Add a closing line for visual polish
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

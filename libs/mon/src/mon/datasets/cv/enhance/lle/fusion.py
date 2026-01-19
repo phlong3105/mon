@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register(name="fusion")
 class Fusion(ImageDataset, RegistrableMixin):
     """Fusion dataset."""
-    
+
     _name      : str         = "fusion"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -41,3 +41,13 @@ class Fusion(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -9,7 +9,7 @@ GhostNet and GhostNetV2 papers.
 References:
     - Paper-V1: "GhostNet: More Features from Cheap Operations," CVPR 2020.
     - Code-V2: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnet_pytorch
-    
+
     - Paper-V2: "GhostNetV2: Enhance Cheap Operation with Long-Range Attention," NeurIPS 2022.
     - Code-V2: https://github.com/phlong3105/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
 """
@@ -37,7 +37,7 @@ import torch.nn.functional as F
 
 def _make_divisible(v: int, divisor: int, min_value: int = None) -> int:
     """Ensure that all layers have a channel number that is divisible by 8.
-    
+
     References:
         - Code: https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
     """
@@ -76,7 +76,7 @@ class SqueezeExcite(nn.Module):
         act1 (Callable): Activation function.
         conv_expand (torch.nn.Conv2d): Expansion convolution layer.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -134,7 +134,7 @@ class ConvBnAct(nn.Module):
         bn1 (torch.nn.BatchNorm2d): Batch normalization layer.
         act1 (Callable): Activation function.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -194,7 +194,7 @@ class GhostModule(nn.Module):
         primary_conv (torch.nn.Sequential): Primary convolution layer.
         cheap_operation (torch.nn.Sequential): Cheap operation layer.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -319,7 +319,7 @@ class GhostBottleneck(nn.Module):
 
         # Point-wise linear projection
         self.ghost2 = GhostModule(mid_channels, out_channels, relu=False)
-        
+
         # Shortcut
         if in_channels == out_channels and self.stride == 1:
             self.shortcut = nn.Sequential()
@@ -383,7 +383,7 @@ class GhostModuleV2(nn.Module):
         gate_fn (torch.nn.Sigmoid): Gating function (only in "attn" mode).
         short_conv (torch.nn.Sequential): Short convolution layer (only in "attn" mode).
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -425,7 +425,7 @@ class GhostModuleV2(nn.Module):
             nn.BatchNorm2d(new_channels),
             nn.ReLU(inplace=True) if relu else nn.Sequential(),
         )
-        
+
         if self.mode == "attn":
             self.gate_fn    = nn.Sigmoid()
             self.short_conv = nn.Sequential(
@@ -436,7 +436,7 @@ class GhostModuleV2(nn.Module):
                 nn.Conv2d(out_channels, out_channels, kernel_size=(5, 1), stride=1, padding=(2, 0), groups=out_channels, bias=False),
                 nn.BatchNorm2d(out_channels),
             )
-      
+
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
@@ -451,13 +451,13 @@ class GhostModuleV2(nn.Module):
         x2 = self.cheap_operation(x1)
         y  = torch.cat([x1, x2], dim=1)
         y  = y[:, :self.out_channels, :, :]
-        
+
         if self.mode == "attn":
             residual = self.short_conv(F.avg_pool2d(x, kernel_size=2, stride=2))
             residual = self.gate_fn(residual)
             residual = F.interpolate(residual, size=(y.shape[-2], y.shape[-1]), mode="nearest")
             y        = y * residual
-            
+
         return y
 
 
@@ -480,7 +480,7 @@ class GhostBottleneckV2(nn.Module):
         ghost2 (GhostModuleV2): Second Ghost module.
         shortcut (torch.nn.Sequential): Shortcut connection.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -536,9 +536,9 @@ class GhostBottleneckV2(nn.Module):
             self.se = SqueezeExcite(mid_channels, se_ratio=se_ratio)
         else:
             self.se = None
-            
+
         self.ghost2 = GhostModuleV2(mid_channels, out_channels, relu=False, mode="original")
-        
+
         # Shortcut
         if in_channels == out_channels and self.stride == 1:
             self.shortcut = nn.Sequential()
@@ -557,7 +557,7 @@ class GhostBottleneckV2(nn.Module):
                 nn.Conv2d(in_channels, out_channels, 1, stride=1, padding=0, bias=False),
                 nn.BatchNorm2d(out_channels),
             )
-            
+
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
@@ -578,5 +578,15 @@ class GhostBottleneckV2(nn.Module):
         x  = self.ghost2(x)
         x += self.shortcut(residual)
         return x
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

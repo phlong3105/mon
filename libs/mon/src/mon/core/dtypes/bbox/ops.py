@@ -75,7 +75,7 @@ def is_normalized(bbox: np.ndarray) -> bool:
     """
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Check if coords are in [0, 1] with a small epsilon for float precision
     return np.all(bbox[:, :4] >= -1e-5) and np.all(bbox[:, :4] <= 1.00001)
 
@@ -92,10 +92,10 @@ def is_cxcywhn(bbox: np.ndarray) -> bool:
     """
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     if bbox.shape[0] == 0:
         return False
-    
+
     # CXCYWHN is essentially any valid normalized box where W/H are positive
     return is_normalized(bbox) and np.all(bbox[:, 2:4] > 0)
 
@@ -112,13 +112,13 @@ def is_xyxy(bbox: np.ndarray) -> bool:
     """
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     if bbox.shape[0] == 0:
         return False
-    
+
     if is_normalized(bbox):
         return False
-    
+
     # Check all boxes: x_max > x_min and y_max > y_min
     # This is the defining characteristic of XYXY
     return np.all(bbox[:, 2] > bbox[:, 0]) and np.all(bbox[:, 3] > bbox[:, 1])
@@ -137,31 +137,31 @@ def is_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> bool:
     """
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     if bbox.shape[0] == 0:
         return False
-    
+
     if is_normalized(bbox):
         return False
-    
+
     h, w = I.imgsz(imgsz)
     x1, y1, val2, val3 = bbox[:, 0], bbox[:, 1], bbox[:, 2], bbox[:, 3]
-    
+
     # Rule 1: Width and Height must be positive
     # In XYWH, val2 and val3 are w and h.
     is_positive_dims = np.all(val2 > 0) and np.all(val3 > 0)
-    
+
     # Rule 2: In XYXY, val2 (x2) must be greater than x1.
     # If there are cases where val2 < x1, it's definitely NOT XYXY.
     is_not_xyxy = np.any(val2 < x1) or np.any(val3 < y1)
-    
+
     # Rule 3: Magnitude check (Heuristic)
     # If we assume XYXY, and x2 + y2 are significantly larger than width/height
     # would be in this context, we lean toward XYXY.
     # Here we check if the values at index 2,3 are "too small" to be
     # absolute coordinates for objects located at x1, y1.
     is_likely_wh = np.mean(val2) < np.mean(x1) if np.mean(x1) > w/4 else True
-    
+
     return is_positive_dims and (is_not_xyxy or is_likely_wh)
 
 # endregion
@@ -178,9 +178,9 @@ def is_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> bool:
 
 def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
     """Filter bounding boxes by IoU threshold using a simple area comparison.
-    
+
     TODO: This is similar to Non-Maximum Suppression (NMS), but using area as the tie-breaker. Consider making a full family of NMS functions.
-    
+
     Args:
         bbox: Batch of bounding boxes, formatted as a numpy.ndarray of shape
             (N, 7+) and in XYXY format.
@@ -191,29 +191,29 @@ def filter_iou(bbox: np.ndarray, iou_thres: float = 0.5) -> np.ndarray:
     """
     if len(bbox) <= 1:
         return bbox
-    
+
     # Calculate the IoU matrix once
     matrix = iou_matrix(bbox)
-    
+
     # Pre-calculate areas
     areas = (bbox[:, 2] - bbox[:, 0]) * (bbox[:, 3] - bbox[:, 1])
-    
+
     # Sort indices by area descending (largest boxes first)
     # This ensures we compare the 'best' candidates first
     order = areas.argsort()[::-1]
     keep  = []
-    
+
     while order.size > 0:
         i = order[0]
         keep.append(i)
-        
+
         # Calculate overlap of the current largest box with the rest
         # We use the pre-computed matrix for speed
         ious = matrix[i, order[1:]]
-        
+
         # Identify indices of boxes that don't overlap significantly
         inds = np.where(ious < iou_thres)[0]
-        
+
         # Only keep the boxes that are 'far' from the current one
         order = order[inds + 1]
 
@@ -324,16 +324,16 @@ def enclosing(bbox: np.ndarray) -> np.ndarray:
     """
     if bbox.shape[-1] < 8:
         raise ValueError(f"Expected corner format (last dim >= 8), but got {bbox.shape[-1]}.")
-    
+
     # Efficiently separate X and Y coordinates
     x_coords = bbox[:, 0:8:2] # Slicing [start:stop:step]
     y_coords = bbox[:, 1:8:2]
-    
+
     x1 = np.min(x_coords, axis=1)
     y1 = np.min(y_coords, axis=1)
     x2 = np.max(x_coords, axis=1)
     y2 = np.max(y_coords, axis=1)
-    
+
     # Reassemble with remaining attributes (conf, class, id)
     return np.column_stack([x1, y1, x2, y2, bbox[:, 8:]])
 
@@ -382,11 +382,11 @@ def center_distance(
     # Calculate centers: (N, 2) and (M, 2)
     c1 = (bbox1[:, :2] + bbox1[:, 2:4]) / 2.0
     c2 = (bbox2[:, :2] + bbox2[:, 2:4]) / 2.0
-    
+
     # Broadcast to (N, M, 2)
     # Using None indexing is slightly cleaner than expand_dims for pairwise ops
     dist = np.linalg.norm(c1[:, None, :] - c2[None, :, :], axis=-1)
-    
+
     # Normalize
     if imgsz is not None:
         # Normalize by the image diagonal (constant across frames)
@@ -398,7 +398,7 @@ def center_distance(
     if max_dist > 1e-7:
         # Invert: 1.0 is closest, 0.0 is furthest
         return 1.0 - (dist / max_dist)
-    
+
     return np.ones_like(dist)
 
 
@@ -425,7 +425,7 @@ def iou(bbox1: np.ndarray, bbox2: np.ndarray, eps: float = 1e-7) -> np.ndarray:
     # bbox2[None, :, :2] is shape (1, M, 2)
     lt = np.maximum(bbox1[:, None, :2], bbox2[None, :, :2])  # left-top
     rb = np.minimum(bbox1[:, None, 2:4], bbox2[None, :, 2:4]) # right-bottom
-    
+
     # Intersection Area
     wh    = np.maximum(0.0, rb - lt)
     inter = wh[:, :, 0] * wh[:, :, 1]
@@ -457,19 +457,19 @@ def giou(bbox1: np.ndarray, bbox2: np.ndarray, eps: float = 1e-7) -> np.ndarray:
     # Ensure 2D arrays
     bbox1 = to_2d(bbox1)
     bbox2 = to_2d(bbox2)
-    
+
     # Standard IoU Calculation
     # lt: left-top, rb: right-bottom
     lt    = np.maximum(bbox1[:, None, :2], bbox2[None, :, :2])
     rb    = np.minimum(bbox1[:, None, 2:4], bbox2[None, :, 2:4])
     wh    = np.maximum(0.0, rb - lt)
     inter = wh[..., 0] * wh[..., 1]
-    
+
     area1 = (bbox1[:, 2] - bbox1[:, 0]) * (bbox1[:, 3] - bbox1[:, 1])
     area2 = (bbox2[:, 2] - bbox2[:, 0]) * (bbox2[:, 3] - bbox2[:, 1])
     union = area1[:, None] + area2[None, :] - inter + eps
     iou_  = inter / union
-    
+
     # Enclosing Box (C)
     # Finding the min of the mins and max of the maxes
     c_lt   = np.minimum(bbox1[:, None, :2], bbox2[None, :, :2])
@@ -576,14 +576,14 @@ def ciou(bbox1: np.ndarray, bbox2: np.ndarray, eps: float = 1e-7) -> np.ndarray:
     # Aspect Ratio Term (CIoU)
     w1, h1 = (b1[..., 2] - b1[..., 0]), (b1[..., 3] - b1[..., 1])
     w2, h2 = (b2[..., 2] - b2[..., 0]), (b2[..., 3] - b2[..., 1])
-    
+
     # Standard CIoU v calculation
     v = (4 / np.pi**2) * np.power(np.arctan(w2 / (h2 + eps)) - np.arctan(w1 / (h1 + eps)), 2)
-    
+
     # alpha is defined such that it prioritizes the overlap over aspect ratio
     with np.errstate(divide='ignore', invalid='ignore'):
         alpha = v / (v - iou_ + 1.0 + eps)
-    
+
     return iou_ - (rho2 / c2_diag) - (alpha * v)
 
 
@@ -601,7 +601,7 @@ def iou_matrix(bbox: np.ndarray, self_match: bool = False) -> np.ndarray:
     """
     # Ensure 2D arrays
     bbox = to_2d(bbox)
-    
+
     # Slice once to avoid repeated indexing
     x1, y1, x2, y2 = bbox[:, 0:1], bbox[:, 1:2], bbox[:, 2:3], bbox[:, 3:4]
 
@@ -612,13 +612,13 @@ def iou_matrix(bbox: np.ndarray, self_match: bool = False) -> np.ndarray:
     # Vectorized Union
     area_ = (x2 - x1) * (y2 - y1)
     union = area_ + area_.T - inter
-    
+
     # eps = 1e-7 to prevent division by zero
     iou_mat = np.divide(inter, union, out=np.zeros_like(inter), where=union > 1e-7)
 
     if not self_match:
         np.fill_diagonal(iou_mat, 0)
-        
+
     return iou_mat
 
 # endregion
@@ -645,21 +645,21 @@ def xywh_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     # Ensure w0 and h0 are floats to prevent integer division issues
     imgsz  = I.imgsz(imgsz)
     h0, w0 = float(imgsz[0]), float(imgsz[1])
-    
+
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Handle empty inputs
     if bbox.shape[0] == 0:
         return bbox.copy()
-   
+
     # Vectorized transformation
     # We slice up to 4 to isolate coordinates, then grab the rest
     coords = bbox[:, :4]
     rest   = bbox[:, 4:]
-    
+
     x, y, w, h = coords.T
-    
+
     cx_n = (x + w / 2.0) / w0
     cy_n = (y + h / 2.0) / h0
     w_n  = w / w0
@@ -682,25 +682,25 @@ def xywh_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Handle empty inputs
     if bbox.shape[0] == 0:
         return bbox.copy()
-    
+
     # Vectorized transformation
     # We slice up to 4 to isolate coordinates, then grab the rest
     coords = bbox[:, :4]
     rest   = bbox[:, 4:]
-    
+
     x, y, w, h = coords.T
-    
+
     # Calculate new boundaries
     x2 = x + w
     y2 = y + h
-    
+
     # Reassemble
     return np.column_stack((x, y, x2, y2, rest))
-   
+
 
 def xyxy_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from XYXY to normalized CXCYWHN.
@@ -717,32 +717,32 @@ def xyxy_to_cxcywhn(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     # Ensure w0 and h0 are floats to prevent integer division issues
     imgsz  = I.imgsz(imgsz)
     h0, w0 = float(imgsz[0]), float(imgsz[1])
-    
+
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Handle empty inputs
     if bbox.shape[0] == 0:
         return bbox.copy()
-   
+
     # Vectorized transformation
     # We slice up to 4 to isolate coordinates, then grab the rest
     coords = bbox[:, :4]
     rest   = bbox[:, 4:]
-    
+
     x1, y1, x2, y2 = coords.T
-    
+
     # Compute normalized CXCYWH
     # Use 1e-7 to prevent division by zero if imgsz is invalid
     eps  = 1e-7
     w    = x2 - x1
     h    = y2 - y1
-    
+
     cx_n = (x1 + w / 2.0) / (w0 + eps)
     cy_n = (y1 + h / 2.0) / (h0 + eps)
     w_n  = w / (w0 + eps)
     h_n  = h / (h0 + eps)
-    
+
     # Reassemble
     return np.column_stack((cx_n, cy_n, w_n, h_n, rest))
 
@@ -760,22 +760,22 @@ def xyxy_to_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Handle empty inputs
     if bbox.shape[0] == 0:
         return bbox.copy()
-   
+
     # Vectorized transformation
     # We slice up to 4 to isolate coordinates, then grab the rest
     coords = bbox[:, :4]
     rest   = bbox[:, 4:]
-    
+
     x1, y1, x2, y2 = coords.T
-    
+
     # Compute width and height
     w = x2 - x1
     h = y2 - y1
-    
+
     # Reassemble
     return np.column_stack((x1, y1, w, h, rest))
 
@@ -795,30 +795,30 @@ def cxcywhn_to_xywh(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     # Ensure w0 and h0 are floats to prevent integer division issues
     imgsz  = I.imgsz(imgsz)
     h0, w0 = float(imgsz[0]), float(imgsz[1])
-    
+
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Handle empty inputs
     if bbox.shape[0] == 0:
         return bbox.copy()
-   
+
     # Vectorized transformation
     # We slice up to 4 to isolate coordinates, then grab the rest
     coords = bbox[:, :4]
     rest   = bbox[:, 4:]
-    
+
     cx_n, cy_n, w_n, h_n = coords.T
-    
+
     # Denormalize and Shift
     w = w_n * w0
     h = h_n * h0
     x = (cx_n * w0) - (w / 2.0)
     y = (cy_n * h0) - (h / 2.0)
-    
+
     # Reassemble
     return np.column_stack((x, y, w, h, rest))
-    
+
 
 def cxcywhn_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes from CXCYWHN to XYXY.
@@ -835,21 +835,21 @@ def cxcywhn_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     # Ensure w0 and h0 are floats to prevent integer division issues
     imgsz  = I.imgsz(imgsz)
     h0, w0 = float(imgsz[0]), float(imgsz[1])
-    
+
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Handle empty inputs
     if bbox.shape[0] == 0:
         return bbox.copy()
-   
+
     # Vectorized transformation
     # We slice up to 4 to isolate coordinates, then grab the rest
     coords = bbox[:, :4]
     rest   = bbox[:, 4:]
-    
+
     cx_n, cy_n, w_n, h_n = coords.T
-    
+
     # Transform to absolute corners
     # Applying the width/height offset before multiplying by imgsz
     # is mathematically identical but slightly cleaner.
@@ -857,10 +857,10 @@ def cxcywhn_to_xyxy(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     y1 = (cy_n - h_n / 2) * h0
     x2 = (cx_n + w_n / 2) * w0
     y2 = (cy_n + h_n / 2) * h0
-    
+
     # Reassemble
     return np.column_stack((x1, y1, x2, y2, rest))
-    
+
 
 def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.ndarray:
     """Convert bounding boxes between supported formats.
@@ -879,11 +879,11 @@ def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.nda
     """
     if len(bbox) == 0:
         return bbox
-    
+
     # Normalize the enum input
     if not isinstance(fmt, BBoxFormat):
         fmt = BBoxFormat(fmt)
-    
+
     match fmt:
         # COCO (XYWH) -> Target
         case BBoxFormat.COCO2VOC | BBoxFormat.XYWH2XYXY:
@@ -906,7 +906,7 @@ def convert(bbox: np.ndarray, fmt: BBoxFormat, imgsz: tuple[int, int]) -> np.nda
         case _:
             raise ValueError(f"Unsupported 'fmt' conversion: {fmt}. "
                              f"Must be one of: {BBoxFormat.conversion_codes()}.")
-    
+
 
 # --- Encoding ---
 
@@ -936,17 +936,17 @@ def to_2d(bbox: Union[np.ndarray, list, tuple]) -> np.ndarray:
         except ValueError:
             # Handle jagged arrays (e.g., one box has 7 elements, another has 8)
             raise ValueError("Expected all elements in 'bbox' to have the same shape.")
-    
+
     if not isinstance(bbox, np.ndarray):
         raise TypeError(f"Expected 'bbox' to be a numpy.ndarray, list, or tuple, "
                         f"but got {type(bbox).__name__}.")
-    
+
     # Handle various NumPy shapes
     if bbox.ndim == 1:
         return bbox[np.newaxis, :]   # [5+] -> [1, 5+]
     elif bbox.ndim == 3:
         return np.squeeze(bbox)      # [1, N, 5+] -> [N, 5+]
-    
+
     return bbox
 
 
@@ -1017,22 +1017,22 @@ def split(image: np.ndarray, bbox : np.ndarray, n: int = 2) -> tuple[list[np.nda
     sub_w      = w0 // cols
     sub_images = []
     sub_bboxes = []
-    
+
     # Pre-convert all bboxes to global XYXY once to avoid repeated math
     bbox_xyxy_global = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
-    
+
     for i in range(rows):
         for j in range(cols):
             if len(sub_images) >= n:
                 break
-            
+
             y_start, x_start = i * sub_h, j * sub_w
             y_end, x_end     = min(y_start + sub_h, h0), min(x_start + sub_w, w0)
-            
+
             tile   = image[y_start:y_end, x_start:x_end].copy()
             th, tw = tile.shape[:2]  # Actual tile dimensions
             sub_images.append(tile)
-            
+
             if len(bbox) == 0:
                 sub_bboxes.append(np.zeros((0, bbox.shape[1]), dtype=np.float32))
                 continue
@@ -1041,11 +1041,11 @@ def split(image: np.ndarray, bbox : np.ndarray, n: int = 2) -> tuple[list[np.nda
             tile_bboxes = bbox_xyxy_global.copy()
             tile_bboxes[:, [0, 2]] -= x_start
             tile_bboxes[:, [1, 3]] -= y_start
-            
+
             # Clip to tile boundaries
             tile_bboxes[:, [0, 2]] = np.clip(tile_bboxes[:, [0, 2]], 0, tw)
             tile_bboxes[:, [1, 3]] = np.clip(tile_bboxes[:, [1, 3]], 0, th)
-            
+
             # Filter out boxes that have no area in this tile
             keep = (tile_bboxes[:, 2] > tile_bboxes[:, 0]) & (tile_bboxes[:, 3] > tile_bboxes[:, 1])
             valid_bboxes = tile_bboxes[keep]
@@ -1078,22 +1078,22 @@ def normalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     # Ensure w0 and h0 are floats to prevent integer division issues
     imgsz  = I.imgsz(imgsz)
     h0, w0 = float(imgsz[0]), float(imgsz[1])
-    
+
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     if is_normalized(bbox):
         return bbox
-    
+
     # Vectorized approach
     # We create a normalization vector [W, H, W, H] to divide the first 4 columns
     # This is faster than unpacking/stacking for large N
     norm_vec = np.array([w0, h0, w0, h0], dtype=np.float32)
-    
+
     # Clone to avoid modifying the original array in-place
     normalized_bbox         = bbox.astype(np.float32).copy()
     normalized_bbox[:, :4] /= (norm_vec + 1e-7) # Add epsilon for stability
-    
+
     return normalized_bbox
 
 
@@ -1113,10 +1113,10 @@ def denormalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     # Ensure w0 and h0 are floats to prevent integer division issues
     imgsz  = I.imgsz(imgsz)
     h0, w0 = float(imgsz[0]), float(imgsz[1])
-    
+
     # Ensure 2D for consistent slicing
     bbox = to_2d(bbox)
-    
+
     # Skip if already in pixel units or empty
     if bbox.shape[0] == 0 or not is_normalized(bbox):
         return bbox
@@ -1124,11 +1124,11 @@ def denormalize(bbox: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     # Create scaling vector [W, H, W, H]
     # This works for both XYXY and CXCYWH formats
     scale_vec = np.array([w0, h0, w0, h0], dtype=np.float32)
-    
+
     # Apply scaling to the first 4 columns only
     denormalized_bbox         = bbox.copy()
     denormalized_bbox[:, :4] *= scale_vec
-    
+
     return denormalized_bbox
 
 
@@ -1158,7 +1158,7 @@ def crop_center(
     h1, w1 = I.imgsz(imgsz)
     if h1 > h0 or w1 > w0:
         raise ValueError(f"Target 'imgsz' {imgsz} exceeds original image size {image.shape[:2]}.")
-    
+
     # Calculate crop region (center of image)
     x_start = max(0, (w0 - w1) // 2)
     y_start = max(0, (h0 - h1) // 2)
@@ -1173,12 +1173,12 @@ def crop_center(
 
     # Convert to XYXY in absolute pixels
     bbox_xyxy = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
-    
+
     # Vectorized Shift
     # Shift x1, y1, x2, y2 all at once
     bbox_xyxy[:, [0, 2]] -= x_start
     bbox_xyxy[:, [1, 3]] -= y_start
-    
+
     # Vectorized Clipping
     # x1, x2 clipped to [0, w1] | y1, y2 clipped to [0, h1]
     bbox_xyxy[:, [0, 2]] = np.clip(bbox_xyxy[:, [0, 2]], 0, w1)
@@ -1188,13 +1188,13 @@ def crop_center(
     # Keep only boxes where x2 > x1 AND y2 > y1 (valid area)
     keep          = (bbox_xyxy[:, 2] > bbox_xyxy[:, 0]) & (bbox_xyxy[:, 3] > bbox_xyxy[:, 1])
     adjusted_bbox = bbox_xyxy[keep]
-    
+
     # Re-normalize to target crop size
     if len(adjusted_bbox) > 0:
         adjusted_bbox = convert(adjusted_bbox, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(h1, w1))
-    
+
     return cropped_image, adjusted_bbox
-    
+
 
 def crop_fit_square(
     image    : np.ndarray,
@@ -1214,32 +1214,32 @@ def crop_fit_square(
         Tuple of padded image and adjusted bounding boxes.
     """
     h0, w0 = I.imgsz(image)
-    
+
     # Find non-border pixels
     if len(image.shape) == 3 and image.shape[2] == 3:
         mask = np.any(image != pad_value, axis=2)
     else:
         mask = image != pad_value
-    
+
     coords = np.argwhere(mask)
     if coords.size == 0:
         # If the entire image is border color, return a square of pad_value
         dim = max(h0, w0)
         padded_image = np.full((dim, dim, image.shape[2]), pad_value, dtype=image.dtype)
         return padded_image, np.array([], np.float32).reshape(0, bbox.shape[1])
-    
+
     y_min, x_min = coords.min(axis=0)
     y_max, x_max = coords.max(axis=0) + 1  # Add 1 to include the max pixel
-    
+
     # Crop the image
     cropped_image = image[y_min:y_max, x_min:x_max].copy()
     h1, w1        = I.imgsz(cropped_image)
-    
+
     # Pad to make square
     dim   = max(h1, w1)
     pad_h = (dim - h1) // 2
     pad_w = (dim - w1) // 2
-    
+
     padded_image = cv2.copyMakeBorder(
         src        = cropped_image,
         top        = pad_h,
@@ -1249,20 +1249,20 @@ def crop_fit_square(
         borderType = cv2.BORDER_CONSTANT,
         value      = [pad_value, pad_value, pad_value],
     )
-    
+
     # Vectorized BBox Logic
     if bbox.size > 0:
         bbox_xyxy = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
-        
+
         # Shift and Pad
         bbox_xyxy[:, [0, 2]] = bbox_xyxy[:, [0, 2]] - x_min + pad_w
         bbox_xyxy[:, [1, 3]] = bbox_xyxy[:, [1, 3]] - y_min + pad_h
-        
+
         # Re-normalize to the square 'dim'
         adjusted_bbox = convert(bbox_xyxy, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(dim, dim))
     else:
         adjusted_bbox = np.empty((0, bbox.shape[1]), dtype=np.float32)
-    
+
     return padded_image, adjusted_bbox
 
 
@@ -1298,21 +1298,21 @@ def pad_square(
         borderType = cv2.BORDER_CONSTANT,
         value      = [pad_value] * (image.shape[2] if len(image.shape) == 3 else 1),
     )
-    
+
     # Vectorized Coordinate Adjustment
     if bbox.shape[0] == 0:
         return padded_image, bbox
-    
+
     # Pixel space (normalized to original size)
     bbox_xyxy = convert(bbox, fmt=BBoxFormat.CXCYWHN2XYXY, imgsz=(h0, w0))
-    
+
     # Add offsets to x1, y1, x2, y2
     bbox_xyxy[:, [0, 2]] += pad_w
     bbox_xyxy[:, [1, 3]] += pad_h
-    
+
     # Re-normalize to the new square size (dim)
     adjusted_bbox = convert(bbox_xyxy, fmt=BBoxFormat.XYXY2CXCYWHN, imgsz=(dim, dim))
-    
+
     return padded_image, adjusted_bbox
 
 # endregion
@@ -1322,5 +1322,15 @@ def pad_square(
 # region DESTRUCTION
 # ==============================================================================
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

@@ -19,7 +19,7 @@ from ....api import *
 # @DATASETS.register()
 class UHD4K(ImageDataset, RegistrableMixin):
     """UHD-4K dataset."""
-    
+
     _name      : str         = "uhd4k"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = "4k"
@@ -54,7 +54,7 @@ class UHD4K(ImageDataset, RegistrableMixin):
 # @DATASETS.register()
 class UHD8K(ImageDataset, RegistrableMixin):
     """UHD-8K dataset."""
-    
+
     _name      : str         = "uhd8k"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = "8k"
@@ -84,3 +84,13 @@ class UHD8K(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

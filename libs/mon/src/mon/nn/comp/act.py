@@ -88,7 +88,7 @@ class SimpleGate(nn.Module):
     References:
         - Paper: https://arxiv.org/pdf/2204.04676.pdf
     """
-    
+
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
@@ -141,3 +141,13 @@ class Sine(nn.Module):
             to 1.0.
         """
         return torch.sin(self.w0 * x)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

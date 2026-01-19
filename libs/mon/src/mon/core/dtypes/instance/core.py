@@ -116,7 +116,7 @@ class Instance(TensorOrArray):
         # Validate paths
         image_path = Path(image_path).normalize(exist=True) if image_path else None
         root       = Path(root).normalize(exist=True)       if root       else None
-        
+
         # Infer image size if not provided
         if imgsz is None:
             if image_path and image_path.is_image_file(exist=True):
@@ -126,17 +126,17 @@ class Instance(TensorOrArray):
                                  f"but got both None.")
         else:
             imgsz = I.imgsz(imgsz)
-        
+
         # Call the setter to ensure type validation on init
         self._imgsz      = imgsz
         self._mask       = mask
         self._image_path = image_path
         self._root       = root
         self.data        = data
-        
+
         # Continue the initialization chain
         super().__init__(data=self.data)
-    
+
     # --- Properties ---
     @property
     def data(self) -> np.ndarray:
@@ -144,7 +144,7 @@ class Instance(TensorOrArray):
         and in CXCYWHN format.
         """
         return self._data
-    
+
     @data.setter
     def data(self, value: np.ndarray):
         """Set the bounding box data.
@@ -160,24 +160,24 @@ class Instance(TensorOrArray):
         # Ensure we are working with a float ndarray for normalization precision
         if not isinstance(value, np.ndarray):
             value = np.array(value, dtype=np.float32)
-        
+
         if value.ndim != 1 or value.shape[0] < 7:
             raise ValueError(f"Expected 'data' to be a numpy.ndarray of shape (7+), "
                              f"but got {value.shape}.")
-        
+
         # Internal conversion logic
         if B.is_xywh(value, self._imgsz):
             value = B.xywh_to_cxcywhn(value, self._imgsz)[0]
         elif B.is_xyxy(value):
             value = B.xyxy_to_cxcywhn(value, self._imgsz)[0]
-        
+
         self._data = value
-    
+
     @property
     def mask(self) -> np.ndarray:
         """Return the instance segmentation mask."""
         return self._mask
-    
+
     @mask.setter
     def mask(self, value: np.ndarray):
         """Set or update the instance segmentation mask.
@@ -186,44 +186,44 @@ class Instance(TensorOrArray):
             value: Mask array of shape (H, W, C) or compatible shape.
         """
         self._mask = value
-    
+
     @property
     def imgsz(self) -> tuple[int, int]:
         """Return the image size as (H, W)."""
         return self._imgsz
-    
+
     @property
     def image_path(self) -> Path:
         """Return the associated image path."""
         return self._image_path
-    
+
     @property
     def root(self) -> Path:
         """Return the root directory for the label file."""
         return self._root
-    
+
     @property
     def conf(self) -> float:
         """Return the confidence score."""
         return float(self.data[5])
-    
+
     @property
     def cls(self) -> int:
         """Return the class identifier."""
         return int(self.data[6])
-    
+
     @property
     def id(self) -> int:
         """Return the tracking identifier."""
         return int(self.data[7])
-    
+
     @property
     def cxcywhn(self) -> np.ndarray:
         """Return the bounding box, formatted as a numpy.ndarray of shape (7+)
         and in CXCYWHN format.
         """
         return self.data
-    
+
     def xyxy(self, imgsz: tuple[int, int] = None) -> np.ndarray:
         """Convert the bounding box from CXCYWHN to XYXY format.
 
@@ -236,7 +236,7 @@ class Instance(TensorOrArray):
         """
         imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return B.cxcywhn_to_xyxy(self.data, imgsz)[0]
-    
+
     def xywh(self, imgsz: tuple[int, int] = None) -> np.ndarray:
         """Convert the bounding box from CXCYWHN to XYWH format.
 
@@ -249,12 +249,22 @@ class Instance(TensorOrArray):
         """
         imgsz = I.imgsz(imgsz) if imgsz is not None else self._imgsz
         return B.cxcywhn_to_xywh(self.data, imgsz)[0]
-    
+
     @property
     def area(self) -> float:
         """Compute the area of the bounding box in pixels."""
         # Using normalization factors: (W_norm * W_img) * (H_norm * H_img)
         h0, w0 = self._imgsz
         return float((self.data[2] * w0) * (self.data[3] * h0))
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

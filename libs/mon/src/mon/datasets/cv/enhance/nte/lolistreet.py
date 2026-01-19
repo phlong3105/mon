@@ -24,7 +24,7 @@ from ....api import *
 @DATASETS.register()
 class LoLIStreet(ImageDataset, RegistrableMixin):
     """LoLI-Street dataset."""
-    
+
     _name      : str         = "lolistreet"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE]
     _subset    : str         = None
@@ -140,18 +140,18 @@ class LoLIStreet(ImageDataset, RegistrableMixin):
 @DATASETS.register()
 class LoLIStreetVal(LoLIStreet):
     """LoLI-Street-Val subset."""
-    
+
     _name: str = "lolistreetval"
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
         pattern = self.root / "val" / "image"
-        
+
         images  = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(pattern.rglob("*"))
@@ -161,23 +161,23 @@ class LoLIStreetVal(LoLIStreet):
                     images.append(Image(data=path, root=pattern))
 
         return images
-        
+
 
 @DATASETS.register()
 class LoLIStreetVal_Light(LoLIStreet):
     """LoLI-Street-Val subset."""
-    
+
     _name: str = "lolistreetval_light"
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
         pattern = self.root / "val" / "image"
-        
+
         images  = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(pattern.rglob("light_*"))
@@ -187,23 +187,23 @@ class LoLIStreetVal_Light(LoLIStreet):
                     images.append(Image(data=path, root=pattern))
 
         return images
-    
-    
+
+
 @DATASETS.register()
 class LoLIStreetVal_Moderate(LoLIStreet):
     """LoLI-Street-Val subset."""
-    
+
     _name: str = "lolistreetval_moderate"
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
         pattern = self.root / "val" / "image"
-        
+
         images  = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(pattern.rglob("moderate_*"))
@@ -213,23 +213,23 @@ class LoLIStreetVal_Moderate(LoLIStreet):
                     images.append(Image(data=path, root=pattern))
 
         return images
-    
-    
+
+
 @DATASETS.register()
 class LoLIStreetVal_Dense(LoLIStreet):
     """LoLI-Street-Val subset."""
-    
+
     _name: str = "lolistreetval_dense"
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
         pattern = self.root / "val" / "image"
-        
+
         images  = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(pattern.rglob("dense_*"))
@@ -246,16 +246,16 @@ class LoLIStreetTest(LoLIStreet):
     """LoLI-Street-Test subset."""
 
     _name: str = "lolistreettest"
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
         pattern = self.root / "test" / "image"
-        
+
         images  = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(pattern.rglob("*"))
@@ -265,3 +265,13 @@ class LoLIStreetTest(LoLIStreet):
                     images.append(Image(data=path, root=pattern))
 
         return images
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -65,7 +65,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
     Attributes:
         _data (torch.Tensor | numpy.ndarray): Underlying data object.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(self, data: np.ndarray | torch.Tensor, *args, **kwargs):
         """Initialize a new instance.
@@ -77,7 +77,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
         """
         # Call the setter to ensure type validation on init
         self.data = data
-        
+
         # Continue the initialization chain
         super().__init__(data=self.data, *args, **kwargs)
 
@@ -100,7 +100,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
         if isinstance(item, (np.generic, int, float, bool)) and not isinstance(item, np.ndarray):
              item = np.array(item)
         return self.__class__(item)
-    
+
     # --- Properties ---
     @property
     def data(self) -> np.ndarray | torch.Tensor:
@@ -123,12 +123,12 @@ class TensorOrArray(Data, DeviceManagementMixin):
                 f"but got {type(value).__name__}."
             )
         self._data = value
-    
+
     @property
     def shape(self) -> tuple[int, ...]:
         """Return the data shape."""
         return self.data.shape
-    
+
     @property
     def meta(self) -> dict:
         """Return metadata describing the data."""
@@ -137,7 +137,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
             "dtype": self.data.dtype,
             "type" : type(self.data),
         }
-    
+
     # --- Device Management ---
     def to(self, *args, **kwargs) -> TensorOrArray:
         """Move or cast data to a specific device.
@@ -166,7 +166,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
         if isinstance(self.data, np.ndarray):
             return self
         return self.__class__(self.data.cpu())
-    
+
     def cuda(self) -> TensorOrArray:
         """Move data to GPU.
 
@@ -180,7 +180,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
             # torch.as_tensor is safer than torch.tensor as it avoids copying if possible
             return self.__class__(torch.as_tensor(self.data).cuda())
         return self.__class__(self.data.cuda())
-    
+
     def mps(self) -> TensorOrArray:
         """Move data to MPS.
 
@@ -190,7 +190,7 @@ class TensorOrArray(Data, DeviceManagementMixin):
         if isinstance(self.data, np.ndarray):
             return self.__class__(torch.as_tensor(self.data).to("mps"))
         return self.__class__(self.data.to("mps"))
-    
+
     def numpy(self) -> TensorOrArray:
         """Convert data to numpy.ndarray.
 
@@ -201,5 +201,15 @@ class TensorOrArray(Data, DeviceManagementMixin):
             return self
         # .detach() is vital if the tensor is part of a computation graph
         return self.__class__(self.data.detach().cpu().numpy())
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

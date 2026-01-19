@@ -596,3 +596,13 @@ class ComplexGaborLayer(nn.Module):
         return torch.exp(1j * omega - scale.abs().square())
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

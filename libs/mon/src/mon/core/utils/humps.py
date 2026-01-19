@@ -113,7 +113,7 @@ def pascalize(value: Any) -> Any:
     """
     if isinstance(value, (list, Mapping)):
         return _process_keys(value, pascalize)
-    
+
     s     = str(value)
     words = _separate_words(s)
     return "".join(word.capitalize() for word in words)
@@ -211,5 +211,15 @@ def _separate_words(string: str) -> list[str]:
         List of words extracted from the string.
     """
     return _WORD_RE.findall(string)
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

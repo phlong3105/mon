@@ -522,3 +522,13 @@ def create_progress_bar(
     return Progress(*columns, console=console, transient=transient, disable=disable)
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

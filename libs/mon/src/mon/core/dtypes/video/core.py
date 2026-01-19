@@ -94,18 +94,18 @@ class Frame(PersistentData):
         # Validate data
         if not isinstance(data, np.ndarray):
             raise TypeError(f"Expected 'data' to be a numpy.ndarray, but got {type(data)}.")
-        
+
         # Set internal attributes
         self._index = index
-        
+
         # Continue the initialization chain
         super().__init__(data=data, path=path, root=root, persist=True)
-        
+
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the logical length of the container."""
         return 1
-    
+
     def __getitem__(self, index: int = 0) -> np.ndarray:
         """Return the frame at the given ``index``.
 
@@ -113,18 +113,18 @@ class Frame(PersistentData):
             index: Index to get the frame. Defaults to 0.
         """
         return self.data
-    
+
     # --- Properties ---
     @property
     def shape(self) -> tuple[int, int, int]:
         """Return the frame shape as (H, W, C)."""
         return self.data.shape
-    
+
     @property
     def imgsz(self) -> tuple[int, int]:
         """Return the frame size as (H, W)."""
         return self.shape[0], self.shape[1]
-    
+
     @property
     def index(self) -> int:
         """Return the frame index within the video."""
@@ -133,7 +133,7 @@ class Frame(PersistentData):
     @property
     def frame_path(self) -> Optional[Path]:
         """Construct a path for the frame based on the video path and index.
-        
+
         Return the stored ``path`` if no video path is provided.
         """
         if self.path is not None:
@@ -153,7 +153,7 @@ class Frame(PersistentData):
             "shape"     : self.shape,
             "hash"      : self.path.stat().st_size if isinstance(self.path, Path) else None,
         }
-    
+
     # --- Data Loading ---
     def load(self, reload: bool = False) -> Any:
         """Load data from disk to memory.
@@ -167,5 +167,15 @@ class Frame(PersistentData):
             disk.
         """
         pass
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

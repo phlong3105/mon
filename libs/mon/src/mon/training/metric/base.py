@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for metrics."""
+"""Base classes and mixins for metrics.
+
+This module provides base classes and mixins for metrics.
+"""
 
 from __future__ import annotations
 

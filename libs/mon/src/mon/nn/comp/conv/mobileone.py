@@ -28,10 +28,10 @@ from ..attention import SEBlock
 
 def reparameterize_model(model: nn.Module) -> nn.Module:
     """Re-parameterize all re-parameterizable modules in the model for inference.
-    
+
     Args:
         model: The model containing re-parameterizable modules.
-        
+
     Returns:
         The re-parameterized model for inference.
     """
@@ -54,12 +54,12 @@ class MobileOneBlock(nn.Module):
 
     This block has a multi-branched architecture at train-time and plain-CNN
     style architecture at inference time.
-    
+
     References:
         - Paper: "MobileOne: An Improved One millisecond Mobile Backbone," CVPR 2023.
         - Code: https://github.com/apple/ml-mobileone/tree/main
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -76,7 +76,7 @@ class MobileOneBlock(nn.Module):
         num_conv_branches: int  = 1
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_channels: Number of input channels.
             out_channels: Number of output channels.
@@ -110,7 +110,7 @@ class MobileOneBlock(nn.Module):
             self.activation = nn.ReLU()
         else:
             self.activation = nn.Identity()
-        
+
         if inference:
             self.reparam_conv = nn.Conv2d(
                 in_channels  = in_channels,
@@ -141,11 +141,11 @@ class MobileOneBlock(nn.Module):
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
-        
+
         Args:
             input: Input tensor with dimensions (B, C_in, H, W) and values ranging
                 from 0.0 to 1.0.
-            
+
         Returns:
             Output tensor with dimensions (B, C_out, H_out, W_out) and values
                 ranging from 0.0 to 1.0.
@@ -171,7 +171,7 @@ class MobileOneBlock(nn.Module):
             output += self.rbr_conv[ix](input)
 
         return self.activation(self.se(output))
-    
+
     def reparameterize(self):
         """Re-parameterize multi-branched architecture used at training time to
         obtain a plain CNN-like structure for inference.
@@ -205,7 +205,7 @@ class MobileOneBlock(nn.Module):
     def _get_kernel_bias(self) -> tuple[torch.Tensor, torch.Tensor]:
         """Fuse all branches to obtain equivalent kernel and bias for
         re-parameterized conv layer.
-        
+
         References:
             - Code: https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L83
 
@@ -241,10 +241,10 @@ class MobileOneBlock(nn.Module):
 
     def _fuse_bn_tensor(self, branch) -> tuple[torch.Tensor, torch.Tensor]:
         """Fuse batchnorm parameters into convolutional kernel and bias.
-        
+
         References:
             - Code: https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L95
-    
+
         Returns:
             A tuple of kernel and bias tensors.
         """
@@ -281,11 +281,11 @@ class MobileOneBlock(nn.Module):
 
     def _conv_bn(self, kernel_size: int, padding: int) -> nn.Sequential:
         """Create a convolutional layer followed by batch normalization.
-        
+
         Args:
             kernel_size: Size of the convolutional kernel.
             padding: Padding for the convolution.
-            
+
         Returns:
             A sequential container with conv and batchnorm layers.
         """
@@ -304,5 +304,15 @@ class MobileOneBlock(nn.Module):
         )
         mod_list.add_module("bn", nn.BatchNorm2d(num_features=self.out_channels))
         return mod_list
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

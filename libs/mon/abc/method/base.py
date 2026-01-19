@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for <name>."""
+"""Base classes and mixins for <name>.
+
+This module provides base classes and mixins for <name>.
+"""
 
 from __future__ import annotations
 

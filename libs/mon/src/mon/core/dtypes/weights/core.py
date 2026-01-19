@@ -244,3 +244,13 @@ class WeightsEnum(Enum):
 WeightsType = Weights | WeightsEnum
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

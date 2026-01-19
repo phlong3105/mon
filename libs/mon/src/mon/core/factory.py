@@ -726,3 +726,13 @@ MODELS         = ModelFactory(name="Models", decamelize=True)
 WEIGHTS        = WeightsFactory(name="Weights", decamelize=True)
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

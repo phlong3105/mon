@@ -19,7 +19,7 @@ from ....api import *
 @DATASETS.register()
 class RealLOLBlur(ImageDataset, RegistrableMixin):
     """Real-LOL-Blur dataset."""
-    
+
     _name      : str         = "reallolblur"
     _tasks     : list[Task]  = [Task.DEBLUR, Task.LLE]
     _subset    : str         = None
@@ -35,3 +35,13 @@ class RealLOLBlur(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

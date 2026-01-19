@@ -10,6 +10,8 @@ References:
     - Code: https://github.com/Gil-Mor/iFish
 """
 
+from __future__ import annotations
+
 __all__ = [
     "iFishTransform",
 ]
@@ -30,11 +32,11 @@ from mon.core import ALBUMENTATIONS, image as I
 # --- Utils ---
 def get_fisheye_factor(r: float, d: float) -> float:
     """Calculates the fisheye transformation factor.
-    
+
     Args:
         r (float): Radius in normalized coordinates.
         d (float): Distortion factor.
-        
+
     Returns:
         float: Fisheye transformation factor.
     """
@@ -44,11 +46,11 @@ def get_fisheye_factor(r: float, d: float) -> float:
 
 def get_reverse_fisheye_factor(r: float, d: float) -> float:
     """Calculates the reverse fisheye transformation factor.
-    
+
     Args:
         r (float): Radius in normalized coordinates.
         d (float): Distortion factor.
-    
+
     Returns:
         float: Reverse fisheye transformation factor.
     """
@@ -58,13 +60,13 @@ def get_reverse_fisheye_factor(r: float, d: float) -> float:
 
 def fisheye_xy_n(x_n: float, y_n: float, r: float, d: float) -> tuple[float, float]:
     """Calculates the fisheye transformation for normalized coordinates.
-    
+
     Args:
         x_n (float): Normalized x-coordinate.
         y_n (float): Normalized y-coordinate.
         r (float): Radius in normalized coordinates.
         d (float): Distortion factor.
-        
+
     Returns:
         tuple: Transformed x and y coordinates.
     """
@@ -77,13 +79,13 @@ def fisheye_xy_n(x_n: float, y_n: float, r: float, d: float) -> tuple[float, flo
 
 def reverse_fisheye_xy_n(x_n: float, y_n: float, r: float, d: float) -> tuple[float, float]:
     """Calculates the reverse fisheye transformation for normalized coordinates.
-    
+
     Args:
         x_n (float): Normalized x-coordinate.
         y_n (float): Normalized y-coordinate.
         r (float): Radius in normalized coordinates.
         d (float): Distortion factor.
-    
+
     Returns:
         tuple[float, float]: Transformed x and y coordinates.
     """
@@ -98,11 +100,11 @@ def reverse_fisheye_xy_n(x_n: float, y_n: float, r: float, d: float) -> tuple[fl
 # --- Transformation Functions ---
 def transform_image(image: np.ndarray, distortion: float) -> np.ndarray:
     """Applies fisheye transformation to an image.
-    
+
     Args:
         image (numpy.ndarray): Input image.
         distortion (float): Distortion factor.
-    
+
     Returns:
         numpy.ndarray: Fisheye transformed image.
     """
@@ -160,7 +162,7 @@ def transform_bbox0(
     aspect_thres: float = 0.0,
 ) -> np.ndarray:
     """Transforms bounding boxes from original image to fisheye image.
-    
+
     Args:
         bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 4+)
             in CXCYWHN format.
@@ -170,7 +172,7 @@ def transform_bbox0(
         area_thres (int): Minimum area threshold for bounding boxes. Default is 0.
         aspect_thres (float): Minimum height-to-width ratio threshold for bounding
             boxes. Default is 0.0.
-    
+
     Returns:
         numpy.ndarray: Transformed bounding boxes as a numpy.ndarray of shape
             (M, 4+) in CXCYWHN format.
@@ -214,7 +216,7 @@ def transform_bbox0(
         y1_new = int(min(b_y_u)) - top_margin
         x2_new = int(max(b_x_u)) - left_margin
         y2_new = int(max(b_y_u)) - top_margin
-        #        
+        #
         cx_new     = (x1_new + x2_new) / 2
         cy_new     = (y1_new + y2_new) / 2
         w_new      = x2_new - x1_new
@@ -250,7 +252,7 @@ def transform_bbox1(
     aspect_thres: float = 0.0,
 ) -> np.ndarray:
     """Transforms bounding boxes from original image to fisheye image.
-    
+
     Args:
         bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 4+)
             in CXCYWHN format.
@@ -260,7 +262,7 @@ def transform_bbox1(
         area_thres (int): Minimum area threshold for bounding boxes. Default is 0.
         aspect_thres (float): Minimum height-to-width ratio threshold for bounding
             boxes. Default is 0.0.
-    
+
     Returns:
         numpy.ndarray: Transformed bounding boxes as a numpy.ndarray of shape
             (M, 4+) in CXCYWHN format.
@@ -347,7 +349,7 @@ def transform_bbox(
     grid_points : int   = 5,
 ) -> np.ndarray:
     """Transforms bounding boxes from original image to fisheye image.
-    
+
     Args:
         bbox (numpy.ndarray): Bounding boxes as a numpy.ndarray of shape (N, 4+)
             in CXCYWHN format.
@@ -359,7 +361,7 @@ def transform_bbox(
             boxes. Default is 0.0.
         grid_points (int): Number of grid points per box side for transformation.
             Default is 5.
-            
+
     Returns:
         numpy.ndarray: Transformed bounding boxes as a numpy.ndarray of shape
             (M, 4+) in CXCYWHN format.
@@ -442,7 +444,7 @@ def transform_bbox(
 class iFishTransform(DualTransform):
     """A transformation that applies a fisheye effect to images and adjusts
     bounding boxes accordingly.
-    
+
     Attributes:
         _targets (tuple): The targets that this transformation can be applied to.
             Supports images, masks, and bounding boxes.
@@ -469,7 +471,7 @@ class iFishTransform(DualTransform):
         p           : float = 1
     ):
         """Initializes the iFishTransform.
-        
+
         Args:
             distortion (float): The distortion factor for the fisheye effect.
                 Defaults to 1.0.
@@ -483,7 +485,7 @@ class iFishTransform(DualTransform):
         self._distortion   = distortion
         self._area_thres   = area_thres
         self._aspect_thres = aspect_thres
-    
+
     # --- Apply ---
     def apply(
         self,
@@ -494,7 +496,7 @@ class iFishTransform(DualTransform):
         *args: Any, **params: Any
     ) -> np.ndarray:
         """Applies the fisheye transformation to an image.
-        
+
         Args:
             img (numpy.ndarray): Input image.
             fisheye_image (numpy.ndarray): Fisheye transformed image.
@@ -502,7 +504,7 @@ class iFishTransform(DualTransform):
             new_size (tuple[int, int]): Transformed image size as (W, H).
             *args: Additional positional arguments.
             **params: Additional keyword arguments.
-            
+
         Returns:
             numpy.ndarray: Fisheye transformed image.
         """
@@ -517,7 +519,7 @@ class iFishTransform(DualTransform):
         *args: Any, **params: Any
     ) -> np.ndarray:
         """Applies the fisheye transformation to a mask.
-        
+
         Args:
             img (numpy.ndarray): Input mask.
             fisheye_image (numpy.ndarray): Fisheye transformed mask.
@@ -525,7 +527,7 @@ class iFishTransform(DualTransform):
             new_size (tuple[int, int]): Transformed mask size as (W, H).
             *args: Additional positional arguments.
             **params: Additional keyword arguments.
-            
+
         Returns:
             numpy.ndarray: Fisheye transformed mask.
         """
@@ -540,7 +542,7 @@ class iFishTransform(DualTransform):
         *args: Any, **params: Any
     ) -> np.ndarray:
         """Applies the fisheye transformation to bounding boxes.
-        
+
         Args:
             bboxes (numpy.ndarray): Input bounding boxes as a numpy.ndarray of
                 shape (N, 4+) in CXCYWHN format.
@@ -549,13 +551,13 @@ class iFishTransform(DualTransform):
             new_size (tuple[int, int]): Transformed image size as (W, H).
             *args: Additional positional arguments.
             **params: Additional keyword arguments.
-            
+
         Returns:
             numpy.ndarray: Fisheye transformed bounding boxes as a numpy.ndarray
                 of shape (M, 4+) in CXCYWHN format.
         """
         return transform_bbox0(bboxes, old_size, new_size, self._distortion, self._area_thres, self._aspect_thres)
-    
+
     # --- Utils ---
     def get_params_dependent_on_data(
         self,
@@ -563,11 +565,11 @@ class iFishTransform(DualTransform):
         data  : dict[str, Any]
     ) -> dict[str, Any]:
         """Gets parameters dependent on the input data.
-        
+
         Args:
             params (dict): Current parameters.
             data (dict): Input data containing the image.
-            
+
         Returns:
             dict: Updated parameters including fisheye image, old size, and new
                 size.

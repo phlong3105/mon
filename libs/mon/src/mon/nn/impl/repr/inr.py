@@ -803,3 +803,13 @@ def interpolate_image(image: torch.Tensor, size: int) -> torch.Tensor:
     """
     # return F.interpolate(image, size=(down_size, down_size), mode="bicubic")
     return F.interpolate(image, size=(size, size), mode="area")
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

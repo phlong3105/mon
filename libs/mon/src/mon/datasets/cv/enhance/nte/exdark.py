@@ -22,7 +22,7 @@ from ....api import *
 @DATASETS.register()
 class ExDark(ImageDataset, RegistrableMixin):
     """ExDark dataset."""
-    
+
     _name      : str         = "exdark"
     _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
     _subset    : str         = None
@@ -58,3 +58,13 @@ class ExDark(ImageDataset, RegistrableMixin):
         {"name": "People"   , "id": 11, "coco80_id":  1, "color": [ 81, 120, 228]},
         {"name": "Table"    , "id": 12, "coco80_id": 61, "color": [216, 147, 179]},
     ])
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

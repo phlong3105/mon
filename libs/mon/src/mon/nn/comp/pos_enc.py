@@ -24,7 +24,7 @@ import torch.nn as nn
 
 class PosEncodingFourier(nn.Module):
     """Positional Encoding (PE) using Fourier features.
-    
+
     Apply Fourier feature mapping to the input coordinates.
     """
 
@@ -118,7 +118,7 @@ class PosEncodingNeRF(nn.Module):
 
         self.in_features  = in_features
         self.out_features = in_features + 2 * in_features * self.num_frequencies
-        
+
         # Pre-compute frequency bands to avoid recomputing in forward pass
         freq_bands = 2.0 ** torch.linspace(0.0, self.num_frequencies - 1, self.num_frequencies)
         self.register_buffer("freq_bands", freq_bands * np.pi)
@@ -149,17 +149,27 @@ class PosEncodingNeRF(nn.Module):
         """
         # x shape: [B, ..., C]
         # freq_bands shape: [num_frequencies]
-        
+
         # Reshape for broadcasting: [B, ..., C, 1] * [1, ..., 1, num_frequencies]
         # Result: [B, ..., C, num_frequencies]
         spectrum = x.unsqueeze(-1) * self.freq_bands
-        
+
         sin_enc  = torch.sin(spectrum)
         cos_enc  = torch.cos(spectrum)
-        
+
         # Flatten the last two dimensions: [B, ..., C * num_frequencies]
         sin_enc  = sin_enc.view(*x.shape[:-1], -1)
         cos_enc  = cos_enc.view(*x.shape[:-1], -1)
-        
+
         # Concatenate original input with encodings
         return torch.cat([x, sin_enc, cos_enc], dim=-1)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

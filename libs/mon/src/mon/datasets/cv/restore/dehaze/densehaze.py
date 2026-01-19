@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register()
 class DenseHaze(ImageDataset, RegistrableMixin):
     """Dense-Haze dataset."""
-    
+
     _name      : str         = "densehaze"
     _tasks     : list[Task]  = [Task.DEHAZE]
     _subset    : str         = None
@@ -48,3 +48,13 @@ class DenseHaze(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

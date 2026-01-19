@@ -3,28 +3,27 @@
 
 """Albumentations-based data augmentation and transformation.
 
-This package provides various data augmentations and transformations using the
-albumentations library.
+This package contains various data augmentations and transformations using the
+``albumentations`` library.
 
 Notes:
     - Design Pattern: Template Method.
-    - Goal: Provide a structured way to define a family of methods or classes
-      that share a common interface/inheritance but aren't tied to the specific
-      "interchanged" requirement of the "Strategy Pattern".
+    - Goal: Define a family of algorithms that share a common processing pipeline.
     - Structure:
         ::
 
-            template/
-            ├── __init__.py    # Registry and factory logic
-            ├── base.py        # Base classes and mixins
-            ├── basic.py       # Basic functionalities
+            albumentations/
+            ├── __init__.py             # Registry and factory
+            ├── api.py                  # External APIs
+            ├── base.py                 # Base classes and mixins
+            ├── basic.py                # Basic functionalities
             ├── ...
-            ├── utils.py       # Utility functions and helpers
-            └── external/      # Expose external libraries
+            ├── utils.py                # Utilities and helpers
+            └── external/               # Integrate external libraries
                 └── ...
 """
 
-# __all__ = []
+from __future__ import annotations
 
 from typing import Any
 
@@ -38,7 +37,7 @@ from .utils import *
 
 
 # ==============================================================================
-# REGISTRY & FACTORY (Type Resolution)
+# region REGISTRY & FACTORY
 # ==============================================================================
 
 class Compose(A.Compose):

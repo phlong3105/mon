@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic augmentations using Albumentations.
+"""Basic Albumentations transformations.
 
-This module provides various data transformations using the Albumentations
-library. It automatically registers all transformation classes from Albumentations
-into the ALBUMENTATIONS registry for easy access and usage.
+This module provides the basic Albumentations transformations.
 """
+
+from __future__ import annotations
 
 import importlib
 import inspect
@@ -58,3 +58,13 @@ def __register_transforms(module, prefix: str = ""):
 
 __register_transforms(A)
 ALBUMENTATIONS.sort()
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

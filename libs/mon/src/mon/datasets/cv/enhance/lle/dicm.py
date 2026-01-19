@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register(name="dicm")
 class DICM(ImageDataset, RegistrableMixin):
     """DICM dataset."""
-    
+
     _name      : str         = "dicm"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -41,3 +41,13 @@ class DICM(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

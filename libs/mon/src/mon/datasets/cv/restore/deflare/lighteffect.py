@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register()
 class LightEffect(ImageDataset, RegistrableMixin):
     """LightEffect dataset."""
-    
+
     _name      : str         = "lighteffect"
     _tasks     : list[Task]  = [Task.DEFLARE]
     _subset    : str         = None
@@ -34,3 +34,13 @@ class LightEffect(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

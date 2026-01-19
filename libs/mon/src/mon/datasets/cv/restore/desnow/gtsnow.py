@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register()
 class GTSnow(ImageDataset, RegistrableMixin):
     """GTSnow dataset."""
-    
+
     _name      : str         = "gtsnow"
     _tasks     : list[Task]  = [Task.DESNOW]
     _subset    : str         = None
@@ -41,3 +41,13 @@ class GTSnow(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

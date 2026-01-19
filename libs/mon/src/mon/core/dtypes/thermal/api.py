@@ -10,3 +10,13 @@ this package. It is intended to be imported by other modules for convenience.
 from __future__ import annotations
 
 __all__ = []
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -89,3 +89,13 @@ class AdaptiveBatchNorm2d(nn.Module):
             from 0.0 to 1.0.
         """
         return self.w0 * x + self.w1 * self.bn(x)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

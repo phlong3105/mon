@@ -48,7 +48,7 @@ class DataLoader(dataloader.DataLoader):
         *args, **kwargs
     ):
         """Initialize a new instance.
-        
+
         Args:
             dataset: The dataset to load data from, or a configuration dictionary
                 to build the dataset.
@@ -65,15 +65,15 @@ class DataLoader(dataloader.DataLoader):
         # Build dataset if it's a config object
         if isinstance(dataset, (dict, box.Box)):
             dataset = DATASETS.build(**dataset)
-            
+
         # Cache collate_fn to avoid repeated getattr calls
         # We prioritize the dataset's internal collation logic if it exists
         collate_fn = getattr(dataset, "collate_fn", collate_fn)
-        
+
         # Only pin memory if we are actually using a collate function that
         # returns Tensors (usually implied if collate_fn exists)
         pin_memory = pin_memory if collate_fn is not None else False
-        
+
         super().__init__(
             dataset     = dataset,
             batch_size  = batch_size,
@@ -84,3 +84,13 @@ class DataLoader(dataloader.DataLoader):
             pin_memory  = pin_memory,
             *args, **kwargs
         )
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -66,7 +66,7 @@ class DepthMap(Image):
     Attributes:
         _source (DepthSource): Source of the depth data.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -85,14 +85,24 @@ class DepthMap(Image):
         """
         # Validate and set the depth source
         self._source = DepthSource(source)
-        
+
         # Continue the initialization chain
         super().__init__(flags=flags, *args, **kwargs)
-        
+
     # ---- Properties ---
     @property
     def source(self) -> DepthSource:
         """Return the depth data source."""
         return self._source
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

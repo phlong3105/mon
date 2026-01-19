@@ -12,22 +12,18 @@ Notes:
         ::
 
             metric/
-            ├── __init__.py   # Registry and factory
-            ├── api.py        # External APIs
-            ├── base.py       # Base classes and mixins
-            ├── basic.py      # Basic functionalities
+            ├── __init__.py             # Registry and factory
+            ├── api.py                  # External APIs
+            ├── base.py                 # Base classes and mixins
             ├── ...
-            ├── utils.py      # Utilities and helpers
-            └── external/     # Integrate external libraries
-                └── ...
+            └── utils.py                # Utilities and helpers
 """
 
 from __future__ import annotations
 
+# from .api import *
 from .base import *
-from .basic import *
 from .complexity import *
-from .extern import *
 from .image import *
 from .utils import *
 

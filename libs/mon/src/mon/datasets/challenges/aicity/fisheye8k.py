@@ -18,7 +18,7 @@ from ...api import *
 @DATASETS.register()
 class FishEye8K(ImageDataset, RegistrableMixin):
     """FishEye8K dataset."""
-    
+
     _name      : str         = "fisheye8k"
     _tasks     : list[Task]  = [Task.DETECT]
     _subset    : str         = None
@@ -40,3 +40,13 @@ class FishEye8K(ImageDataset, RegistrableMixin):
         {"name": "pedestrian", "id": 3, "color": [ 81, 120, 228]},
         {"name": "truck",      "id": 4, "color": [ 72, 153, 152]},
     ])
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

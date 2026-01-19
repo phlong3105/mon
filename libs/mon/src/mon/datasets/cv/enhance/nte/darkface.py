@@ -44,3 +44,13 @@ class DarkFace(ImageDataset, RegistrableMixin):
     _classlist : ClassList   = ClassList([
         {"name": "face", "id": 0, "color": [81, 120, 228]},
     ])
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

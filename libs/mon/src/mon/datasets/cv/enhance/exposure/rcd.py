@@ -23,7 +23,7 @@ from ....api import *
 @DATASETS.register()
 class RCD(ImageDataset, RegistrableMixin):
     """RCD dataset."""
-    
+
     _name      : str         = "rcd"
     _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
     _subset    : str         = None
@@ -95,3 +95,13 @@ class RCD(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

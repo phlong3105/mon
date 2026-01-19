@@ -22,7 +22,7 @@ from ...api import *
 @DATASETS.register()
 class MIPI2024Flare(ImageDataset, RegistrableMixin):
     """MIPI 2024 Flare dataset."""
-    
+
     _name      : str         = "mipi2024flare"
     _tasks     : list[Task]  = [Task.DEFLARE]
     _subset    : str         = None
@@ -45,14 +45,14 @@ class MIPI2024Flare(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
-            
+
         Raises:
             ValueError: If the specified ``split`` is invalid.
         """
@@ -64,7 +64,7 @@ class MIPI2024Flare(ImageDataset, RegistrableMixin):
             patterns = [self.root / "test" / "image"]
         else:
             raise ValueError(f"``split`` invalid: [{self.split}]")
-        
+
         images = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
@@ -75,3 +75,13 @@ class MIPI2024Flare(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

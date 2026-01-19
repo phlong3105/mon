@@ -18,7 +18,7 @@ from ....api import *
 @DATASETS.register()
 class UHDLL(ImageDataset, RegistrableMixin):
     """UHD-LL dataset."""
-    
+
     _name      : str         = "uhdll"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -48,3 +48,13 @@ class UHDLL(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

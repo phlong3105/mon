@@ -55,7 +55,7 @@ class Data(abc.ABC):
     Attributes:
         _data (Any): Underlying data.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(self, data: Any, *args, **kwargs):
         """Initialize a new instance.
@@ -66,12 +66,12 @@ class Data(abc.ABC):
             **kwargs: Keyword arguments.
         """
         self._data = data
-    
+
     # --- Representation ---
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
         return f"{self.__class__.__name__}(shape={self.shape}, type={type(self.data)})"
-    
+
     # --- Container / Sequence Methods ---
     @abc.abstractmethod
     def __len__(self) -> int:
@@ -81,7 +81,7 @@ class Data(abc.ABC):
             Length of the container.
         """
         pass
-    
+
     @abc.abstractmethod
     def __getitem__(self, index: int) -> Any:
         """Return an item at the given ``index``.
@@ -99,7 +99,7 @@ class Data(abc.ABC):
         """
         for i in range(len(self)):
             yield self[i]
-    
+
     # --- Properties ---
     @property
     @abc.abstractmethod
@@ -122,9 +122,9 @@ class Data(abc.ABC):
 
 class PersistentData(Data, abc.ABC):
     """Abstract base class for data that can be loaded from and saved to disk.
-    
+
     Extend ``Data`` to add persistence capabilities and lazy loading.
-    
+
     Attributes:
         _path (Path | str | None): Path to load data from.
         _root (Path | str | None): Root directory for relative paths. Defaults
@@ -132,7 +132,7 @@ class PersistentData(Data, abc.ABC):
         _persist (bool): If True, persist loaded data in memory. Defaults to
             False.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -156,10 +156,10 @@ class PersistentData(Data, abc.ABC):
         self._path    = Path(path).normalize(exist=True) if path else None
         self._root    = Path(root).normalize(exist=True) if root else None
         self._persist = persist
-        
+
         # Continue the initialization chain
         super().__init__(data=data, *args, **kwargs)
-    
+
     # --- Properties ---
     @property
     def data(self) -> Any:
@@ -169,22 +169,22 @@ class PersistentData(Data, abc.ABC):
                 self._data = self.load()
             return self._data
         return self.load()
-    
+
     @property
     def path(self) -> Path:
         """Return the path to the data file."""
         return self._path
-    
+
     @property
     def root(self) -> Path:
         """Return the root directory for relative paths."""
         return self._root
-    
+
     @property
     def persist(self) -> bool:
         """Return whether the loaded data is persisted in memory."""
         return self._persist
-    
+
     @persist.setter
     def persist(self, value: bool):
         """Set whether loaded data is persisted in memory.
@@ -195,7 +195,7 @@ class PersistentData(Data, abc.ABC):
         self._persist = value
         if not self._persist:
             self.clear()
-    
+
     # --- Data Loading ---
     @abc.abstractmethod
     def load(self, reload: bool = False) -> Any:
@@ -209,7 +209,7 @@ class PersistentData(Data, abc.ABC):
             Loaded data object.
         """
         pass
-    
+
     def clear(self):
         """Clear the loaded data from memory if not persisting."""
         if (
@@ -223,7 +223,7 @@ class PersistentData(Data, abc.ABC):
 
 class DeviceManagementMixin(abc.ABC):
     """Mixin for device management operations."""
-    
+
     @abc.abstractmethod
     def to(self, device: str | torch.device, *args, **kwargs) -> Any:
         """Move or cast data to a specific device.
@@ -237,7 +237,7 @@ class DeviceManagementMixin(abc.ABC):
             Data moved or cast to the target device.
         """
         pass
-    
+
     @abc.abstractmethod
     def cpu(self) -> Any:
         """Move data to CPU.
@@ -255,7 +255,7 @@ class DeviceManagementMixin(abc.ABC):
             Data moved to GPU.
         """
         pass
-    
+
     @abc.abstractmethod
     def mps(self) -> Any:
         """Move data to MPS.
@@ -264,7 +264,7 @@ class DeviceManagementMixin(abc.ABC):
             Data moved to MPS.
         """
         pass
-    
+
     @abc.abstractmethod
     def numpy(self) -> Any:
         """Convert data to numpy.ndarray.
@@ -281,5 +281,15 @@ class DeviceManagementMixin(abc.ABC):
 # region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

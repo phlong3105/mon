@@ -22,7 +22,7 @@ from ...api import *
 @DATASETS.register(name="cityscapes")
 class Cityscapes(ImageDataset):
     """Cityscapes main dataset."""
-    
+
     _subset    : str         = "cityscapes"
     _tasks     : list[Task]  = [Task.SEGMENT]
     _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -76,7 +76,7 @@ class Cityscapes(ImageDataset):
         *args, **kwargs
     ):
         """Initializes the Cityscapes dataset.
-        
+
         Args:
             root (Path): The root directory of the dataset.
             use_blurred (bool): Whether to use blurred images. Defaults to False.
@@ -85,11 +85,11 @@ class Cityscapes(ImageDataset):
         self.use_blurred = use_blurred
         self.use_coarse  = use_coarse
         super().__init__(root=root, *args, **kwargs)
-    
+
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
         """
@@ -122,3 +122,13 @@ class Cityscapes(ImageDataset):
 
         self._datapoints["image"]    = images
         self._datapoints["semantic"] = semantic
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

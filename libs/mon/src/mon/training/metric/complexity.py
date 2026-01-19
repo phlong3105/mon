@@ -35,12 +35,12 @@ def compute_model_stats(
     channels: int = 3
 ) -> tuple[float, float, float]:
     """Compute the number of parameters, MACs, and FLOPs of a model.
-    
+
     Args:
         model: PyTorch model to profile.
         imgsz: Input image size. Defaults to 512.
         channels: Number of input channels. Defaults to 3.
-        
+
     Returns:
         - params: Number of parameters in the model.
         - macs: Multiply-Accumulate Operations of the model.
@@ -48,22 +48,22 @@ def compute_model_stats(
     """
     h, w   = I.imgsz(imgsz)
     device = next(model.parameters()).device
-    
+
     # Use a dummy input
     input_data = torch.randn(1, channels, h, w).to(device)
-    
+
     # Eval mode is crucial for accurate MACs (e.g., skips Dropout)
     model.eval()
-    
+
     with torch.no_grad():
         # thop.profile often modifies the model with hooks;
         # deepcopy protects the original object
         model_copy   = copy.deepcopy(model)
         macs, params = thop.profile(model_copy, inputs=(input_data,), verbose=False)
-        
+
     flops = 2 * macs
     return params, macs, flops
-    
+
 
 def benchmark(
     model   : nn.Module,
@@ -81,26 +81,26 @@ def benchmark(
     """
     # Compute complexity stats
     params, macs, flops = compute_model_stats(model=model, imgsz=imgsz, channels=channels)
-    
+
     # Measure Latency (Inference speed)
     h, w        = I.imgsz(imgsz)
     device      = next(model.parameters()).device
     dummy_input = torch.randn(1, channels, h, w).to(device)
     model.eval()
-    
+
     # Warmup
     for _ in range(3):
         _ = model(dummy_input)
-        
+
     start_time = time.perf_counter()
     with torch.no_grad():
         for _ in range(num_runs):
             _ = model(dummy_input)
             if device.type == "cuda":
                 torch.cuda.synchronize()
-    
+
     avg_latency = (time.perf_counter() - start_time) / num_runs * 1000  # ms
-    
+
     # Log results with human-readable formatting
     log("-" * 30)
     log(f"{'Model Benchmark':^30}")
@@ -127,5 +127,15 @@ def _format_unit(val: float, target: str = "M") -> str:
     if target == "G":
         return f"{val / 1e9:.2f} G"
     return f"{val / 1e6:.2f} M"
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

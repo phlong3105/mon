@@ -19,7 +19,7 @@ from ...api import *
 @DATASETS.register()
 class COCO80(ImageDataset, RegistrableMixin):
     """COCO-80-classes dataset."""
-    
+
     _name      : str         = "coco80"
     _tasks     : list[Task]  = [Task.DETECT]
     _subset    : str         = None
@@ -117,12 +117,12 @@ class COCO80(ImageDataset, RegistrableMixin):
         {"name": "hair drier"    , "id": 79, "supercategory": "indoor"    , "color": (123,  68, 172)},
         {"name": "toothbrush"    , "id": 80, "supercategory": "indoor"    , "color": ( 58, 228, 226)},
     ])
-    
+
 
 @DATASETS.register()
 class COCO91(ImageDataset, RegistrableMixin):
     """COCO-91-classes dataset."""
-    
+
     _name      : str         = "coco91"
     _tasks     : list[Task]  = [Task.DETECT]
     _subset    : str         = None
@@ -231,3 +231,13 @@ class COCO91(ImageDataset, RegistrableMixin):
         {"name": "toothbrush"    , "id": 90, "supercategory": "indoor"    , "color": [ 58, 228, 226]},
         {"name": "hair brush"    , "id": 91, "supercategory": "indoor"    , "color": [149, 108,  73]}
     ])
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

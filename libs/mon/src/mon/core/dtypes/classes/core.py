@@ -16,14 +16,12 @@ __all__ = [
 
 from typing import Any
 
-import box
 import numpy as np
 
 from mon.core.console import log, rprint_list_dicts
 from mon.core.fileio import load_yaml
 from mon.core.pathlib import Path
 from ..array import TensorOrArray
-
 
 # ==============================================================================
 # region CONSTANTS
@@ -303,5 +301,15 @@ class Probabilities(TensorOrArray):
     def top5(self) -> np.ndarray:
         """Return the confidence scores of the top-5 classes."""
         return self.data[self.top5_idxes]
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

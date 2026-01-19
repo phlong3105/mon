@@ -24,3 +24,13 @@ from torch.nn.modules.transformer import (
     TransformerEncoder,
     TransformerEncoderLayer,
 )
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -85,3 +85,13 @@ SOURCE = SimpleNamespace(
 VERBOSE = True  # Global verbosity flag for internal logging
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

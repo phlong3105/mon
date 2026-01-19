@@ -25,7 +25,7 @@ from ....api import *
 
 class LOLBlur(ImageDataset, abc.ABC):
     """LOL-Blur dataset."""
-    
+
     _splits    : list[Split] = [Split.TRAIN, Split.TEST]
     _modalities: Modalities  = {
         "image": Modality(
@@ -57,7 +57,7 @@ class LOLBlur(ImageDataset, abc.ABC):
 @DATASETS.register()
 class LOLBlurB(LOLBlur, RegistrableMixin):
     """LOL-Blur-B (Blur) dataset."""
-    
+
     _name  : str        = "lolblurb"
     _tasks : list[Task] = [Task.DEBLUR]
     _subset: str        = "b"
@@ -66,7 +66,7 @@ class LOLBlurB(LOLBlur, RegistrableMixin):
 @DATASETS.register()
 class LOLBlurBN(LOLBlur, RegistrableMixin):
     """LOL-Blur-BN (Blur + Noise) dataset."""
-    
+
     _name  : str        = "lolblurbn"
     _tasks : list[Task] = [Task.DEBLUR, Task.DENOISE]
     _subset: str        = "bn"
@@ -75,7 +75,7 @@ class LOLBlurBN(LOLBlur, RegistrableMixin):
 @DATASETS.register()
 class LOLBlurL(LOLBlur, RegistrableMixin):
     """LOL-Blur-L (Low-Light) dataset."""
-    
+
     _name  : str        = "lolblurl"
     _tasks : list[Task] = [Task.LLE]
     _subset: str        = "l"
@@ -84,7 +84,7 @@ class LOLBlurL(LOLBlur, RegistrableMixin):
 @DATASETS.register()
 class LOLBlurLB(LOLBlur, RegistrableMixin):
     """LOL-Blur-LB (Low-Light + Blur) dataset."""
-    
+
     _name  : str        = "lolblurlb"
     _tasks : list[Task] = [Task.DEBLUR, Task.LLE]
     _subset: str        = "lb"
@@ -93,7 +93,7 @@ class LOLBlurLB(LOLBlur, RegistrableMixin):
 @DATASETS.register()
 class LOLBlurLBN(LOLBlur, RegistrableMixin):
     """LOL-Blur-LBN (Low-Light + Blur + Noise) dataset."""
-    
+
     _name  : str        = "lolblurlbn"
     _tasks : list[Task] = [Task.DEBLUR, Task.DENOISE, Task.LLE]
     _subset: str        = "lbn"
@@ -102,7 +102,17 @@ class LOLBlurLBN(LOLBlur, RegistrableMixin):
 @DATASETS.register()
 class LOLBlurN(LOLBlur, RegistrableMixin):
     """LOL-Blur-N (Noise) dataset."""
-    
+
     _name  : str        = "lolblurn"
     _tasks : list[Task] = [Task.DENOISE]
     _subset: str        = "n"
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

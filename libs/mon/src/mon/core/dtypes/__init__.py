@@ -12,16 +12,16 @@ Notes:
         ::
 
             dtypes/
-            ├── __init__.py        # Unified entry point
-            ├── base.py            # Global base classes and mixins
+            ├── __init__.py             # Unified entry point
+            ├── base.py                 # Global base classes and mixins
             ├── toolkit/
-            │   ├── __init__.py    # Exposes all
-            │   ├── api.py         # External APIs
-            │   ├── core.py        # Base classes and mixins
-            │   ├── io.py          # I/O operations
-            │   ├── ops.py         # Atomic operations
-            │   ├── exec.py        # Execution logic
-            │   └── debug.py       # Debugging utilities
+            │   ├── __init__.py         # Exposes all
+            │   ├── api.py              # External APIs
+            │   ├── core.py             # Base classes and mixins
+            │   ├── io.py               # I/O operations
+            │   ├── ops.py              # Atomic operations
+            │   ├── exec.py             # Execution logic
+            │   └── debug.py            # Debugging utilities
             └── ...
 """
 

@@ -50,7 +50,7 @@ class DSConv2d(nn.Module):
         dtype       : Any             = None,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_channels: Number of channels in the input image.
             out_channels: Number of channels produced by the convolution.
@@ -97,15 +97,25 @@ class DSConv2d(nn.Module):
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
-        
+
         Args:
             x: Input tensor of shape (B, C_in, H, W) and values ranging
                 from 0.0 to 1.0.
-            
+
         Returns:
             Output tensor of shape (B, C_out, H_out, W_out) and values ranging
             from 0.0 to 1.0.
         """
         return self.pw_conv(self.dw_conv(x))
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

@@ -22,7 +22,7 @@ from ...api import *
 @DATASETS.register()
 class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
     """NTIRE 2025 LLIE dataset."""
-    
+
     _name      : str         = "ntire2025llie"
     _tasks     : list[Task]  = [Task.LLE]
     _subset    : str         = None
@@ -49,10 +49,10 @@ class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
         """Load primary modality data files in the dataset.
-        
+
         Returns:
             A list of Image instances for the primary modality.
-            
+
         Raises:
             ValueError: If the specified ``split`` is invalid.
         """
@@ -75,3 +75,13 @@ class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
                         images.append(Image(data=path, root=pattern))
 
         return images
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

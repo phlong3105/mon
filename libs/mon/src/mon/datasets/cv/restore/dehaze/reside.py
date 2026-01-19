@@ -48,8 +48,8 @@ class RESIDE_HSTSReal(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
-    
-        
+
+
 @DATASETS.register()
 class RESIDE_HSTSSyn(ImageDataset, RegistrableMixin):
     """RESIDE-HSTS-Synthetic dataset."""
@@ -83,7 +83,7 @@ class RESIDE_HSTSSyn(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
-    
+
 
 @DATASETS.register()
 class RESIDE_ITS(ImageDataset, RegistrableMixin):
@@ -181,8 +181,8 @@ class RESIDE_RTTS(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
-    
-        
+
+
 
 @DATASETS.register()
 class RESIDE_SOTSIndoor(ImageDataset, RegistrableMixin):
@@ -280,3 +280,13 @@ class RESIDE_URHI(ImageDataset, RegistrableMixin):
         ),
     }
     _classlist : ClassList   = None
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -153,16 +153,16 @@ def normalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """
     # Standardize image size
     h, w = I.imgsz(imgsz)
-    
+
     # Standardize input to (N, 2)
     orig_shape = contour.shape
     contour    = contour.reshape(-1, 2)
-    
+
     # Vectorized division: [x, y] / [w, h]
     # Adding epsilon 1e-7 prevents division by zero
     scale      = np.array([w, h], dtype=np.float32)
     normalized = contour.astype(np.float32) / (scale + 1e-7)
-    
+
     return normalized.reshape(orig_shape)
 
 
@@ -183,15 +183,15 @@ def denormalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
     """
     # Standardize image size
     h, w = I.imgsz(imgsz)
-    
+
     # Standardize input to (N, 2)
     orig_shape   = contour.shape
     contour      = contour.reshape(-1, 2)
-    
+
     # Vectorized multiplication: [x_norm, y_norm] * [w, h]
     scale        = np.array([w, h], dtype=np.float32)
     denormalized = contour * scale
-    
+
     return denormalized.reshape(orig_shape)
 
 
@@ -205,5 +205,15 @@ def denormalize(contour: np.ndarray, imgsz: tuple[int, int]) -> np.ndarray:
 # region DESTRUCTION
 # ==============================================================================
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

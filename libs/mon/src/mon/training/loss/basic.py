@@ -10,59 +10,13 @@ learning models.
 from __future__ import annotations
 
 __all__ = [
-    "BCELoss",
-    "BCEWithLogitsLoss",
-    "CTCLoss",
     "CharbonnierLoss",
-    "CosineEmbeddingLoss",
     "CosineSimilarityLoss",
-    "CrossEntropyLoss",
     "ExtendedL1Loss",
-    "GaussianNLLLoss",
-    "HingeEmbeddingLoss",
-    "HuberLoss",
-    "KLDivLoss",
-    "L1Loss",
-    "MSELoss",
-    "MarginRankingLoss",
-    "MultiLabelMarginLoss",
-    "MultiLabelSoftMarginLoss",
-    "MultiMarginLoss",
-    "NLLLoss",
-    "NLLLoss2d",
-    "PoissonNLLLoss",
-    "SmoothL1Loss",
-    "SoftMarginLoss",
-    "TripletMarginLoss",
-    "TripletMarginWithDistanceLoss",
 ]
 
 import torch
 import torch.nn as nn
-from torch.nn.modules.loss import (
-    BCELoss,
-    BCEWithLogitsLoss,
-    CosineEmbeddingLoss,
-    CrossEntropyLoss,
-    CTCLoss,
-    GaussianNLLLoss,
-    HingeEmbeddingLoss,
-    HuberLoss,
-    KLDivLoss,
-    L1Loss,
-    MarginRankingLoss,
-    MSELoss,
-    MultiLabelMarginLoss,
-    MultiLabelSoftMarginLoss,
-    MultiMarginLoss,
-    NLLLoss,
-    NLLLoss2d,
-    PoissonNLLLoss,
-    SmoothL1Loss,
-    SoftMarginLoss,
-    TripletMarginLoss,
-    TripletMarginWithDistanceLoss,
-)
 
 from .base import BaseLoss
 
@@ -77,7 +31,7 @@ class CharbonnierLoss(BaseLoss):
     Attributes:
         eps2 (float): Small constant for numerical stability.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-6, reduction: str = "mean"):
         """Initialize a new instance.
@@ -89,7 +43,7 @@ class CharbonnierLoss(BaseLoss):
         """
         super().__init__(reduction=reduction)
         self.eps2 = eps ** 2
-    
+
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the Charbonnier loss between ``input`` and ``target``.
@@ -99,7 +53,7 @@ class CharbonnierLoss(BaseLoss):
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
            target: Target (ground truth), formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
-        
+
         Returns:
             Loss value.
         """
@@ -107,7 +61,7 @@ class CharbonnierLoss(BaseLoss):
         loss = torch.sqrt(diff * diff + self.eps2)
         loss = self.reduce(loss=loss)
         return loss
-    
+
 
 class CosineSimilarityLoss(BaseLoss):
     """Cosine Similarity loss function.
@@ -115,7 +69,7 @@ class CosineSimilarityLoss(BaseLoss):
     Attributes:
         cos (torch.nn.CosineSimilarity): Cosine similarity module.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(self, dim: int = 1, eps: float = 1e-6, reduction: str = "mean"):
         """Initialize a new instance.
@@ -130,7 +84,7 @@ class CosineSimilarityLoss(BaseLoss):
         super().__init__(reduction=reduction)
         # dim=1 is standard for (B, C, H, W) images to compare color/feature vectors
         self.cos = nn.CosineSimilarity(dim=dim, eps=eps)
-    
+
     # --- Callable & Context Manager ---
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """Calculate the Cosine Similarity loss between ``input`` and ``target``.
@@ -140,7 +94,7 @@ class CosineSimilarityLoss(BaseLoss):
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
             target: Target (ground truth), formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
-        
+
         Returns:
             Loss value.
         """
@@ -153,21 +107,21 @@ class CosineSimilarityLoss(BaseLoss):
         loss = self.reduce(loss=loss)
         return loss
         """
-        
+
         # cos() returns (B, H, W).
         # Loss is 1 - similarity, so similarity=1 means loss=0.
         loss = 1.0 - self.cos(input, target)
         loss = self.reduce(loss=loss)
         return loss
-        
-        
+
+
 class ExtendedL1Loss(BaseLoss):
     """Extended L1 loss function that applies a mask to the input and target.
 
     Attributes:
         eps (float): Small constant for numerical stability.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-8, reduction: str = "mean"):
         """Initialize a new instance.
@@ -179,7 +133,7 @@ class ExtendedL1Loss(BaseLoss):
         """
         super().__init__(reduction=reduction)
         self.eps = eps
-    
+
     # --- Callable & Context Manager ---
     # noinspection PyMethodOverriding
     def forward(
@@ -198,16 +152,16 @@ class ExtendedL1Loss(BaseLoss):
             mask: Mask, formatted as a torch.Tensor of shape (B, 1, H, W)
                 with binary values indicating the regions to consider in the
                 loss calculation.
-                
+
         Returns:
             Loss value.
         """
         # Calculate absolute difference
         abs_diff = torch.abs(input - target)
-        
+
         # Apply mask
         masked_diff = abs_diff * mask
-        
+
         # Proper Normalization (Masked Mean)
         # Instead of dividing by the total number of pixels,
         # we divide by the number of active pixels in the mask.
@@ -218,7 +172,7 @@ class ExtendedL1Loss(BaseLoss):
         else:
             # If reduction is 'none' or 'sum', use the base reduction logic
             loss  = self.reduce(masked_diff)
-        
+
         # TODO: Delete later
         """
         norm = self.loss_l1(mask, torch.zeros_like(mask))
@@ -227,5 +181,15 @@ class ExtendedL1Loss(BaseLoss):
         return loss
         """
         return loss
-        
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
 # endregion

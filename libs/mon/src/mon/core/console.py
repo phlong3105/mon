@@ -166,3 +166,13 @@ def rprint_list_dicts(list_of_dicts: list[dict]):
     console.log(tab)
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

@@ -54,7 +54,7 @@ def is_image(image: np.ndarray | torch.Tensor) -> bool:
             (H, W, C) and pixel values ranging from 0 to 255; or as a
             torch.Tensor of shape (B, C, H, W) and pixel values ranging
             from 0.0 to 1.0.
-            
+
     Returns:
         True if the input is an image, otherwise False.
     """
@@ -71,7 +71,7 @@ def is_channel_first(image: np.ndarray | torch.Tensor) -> bool:
         image: An RGB or grayscale image, formatted as a numpy.ndarray with
             pixel values ranging from 0 to 255; or as a torch.Tensor with pixel
             values ranging from 0.0 to 1.0.
-            
+
     Returns:
         True if the ``image`` is in channel-first format, otherwise False.
 
@@ -79,7 +79,7 @@ def is_channel_first(image: np.ndarray | torch.Tensor) -> bool:
         ValueError: If ``image`` does not have 3 or 4 dimensions.
     """
     shape_ = image.shape if isinstance(image, np.ndarray) else image.size()
-    
+
     # Handle Batch vs No-Batch
     if len(shape_) == 4:
         # (B, C, H, W) vs (B, H, W, C)
@@ -92,18 +92,18 @@ def is_channel_first(image: np.ndarray | torch.Tensor) -> bool:
     else:
         raise ValueError(f"Expected 'image' to have 3 or 4 dimensions, "
                          f"but got {len(shape_)}.")
-    
+
     # Standard color channel counts
     common_channels = {1, 2, 3, 4}  # 2 for optical flow, 1,3,4 for images
-    
+
     if c_candidate_first in common_channels and c_candidate_last not in common_channels:
         return True
     if c_candidate_last in common_channels and c_candidate_first not in common_channels:
         return False
-    
+
     # Size-based heuristic if both or neither match common counts
     return c_candidate_first < shape_[-2] and c_candidate_first < shape_[-1]
-    
+
 
 def is_channel_last(image: np.ndarray | torch.Tensor) -> bool:
     """Check if an image is in channel-last format.
@@ -112,7 +112,7 @@ def is_channel_last(image: np.ndarray | torch.Tensor) -> bool:
         image: An RGB or grayscale image, formatted as a numpy.ndarray with
             pixel values ranging from 0 to 255; or as a torch.Tensor with pixel
             values ranging from 0.0 to 1.0.
-            
+
     Returns:
         True if the ``image`` is in channel-last format, otherwise False.
     """
@@ -145,7 +145,7 @@ def is_grayscale(image: np.ndarray | torch.Tensor) -> bool:
             (H, W, C) and pixel values ranging from 0 to 255; or as a
             torch.Tensor of shape (B, C, H, W) and pixel values ranging from
             0.0 to 1.0.
-   
+
     Returns:
         True if the ``image`` has 1 channel or is 2D, False otherwise.
     """
@@ -160,14 +160,14 @@ def is_normalized(image: np.ndarray | torch.Tensor) -> bool:
             (H, W, C) and pixel values ranging from 0 to 255; or as a
             torch.Tensor of shape (B, C, H, W) and pixel values ranging from
             0.0 to 1.0.
-    
+
     Returns:
         True if the ``image`` is normalized, False otherwise.
     """
     # Check dtype first (fastest)
     if isinstance(image, np.ndarray) and image.dtype == np.uint8:
         return False
-    
+
     # Check values
     if isinstance(image, torch.Tensor):
         return image.max().item() <= 1.01  # Tolerance for float precision
@@ -197,7 +197,7 @@ def shape(image: np.ndarray | torch.Tensor) -> tuple[int, int, int]:
     # Handle 2D Grayscale case (H, W) -> (H, W, 1)
     if image.ndim == 2:
         return image.shape[0], image.shape[1], 1
-    
+
     # Standard 3D/4D case
     return (
         (image.shape[-2], image.shape[-1], image.shape[-3])
@@ -221,7 +221,7 @@ def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
         TypeError: If ``image_or_size`` is not a supported type.
     """
     size = None
-    
+
     # Handle Tensors/Arrays
     if isinstance(image_or_size, (np.ndarray, torch.Tensor)):
         if is_channel_first(image_or_size):
@@ -230,11 +230,11 @@ def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
         else:
             # Supports [H, W, C] or [B, H, W, C]
             size = (int(image_or_size.shape[-3]), int(image_or_size.shape[-2]))
-    
+
     # Handle Numeric inputs
     elif isinstance(image_or_size, (int, float)):
         size = (int(image_or_size), int(image_or_size))
-    
+
     # Handle Sequences
     elif isinstance(image_or_size, (list, tuple)):
         if len(image_or_size) >= 2:
@@ -242,17 +242,17 @@ def imgsz(image_or_size: Any, divisor: int = None) -> tuple[int, int]:
             size = (image_or_size[0], image_or_size[1])
         elif len(image_or_size) == 1:
             size = (image_or_size[0], image_or_size[0])
-    
+
     if size is None:
         raise TypeError(f"Could not parse size from {type(image_or_size)}")
-    
+
     # Apply Divisor (Rounding up to the nearest multiple)
     if divisor:
         h, w = size
         h    = int(math.ceil(h / divisor) * divisor)
         w    = int(math.ceil(w / divisor) * divisor)
         size = (h, w)
-    
+
     return size
 
 
@@ -264,14 +264,14 @@ def num_channels(image: np.ndarray | torch.Tensor) -> int:
             (H, W, C) and pixel values ranging from 0 to 255; or as a
             torch.Tensor of shape (B, C, H, W) and pixel values ranging from
             0.0 to 1.0.
-   
+
     Returns:
         The number of channels in the image.
     """
     # 2D Grayscale case: Always 1 channel
     if image.ndim == 2:
         return 1
-    
+
     # Batch (4D) or Single (3D) case
     if is_channel_first(image):
         # (B, C, H, W) or (C, H, W): Channel is at index 1 or 0 respectively.
@@ -337,11 +337,11 @@ def center(image: np.ndarray | torch.Tensor, integer: bool = True) -> np.ndarray
             Defaults to True.
     """
     h, w = imgsz(image)
-    
+
     # Calculate center
     y_c, x_c = (h / 2, w / 2) if not integer else (h // 2, w // 2)
     center_  = [y_c, x_c]
-    
+
     return torch.tensor(center_) if isinstance(image, torch.Tensor) else np.array(center_)
 
 # endregion
@@ -355,29 +355,29 @@ def center(image: np.ndarray | torch.Tensor, integer: bool = True) -> np.ndarray
 
 def to_array(image: torch.Tensor) -> np.ndarray:
     """Convert an image from torch.Tensor to numpy.ndarray.
-    
+
     Args:
         image: An RGB or grayscale image, formatted as a torch.Tensor of shape
             (B, C, H, W) and pixel values ranging from 0.0 to 1.0.
-    
+
     Returns:
         An RGB or grayscale image, formatted as a numpy.ndarray of shape
             (H, W, C) and pixel values ranging from 0 to 255.
-    
+
     Raises:
         TypeError: If ``image`` is not a 4D torch.Tensor.
-        
+
     Notes:
         image = (tensor.squeeze().detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy() * 255).round().astype("uint8")
     """
     if not torch.is_tensor(image) or image.ndim != 4:
         raise TypeError(f"Expected 'image' to be a 4D torch.Tensor, "
                         f"but got {image.ndim}D.")
-    
+
     # Select the first image in batch if B > 1, then move to CPU
     # We avoid squeeze() to prevent accidentally removing C=1
     img = image[0].detach().cpu()
-    
+
     # Perform operations on the device to minimize transfer overhead
     # Select the first image in batch if B > 1
     image = image[0].detach()
@@ -398,23 +398,23 @@ def to_tensor(image: np.ndarray, normalize: bool = False) -> torch.Tensor:
         An RGB or grayscale image, formatted as a torch.Tensor of shape
             (B, C, H, W) and pixel values ranging from 0.0 to 1.0 if ``normalize``
             is True, else ranging from 0 to 255.
-        
+
     Raises:
         TypeError: If ``image`` is not a 3D numpy.array.
-        
+
     Notes:
         image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().div(255.0).unsqueeze(0).to(device)
     """
     if not isinstance(image, np.ndarray) or image.ndim != 3:
         raise TypeError(f"Expected 'image' to be a 3D numpy.ndarray, "
                         f"but got {image.ndim}D.")
-    
+
     # Convert to tensor and permute: [H, W, C] -> [C, H, W]
     tensor = torch.from_numpy(image).permute(2, 0, 1).float()
-    
+
     if normalize:
         tensor = tensor.div(255.0)
-        
+
     # Add batch dimension: [1, C, H, W]
     return tensor.unsqueeze(0).contiguous()
 
@@ -443,15 +443,15 @@ def split(image: np.ndarray, n: int = 2) -> list[np.ndarray]:
     """
     if image.ndim != 3:
         raise ValueError(f"Expected 'image' to be a 3D numpy.ndarray, but got {image.ndim}D.")
-    
+
     h, w, c = image.shape
-    
+
     # Find optimal Grid (Rows, Cols)
     # We look for factors of n that best match the image aspect ratio
     best_ratio_diff = float("inf")
     rows, cols = 1, n
     img_aspect = h / w
-    
+
     for r in range(1, n + 1):
         if n % r == 0:
             c_grid = n // r
@@ -462,14 +462,14 @@ def split(image: np.ndarray, n: int = 2) -> list[np.ndarray]:
             if ratio_diff < best_ratio_diff:
                 best_ratio_diff = ratio_diff
                 rows, cols = r, c_grid
-    
+
     # Extract Tiles
     sub_images = []
     # Use np.array_split to handle uneven sizes automatically
     # This ensures h % rows pixels are distributed across tiles
     row_splits = np.array_split(np.arange(h), rows)
     col_splits = np.array_split(np.arange(w), cols)
-    
+
     for r_indices in row_splits:
         for c_indices in col_splits:
             tile = image[r_indices[0]:r_indices[-1]+1,
@@ -496,55 +496,55 @@ def pad_square(
             (H, W, C) and pixel values ranging from 0 to 255.
         pad_value: Padding value. Default to 0.
         mode: Padding mode. Defaults to "constant".
-        
+
     Returns:
         Padded square image of shape (S, S, C), where S is the maximum of (H, W).
-    
+
     Raises:
         ValueError: If ``image`` is not a 2D or 3D numpy.ndarray.
     """
     if image.ndim not in [2, 3]:
         raise ValueError(f"Expected 'image' to be a 2D or 3D numpy.ndarray, "
                          f"but got {image.ndim}D.")
-    
+
     h, w = image.shape[:2]
     size = max(h, w)
-    
+
     # Calculate padding for top, bottom, left, right
     pad_h = size - h
     pad_w = size - w
-    
+
     top, bottom = pad_h // 2, pad_h - (pad_h // 2)
     left, right = pad_w // 2, pad_w - (pad_w // 2)
-    
+
     # Construction of padding width tuple
     # For (H, W, C): ((top, bottom), (left, right), (0, 0))
     pad_width = [(top, bottom), (left, right)]
     if image.ndim == 3:
         pad_width.append((0, 0))  # Don't pad the channel dimension
-    
+
     if mode == "constant":
         return np.pad(image, pad_width, mode=mode, constant_values=pad_value)
     else:
         return np.pad(image, pad_width, mode=mode)
-    
+
 
 def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """Downsample an image tensor into a pair to half resolution.
-    
+
     References:
         - Code: https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing
-    
+
     Args:
         image: An RGB or grayscale image, formatted as a torch.Tensor of shape
             (B, C, H, W) and pixel values ranging from 0.0 to 1.0.
 
     Returns:
         Tuple containing two downsampled images.
-    
+
     Raises:
         TypeError: If ``image`` is not a 4D torch.Tensor.
-    
+
     Notes:
         Averages diagonal pixels in non-overlapping patches:
             -------------      -------------
@@ -557,15 +557,15 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """
     if image.ndim != 4:
         raise TypeError(f"Expected 'image' to be a 4D torch.Tensor, but got {image.ndim}D.")
-    
+
     b, c, h, w    = image.shape
     device, dtype = image.device, image.dtype
-    
+
     # Define kernels: filter_ad picks (top-left, bottom-right), filter_bc picks (top-right, bottom-left)
     # We use .repeat(c, 1, 1, 1) for channel-wise (depthwise) convolution
     kernel_ad = torch.tensor([[[[0.5, 0.0], [0.0, 0.5]]]], device=device, dtype=dtype).repeat(c, 1, 1, 1)
     kernel_bc = torch.tensor([[[[0.0, 0.5], [0.5, 0.0]]]], device=device, dtype=dtype).repeat(c, 1, 1, 1)
-    
+
     # Stride=2 ensures non-overlapping 2x2 patches
     out_ad = F.conv2d(image, kernel_ad, stride=2, groups=c)
     out_bc = F.conv2d(image, kernel_bc, stride=2, groups=c)
@@ -578,5 +578,15 @@ def pair_downsample(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
 # region DESTRUCTION
 # ==============================================================================
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

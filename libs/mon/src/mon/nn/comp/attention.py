@@ -67,6 +67,7 @@ class SEBlock(nn.Module):
         y = self.sigmoid(y)
         return x * y
 
+
 # --- Parameter-Free Attention ---
 
 class SimAM(nn.Module):
@@ -112,3 +113,13 @@ class SimAM(nn.Module):
         v          = d.sum(dim=[2, 3], keepdim=True) / n
         e_inv      = d / (4 * (v + self.e_lambda)) + 0.5
         return x * self.sigmoid(e_inv)
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

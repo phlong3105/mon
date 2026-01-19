@@ -1,15 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Basic <Name>
+"""Linear layers utilities.
 
-This module provides the basic <name>.
+This module provides various utilities for linear layers.
 """
 
 from __future__ import annotations
 
 __all__ = []
 
+
+# ==============================================================================
+# region UTILITIES
+# ==============================================================================
+
+
+# endregion
 
 
 # ==============================================================================

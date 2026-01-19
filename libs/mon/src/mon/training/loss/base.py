@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for loss functions."""
+"""Base classes and mixins for loss functions.
+
+This module provides base classes and mixins for loss functions.
+"""
 
 from __future__ import annotations
 
@@ -51,9 +54,8 @@ class BaseLoss(_Loss, abc.ABC):
         _reduce_fn (Callable): Function to reduce the loss tensor based on the
             specified ``reduction`` method.
     """
-    
-    # --- Lifecycle & Initialization ---
 
+    # --- Lifecycle & Initialization ---
     def __init__(self, reduction: str = "mean"):
         """Initialize a new instance.
 
@@ -71,12 +73,12 @@ class BaseLoss(_Loss, abc.ABC):
             "sum" : torch.sum,
             "none": lambda x: x,
         }[reduction]
-        
+
     # --- Representation ---
     def __str__(self):
         """Return the string representation of the loss class."""
         return depascalize(self.__class__.__name__).lower()
-    
+
     # --- Callable & Context Manager ---
     @abc.abstractmethod
     def forward(self, *args, **kwargs) -> torch.Tensor:
@@ -90,7 +92,7 @@ class BaseLoss(_Loss, abc.ABC):
             Loss value.
         """
         pass
-    
+
     def reduce(self, loss: torch.Tensor) -> torch.Tensor:
         """Reduce the loss tensor according to the specified reduction method.
 
@@ -105,5 +107,15 @@ class BaseLoss(_Loss, abc.ABC):
 
 # --- Mixins ---
 
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

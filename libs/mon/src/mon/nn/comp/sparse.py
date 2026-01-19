@@ -15,3 +15,13 @@ __all__ = [
 ]
 
 from torch.nn.modules.sparse import Embedding, EmbeddingBag
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

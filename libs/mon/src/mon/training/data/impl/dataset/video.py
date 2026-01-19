@@ -310,3 +310,13 @@ def is_video_dataset(dataset: Dataset) -> bool:
     return isinstance(dataset, VideoLoader)
 
 # endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion
