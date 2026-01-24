@@ -46,6 +46,7 @@ from ...comp import (
 # ==============================================================================
 
 # --- Positional Encoding Based (Standard MLPs) ---
+
 class FFN(nn.Module):
     """Fourier Feature Network (FFN).
 
@@ -178,6 +179,7 @@ class PosEncodingMLP(nn.Module):
 
 
 # --- Periodic Activation Based (SIREN Variants) ---
+
 class SIREN(nn.Module):
     """SIREN MLP using sine activation functions.
 
@@ -456,6 +458,7 @@ class FINER_PP(nn.Module):
 
 
 # --- Radial & Wavelet Based ---
+
 class GAUSS(nn.Module):
     """Gaussian MLP.
 
@@ -626,6 +629,7 @@ class WIRE(nn.Module):
 # ==============================================================================
 
 # --- Coordinate Generation & Embedding ---
+
 def create_coords(size: int) -> torch.Tensor:
     """Create a normalized square coordinates grid.
 
@@ -689,6 +693,7 @@ def ff_embedding(p: torch.Tensor, B: torch.Tensor | None = None) -> torch.Tensor
 
 
 # --- Spatial Context & Patch Extraction ---
+
 def create_patches(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
     """Create a tensor where the channel contains patch information.
 
@@ -768,6 +773,7 @@ def create_depth_aware_patches(
 
 
 # --- Multi-scale & Sampling Operations ---
+
 def pair_downsampler(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """Downsample the image into two sub-images using learned filters.
 

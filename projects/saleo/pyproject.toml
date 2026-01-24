@@ -1,0 +1,51 @@
+#
+#     /\_____/\
+#    /  o   o  \
+#   ( ==  ^  == )
+#    )         (
+#   (           )
+#  ( (  )   (  ) )
+# (__(__)___(__)__)
+#
+# Installation:
+#   poetry install
+#
+# References:
+#   - pyproject.toml: https://packaging.python.org/en/latest/
+#   - poetry        : https://python-poetry.org/docs/
+#   - uv            : https://docs.astral.sh/uv/
+
+[project]
+name            = "saleo"
+version         = "1.2.0"
+description     = "SALEO: Scale-Arbitrary Low-Light Enhancement via Depth-Aware Implicit Neural Optimization"
+license         = "MIT"
+readme          = "README.md"
+requires-python = ">=3.12,<3.14"
+authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
+keywords        = ["computer vision", "deep learning", "research"]
+classifiers     = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python",
+]
+dependencies    = ["mon"]
+
+# [project.urls]
+# Homepage      = ""
+# Documentation = ""
+# Repository    = ""
+# Issues        = ""
+
+[tool.poetry]
+# package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
+packages = [{ include = "zinf", from = "src" }]
+include  = []
+exclude  = []
+
+[tool.poetry.dependencies]
+mon = { path = "../../libs/mon", develop = true }
+
+[build-system]
+requires      = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
