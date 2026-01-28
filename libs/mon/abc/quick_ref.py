@@ -308,8 +308,8 @@ pass
 # --- Retrieval (Read-only; no side effects) ---
 """
 # Accessing
-- get    : Retrieve a single value.
-- query  : Retrieve multiple values.
+- get    : Retrieve a single value (logical units).
+- query  : Retrieve multiple values (logical units).
 - extract: Extract specific parts from the data.
 - parse  : Extract and convert specific parts from a string or a text into a structured format.
 - resolve: Convert an identifier or reference into the actual object or value it points to.

@@ -31,6 +31,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from mon.core import image as I
 from ...comp import (
     ComplexGaborLayer,
     FINERLinear,
@@ -86,7 +87,7 @@ class FFN(nn.Module):
 
         # First layer
         net = []
-        net.append(nn.Linear(self.encoding.out_features, hidden_dim, bias=bias))
+        net.append(nn.Linear(int(self.encoding.out_features), hidden_dim, bias=bias))
         net.append(nn.ReLU(True))
         # Hidden layers
         for i in range(hidden_layers):
@@ -151,7 +152,7 @@ class PosEncodingMLP(nn.Module):
 
         # First layer
         net = []
-        net.append(nn.Linear(self.encoding.out_features, hidden_dim, bias=bias))
+        net.append(nn.Linear(int(self.encoding.out_features), hidden_dim, bias=bias))
         net.append(nn.ReLU(True))
         # Hidden layers
         for i in range(hidden_layers):
@@ -630,18 +631,26 @@ class WIRE(nn.Module):
 
 # --- Coordinate Generation & Embedding ---
 
-def create_coords(size: int) -> torch.Tensor:
+def create_coords(size: int | tuple[int, ...], device: torch.device) -> torch.Tensor:
     """Create a normalized square coordinates grid.
 
     Args:
         size: The size of the grid.
+        device: The device to place the tensor on.
 
     Returns:
-        A tensor of shape (size, size, 2) and values ranging from 0.0 to 1.0.
+        A tensor of shape (1, size, size, 2) and values ranging from -1.0 to 1.0.
     """
-    h, w   = size, size
-    coords = np.dstack(np.meshgrid(np.linspace(0, 1, h), np.linspace(0, 1, w)))
-    return torch.from_numpy(coords).float()
+    h, w    = I.imgsz(size)
+    # TODO: Old code normalize from 0 to 1. Delete later
+    # x_range = torch.linspace(0, 1, w, device=device)
+    # y_range = torch.linspace(0, 1, h, device=device)
+    x_range = torch.linspace(-1, 1, w, device=device)
+    y_range = torch.linspace(-1, 1, h, device=device)
+    y, x    = torch.meshgrid(y_range, x_range, indexing="ij")
+    # Stack to get (H, W, 2) then expand to (1, H, W, 2)
+    coords  = torch.stack([x, y], dim=-1).unsqueeze(0)
+    return coords
 
 
 def create_noisy_coords(size: int, sigma: float = 0.5, lamda: float = 1.0) -> torch.Tensor:

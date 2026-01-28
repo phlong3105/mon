@@ -83,7 +83,7 @@ class DAV2(nn.Module, nn.RegistrableMixin):
         out_channels: list[int],
         use_bn      : bool                     = False,
         use_clstoken: bool                     = False,
-        device      : torch.device | str | int = None,
+        device      : torch.device | str | int = torch.device("cpu"),
         weights     : WeightsType  | None      = None,
         verbose     : bool                     = True,
         *args, **kwargs
@@ -93,7 +93,6 @@ class DAV2(nn.Module, nn.RegistrableMixin):
         Args:
             name: Name of the model variant.
             weights: Pre-trained weights to load. Defaults to None.
-
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__()

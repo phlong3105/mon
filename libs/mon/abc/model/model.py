@@ -106,8 +106,8 @@ class BaseModel(nn.Module, nn.RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input, formatted as a torch.Tensor of shape (B, C, H, W)
+                and pixel values ranging from 0.0 to 1.0.
 
         Returns:
 

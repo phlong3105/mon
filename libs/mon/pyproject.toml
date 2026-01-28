@@ -19,7 +19,7 @@
 
 [project]
 name            = "mon"
-version         = "2.9.1"
+version         = "2.10.0"
 description     = "Just a research package."
 license         = "MIT"
 readme          = "README.md"
@@ -63,7 +63,7 @@ dependencies    = [
     "spikingjelly",                     # SpikingJelly is an open-source deep learning framework for Spiking Neural Network (SNN) based on PyTorch.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
-    "torch (>=2.9.1)",                  # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch (>=2.10.0)",                 # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
@@ -92,7 +92,7 @@ dependencies    = [
     "ultralytics",                      # Ultralytics YOLO 🚀.
     "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
     # ----- Fixes -----
-    "bitsandbytes (==0.42.0) ; sys_platform == 'darwin'"  
+    "bitsandbytes (==0.42.0) ; sys_platform == 'darwin'"
 ]
 
 [project.urls]
@@ -109,7 +109,7 @@ docs = [                                # Documentation
     "mkdocstrings",                     # Automatic documentation from sources, for MkDocs.
     "sphinx",                           # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
     "sphinx-paramlinks",                # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
-]                                       
+]
 gui = [                                 # GUI Applications
     "PyQt6",                            # Python bindings for the Qt cross-platform application toolkit.
     "matplotlib",                       # Publication quality figures in Python.

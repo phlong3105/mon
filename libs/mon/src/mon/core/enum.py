@@ -646,6 +646,7 @@ class MLType(Enum):
     SUPERVISED      = "supervised"       # Supervised learning with labeled data.
     UNSUPERVISED    = "unsupervised"     # Unsupervised learning with unlabeled data.
     SELF_SUPERVISED = "self_supervised"  # Self-Supervised (or Semi-Supervised) learning with self-generated supervision.
+    TEST_TIME       = "test_time"        # Test-Time Adaptation (TTA) or Test-Time Augmentation (TTA).
     ZERO_SHOT       = "zero_shot"        # Zero-Shot learning without any training data.
 
     @classmethod

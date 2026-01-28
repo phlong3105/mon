@@ -17,7 +17,8 @@ dependencies:
   - pip                                 # PyPA recommended tool for installing Python packages.
   - poetry                              # Python dependency management and packaging made easy
   # CUDA
-  - cuda-toolkit=12.9                   # CUDA Toolkit - Including CUDA runtime.
+  # - cuda-toolkit=12.8                   # CUDA Toolkit - Including CUDA runtime.
+  - cuda-toolkit=13.0                   # CUDA Toolkit - Including CUDA runtime.
   - cudnn                               # NVIDIA's cuDNN deep neural network acceleration library.
   - cupy                                # NumPy & SciPy for GPU.
   - nvidia-ml-py                        # Python Bindings for the NVIDIA Management Library.

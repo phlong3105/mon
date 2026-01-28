@@ -11,7 +11,6 @@ from __future__ import annotations
 __all__ = [
     "InDi",
     "SIREN",
-    "SIREN_DAM",
 ]
 
 from typing import Any, Optional
@@ -19,39 +18,6 @@ from typing import Any, Optional
 import torch
 
 from mon import nn
-
-
-# ==============================================================================
-# region UTILS
-# ==============================================================================
-
-def depth_aware_modulation(
-    patch    : torch.Tensor,
-    depth    : torch.Tensor,
-    patch_dim: int,
-    alpha    : float = 8.3
-) -> torch.Tensor:
-    """Modulate intensity features based on depth similarity.
-
-    Adjust the intensity features of image patches according to the depth
-    similarity between the center pixel and its neighbors. This helps to
-    emphasize features from geometrically similar regions while attenuating
-    those from dissimilar regions.
-    """
-    # 1. Calculate absolute depth difference: |D(p_i) - depth_center|
-    center  = patch_dim // 2
-    depth_c = depth[:, :, center:center + 1]
-    depth_d = torch.abs(depth_c - depth)
-    # 2. Calculate Depth Similarity Weights: f_d = exp(-alpha * depth_diff)
-    # These weights define how much each neighbor contributes to the output feature.
-    f_d     = torch.exp(-alpha * depth_d)
-    # 3. Modulate the Intensity Features: N(y'_V) = N(y_V) * f_d
-    # Element-wise multiplication ensures that features from geometrically
-    # dissimilar pixels (high depth_diff, low f_d) are attenuated.
-    patch   = patch * f_d
-    return patch
-
-# endregion
 
 
 # ==============================================================================
@@ -63,8 +29,9 @@ def depth_aware_modulation(
 class SIREN(nn.Module):
     """SIREN network (similar to CoLIE model).
 
-    Dual-path SIREN network that processes coordinate and image patch inputs
-    separately before combining them for final output prediction.
+    A Conditional INR using SIREN layers. It doesn't just memorize coordinates
+    ``(x, y)``; it looks at the local neighborhood of the input image to decide
+    how to enhance the pixel.
 
     Attributes:
         patch_dim (int): Input dimension of the patch branch.
@@ -141,38 +108,30 @@ class SIREN(nn.Module):
     # --- Callable & Context Manager ---
     def forward(
         self,
-        coord: torch.Tensor,
-        patch: torch.Tensor,
-        *args, **kwargs
+        coords : torch.Tensor,
+        patches: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Forward the input through the network."""
+        """Forward the input through the network.
+
+        Args:
+            coords: Input coordinates, formatted as a torch.Tensor of shape
+                (... , 2) and values ranging from -1.0 to 1.0.
+            patches: Input patches, formatted as a torch.Tensor of shape
+                (... , C) and values ranging from 0.0 to 1.0.
+        """
         # Process each branch
-        coord_e  = self.pos_encode(coord) if self.pos_encode else coord
-        coord_f  = self.coords_net(coord_e)
-        patch_f  = self.patch_net(patch)
-        concat_f = torch.cat((coord_f, patch_f), dim=-1)
+        coords_e  = self.pos_encode(coords) if self.pos_encode else coords
+        coords_f  = self.coord_net(coords_e)
+        patches_f = self.patch_net(patches)
+        concat_f  = torch.cat((coords_f, patches_f), dim=-1)
         # Final output
-        output   = self.output_net(concat_f)
+        output    = self.output_net(concat_f)
+
+        # TODO: Debug (Delete later)
+        # print(f"coords : {coords.shape}")
+        # print(f"patches: {patches.shape}")
+
         return output, concat_f
-
-
-# noinspection PyMethodOverriding
-class SIREN_DAM(SIREN):
-    """SIREN network with Depth-Aware Modulation (DAM)."""
-
-    # --- Callable & Context Manager ---
-    def forward(
-        self,
-        coord: torch.Tensor,
-        patch: torch.Tensor,
-        depth: torch.Tensor,
-        *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        """Forward the input through the network."""
-        # Modulate intensity features based on depth similarity
-        patch = depth_aware_modulation(patch, depth, self.patch_dim)
-        # Call parent forward method
-        return super().forward(coord, patch, *args, **kwargs)
 
 
 # --- InDi Networks ---
@@ -228,18 +187,18 @@ class InDi(nn.Module):
     # --- Callable & Context Manager ---
     def forward(
         self,
-        coord: torch.Tensor,
-        patch: torch.Tensor,
-        prev : torch.Tensor,
-        t    : torch.Tensor,
+        coords : torch.Tensor,
+        patches: torch.Tensor,
+        prev   : torch.Tensor,
+        t      : torch.Tensor,
         *args, **kwargs
     ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
         """Forward the input through the network."""
         # Backbone branch
-        backbone_out, backbone_f = self.backbone(coord, patch)
+        backbone_out, backbone_f = self.backbone(coords, patches)
         # Auxiliary branch
         t_tensor    = torch.ones_like(prev) * t
-        aux_in      = torch.cat((coord, patch, prev, t_tensor), dim=-1)
+        aux_in      = torch.cat((coords, patches, prev, t_tensor), dim=-1)
         aux_out     = self.aux_net(aux_in)
         # Concatenate and project
         concat_feat = torch.cat((backbone_f, aux_out), -1)

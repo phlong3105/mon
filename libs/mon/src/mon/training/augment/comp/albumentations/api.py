@@ -39,6 +39,8 @@ from albumentations.core.transforms_interface import (
     NoOp,
     Transform3D,
 )
+# noinspection PyUnusedImports
+from albumentations.pytorch import ToTensor3D, ToTensorV2
 
 from mon.core import ALBUMENTATIONS
 

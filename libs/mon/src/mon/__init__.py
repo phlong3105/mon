@@ -8,7 +8,7 @@ high-frequency APIs, and offer lazy loading for heavy optional subpackages.
 """
 
 __author__  = "Long H. Pham"
-__version__ = "2.9.1"
+__version__ = "2.10.0"
 
 import time
 __start = time.time()
