@@ -51,11 +51,11 @@ class SICE(ImageDataset, RegistrableMixin):
     We use the under-exposure images as the primary input modality.
     """
 
-    _name      : str         = "sice"
-    _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF, Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "sice"
+    tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF, Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image"      : Modality(
             name    = "image_under",
             type    = "image",
@@ -93,7 +93,7 @@ class SICE(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Lifecycle & Initialization ---
     def __init__(self, lr: bool = True, *args, **kwargs):
@@ -103,7 +103,10 @@ class SICE(ImageDataset, RegistrableMixin):
             lr: If True, use the low-resolution version of the dataset.
                 Default is True.
         """
+        # Assign attributes
         self.lr = lr
+
+        # Continue the initialization chain
         super().__init__(*args, **kwargs)
 
     # --- Data Loading ---
@@ -135,11 +138,11 @@ class SICEME(ImageDataset, RegistrableMixin):
     enhancement (e.g., Zero-DCE, Zero-DCE++, etc.).
     """
 
-    _name      : str         = "siceme"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = "me"
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "siceme"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = "me"
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -163,7 +166,7 @@ class SICEME(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

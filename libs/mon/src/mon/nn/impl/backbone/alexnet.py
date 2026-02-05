@@ -36,17 +36,17 @@ class AlexNetBackBone(nn.Module, RegistrableMixin):
     """AlexNet backbone.
 
     Attributes:
-        features (torch.nn.Sequential): The feature extraction layers.
-        out_indices (list): List of layer indices to extract features from.
-        out_channels (list): List of output channels for each extracted layer.
-        verbose (bool): Verbosity mode.
+        features: The feature extraction layers.
+        out_indices: List of layer indices to extract features from.
+        out_channels: List of output channels for each extracted layer.
+        verbose: Verbosity mode.
     """
 
-    _arch     : str          = "alexnet"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.BACKBONE]
-    _mltypes  : list[MLType] = []
-    _model_dir: Path         = current_dir
+    arch     : str          = "alexnet"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.BACKBONE]
+    mltypes  : list[MLType] = []
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -73,6 +73,7 @@ class AlexNetBackBone(nn.Module, RegistrableMixin):
         # Initialize RegistrableMixin
         RegistrableMixin.__init__(self, name=name)
 
+        # Assign attributes
         self.verbose = verbose
 
         # Load the base model
@@ -99,13 +100,12 @@ class AlexNetBackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
             A list of feature maps from the specified layers.
         """
-        # If you need multi-scale features for a Neck (FPN):
+        # If you need multiscale features for a Neck (FPN):
         outputs = []
         for i, layer in enumerate(self.features):
             x = layer(x)
@@ -157,22 +157,17 @@ class AlexNet_Weights(WeightsEnum):
 
 @BACKBONES.register(name="alexnet", metaclass=AlexNetBackBone)
 def alexnet(
-    weights    : WeightsEnum | str | None = AlexNet_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = AlexNet_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> AlexNetBackBone:
     """Create an AlexNet backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            AlexNet_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from.
-            Defaults to None.
+        weights: Pre-trained weights to load. Defaults to AlexNet_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An AlexNet backbone model.
     """
     return AlexNetBackBone(
         name        = "alexnet",

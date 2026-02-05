@@ -64,11 +64,11 @@ class SAM(nn.Module, nn.RegistrableMixin):
         - Code: https://github.com/ultralytics/ultralytics
     """
 
-    _arch     : str          = "sam"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.SEGMENT]
-    _mltypes  : list[MLType] = [MLType.SUPERVISED]
-    _model_dir: Path         = current_dir
+    arch     : str          = "sam"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.SEGMENT]
+    mltypes  : list[MLType] = [MLType.SUPERVISED]
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(

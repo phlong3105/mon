@@ -23,11 +23,11 @@ from ....api import *
 class Snow100K(ImageDataset, RegistrableMixin):
     """Snow100K dataset."""
 
-    _name      : str         = "snow100k"
-    _tasks     : list[Task]  = [Task.DESNOW]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN]
-    _modalities: Modalities  = {
+    name      : str         = "snow100k"
+    tasks     : list[Task]  = [Task.DESNOW]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class Snow100K(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:

@@ -23,11 +23,11 @@ from ....api import *
 class LightEffect(ImageDataset, RegistrableMixin):
     """LightEffect dataset."""
 
-    _name      : str         = "lighteffect"
-    _tasks     : list[Task]  = [Task.DEFLARE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN]
-    _modalities: Modalities  = {
+    name      : str         = "lighteffect"
+    tasks     : list[Task]  = [Task.DEFLARE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -37,7 +37,7 @@ class LightEffect(ImageDataset, RegistrableMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

@@ -9,7 +9,7 @@ computer vision.
 Notes:
     - Design Pattern: Component-Based Framework.
     - Goal: Define a collection of components that can be assembled to form
-      concrete <Name> implementations.
+      concrete monocular depth estimation implementations.
     - Structure:
         ::
 

@@ -24,11 +24,11 @@ from ....api import *
 class RealBlurJ(ImageDataset, RegistrableMixin):
     """RealBlur-J dataset."""
 
-    _name      : str         = "realblur"
-    _tasks     : list[Task]  = [Task.DEBLUR]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "realblur"
+    tasks     : list[Task]  = [Task.DEBLUR]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -45,7 +45,7 @@ class RealBlurJ(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -71,11 +71,11 @@ class RealBlurJ(ImageDataset, RegistrableMixin):
 class RealBlurR(ImageDataset, RegistrableMixin):
     """RealBlur-R dataset."""
 
-    _name      : str         = "realblur"
-    _tasks     : list[Task]  = [Task.DEBLUR]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "realblur"
+    tasks     : list[Task]  = [Task.DEBLUR]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -92,7 +92,7 @@ class RealBlurR(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:

@@ -28,11 +28,11 @@ from ....api import *
 class LLVIP(ImageDataset, RegistrableMixin):
     """LLVIP dataset."""
 
-    _name      : str         = "llvip"
-    _tasks     : list[Task]  = [Task.NTE, Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "llvip"
+    tasks     : list[Task]  = [Task.NTE, Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image"   : Modality(
             name    = "image",
             type    = "image",
@@ -56,7 +56,7 @@ class LLVIP(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

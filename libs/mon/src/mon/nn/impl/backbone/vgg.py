@@ -50,17 +50,17 @@ class VGGBackBone(nn.Module, RegistrableMixin):
     """VGG backbone.
 
     Attributes:
-        features (torch.nn.Sequential): The feature extraction layers.
-        out_indices (list): List of layer indices to extract features from.
-        out_channels (list): List of output channels for each extracted layer.
-        verbose (bool): Verbosity mode.
+        features: The feature extraction layers.
+        out_indices: List of layer indices to extract features from.
+        out_channels: List of output channels for each extracted layer.
+        verbose: Verbosity mode.
     """
 
-    _arch     : str          = "vgg"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.BACKBONE]
-    _mltypes  : list[MLType] = []
-    _model_dir: Path         = current_dir
+    arch     : str          = "vgg"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.BACKBONE]
+    mltypes  : list[MLType] = []
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -91,6 +91,7 @@ class VGGBackBone(nn.Module, RegistrableMixin):
         # Initialize RegistrableMixin
         RegistrableMixin.__init__(self, name=name)
 
+        # Assign attributes
         self.verbose = verbose
 
         # Load the base model
@@ -118,13 +119,12 @@ class VGGBackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
             A list of feature maps from the specified layers.
         """
-        # If you need multi-scale features for a Neck (FPN):
+        # If you need multiscale features for a Neck (FPN):
         outputs = []
         for i, layer in enumerate(self.features):
             x = layer(x)
@@ -365,22 +365,17 @@ class VGG19_BN_Weights(WeightsEnum):
 
 @BACKBONES.register(name="vgg11", metaclass=VGGBackBone)
 def vgg11(
-    weights    : WeightsEnum | str | None = VGG11_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG11_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG11 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG11_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG11_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG11 backbone model.
     """
     return VGGBackBone(
         name        = "vgg11",
@@ -394,22 +389,17 @@ def vgg11(
 
 @BACKBONES.register(name="vgg11_bn", metaclass=VGGBackBone)
 def vgg11_bn(
-    weights    : WeightsEnum | str | None = VGG11_BN_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG11_BN_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG11-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG11_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG11_BN_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG11-BN backbone model.
     """
     return VGGBackBone(
         name        = "vgg11_bn",
@@ -423,22 +413,17 @@ def vgg11_bn(
 
 @BACKBONES.register(name="vgg13", metaclass=VGGBackBone)
 def vgg13(
-    weights    : WeightsEnum | str | None = VGG13_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG13_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG13 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG13_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG13_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG13 backbone model.
     """
     return VGGBackBone(
         name        = "vgg13",
@@ -452,22 +437,17 @@ def vgg13(
 
 @BACKBONES.register(name="vgg13_bn", metaclass=VGGBackBone)
 def vgg13_bn(
-    weights    : WeightsEnum | str | None = VGG13_BN_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG13_BN_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG13-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG13_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG13_BN_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG13-BN backbone model.
     """
     return VGGBackBone(
         name        = "vgg13_bn",
@@ -481,22 +461,17 @@ def vgg13_bn(
 
 @BACKBONES.register(name="vgg16", metaclass=VGGBackBone)
 def vgg16(
-    weights    : WeightsEnum | str | None = VGG16_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG16_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG16 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG16_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG16_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG16 backbone model.
     """
     return VGGBackBone(
         name        = "vgg16",
@@ -510,22 +485,17 @@ def vgg16(
 
 @BACKBONES.register(name="vgg16_bn", metaclass=VGGBackBone)
 def vgg16_bn(
-    weights    : WeightsEnum | str | None = VGG16_BN_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG16_BN_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG16-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG16_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG16_BN_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG16-BN backbone model.
     """
     return VGGBackBone(
         name        = "vgg16_bn",
@@ -539,22 +509,17 @@ def vgg16_bn(
 
 @BACKBONES.register(name="vgg19", metaclass=VGGBackBone)
 def vgg19(
-    weights    : WeightsEnum | str | None = VGG19_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG19_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG19 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG19_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG19_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG19 backbone model.
     """
     return VGGBackBone(
         name        = "vgg19",
@@ -568,22 +533,17 @@ def vgg19(
 
 @BACKBONES.register(name="vgg19_bn", metaclass=VGGBackBone)
 def vgg19_bn(
-    weights    : WeightsEnum | str | None = VGG19_BN_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = VGG19_BN_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> VGGBackBone:
     """Create a VGG19-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            VGG19_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to VGG19_BN_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A VGG19-BN backbone model.
     """
     return VGGBackBone(
         name        = "vgg19_bn",

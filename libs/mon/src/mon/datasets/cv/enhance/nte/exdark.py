@@ -27,11 +27,11 @@ from ....api import *
 class ExDark(ImageDataset, RegistrableMixin):
     """ExDark dataset."""
 
-    _name      : str         = "exdark"
-    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "exdark"
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -48,7 +48,7 @@ class ExDark(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "Bicycle"  , "id":  1, "coco80_id":  2, "color": [138, 183,  33]},
         {"name": "Boat"     , "id":  2, "coco80_id":  9, "color": [ 19,  64,  83]},
         {"name": "Bottle"   , "id":  3, "coco80_id": 40, "color": [139, 160,   1]},

@@ -26,11 +26,11 @@ from ....api import *
 class GTA5NighttimeFog(ImageDataset, RegistrableMixin):
     """GTA5NighttimeFog dataset."""
 
-    _name      : str         = "gta5nighttimefog"
-    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DEHAZE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "gta5nighttimefog"
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DEHAZE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -54,7 +54,7 @@ class GTA5NighttimeFog(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

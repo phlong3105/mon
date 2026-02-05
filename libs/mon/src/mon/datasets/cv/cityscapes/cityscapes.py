@@ -27,14 +27,14 @@ from ...api import *
 class Cityscapes(ImageDataset):
     """Cityscapes main dataset."""
 
-    _subset    : str         = "cityscapes"
-    _tasks     : list[Task]  = [Task.SEGMENT]
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = Modalities({
+    subset    : str         = "cityscapes"
+    tasks     : list[Task]  = [Task.SEGMENT]
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = Modalities({
         "image"   : Image,
         "semantic": SemanticMask,
     })
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "unlabeled"           , "id":  0, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "ego vehicle"         , "id":  1, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
         {"name": "rectification border", "id":  2, "train_id": 255, "category": "void"        , "category_id": 0, "ignore_in_eval": True , "color": (  0,   0,   0)},
@@ -124,8 +124,8 @@ class Cityscapes(ImageDataset):
                     )
                 )
 
-        self._datapoints["image"]    = images
-        self._datapoints["semantic"] = semantic
+        self.datapoints["image"]    = images
+        self.datapoints["semantic"] = semantic
 
 # endregion
 

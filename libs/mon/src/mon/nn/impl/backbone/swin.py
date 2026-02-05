@@ -46,17 +46,17 @@ class SwinBackBone(nn.Module, RegistrableMixin):
     """Swin backbone.
 
     Attributes:
-        features (torch.nn.Sequential): The feature extraction layers.
-        out_indices (list): List of layer indices to extract features from.
-        out_channels (list): List of output channels for each extracted layer.
-        verbose (bool): Verbosity mode.
+        features: The feature extraction layers.
+        out_indices: List of layer indices to extract features from.
+        out_channels: List of output channels for each extracted layer.
+        verbose: Verbosity mode.
     """
 
-    _arch     : str          = "swin"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.BACKBONE]
-    _mltypes  : list[MLType] = []
-    _model_dir: Path         = current_dir
+    arch     : str          = "swin"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.BACKBONE]
+    mltypes  : list[MLType] = []
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -95,6 +95,7 @@ class SwinBackBone(nn.Module, RegistrableMixin):
         # Initialize RegistrableMixin
         RegistrableMixin.__init__(self, name=name)
 
+        # Assign attributes
         self.verbose = verbose
 
         # Load the base model
@@ -142,8 +143,7 @@ class SwinBackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
             A list of feature maps from the specified layers.
@@ -338,22 +338,17 @@ class Swin_V2_B_Weights(WeightsEnum):
 
 @BACKBONES.register(name="swin_t", metaclass=SwinBackBone)
 def swin_t(
-    weights    : WeightsEnum | str | None = Swin_T_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = Swin_T_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> SwinBackBone:
     """Create a Swin-T backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            Swin_T_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to Swin_T_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A Swin-T backbone model.
     """
     return SwinBackBone(
         name                  = "swin_t",
@@ -371,22 +366,17 @@ def swin_t(
 
 @BACKBONES.register(name="swin_s", metaclass=SwinBackBone)
 def swin_s(
-    weights    : WeightsEnum | str | None = Swin_S_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = Swin_S_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> SwinBackBone:
     """Create a Swin-S backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            Swin_S_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to Swin_S_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A Swin-S backbone model.
     """
     return SwinBackBone(
         name                  = "swin_s",
@@ -404,22 +394,17 @@ def swin_s(
 
 @BACKBONES.register(name="swin_b", metaclass=SwinBackBone)
 def swin_b(
-    weights    : WeightsEnum | str | None = Swin_B_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = Swin_B_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> SwinBackBone:
     """Create a Swin-B backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            Swin_B_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to Swin_B_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A Swin-B backbone model.
     """
     return SwinBackBone(
         name                  = "swin_b",
@@ -437,22 +422,17 @@ def swin_b(
 
 @BACKBONES.register(name="swin_v2_t", metaclass=SwinBackBone)
 def swin_v2_t(
-    weights    : WeightsEnum | str | None = Swin_V2_T_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = Swin_V2_T_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> SwinBackBone:
     """Create a Swin-V2-T backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            Swin_V2_T_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to Swin_V2_T_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A Swin-V2-T backbone model.
     """
     return SwinBackBone(
         name                  = "swin_v2_t",
@@ -470,22 +450,17 @@ def swin_v2_t(
 
 @BACKBONES.register(name="swin_v2_s", metaclass=SwinBackBone)
 def swin_v2_s(
-    weights    : WeightsEnum | str | None = Swin_V2_S_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = Swin_V2_S_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> SwinBackBone:
     """Create a Swin-V2-S backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            Swin_V2_S_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to Swin_V2_S_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A Swin-V2-S backbone model.
     """
     return SwinBackBone(
         name                  = "swin_v2_s",
@@ -503,22 +478,17 @@ def swin_v2_s(
 
 @BACKBONES.register(name="swin_v2_b", metaclass=SwinBackBone)
 def swin_v2_b(
-    weights    : WeightsEnum | str | None = Swin_V2_B_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = Swin_V2_B_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> SwinBackBone:
     """Create a Swin-V2-B backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            Swin_V2_B_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to Swin_V2_B_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A Swin-V2-B backbone model.
     """
     return SwinBackBone(
         name                  = "swin_v2_b",

@@ -77,27 +77,27 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
     and values to simplify common enum operations.
 
     Attributes:
-        _names (list): Cached list of enum members in declaration order.
-        _values (list): Cached list of enum values in declaration order.
-        _ints_to_enums (dict): Mapping from integer indices to members.
-        _values_to_enums (dict): Mapping from enum values to members.
-        _strs_to_enums (dict): Mapping from lowercase member names to members.
+        names: Cached list of enum members in declaration order.
+        values: Cached list of enum values in declaration order.
+        ints_to_enums: Mapping from integer indices to members.
+        values_to_enums: Mapping from enum values to members.
+        strs_to_enums: Mapping from lowercase member names to members.
     """
 
     # --- Lifecycle & Initialization ---
     @classmethod
     def __init_subclass__(cls):
         """Initialize cached helper mappings on subclass definition."""
-        cls._names         = list(cls)
-        cls._values        = [m.value for m in cls]
-        cls._ints_to_enums = {i: m for i, m in enumerate(cls)}
-        cls._strs_to_enums = {m.name.lower(): m for m in cls}
+        cls.names         = list(cls)
+        cls.values        = [m.value for m in cls]
+        cls.ints_to_enums = {i: m for i, m in enumerate(cls)}
+        cls.strs_to_enums = {m.name.lower(): m for m in cls}
 
         # Only cache values if they are hashable to avoid runtime errors.
-        cls._values_to_enums = {}
+        cls.values_to_enums = {}
         for m in cls:
             try:
-                cls._values_to_enums[m.value] = m
+                cls.values_to_enums[m.value] = m
             except TypeError:
                 pass
 
@@ -114,43 +114,18 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
         Args:
             value: Value to check.
         """
-        return isinstance(value, cls) or value in cls._values
+        return isinstance(value, cls) or value in cls.values
 
     # --- Properties ---
     @classmethod
     def random(cls):
         """Return a random enum member."""
-        return random.choice(cls._names)
+        return random.choice(cls.names)
 
     @classmethod
     def random_value(cls):
         """Return the value of a random enum member."""
         return cls.random().value
-
-    @classmethod
-    def names(cls) -> list:
-        """Return a list of all enum members."""
-        return cls._names
-
-    @classmethod
-    def values(cls) -> list[Any]:
-        """Return a list of all enum values."""
-        return cls._values
-
-    @classmethod
-    def ints_to_members(cls) -> dict:
-        """Return a mapping from integer indices to enum members."""
-        return cls._ints_to_enums
-
-    @classmethod
-    def strs_to_members(cls) -> dict:
-        """Return a mapping from lowercase member names to enum members."""
-        return cls._strs_to_enums
-
-    @classmethod
-    def values_to_members(cls) -> dict:
-        """Return a mapping from enum values to enum members."""
-        return cls._values_to_enums
 
     # --- Initialize ---
     @classmethod
@@ -169,8 +144,8 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
 
         # 2. Direct Value Lookup (fastest for hashable types)
         try:
-            if value in cls._values_to_enums:
-                return cls._values_to_enums[value]
+            if value in cls.values_to_enums:
+                return cls.values_to_enums[value]
         except TypeError:
             # Value is not hashable (e.g., a list), so we can't use the dict.
             # Fallback to a linear scan below.
@@ -181,16 +156,16 @@ class Enum(enum.Enum, metaclass=CustomEnumMeta):
             val_lower = value.lower().split(".")[-1]
             if val_lower in ["default", "DEFAULT"]:
                 # If "default", return the first enum member
-                return cls._values[0]
-            elif val_lower in cls._strs_to_enums:
-                return cls._strs_to_enums[val_lower]
+                return cls.values[0]
+            elif val_lower in cls.strs_to_enums:
+                return cls.strs_to_enums[val_lower]
 
         # 4. Integer/Index Lookup
-        if isinstance(value, int) and value in cls._ints_to_enums:
-            return cls._ints_to_enums[value]
+        if isinstance(value, int) and value in cls.ints_to_enums:
+            return cls.ints_to_enums[value]
 
         # 5. Fallback linear scan for unhashable or non-standard values
-        for member in cls._names:
+        for member in cls.names:
             if member.value == value:
                 return member
 

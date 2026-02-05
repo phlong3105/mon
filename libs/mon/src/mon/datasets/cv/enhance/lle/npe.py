@@ -23,11 +23,11 @@ from ....api import *
 class NPE(ImageDataset, RegistrableMixin):
     """NPE dataset."""
 
-    _name      : str         = "npe"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "npe"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class NPE(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

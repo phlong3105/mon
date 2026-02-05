@@ -23,11 +23,11 @@ from ....api import *
 class VV(ImageDataset, RegistrableMixin):
     """VV dataset."""
 
-    _name      : str         = "vv"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "vv"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class VV(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

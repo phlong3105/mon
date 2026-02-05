@@ -36,13 +36,12 @@ class DepthAwareConv2d(nn.Module):
     from the depth tensor.
 
     Attributes:
-        conv (torch.nn.Conv2d): Convolutional layer used to perform standard 2D
-            convolution.
-        kernel_size (int): Size of the convolutional kernel.
-        padding (int): Padding size to be applied to the convolution operation.
-        alpha (float): Scaling factor for depth similarity computation.
+        conv: Convolutional layer used to perform standard 2D convolution.
+        kernel_size: Size of the convolutional kernel.
+        padding: Padding size to be applied to the convolution operation.
+        alpha: Scaling factor for depth similarity computation.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -53,7 +52,7 @@ class DepthAwareConv2d(nn.Module):
         alpha       : float = 8.3,
     ):
         """Initialize a new instance.
-        
+
         Args:
             in_channels: Number of channels in the input image.
             out_channels: Number of channels produced by the convolution.
@@ -70,16 +69,13 @@ class DepthAwareConv2d(nn.Module):
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
-        
+
         Args:
-            x: Input tensor of shape (B, C_in, H, W) and values ranging
-                from 0.0 to 1.0.
-            d: Depth tensor of shape (B, 1, H, W) and values ranging
-                from 0.0 to 1.0.
-            
+            x: Input tensor of shape (B, C_in, H, W) and values ranging from 0.0 to 1.0.
+            d: Depth tensor of shape (B, 1, H, W) and values ranging from 0.0 to 1.0.
+
         Returns:
-            Output tensor of shape (B, C_out, H_out, W_out) and values
-            ranging from 0.0 to 1.0.
+            Output tensor of shape (B, C_out, H_out, W_out) and values ranging from 0.0 to 1.0.
         """
         # input: [b, channels, h, w]
         # depth: [b, 1,        h, w]
@@ -103,7 +99,7 @@ class DepthAwareConv2d(nn.Module):
         F_D = F_D.view(b, 1, h_kernel, w_kernel, h, w)
         F_D = F_D.permute(0, 4, 1, 2, 3, 5).reshape(b, 1, h * w_kernel, w * h_kernel)
         F_D = F_D[:, :, padding:h + padding, padding:w + padding]  # Adjust for padding
-        
+
         # Apply depth similarity to standard convolution output
         return self.conv(x) * F_D
 
@@ -116,12 +112,12 @@ class DepthAwareAvgPool2d(nn.Module):
     resulting in a more contextually aware aggregation of features.
 
     Attributes:
-        kernel_size (int): Size of the pooling kernel.
-        stride (int): Stride of the pooling operation.
-        padding (int): Padding size for the pooling operation.
-        alpha (float): Scaling factor for depth similarity.
+        kernel_size: Size of the pooling kernel.
+        stride: Stride of the pooling operation.
+        padding: Padding size for the pooling operation.
+        alpha: Scaling factor for depth similarity.
     """
-    
+
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -131,7 +127,7 @@ class DepthAwareAvgPool2d(nn.Module):
         alpha      : float = 8.3,
     ):
         """Initialize a new instance.
-        
+
         Args:
             kernel_size: Size of the pooling kernel.
             stride: Stride of the pooling operation. Defaults to 1.
@@ -147,13 +143,11 @@ class DepthAwareAvgPool2d(nn.Module):
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
-        
+
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
-            d: Depth tensor of shape (B, 1, H, W) and values ranging
-                from 0.0 to 1.0.
-            
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            d: Depth tensor of shape (B, 1, H, W) and values ranging from 0.0 to 1.0.
+
         Returns:
             Output tensor of shape (B, C, H_out, W_out) and values ranging
             from 0.0 to 1.0.
@@ -165,7 +159,7 @@ class DepthAwareAvgPool2d(nn.Module):
         # Pad input and depth for pooling
         x_padded = F.pad(x, (self.padding, self.padding, self.padding, self.padding), mode="replicate")
         d_padded = F.pad(d, (self.padding, self.padding, self.padding, self.padding), mode="replicate")
-        
+
         # Extract patches using unfold
         x_unfolded = F.unfold(x_padded, kernel_size=self.kernel_size, stride=self.stride)
         d_unfolded = F.unfold(d_padded, kernel_size=self.kernel_size, stride=self.stride)
@@ -187,7 +181,7 @@ class DepthAwareAvgPool2d(nn.Module):
         weighted_sum = torch.sum(F_D * x_unfolded, dim=2, keepdim=True)  # Sum over kernel
         fd_sum       = torch.sum(F_D, dim=2, keepdim=True)  # Normalize
         y            = weighted_sum / (fd_sum + 1e-8)       # Avoid division by zero
-        
+
         # Reshape to [b, c, h_out, w_out]
         y = y.view(b, c, h_out, w_out)
         return y

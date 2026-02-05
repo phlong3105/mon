@@ -24,11 +24,11 @@ from ..api import *
 class Speed10(ImageDataset, RegistrableMixin):
     """Speed10 dataset."""
 
-    _name      : str         = "speed10"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "speed10"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -45,18 +45,18 @@ class Speed10(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class Speed1K(ImageDataset, RegistrableMixin):
     """Speed1K dataset."""
 
-    _name      : str         = "speed1k"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "speed1k"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -73,7 +73,7 @@ class Speed1K(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

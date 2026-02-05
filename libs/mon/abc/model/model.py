@@ -58,11 +58,11 @@ class BaseModel(nn.Module, nn.RegistrableMixin):
         - Code:
     """
 
-    _arch     : str          = "<arch>"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.SEGMENT]
-    _mltypes  : list[MLType] = []
-    _model_dir: Path         = current_dir
+    arch     : str          = "<arch>"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.SEGMENT]
+    mltypes  : list[MLType] = []
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(

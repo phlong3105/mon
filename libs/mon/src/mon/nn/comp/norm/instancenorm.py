@@ -38,10 +38,9 @@ class AdaptiveInstanceNorm2d(nn.Module):
     Apply adaptive instance normalization to the input tensor.
 
     Attributes:
-        w0 (torch.nn.parameter.Parameter): Weight for the identity connection.
-        w1 (torch.nn.parameter.Parameter): Weight for the instance normalization
-            connection.
-        norm (torch.nn.InstanceNorm2d): Instance normalization layer.
+        w0: Weight for the identity connection.
+        w1: Weight for the instance normalization connection.
+        norm: Instance normalization layer.
     """
 
     # --- Lifecycle & Initialization ---
@@ -72,12 +71,10 @@ class AdaptiveInstanceNorm2d(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         return self.w0 * x + self.w1 * self.norm(x)
 
@@ -95,7 +92,7 @@ class HalfInstanceNorm2d(nn.Module):
     where :math:`\oplus` is concatenation along the channel dimension.
 
     Attributes:
-        norm (torch.nn.InstanceNorm2d): Instance normalization layer.
+        norm: Instance normalization layer.
     """
 
     # --- Lifecycle & Initialization ---
@@ -135,12 +132,10 @@ class HalfInstanceNorm2d(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         y1, y2 = torch.chunk(x, chunks=2, dim=1)
         y1     = self.norm(y1)

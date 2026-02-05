@@ -25,11 +25,11 @@ from ....api import *
 class Rain100(ImageDataset, RegistrableMixin):
     """Rain100 dataset."""
 
-    _name      : str         = "rain100"
-    _tasks     : list[Task]  = [Task.DERAIN]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "rain100"
+    tasks     : list[Task]  = [Task.DERAIN]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -46,18 +46,18 @@ class Rain100(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class Rain100H(ImageDataset, RegistrableMixin):
     """Rain100H dataset."""
 
-    _name      : str         = "rain100h"
-    _tasks     : list[Task]  = [Task.DERAIN]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "rain100h"
+    tasks     : list[Task]  = [Task.DERAIN]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -74,18 +74,18 @@ class Rain100H(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class Rain100L(ImageDataset, RegistrableMixin):
     """Rain100L dataset."""
 
-    _name      : str         = "rain100l"
-    _tasks     : list[Task]  = [Task.DERAIN]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "rain100l"
+    tasks     : list[Task]  = [Task.DERAIN]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -102,7 +102,7 @@ class Rain100L(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

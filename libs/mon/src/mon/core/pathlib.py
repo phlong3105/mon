@@ -213,7 +213,7 @@ class Path(type(Path_())):
 
         if mkdir:
             # If path is file-like, create parent; otherwise, create the dir itself.
-            dir_to_create = path.parent if path.is_file() else path
+            dir_to_create = path if path.is_dir() else path.parent
             dir_to_create.mkdir(parents=True, exist_ok=True)
 
         return path

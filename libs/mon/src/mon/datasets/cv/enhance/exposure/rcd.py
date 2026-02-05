@@ -28,11 +28,11 @@ from ....api import *
 class RCD(ImageDataset, RegistrableMixin):
     """RCD dataset."""
 
-    _name      : str         = "rcd"
-    _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "rcd"
+    tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image"      : Modality(
             name    = "image_ev_0",
             type    = "image",
@@ -98,7 +98,7 @@ class RCD(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

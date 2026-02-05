@@ -46,10 +46,9 @@ class AdaptiveBatchNorm2d(nn.Module):
         - Code: https://github.com/nrupatunga/Fast-Image-Filters
 
     Attributes:
-        w0 (torch.nn.parameter.Parameter): Weight for the identity connection.
-        w1 (torch.nn.parameter.Parameter): Weight for the batch normalization
-            connection.
-        bn (torch.nn.BatchNorm2d): Batch normalization layer.
+        w0: Weight for the identity connection.
+        w1: Weight for the batch normalization connection.
+        bn: Batch normalization layer.
     """
 
     # --- Lifecycle & Initialization ---
@@ -66,8 +65,8 @@ class AdaptiveBatchNorm2d(nn.Module):
             num_features: Number of features in the input tensor.
             eps: A value added to the denominator for numerical stability.
                 Defaults to 0.999.
-            momentum: The value used for the running mean and variance
-                computation. Defaults to 0.001.
+            momentum: The value used for the running mean and variance computation.
+                Defaults to 0.001.
             *args: Additional positional arguments for nn.BatchNorm2d.
             **kwargs: Additional keyword arguments for nn.BatchNorm2d.
         """
@@ -81,12 +80,10 @@ class AdaptiveBatchNorm2d(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging
-            from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         return self.w0 * x + self.w1 * self.bn(x)
 

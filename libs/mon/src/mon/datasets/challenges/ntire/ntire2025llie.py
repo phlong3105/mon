@@ -27,11 +27,11 @@ from ...api import *
 class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
     """NTIRE 2025 LLIE dataset."""
 
-    _name      : str         = "ntire2025llie"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "ntire2025llie"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -48,7 +48,7 @@ class NTIRE2025LLIE(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:

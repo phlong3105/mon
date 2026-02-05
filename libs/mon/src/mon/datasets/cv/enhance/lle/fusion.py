@@ -23,11 +23,11 @@ from ....api import *
 class Fusion(ImageDataset, RegistrableMixin):
     """Fusion dataset."""
 
-    _name      : str         = "fusion"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "fusion"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class Fusion(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

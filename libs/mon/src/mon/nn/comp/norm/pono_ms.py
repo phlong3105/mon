@@ -42,7 +42,7 @@ class PositionalNorm(nn.Module):
     Apply positional normalization to the input tensor.
 
     Attributes:
-        eps (float): A small value to avoid division by zero.
+        eps: A small value to avoid division by zero.
     """
 
     # --- Lifecycle & Initialization ---
@@ -60,8 +60,7 @@ class PositionalNorm(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
             A tuple containing:
@@ -78,7 +77,7 @@ class PositionalNorm(nn.Module):
 class MomentShortcut(nn.Module):
     """Moment shortcut layer.
 
-    Apply moment shortcut to the input tensor.
+    Apply the moment shortcut to the input tensor.
     """
 
     # --- Callable & Context Manager ---
@@ -91,14 +90,12 @@ class MomentShortcut(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
             beta: The beta tensor of shape (B, 1, H, W). Defaults to None.
             gamma: The gamma tensor of shape (B, 1, H, W). Defaults to None.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging
-            from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         if gamma is not None:
             x = x * gamma

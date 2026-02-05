@@ -37,16 +37,15 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
     separated evaluation pipelines outside the train/eval/test loop.
 
     Attributes:
-        _transform (albumentations.Compose | None): Transformations for input
-            and target. Defaults to None.
+        transform: Transformations for input and target.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         input_dir : Path,
-        target_dir: Path | None             = None,
-        transform : A.Compose | None        = None,
+        target_dir: Path             | None = None,
+        transform : A.Compose        | None = None,
         classlist : Path | ClassList | None = None,
         verbose   : bool                    = True,
         *args, **kwargs
@@ -56,8 +55,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         Args:
             input_dir: Absolute path to the input data directory.
             target_dir: Absolute path to the target directory. Defaults to None.
-            transform: Transformations to apply to input and target.
-                Defaults to None.
+            transform: Transformations to apply to input and target. Defaults to None.
             classlist: Either a .yaml file containing the classes definitions,
                 or a ClassList instance. Defaults to None.
             verbose: Verbosity mode. Defaults to True.
@@ -71,7 +69,10 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             verbose    = verbose,
             *args, **kwargs
         )
-        self.transform = transform
+
+        # Assign attributes
+        self.transform = None
+        self.set_transform(value=transform)
 
     def __del__(self):
         """Finalize the object.
@@ -85,14 +86,14 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         """Return the official string representation for developers."""
         lines  = [f"Dataset {self.__class__.__name__}"]
         lines += [f"Number of datapoints: {len(self)}"]
-        if self._transform:
-            lines += [repr(self._transform)]
+        if self.transform:
+            lines += [repr(self.transform)]
         return "\n".join(lines)
 
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the length of the container."""
-        return len(self._datapoints["image"])
+        return len(self.datapoints["image"])
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an item at the given ``index``.
@@ -104,9 +105,9 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
 
-        transform = self._transform
+        transform = self.transform
 
-        if transform:
+        if transform is not None:
             # Optimized transformation branch
             if self.has_target:
                 augmented      = transform(image=data["image"], target=data["target"])
@@ -128,13 +129,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         return {**data, "meta": meta}
 
     # --- Properties ---
-    @property
-    def transform(self) -> A.Compose | None:
-        """Return the transformation operations."""
-        return self._transform
-
-    @transform.setter
-    def transform(self, value: Any):
+    def set_transform(self, value: Any):
         """Set the transformation operations.
 
         Args:
@@ -144,7 +139,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             TypeError: If ``value`` is not an instance of albumentations.Compose.
         """
         if value is None:
-            self._transform = None
+            self.transform = None
             return
 
         if isinstance(value, (dict, box.Box)):
@@ -162,7 +157,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             if "target" not in value.processors.get("additional_targets", {}):
                 value.add_targets({"target": "image"})
 
-        self._transform = value
+        self.transform = value
 
     # --- Data Loading ---
     def _load_data(self) -> dict[str, Any]:
@@ -172,9 +167,9 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             Dictionary containing lists of datapoints for each modality.
         """
         disable_pbar = self.disable_pbar
-        input_dir    = self._input_dir
+        input_dir    = self.input_dir
         has_target   = self.has_target
-        target_dir   = self._target_dir if has_target else None
+        target_dir   = self.target_dir if has_target else None
 
         # List image
         images = []
@@ -215,7 +210,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         if len(self) <= 0:
             raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
 
-        for k, v in self._datapoints.items():
+        for k, v in self.datapoints.items():
             if v in [None, []]:
                 raise RuntimeError(f"Datapoint modality '{k}' is empty!")
             elif len(v) != len(self):
@@ -237,7 +232,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         # Efficiency: Use dict comprehension for faster construction
         return {
             k: (v[index] if v is not None else None)
-            for k, v in self._datapoints.items()
+            for k, v in self.datapoints.items()
         }
 
 # endregion

@@ -11,12 +11,9 @@ from __future__ import annotations
 
 __all__ = [
     "FFN",
-    "FINER",
-    "FINER_PP",
-    "GAUSS",
-    "PosEncodingMLP",
-    "SIREN",
-    "WIRE",
+    "Finer",
+    "Finer_PP",
+    "Siren",
     "create_coords",
     "create_depth_aware_patches",
     "create_noisy_coords",
@@ -33,17 +30,14 @@ import torch.nn.functional as F
 
 from mon.core import image as I
 from ...comp import (
-    ComplexGaborLayer,
     FINERLinear,
-    GaussLinear,
     PosEncodingFourier,
-    PosEncodingNeRF,
     SineLinear,
 )
 
 
 # ==============================================================================
-# IMPLICIT NEURAL REPRESENTATIONS (INRs)
+# region IMPLICIT NEURAL REPRESENTATIONS (INRs)
 # ==============================================================================
 
 # --- Positional Encoding Based (Standard MLPs) ---
@@ -55,8 +49,8 @@ class FFN(nn.Module):
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
 
     Attributes:
-        encoding (PosEncodingFourier): Positional encoding layer.
-        net (torch.nn.Sequential): The MLP network.
+        encoding: Positional encoding layer.
+        net: The MLP network.
     """
 
     # --- Lifecycle & Initialization ---
@@ -83,72 +77,7 @@ class FFN(nn.Module):
                 Defaults to True.
         """
         super().__init__()
-        self.encoding = PosEncodingFourier(in_features=in_features, B=B)
-
-        # First layer
-        net = []
-        net.append(nn.Linear(int(self.encoding.out_features), hidden_dim, bias=bias))
-        net.append(nn.ReLU(True))
-        # Hidden layers
-        for i in range(hidden_layers):
-            net.append(nn.Linear(hidden_dim, hidden_dim, bias=bias))
-            net.append(nn.ReLU(True))
-        # Final layer
-        final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
-        net.append(final_linear)
-
-        self.net = nn.Sequential(*net)
-
-    # --- Callable & Context Manager ---
-    def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward the input through the network.
-
-        Args:
-            coords: Input tensor of shape (..., in_features) and values ranging
-                from 0.0 to 1.0.
-
-        Returns:
-            Output tensor of shape (..., out_features) and values ranging
-            from 0.0 to 1.0.
-        """
-        return self.net(self.encoding(coords))
-
-
-class PosEncodingMLP(nn.Module):
-    """Positional Encoding (PE) MLP.
-
-    References:
-        - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
-
-    Attributes:
-        encoding (PosEncodingNeRF): Positional encoding layer.
-        net (torch.nn.Sequential): The MLP network.
-    """
-
-    # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        in_features    : int,
-        out_features   : int,
-        hidden_dim     : int,
-        hidden_layers  : int,
-        num_frequencies: int  = 10,
-        bias           : bool = True,
-    ):
-        """Initialize a new instance.
-
-        Args:
-            in_features: Size of each input sample.
-            out_features: Size of each output sample.
-            hidden_dim: Number of hidden units in each hidden layer.
-            hidden_layers: Number of hidden layers.
-            num_frequencies: Number of frequency bands for positional encoding.
-                Defaults to 10.
-            bias: If True, adds a learnable bias to the linear layers.
-                Defaults to True.
-        """
-        super().__init__()
-        self.encoding = PosEncodingNeRF(in_features=in_features, num_frequencies=num_frequencies)
+        self.encoding = PosEncodingFourier(mapping_size=in_features, B=B)
 
         # First layer
         net = []
@@ -181,7 +110,7 @@ class PosEncodingMLP(nn.Module):
 
 # --- Periodic Activation Based (SIREN Variants) ---
 
-class SIREN(nn.Module):
+class Siren(nn.Module):
     """SIREN MLP using sine activation functions.
 
     References:
@@ -191,19 +120,18 @@ class SIREN(nn.Module):
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
 
     Attributes:
-        net (torch.nn.Sequential): The MLP network.
+        net: The MLP network.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        in_features   : int,
-        out_features  : int,
-        hidden_dim    : int,
-        hidden_layers : int,
-        first_omega_0 : float = 30.0,
-        hidden_omega_0: float = 30.0,
-        bias          : bool  = True,
+        in_features  : int,
+        out_features : int,
+        hidden_dim   : int,
+        hidden_layers: int,
+        w0           : float = 30.0,
+        w            : float = 30.0,
     ):
         """Initialize a new instance.
 
@@ -212,41 +140,22 @@ class SIREN(nn.Module):
             out_features: Size of each output sample.
             hidden_dim: Number of hidden units in each hidden layer.
             hidden_layers: Number of hidden layers.
-            first_omega_0: Frequency scaling factor for the first layer.
-                Defaults to 30.0.
-            hidden_omega_0: Frequency scaling factor for the hidden layers.
-                Defaults to 30.0.
-            bias: If True, adds a learnable bias to the linear layers.
+            w0: Frequency scaling factor for the first layer. Defaults to 30.0.
+            w: Frequency scaling factor for the hidden layers. Defaults to 30.0.
         """
         super().__init__()
         # First layer
         net = []
-        net.append(
-            SineLinear(
-                in_features  = in_features,
-                out_features = hidden_dim,
-                bias         = bias,
-                is_first     = True,
-                omega_0      = first_omega_0
-            )
-        )
+        net.append(SineLinear(in_features=in_features, out_features=hidden_dim, w0=w0, is_first=True))
         # Hidden layers
         for i in range(hidden_layers):
-            net.append(
-                SineLinear(
-                    in_features  = hidden_dim,
-                    out_features = hidden_dim,
-                    bias         = bias,
-                    is_first     = False,
-                    omega_0      = hidden_omega_0
-                )
-            )
+            net.append(SineLinear(in_features=in_features, out_features=hidden_dim, w0=w, is_first=False))
         # Final layer
-        final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
+        final_linear = nn.Linear(hidden_dim, out_features)
         with torch.no_grad():
             final_linear.weight.uniform_(
-                -np.sqrt(6.0 / hidden_dim) / hidden_omega_0,
-                 np.sqrt(6.0 / hidden_dim) / hidden_omega_0
+                -np.sqrt(6.0 / hidden_dim) / w,
+                 np.sqrt(6.0 / hidden_dim) / w
             )
         net.append(final_linear)
 
@@ -267,7 +176,7 @@ class SIREN(nn.Module):
         return self.net(coords)
 
 
-class FINER(nn.Module):
+class Finer(nn.Module):
     """FINER MLP.
 
     References:
@@ -276,7 +185,7 @@ class FINER(nn.Module):
         - Code: https://github.com/liuzhen0212/FINER
 
     Attributes:
-        net (torch.nn.Sequential): The MLP network.
+        net: The MLP network.
     """
 
     # --- Lifecycle & Initialization ---
@@ -286,11 +195,10 @@ class FINER(nn.Module):
         out_features    : int,
         hidden_dim      : int,
         hidden_layers   : int,
-        first_omega_0   : float = 30.0,
-        hidden_omega_0  : float = 30.0,
-        first_bias_scale: float | None = None,
+        w0              : float = 30.0,
+        w               : float = 30.0,
+        first_bias_scale: float = None,
         scale_req_grad  : bool  = False,
-        bias            : bool  = True,
     ):
         """Initialize a new instance.
 
@@ -299,14 +207,10 @@ class FINER(nn.Module):
             out_features: Size of each output sample.
             hidden_dim: Hidden channel dimensions.
             hidden_layers: Number of hidden layers.
-            first_omega_0: Frequency scaling factor for the first layer.
-                Defaults to 30.0.
-            hidden_omega_0: Frequency scaling factor for the hidden layers.
-                Defaults to 30.0.
+            w0: Frequency scaling factor for the first layer. Defaults to 30.0.
+            w: Frequency scaling factor for the hidden layers. Defaults to 30.0.
             first_bias_scale: Bias scale for the first layer as float or None.
                 Defaults to None.
-            bias: If set to False, the layer will not learn an additive bias.
-                Defaults to True.
             scale_req_grad: Scale requires gradient if True. Defaults to False.
         """
         super().__init__()
@@ -317,11 +221,10 @@ class FINER(nn.Module):
             FINERLinear(
                 in_features      = in_features,
                 out_features     = hidden_dim,
-                bias             = bias,
-                is_first         = True,
-                omega_0          = first_omega_0,
+                w0               = w0,
                 first_bias_scale = first_bias_scale,
-                scale_req_grad   = scale_req_grad
+                scale_req_grad   = scale_req_grad,
+                is_first         = True,
             )
         )
         # Hidden layers
@@ -330,17 +233,16 @@ class FINER(nn.Module):
                 FINERLinear(
                     in_features    = hidden_dim,
                     out_features   = hidden_dim,
-                    bias           = bias,
-                    omega_0        = hidden_omega_0,
-                    scale_req_grad = scale_req_grad
+                    w0             = w,
+                    scale_req_grad = scale_req_grad,
                 )
             )
         # Final layer
-        final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
+        final_linear = nn.Linear(hidden_dim, out_features)
         with torch.no_grad():
             final_linear.weight.uniform_(
-                -np.sqrt(6.0 / hidden_dim) / hidden_omega_0,
-                 np.sqrt(6.0 / hidden_dim) / hidden_omega_0
+                -np.sqrt(6.0 / hidden_dim) / w,
+                 np.sqrt(6.0 / hidden_dim) / w
             )
         net.append(final_linear)
 
@@ -361,7 +263,7 @@ class FINER(nn.Module):
         return self.net(coords)
 
 
-class FINER_PP(nn.Module):
+class Finer_PP(nn.Module):
     """FINER++ MLP.
 
     References:
@@ -370,8 +272,8 @@ class FINER_PP(nn.Module):
         - Code: https://github.com/liuzhen0212/FINER
 
     Attributes:
-        out_features (int): Size of each output sample.
-        net (torch.nn.Sequential): The MLP network.
+        out_features: Size of each output sample.
+        net: The MLP network.
     """
 
     # --- Lifecycle & Initialization ---
@@ -381,11 +283,10 @@ class FINER_PP(nn.Module):
         out_features    : int,
         hidden_dim      : int,
         hidden_layers   : int,
-        first_omega_0   : float = 30.0,
-        hidden_omega_0  : float = 30.0,
+        w0              : float = 30.0,
+        w               : float = 30.0,
         first_bias_scale: float = 5,
         scale_req_grad  : bool  = False,
-        bias            : bool  = True,
     ):
         """Initialize a new instance.
 
@@ -394,15 +295,11 @@ class FINER_PP(nn.Module):
             out_features: Size of each output sample.
             hidden_dim: Hidden channel dimensions.
             hidden_layers: Number of hidden layers.
-            first_omega_0: Frequency scaling factor for the first layer.
-                Defaults to 30.0.
-            hidden_omega_0: Frequency scaling factor for the hidden layers.
-                Defaults to 30.0.
+            w0: Frequency scaling factor for the first layer. Defaults to 30.0.
+            w: Frequency scaling factor for the hidden layers. Defaults to 30.0.
             first_bias_scale: Bias scale for the first layer as float or None.
                 Defaults to 5.
             scale_req_grad: Scale requires gradient if True. Defaults to False.
-            bias: If set to False, the layer will not learn an additive bias.
-                Defaults to True.
         """
         super().__init__()
         self.out_features = out_features
@@ -413,11 +310,10 @@ class FINER_PP(nn.Module):
             FINERLinear(
                 in_features      = in_features,
                 out_features     = hidden_dim,
-                bias             = bias,
-                is_first         = True,
-                omega_0          = first_omega_0,
+                w0               = w0,
                 first_bias_scale = first_bias_scale,
-                scale_req_grad   = scale_req_grad
+                scale_req_grad   = scale_req_grad,
+                is_first         = True,
             )
         )
         # Hidden layers
@@ -426,17 +322,16 @@ class FINER_PP(nn.Module):
                 FINERLinear(
                     in_features    = hidden_dim,
                     out_features   = hidden_dim,
-                    bias           = bias,
-                    omega_0        = hidden_omega_0,
+                    w0             = w,
                     scale_req_grad = scale_req_grad
                 )
             )
         # Final layer
-        final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
+        final_linear = nn.Linear(hidden_dim, out_features)
         with torch.no_grad():
             final_linear.weight.uniform_(
-                -np.sqrt(6.0 / hidden_dim) / hidden_omega_0,
-                 np.sqrt(6.0 / hidden_dim) / hidden_omega_0
+                -np.sqrt(6.0 / hidden_dim) / w,
+                 np.sqrt(6.0 / hidden_dim) / w
             )
         net.append(final_linear)
 
@@ -458,175 +353,11 @@ class FINER_PP(nn.Module):
         return output.view(-1, self.out_features)
 
 
-# --- Radial & Wavelet Based ---
-
-class GAUSS(nn.Module):
-    """Gaussian MLP.
-
-    References:
-        - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
-
-    Attributes:
-        net (torch.nn.Sequential): The MLP network.
-    """
-
-    # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        in_features  : int,
-        out_features : int,
-        hidden_dim   : int,
-        hidden_layers: int,
-        scale        : float = 30.0,
-        bias         : bool  = True,
-    ):
-        """Initialize a new instance.
-
-        Args:
-            in_features: Size of each input sample.
-            out_features: Size of each output sample.
-            hidden_dim: Number of hidden units in each hidden layer.
-            hidden_layers: Number of hidden layers.
-            scale: Gaussian scale factor. Defaults to 30.0.
-            bias: If True, adds a learnable bias to the linear layers.
-                Defaults to True.
-        """
-        super().__init__()
-
-        # First layer
-        net = []
-        net.append(GaussLinear(in_features, hidden_dim, bias, scale=scale))
-        # Hidden layers
-        for i in range(hidden_layers):
-            net.append(GaussLinear(hidden_dim, hidden_dim, bias, scale=scale))
-        # Final layer
-        final_linear = nn.Linear(hidden_dim, out_features, bias=bias)
-        net.append(final_linear)
-
-        self.net = nn.Sequential(*net)
-
-    # --- Callable & Context Manager ---
-    def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward the input through the network.
-
-        Args:
-            coords: Input tensor of shape (..., in_features) and values ranging
-                from 0.0 to 1.0.
-
-        Returns:
-            Output tensor of shape (..., out_features) and values ranging
-            from 0.0 to 1.0.
-        """
-        return self.net(coords)
-
-
-class WIRE(nn.Module):
-    """WIRE MLP with Gabor wavelet activations.
-
-    References:
-        - Paper: "WIRE: Wavelet Implicit Neural Representations," CVPR 2023.
-        - Code: https://github.com/vishwa91/wire
-        - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
-
-    Attributes:
-        nonlin (type): The nonlinearity class used.
-        complex (bool): Whether the network uses complex numbers.
-        wavelet (str): The type of wavelet used.
-        pos_encode (bool): Whether positional encoding is used.
-        net (torch.nn.Sequential): The MLP network.
-    """
-
-    # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        in_features   : int,
-        out_features  : int,
-        hidden_dim    : int,
-        hidden_layers : int   = 4,
-        first_omega_0 : float = 10.0,
-        hidden_omega_0: float = 10.0,
-        scale         : float = 10.0,
-        bias          : bool  = True,
-    ):
-        """Initialize a new instance.
-
-        Args:
-            in_features: Size of each input sample.
-            out_features: Size of each output sample.
-            hidden_dim: Size of each hidden layer.
-            hidden_layers: Number of hidden layers. Defaults to 4.
-            first_omega_0: Frequency scaling factor for the first layer.
-                Defaults to 10.0.
-            hidden_omega_0: Frequency scaling factor for hidden layers.
-                Defaults to 10.0.
-            scale: Scaling of Gabor Gaussian term. Defaults to 10.0.
-            bias: If False, the layers will not learn an additive bias.
-                Defaults to True.
-        """
-        super().__init__()
-        # All results in the paper were with the default complex 'gabor' nonlinearity
-        self.nonlin  = ComplexGaborLayer
-
-        # Since complex numbers are two real numbers, reduce the number of hidden parameters by 2
-        hidden_dim   = int(hidden_dim / np.sqrt(2))
-        dtype        = torch.cfloat
-        self.complex = True
-        self.wavelet = "gabor"
-
-        # Legacy parameter
-        self.pos_encode = False
-
-        # First layer
-        net = []
-        net.append(
-            self.nonlin(
-                in_features  = in_features,
-                out_features = hidden_dim,
-                bias         = bias,
-                is_first     = True,
-                omega_0      = first_omega_0,
-                sigma_0      = scale,
-                trainable    = False
-            )
-        )
-        # Hidden layers
-        for i in range(hidden_layers):
-            net.append(
-                self.nonlin(
-                    in_features  = hidden_dim,
-                    out_features = hidden_dim,
-                    bias         = bias,
-                    is_first     = False,
-                    omega_0      = hidden_omega_0,
-                    sigma_0      = scale
-                )
-            )
-        # Final layer
-        final_linear = nn.Linear(hidden_dim, out_features, bias=bias, dtype=dtype)
-        net.append(final_linear)
-
-        self.net = nn.Sequential(*net)
-
-    # --- Callable & Context Manager ---
-    def forward(self, coords: torch.Tensor) -> torch.Tensor:
-        """Forward the input through the network.
-
-        Args:
-            coords: Input tensor of shape (..., in_features) and values ranging
-                from 0.0 to 1.0.
-
-        Returns:
-            Output tensor of shape (..., out_features) and values ranging
-            from 0.0 to 1.0.
-        """
-        output = self.net(coords)
-        if self.wavelet == "gabor":
-            return output.real
-        return output
+# endregion
 
 
 # ==============================================================================
-# UTILITIES
+# region UTILITIES
 # ==============================================================================
 
 # --- Coordinate Generation & Embedding ---
@@ -818,6 +549,8 @@ def interpolate_image(image: torch.Tensor, size: int) -> torch.Tensor:
     """
     # return F.interpolate(image, size=(down_size, down_size), mode="bicubic")
     return F.interpolate(image, size=(size, size), mode="area")
+
+# endregion
 
 
 # ==============================================================================

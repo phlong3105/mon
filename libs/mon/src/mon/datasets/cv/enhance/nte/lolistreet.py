@@ -29,11 +29,11 @@ from ....api import *
 class LoLIStreet(ImageDataset, RegistrableMixin):
     """LoLI-Street dataset."""
 
-    _name      : str         = "lolistreet"
-    _tasks     : list[Task]  = [Task.NTE, Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "lolistreet"
+    tasks     : list[Task]  = [Task.NTE, Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -57,7 +57,7 @@ class LoLIStreet(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"id": 0 , "name": "person"        , "supercategory": "person",     "color": [ 81, 120, 228]},
         {"id": 1 , "name": "bicycle"       , "supercategory": "vehicle",    "color": [138, 183,  33]},
         {"id": 2 , "name": "car"           , "supercategory": "vehicle",    "color": [ 49,   3, 150]},
@@ -145,7 +145,7 @@ class LoLIStreet(ImageDataset, RegistrableMixin):
 class LoLIStreetVal(LoLIStreet):
     """LoLI-Street-Val subset."""
 
-    _name: str = "lolistreetval"
+    name: str = "lolistreetval"
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -171,7 +171,7 @@ class LoLIStreetVal(LoLIStreet):
 class LoLIStreetVal_Light(LoLIStreet):
     """LoLI-Street-Val subset."""
 
-    _name: str = "lolistreetval_light"
+    name: str = "lolistreetval_light"
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -197,7 +197,7 @@ class LoLIStreetVal_Light(LoLIStreet):
 class LoLIStreetVal_Moderate(LoLIStreet):
     """LoLI-Street-Val subset."""
 
-    _name: str = "lolistreetval_moderate"
+    name: str = "lolistreetval_moderate"
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -223,7 +223,7 @@ class LoLIStreetVal_Moderate(LoLIStreet):
 class LoLIStreetVal_Dense(LoLIStreet):
     """LoLI-Street-Val subset."""
 
-    _name: str = "lolistreetval_dense"
+    name: str = "lolistreetval_dense"
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -249,7 +249,7 @@ class LoLIStreetVal_Dense(LoLIStreet):
 class LoLIStreetTest(LoLIStreet):
     """LoLI-Street-Test subset."""
 
-    _name: str = "lolistreettest"
+    name: str = "lolistreettest"
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:

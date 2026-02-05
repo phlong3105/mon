@@ -15,7 +15,6 @@ __all__ = [
     "MIPI2024Flare",
 ]
 
-
 from ...api import *
 
 
@@ -27,11 +26,11 @@ from ...api import *
 class MIPI2024Flare(ImageDataset, RegistrableMixin):
     """MIPI 2024 Flare dataset."""
 
-    _name      : str         = "mipi2024flare"
-    _tasks     : list[Task]  = [Task.DEFLARE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "mipi2024flare"
+    tasks     : list[Task]  = [Task.DEFLARE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -48,7 +47,7 @@ class MIPI2024Flare(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:

@@ -33,6 +33,13 @@ class SEBlock(nn.Module):
     References:
         - Paper: "Squeeze-and-Excitation Networks," CVPR 2018.
         - Code: https://github.com/hujie-frank/SENet
+
+    Attributes:
+        avg_pool: Adaptive average pooling layer.
+        reduce: 1x1 convolutional layer for channel reduction.
+        expand: 1x1 convolutional layer for channel expansion.
+        act: ReLU activation function.
+        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -41,8 +48,7 @@ class SEBlock(nn.Module):
 
         Args:
             in_channels: Number of input channels.
-            rd_ratio: Reduction ratio for the intermediate channels.
-                Defaults to 0.0625.
+            rd_ratio: Reduction ratio for the intermediate channels. Defaults to 0.0625.
         """
         super().__init__()
         mid_channels  = int(in_channels * rd_ratio)
@@ -83,7 +89,8 @@ class SimAM(nn.Module):
         - Code: https://github.com/ZjjConan/SimAM
 
     Attributes:
-        e_lambda (float): A small constant to avoid division by zero.
+        e_lambda: A small constant to avoid division by zero.
+        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -91,8 +98,7 @@ class SimAM(nn.Module):
         """Initialize a new instance.
 
         Args:
-            e_lambda: A small constant to avoid division by zero.
-                Defaults to 1e-4.
+            e_lambda: A small constant to avoid division by zero. Defaults to 1e-4.
         """
         super().__init__()
         self.e_lambda = e_lambda
@@ -103,12 +109,10 @@ class SimAM(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         b, c, h, w = x.shape
         n          = w * h - 1

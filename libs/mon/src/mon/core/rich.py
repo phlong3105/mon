@@ -59,12 +59,11 @@ class MemoryUsageColumn(ProgressColumn):
     CUDA is available.
 
     Attributes:
-        devices (list[int]): List of GPU device indices to query.
-            Defaults to [0].
-        unit (MemoryUnit): Memory unit to use for reporting.
-            Defaults to MemoryUnit.GB.
-        update_interval (float): Minimum time in seconds between updates.
-            Defaults to 1.0.
+        devices: List of GPU device indices to query.
+        unit: Memory unit to use for reporting.
+        update_interval: Minimum time in seconds between updates.
+        last_update: Timestamp of the last update.
+        cached_text: Cached Text object for the last rendered memory usage.
     """
 
     # --- Lifecycle & Initialization ---
@@ -78,20 +77,17 @@ class MemoryUsageColumn(ProgressColumn):
         """Initialize the memory usage column.
 
         Args:
-            devices: Device index or a list of indices to monitor.
-                Defaults to 0.
+            devices: Device index or a list of indices to monitor. Defaults to 0.
             unit: Memory unit for display. Defaults to "GB".
-            update_interval: Minimum time in seconds between updates.
-                Defaults to 1.0.
-            table_column: Optional rich.table.Column for custom styling.
-                Defaults to None.
+            update_interval: Minimum time in seconds between updates. Defaults to 1.0.
+            table_column: Optional rich.table.Column for custom styling. Defaults to None.
         """
         super().__init__(table_column=table_column)
         self.devices         = to_int_list(devices)
         self.unit            = MemoryUnit(value=unit)
         self.update_interval = update_interval
-        self._last_update    = 0.0
-        self._cached_text    = Text("")
+        self.last_update     = 0.0
+        self.cached_text     = Text("")
 
     def render(self, task: Task) -> Text:
         """Render the current memory usage.
@@ -103,10 +99,13 @@ class MemoryUsageColumn(ProgressColumn):
             Text object displaying the memory usage.
         """
         current_time = time.time()
-        if current_time - self._last_update > self.update_interval:
-            self._cached_text = self.gpu_memory_text if torch.cuda.is_available() else self.machine_memory_text
-            self._last_update = current_time
-        return self._cached_text
+        if current_time - self.last_update > self.update_interval:
+            if torch.cuda.is_available():
+                self.cached_text = self.gpu_memory_text
+            else:
+                self.cached_text = self.machine_memory_text
+            self.last_update = current_time
+        return self.cached_text
 
     @property
     def machine_memory_text(self) -> Text:
@@ -147,8 +146,7 @@ class ProcessedItemsColumn(ProgressColumn):
         """Initialize a new instance.
 
         Args:
-            table_column: Optional rich.table.Column for custom styling.
-                Defaults to None.
+            table_column: Optional rich.table.Column for custom styling. Defaults to None.
         """
         super().__init__(table_column=table_column)
 
@@ -214,10 +212,8 @@ class SelectionOrInputPrompt(Prompt):
     doesn't match a choice.
 
     Attributes:
-        allow_empty (bool): If True, allow an empty string as a valid response.
-            Defaults to False.
-        column_first (bool): If True, print choices in column-first order.
-            Defaults to False.
+        allow_empty: If True, allow an empty string as a valid response.
+        column_first: If True, print choices in column-first order.
     """
 
     response_type: type = str
@@ -464,8 +460,7 @@ def create_download_bar(transient: bool = False, disable: bool = False) -> Progr
     Args:
         transient: If True, remove the progress display after completion.
             Defaults to False.
-        disable: If True, disable the progress display entirely.
-            Defaults to False.
+        disable: If True, disable the progress display entirely. Defaults to False.
 
     Returns:
         Configured Progress instance for download tasks.
@@ -497,10 +492,8 @@ def create_progress_bar(
     Args:
         transient: If True, remove the progress display after completion.
             Defaults to False.
-        disable: If True, disable the progress display entirely.
-            Defaults to False.
-        show_memory: If True, include a column for memory usage.
-            Defaults to True.
+        disable: If True, disable the progress display entirely. Defaults to False.
+        show_memory: If True, include a column for memory usage. Defaults to True.
 
     Returns:
         Configured Progress instance for general tasks.

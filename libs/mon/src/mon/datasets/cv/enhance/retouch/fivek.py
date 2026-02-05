@@ -26,10 +26,10 @@ from ....api import *
 class FiveK(ImageDataset):
     """FiveK dataset."""
 
-    _subset    : str         = "fivek"
-    _tasks     : list[Task]  = [Task.RETOUCH, Task.EXPOSURE, Task.LLE]
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    subset    : str         = "fivek"
+    tasks     : list[Task]  = [Task.RETOUCH, Task.EXPOSURE, Task.LLE]
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_c",   type="image", module=Image,           train=True, test=True),
@@ -39,29 +39,29 @@ class FiveK(ImageDataset):
         "ref_d": Modality(name="ref_d",   type="image", module=Image,           train=True, test=True),
         "ref_e": Modality(name="ref_e",   type="image", module=Image,           train=True, test=True),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register(name="fiveka")
 class FiveKA(ImageDataset):
     """FiveK-A dataset."""
 
-    _subset    : str         = "fivek"
-    _tasks     : list[Task]  = [Task.RETOUCH, Task.EXPOSURE, Task.LLE]
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    subset    : str         = "fivek"
+    tasks     : list[Task]  = [Task.RETOUCH, Task.EXPOSURE, Task.LLE]
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_a",   type="image", module=Image,           train=True, test=True),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register(name="fivekb")
 class FiveKB(FiveKA):
     """FiveK-B dataset."""
 
-    _modalities: Modalities = {
+    modalities: Modalities = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_b",   type="image", module=Image,           train=True, test=True),
@@ -72,7 +72,7 @@ class FiveKB(FiveKA):
 class FiveKC(FiveKA):
     """FiveK-C dataset."""
 
-    _modalities: Modalities = {
+    modalities: Modalities = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_c",   type="image", module=Image,           train=True, test=True),
@@ -83,7 +83,7 @@ class FiveKC(FiveKA):
 class FiveKD(FiveKA):
     """FiveK-D dataset."""
 
-    _modalities: Modalities = {
+    modalities: Modalities = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_d",   type="image", module=Image,           train=True, test=True),
@@ -94,7 +94,7 @@ class FiveKD(FiveKA):
 class FiveKE(FiveKA):
     """FiveK-E dataset."""
 
-    _modalities: Modalities = {
+    modalities: Modalities = {
         "image": Modality(name="image",   type="image", module=Image,           train=True, test=True, primary=True),
         "depth": Modality(name=DepthName, type="image", module=DefaultDepthMap, train=True, test=True),
         "ref"  : Modality(name="ref_e",   type="image", module=Image,           train=True, test=True),

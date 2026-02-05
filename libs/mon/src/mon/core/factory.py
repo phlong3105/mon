@@ -443,11 +443,12 @@ class ModelFactory(Factory):
 
         # Store metadata alongside the module
         self[arch_name][model_name] = {
-            "arch"   : arch_name,
-            "name"   : model_name,
-            "tasks"  : self._try_get_attr(module, metaclass, "tasks"),
-            "mltypes": self._try_get_attr(module, metaclass, "mltypes"),
-            "module" : module,
+            "arch"     : arch_name,
+            "name"     : model_name,
+            "tasks"    : self._try_get_attr(module, metaclass, "tasks"),
+            "mltypes"  : self._try_get_attr(module, metaclass, "mltypes"),
+            "model_dir": self._try_get_attr(module, metaclass, "model_dir"),
+            "module"   : module,
         }
 
         self._try_set_attr(module, "arch", arch_name)
@@ -719,11 +720,11 @@ class WeightsFactory(Factory):
 # region CONSTANTS
 # ==============================================================================
 
-ALBUMENTATIONS = Factory(name="Albumentations")
-DATASETS       = DatasetFactory(name="Datasets", decamelize=True)
-BACKBONES      = Factory(name="Backbones", decamelize=True)
-MODELS         = ModelFactory(name="Models", decamelize=True)
-WEIGHTS        = WeightsFactory(name="Weights", decamelize=True)
+ALBUMENTATIONS =        Factory(name="Albumentations")
+DATASETS       = DatasetFactory(name="Datasets",  decamelize=True)
+BACKBONES      =        Factory(name="Backbones", decamelize=True)
+MODELS         =   ModelFactory(name="Models",    decamelize=True)
+WEIGHTS        = WeightsFactory(name="Weights",   decamelize=True)
 
 # endregion
 

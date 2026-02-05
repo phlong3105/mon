@@ -36,12 +36,11 @@ class DepthAwareLinear(nn.Module):
     layer.
 
     Attributes:
-        in_features (int): Number of input features (RGB channels).
-        out_features (int): Number of output features.
-        kernel_size (int): Size of the square neighborhood for local averaging.
-        alpha (float): Parameter controlling the sensitivity of depth
-            similarity.
-        linear (torch.nn.Linear): The underlying linear layer.
+        in_features: Number of input features (RGB channels).
+        out_features: Number of output features.
+        kernel_size: Size of the square neighborhood for local averaging.
+        alpha: Parameter controlling the sensitivity of depth similarity.
+        linear: The underlying linear layer.
     """
 
     # --- Lifecycle & Initialization ---

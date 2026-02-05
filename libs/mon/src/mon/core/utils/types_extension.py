@@ -13,6 +13,7 @@ __all__ = [
     "create_combinations",
     "is_float",
     "is_int",
+    "is_valid_path",
     "is_valid_str",
     "merge_dicts",
     "sort",
@@ -33,6 +34,7 @@ from typing import Any, Callable, Collection, Iterable, Sequence
 
 import box
 
+from mon.core.pathlib import Path
 
 # ==============================================================================
 # region CONSTANTS
@@ -89,6 +91,14 @@ def is_valid_str(value: Any) -> bool:
     if not isinstance(value, str):
         return False
     value = _WHITESPACE_RE.sub("", value)
+    return value.lower() not in ["", "none", "null", "nan", "inf"]
+
+
+def is_valid_path(value: Any) -> bool:
+    """Check if ``value`` is a valid path string."""
+    if not isinstance(value, (str, Path)):
+        return False
+    value = _WHITESPACE_RE.sub("", str(value))
     return value.lower() not in ["", "none", "null", "nan", "inf"]
 
 # endregion

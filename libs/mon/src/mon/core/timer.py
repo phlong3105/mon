@@ -27,23 +27,19 @@ from mon.core.console import console
 class Timer:
     """Lightweight timer for measuring elapsed time.
 
-    Accumulate total time, count calls, and provide statistics like per-call
+    Accumulate total time, count calls, and provide statistics like the per-call
     average and the duration of the last interval. Use as a context manager.
 
     Attributes:
-        _name (str | None): Optional name for the timer instance.
-            Defaults to None.
-        start_time (float): Timestamp when the current interval started.
-            Defaults to 0.0.
-        end_time (float): Timestamp when the current interval ended.
-            Defaults to 0.0.
-        total (float): Accumulated total time across all intervals.
-            Defaults to 0.0.
-        calls (int): Number of timing intervals recorded. Defaults to 0.
-        diff (float): Duration of the most recent interval. Defaults to 0.0.
-        avg (float): Running average duration per call. Defaults to 0.0.
-        duration (float): Last reported duration, which can be either the most
-            recent interval's duration or the running average. Defaults to 0.0.
+        name: Optional name for the timer instance.
+        start_time: Timestamp when the current interval started.
+        end_time: Timestamp when the current interval ended.
+        total: Accumulated total time across all intervals.
+        calls: Number of timing intervals recorded.
+        diff: Duration of the most recent interval.
+        avg: Running average duration per call.
+        duration: Last reported duration, which can be either the most recent
+            interval's duration or the running average.
     """
 
     # --- Lifecycle & Initialization ---
@@ -53,15 +49,17 @@ class Timer:
         Args:
             name: Optional name for the timer. Defaults to None.
         """
-        self._name = name
-        self._reset_stats()
+        # Assign attributes
+        self.name       = name
+        self.start_time = 0.0
+        self.end_time   = 0.0
+        self.total      = 0.0
+        self.calls      = 0
+        self.diff       = 0.0
+        self.avg        = 0.0
+        self.duration   = 0.0
 
     # --- Properties ---
-    @property
-    def name(self) -> str:
-        """Return the name of the timer."""
-        return self._name
-
     @property
     def total_m(self) -> float:
         """Return the total time in minutes."""
@@ -147,20 +145,20 @@ class Timer:
         self.duration = self.avg if average else self.diff
         return self.duration
 
-    def reset(self):
+    def restart(self):
         """Reset all timer statistics and start a new interval."""
-        self._reset_stats()
+        self.reset()
         self.tick()
 
-    def _reset_stats(self):
-        """Initialize or reset statistics."""
-        self.start_time: float = 0.0
-        self.end_time  : float = 0.0
-        self.total     : float = 0.0
-        self.calls     : int   = 0
-        self.diff      : float = 0.0
-        self.avg       : float = 0.0
-        self.duration  : float = 0.0
+    def reset(self):
+        """Reset all timer statistics."""
+        self.start_time = 0.0
+        self.end_time   = 0.0
+        self.total      = 0.0
+        self.calls      = 0
+        self.diff       = 0.0
+        self.avg        = 0.0
+        self.duration   = 0.0
 
 
 class TimeProfiler:
@@ -170,10 +168,10 @@ class TimeProfiler:
     postprocessing, and the total time.
 
     Attributes:
-        preprocess (Timer): ``Timer`` for the preprocessing stage.
-        infer (Timer): ``Timer`` for the inference stage.
-        postprocess (Timer): ``Timer`` for the postprocessing stage.
-        total (Timer): ``Timer`` for the overall process.
+        preprocess: ``Timer`` for the preprocessing stage.
+        infer: ``Timer`` for the inference stage.
+        postprocess: ``Timer`` for the postprocessing stage.
+        total: ``Timer`` for the overall process.
     """
 
     # --- Lifecycle & Initialization ---

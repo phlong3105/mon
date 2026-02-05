@@ -24,11 +24,11 @@ from ...api import *
 class COCO80(ImageDataset, RegistrableMixin):
     """COCO-80-classes dataset."""
 
-    _name      : str         = "coco80"
-    _tasks     : list[Task]  = [Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "coco80"
+    tasks     : list[Task]  = [Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -38,7 +38,7 @@ class COCO80(ImageDataset, RegistrableMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": (  0,   0,   0)},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": ( 81, 120, 228)},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": (138, 183,  33)},
@@ -127,11 +127,11 @@ class COCO80(ImageDataset, RegistrableMixin):
 class COCO91(ImageDataset, RegistrableMixin):
     """COCO-91-classes dataset."""
 
-    _name      : str         = "coco91"
-    _tasks     : list[Task]  = [Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "coco91"
+    tasks     : list[Task]  = [Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -141,7 +141,7 @@ class COCO91(ImageDataset, RegistrableMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "background"    , "id":  0, "supercategory": "background", "color": [  0,   0,   0]},
         {"name": "person"        , "id":  1, "supercategory": "person"    , "color": [ 81, 120, 228]},
         {"name": "bicycle"       , "id":  2, "supercategory": "vehicle"   , "color": [138, 183,  33]},

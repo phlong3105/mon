@@ -23,11 +23,11 @@ from ....api import *
 class Rain13K(ImageDataset, RegistrableMixin):
     """Rain13K dataset."""
 
-    _name      : str         = "rain13k"
-    _tasks     : list[Task]  = [Task.DERAIN]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN]
-    _modalities: Modalities  = {
+    name      : str         = "rain13k"
+    tasks     : list[Task]  = [Task.DERAIN]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class Rain13K(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

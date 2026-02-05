@@ -9,26 +9,98 @@ This module provides various utilities for SALEO.
 from __future__ import annotations
 
 __all__ = [
-    "ContinuousPatchSampler",
     "JitteredGridSampler",
+    "RandomPixelSampler",
     "get_local_features",
     "get_nearest_features",
+    "get_v_component",
+    "hsv_to_rgb",
+    "replace_v_component",
+    "rgb_to_hsv",
 ]
 
 import random
-from typing import Optional
 
 import torch
 import torch.nn.functional as F
+import torchvision.transforms.functional as TF
 
-from mon.core import image as I
+from mon.core import create_device, image as I
 
 
 # ==============================================================================
 # region UTILITIES
 # ==============================================================================
 
-# --- Features Query ---
+# --- Color Utils ---
+
+def rgb_to_hsv(rgb: torch.Tensor) -> torch.Tensor:
+    """Convert an RGB image to HSV color space.
+
+    Args:
+        rgb: An RGB image, formatted as a torch.Tensor of shape (B, 3, H, W)
+            and pixel values ranging from 0.0 to 1.0.
+
+    Returns:
+        The HSV image, formatted as a torch.Tensor of shape (B, 3, H, W)
+            and pixel values ranging from 0.0 to 1.0.
+    """
+    cmax, cmax_idx = torch.max(rgb, dim=1, keepdim=True)
+    cmin   = torch.min(rgb, dim=1, keepdim=True)[0]
+    delta  = cmax - cmin
+    hsv_h  = torch.empty_like(rgb[:, 0:1, :, :])
+    cmax_idx[delta == 0] = 3
+    hsv_h[cmax_idx == 0] = (((rgb[:, 1:2] - rgb[:, 2:3]) / delta) % 6)[cmax_idx == 0]
+    hsv_h[cmax_idx == 1] = (((rgb[:, 2:3] - rgb[:, 0:1]) / delta) + 2)[cmax_idx == 1]
+    hsv_h[cmax_idx == 2] = (((rgb[:, 0:1] - rgb[:, 1:2]) / delta) + 4)[cmax_idx == 2]
+    hsv_h[cmax_idx == 3] = 0.0
+    hsv_h /= 6.0
+    hsv_s  = torch.where(cmax == 0, torch.tensor(0.0).type_as(rgb), delta / cmax)
+    hsv_v  = cmax
+    return torch.cat([hsv_h, hsv_s, hsv_v], dim=1)
+
+
+def hsv_to_rgb(hsv: torch.Tensor) -> torch.Tensor:
+    """Convert an HSV image to RGB color space.
+
+    Args:
+        hsv: An HSV image, formatted as a torch.Tensor of shape (B, 3, H, W)
+            and pixel values ranging from 0.0 to 1.0.
+
+    Returns:
+        An RGB image, formatted as a torch.Tensor of shape (B, 3, H, W) and
+            pixel values ranging from 0.0 to 1.0.
+    """
+    hsv_h, hsv_s, hsv_l = hsv[:, 0:1], hsv[:, 1:2], hsv[:, 2:3]
+    _c   = hsv_l * hsv_s
+    _x   = _c * (- torch.abs(hsv_h * 6. % 2.0 - 1) + 1.)
+    _m   = hsv_l - _c
+    _o   = torch.zeros_like(_c)
+    idx  = (hsv_h * 6.0).type(torch.uint8)
+    idx  = (idx % 6).expand(-1, 3, -1, -1)
+    rgb  = torch.empty_like(hsv)
+    rgb[idx == 0] = torch.cat([_c, _x, _o], dim=1)[idx == 0]
+    rgb[idx == 1] = torch.cat([_x, _c, _o], dim=1)[idx == 1]
+    rgb[idx == 2] = torch.cat([_o, _c, _x], dim=1)[idx == 2]
+    rgb[idx == 3] = torch.cat([_o, _x, _c], dim=1)[idx == 3]
+    rgb[idx == 4] = torch.cat([_x, _o, _c], dim=1)[idx == 4]
+    rgb[idx == 5] = torch.cat([_c, _o, _x], dim=1)[idx == 5]
+    rgb += _m
+    return rgb
+
+
+def get_v_component(img_hsv: torch.Tensor) -> torch.Tensor:
+    """Assumes (1, 3, H, W) HSV image."""
+    return img_hsv[:, -1].unsqueeze(0)
+
+
+def replace_v_component(img_hsv: torch.Tensor, v_new: torch.Tensor) -> torch.Tensor:
+    """Replaces the V component of a HSV image (1, 3, H, W)."""
+    img_hsv[:, -1] = v_new
+    return img_hsv
+
+
+# --- Features Utils ---
 
 def get_local_features(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
     """Extract local neighborhoods (patches) for every pixel in the image.
@@ -71,7 +143,7 @@ def get_local_features(image: torch.Tensor, kernel_size: int = 7) -> torch.Tenso
 def get_nearest_features(
     image       : torch.Tensor,
     query_coords: torch.Tensor,
-    kernel_size : int = 7
+    kernel_size : int = 7,
 ) -> torch.Tensor:
     """Query arbitrary-scale features.
 
@@ -122,118 +194,7 @@ def get_nearest_features(
     return sampled_features
 
 
-# --- Patch Samplers ---
-
-class ContinuousPatchSampler:
-    """A sampler that randomly samples patches from input maps (e.g., image,
-    depth, etc.) at each training iteration/step.
-
-    Attributes:
-        image (torch.Tensor): Image, formatted as a torch.Tensor of shape
-            (1, C, H, W) and values ranging from 0.0 to 1.0.
-        depth (torch.Tensor): Optional depth map, formatted as a torch.Tensor
-            of shape (1, 1, H, W) and values ranging from 0.0 to 1.0.
-        patch_size (int): Size of square patches.
-        imgsz (tuple[int, int]): Original image size (H, W).
-        device (torch.device): Device to use for computation. By default, uses
-            ``image``'s device.
-    """
-
-    # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        image     : torch.Tensor,
-        depth     : torch.Tensor,
-        patch_size: int = 64,
-    ):
-        """Initialize a new instance.
-
-        Args:
-            image: image, formatted as a torch.Tensor of shape (1, C, H, W)
-                and values ranging from 0.0 to 1.0.
-            depth: Depth map, formatted as a torch.Tensor of shape (1, 1, H, W)
-                and values ranging from 0.0 to 1.0.
-            patch_size: Size of square patches. Defaults to 64.
-        """
-        # Assign attributes
-        self.image      = image
-        self.depth      = depth
-        self.patch_size = patch_size
-        self.imgsz      = I.imgsz(image)
-        self.device     = image.device
-
-        if self.depth is not None and self.depth.device != self.device:
-            self.depth = self.depth.to(self.device)
-
-    # --- Properties ---
-    @property
-    def has_depth(self) -> bool:
-        """Return True if a depth map is provided."""
-        return self.depth is not None
-
-    # --- Callable & Context Manager ---
-    def get_random_patches(
-        self, k: int = 1
-    ) -> tuple[torch.Tensor, Optional[torch.Tensor], torch.Tensor]:
-        """Sample ``k`` random patches from the inputs.
-
-        Args:
-            k: Number of patches to sample.
-
-        Returns:
-            A tuple of patches, each formatted as a torch.Tensor of shape
-            (batch_size, C, patch_size, patch_size). In addition, the
-            corresponding coordinates, formatted as a torch.Tensor shape
-            (batch_size, patch_size, patch_size, 2) and values ranging from
-            -1.0 to 1.0.
-        """
-        H, W = self.imgsz
-        P    = self.patch_size
-
-        patches_image  = []
-        patches_depth  = []
-        patches_coords = []
-
-        for _ in range(k):
-            # 1. Select random top-left corner
-            h_start = torch.randint(0, H - P, (1,)).item()
-            w_start = torch.randint(0, W - P, (1,)).item()
-            h_end   = h_start + P
-            w_end   = w_start + P
-
-            # 2. Crop input maps (image, depth)
-            image_crop = self.image[:, :, h_start:h_end, w_start:w_end]
-            depth_crop = self.depth[:, :, h_start:h_end, w_start:w_end] if self.has_depth else None
-
-            # 3. Generate coordinates for THIS specific patch
-            # We map the global pixel indices to global -1..1 space
-            # Formula: -1 + (2 * pixel_idx / total_dim)
-
-            # Generate local grid indices
-            y_indices      = torch.arange(h_start, h_end)
-            x_indices      = torch.arange(w_start, w_end)
-            y_mesh, x_mesh = torch.meshgrid(y_indices, x_indices, indexing="ij")
-
-            # Normalize to [-1, 1]
-            x_norm = (x_mesh / (W - 1)) * 2 - 1
-            y_norm = (y_mesh / (H - 1)) * 2 - 1
-
-            # Stack to get (P, P, 2) and expand to (1, P, P, 2)
-            coord_crop = torch.stack([x_norm, y_norm], dim=-1)  # (P, P, 2)
-            coord_crop = coord_crop.unsqueeze(0)  # (1, P, P, 2)
-
-            # 4. Append to list
-            patches_image.append(image_crop)
-            patches_depth.append(depth_crop)
-            patches_coords.append(coord_crop)
-
-        # Concatenate and return
-        return (
-            torch.cat(patches_image,  dim=0),
-            torch.cat(patches_depth,  dim=0) if self.has_depth else None,
-            torch.cat(patches_coords, dim=0)
-        )
-
+# --- Samplers ---
 
 class JitteredGridSampler:
     """A sampler that synchronously splits input maps (e.g., image, depth, etc.)
@@ -242,7 +203,7 @@ class JitteredGridSampler:
     Ensure full coverage of the input maps, but applies a random spatial offset
     (jitter) every epoch.
 
-    Advantage:
+    Advantages:
         1. Guarantees the network sees EVERY pixel (fast convergence).
         2. Random offset prevents 'grid artifacts' or seams in the output.
 
@@ -263,6 +224,7 @@ class JitteredGridSampler:
         image     : torch.Tensor,
         depth     : torch.Tensor = None,
         patch_size: int          = 64,
+        device    : torch.device = None,
     ):
         """Initialize a new instance.
 
@@ -273,13 +235,15 @@ class JitteredGridSampler:
                 and values ranging from 0.0 to 1.0. Defaults to None means no
                 accompanying depth map is provided for this ``image``.
             patch_size: Size of square patches. Defaults to 64.
+            device: Device to use for computation. By default, uses ``image``'s
+                device.
         """
         # Assign attributes
         self.image      = image
         self.depth      = depth
         self.patch_size = patch_size
         self.imgsz      = I.imgsz(image)
-        self.device     = image.device
+        self.device     = create_device(device) if device else image.device
 
         if self.depth is not None and self.depth.device != self.device:
             self.depth = self.depth.to(self.device)
@@ -357,11 +321,13 @@ class JitteredGridSampler:
             x_indices      = torch.arange(w, w + P)
             y_mesh, x_mesh = torch.meshgrid(y_indices, x_indices, indexing="ij")
 
+            # Normalize to [-1, 1]
+            x_norm = (x_mesh / (W - 1)) * 2 - 1
+            y_norm = (y_mesh / (H - 1)) * 2 - 1
+
             # Stack to get (P, P, 2) and expand to (1, P, P, 2)
-            x_norm     = (x_mesh / (W - 1)) * 2 - 1
-            y_norm     = (y_mesh / (H - 1)) * 2 - 1
             coord_crop = torch.stack([x_norm, y_norm], dim=-1)  # (P, P, 2)
-            coord_crop = coord_crop.unsqueeze(0)  # (1, P, P, 2)
+            coord_crop = coord_crop.unsqueeze(0)                       # (1, P, P, 2)
 
             # 4.3. Append to list
             batch_image.append(image_crop)
@@ -387,6 +353,109 @@ class JitteredGridSampler:
                 torch.cat(batch_depth) if self.has_depth else None,
                 torch.cat(batch_coords)
             )
+
+
+class RandomPixelSampler:
+    """A sampler that randomly samples massive batches of random pixels and
+    their neighbors
+
+    Attributes:
+        image (torch.Tensor): Image, formatted as a torch.Tensor of shape
+            (1, C, H, W) and values ranging from 0.0 to 1.0.
+        depth (torch.Tensor): Optional depth map, formatted as a torch.Tensor
+            of shape (1, 1, H, W) and values ranging from 0.0 to 1.0.
+        window_size (int): Size of the local window.
+        imgsz (tuple[int, int]): Original image size (H, W).
+        device (torch.device): Device to use for computation. By default, uses
+            ``image``'s device.
+    """
+
+     # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        image      : torch.Tensor,
+        depth      : torch.Tensor = None,
+        window_size: int          = 3,
+        device     : torch.device = None,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            image: Image, formatted as a torch.Tensor of shape (1, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            depth: Depth map, formatted as a torch.Tensor of shape (1, 1, H, W)
+                and values ranging from 0.0 to 1.0. Defaults to None means no
+                accompanying depth map is provided for this ``image``.
+            window_size: Size of the local window. Defaults to 3.
+            device: Device to use for computation. By default, uses ``image``'s
+                device.
+        """
+        # Assign attributes
+        self.image       = image
+        self.depth       = depth
+        self.window_size = window_size
+        self.imgsz       = I.imgsz(image)
+        self.device      = create_device(device) if device else image.device
+
+        # We blur the input for feature extraction to prevent the network
+        # from learning high-frequency noise from the neighbors.
+        self.image_blur = TF.gaussian_blur(self.image, kernel_size=[5, 5], sigma=[1.5, 1.5])
+
+    # --- Properties ---
+    @property
+    def has_depth(self) -> bool:
+        """Return True if a depth map is provided."""
+        return self.depth is not None
+
+    # --- Callable & Context Manager ---
+    def sample_batch(
+        self,
+        batch_size: int = 500000
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Sample a random batch of coordinates and their features
+        (Instant sampling. Zero overhead.)
+
+        Args:
+            batch_size: Number of random pixels to sample. Defaults to 500,000.
+
+        Returns:
+            A tuple containing:
+                - Sampled coordinates, formatted as a torch.Tensor of shape
+                  (batch_size, 2) and values ranging from -1.0 to 1.0.
+                - Sampled image features, formatted as a torch.Tensor of shape
+                  (batch_size, ...).
+                - Sampled depth features, formatted as a torch.Tensor of shape
+                  (batch_size, ...) if a depth map is provided.
+        """
+        # 1. Generate Random Coordinates [-1, 1]
+        r_x = torch.rand(batch_size, device=self.device) * 2 - 1
+        r_y = torch.rand(batch_size, device=self.device) * 2 - 1
+
+        # Shape: (1, 1, N, 2) for grid_sample
+        # We need requires_grad=True for the smoothness loss later
+        coords = torch.stack([r_x, r_y], dim=-1).view(1, 1, -1, 2).requires_grad_(True)
+
+        # 2. Extract features
+        # features_i = get_nearest_features(self.image, coords, self.window_size)
+        features_i = get_nearest_features(self.image_blur, coords, self.window_size)
+
+        if self.has_depth:
+            features_d = get_nearest_features(self.depth, coords, self.window_size)
+            features   = torch.cat([features_i, features_d], dim=-1)  # (B, 64, 64, 18)
+        else:
+            features_d = None
+            features   = features_i
+
+        # 3. Extract Targets (from SHARP/Original image)
+        target = F.grid_sample(self.image, coords, mode="nearest", align_corners=False)
+
+        # 4. Flatten for MLP
+        coords     = coords.to(self.device)
+        # features_i = features_i.to(self.device)
+        # features_d = features_d.to(self.device) if features_d is not None else None
+        target     = target.to(self.device)
+
+        return coords, features, target
 
 # endregion
 

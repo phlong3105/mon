@@ -13,7 +13,6 @@ __all__ = [
     "WiderFaceVal",
 ]
 
-
 from ...api import *
 
 
@@ -25,11 +24,11 @@ from ...api import *
 class WiderFace(ImageDataset, RegistrableMixin):
     """WiderFace dataset."""
 
-    _name      : str         = "widerface"
-    _tasks     : list[Task]  = [Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "widerface"
+    tasks     : list[Task]  = [Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -39,7 +38,7 @@ class WiderFace(ImageDataset, RegistrableMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "face", "id": 0, "color": [81, 120, 228]},
     ])
 
@@ -48,7 +47,7 @@ class WiderFace(ImageDataset, RegistrableMixin):
 class WiderFaceVal(ImageDataset, RegistrableMixin):
     """WiderFace-Val subset."""
 
-    _name: str = "widerfaceval"
+    name: str = "widerfaceval"
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -57,7 +56,7 @@ class WiderFaceVal(ImageDataset, RegistrableMixin):
         Returns:
             A list of primary modality data files.
         """
-        patterns = [self._root / "val" / "image"]
+        patterns = [self.root / "val" / "image"]
 
         images   = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:

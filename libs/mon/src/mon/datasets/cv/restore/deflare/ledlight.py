@@ -23,11 +23,11 @@ from ....api import *
 class LEDLight(ImageDataset, RegistrableMixin):
     """LEDLight dataset."""
 
-    _name      : str         = "ledlight"
-    _tasks     : list[Task]  = [Task.DEFLARE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "ledlight"
+    tasks     : list[Task]  = [Task.DEFLARE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class LEDLight(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

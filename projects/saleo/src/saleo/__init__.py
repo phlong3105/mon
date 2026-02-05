@@ -15,9 +15,9 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "SALEO",
-    "saleo_b_siren",
-    "saleo_b_siren_ff",
+    "Saleo",
+    "saleo_ffsiren",
+    "saleo_siren",
 ]
 
 from .model import *

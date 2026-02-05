@@ -64,17 +64,17 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
     """EfficientNet V1 and V2 backbone.
 
     Attributes:
-        features (torch.nn.Sequential): The feature extraction layers.
-        out_indices (list): List of layer indices to extract features from.
-        out_channels (list): List of output channels for each extracted layer.
-        verbose (bool): Verbosity mode.
+        features: The feature extraction layers.
+        out_indices: List of layer indices to extract features from.
+        out_channels: List of output channels for each extracted layer.
+        verbose: Verbosity mode.
     """
 
-    _arch     : str          = "efficientnet"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.BACKBONE]
-    _mltypes  : list[MLType] = []
-    _model_dir: Path         = current_dir
+    arch     : str          = "efficientnet"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.BACKBONE]
+    mltypes  : list[MLType] = []
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -107,6 +107,7 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
         # Initialize RegistrableMixin
         RegistrableMixin.__init__(self, name=name)
 
+        # Assign attributes
         self.verbose = verbose
 
         # Load the base model
@@ -148,13 +149,12 @@ class EfficientNetBackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
             A list of feature maps from the specified layers.
         """
-        # If you need multi-scale features for a Neck (FPN):
+        # If you need multiscale features for a Neck (FPN):
         outputs = []
         for i, layer in enumerate(self.features):
             x = layer(x)
@@ -509,22 +509,17 @@ class EfficientNet_V2_L_Weights(WeightsEnum):
 
 @BACKBONES.register(name="efficientnet_b0", metaclass=EfficientNetBackBone)
 def efficientnet_b0(
-    weights    : WeightsEnum | str | None = EfficientNet_B0_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B0_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B0 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B0_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B0_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B0 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b0", width_mult=1.0, depth_mult=1.0)
     return EfficientNetBackBone(
@@ -540,22 +535,17 @@ def efficientnet_b0(
 
 @BACKBONES.register(name="efficientnet_b1", metaclass=EfficientNetBackBone)
 def efficientnet_b1(
-    weights    : WeightsEnum | str | None = EfficientNet_B1_Weights.DEFAULT,
-    out_indices: list              | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B1_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B1 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B1_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B1_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B1 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b1", width_mult=1.0, depth_mult=1.1)
     return EfficientNetBackBone(
@@ -571,22 +561,17 @@ def efficientnet_b1(
 
 @BACKBONES.register(name="efficientnet_b2", metaclass=EfficientNetBackBone)
 def efficientnet_b2(
-    weights    : WeightsEnum | str | None = EfficientNet_B2_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B2_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B2 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B2_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B2_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B2 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b2", width_mult=1.1, depth_mult=1.2)
     return EfficientNetBackBone(
@@ -602,22 +587,17 @@ def efficientnet_b2(
 
 @BACKBONES.register(name="efficientnet_b3", metaclass=EfficientNetBackBone)
 def efficientnet_b3(
-    weights    : WeightsEnum | str | None = EfficientNet_B3_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B3_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B3 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B3_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B3_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B3 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b3", width_mult=1.2, depth_mult=1.4)
     return EfficientNetBackBone(
@@ -633,22 +613,17 @@ def efficientnet_b3(
 
 @BACKBONES.register(name="efficientnet_b4", metaclass=EfficientNetBackBone)
 def efficientnet_b4(
-    weights    : WeightsEnum | str | None = EfficientNet_B4_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B4_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B4 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B4_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B4_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B4 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b4", width_mult=1.4, depth_mult=1.8)
     return EfficientNetBackBone(
@@ -664,22 +639,17 @@ def efficientnet_b4(
 
 @BACKBONES.register(name="efficientnet_b5", metaclass=EfficientNetBackBone)
 def efficientnet_b5(
-    weights    : WeightsEnum | str | None = EfficientNet_B5_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B5_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B5 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B5_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B5_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B5 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b5", width_mult=1.6, depth_mult=2.2)
     return EfficientNetBackBone(
@@ -696,22 +666,17 @@ def efficientnet_b5(
 
 @BACKBONES.register(name="efficientnet_b6", metaclass=EfficientNetBackBone)
 def efficientnet_b6(
-    weights    : WeightsEnum | str | None = EfficientNet_B6_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B6_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B6 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B6_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B6_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B6 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b6", width_mult=1.8, depth_mult=2.6)
     return EfficientNetBackBone(
@@ -728,22 +693,17 @@ def efficientnet_b6(
 
 @BACKBONES.register(name="efficientnet_b7", metaclass=EfficientNetBackBone)
 def efficientnet_b7(
-    weights    : WeightsEnum | str | None = EfficientNet_B7_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_B7_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-B7 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_B7_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_B7_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-B7 backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_b7", width_mult=2.0, depth_mult=3.1)
     return EfficientNetBackBone(
@@ -760,22 +720,17 @@ def efficientnet_b7(
 
 @BACKBONES.register(name="efficientnet_v2_s", metaclass=EfficientNetBackBone)
 def efficientnet_v2_s(
-    weights    : WeightsEnum | str | None = EfficientNet_V2_S_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_V2_S_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-V2-S backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_V2_S_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_V2_S_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-V2-S backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_s")
     return EfficientNetBackBone(
@@ -792,22 +747,17 @@ def efficientnet_v2_s(
 
 @BACKBONES.register(name="efficientnet_v2_m", metaclass=EfficientNetBackBone)
 def efficientnet_v2_m(
-    weights    : WeightsEnum | str | None = EfficientNet_V2_M_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_V2_M_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-V2-M backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_V2_M_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_V2_M_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-V2-M backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_m")
     return EfficientNetBackBone(
@@ -824,22 +774,17 @@ def efficientnet_v2_m(
 
 @BACKBONES.register(name="efficientnet_v2_l", metaclass=EfficientNetBackBone)
 def efficientnet_v2_l(
-    weights    : WeightsEnum | str | None = EfficientNet_V2_L_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = EfficientNet_V2_L_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> EfficientNetBackBone:
     """Create an EfficientNet-V2-L backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            EfficientNet_V2_L_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to EfficientNet_V2_L_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        An EfficientNet-V2-L backbone model.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_l")
     return EfficientNetBackBone(

@@ -23,11 +23,11 @@ from ....api import *
 class RealNightHaze(ImageDataset, RegistrableMixin):
     """RealNightHaze dataset."""
 
-    _name      : str         = "realnighthaze"
-    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DEHAZE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "realnighthaze"
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DEHAZE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class RealNightHaze(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

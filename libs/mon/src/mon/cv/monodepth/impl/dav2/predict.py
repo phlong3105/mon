@@ -49,18 +49,18 @@ except ImportError:
 
 @torch.no_grad()
 def run(args: box.Box):
-    # Summarize the current run
+    # 1. Summarize the current run
     if args.verbose:
         mon.print_run_summary(args)
 
-    # Setup environment
+    # 2. Setup environment
     device = mon.create_device(args.device)
     mon.set_random_seed(args.seed)
 
-    # Resolve pre-trained weights
+    # 3. Resolve pre-trained weights
     weights = args.weights or args.resume or args.tuning
 
-    # Define model
+    # 4. Define model
     model = mon.MODELS.build(
         name    = args.model,
         arch    = args.arch,
@@ -72,11 +72,11 @@ def run(args: box.Box):
     model = model.to(device)
     model.eval()
 
-    # Run benchmark
+    # 5. Run benchmark
     if args.benchmark:
         mon.metric.benchmark(model)
 
-    # Resolve I/O
+    # 6. Resolve I/O
     imgsz     = args.imgsz if args.resize else (0, 0)
     '''
     transform = A.Compose([
@@ -104,7 +104,7 @@ def run(args: box.Box):
         save_nearby  = args.save_nearby,
     )
 
-    # Processing loop
+    # 7. Processing loop
     timers = mon.TimeProfiler()
     timers.total.tick()
     with mon.create_progress_bar() as pbar:
@@ -113,7 +113,7 @@ def run(args: box.Box):
             total       = len(dataset),
             description = f"[bright_yellow]Predicting"
         ):
-            # Pre-process
+            # 7.1 Pre-process
             timers.preprocess.tick()
             meta   = datapoint["meta"]
             path   = mon.Path(meta["path"])
@@ -121,12 +121,12 @@ def run(args: box.Box):
             image  = datapoint["image"]
             timers.preprocess.tock()
 
-            # Inference
+            # 7.2. Inference
             timers.infer.tick()
             outputs = model(image, args.imgsz[0])
             timers.infer.tock()
 
-            # Post-process
+            # 7.3. Post-process
             timers.postprocess.tick()
             depth   = outputs
             depth   = ((depth - depth.min()) / (depth.max() - depth.min()) * 255.0).astype("uint8")
@@ -134,14 +134,14 @@ def run(args: box.Box):
             depth_c = mon.depth.to_color(depth)
             timers.postprocess.tock()
 
-            # Save
+            # 7.4. Save
             if args.save:
                 # Save to: ".../pred/"
                 out_dir  = resolve_output_dir(src_path=path)
                 out_path = out_dir / mon.DIRS.DEPTH / f"{path.stem}{mon.EXT.IMAGE}"
                 mon.image.write(depth, out_path)
 
-            # Save debug
+            # 7.5. Save debug
             if args.save_debug:
                 # Save to: ".../debug/"
                 out_dir  = resolve_debug_dir(src_path=path)
@@ -149,7 +149,7 @@ def run(args: box.Box):
                 mon.image.write(depth_c, out_path)
     timers.total.tock()
 
-    # Finish
+    # 8. Finish
     timers.print()
 
 # endregion

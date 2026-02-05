@@ -24,11 +24,11 @@ from ....api import *
 class YDLD(ImageDataset, RegistrableMixin):
     """YDLD dataset."""
 
-    _name      : str         = "ydld"
-    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "ydld"
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -38,7 +38,7 @@ class YDLD(ImageDataset, RegistrableMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "car_light",            "id": 0, "color": (255,   0,   0)},
         {"name": "traffic_signal_light", "id": 1, "color": (0  , 128,   0)},
         {"name": "street_light",         "id": 2, "color": (0  ,   0, 255)},

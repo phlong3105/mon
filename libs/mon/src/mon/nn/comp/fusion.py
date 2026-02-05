@@ -35,14 +35,12 @@ class DAF(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            residual: Residual tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-            residual: Residual tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         return x + residual
 
@@ -50,11 +48,16 @@ class DAF(nn.Module):
 class MS_CAM(nn.Module):
     """Multi-Scale Channel Attention Module (MS-CAM) layer.
 
-    Apply multi-scale channel attention to the input tensor.
+    Apply multiscale channel attention to the input tensor.
 
     References:
         - Paper: "Attentional Feature Fusion," WACV 2021.
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
+
+    Attributes:
+        local_att: Local attention module.
+        global_att: Global attention module.
+        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -89,12 +92,10 @@ class MS_CAM(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         x_l  = self.local_att(x)
         x_g  = self.global_att(x)
@@ -106,12 +107,16 @@ class MS_CAM(nn.Module):
 class AFF(nn.Module):
     """Attentional Feature Fusion (AFF) layer.
 
-    Fuse the input tensor and the residual tensor using an attentional
-    mechanism.
+    Fuse the input tensor and the residual tensor using an attentional mechanism.
 
     References:
         - Paper: "Attentional Feature Fusion," WACV 2021.
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
+
+    Attributes:
+        local_att: Local attention module.
+        global_att: Global attention module.
+        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -146,14 +151,13 @@ class AFF(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
             residual: Residual tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
 
         Returns:
             Fused output tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            from 0.0 to 1.0.
         """
         x_a  = x + residual
         x_l  = self.local_att(x_a)
@@ -174,6 +178,13 @@ class iAFF(nn.Module):
     References:
         - Paper: "Attentional Feature Fusion," WACV 2021.
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
+
+    Attributes:
+        local_att: First local attention module.
+        global_att: First global attention module.
+        local_att2: Second local attention module.
+        global_att2: Second global attention module.
+        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -224,14 +235,13 @@ class iAFF(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
             residual: Residual tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
 
         Returns:
             Fused output tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            from 0.0 to 1.0.
         """
         x_a   = x + residual
         x_l1  = self.local_att(x_a)

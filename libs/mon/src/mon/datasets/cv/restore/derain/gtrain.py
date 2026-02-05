@@ -23,11 +23,11 @@ from ....api import *
 class GTRain(ImageDataset, RegistrableMixin):
     """GTRain dataset."""
 
-    _name      : str         = "gtrain"
-    _tasks     : list[Task]  = [Task.DERAIN]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "gtrain"
+    tasks     : list[Task]  = [Task.DERAIN]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class GTRain(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

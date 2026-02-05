@@ -29,7 +29,7 @@ class CharbonnierLoss(BaseLoss):
     """Differentiable variant of L1 loss.
 
     Attributes:
-        eps2 (float): Small constant for numerical stability.
+        eps2: Small constant for numerical stability.
     """
 
     # --- Lifecycle & Initialization ---
@@ -67,7 +67,7 @@ class CosineSimilarityLoss(BaseLoss):
     """Cosine Similarity loss function.
 
     Attributes:
-        cos (torch.nn.CosineSimilarity): Cosine similarity module.
+        cos: Cosine similarity module.
     """
 
     # --- Lifecycle & Initialization ---
@@ -90,7 +90,7 @@ class CosineSimilarityLoss(BaseLoss):
         """Calculate the Cosine Similarity loss between ``input`` and ``target``.
 
         Args:
-           input: Input (predictions), formatted as a torch.Tensor of shape
+            input: Input (predictions), formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
             target: Target (ground truth), formatted as a torch.Tensor of shape
                 (B, C, H, W) and values ranging from 0.0 to 1.0.
@@ -98,16 +98,6 @@ class CosineSimilarityLoss(BaseLoss):
         Returns:
             Loss value.
         """
-        # TODO: Delete later
-        """
-        b, c, h, w = input.shape
-        x    = input.permute(0, 2, 3, 1).view(-1, c)
-        y    = target.permute(0, 2, 3, 1).view(-1, c)
-        loss = 1.0 - self.cos(x, y).sum() / (1.0 * b * h * w)
-        loss = self.reduce(loss=loss)
-        return loss
-        """
-
         # cos() returns (B, H, W).
         # Loss is 1 - similarity, so similarity=1 means loss=0.
         loss = 1.0 - self.cos(input, target)
@@ -119,7 +109,7 @@ class ExtendedL1Loss(BaseLoss):
     """Extended L1 loss function that applies a mask to the input and target.
 
     Attributes:
-        eps (float): Small constant for numerical stability.
+        eps: Small constant for numerical stability.
     """
 
     # --- Lifecycle & Initialization ---
@@ -129,7 +119,7 @@ class ExtendedL1Loss(BaseLoss):
         Args:
             eps: Small constant for numerical stability. Defaults to 1e-8.
             reduction: Reduction method to apply to the loss. Can be one of
-                `["none", "mean", "sum"]. Defaults to "mean".
+                ["none", "mean", "sum"]. Defaults to "mean".
         """
         super().__init__(reduction=reduction)
         self.eps = eps
@@ -173,13 +163,6 @@ class ExtendedL1Loss(BaseLoss):
             # If reduction is 'none' or 'sum', use the base reduction logic
             loss  = self.reduce(masked_diff)
 
-        # TODO: Delete later
-        """
-        norm = self.loss_l1(mask, torch.zeros_like(mask))
-        loss = self.loss_l1(mask * input, mask * target) / norm
-        loss = self.reduce(loss=loss)
-        return loss
-        """
         return loss
 
 # endregion

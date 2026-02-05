@@ -23,11 +23,11 @@ from ....api import *
 class FlareReal800(ImageDataset, RegistrableMixin):
     """FlareReal800 dataset."""
 
-    _name      : str         = "flarereal800"
-    _tasks     : list[Task]  = [Task.DEFLARE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL]
-    _modalities: Modalities  = {
+    name      : str         = "flarereal800"
+    tasks     : list[Task]  = [Task.DEFLARE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -44,7 +44,7 @@ class FlareReal800(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

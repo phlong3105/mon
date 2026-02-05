@@ -24,11 +24,11 @@ from ....api import *
 class DarkFace(ImageDataset, RegistrableMixin):
     """DarkFace dataset."""
 
-    _name      : str         = "darkface"
-    _tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "darkface"
+    tasks     : list[Task]  = [Task.NTE, Task.LLE, Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -45,7 +45,7 @@ class DarkFace(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "face", "id": 0, "color": [81, 120, 228]},
     ])
 

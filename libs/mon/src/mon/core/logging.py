@@ -99,28 +99,28 @@ class OutputSuppressor:
     Manage the state of stdout and stderr redirection.
 
     Attributes:
-        _original_stdout (TextIO): Original stdout stream.
-        _original_stderr (TextIO): Original stderr stream.
-        _devnull (TextIO | None): File handle for /dev/null. Defaults to None.
+        original_stdout: Original stdout stream.
+        original_stderr: Original stderr stream.
+        devnull: File handle for /dev/null. Defaults to None.
     """
 
-    _original_stdout = sys.stdout
-    _original_stderr = sys.stderr
-    _devnull         = None
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    devnull         = None
 
     @classmethod
     def disable(cls):
         """Redirect stdout and stderr to /dev/null."""
-        if cls._devnull is None:
-            cls._devnull = open(os.devnull, "w")
-        sys.stdout = cls._devnull
-        sys.stderr = cls._devnull
+        if cls.devnull is None:
+            cls.devnull = open(os.devnull, "w")
+        sys.stdout = cls.devnull
+        sys.stderr = cls.devnull
 
     @classmethod
     def enable(cls):
         """Restore original stdout and stderr."""
-        sys.stdout = cls._original_stdout
-        sys.stderr = cls._original_stderr
+        sys.stdout = cls.original_stdout
+        sys.stderr = cls.original_stderr
         # Note: We keep _devnull open to avoid re-opening overhead.
 
 

@@ -32,6 +32,12 @@ class ImageQualityAssessment(nn.Module):
 
     References:
         - Code: https://github.com/VinAIResearch/PSENet-Image-Enhancement/blob/main/source/iqa.py
+
+    Attributes:
+        exposed_level: Ideal exposure level.
+        eps: Small constant for numerical stability.
+        pad: Padding layer for pooling.
+        avg_pool: Average pooling layer.
     """
 
     # --- Lifecycle & Initialization ---
@@ -50,7 +56,7 @@ class ImageQualityAssessment(nn.Module):
         """
         super().__init__()
         self.exposed_level = exposed_level
-        self.eps = eps
+        self.eps           = eps
 
         # Consolidate pooling to avoid repeated padding operations
         self.pad      = nn.ReflectionPad2d(pool_size // 2)

@@ -1,35 +1,45 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements Low-Light image/video Enhancement (LLE) algorithms."""
+"""Low-light enhancement algorithms.
 
-from .clode import *
-from .colie import *
-# from .colie_mamba import *
-from .dccnet import *
-from .enlightengan import *
-from .fourllie import *
-# from .gcenet import *
-from .hvi_cidnet import *
-from .lformer import *
-from .lightendiffusion import *
-from .lime import *
-from .llunetpp import *
-from .nerco import *
-from .pairlie import *
-from .pie import *
-from .psenet import *
-from .quadprior import *
-from .retinexformer import *
-from .retinexnet import *
-from .ruas import *
-from .sci import *
-from .sgz import *
-from .snr import *
-from .uretinexnet import *
-from .uretinexnetpp import *
-from .zerodce import *
-from .zerodcepp import *
-from .zerodidce import *
-from .zeroig import *
-# from .zinf import *
+This package contains various low-light enhancement algorithms commonly used in
+computer vision.
+
+Notes:
+    - Design Pattern: Component-Based Framework.
+    - Goal: Define a collection of components that can be assembled to form
+      concrete low-light enhancement implementations.
+    - Structure:
+        ::
+
+            lle/
+            ├── __init__.py             # Exposes all
+            ├── base.py                 # Base classes and mixins
+            ├── comp/                   # Components
+            │   ├── __init__.py
+            │   └── ...
+            ├── impl/                   # Implementations
+            │   ├── __init__.py
+            │   └── ...
+            ├── adapters/               # Adapters
+            │   ├── __init__.py
+            │   └── ...
+            └── utils.py                # Utilities and helpers
+"""
+
+from __future__ import annotations
+
+from .adapters import *
+from .base import *
+from .comp import *
+from .impl import *
+from .utils import *
+
+
+# ==============================================================================
+# region REGISTRY & FACTORY
+# ==============================================================================
+
+
+# endregion

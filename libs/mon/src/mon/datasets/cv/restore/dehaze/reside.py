@@ -30,11 +30,11 @@ from ....api import *
 class RESIDE_HSTSReal(ImageDataset, RegistrableMixin):
     """RESIDE-HSTS-Real dataset."""
 
-    _name      : str         = "reside_hstsreal"
-    _tasks     : list[Task]  = [Task.DEHAZE]
-    _subset    : str         = "hsts/real"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "reside_hstsreal"
+    tasks     : list[Task]  = [Task.DEHAZE]
+    subset    : str         = "hsts/real"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -51,18 +51,18 @@ class RESIDE_HSTSReal(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class RESIDE_HSTSSyn(ImageDataset, RegistrableMixin):
     """RESIDE-HSTS-Synthetic dataset."""
 
-    _name      : str         = "reside_hstssyn"
-    _tasks     : list[Task]  = [Task.DEHAZE]
-    _subset    : str         = "hsts/synthetic"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "reside_hstssyn"
+    tasks     : list[Task]  = [Task.DEHAZE]
+    subset    : str         = "hsts/synthetic"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -86,18 +86,18 @@ class RESIDE_HSTSSyn(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class RESIDE_ITS(ImageDataset, RegistrableMixin):
     """RESIDE-ITS dataset."""
 
-    _name      : str         = "reside_its"
-    _tasks     : list[Task]  = [Task.DEHAZE]
-    _subset    : str         = "its"
-    _splits    : list[Split] = [Split.TRAIN]
-    _modalities: Modalities  = {
+    name      : str         = "reside_its"
+    tasks     : list[Task]  = [Task.DEHAZE]
+    subset    : str         = "its"
+    splits    : list[Split] = [Split.TRAIN]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -121,18 +121,18 @@ class RESIDE_ITS(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class RESIDE_OTS(ImageDataset, RegistrableMixin):
     """RESIDE-OTS dataset."""
 
-    _name      : str         = "reside_ots"
-    _tasks     : list[Task]  = [Task.DEHAZE]
-    _subset    : str         = "ots"
-    _splits    : list[Split] = [Split.TRAIN]
-    _modalities: Modalities  = {
+    name      : str         = "reside_ots"
+    tasks     : list[Task]  = [Task.DEHAZE]
+    subset    : str         = "ots"
+    splits    : list[Split] = [Split.TRAIN]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -156,18 +156,18 @@ class RESIDE_OTS(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class RESIDE_RTTS(ImageDataset, RegistrableMixin):
     """RESIDE-RTTS dataset."""
 
-    _name      : str         = "reside_rtts"
-    _tasks     : list[Task]  = [Task.DEHAZE, Task.DETECT]
-    _subset    : str         = "rtts"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "reside_rtts"
+    tasks     : list[Task]  = [Task.DEHAZE, Task.DETECT]
+    subset    : str         = "rtts"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -184,18 +184,18 @@ class RESIDE_RTTS(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class RESIDE_SOTSIndoor(ImageDataset, RegistrableMixin):
     """RESIDE-SOTS-Indoor dataset."""
 
-    _name      : str         = "reside_sotsindoor"
-    _tasks     : list[Task]  = [Task.DEHAZE]
-    _subset    : str         = "sots/indoor"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "reside_sotsindoor"
+    tasks     : list[Task]  = [Task.DEHAZE]
+    subset    : str         = "sots/indoor"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -219,18 +219,18 @@ class RESIDE_SOTSIndoor(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class RESIDE_SOTSOutdoor(ImageDataset, RegistrableMixin):
     """RESIDE-SOTS-Outdoor dataset."""
 
-    _name      : str         = "reside_sotsoutdoor"
-    _tasks     : list[Task]  = [Task.DEHAZE]
-    _subset    : str         = "sots/outdoor"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "reside_sotsoutdoor"
+    tasks     : list[Task]  = [Task.DEHAZE]
+    subset    : str         = "sots/outdoor"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -254,18 +254,18 @@ class RESIDE_SOTSOutdoor(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class RESIDE_URHI(ImageDataset, RegistrableMixin):
     """RESIDE-URHI dataset."""
 
-    _name      : str         = "reside_urhi"
-    _tasks     : list[Task]  = [Task.DEHAZE]
-    _subset    : str         = "urhi"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "reside_urhi"
+    tasks     : list[Task]  = [Task.DEHAZE]
+    subset    : str         = "urhi"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -282,7 +282,7 @@ class RESIDE_URHI(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

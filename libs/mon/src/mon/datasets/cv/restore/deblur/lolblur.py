@@ -30,8 +30,8 @@ from ....api import *
 class LOLBlur(ImageDataset, abc.ABC):
     """LOL-Blur dataset."""
 
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -55,61 +55,61 @@ class LOLBlur(ImageDataset, abc.ABC):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class LOLBlurB(LOLBlur, RegistrableMixin):
     """LOL-Blur-B (Blur) dataset."""
 
-    _name  : str        = "lolblurb"
-    _tasks : list[Task] = [Task.DEBLUR]
-    _subset: str        = "b"
+    name  : str        = "lolblurb"
+    tasks : list[Task] = [Task.DEBLUR]
+    subset: str        = "b"
 
 
 @DATASETS.register()
 class LOLBlurBN(LOLBlur, RegistrableMixin):
     """LOL-Blur-BN (Blur + Noise) dataset."""
 
-    _name  : str        = "lolblurbn"
-    _tasks : list[Task] = [Task.DEBLUR, Task.DENOISE]
-    _subset: str        = "bn"
+    name  : str        = "lolblurbn"
+    tasks : list[Task] = [Task.DEBLUR, Task.DENOISE]
+    subset: str        = "bn"
 
 
 @DATASETS.register()
 class LOLBlurL(LOLBlur, RegistrableMixin):
     """LOL-Blur-L (Low-Light) dataset."""
 
-    _name  : str        = "lolblurl"
-    _tasks : list[Task] = [Task.LLE]
-    _subset: str        = "l"
+    name  : str        = "lolblurl"
+    tasks : list[Task] = [Task.LLE]
+    subset: str        = "l"
 
 
 @DATASETS.register()
 class LOLBlurLB(LOLBlur, RegistrableMixin):
     """LOL-Blur-LB (Low-Light + Blur) dataset."""
 
-    _name  : str        = "lolblurlb"
-    _tasks : list[Task] = [Task.DEBLUR, Task.LLE]
-    _subset: str        = "lb"
+    name  : str        = "lolblurlb"
+    tasks : list[Task] = [Task.DEBLUR, Task.LLE]
+    subset: str        = "lb"
 
 
 @DATASETS.register()
 class LOLBlurLBN(LOLBlur, RegistrableMixin):
     """LOL-Blur-LBN (Low-Light + Blur + Noise) dataset."""
 
-    _name  : str        = "lolblurlbn"
-    _tasks : list[Task] = [Task.DEBLUR, Task.DENOISE, Task.LLE]
-    _subset: str        = "lbn"
+    name  : str        = "lolblurlbn"
+    tasks : list[Task] = [Task.DEBLUR, Task.DENOISE, Task.LLE]
+    subset: str        = "lbn"
 
 
 @DATASETS.register()
 class LOLBlurN(LOLBlur, RegistrableMixin):
     """LOL-Blur-N (Noise) dataset."""
 
-    _name  : str        = "lolblurn"
-    _tasks : list[Task] = [Task.DENOISE]
-    _subset: str        = "n"
+    name  : str        = "lolblurn"
+    tasks : list[Task] = [Task.DENOISE]
+    subset: str        = "n"
 
 # endregion
 

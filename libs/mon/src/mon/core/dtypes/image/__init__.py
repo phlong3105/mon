@@ -26,6 +26,7 @@ Notes:
 from __future__ import annotations
 
 from .core import *
+from .custom_ops import *
 from .debug import *
 from .io import *
 from .ops import *

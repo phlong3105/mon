@@ -26,15 +26,12 @@ import torch
 # region CONTROL
 # ==============================================================================
 
-def set_random_seed(
-    seed         : int | tuple[int, int],
-    deterministic: bool = False,
-):
+def set_random_seed(seed: int | tuple[int, int], deterministic: bool = False):
     """Set random seeds for Python, NumPy, and PyTorch.
 
     Args:
-        seed: Single integer seed or a two-element tuple (min, max) from which a
-            value for ``seed`` will be randomly sampled.
+        seed: Single integer seed or a two-element tuple (min, max) from which
+            a value for ``seed`` will be randomly sampled.
         deterministic: If ``deterministic`` is True, configure PyTorch for
             deterministic operations. Defaults to False.
     """

@@ -24,11 +24,11 @@ from ....api import *
 class LOLv2Real(ImageDataset, RegistrableMixin):
     """LOL-v2 Real dataset."""
 
-    _name      : str         = "lolv2"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = "real"
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "lolv2"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = "real"
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -52,18 +52,18 @@ class LOLv2Real(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 
 @DATASETS.register()
 class LOLv2Syn(ImageDataset, RegistrableMixin):
     """LOL-v2 Synthetic dataset."""
 
-    _name      : str         = "lolv2"
-    _tasks     : list[Task]  = [Task.LLE]
-    _subset    : str         = "syn"
-    _splits    : list[Split] = [Split.TRAIN, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "lolv2"
+    tasks     : list[Task]  = [Task.LLE]
+    subset    : str         = "syn"
+    splits    : list[Split] = [Split.TRAIN, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -87,7 +87,7 @@ class LOLv2Syn(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

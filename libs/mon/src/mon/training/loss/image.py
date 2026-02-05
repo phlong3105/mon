@@ -41,10 +41,9 @@ class ExposureControlLoss(BaseLoss):
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
 
     Attributes:
-        channel_mean (bool): If True, compute mean across channels before
-            pooling.
-        target_exposure (torch.Tensor): Well-exposedness level E.
-        pool (torch.nn.AvgPool2d): Pooling layer for computing local means.
+        channel_mean: If True, compute mean across channels before pooling.
+        target_exposure: Well-exposedness level E.
+        pool: Pooling layer for computing local means.
     """
 
     # --- Lifecycle & Initialization ---
@@ -119,10 +118,9 @@ class ExposureValueControlLoss(BaseLoss):
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
 
     Attributes:
-        channel_mean (bool): If True, compute mean across channels before
-            pooling.
-        target_exposure (torch.Tensor): Well-exposedness level E.
-        pool (torch.nn.AvgPool2d): Pooling layer for computing local means.
+        channel_mean: If True, compute mean across channels before pooling.
+        target_exposure: Well-exposedness level E.
+        pool: Pooling layer for computing local means.
     """
 
     # --- Lifecycle & Initialization ---
@@ -209,7 +207,7 @@ class ColorConstancyLoss(BaseLoss):
         - https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py#L74
 
     Attributes:
-        eps (float): Small constant for numerical stability.
+        eps: Small constant for numerical stability.
     """
 
     # --- Lifecycle & Initialization ---
@@ -275,7 +273,7 @@ class PSNRLoss(BaseLoss):
     """Loss function based on Peak Signal-to-Noise Ratio (PSNR).
 
     Attributes:
-        to_y (bool): If True, use Y-channel for computing PSNR.
+        to_y: If True, use Y-channel for computing PSNR.
     """
 
     # --- Lifecycle & Initialization ---
@@ -346,9 +344,8 @@ class SpatialConsistencyLoss(BaseLoss):
     in local gradients between the enhanced and input images.
 
     Attributes:
-        num_regions (int): Number of directional regions to consider for
-            gradient comparison.
-        pool (torch.nn.AvgPool2d): Pooling layer for blurring.
+        num_regions: Number of directional regions to consider for gradient comparison.
+        pool: Pooling layer for blurring.
     """
 
     # --- Lifecycle & Initialization ---
@@ -506,7 +503,7 @@ class EdgeLoss(BaseLoss):
     penalizing differences between the input and target images.
 
     Attributes:
-        charbonnier (CharbonnierLoss): Charbonnier loss instance for edge map comparison.
+        charbonnier: Charbonnier loss instance for edge map comparison.
     """
 
     # --- Lifecycle & Initialization ---
@@ -607,7 +604,7 @@ class DepthAwareIlluminationLoss(BaseLoss):
     discontinuities.
 
     Attributes:
-        alpha (float): Weighting factor for depth influence.
+        alpha: Weighting factor for depth influence.
     """
 
     # --- Lifecycle & Initialization ---
@@ -670,8 +667,8 @@ class StructureTextureDecompositionLoss(BaseLoss):
     in the enhanced image.
 
     Attributes:
-        kernel_size (list[int]): Size of the Gaussian kernel for blurring.
-        sigma (list[float]): Standard deviation for the Gaussian kernel.
+        kernel_size: Size of the Gaussian kernel for blurring.
+        sigma: Standard deviation for the Gaussian kernel.
     """
 
     # --- Lifecycle & Initialization ---

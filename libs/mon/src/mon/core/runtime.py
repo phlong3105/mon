@@ -50,6 +50,7 @@ from mon.core.utils import (
     depascalize,
     is_int,
     is_valid_str,
+    is_valid_path,
     merge_dicts,
     to_int,
     to_list,
@@ -142,7 +143,7 @@ CLI_OPTIONS = {
     "task"         : {
         "default"    : None,
         "type"       : _str_or_none,
-        "choices"    : Task.values(),
+        "choices"    : [None] + Task.values(),
         "help"       : f"Task to run: {Task.values()}.",
         "prompt_only": False,
         "prompt_text": "Task",
@@ -150,7 +151,7 @@ CLI_OPTIONS = {
     "mode"         : {
         "default"    : None,
         "type"       : _str_or_none,
-        "choices"    : RunMode.values(),
+        "choices"    : [None] + RunMode.values(),
         "help"       : f"Run mode: {RunMode.values()}.",
         "prompt_only": False,
         "i_cli_type" : str,
@@ -209,7 +210,7 @@ CLI_OPTIONS = {
     "device"       : {
         "default"    : None,
         "type"       : _str_or_none,
-        "choices"    : list_devices(),
+        "choices"    : [None] + list_devices(),
         "help"       : f"Running device: {list_devices()}.",
         "prompt_only": False,
         "prompt_text": "Device",
@@ -285,17 +286,11 @@ CLI_OPTIONS = {
         "prompt_text": "Benchmark?   ",
     },
     # Save & Visualize
-    "save_result"  : {
+    "save"         : {
         "action"     : "store_true",
         "help"       : "Save results.",
         "prompt_only": False,
         "prompt_text": "Save Result? ",
-    },
-    "save_image"   : {
-        "action"     : "store_true",
-        "help"       : "Save output images.",
-        "prompt_only": False,
-        "prompt_text": "Save Image?  ",
     },
     "save_debug"   : {
         "action"     : "store_true",
@@ -370,10 +365,10 @@ class Prompt:
     and display prompts using the Rich-based ``SelectionOrInputPrompt``.
 
     Attributes:
-        text (str): Prompt text.
-        default (str): Normalized default string.
-        choices (list[str] | None): Normalized choices list or None.
-        value (str): Last returned value from ``prompt()``.
+        text: Prompt text.
+        default: Normalized default string.
+        choices: Normalized choices list or None.
+        value: Last returned value from ``prompt()``.
     """
 
     # --- Lifecycle & Initialization ---
@@ -388,8 +383,7 @@ class Prompt:
         Args:
             text: Prompt text to display.
             default: Default value to show.
-            choices: Optional sequence of choices for selection prompts.
-                Defaults to None.
+            choices: Optional sequence of choices for selection prompts. Defaults to None.
         """
         self.text    = text
         self.default = default
@@ -471,9 +465,9 @@ class Confirm:
     confirmation prompt using Rich.
 
     Attributes:
-        text (str): Prompt text.
-        default (bool): Default boolean selection.
-        value (bool): Last returned value from ``prompt()``.
+        text: Prompt text.
+        default: Default boolean selection.
+        value: Last returned value from ``prompt()``.
     """
 
     # --- Lifecycle & Initialization ---
@@ -502,13 +496,13 @@ class Confirm:
 class NumberPrompt:
     """Integer prompt wrapper for numeric input.
 
-    Store prompt text, default integer, and last returned value. Normalize
+    Store prompt text, default integer, and the last returned value. Normalize
     numeric input and display an integer prompt using Rich.
 
     Attributes:
-        text (str): Prompt text.
-        default (int): Default numeric value or -1 for unset.
-        value (int | None): Last returned value from ``prompt()``.
+        text: Prompt text.
+        default: Default numeric value or -1 for unset.
+        value: Last returned value from ``prompt()``.
     """
 
     # --- Lifecycle & Initialization ---
@@ -691,8 +685,8 @@ class ICLI:
     arguments and configuration selections.
 
     Attributes:
-        _args (dict): Current in-progress arguments.
-        _config_args (dict): Loaded configuration arguments from the selected config.
+        _args: Current in-progress arguments.
+        _config_args: Loaded configuration arguments from the selected config.
     """
 
     # --- Lifecycle & Initialization ---
@@ -705,9 +699,9 @@ class ICLI:
         """Initialize a new instance.
 
         Args:
-            defaults (dict): Default overrides for arguments. Defaults to None.
-            reload (bool): Reload configuration files. Defaults to True.
-            verbose (bool): If True, enable verbose logging. Defaults to False.
+            defaults: Default overrides for arguments. Defaults to None.
+            reload: Reload configuration files. Defaults to True.
+            verbose: If True, enable verbose logging. Defaults to False.
         """
         self.verbose = verbose
         self.reload  = reload
@@ -832,7 +826,7 @@ class ICLI:
             _config  = self._args.config
             _model   = self._args.model
             _default = self._args.fullname or self._config_args.get("fullname")
-            _default = _default or (Path(_config).stem if is_valid_str(_config) else _model)
+            _default = _default or (Path(_config).stem if is_valid_path(_config) else _model)
             self._args.fullname = Prompt(
                 text    = CLI_OPTIONS["fullname"]["prompt_text"],
                 default = _default,
@@ -1222,7 +1216,7 @@ class ProjectResolver:
     def __init__(
         self,
         root   : Path | str | None = None,
-        verbose: bool       | None = False,
+        verbose: bool = False,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -1434,8 +1428,8 @@ class ProjectResolver:
         for m in models:
             # Check if model exists in registry and has an 'arch' attribute
             entry = flattened_registry.get(m)
-            if entry and hasattr(entry, "arch"):
-                a = str(entry.arch).strip()
+            if entry and "arch" in entry:
+                a = str(entry["arch"]).strip()
                 if a and a.lower() != "none":
                     archs.add(a)
 
@@ -1481,9 +1475,9 @@ class ProjectResolver:
         # Gather all potential files
         root         = self._root
         config_files = []
-        if is_valid_str(root):
+        if is_valid_path(root):
             config_files.extend(self.list_config_files(root))
-        if is_valid_str(model_root):
+        if is_valid_path(model_root):
             config_files.extend(self.list_config_files(model_root))
 
         # Filter by file type
@@ -1526,12 +1520,12 @@ class ProjectResolver:
         weights = []
 
         # Collect from local training runs
-        if is_valid_str(self._root):
+        if is_valid_path(self._root):
             train_dir = self._root / "run" / "train"
             weights.extend(w.list_weights(train_dir))
 
         # Collect from global Model Zoo
-        if is_valid_str(ZOO_DIR):
+        if is_valid_path(ZOO_DIR):
             weights.extend(w.list_weights(ZOO_DIR))
 
         # Filter by Model Name

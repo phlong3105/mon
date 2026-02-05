@@ -30,8 +30,8 @@ class DSConv2d(nn.Module):
     Apply a depthwise convolution followed by a pointwise convolution.
 
     Attributes:
-        dw_conv (torch.nn.Conv2d): Depthwise convolutional layer.
-        pw_conv (torch.nn.Conv2d): Pointwise convolutional layer.
+        dw_conv: Depthwise convolutional layer.
+        pw_conv: Pointwise convolutional layer.
     """
 
     # --- Lifecycle & Initialization ---
@@ -99,8 +99,7 @@ class DSConv2d(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C_in, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C_in, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
             Output tensor of shape (B, C_out, H_out, W_out) and values ranging

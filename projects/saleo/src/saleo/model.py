@@ -14,9 +14,9 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "SALEO",
-    "saleo_b_siren",
-    "saleo_b_siren_ff",
+    "Saleo",
+    "saleo_ffsiren",
+    "saleo_siren",
 ]
 
 import kornia
@@ -25,12 +25,17 @@ import torch
 from mon import nn
 from mon.core import create_device, log, MLType, MODELS, Path, Task
 from mon.training import loss as L
-from .loss import ConfidenceGatedDepthLoss
-from .module import SIREN
+from .loss import ConfidenceGatedDepthLoss, ExplicitSmoothnessLoss
+from .module import ResidualINR
 from .utils import (
     get_local_features,
     get_nearest_features,
+    get_v_component,
+    hsv_to_rgb,
     JitteredGridSampler,
+    RandomPixelSampler,
+    replace_v_component,
+    rgb_to_hsv,
 )
 
 current_file = Path(__file__).normalize()
@@ -43,7 +48,8 @@ current_dir  = current_file.parents[0]
 
 # --- Base Classes ---
 
-class SALEO(nn.Module, nn.RegistrableMixin):
+# noinspection PyMethodMayBeStatic
+class Saleo(nn.Module, nn.RegistrableMixin):
     """SALEO model.
 
     References:
@@ -52,26 +58,20 @@ class SALEO(nn.Module, nn.RegistrableMixin):
         - Code: https://github.com/phlong3105/saleo
     """
 
-    _arch     : str          = "saleo"
-    _name     : str          = "saleo"
-    _tasks    : list[Task]   = [Task.LLE]
-    _mltypes  : list[MLType] = [MLType.TEST_TIME]
-    _model_dir: Path         = current_dir
-    _inr_funcs: dict         = {
-        "siren": SIREN,
-    }
+    arch       : str          = "saleo"
+    name       : str          = "saleo"
+    tasks      : list[Task]   = [Task.LLE]
+    mltypes    : list[MLType] = [MLType.TEST_TIME]
+    model_dir  : Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         name       : str,
-        inr        : str,
         window_size: int,
         hidden_dim : int,
         num_layers : int,
         add_layers : int,
-        pos_encode : bool,
-        E          : float,
         device     : torch.device = torch.device("cpu"),
         verbose    : bool = True,
         *args, **kwargs
@@ -85,40 +85,35 @@ class SALEO(nn.Module, nn.RegistrableMixin):
             hidden_dim: Hidden dimension of the networks.
             num_layers: Number of layers in each branch.
             add_layers: Number of layers to add between the two branches.
-            pos_encode: Whether to use positional encoding.
-            E: Well-exposedness level E.
             device: Device to use for computation. Defaults to "cpu".
             verbose: Verbosity mode. Defaults to True.
+            *args: Additional positional arguments for the INR model.
+            **kwargs: Additional keyword arguments for the INR model.
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__()
         # Initialize RegistrableMixin
         nn.RegistrableMixin.__init__(self, name=name)
 
-        # Validate inputs
-        if inr not in self._inr_funcs:
-            raise KeyError(f"Expected 'inr' in {list(self._inr_funcs.keys())}, but got '{inr}'.")
-
         # Assign attributes
         self.verbose     = verbose
-        self.inr_func    = self._inr_funcs[inr]
         self.window_size = window_size
         self.hidden_dim  = hidden_dim
         self.num_layers  = num_layers
         self.add_layers  = add_layers
-        self.pos_encode  = pos_encode
-        self.E           = E
+        self.inr_args    = args
+        self.inr_kwargs  = kwargs
         self.device      = create_device(device)
 
     # --- Callable & Context Manager ---
     def forward(
         self,
-        image       : torch.Tensor,
-        depth       : torch.Tensor = None,
-        epochs      : int          = 100,
-        batch_size  : int          = 1,
-        save_weights: bool         = False,
-        save_debug  : bool         = False,
+        image     : torch.Tensor,
+        depth     : torch.Tensor = None,
+        epochs    : int          = 100,
+        batch_size: int          = 8,
+        E         : float        = 0.1,
+        save_debug: bool         = False,
     ) -> dict:
         """Forward the input through the network.
 
@@ -132,109 +127,162 @@ class SALEO(nn.Module, nn.RegistrableMixin):
             depth: Depth map, formatted as a torch.Tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
             epochs: Number of optimization steps. Defaults to 100.
-            batch_size: Batch size. Defaults to 1.
-            save_weights: Whether to save the trained weights. Defaults to False.
+            batch_size: Batch size. Defaults to 8.
+            E: Well-exposedness level E. Defaults to 0.1.
             save_debug: Whether to save intermediate results for debugging.
                 Defaults to False.
         """
-        # 1. Create INR network
+        # 1. Move inputs
+        image = image.to(self.device)
+
+        if depth is not None:
+            depth = depth.to(self.device)
+
+        # 2. Convert color space
+        image_hsv = rgb_to_hsv(image).to(self.device)
+        image_i   = get_v_component(image_hsv).to(self.device)
+
+        # 3. Optimize and infer illumination residual
+        image_i_res = self._estimate_residual(
+            image_i    = image_i,
+            depth      = depth,
+            epochs     = epochs,
+            batch_size = batch_size,
+            E          = E,
+        )
+
+        # 4. Retinex reconstruction
+        image_i_fixed = image_i + image_i_res             # Illumination
+        image_r       = image_i / (image_i_fixed + 1e-4)  # Reflectance
+        image_r       = self._refine_reflectance(image_r, image_i_fixed, 0.1, 3.0)
+
+        # 5. Recombine
+        image_hsv_fixed = replace_v_component(image_hsv, image_r)
+        image_rgb_fixed = hsv_to_rgb(image_hsv_fixed)
+        # image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
+
+        # 6. Return final and intermediate results for debugging
+        outputs = { "enhanced": image_rgb_fixed }
+        if save_debug:
+            outputs |= {
+                "image_i"      : image_i,
+                "image_i_res"  : image_i_res,
+                "image_i_fixed": image_i_fixed,
+                "image_r"      : image_r,
+            }
+        return outputs
+
+    def _estimate_residual(
+        self,
+        image_i   : torch.Tensor,
+        depth     : torch.Tensor = None,
+        epochs    : int          = 100,
+        batch_size: int          = 8,
+        E         : float        = 0.1,
+        tile_size : int          = 256
+    ) -> torch.Tensor:
+        """Estimate the full-resolution illumination residual map using an INR
+        network.
+
+        Args:
+            image_i: Illumination map, formatted as a torch.Tensor of shape
+                (B, 1, H, W) and values ranging from 0.0 to 1.0.
+            depth: Depth map, formatted as a torch.Tensor of shape (B, 1, H, W)
+                and values ranging from 0.0 to 1.0. Defaults to None.
+            epochs: Number of optimization steps. Defaults to 100.
+            batch_size: Batch size. Defaults to 8.
+            E: Well-exposedness level E. Defaults to 0.1.
+            tile_size: Tile size for inference. Defaults to 256.
+
+        Returns:
+            The full resolution illumination residual map, formatted as a
+            torch.Tensor of shape (B, 1, H, W) and values ranging from
+            0.0 to 1.0.
+        """
+        # 1. Create the INR network
         if depth is not None:
             patch_dim = self.window_size ** 2 * 2
         else:
             patch_dim = self.window_size ** 2
 
-        model = self.inr_func(
+        model = ResidualINR(
             patch_dim  = patch_dim,
             hidden_dim = self.hidden_dim,
             num_layers = self.num_layers,
             add_layers = self.add_layers,
-            pos_encode = self.pos_encode,
+            *self.inr_args, **self.inr_kwargs
         ).to(self.device)
 
-        # 2. Convert image to HSV
-        image     = image.to(self.device)
-        image_hsv = kornia.color.rgb_to_hsv(image)
-        image_hv  = image_hsv[:, 0:2, :, :]
-        image_v   = image_hsv[:, 2:3, :, :]
-
-        # 3. Optimize INR network
-        self._optimize(
+        # 2. Optimize the INR network
+        self._optimize_residual(
             model      = model,
-            illu       = image_v,
+            image_i    = image_i,
             depth      = depth,
             epochs     = epochs,
-            batch_size = batch_size
+            batch_size = batch_size,
+            E          = E,
+        )
+        """
+        self._optimize_residual_stochastic(
+            model      = model,
+            image_i    = image_i,
+            depth      = depth,
+            epochs     = epochs,
+            batch_size = 500000,
+            E          = E,
+        )
+        """
+
+        # 3. Infer the full-resolution illumination residual map
+        image_i_res = self._infer_residual(
+            model      = model,
+            image_i    = image_i,
+            depth      = depth,
+            tile_size  = tile_size
         )
 
-        # 4. Infer full-resolution illumination map
-        illu_res = self._infer(model=model, illu=image_v, depth=depth)
+        return image_i_res
 
-        # 5. Retinex reconstruction
-        illu            = illu_res + image_v
-        image_v_fixed   = image_v / (illu + 1e-4)
-
-        # 6. Convert back to RGB
-        image_hsv_fixed = torch.cat((image_hv, image_v_fixed), dim=1)
-        image_rgb_fixed = kornia.color.hsv_to_rgb(image_hsv_fixed)
-
-        # 7. Normalize
-        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
-        image_rgb_fixed = torch.clamp(image_rgb_fixed, 0, 1)
-
-        # 8. Return final and intermediate results for debugging
-        outputs = { "enhanced": image_rgb_fixed }
-        if save_debug:
-            outputs |= {
-                "image_v"      : image_v,
-                "image_v_fixed": image_v_fixed,
-                "residual"     : illu_res,
-            }
-        if save_weights:
-            outputs |= { "model": model.state_dict() }
-        return outputs
-
-    def _optimize(
+    def _optimize_residual(
         self,
         model     : nn.Module,
-        illu      : torch.Tensor,
+        image_i   : torch.Tensor,
         depth     : torch.Tensor = None,
         epochs    : int          = 100,
-        batch_size: int          = 1
+        batch_size: int          = 8,
+        E         : float        = 0.1,
     ):
         """Optimize the INR network on one input sample.
 
         Args:
             model: INR network to optimize.
-            illu: Illumination map (i.e., Value channel), formatted as a
-                torch.Tensor of shape (B, 1, H, W) and values ranging from
-                0.0 to 1.0.
+            image_i: Illumination map, formatted as a torch.Tensor of shape
+                (B, 1, H, W) and values ranging from 0.0 to 1.0.
             depth: Depth map, formatted as a torch.Tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
             epochs: Number of optimization steps. Defaults to 100.
-            batch_size: Batch size. Defaults to 1.
+            batch_size: Batch size. Defaults to 8.
+            E: Well-exposedness level E. Defaults to 0.1.
         """
         # 1. Define optimizer & losses
-        optimizer = torch.optim.Adam(
-            params       = model.parameters(),
-            lr           = 1e-4,
-            betas        = (0.9, 0.999),
-            weight_decay = 3e-4,
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=1e-4, weight_decay=3e-4)
+        L_exp     = L.ExposureValueControlLoss(patch_size=16, mean_val=E).to(self.device)
+        L_tv      = L.TotalVariationLoss().to(self.device)
+        L_de      = ConfidenceGatedDepthLoss().to(self.device)
+
+        # 2. Define sampler
+        sampler = JitteredGridSampler(
+            image      = image_i,
+            depth      = depth,
+            patch_size = self.hidden_dim,
+            device     = self.device,
         )
-        L_exp = L.ExposureValueControlLoss(
-            patch_size   = 16,
-            mean_val     = self.E,
-            channel_mean = True,
-        ).to(self.device)
-        L_tv  = L.TotalVariationLoss().to(self.device)
-        L_str = ConfidenceGatedDepthLoss().to(self.device)
 
-        # 2. Define patch sampler
-        sampler = JitteredGridSampler(image=illu, depth=depth, patch_size=self.hidden_dim)
-
-        # 3. Training loop
+        # 3. Patch-based training
         for i in range(epochs):
             model.train()
             loss_epoch = 0.0
+            num_items  = 0
 
             # Use the iterator to cover the whole image
             iterator = sampler.get_epoch_iterator(batch_size=batch_size)
@@ -265,73 +313,150 @@ class SALEO(nn.Module, nn.RegistrableMixin):
                 # 3.5. Forward pass
                 optimizer.zero_grad()
 
-                # Returns (N, 1)
-                flat_illu_res, _ = model(coords=flat_coords, patches=flat_patches)
+                # Returns: residual + noise (optional)
+                flat_i_res    = model(coords=flat_coords, patches=flat_patches)
 
                 # Reshape back to images for Loss calculation
                 # (N, 1) -> (B, 1, 64, 64)
-                batch_illu_res = flat_illu_res.view(batch_i.shape)
+                batch_i_res   = flat_i_res.view(batch_i.shape)
 
                 # 3.6. Retinex reconstruction
-                batch_illu     = batch_illu_res + batch_i
-                batch_i_fixed  = batch_i / (batch_illu + 1e-4)
+                batch_i_fixed = batch_i + batch_i_res             # Illumination
+                batch_r       = batch_i / (batch_i_fixed + 1e-4)  # Reflectance
 
                 # 3.7. Loss (Computed on patches)
-                l_spa  = torch.mean(torch.abs(torch.pow(batch_illu - batch_i, 2)))  # Spatial loss
-                l_tv   = L_tv(batch_illu)               # TV loss
-                l_exp  = torch.mean(L_exp(batch_illu))  # Exposure loss
-                l_spar = torch.mean(batch_i_fixed)      # Sparsity loss
-                l_str  = L_str(batch_i, batch_d, batch_illu) if batch_d is not None else 0.0
-                loss   = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar) + l_str
+                l_spa  = torch.mean(torch.abs(torch.pow(batch_i_fixed - batch_i, 2)))  # Spatial loss
+                l_tv   = L_tv(batch_i_fixed)               # TV loss
+                l_exp  = torch.mean(L_exp(batch_i_fixed))  # Exposure loss
+                l_spar = torch.mean(batch_r)               # Sparsity loss
+                l_de   = L_de(batch_i, batch_d, batch_i_fixed) if batch_d is not None else 0.0
+                loss   = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar) + (10 * l_de)
 
                 loss.backward()
                 optimizer.step()
                 loss_epoch += loss.item()
+                num_items  += 1
 
-            # 4. Log debugging information
+            # 3.8. Log debugging information
             if self.verbose:
-                log(f"Epoch {i+1}/{epochs}: Loss = {loss_epoch:.4f}")
+                log(f"Epoch {i+1:4d}/{epochs:4d}: Loss = {(loss_epoch / num_items):6.2f}")
 
-    @torch.no_grad()
-    def _infer(
+    def _optimize_residual_stochastic(
         self,
-        model: nn.Module,
-        illu : torch.Tensor,
-        depth: torch.Tensor = None
-    ) -> torch.Tensor:
-        """Query the trained INR model for the full-resolution illumination map.
+        model     : nn.Module,
+        image_i   : torch.Tensor,
+        depth     : torch.Tensor = None,
+        epochs    : int          = 100,
+        batch_size: int          = 500000,
+        E         : float        = 0.1,
+    ):
+        """Optimize the INR network on one input sample.
 
         Args:
-            model: INR model to optimize.
-            illu: Illumination map (i.e., Value channel), formatted as a
-                torch.Tensor of shape (B, 1, H, W) and values ranging from
-                0.0 to 1.0.
+            model: INR network to optimize.
+            image_i: Illumination map, formatted as a torch.Tensor of shape
+                (B, 1, H, W) and values ranging from 0.0 to 1.0.
             depth: Depth map, formatted as a torch.Tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
+            epochs: Number of optimization steps. Defaults to 100.
+            batch_size: Batch size. Defaults to 500,000.
+            E: Well-exposedness level E. Defaults to 0.1.
+        """
+        # 1. Define optimizer & losses
+        optimizer = torch.optim.Adam(params=model.parameters(), lr=1e-4, weight_decay=3e-4)
+        L_tv      = ExplicitSmoothnessLoss().to(self.device)
+
+        # 2. Define sampler
+        sampler = RandomPixelSampler(
+            image       = image_i,
+            depth       = depth,
+            window_size = self.window_size,
+            device      = self.device,
+        )
+
+        # 3. Patch-based training
+        for i in range(epochs):
+            model.train()
+            optimizer.zero_grad()
+
+            # 3.1. Sample a batch of pixels and their features
+            coords, features, features_i = sampler.sample_batch(batch_size=batch_size)
+
+            # 3.2. Flatten for INR network
+            # (B, H, W, patch_dim) -> (B*H*W, patch_dim)
+            flat_coords    = coords.reshape(-1, 2)
+            flat_patches   = features.reshape(-1, features.shape[-1])
+            flat_feature_i = features_i.reshape(-1, 1)
+
+            # 3.3. Forward pass
+            flat_i_res   = model(coords=flat_coords, patches=flat_patches)
+
+            # 3.4. Retinex reconstruction
+            flat_i_fixed = flat_feature_i + flat_i_res
+            flat_r       = flat_feature_i / (flat_i_fixed + 1e-4)
+
+            # 3.5. Calculate loss
+            # Spatial Loss: Illumination should stay close to Input
+            l_spa  = torch.mean(torch.abs((flat_i_fixed - flat_feature_i) ** 2))
+            # TV Loss: Replaced by Gradient Penalty (explicit_smoothness_loss)
+            l_tv   = L_tv(flat_i_fixed, flat_coords)
+            # Exposure Loss: Mean of batch should match E
+            l_exp  = torch.mean((torch.mean(flat_i_fixed) - E) ** 2)
+            # Sparsity Loss: Reflectance should be sparse (dark)
+            l_spar = torch.mean(flat_r)
+            # Weighted Sum (Using your original weights)
+            loss   = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar)
+
+            loss.backward()
+            optimizer.step()
+
+            # 3.8. Log debugging information
+            if self.verbose:
+                log(f"Epoch {i+1:4d}/{epochs:4d}: Loss = {loss:6.2f}")
+
+    @torch.no_grad()
+    def _infer_residual(
+        self,
+        model     : nn.Module,
+        image_i   : torch.Tensor,
+        depth     : torch.Tensor = None,
+        tile_size : int          = 256
+    ) -> torch.Tensor:
+        """Query the trained INR model for the full-resolution illumination
+        residual map.
+
+        Args:
+            model: INR network to optimize.
+            image_i: Illumination map, formatted as a torch.Tensor of shape
+                (B, 1, H, W) and values ranging from 0.0 to 1.0.
+            depth: Depth map, formatted as a torch.Tensor of shape (B, 1, H, W)
+                and values ranging from 0.0 to 1.0. Defaults to None.
+            tile_size: Tile size for inference. Defaults to 256.
 
         Returns:
-            The full resolution illumination map, formatted as a torch.Tensor of
-            shape (B, 1, H, W) and values ranging from 0.0 to 1.0.
+            The full resolution illumination residual map, formatted as a
+            torch.Tensor of shape (B, 1, H, W) and values ranging from
+            0.0 to 1.0.
         """
         model.eval()
 
-        illu_res  = torch.zeros_like(illu)
-        H, W      = illu.shape[-2:]
-        tile_size = self.hidden_dim  # 256
+        H, W        = image_i.shape[-2:]
+        image_i_res = torch.zeros_like(image_i).to(self.device)
+        tile_size   = tile_size or self.hidden_dim  # 256
 
         for h in range(0, H, tile_size):
             for w in range(0, W, tile_size):
                 # 1. Get tile coords
-                h_end  = min(h + tile_size, H)
-                w_end  = min(w + tile_size, W)
-                real_h = h_end - h
-                real_w = w_end - w
+                h_end   = min(h + tile_size, H)
+                w_end   = min(w + tile_size, W)
+                real_h  = h_end - h
+                real_w  = w_end - w
 
                 # 2. Generate coords for tile
                 y_range = torch.linspace(-1 + 2*h/(H-1), -1 + 2*(h_end-1)/(H-1), real_h)
                 x_range = torch.linspace(-1 + 2*w/(W-1), -1 + 2*(w_end-1)/(W-1), real_w)
                 grid_y, grid_x = torch.meshgrid(y_range, x_range, indexing="ij")
-                coords  = torch.stack([grid_x, grid_y], dim=-1).unsqueeze(0) # (1, h, w, 2)
+                coords  = torch.stack([grid_x, grid_y], dim=-1).unsqueeze(0)  # (1, h, w, 2)
                 coords  = coords.to(self.device)
 
                 # 3. Get features
@@ -339,8 +464,8 @@ class SALEO(nn.Module, nn.RegistrableMixin):
                 # We crop the input V to the relevant area (plus padding) for speed,
                 # or just pass the whole image to get_nearest_features if memory allows.
                 # For safety, let's use the helper on the whole image:
-                features_i = get_nearest_features(illu,  coords, kernel_size=self.window_size)
-                features_d = get_nearest_features(depth, coords, kernel_size=self.window_size) if depth is not None else None
+                features_i = get_nearest_features(image_i, coords, kernel_size=self.window_size)
+                features_d = get_nearest_features(depth,   coords, kernel_size=self.window_size) if depth is not None else None
 
                 # 4. Concatenate features
                 if features_d is not None:
@@ -349,15 +474,39 @@ class SALEO(nn.Module, nn.RegistrableMixin):
                     features = features_i
 
                 # 5. Forward pass
-                flat_coords      = coords.reshape(-1, 2)
-                flat_patches     = features.reshape(-1, features.shape[-1])
-                flat_illu_res, _ = model(coords=flat_coords, patches=flat_patches)
+                flat_coords   = coords.reshape(-1, 2)
+                flat_patches  = features.reshape(-1, features.shape[-1])
+                flat_illu_res = model(coords=flat_coords, patches=flat_patches)
 
                 # 6. Place in canvas
-                illu_res[:, :, h:h_end, w:w_end] = flat_illu_res.view(1, 1, real_h, real_w)
+                image_i_res[:, :, h:h_end, w:w_end] = flat_illu_res.view(1, 1, real_h, real_w)
 
-        return illu_res
+        return image_i_res
 
+    def _refine_reflectance(
+        self,
+        image_r    : torch.Tensor,
+        image_i    : torch.Tensor,
+        sigma_color: float = 0.1,
+        sigma_space: float = 1.5,
+    ) -> torch.Tensor:
+        """Refine the reflectance map using a simple post-processing step."""
+        # 1. Joint Bilateral filter
+        # Radius is typically 3 * sigma
+        radius = int(3 * sigma_space)
+        if radius % 2 == 0:
+            radius += 1 # Ensure odd
+        kernel_size = (radius, radius)
+
+        image_r = kornia.filters.joint_bilateral_blur(
+            input       = image_r,
+            guidance    = image_i,
+            kernel_size = kernel_size,
+            sigma_color = sigma_color,
+            sigma_space = (sigma_space, sigma_space)
+        )
+
+        return image_r
 
 # --- Mixins ---
 
@@ -375,63 +524,55 @@ class SALEO(nn.Module, nn.RegistrableMixin):
 # --- Model Variants ---
 
 cfgs: dict[str, dict] = {
-    "b": {
-        "window_size": 7,
-        "hidden_dim" : 256,
-        "num_layers" : 4,
-        "add_layers" : 2,
+    "s": {
+        "window_size" : 7,
+        "hidden_dim"  : 256,
+        "num_layers"  : 4,
+        "add_layers"  : 2,
+        "mapping_size": 256,
+        "B"           : 30.0,
     },
 }
 
 
 def _saleo(cfg: str, *args, **kwargs):
     kwargs = cfgs[cfg] | kwargs
-    return SALEO(*args, **kwargs)
+    return Saleo(*args, **kwargs)
 
 
-@MODELS.register(name="saleo_b_siren", metaclass=SALEO)
-def saleo_b_siren(E: float = 0.5, verbose: bool = False, *args, **kwargs):
-    """Create a SALEO-B-SIREN model.
+@MODELS.register(name="saleo_siren", metaclass=Saleo)
+def saleo_siren(verbose: bool = False, *args, **kwargs):
+    """Create a SALEO model with SIREN.
 
     Args:
-        E: Well-exposedness level E. Defaults to 0.5.
         verbose: Verbosity mode. Defaults to False.
         args: Additional positional arguments for the SALEO model.
         kwargs: Additional keyword arguments for the SALEO model.
-
-    Returns:
-        A SALEO-B-SIREN model instance.
     """
     return _saleo(
-        cfg        = "b",
-        name       = "saleo_b_siren",
+        cfg        = "s",
+        name       = "saleo_siren",
         inr        = "siren",
         pos_encode = False,
-        E          = E,
         verbose    = verbose,
         *args, **kwargs
     )
 
 
-@MODELS.register(name="saleo_b_siren_ff", metaclass=SALEO)
-def saleo_b_siren_ff(E: float = 0.5, verbose: bool = False, *args, **kwargs):
-    """Create a SALEO-B-SIREN-FF model.
+@MODELS.register(name="saleo_ffsiren", metaclass=Saleo)
+def saleo_ffsiren(verbose: bool = False, *args, **kwargs):
+    """Create a SALEO model with FF+SIREN.
 
     Args:
-        E: Well-exposedness level E. Defaults to 0.5.
         verbose: Verbosity mode. Defaults to False.
         args: Additional positional arguments for the SALEO model.
         kwargs: Additional keyword arguments for the SALEO model.
-
-    Returns:
-        A SALEO-B-SIREN-FF model instance.
     """
     return _saleo(
-        cfg        = "b",
-        name       = "saleo_b_siren_ff",
+        cfg        = "s",
+        name       = "saleo_ffsiren",
         inr        = "siren",
         pos_encode = True,
-        E          = E,
         verbose    = verbose,
         *args, **kwargs
     )

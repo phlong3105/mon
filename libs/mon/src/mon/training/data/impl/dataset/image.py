@@ -39,24 +39,22 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
     albumentations library.
 
     Attributes:
-        _subset (str | None): Name of the dataset's subset directory. Since the
-            given attribute ``root`` may only set the dataset root directory,
-            this attribute defines the actual folder name of the sub-dataset
-            within the root directory (e.g., dataset with multiple versions).
-            Defaults to None.
-        _splits (list[mon.core.enum.Split]): List of supported splits. Defaults
-            to [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT].
-        _modalities (Modalities): Dictionary defining the dataset modalities.
-            Defaults to {"image": ...}.
-        _classlist (ClassList | None): Dataset object classes. Defaults to None.
-        _transform (albumentations.Compose | None): Transformations to apply to
-            the data. Defaults to None.
-        verbose (bool): If True, enable verbose output. Defaults to True.
+        subset: Name of the dataset's subset directory. Since the given
+            attribute ``root`` may only set the dataset root directory, this
+            attribute defines the actual folder name of the sub-dataset within
+            the root directory (e.g., dataset with multiple versions).
+            `Should be defined in subclasses.`
+        splits: List of supported splits. `Should be defined in subclasses.`
+        modalities: Dictionary defining the dataset modalities. `Must be defined
+            in subclasses.`
+        classlist: Dataset object classes. `Should be defined in subclasses.`
+        transform : Transformations to apply to the data.
+        verbose: If True, enable verbose output. Defaults to True.
     """
 
-    _subset    : str | None  = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
-    _modalities: Modalities  = {
+    subset    : str | None  = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -66,16 +64,16 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList | None = None
+    classlist : ClassList | None = None
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         root     : Path,
-        split    : Split                    = Split.TRAIN,
-        transform: A.Compose | None         = None,
-        classlist: Path | ClassList | None  = None,
-        verbose  : bool                     = True,
+        split    : Split                   = Split.TRAIN,
+        transform: A.Compose        | None = None,
+        classlist: Path | ClassList | None = None,
+        verbose  : bool                    = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -92,8 +90,9 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
 
         Raises:
             TypeError: If ``root``, ``split``, or ``verbose`` is invalid.
-            ValueError: If ``_modalities`` is empty.
+            ValueError: If ``modalities`` is empty.
         """
+        # Validate inputs
         if not isinstance(root, (str, Path)):
             raise TypeError(
                 f"Expected 'root' to be a str or Path, but got {type(root).__name__}."
@@ -106,10 +105,8 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
             raise TypeError(
                 f"Expected 'verbose' to be a bool, but got {type(verbose).__name__}."
             )
-
-        # Validate modalities
-        if not self._modalities:
-            raise ValueError(f"Expected '_modalities' to be a non-empty dict.")
+        if not self.modalities:
+            raise ValueError(f"Expected 'modalities' to be a non-empty dict.")
 
         # Continue the initialization chain
         super().__init__(
@@ -119,33 +116,10 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
             verbose   = verbose,
             *args, **kwargs
         )
-        self.transform = transform
 
-    # TODO: Delete later
-    '''
-    def __init_subclass__(cls, *args, **kwargs):
-        """Validate subclass attributes on inheritance.
-
-        Args:
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
-
-        Raises:
-            TypeError: If ``_splits`` is not defined in the subclass.
-        """
-        super().__init_subclass__(*args, **kwargs)
-
-        # Check for EXPLICIT definition in the subclass (not inherited)
-        for attr in ["_splits", "_modalities"]:
-            if attr not in cls.__dict__:
-                raise TypeError(f"Class {cls.__name__} must define '{attr}' attribute.")
-
-        # Check for VALID values
-        if not cls._splits:
-            raise TypeError(f"Class {cls.__name__} must define '_splits' attribute.")
-        if not cls._modalities:  # Checks for None, empty list [], or empty tuple ()
-            raise TypeError(f"Class {cls.__name__} must define '_modalities' attribute.")
-    '''
+        # Assign attributes
+        self.transform = None
+        self.set_transform(value=transform)
 
     def __del__(self):
         """Finalize the object.
@@ -159,10 +133,10 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
         """Return the official string representation for developers."""
         lines  = [f"Dataset {self.__class__.__name__}"]
         lines += [f"Number of datapoints: {len(self)}"]
-        if self._root:
-            lines += [f"Root location: {self._root}"]
-        if self._transform:
-            lines += [repr(self._transform)]
+        if self.root:
+            lines += [f"Root location: {self.root}"]
+        if self.transform:
+            lines += [repr(self.transform)]
         return "\n".join(lines)
 
     # --- Container / Sequence Methods ---
@@ -170,8 +144,8 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
         """Return the length of the container."""
         # Optimization: Use the internal dict directly to avoid property overhead
         # and search only for the primary modality key once.
-        pk = next(k for k, v in self._modalities.items() if v.primary)
-        return len(self._datapoints[pk])
+        pk = next(k for k, v in self.modalities.items() if v.primary)
+        return len(self.datapoints[pk])
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an item at the given ``index``."""
@@ -179,9 +153,9 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
         data = self._get_underlying_data(index=index)
         meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
 
-        transform = self._transform
+        transform = self.transform
 
-        if transform:
+        if transform is not None:
             pk, _ = self.primary_modality
 
             # Albumentations expects 'image'. We map pk -> 'image' without pop/merge overhead.
@@ -200,22 +174,17 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
 
             # Optimized Type Casting
             for k, v in data.items():
-                # Converts non‑float tensors/arrays to float32
-                if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
-                    data[k] = v.to(torch.float32)
-                elif isinstance(v, np.ndarray) and v.dtype != np.float32:
-                    data[k] = v.astype(np.float32)
+                if v is not None:
+                    # Converts non‑float tensors/arrays to float32
+                    if isinstance(v, torch.Tensor) and v.dtype != torch.float32:
+                        data[k] = v.to(torch.float32)
+                    elif isinstance(v, np.ndarray) and v.dtype != np.float32:
+                        data[k] = v.astype(np.float32)
 
         return {**data, "meta": meta}
 
     # --- Properties ---
-    @property
-    def transform(self) -> A.Compose | None:
-        """Return the transformation operations."""
-        return self._transform
-
-    @transform.setter
-    def transform(self, value: Any = None):
+    def set_transform(self, value: Any = None):
         """Set the transformation operations.
 
         Args:
@@ -225,7 +194,7 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
             TypeError: If ``value`` is not an instance of albumentations.Compose.
         """
         if value is None:
-            self._transform = None
+            self.transform = None
             return
 
         if isinstance(value, (dict, box.Box)):
@@ -239,14 +208,14 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
         # Add additional targets to A.Compose if needed.
         existing_targets = value.processors.get("additional_targets", {})
         new_targets      = {
-            k: v.type for k, v in self._modalities.items()
+            k: v.type for k, v in self.modalities.items()
             if v.type and v.module and k not in A.TARGET_TYPES and k not in existing_targets
         }
 
         if new_targets:
             value.add_targets(additional_targets=new_targets)
 
-        self._transform = value
+        self.transform = value
 
     # --- Data Loading ---
     def verify(self):
@@ -260,19 +229,19 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
             raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
 
         pk, _ = self.primary_modality
-        for k, v in self._datapoints.items():
-            if k not in self._modalities:
+        for k, v in self.datapoints.items():
+            if k not in self.modalities:
                 raise RuntimeError(
                     f"Expected 'datapoints' to have only defined modalities, "
                     f"but got unexpected key: {k}."
                 )
-            if self._modalities[k]:
+            if self.modalities[k]:
                 if v in [None, []]:
                     raise RuntimeError(f"Datapoint modality '{k}' is empty.")
                 elif len(v) != len(self):
                     raise RuntimeError(
-                        f"Datapoint modality '{k}' has inconsistent length with the dataset: "
-                        f"{len(v)} != {len(self)}."
+                        f"Datapoint modality '{k}' has inconsistent length with "
+                        f"the dataset: {len(v)} != {len(self)}."
                     )
 
         if self.verbose:
@@ -288,7 +257,7 @@ class ImageDataset(Dataset, MultimodalDataLoadMixin, BatchCollateMixin):
         # Efficiency: Use dict comprehension for faster construction
         return {
             k: (v[index] if v is not None else None)
-            for k, v in self._datapoints.items()
+            for k, v in self.datapoints.items()
         }
 
 
@@ -325,6 +294,7 @@ class ImageLoader(ImageDataset):
         Raises:
             TypeError: If ``root``, ``split``, or ``verbose`` is invalid.
         """
+        # Validate inputs
         if not isinstance(root, (str, Path)):
             raise TypeError(
                 f"Expected 'root' to be a str or Path, but got {type(root).__name__}."
@@ -338,6 +308,7 @@ class ImageLoader(ImageDataset):
                 f"Expected 'verbose' to be a bool, but got {type(verbose).__name__}."
             )
 
+        # Continue the initialization chain
         super().__init__(
             root      = root,
             split     = split,
@@ -354,7 +325,7 @@ class ImageLoader(ImageDataset):
         Raises:
             FileNotFoundError: If the ``root`` path is invalid.
         """
-        root = self._root
+        root = self.root
 
         if root.is_image_file():
             paths = [root]

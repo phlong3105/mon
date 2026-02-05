@@ -62,11 +62,11 @@ class UniK3D(nn.Module, nn.RegistrableMixin):
         - Code: https://github.com/lpiccinelli-eth/UniK3D
     """
 
-    _arch     : str          = "unik3d"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.MONODEPTH]
-    _mltypes  : list[MLType] = [MLType.SUPERVISED]
-    _model_dir: Path         = current_dir
+    arch     : str          = "unik3d"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.MONODEPTH]
+    mltypes  : list[MLType] = [MLType.SUPERVISED]
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(

@@ -9,7 +9,8 @@ This module provides operations for color processing.
 from __future__ import annotations
 
 __all__ = [
-    "RGBToHVI",
+    "RgbToHsv",
+    "RgbToHvi",
     "color_transfer",
 ]
 
@@ -20,12 +21,77 @@ import torch.nn as nn
 
 
 # ==============================================================================
+# region
+# ==============================================================================
+
+# --- HSV Space ---
+
+class RgbToHsv:
+    """A convenience class for converting RGB images to HSV color space and back."""
+
+    def rgb_to_hsv(self, rgb: torch.Tensor) -> torch.Tensor:
+        """Convert an RGB image to HSV color space.
+
+        Args:
+            rgb: An RGB image, formatted as a torch.Tensor of shape (B, 3, H, W)
+                and pixel values ranging from 0.0 to 1.0.
+
+        Returns:
+            The HSV image, formatted as a torch.Tensor of shape (B, 3, H, W)
+                and pixel values ranging from 0.0 to 1.0.
+        """
+        cmax, cmax_idx = torch.max(rgb, dim=1, keepdim=True)
+        cmin   = torch.min(rgb, dim=1, keepdim=True)[0]
+        delta  = cmax - cmin
+        hsv_h  = torch.empty_like(rgb[:, 0:1, :, :])
+        cmax_idx[delta == 0] = 3
+        hsv_h[cmax_idx == 0] = (((rgb[:, 1:2] - rgb[:, 2:3]) / delta) % 6)[cmax_idx == 0]
+        hsv_h[cmax_idx == 1] = (((rgb[:, 2:3] - rgb[:, 0:1]) / delta) + 2)[cmax_idx == 1]
+        hsv_h[cmax_idx == 2] = (((rgb[:, 0:1] - rgb[:, 1:2]) / delta) + 4)[cmax_idx == 2]
+        hsv_h[cmax_idx == 3] = 0.0
+        hsv_h /= 6.0
+        hsv_s  = torch.where(cmax == 0, torch.tensor(0.0).type_as(rgb), delta / cmax)
+        hsv_v  = cmax
+        return torch.cat([hsv_h, hsv_s, hsv_v], dim=1)
+
+    def hsv_to_rgb(self, hsv: torch.Tensor) -> torch.Tensor:
+        """Convert an HSV image to RGB color space.
+
+        Args:
+            hsv: An HSV image, formatted as a torch.Tensor of shape (B, 3, H, W)
+                and pixel values ranging from 0.0 to 1.0.
+
+        Returns:
+            An RGB image, formatted as a torch.Tensor of shape (B, 3, H, W) and
+                pixel values ranging from 0.0 to 1.0.
+        """
+        hsv_h, hsv_s, hsv_l = hsv[:, 0:1], hsv[:, 1:2], hsv[:, 2:3]
+        _c   = hsv_l * hsv_s
+        _x   = _c * (- torch.abs(hsv_h * 6. % 2.0 - 1) + 1.)
+        _m   = hsv_l - _c
+        _o   = torch.zeros_like(_c)
+        idx  = (hsv_h * 6.0).type(torch.uint8)
+        idx  = (idx % 6).expand(-1, 3, -1, -1)
+        rgb  = torch.empty_like(hsv)
+        rgb[idx == 0] = torch.cat([_c, _x, _o], dim=1)[idx == 0]
+        rgb[idx == 1] = torch.cat([_x, _c, _o], dim=1)[idx == 1]
+        rgb[idx == 2] = torch.cat([_o, _c, _x], dim=1)[idx == 2]
+        rgb[idx == 3] = torch.cat([_o, _x, _c], dim=1)[idx == 3]
+        rgb[idx == 4] = torch.cat([_x, _o, _c], dim=1)[idx == 4]
+        rgb[idx == 5] = torch.cat([_c, _o, _x], dim=1)[idx == 5]
+        rgb += _m
+        return rgb
+
+# endregion
+
+
+# ==============================================================================
 # region LEARNABLE COLOR SPACES
 # ==============================================================================
 
 # --- HVI Space (Perceptual Saturation & Intensity) ---
 
-class RGBToHVI(nn.Module):
+class RgbToHvi(nn.Module):
     """A module for converting RGB images to HVI color space and back.
 
     References:

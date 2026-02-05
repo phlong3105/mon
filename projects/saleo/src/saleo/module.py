@@ -10,7 +10,8 @@ from __future__ import annotations
 
 __all__ = [
     "InDi",
-    "SIREN",
+    "ReflectanceINR",
+    "ResidualINR",
 ]
 
 from typing import Any, Optional
@@ -26,18 +27,18 @@ from mon import nn
 
 # --- INR Networks ---
 
-class SIREN(nn.Module):
-    """SIREN network (similar to CoLIE model).
+class ResidualINR(nn.Module):
+    """SIREN network for residual mapping.
 
-    A Conditional INR using SIREN layers. It doesn't just memorize coordinates
+    A conditional INR using SIREN layers. It doesn't just memorize coordinates
     ``(x, y)``; it looks at the local neighborhood of the input image to decide
     how to enhance the pixel.
 
     Attributes:
         patch_dim (int): Input dimension of the patch branch.
         hidden_dim (int): Hidden dimension of the networks.
-        coords_dim (int): Output dimension of the coordinate branch. Defaults to 2.
-        pos_encode (nn.PosEncodingNeRF): Positional encoding module for coordinates.
+        coords_dim (int): Output dimension of the coordinate branch.
+        ff (nn.PosEncodingFourier): Fourier feature mapping for coordinates.
         coord_net (nn.Sequential): SIREN network for processing coordinates.
         patch_net (nn.Sequential): SIREN network for processing patches.
         output_net (nn.Sequential): Output network for combining features.
@@ -47,11 +48,13 @@ class SIREN(nn.Module):
     def __init__(
         self,
         patch_dim   : int,
-        hidden_dim  : int  = 256,
-        num_layers  : int  = 4,
-        add_layers  : int  = 2,
-        pos_encode  : bool = False,
-        weight_decay: Any  = None,
+        hidden_dim  : int   = 256,
+        num_layers  : int   = 4,
+        add_layers  : int   = 2,
+        pos_encode  : bool  = False,
+        mapping_size: int   = 256,
+        B           : float = 20.0,
+        weight_decay: Any   = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -62,6 +65,8 @@ class SIREN(nn.Module):
             num_layers: Number of layers in each branch. Defaults to 4.
             add_layers: Number of layers to add between the two branches. Defaults to 2.
             pos_encode: Whether to use positional encoding. Defaults to False.
+            mapping_size: Size of Fourier feature mapping. Defaults to 256.
+            B: Fourier feature scaling factor. Defaults to 20.0.
             weight_decay: Weight decay parameters for each branch. Defaults to None.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
@@ -73,10 +78,10 @@ class SIREN(nn.Module):
 
         # Define networks
         if pos_encode:
-            self.pos_encode = nn.PosEncodingNeRF(in_features=2, sidelength=hidden_dim)
-            self.coords_dim = self.pos_encode.out_features
+            self.ff         = nn.PosEncodingFourier(mapping_size=mapping_size, B=B)
+            self.coords_dim = self.ff.out_features
         else:
-            self.pos_encode = None
+            self.ff         = None
             self.coords_dim = 2
 
         coord_layers = [nn.SineLinear(self.coords_dim, hidden_dim, is_first=True)]
@@ -90,7 +95,7 @@ class SIREN(nn.Module):
         output_layers = []
         for _ in range(add_layers, num_layers - 1):
             output_layers.append(nn.SineLinear(hidden_dim, hidden_dim))
-        output_layers.append(nn.Linear(hidden_dim, 1))
+        output_layers.append(nn.SineLinear(hidden_dim, 1, is_last=True))
         output_layers.append(nn.Sigmoid())
 
         self.coord_net  = nn.Sequential(*coord_layers)
@@ -110,7 +115,7 @@ class SIREN(nn.Module):
         self,
         coords : torch.Tensor,
         patches: torch.Tensor,
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> torch.Tensor:
         """Forward the input through the network.
 
         Args:
@@ -120,18 +125,86 @@ class SIREN(nn.Module):
                 (... , C) and values ranging from 0.0 to 1.0.
         """
         # Process each branch
-        coords_e  = self.pos_encode(coords) if self.pos_encode else coords
+        coords_e  = self.ff(coords) if self.ff is not None else coords
         coords_f  = self.coord_net(coords_e)
         patches_f = self.patch_net(patches)
         concat_f  = torch.cat((coords_f, patches_f), dim=-1)
         # Final output
         output    = self.output_net(concat_f)
+        return output
 
-        # TODO: Debug (Delete later)
-        # print(f"coords : {coords.shape}")
-        # print(f"patches: {patches.shape}")
 
-        return output, concat_f
+class ReflectanceINR(nn.Module):
+    """SIREN network for reflectance mapping.
+
+    Attributes:
+        hidden_dim (int): Hidden dimension of the networks.
+        coords_dim (int): Output dimension of the coordinate branch.
+        ff (nn.PosEncodingFourier): Fourier feature mapping for coordinates.
+        coord_net (nn.Sequential): SIREN network for processing coordinates.
+    """
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        hidden_dim  : int   = 256,
+        num_layers  : int   = 4,
+        pos_encode  : bool  = False,
+        mapping_size: int   = 256,
+        B           : float = 20.0,
+        weight_decay: Any   = None,
+        *args, **kwargs
+    ):
+        """Initialize a new instance.
+
+        Args:
+            hidden_dim: Hidden dimension of the networks. Defaults to 256.
+            num_layers: Number of layers in each branch. Defaults to 4.
+            pos_encode: Whether to use positional encoding. Defaults to False.
+            mapping_size: Size of Fourier feature mapping. Defaults to 256.
+            B: Fourier feature scaling factor. Defaults to 20.0.
+            weight_decay: Weight decay parameters for each branch. Defaults to None.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
+        super().__init__()
+        # Attribute assignments
+        self.hidden_dim = hidden_dim
+
+        # Define networks
+        if pos_encode:
+            self.ff         = nn.PosEncodingFourier(mapping_size=mapping_size, B=B)
+            self.coords_dim = self.ff.out_features
+        else:
+            self.ff         = None
+            self.coords_dim = 2
+
+        coord_layers = []
+        coord_layers.append(nn.SineLinear(self.coords_dim, hidden_dim, is_first=True))
+        for _ in range(1, num_layers - 1):
+            coord_layers.append(nn.SineLinear(hidden_dim, hidden_dim))
+        coord_layers.append(nn.SineLinear(hidden_dim, 1, is_last=True))
+        coord_layers.append(nn.Sigmoid())
+
+        self.coord_net = nn.Sequential(*coord_layers)
+
+        # Weight decay params
+        if not weight_decay:
+            weight_decay = [0.1]
+        self.params  = []
+        self.params += [{"params": self.coord_net.parameters(),  "weight_decay": weight_decay[0]}]
+
+    # --- Callable & Context Manager ---
+    def forward(self, coords: torch.Tensor) -> torch.Tensor:
+        """Forward the input through the network.
+
+        Args:
+            coords: Input coordinates, formatted as a torch.Tensor of shape
+                (... , 2) and values ranging from -1.0 to 1.0.
+        """
+        # Process each branch
+        coords_e = self.ff(coords) if self.ff is not None else coords
+        return self.coord_net(coords_e)
 
 
 # --- InDi Networks ---

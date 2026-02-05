@@ -30,25 +30,31 @@ class PosEncodingFourier(nn.Module):
     """Positional Encoding (PE) using Fourier features.
 
     Apply Fourier feature mapping to the input coordinates.
+
+    Attributes:
+        in_features: Size of each input sample.
+        out_features: Size of each output sample.
+        B: Projection matrix for Fourier features.
     """
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, in_features: int, B: float = 20.0):
+    def __init__(self, mapping_size: int, B: float = 20.0):
         """Initialize a new instance.
 
         Args:
-            in_features: Size of each input sample.
+            mapping_size: Size of Fourier feature mapping.
             B: Standard deviation of the Gaussian distribution used to sample
                 the projection matrix. If set to None, no projection is applied.
                 Defaults to 20.0.
         """
         super().__init__()
-        self.in_features  = in_features
-        self.out_features = in_features * 2
+        self.in_features  = mapping_size // 2
+        self.out_features = mapping_size
+
         if B is None:
             self.B = None
         else:
-            self.register_buffer("B", torch.randn((in_features, 2)) * B)
+            self.register_buffer("B", torch.randn((self.in_features, 2)) * B)
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -56,16 +62,16 @@ class PosEncodingFourier(nn.Module):
 
         Args:
             x: Input tensor of shape (..., in_features) and values ranging
-                from 0.0 to 1.0.
+                from -1.0 to 1.0.
 
         Returns:
             Output tensor of shape (..., out_features) and values ranging
-            from 0.0 to 1.0.
+            from -1.0 to 1.0.
         """
         if self.B is None:
             return x
         else:
-            proj     = (2.0 * np.pi * x) @ self.B.T
+            proj     = (2.0 * math.pi * x) @ self.B.T
             encoding = torch.cat([torch.sin(proj), torch.cos(proj)], dim=-1)
             return encoding
 
@@ -77,6 +83,11 @@ class PosEncodingNeRF(nn.Module):
 
     References:
         - Code: https://github.com/liuzhen0212/FINER/blob/main/models.py
+
+    Attributes:
+        in_features: Size of each input sample.
+        out_features: Size of each output sample.
+        num_frequencies: Number of frequency bands for positional encoding.
     """
 
     # --- Lifecycle & Initialization ---

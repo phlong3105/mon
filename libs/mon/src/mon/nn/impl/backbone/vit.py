@@ -44,20 +44,20 @@ class ViTBackBone(nn.Module, RegistrableMixin):
     """ViT backbone.
 
     Attributes:
-        patch_embed (torch.nn.Module): Patch embedding layer.
-        class_token (torch.nn.Parameter): Class token.
-        pos_embedding (torch.nn.Parameter): Positional embedding.
-        blocks (torch.nn.ModuleList): Transformer blocks.
-        out_indices (list): List of layer indices to extract features from.
-        embed_dim (int): Embedding dimension.
-        verbose (bool): Verbosity mode.
+        patch_embed: Patch embedding layer.
+        class_token: Class token.
+        pos_embedding: Positional embedding.
+        blocks: Transformer blocks.
+        out_indices: List of layer indices to extract features from.
+        embed_dim: Embedding dimension.
+        verbose: Verbosity mode.
     """
 
-    _arch     : str          = "vit"
-    _name     : str          = None
-    _tasks    : list[Task]   = [Task.BACKBONE]
-    _mltypes  : list[MLType] = []
-    _model_dir: Path         = current_dir
+    arch     : str          = "vit"
+    name     : str          = None
+    tasks    : list[Task]   = [Task.BACKBONE]
+    mltypes  : list[MLType] = []
+    model_dir: Path         = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -94,6 +94,7 @@ class ViTBackBone(nn.Module, RegistrableMixin):
         # Initialize RegistrableMixin
         RegistrableMixin.__init__(self, name=name)
 
+        # Assign attributes
         self.verbose = verbose
 
         # Load the base model
@@ -132,8 +133,7 @@ class ViTBackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
 
         Returns:
             A list of feature maps from the specified layers.
@@ -147,7 +147,7 @@ class ViTBackBone(nn.Module, RegistrableMixin):
         x = torch.cat((batch_class_token, x), dim=1)
         x = x + self.pos_embedding
 
-        # If you need multi-scale features for a Neck (FPN):
+        # If you need multiscale features for a Neck (FPN):
         outputs = []
         for i, block in enumerate(self.blocks):
             x = block(x)
@@ -449,22 +449,17 @@ class ViT_H_14_Weights(WeightsEnum):
 
 @BACKBONES.register(name="vit_b_16", metaclass=ViTBackBone)
 def vit_b_16(
-    weights    : WeightsEnum | str | None = ViT_B_16_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = ViT_B_16_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> ViTBackBone:
     """Create a ViT-B/16 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            ViT_B_16_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to ViT_B_16_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A ViT-B/16 backbone model.
     """
     return ViTBackBone(
         name        = "vit_b_16",
@@ -481,22 +476,17 @@ def vit_b_16(
 
 @BACKBONES.register(name="vit_b_32", metaclass=ViTBackBone)
 def vit_b_32(
-    weights    : WeightsEnum | str | None = ViT_B_32_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = ViT_B_32_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> ViTBackBone:
     """Create a ViT-B/32 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            ViT_B_32_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to ViT_B_32_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A ViT-B/32 backbone model.
     """
     return ViTBackBone(
         name        = "vit_b_32",
@@ -513,22 +503,17 @@ def vit_b_32(
 
 @BACKBONES.register(name="vit_l_16", metaclass=ViTBackBone)
 def vit_l_16(
-    weights    : WeightsEnum | str | None = ViT_L_16_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = ViT_L_16_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> ViTBackBone:
     """Create a ViT-L/16 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            ViT_L_16_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to ViT_L_16_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A ViT-L/16 backbone model.
     """
     return ViTBackBone(
         name        = "vit_l_16",
@@ -545,22 +530,17 @@ def vit_l_16(
 
 @BACKBONES.register(name="vit_l_32", metaclass=ViTBackBone)
 def vit_l_32(
-    weights    : WeightsEnum | str | None = ViT_L_32_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = ViT_L_32_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> ViTBackBone:
     """Create a ViT-L/32 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            ViT_L_32_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to ViT_L_32_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A ViT-L/32 backbone model.
     """
     return ViTBackBone(
         name        = "vit_l_32",
@@ -577,22 +557,17 @@ def vit_l_32(
 
 @BACKBONES.register(name="vit_h_14", metaclass=ViTBackBone)
 def vit_h_14(
-    weights    : WeightsEnum | str | None = ViT_H_14_Weights.DEFAULT,
-    out_indices: list[int]         | None = None,
+    weights    : WeightsEnum | str = ViT_H_14_Weights.DEFAULT,
+    out_indices: list[int] | None  = None,
     *args, **kwargs
-):
+) -> ViTBackBone:
     """Create a ViT-H/14 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to
-            ViT_H_14_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults
-            to None.
+        weights: Pre-trained weights to load. Defaults to ViT_H_14_Weights.DEFAULT.
+        out_indices: List of layer indices to extract features from. Defaults to None.
         args: Additional positional arguments for the ResNet model.
         kwargs: Additional keyword arguments for the ResNet model.
-
-    Returns:
-        A ViT-H/14 backbone model.
     """
     return ViTBackBone(
         name        = "vit_h_14",

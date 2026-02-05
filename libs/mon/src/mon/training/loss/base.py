@@ -51,8 +51,8 @@ class BaseLoss(_Loss, abc.ABC):
     """Loss function base class.
 
     Attributes:
-        _reduce_fn (Callable): Function to reduce the loss tensor based on the
-            specified ``reduction`` method.
+        _reduce_fn: Function to reduce the loss tensor based on the specified
+            ``reduction`` method.
     """
 
     # --- Lifecycle & Initialization ---

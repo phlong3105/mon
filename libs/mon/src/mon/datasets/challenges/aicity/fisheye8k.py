@@ -23,11 +23,11 @@ from ...api import *
 class FishEye8K(ImageDataset, RegistrableMixin):
     """FishEye8K dataset."""
 
-    _name      : str         = "fisheye8k"
-    _tasks     : list[Task]  = [Task.DETECT]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "fisheye8k"
+    tasks     : list[Task]  = [Task.DETECT]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -37,7 +37,7 @@ class FishEye8K(ImageDataset, RegistrableMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList   = ClassList([
+    classlist : ClassList   = ClassList([
         {"name": "bus",        "id": 0, "color": [140,  24, 143]},
         {"name": "bike",       "id": 1, "color": [122,  35,   2]},
         {"name": "car",        "id": 2, "color": [ 49,   3, 150]},

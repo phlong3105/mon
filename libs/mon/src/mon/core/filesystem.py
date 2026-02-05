@@ -239,7 +239,7 @@ def resolve_model_dir(arch: str, model: str) -> Optional[Path]:
             return None
 
         # Path Resolution
-        model_dir = getattr(model_entry, "_model_dir") or getattr(model_entry, "model_dir")
+        model_dir = model_entry.get("_model_dir") or model_entry.get("model_dir")
 
         if model_dir:
             return Path(model_dir)

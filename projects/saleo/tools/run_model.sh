@@ -19,7 +19,7 @@ source ./utils.sh
 # VARIABLES
 # ==============================================================================
 # --- User Inputs ---
-task=""
+task="lle"
 mode="predict"
 arch=""
 model=""
@@ -52,7 +52,6 @@ python -W ignore -m mon.tools.run_model \
     --data "${data}" \
     --device "${device}" \
     --save \
-    --save-image \
     --save-debug \
     --exist-ok \
     --verbose \

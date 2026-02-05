@@ -17,7 +17,6 @@ __all__ = [
     "MSEC",
 ]
 
-
 from ....api import *
 
 
@@ -29,11 +28,11 @@ from ....api import *
 class MSEC(ImageDataset, RegistrableMixin):
     """MSEC dataset."""
 
-    _name      : str         = "msec"
-    _tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "msec"
+    tasks     : list[Task]  = [Task.EXPOSURE, Task.MEF]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
+    modalities: Modalities  = {
         "image"        : Modality(
             name    = "image_ev_0",
             type    = "image",
@@ -85,7 +84,7 @@ class MSEC(ImageDataset, RegistrableMixin):
             test    = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Lifecycle & Initialization ---
     def __init__(self, lr: bool = True, *args, **kwargs):
@@ -95,7 +94,10 @@ class MSEC(ImageDataset, RegistrableMixin):
             lr (bool): If True, use low-resolution versions of the images.
                 Default is True.
         """
+        # Assign attributes
         self.lr = lr
+
+        # Continue the initialization chain
         super().__init__(*args, **kwargs)
 
     # --- Data Loading ---

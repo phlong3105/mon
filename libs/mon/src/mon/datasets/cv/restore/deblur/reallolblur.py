@@ -24,11 +24,11 @@ from ....api import *
 class RealLOLBlur(ImageDataset, RegistrableMixin):
     """Real-LOL-Blur dataset."""
 
-    _name      : str         = "reallolblur"
-    _tasks     : list[Task]  = [Task.DEBLUR, Task.LLE]
-    _subset    : str         = None
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "reallolblur"
+    tasks     : list[Task]  = [Task.DEBLUR, Task.LLE]
+    subset    : str         = None
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -38,7 +38,7 @@ class RealLOLBlur(ImageDataset, RegistrableMixin):
             primary = True,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
 # endregion
 

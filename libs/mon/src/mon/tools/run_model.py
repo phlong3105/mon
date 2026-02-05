@@ -19,6 +19,7 @@ import subprocess
 
 import box
 
+import mon
 from mon.core import (
     is_valid_str,
     MODELS,
@@ -31,6 +32,8 @@ from mon.core import (
     to_list,
     to_str,
 )
+
+mon.preload()
 
 current_file = Path(__file__).normalize(exist=True)
 current_dir  = current_file.parents[0]

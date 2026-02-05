@@ -24,11 +24,11 @@ from ....api import *
 class RealBlurTeleJ(ImageDataset, RegistrableMixin):
     """RealBlurTele-J dataset."""
 
-    _name      : str         = "realblurtelej"
-    _tasks     : list[Task]  = [Task.DEBLUR]
-    _subset    : str         = "j"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "realblurtelej"
+    tasks     : list[Task]  = [Task.DEBLUR]
+    subset    : str         = "j"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -45,7 +45,7 @@ class RealBlurTeleJ(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
@@ -71,11 +71,11 @@ class RealBlurTeleJ(ImageDataset, RegistrableMixin):
 class RealBlurTeleR(ImageDataset, RegistrableMixin):
     """RealBlurTele-R dataset."""
 
-    _name      : str         = "realblurteler"
-    _tasks     : list[Task]  = [Task.DEBLUR]
-    _subset    : str         = "r"
-    _splits    : list[Split] = [Split.TEST]
-    _modalities: Modalities  = {
+    name      : str         = "realblurteler"
+    tasks     : list[Task]  = [Task.DEBLUR]
+    subset    : str         = "r"
+    splits    : list[Split] = [Split.TEST]
+    modalities: Modalities  = {
         "image": Modality(
             name    = "image",
             type    = "image",
@@ -92,7 +92,7 @@ class RealBlurTeleR(ImageDataset, RegistrableMixin):
             test    = False,
         ),
     }
-    _classlist : ClassList   = None
+    classlist : ClassList   = None
 
     # --- Data Loading ---
     def _load_primary_data(self) -> list[Image]:
