@@ -24,21 +24,15 @@ from typing import Any
 import yaml
 
 from mon.core.pathlib import Path
+from mon.core.utils import PathLike
 
 
 # ==============================================================================
 # region INPUT
 # ==============================================================================
 
-def load_json(path: Path | str) -> dict | list:
-    """Load data from a JSON file.
-
-    Args:
-        path: Path to the JSON file.
-
-    Returns:
-        Data loaded from the JSON file.
-    """
+def load_json(path: PathLike) -> dict | list:
+    """Load data from a JSON file."""
     path = Path(path).normalize(exist=True)
 
     if not path.is_json_file():
@@ -48,15 +42,8 @@ def load_json(path: Path | str) -> dict | list:
         return json.load(f)
 
 
-def load_yaml(path: Path | str) -> dict | list:
-    """Load data from a YAML file.
-
-    Args:
-        path: Path to the YAML file.
-
-    Returns:
-        Data loaded from the YAML file.
-    """
+def load_yaml(path: PathLike) -> dict | list:
+    """Load data from a YAML file."""
     path = Path(path).normalize(exist=True)
 
     if not path.is_yaml_file():
@@ -66,15 +53,8 @@ def load_yaml(path: Path | str) -> dict | list:
         return yaml.safe_load(f)
 
 
-def load_txt(path: Path | str) -> list[str]:
-    """Read lines from a text file.
-
-    Args:
-        path: Path to the text file.
-
-    Returns:
-        List of strings, one for each line in the file.
-    """
+def load_txt(path: PathLike) -> list[str]:
+    """Read lines from a text file."""
     path = Path(path).normalize(exist=True)
 
     if not path.is_txt_file():
@@ -82,6 +62,7 @@ def load_txt(path: Path | str) -> list[str]:
 
     with open(path, "r", encoding="utf-8") as f:
         return [line.strip() for line in f.readlines()]
+
 
 # endregion
 
@@ -91,10 +72,10 @@ def load_txt(path: Path | str) -> list[str]:
 # ==============================================================================
 
 def save_json(
-    data     : Any,
-    path     : Path | str,
-    indent   : int  = 4,
-    overwrite: bool = True
+    data: Any,
+    path: PathLike,
+    indent: int = 4,
+    overwrite: bool = True,
 ):
     """Save data to a JSON file."""
     path = Path(path).normalize(mkdir=True)
@@ -105,9 +86,9 @@ def save_json(
 
 
 def save_yaml(
-    data     : Any,
-    path     : Path | str,
-    overwrite: bool = True
+    data: Any,
+    path: PathLike,
+    overwrite: bool = True,
 ):
     """Save data to a YAML file."""
     path = Path(path).normalize(mkdir=True)
@@ -118,9 +99,9 @@ def save_yaml(
 
 
 def save_txt(
-    data     : list[str] | str,
-    path     : Path | str,
-    overwrite: bool = True
+    data: list[str] | str,
+    path: PathLike,
+    overwrite: bool = True,
 ):
     """Save strings to a text file."""
     path = Path(path).normalize(mkdir=True)
@@ -130,6 +111,7 @@ def save_txt(
         data = [data]
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(data))
+
 
 # endregion
 

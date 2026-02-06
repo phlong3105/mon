@@ -23,8 +23,7 @@ import sys
 
 from rich import logging as r_logging
 
-from mon.core.pathlib import Path
-
+from mon.core.utils import PathLike
 
 # Set a default log level for TensorFlow to reduce verbosity on import.
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -36,11 +35,12 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 # Configure the root logger to use RichHandler for pretty, colorful logging.
 logging.basicConfig(
-    level    = logging.INFO,
-    format   = "%(message)s",
-    handlers = [r_logging.RichHandler(rich_tracebacks=True)]
+    level=logging.INFO,
+    format="%(message)s",
+    handlers=[r_logging.RichHandler(rich_tracebacks=True)],
 )
 logger = logging.getLogger("rich")
+
 
 # endregion
 
@@ -50,8 +50,8 @@ logger = logging.getLogger("rich")
 # ==============================================================================
 
 def get_logger(
-    path: Path | str = None,
-    name: str        = "global_logger"
+    path: PathLike | None = None,
+    name: str = "global_logger",
 ) -> logging.Logger:
     """Return a configured logger.
 
@@ -59,12 +59,11 @@ def get_logger(
     writes INFO-level records with timestamps and file and line context.
 
     Args:
-        path: Optional path to a log file. If ``path`` is None, file logging is
-            skipped. Defaults to None.
+        path (PathLike, optional): Path to a log file. Defaults to None.
         name: Name of the logger. Defaults to "global_logger".
 
     Returns:
-        Configured logger instance.
+        logging.Logger: Configured logger instance.
     """
     lgr = logging.getLogger(name)
 
@@ -74,17 +73,18 @@ def get_logger(
         if not any(
             isinstance(h, logging.FileHandler) and
             h.baseFilename == os.path.abspath(path)
-            for h in lgr.handlers
+            for h in lgr.handlers,
         ):
             file_handler = logging.FileHandler(path)
             file_handler.setLevel(logging.INFO)
-            formatter    = logging.Formatter(
-                "%(asctime)s [%(filename)s:%(lineno)s] %(levelname)s: %(message)s"
+            formatter = logging.Formatter(
+                "%(asctime)s [%(filename)s:%(lineno)s] %(levelname)s: %(message)s",
             )
             file_handler.setFormatter(formatter)
             lgr.addHandler(file_handler)
 
     return lgr
+
 
 # endregion
 
@@ -94,19 +94,17 @@ def get_logger(
 # ==============================================================================
 
 class OutputSuppressor:
-    """Stdout and stderr redirection state manager.
-
-    Manage the state of stdout and stderr redirection.
+    """Manage the state of stdout and stderr redirection.
 
     Attributes:
-        original_stdout: Original stdout stream.
-        original_stderr: Original stderr stream.
-        devnull: File handle for /dev/null. Defaults to None.
+        original_stdout(sys.stdout): Original stdout stream.
+        original_stderr(sys.stderr): Original stderr stream.
+        devnull(file): File descriptor for /dev/null.
     """
 
     original_stdout = sys.stdout
     original_stderr = sys.stderr
-    devnull         = None
+    devnull = None
 
     @classmethod
     def disable(cls):
@@ -148,7 +146,7 @@ def _disable_default_loggers():
     # A list of common libraries that produce verbose output.
     # `None` refers to the root logger.
     noisy_loggers = [
-        None, "torch", "tensorflow", "tensorboard", "mmcv", "fsspec", "urllib3"
+        None, "torch", "tensorflow", "tensorboard", "mmcv", "fsspec", "urllib3",
     ]
     for name in noisy_loggers:
         logging.getLogger(name).setLevel(SILENCE_LEVEL)
@@ -170,6 +168,7 @@ def disable_print():
     """Completely silence the console."""
     OutputSuppressor.disable()
     _disable_default_loggers()
+
 
 # endregion
 

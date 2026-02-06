@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 import time
-from typing import Any, List, Optional, TextIO
+from typing import Any, List, Optional, override, TextIO
 
 import rich
 import torch
@@ -57,69 +57,48 @@ class MemoryUsageColumn(ProgressColumn):
 
     Display either system RAM or aggregated GPU VRAM usage, depending on whether
     CUDA is available.
-
-    Attributes:
-        devices: List of GPU device indices to query.
-        unit: Memory unit to use for reporting.
-        update_interval: Minimum time in seconds between updates.
-        last_update: Timestamp of the last update.
-        cached_text: Cached Text object for the last rendered memory usage.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        devices        : int | list[int] = 0,
-        unit           : str             = "GB",
-        update_interval: float           = 1.0,
-        table_column   : Column          = None,
+        devices: int | list[int] = 0,
+        unit: str = "GB",
+        update_interval: float = 1.0,
+        table_column: Column | None = None,
     ):
-        """Initialize the memory usage column.
+        """Initialize a new instance.
 
         Args:
-            devices: Device index or a list of indices to monitor. Defaults to 0.
-            unit: Memory unit for display. Defaults to "GB".
-            update_interval: Minimum time in seconds between updates. Defaults to 1.0.
-            table_column: Optional rich.table.Column for custom styling. Defaults to None.
+            devices (int | list[int]): List of GPU device indices to query.
+                Defaults to 0.
+            unit (str): Memory unit to use for reporting. Defaults to "GB".
+            update_interval (float): Minimum time in seconds between updates.
+                Defaults to 1.0.
+            table_column (Column, optional): Optional rich.table.Column for
+                custom styling. Defaults to None.
         """
         super().__init__(table_column=table_column)
-        self.devices         = to_int_list(devices)
-        self.unit            = MemoryUnit(value=unit)
+        self.devices = to_int_list(devices)
+        self.unit = MemoryUnit(value=unit)
         self.update_interval = update_interval
-        self.last_update     = 0.0
-        self.cached_text     = Text("")
+        self.last_update = 0.0
+        self.cached_text = Text("")
 
-    def render(self, task: Task) -> Text:
-        """Render the current memory usage.
-
-        Args:
-            task: The rich.progress.Task being rendered.
-
-        Returns:
-            Text object displaying the memory usage.
-        """
-        current_time = time.time()
-        if current_time - self.last_update > self.update_interval:
-            if torch.cuda.is_available():
-                self.cached_text = self.gpu_memory_text
-            else:
-                self.cached_text = self.machine_memory_text
-            self.last_update = current_time
-        return self.cached_text
-
+    # --- Properties ---
     @property
     def machine_memory_text(self) -> Text:
-        """Format system RAM usage into a Text object."""
+        """Return formatted system RAM usage as a Text object."""
         # Import locally to avoid circular dependencies.
         from mon.core.device import query_ram_usages
 
         total, used, _ = query_ram_usages(unit=self.unit)
-        memory_status  = f"{used:.1f}/{total:.1f}{self.unit.value} (CPU)"
+        memory_status = f"{used:.1f}/{total:.1f}{self.unit.value} (CPU)"
         return Text(memory_status, style="bright_yellow")
 
     @property
     def gpu_memory_text(self) -> Text:
-        """Format and aggregate GPU VRAM usage into a Text object."""
+        """Return formatted GPU VRAM usage as a Text object."""
         # Import locally to avoid circular dependencies.
         from mon.core.device import query_vram_usage
 
@@ -133,9 +112,29 @@ class MemoryUsageColumn(ProgressColumn):
         memory_status = f"{used_mem:.1f}/{total_mem:.1f}{self.unit.value} ({num_devices} GPUs)"
         return Text(memory_status, style="bright_yellow")
 
+    # --- Callable & Context Manager ---
+    @override
+    def render(self, task: Task) -> Text:
+        """Render the current memory usage.
+
+        Args:
+            task (Task): The rich.progress.Task being rendered.
+
+        Returns:
+            Text: Memory usage formatted for display.
+        """
+        current_time = time.time()
+        if current_time - self.last_update > self.update_interval:
+            if torch.cuda.is_available():
+                self.cached_text = self.gpu_memory_text
+            else:
+                self.cached_text = self.machine_memory_text
+            self.last_update = current_time
+        return self.cached_text
+
 
 class ProcessedItemsColumn(ProgressColumn):
-    """Progress column that displays the count of processed items.
+    r"""Progress column that displays the count of processed items.
 
     Show a \"completed/total\" count in a fixed-width field to prevent the
     progress bar from resizing during updates.
@@ -146,18 +145,21 @@ class ProcessedItemsColumn(ProgressColumn):
         """Initialize a new instance.
 
         Args:
-            table_column: Optional rich.table.Column for custom styling. Defaults to None.
+            table_column (Column, optional): Optional rich.table.Column for
+                custom styling. Defaults to None.
         """
         super().__init__(table_column=table_column)
 
+    # --- Callable & Context Manager ---
+    @override
     def render(self, task: Task) -> Text:
-        """Render the processed items count for the task.
+        r"""Render the processed items count for the task.
 
         Args:
-            task: The rich.progress.Task being rendered.
+            task (Task): The rich.progress.Task being rendered.
 
         Returns:
-            Text object showing \"completed/total\" items.
+            Text: Processed items count formatted for display.
         """
         completed = int(task.completed)
 
@@ -179,14 +181,16 @@ class ProcessingSpeedColumn(ProgressColumn):
     it/s, show the latency in milliseconds per item (ms/it).
     """
 
+    # --- Callable & Context Manager ---
+    @override
     def render(self, task: Task) -> Text:
         """Render the processing speed for the task.
 
         Args:
-            task: The rich.progress.Task being rendered.
+            task (Task): The rich.progress.Task being rendered.
 
         Returns:
-            Text object displaying the processing speed.
+            Text: Processing speed formatted for display.
         """
         speed = task.speed
         if speed is None or speed == 0:
@@ -210,10 +214,6 @@ class SelectionOrInputPrompt(Prompt):
     Extend ``rich.prompt.Prompt`` to create a flexible prompt that can present a
     list of choices for selection while also accepting arbitrary input if it
     doesn't match a choice.
-
-    Attributes:
-        allow_empty: If True, allow an empty string as a valid response.
-        column_first: If True, print choices in column-first order.
     """
 
     response_type: type = str
@@ -221,18 +221,18 @@ class SelectionOrInputPrompt(Prompt):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        prompt        : TextType            = "",
+        prompt: TextType = "",
         *,
-        console       : Optional[Console]   = None,
-        password      : bool                = False,
-        choices       : Optional[List[str]] = None,
-        case_sensitive: bool                = True,
-        show_default  : bool                = True,
-        show_choices  : bool                = True,
-        column_first  : bool                = False,
-        allow_empty   : bool                = False,
+        console: Optional[Console] = None,
+        password: bool = False,
+        choices: Optional[List[str]] = None,
+        case_sensitive: bool = True,
+        show_default: bool = True,
+        show_choices: bool = True,
+        column_first: bool = False,
+        allow_empty: bool = False,
     ):
-        """Initialize the prompt.
+        """Initialize a new instance.
 
         Args:
             prompt: Text to display for the prompt.
@@ -249,16 +249,16 @@ class SelectionOrInputPrompt(Prompt):
             allow_empty: If True, allow an empty string as a valid response.
                 Defaults to False.
         """
-        self.allow_empty  = allow_empty
+        self.allow_empty = allow_empty
         self.column_first = column_first
         super().__init__(
             prompt,
-            console        = console,
-            password       = password,
-            choices        = choices,
-            case_sensitive = case_sensitive,
-            show_default   = show_default,
-            show_choices   = show_choices,
+            console=console,
+            password=password,
+            choices=choices,
+            case_sensitive=case_sensitive,
+            show_default=show_default,
+            show_choices=show_choices,
         )
 
     def print_choices(self):
@@ -272,18 +272,18 @@ class SelectionOrInputPrompt(Prompt):
     @classmethod
     def ask(
         cls,
-        prompt        : TextType            = "",
+        prompt: TextType = "",
         *,
-        console       : Optional[Console]   = None,
-        password      : bool                = False,
-        choices       : Optional[List[str]] = None,
-        case_sensitive: bool                = True,
-        show_default  : bool                = True,
-        show_choices  : bool                = True,
-        allow_empty   : bool                = False,
-        column_first  : bool                = False,
-        default       : Any                 = ...,
-        stream        : Optional[TextIO]    = None,
+        console: Optional[Console] = None,
+        password: bool = False,
+        choices: Optional[List[str]] = None,
+        case_sensitive: bool = True,
+        show_default: bool = True,
+        show_choices: bool = True,
+        allow_empty: bool = False,
+        column_first: bool = False,
+        default: Any = ...,
+        stream: Optional[TextIO] = None,
     ) -> Any:
         """Create and run a SelectionOrInputPrompt instance.
 
@@ -310,14 +310,14 @@ class SelectionOrInputPrompt(Prompt):
         """
         _prompt = cls(
             prompt,
-            console        = console,
-            password       = password,
-            choices        = choices,
-            case_sensitive = case_sensitive,
-            show_default   = show_default,
-            show_choices   = show_choices,
-            allow_empty    = allow_empty,
-            column_first   = column_first,
+            console=console,
+            password=password,
+            choices=choices,
+            case_sensitive=case_sensitive,
+            show_default=show_default,
+            show_choices=show_choices,
+            allow_empty=allow_empty,
+            column_first=column_first,
         )
         return _prompt(default=default, stream=stream)
 
@@ -483,8 +483,8 @@ def create_download_bar(transient: bool = False, disable: bool = False) -> Progr
 
 
 def create_progress_bar(
-    transient  : bool = False,
-    disable    : bool = False,
+    transient: bool = False,
+    disable: bool = False,
     show_memory: bool = True
 ) -> Progress:
     """Create a general-purpose progress bar for tasks.

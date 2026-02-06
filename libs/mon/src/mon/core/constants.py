@@ -3,7 +3,8 @@
 
 """Project-wide constant definitions.
 
-This module provides project-wide constants and default directory and file extensions.
+This module provides project-wide constants and default directory and file
+extensions.
 """
 
 from __future__ import annotations
@@ -37,7 +38,7 @@ from mon.core.pathlib import Path
 
 # Robustly find the project root (first pyproject.toml up)
 current_file = Path(__file__).normalize()
-ROOT_DIR     = current_file
+ROOT_DIR = current_file
 
 for parent in current_file.parents:
     if (parent / "pyproject.toml").exists():
@@ -45,7 +46,7 @@ for parent in current_file.parents:
         break
 
 # Find the monorepo root (highest pyproject.toml up)
-_all_roots    = [p for p in ROOT_DIR.parents if (p / "pyproject.toml").exists()]
+_all_roots = [p for p in ROOT_DIR.parents if (p / "pyproject.toml").exists()]
 MONO_ROOT_DIR = _all_roots[-1] if _all_roots else ROOT_DIR
 
 # Zoo directory (prefer root-level zoo if it exists)
@@ -56,28 +57,27 @@ if _zoo_dir_in_root.exists():
 else:
     ZOO_DIR = MONO_ROOT_DIR / "zoo"
 
-
 # --- Values ---
 
 DIRS = SimpleNamespace(
-    DEBUG     = "debug",
-    DEPTH     = "depth",
-    IMAGE     = "image",
-    LABEL     = "label",
-    PRED      = "pred",
-    VISUALIZE = "visualize",
+    DEBUG="debug",
+    DEPTH="depth",
+    IMAGE="image",
+    LABEL="label",
+    PRED="pred",
+    VISUALIZE="visualize",
 )
 
 EXT = SimpleNamespace(
-    CKPT       = WeightExtension.CKPT.value,
-    IMAGE      = ImageExtension.JPG.value,
-    POINTCLOUD = ".ply",
-    WEIGHTS    = WeightExtension.PT.value,
+    CKPT=WeightExtension.CKPT.value,
+    IMAGE=ImageExtension.JPG.value,
+    POINTCLOUD=".ply",
+    WEIGHTS=WeightExtension.PT.value,
 )
 
 SOURCE = SimpleNamespace(
-    DEPTH    = DepthSource.DAv2_ViTB,
-    INFRARED = InfraredSource.INFRARED,
+    DEPTH=DepthSource.DAv2_ViTB,
+    INFRARED=InfraredSource.INFRARED,
 )
 
 # --- Execution Flags  ---

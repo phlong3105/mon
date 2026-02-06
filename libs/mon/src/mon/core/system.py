@@ -30,10 +30,10 @@ def set_random_seed(seed: int | tuple[int, int], deterministic: bool = False):
     """Set random seeds for Python, NumPy, and PyTorch.
 
     Args:
-        seed: Single integer seed or a two-element tuple (min, max) from which
-            a value for ``seed`` will be randomly sampled.
-        deterministic: If ``deterministic`` is True, configure PyTorch for
-            deterministic operations. Defaults to False.
+        seed (int | tuple[int, int]): Single seed value or a range of [min, max]
+            from which a seed will be randomly sampled.
+        deterministic (bool): If True, configures PyTorch for deterministic
+            behavior. Defaults to False.
     """
     if isinstance(seed, Sequence):
         # If a range is provided, sample a seed from it.
@@ -50,9 +50,10 @@ def set_random_seed(seed: int | tuple[int, int], deterministic: bool = False):
     if deterministic:
         # Configure PyTorch for deterministic behavior.
         torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark     = False
+        torch.backends.cudnn.benchmark = False
         # Use deterministic algorithms, warning if they are not available.
         torch.use_deterministic_algorithms(True, warn_only=True)
+
 
 # endregion
 
@@ -71,6 +72,7 @@ def clear_terminal():
         # \033[H moves the cursor to the top-left corner.
         # \033[2J clears the entire screen.
         print("\033[H\033[2J", end="", flush=True)
+
 
 # endregion
 

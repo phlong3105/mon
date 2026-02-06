@@ -31,15 +31,14 @@ class Timer:
     average and the duration of the last interval. Use as a context manager.
 
     Attributes:
-        name: Optional name for the timer instance.
-        start_time: Timestamp when the current interval started.
-        end_time: Timestamp when the current interval ended.
-        total: Accumulated total time across all intervals.
-        calls: Number of timing intervals recorded.
-        diff: Duration of the most recent interval.
-        avg: Running average duration per call.
-        duration: Last reported duration, which can be either the most recent
-            interval's duration or the running average.
+        name (str, optional): Optional name for the timer instance.
+        start_time (float): Start time of the current interval.
+        end_time (float): End time of the current interval.
+        total (float): Total accumulated time across all intervals.
+        calls (int): Number of timing intervals recorded.
+        diff (float): Duration of the most recent interval.
+        avg (float): Average duration per interval.
+        duration (float): Duration of the last reported interval.
     """
 
     # --- Lifecycle & Initialization ---
@@ -47,17 +46,18 @@ class Timer:
         """Initialize a new instance.
 
         Args:
-            name: Optional name for the timer. Defaults to None.
+            name (str, optional): Optional name for the timer instance.
+                Defaults to None.
         """
         # Assign attributes
-        self.name       = name
+        self.name = name
         self.start_time = 0.0
-        self.end_time   = 0.0
-        self.total      = 0.0
-        self.calls      = 0
-        self.diff       = 0.0
-        self.avg        = 0.0
-        self.duration   = 0.0
+        self.end_time = 0.0
+        self.total = 0.0
+        self.calls = 0
+        self.diff = 0.0
+        self.avg = 0.0
+        self.duration = 0.0
 
     # --- Properties ---
     @property
@@ -122,12 +122,12 @@ class Timer:
         """Record the end time of an interval and update statistics.
 
         Args:
-            average: If True, the ``duration`` attribute is set to the running
-                average. Otherwise, it is set to the duration of the most
-                recent interval. Defaults to True.
+            average (bool): If True, return the average duration of the last
+                intervals. If False, return the duration of the most recent
+                interval. Defaults to True.
 
         Returns:
-            Resulting duration.
+            float: Duration of the last interval.
         """
         # Ensure all GPU operations are finished before stopping the clock.
         try:
@@ -138,10 +138,10 @@ class Timer:
             pass
 
         self.end_time = time.perf_counter()
-        self.diff     = self.end_time - self.start_time
-        self.total   += self.diff
-        self.calls   += 1
-        self.avg      = self.total / self.calls
+        self.diff = self.end_time - self.start_time
+        self.total += self.diff
+        self.calls += 1
+        self.avg = self.total / self.calls
         self.duration = self.avg if average else self.diff
         return self.duration
 
@@ -153,12 +153,12 @@ class Timer:
     def reset(self):
         """Reset all timer statistics."""
         self.start_time = 0.0
-        self.end_time   = 0.0
-        self.total      = 0.0
-        self.calls      = 0
-        self.diff       = 0.0
-        self.avg        = 0.0
-        self.duration   = 0.0
+        self.end_time = 0.0
+        self.total = 0.0
+        self.calls = 0
+        self.diff = 0.0
+        self.avg = 0.0
+        self.duration = 0.0
 
 
 class TimeProfiler:
@@ -168,19 +168,19 @@ class TimeProfiler:
     postprocessing, and the total time.
 
     Attributes:
-        preprocess: ``Timer`` for the preprocessing stage.
-        infer: ``Timer`` for the inference stage.
-        postprocess: ``Timer`` for the postprocessing stage.
-        total: ``Timer`` for the overall process.
+        preprocess (Timer): Timer for the preprocessing stage.
+        infer (Timer): Timer for the inference stage.
+        postprocess (Timer): Timer for the postprocessing stage.
+        total (Timer): Timer for the total time.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(self):
         """Initialize a new instance."""
-        self.preprocess  = Timer(name="Preprocess")
-        self.infer       = Timer(name="Infer")
+        self.preprocess = Timer(name="Preprocess")
+        self.infer = Timer(name="Infer")
         self.postprocess = Timer(name="Postprocess")
-        self.total       = Timer(name="Total")
+        self.total = Timer(name="Total")
 
     # --- Properties ---
     @property
@@ -202,11 +202,11 @@ class TimeProfiler:
 
         # Define the order of timers to be printed
         timers_to_print = [
-            (self.total.name,       self.total.total),
-            (self.preprocess.name,  self.preprocess.total),
-            (self.infer.name,       self.infer.total),
+            (self.total.name, self.total.total),
+            (self.preprocess.name, self.preprocess.total),
+            (self.infer.name, self.infer.total),
             (self.postprocess.name, self.postprocess.total),
-            ("Process",             self.process_time),
+            ("Process", self.process_time),
         ]
 
         for name, time_val in timers_to_print:
@@ -223,7 +223,8 @@ class TimeProfiler:
         console.log(f"Total Time     : {self.total.total_time:09.6f} (s).")
         console.log(f"  - Preprocess : {self.preprocess.total_time:09.6f} (s).")
         console.log(f"  - Infer      : {self.infer.total_time:09.6f} (s).")
-        console.log(f"  - Postprocess: {self.postprocess.total_time:09.6f} (s).")
+        console.log(f"  - Postprocess: {self.postprocess.total_time:09.6f} (
+        s).")
         console.log(f"  - -----")
         console.log(f"  - Process    : {self.process_time:09.6f} (s).")
         '''
@@ -249,6 +250,7 @@ class TimeProfiler:
                 else:
                     message += f"{v:<10.6f}\t"
         print(f"{message}\n")
+
 
 # endregion
 

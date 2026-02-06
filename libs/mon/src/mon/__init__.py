@@ -7,10 +7,11 @@ Provide the top-level package for the mon framework, expose core and
 high-frequency APIs, and offer lazy loading for heavy optional subpackages.
 """
 
-__author__  = "Long H. Pham"
+__author__ = "Long H. Pham"
 __version__ = "2.10.0"
 
 import time
+
 __start = time.time()
 
 from .core import *
@@ -27,7 +28,7 @@ def preload(verbose: bool = True):
     """Preload specialized mon subpackages.
 
     Import optional heavy subpackages (cv, genai, datasets) to reduce first-call
-    latency; optionally log the elapsed load time when verbose is True.
+    latency; optionally, log the elapsed load time when verbose is True.
     """
     start = time.time()
 

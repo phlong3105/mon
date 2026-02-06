@@ -26,15 +26,18 @@ import torch.nn as nn
 
 from mon.core.console import log
 from mon.core.enum import MemoryUnit
-from mon.core.utils import create_combinations
+from mon.core.utils import create_combinations, DeviceType, float_3_t
 
 try:
     import pynvml
     from pynvml.smi import NVMLError
+
     pynvml_available = True
 except ImportError:
-    pynvml           = None
+    pynvml = None
     pynvml_available = False
+
+
     # Define a placeholder for the exception if pynvml is not installed
     class NVMLError(Exception):
         pass
@@ -50,6 +53,7 @@ CUDA_PREFIX = "cuda:"
 # Inside [], ( and ) are literals and do not need escaping.
 _DEVICE_CLEAN_RE = re.compile(r"[\[\]()\s'\"]")
 
+
 # endregion
 
 
@@ -58,18 +62,18 @@ _DEVICE_CLEAN_RE = re.compile(r"[\[\]()\s'\"]")
 # ==============================================================================
 
 def list_devices() -> list[str]:
-    """List available device specifiers.
+    """List available device specifiers that the current environment supports.
 
     Returns:
-        List containing "auto", "cpu", "mps" (if available), and all available
-        CUDA device specifiers and combinations if CUDA is available.
+        list[str]: List of supported device specifiers.
+        Example: ["cpu", "cuda:0", "cuda:1", "cuda:0,1"].
     """
     devices = ["auto", "cpu"]
     if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
         devices.append("mps")
 
     if torch.cuda.is_available():
-        num_devices  = torch.cuda.device_count()
+        num_devices = torch.cuda.device_count()
         # Add primary indices first (fastest path)
         cuda_indices = list(range(num_devices))
         devices.extend([f"cuda:{i}" for i in cuda_indices])
@@ -78,11 +82,14 @@ def list_devices() -> list[str]:
         if num_devices > 1:
             cuda_combinations = create_combinations(cuda_indices)
             # Filter out combinations of length 1 as we already added them
-            devices.extend([
-                f"{CUDA_PREFIX}{','.join(map(str, comb))}"
-                for comb in cuda_combinations if len(comb) > 1
-            ])
+            devices.extend(
+                [
+                    f"{CUDA_PREFIX}{','.join(map(str, comb))}"
+                    for comb in cuda_combinations if len(comb) > 1
+                ],
+            )
     return devices
+
 
 # endregion
 
@@ -91,18 +98,14 @@ def list_devices() -> list[str]:
 # region CREATION
 # ==============================================================================
 
-def create_device(device: torch.device | str | int | None) -> torch.device | str:
-    """Create a torch.device object from a flexible device input.
-
-    Convert various device specifiers into a final torch.device object or the
-    special "auto" string for libraries like PyTorch Lightning.
+def create_device(device: DeviceType) -> torch.device | str:
+    """Create a torch.device object from a device specifier.
 
     Args:
-        device: Device specifier, such as a torch.device object, an integer,
-            a string like "cuda:0", or "auto".
+        device (DeviceType): Device specifier to convert to a torch.device object.
 
     Returns:
-        A torch.device object or the special string "auto".
+        torch.device | str: Corresponding torch.device object or "auto" string.
 
     Raises:
         ValueError: If the ``device`` specifier is unsupported.
@@ -142,17 +145,16 @@ def create_device(device: torch.device | str | int | None) -> torch.device | str
 # --- Accessing ---
 
 def inspect_model_device(model: nn.Module) -> torch.device:
-    """Return the device used by the first parameter of the model.
+    """Return the device of a model.
 
     Inspect the model parameters and return the device used by the first
     parameter. This is a reliable way to determine where a model is located.
 
     Args:
-        model: Model whose parameter device is queried.
+        model (nn.Module): Model to inspect.
 
     Returns:
-        Device where the ``model``'s parameters reside. Defaults to "cpu" if the
-        ``model`` has no parameters or buffers.
+        torch.device: Device of the model.
     """
     try:
         # Check parameters first
@@ -166,23 +168,19 @@ def inspect_model_device(model: nn.Module) -> torch.device:
             return torch.device("cpu")
 
 
-def query_vram_usage(
-    device: int        = 0,
-    unit  : MemoryUnit = MemoryUnit.GB
-) -> tuple[float, float, float]:
+def query_vram_usage(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> float_3_t:
     """Query NVML for the specified CUDA device memory usage.
 
-    Return memory totals in the requested unit.
-
     Args:
-        device: CUDA device index to query. Defaults to 0.
-        unit: Unit to report memory in. Defaults to MemoryUnit.GB.
+        device (int): CUDA device index to query. Defaults to 0.
+        unit (MemoryUnit): Unit to report memory in. Defaults to MemoryUnit.GB.
 
     Returns:
-        Tuple of (total, used, free) VRAM values in the requested unit.
+        tuple[float, float, float]: (total, used, free) memory values in the
+            requested unit.
 
     Raises:
-        ImportError: If pynvml is not installed.
+        ImportError: If ``pynvml`` is not installed.
         NVMLError: If there is an error communicating with the NVIDIA driver.
     """
     if not pynvml_available:
@@ -190,12 +188,13 @@ def query_vram_usage(
     try:
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(device)
-        info   = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        info = pynvml.nvmlDeviceGetMemoryInfo(handle)
         # Cache the ratio to avoid repeated lookups
-        ratio  = MemoryUnit.names_to_bytes()[MemoryUnit(unit)]
+        ratio = MemoryUnit.names_to_bytes()[MemoryUnit(unit)]
         return info.total / ratio, info.used / ratio, info.free / ratio
     finally:
-        # Crucial: Always shut down NVML to release driver handles, even if errors occur.
+        # Crucial: Always shut down NVML to release driver handles, even if
+        # errors occur.
         try:
             pynvml.nvmlShutdown()
         except NVMLError:
@@ -203,40 +202,36 @@ def query_vram_usage(
             pass
 
 
-def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> tuple[float, float, float]:
+def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> float_3_t:
     """Query system RAM usage.
 
-    Return totals in the requested unit.
-
     Args:
-        unit: Unit to report memory in. Defaults to MemoryUnit.GB.
+        unit (MemoryUnit): Unit to report memory in. Defaults to MemoryUnit.GB.
 
     Returns:
-        Tuple of (total, used, free) RAM values in the requested unit.
+        tuple[float, float, float]: (total, used, free) memory values in the
+            requested unit.
     """
     memory = psutil.virtual_memory()
-    ratio  = MemoryUnit.names_to_bytes()[MemoryUnit(unit)]
+    ratio = MemoryUnit.names_to_bytes()[MemoryUnit(unit)]
     return (
-        memory.total     / ratio,  # total
-        memory.used      / ratio,  # used
-        memory.available / ratio   # free
+        memory.total / ratio,  # total
+        memory.used / ratio,  # used
+        memory.available / ratio,  # free
     )
 
 
-def parse_device(
-    device: torch.device | str | int | None
-) -> torch.device | str | list[str]:
+def parse_device(device: DeviceType) -> torch.device | str | list[str]:
     """Parse a device input into a canonical representation.
 
     Handle various device formats, including torch.device objects, integers,
     strings (e.g., "cpu", "cuda", "cuda:0,1"), and None.
 
     Args:
-        device: Device specifier to parse.
+        device (DeviceType): Device specifier to parse.
 
     Returns:
-        Canonical representation: "cpu", "auto", a torch.device, or a list of
-        CUDA indices as strings.
+        torch.device | str | list[str]: Parsed device representation.
     """
     if isinstance(device, torch.device):
         return device
@@ -256,7 +251,8 @@ def parse_device(
         if device.startswith("cpu") or device.startswith("mps"):
             return torch.device(device)
 
-        # Clean the string by removing brackets, spaces, quotes, and "cuda:" prefix
+        # Clean the string by removing brackets, spaces, quotes, and "cuda:"
+        # prefix
         clean_str = _DEVICE_CLEAN_RE.sub("", device).replace("cuda:", "")
         return [x for x in clean_str.split(",") if x]
 
