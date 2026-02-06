@@ -37,7 +37,7 @@ from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
-current_dir  = current_file.parents[0]
+current_dir = current_file.parents[0]
 
 
 # ==============================================================================
@@ -47,44 +47,36 @@ current_dir  = current_file.parents[0]
 # --- Base Classes ---
 
 class VGGBackBone(nn.Module, RegistrableMixin):
-    """VGG backbone.
+    """VGG backbone."""
 
-    Attributes:
-        features: The feature extraction layers.
-        out_indices: List of layer indices to extract features from.
-        out_channels: List of output channels for each extracted layer.
-        verbose: Verbosity mode.
-    """
-
-    arch     : str          = "vgg"
-    name     : str          = None
-    tasks    : list[Task]   = [Task.BACKBONE]
-    mltypes  : list[MLType] = []
-    model_dir: Path         = current_dir
+    arch: str = "vgg"
+    name: str = None
+    tasks: list[Task] = [Task.BACKBONE]
+    mltypes: list[MLType] = []
+    model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name       : str,
-        cfg        : str,
-        batch_norm : bool,
-        weights    : WeightsType | None = None,
-        out_indices: list[int]   | None = None,
-        verbose    : bool               = True,
-        *args, **kwargs
+        name: str,
+        cfg: str,
+        batch_norm: bool,
+        weights: WeightsType | None = None,
+        out_indices: list[int] | None = None,
+        verbose: bool = True,
+        *args, **kwargs,
     ):
         """Initialize a new instance.
 
         Args:
-            name: Name of the model variant.
-            cfg: Configuration string for VGG layers.
-            batch_norm: Whether to use batch normalization.
-            weights: Pre-trained weights to load.
-            out_indices: List of layer indices to extract features from.
-                If None, defaults to [6, 13, 23, 33, 43].
-            verbose: Verbosity mode. Defaults to True.
-            *args: Additional positional arguments for the ResNet model.
-            **kwargs: Additional keyword arguments for the ResNet model
+            name (str): Name of the model variant.
+            cfg (str): Configuration string, e.g. 'A'.
+            batch_norm (bool): Whether to use batch normalization.
+            weights (WeightsType, optional): Pre-trained weights to load.
+                Defaults to None.
+            out_indices (list[int], optional): List of layer indices to extract
+                features from. If None, defaults to [6, 13, 23, 33, 43].
+            verbose (bool): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__()
@@ -97,7 +89,7 @@ class VGGBackBone(nn.Module, RegistrableMixin):
         # Load the base model
         if isinstance(weights, WeightsType):
             kwargs["init_weights"] = False
-            kwargs["num_classes"]  = weights.num_classes
+            kwargs["num_classes"] = weights.num_classes
 
         base_model = VGG(make_layers(cfgs[cfg], batch_norm=batch_norm), *args, **kwargs)
 
@@ -110,8 +102,8 @@ class VGGBackBone(nn.Module, RegistrableMixin):
                 log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, VGG already has a 'features' block
-        self.features     = base_model.features
-        self.out_indices  = out_indices or [6, 13, 23, 33, 43]
+        self.features = base_model.features
+        self.out_indices = out_indices or [6, 13, 23, 33, 43]
         self.out_channels = [64, 128, 256, 512, 512]
 
     # --- Callable & Context Manager ---
@@ -119,10 +111,11 @@ class VGGBackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            A list of feature maps from the specified layers.
+            list[torch.Tensor]: List of feature maps from the specified layers.
         """
         # If you need multiscale features for a Neck (FPN):
         outputs = []
@@ -149,25 +142,25 @@ class VGGBackBone(nn.Module, RegistrableMixin):
 class VGG11_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg11-8a719046.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg11-8a719046.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 132863336,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 69.020,
                     "acc@5": 88.628,
-                }
+                },
             },
-            "_ops"      : 7.609,
+            "_ops": 7.609,
             "_file_size": 506.84,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -176,25 +169,25 @@ class VGG11_Weights(WeightsEnum):
 class VGG11_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 132868840,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 70.370,
                     "acc@5": 89.810,
-                }
+                },
             },
-            "_ops"      : 7.609,
+            "_ops": 7.609,
             "_file_size": 506.881,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -203,25 +196,25 @@ class VGG11_BN_Weights(WeightsEnum):
 class VGG13_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg13-19584684.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg13-19584684.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 133047848,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 69.928,
                     "acc@5": 89.246,
-                }
+                },
             },
-            "_ops"      : 11.308,
+            "_ops": 11.308,
             "_file_size": 507.545,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -230,25 +223,25 @@ class VGG13_Weights(WeightsEnum):
 class VGG13_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 133053736,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 71.586,
                     "acc@5": 90.374,
-                }
+                },
             },
-            "_ops"      : 11.308,
+            "_ops": 11.308,
             "_file_size": 507.59,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -257,25 +250,25 @@ class VGG13_BN_Weights(WeightsEnum):
 class VGG16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg16-397923af.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg16-397923af.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 138357544,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 71.592,
                     "acc@5": 90.382,
-                }
+                },
             },
-            "_ops"      : 15.47,
+            "_ops": 15.47,
             "_file_size": 527.796,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -284,25 +277,25 @@ class VGG16_Weights(WeightsEnum):
 class VGG16_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 138365992,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 73.360,
                     "acc@5": 91.516,
-                }
+                },
             },
-            "_ops"      : 15.47,
+            "_ops": 15.47,
             "_file_size": 527.866,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -311,25 +304,25 @@ class VGG16_BN_Weights(WeightsEnum):
 class VGG19_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 143667240,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 72.376,
                     "acc@5": 90.876,
-                }
+                },
             },
-            "_ops"      : 19.632,
+            "_ops": 19.632,
             "_file_size": 548.051,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -338,25 +331,25 @@ class VGG19_Weights(WeightsEnum):
 class VGG19_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 143678248,
-            "min_size"  : (32, 32),
+            "min_size": (32, 32),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 74.218,
                     "acc@5": 91.842,
-                }
+                },
             },
-            "_ops"      : 19.632,
+            "_ops": 19.632,
             "_file_size": 548.143,
-            "_docs"     : """These weights were trained from scratch by using a simplified training recipe.""",
-        }
+            "_docs": """These weights were trained from scratch by using a simplified training recipe.""",
+        },
     )
     DEFAULT = IMAGENET1K_V1
 
@@ -365,194 +358,195 @@ class VGG19_BN_Weights(WeightsEnum):
 
 @BACKBONES.register(name="vgg11", metaclass=VGGBackBone)
 def vgg11(
-    weights    : WeightsEnum | str = VGG11_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG11_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG11 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG11_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG11_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg11",
-        cfg         = "A",
-        batch_norm  = False,
-        weights     = VGG11_Weights(weights),
-        out_indices = out_indices,
-        *args, **kwargs
+        name="vgg11",
+        cfg="A",
+        batch_norm=False,
+        weights=VGG11_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
 
 
 @BACKBONES.register(name="vgg11_bn", metaclass=VGGBackBone)
 def vgg11_bn(
-    weights    : WeightsEnum | str = VGG11_BN_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG11_BN_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG11-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG11_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG11_BN_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg11_bn",
-        cfg         = "A",
-        batch_norm  = True,
-        weights     = VGG11_BN_Weights(weights),
-        out_indices = out_indices,
-        *args, **kwargs
+        name="vgg11_bn",
+        cfg="A",
+        batch_norm=True,
+        weights=VGG11_BN_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
 
 
 @BACKBONES.register(name="vgg13", metaclass=VGGBackBone)
 def vgg13(
-    weights    : WeightsEnum | str = VGG13_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG13_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG13 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG13_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG13_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg13",
-        cfg         = "B",
-        batch_norm  = False,
-        weights     = VGG13_Weights(weights),
-        out_indices = out_indices,
-       *args, **kwargs
+        name="vgg13",
+        cfg="B",
+        batch_norm=False,
+        weights=VGG13_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
 
 
 @BACKBONES.register(name="vgg13_bn", metaclass=VGGBackBone)
 def vgg13_bn(
-    weights    : WeightsEnum | str = VGG13_BN_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG13_BN_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG13-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG13_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG13_BN_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg13_bn",
-        cfg         = "B",
-        batch_norm  = True,
-        weights     = VGG13_BN_Weights(weights),
-        out_indices = out_indices,
-        *args, **kwargs
+        name="vgg13_bn",
+        cfg="B",
+        batch_norm=True,
+        weights=VGG13_BN_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
 
 
 @BACKBONES.register(name="vgg16", metaclass=VGGBackBone)
 def vgg16(
-    weights    : WeightsEnum | str = VGG16_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG16_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG16 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG16_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG16_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg16",
-        cfg         = "D",
-        batch_norm  = False,
-        weights     = VGG16_Weights(weights),
-        out_indices = out_indices,
-        *args, **kwargs
+        name="vgg16",
+        cfg="D",
+        batch_norm=False,
+        weights=VGG16_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
 
 
 @BACKBONES.register(name="vgg16_bn", metaclass=VGGBackBone)
 def vgg16_bn(
-    weights    : WeightsEnum | str = VGG16_BN_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG16_BN_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG16-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG16_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG16_BN_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg16_bn",
-        cfg         = "D",
-        batch_norm  = True,
-        weights     = VGG16_BN_Weights(weights),
-        out_indices = out_indices,
-       *args, **kwargs
+        name="vgg16_bn",
+        cfg="D",
+        batch_norm=True,
+        weights=VGG16_BN_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
 
 
 @BACKBONES.register(name="vgg19", metaclass=VGGBackBone)
 def vgg19(
-    weights    : WeightsEnum | str = VGG19_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG19_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG19 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG19_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG19_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg19",
-        cfg         = "E",
-        batch_norm  = False,
-        weights     = VGG19_Weights(weights),
-        out_indices = out_indices,
-        *args, **kwargs
+        name="vgg19",
+        cfg="E",
+        batch_norm=False,
+        weights=VGG19_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
 
 
 @BACKBONES.register(name="vgg19_bn", metaclass=VGGBackBone)
 def vgg19_bn(
-    weights    : WeightsEnum | str = VGG19_BN_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = VGG19_BN_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG19-BN backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to VGG19_BN_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to VGG19_BN_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return VGGBackBone(
-        name        = "vgg19_bn",
-        cfg         = "E",
-        batch_norm  = True,
-        weights     = VGG19_BN_Weights(weights),
-        out_indices = out_indices,
-        *args, **kwargs
+        name="vgg19_bn",
+        cfg="E",
+        batch_norm=True,
+        weights=VGG19_BN_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
+
 
 # endregion
 

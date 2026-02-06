@@ -27,6 +27,7 @@ from torch.nn.modules.container import (
 from torch.nn.modules.module import Module
 
 from mon.core import MLType, Path, Task
+from mon.core.types_alias import PathLike
 
 
 # ==============================================================================
@@ -64,47 +65,50 @@ class RegistrableMixin:
     factory registration purposes.
 
     Attributes:
-        arch: The model's architecture. `Must be defined in subclasses or set
-            during initialization.`
-        name: The model's name. `Must be defined in subclasses and set during
-            initialization.`
-        tasks: A list of tasks that the model can perform. `Must be defined in
-            subclasses or set during initialization.`
-        mltypes: A list of learning types that the model can perform. `Must be
-            defined in subclasses or set during initialization.`
-        model_dir: The model's directory. `Must be defined in subclasses or
+        arch (str): The model's architecture. `Must be defined in subclasses or
             set during initialization.`
+        name (str): The model's name. `Must be defined in subclasses or set
+            during initialization.`
+        tasks (list[Task]): A list of tasks that the model can perform. `Must be
+            defined in subclasses or set during initialization.`
+        mltypes (list[MLType]): A list of learning types that the model can
+            perform. `Must be defined in subclasses or set during initialization.`
+        model_dir (Path): The directory where the model is stored. `Must be
+            defined in subclasses or set during initialization.`
     """
 
-    arch     : str          = ""
-    name     : str          = ""
-    tasks    : list[Task]   = []
-    mltypes  : list[MLType] = []
-    model_dir: Path         = None
+    arch: str = ""
+    name: str = ""
+    tasks: list[Task] = []
+    mltypes: list[MLType] = []
+    model_dir: Path = None
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        arch     : str          | None = None,
-        name     : str          | None = None,
-        tasks    : list[Task]   | None = None,
-        mltypes  : list[MLType] | None = None,
-        model_dir: Path         | None = None,
+        arch: str | None = None,
+        name: str | None = None,
+        tasks: list[Task] | None = None,
+        mltypes: list[MLType] | None = None,
+        model_dir: PathLike | None = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            arch: Architecture of the data container. If provided, it overrides
-                class-level default. Defaults to None.
-            name: Name of the data container. If provided, it overrides the
-                class-level default. Defaults to None.
-            tasks: List of supported tasks. If provided, it overrides the
-                class-level default. Defaults to None.
-            mltypes: List of supported learning types. If provided, it overrides
+            arch (str, optional): The model's architecture. If provided, it
+                overrides the class-level default. Defaults to None.
+            name (str, optional): The model's name. If provided, it overrides
                 the class-level default. Defaults to None.
-            model_dir: Directory of the model. If provided, it overrides the
-                class-level default. Defaults to None.
+            tasks (list[Task], optional): A list of tasks that the model can
+                perform. If provided, it overrides the class-level default.
+                Defaults to None.
+            mltypes (list[MLType], optional): A list of learning types that the
+                model can perform. If provided, it overrides the class-level
+                default. Defaults to None.
+            model_dir (PathLike, optional): The directory where the model is
+                stored. If provided, it overrides the class-level default.
+                Defaults to None.
         """
         # Validate inputs
         if arch is not None and not isinstance(name, str):
@@ -121,11 +125,13 @@ class RegistrableMixin:
             )
         if mltypes is not None and not isinstance(mltypes, list):
             raise TypeError(
-                f"Expected 'mltypes' to be a list, but got {type(mltypes).__name__}."
+                f"Expected 'mltypes' to be a list, "
+                f"but got {type(mltypes).__name__}."
             )
-        if model_dir is not None and not isinstance(model_dir, Path):
+        if model_dir is not None and not isinstance(model_dir, (Path, str)):
             raise TypeError(
-                f"Expected 'model_dir' to be a Path, but got {type(model_dir).__name__}."
+                f"Expected 'model_dir' to be a Path, "
+                f"but got {type(model_dir).__name__}."
             )
 
         # Assign attributes

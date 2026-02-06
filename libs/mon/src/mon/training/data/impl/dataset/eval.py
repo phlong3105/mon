@@ -13,9 +13,8 @@ __all__ = [
     "ImageEvalDataset",
 ]
 
-from typing import Any
+from typing import Any, Optional, override
 
-import box
 import numpy as np
 import torch
 
@@ -33,47 +32,46 @@ from ...comp import BatchCollateMixin, InputTargetLoadMixin
 class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
     """Image quality assessment (IQA) dataset.
 
-    Define two main modalities: ``image`` and ``target``. Primarily used for
-    separated evaluation pipelines outside the train/eval/test loop.
-
-    Attributes:
-        transform: Transformations for input and target.
+    Extends the base ``Dataset`` class with ``InputTargetLoadMixin`` and
+    ``BatchCollateMixin`` to support evaluation pipelines where input and target
+    are images.
     """
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        input_dir : Path,
-        target_dir: Path             | None = None,
-        transform : A.Compose        | None = None,
-        classlist : Path | ClassList | None = None,
-        verbose   : bool                    = True,
+        input_dir: Path | str,
+        target_dir: Path | str | None = None,
+        transform: A.Compose | dict | None = None,
+        classlist: ClassList | Path | str | None = None,
+        verbose: bool = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            input_dir: Absolute path to the input data directory.
-            target_dir: Absolute path to the target directory. Defaults to None.
-            transform: Transformations to apply to input and target. Defaults to None.
-            classlist: Either a .yaml file containing the classes definitions,
-                or a ClassList instance. Defaults to None.
-            verbose: Verbosity mode. Defaults to True.
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
+            input_dir (Path | str): Absolute path to the input directory.
+            target_dir (Path | str, optional): Absolute path to the target directory.
+                Defaults to None.
+            transform (A.Compose | dict, optional): Transformations to apply.
+                Defaults to None.
+            classlist (ClassList | Path | str, optional): Class definitions for
+                the dataset. Can be a ``ClassList`` instance or a path to a
+                .yaml file. Defaults to None.
+            verbose (bool): Verbosity mode. Defaults to True.
         """
         super().__init__(
-            input_dir  = input_dir,
-            target_dir = target_dir,
-            classlist  = classlist,
-            verbose    = verbose,
+            input_dir=input_dir,
+            target_dir=target_dir,
+            classlist=classlist,
+            verbose=verbose,
             *args, **kwargs
         )
 
         # Assign attributes
-        self.transform = None
-        self.set_transform(value=transform)
+        self.transform = transform
 
+    @override
     def __del__(self):
         """Finalize the object.
 
@@ -82,40 +80,46 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         pass
 
     # --- Representation ---
+    @override
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
-        lines  = [f"Dataset {self.__class__.__name__}"]
+        lines = [f"Dataset {self.__class__.__name__}"]
         lines += [f"Number of datapoints: {len(self)}"]
         if self.transform:
             lines += [repr(self.transform)]
         return "\n".join(lines)
 
     # --- Container / Sequence Methods ---
+    @override
     def __len__(self) -> int:
         """Return the length of the container."""
         return len(self.datapoints["image"])
 
+    @override
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an item at the given ``index``.
 
         Args:
-            index: Index to access.
+            index (int): Index of datapoint.
+
+        Returns:
+            dict[str, Any]: A datapoint dictionary containing all modalities,
+                each associated with a 'key'.
         """
         # Fetch datapoint
-        data = self._get_underlying_data(index=index)
-        meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
+        data = self.get_underlying_data(index=index)
+        meta = data.pop("meta")
 
         transform = self.transform
 
-        if transform is not None:
-            # Optimized transformation branch
+        if transform:
             if self.has_target:
-                augmented      = transform(image=data["image"], target=data["target"])
-                data["image"]  = augmented["image"]
+                augmented = transform(image=data["image"], target=data["target"])
+                data["image"] = augmented["image"]
                 data["target"] = augmented["target"]
             else:
-                augmented      = transform(image=data["image"])
-                data["image"]  = augmented["image"]
+                augmented = transform(image=data["image"])
+                data["image"] = augmented["image"]
 
             # Vectorized-style type casting
             for k, v in data.items():
@@ -129,68 +133,74 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         return {**data, "meta": meta}
 
     # --- Properties ---
-    def set_transform(self, value: Any):
+    @property
+    def transform(self) -> A.Compose | None:
+        """Return the transformation pipeline."""
+        return self._transform
+
+    @transform.setter
+    def transform(self, transform: A.Compose | dict | None):
         """Set the transformation operations.
 
         Args:
-            value: Transformations for input and target.
+            transform (A.Compose | dict, optional): Transformations to apply.
+                Defaults to None.
 
         Raises:
-            TypeError: If ``value`` is not an instance of albumentations.Compose.
+            TypeError: If ``transform`` is not an instance of albumentations.Compose.
         """
-        if value is None:
-            self.transform = None
+        if transform is None:
+            self._transform = None
             return
 
-        if isinstance(value, (dict, box.Box)):
-            value = A.Compose(**value)
-        if not isinstance(value, A.Compose):
+        if isinstance(transform, dict):
+            transform = A.Compose(**transform)
+        if not isinstance(transform, A.Compose):
             raise TypeError(
-                f"Expected 'transform' to be an instance of albumentations.Compose, "
-                f"but got {type(value).__name__}."
+                f"Expected 'transform' to be an instance of "
+                f"albumentations.Compose, but got {type(transform).__name__}."
             )
 
         # Add additional targets to A.Compose if needed.
         if self.has_target:
             # Albumentations stores additional targets in a specific dict;
             # check if 'target' is already there to avoid overhead.
-            if "target" not in value.processors.get("additional_targets", {}):
-                value.add_targets({"target": "image"})
+            if "target" not in transform.processors.get("additional_targets", {}):
+                transform.add_targets({"target": "image"})
 
-        self.transform = value
+        self._transform = transform
 
     # --- Data Loading ---
-    def _load_data(self) -> dict[str, Any]:
-        """Load core data for the dataset.
+    @override
+    def _load_data(self) -> dict[str, list[Any]]:
+        """Load the core data of the dataset.
 
         Returns:
-            Dictionary containing lists of datapoints for each modality.
+            dict[str, list[Any]]: Dictionary containing lists of datapoints for
+                each modality.
         """
-        disable_pbar = self.disable_pbar
-        input_dir    = self.input_dir
-        has_target   = self.has_target
-        target_dir   = self.target_dir if has_target else None
+        datapoints: dict[str, Optional[list[Any]]] = {}
 
         # List image
         images = []
-        with create_progress_bar(disable=disable_pbar) as pbar:
-            paths = sorted(input_dir.rglob("*"))
-            desc  = f"Listing {self.__class__.__name__} input image(s)"
+        with create_progress_bar(disable=self.disable_pbar) as pbar:
+            paths = sorted(self.input_dir.rglob("*"))
+            desc = f"Listing {self.__class__.__name__} input image(s)"
             for path in pbar.track(sequence=paths, description=desc):
                 if path.is_image_file(exist=True):
-                    images.append(Image(data=path, root=input_dir))
-        datapoints = {"image": images}
+                    images.append(Image(data=path, root=self.input_dir))
+        datapoints["image"] = images
 
         # List target
-        if has_target:
+        if self.has_target:
             targets = []
-            with create_progress_bar(disable=disable_pbar) as pbar:
+            with create_progress_bar(disable=self.disable_pbar) as pbar:
                 desc = f"Listing {self.__class__.__name__} target image(s)"
                 for image in pbar.track(sequence=images, description=desc):
-                    target_file = target_dir / image.path.name
+                    target_file = self.target_dir / image.path.name
                     target_file = target_file.image_file(exist=True)
                     if target_file.is_image_file(exist=True):
-                        targets.append(Image(data=target_file, root=target_dir))
+                        targets.append(Image(data=target_file, root=self.target_dir))
             datapoints["target"] = targets
         else:
             datapoints["target"] = None
@@ -200,6 +210,7 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
 
         return datapoints
 
+    @override
     def verify(self):
         """Verify dataset integrity.
 
@@ -208,27 +219,42 @@ class ImageEvalDataset(Dataset, InputTargetLoadMixin, BatchCollateMixin):
                 inconsistent.
         """
         if len(self) <= 0:
-            raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
+            raise RuntimeError(
+                f"No datapoints in the dataset: {self.__class__.__name__}."
+            )
 
         for k, v in self.datapoints.items():
             if v in [None, []]:
                 raise RuntimeError(f"Datapoint modality '{k}' is empty!")
             elif len(v) != len(self):
                 raise RuntimeError(
-                    f"Datapoint modality '{k}' has inconsistent length with the dataset: "
-                    f"{len(v)} != {len(self)}."
+                    f"Datapoint modality '{k}' has inconsistent length with "
+                    f"the dataset: {len(v)} != {len(self)}."
                 )
 
         if self.verbose:
             log(f"Number of datapoints: {len(self)}.")
 
     # --- Access ---
-    def _get_datapoint(self, index: int) -> dict[str, Any]:
+    @override
+    def get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
 
         Args:
-            index: Index of datapoint.
+            index (int): Index of datapoint.
+
+        Returns:
+            dict[str, Any]: A datapoint dictionary containing all modalities,
+                each associated with a 'key'.
+
+        Raises:
+            IndexError: If ``index`` is out of range.
         """
+        if index < 0 or index >= len(self):
+            raise IndexError(
+                f"Index {index} out of range for dataset of size {len(self)}."
+            )
+
         # Efficiency: Use dict comprehension for faster construction
         return {
             k: (v[index] if v is not None else None)

@@ -12,10 +12,10 @@ __all__ = [
     "RegistrableMixin",
 ]
 
-import abc
-from typing import Any, Dict, NamedTuple, TypeAlias
+from abc import ABC, abstractmethod
+from typing import Any, NamedTuple, OrderedDict, override, TypeAlias
 
-from torch.utils.data import dataset
+from torch.utils.data.dataset import Dataset as Dataset_
 
 from mon.core import log, Path, Task
 from mon.core.dtypes import ClassList
@@ -39,23 +39,21 @@ class Modality(NamedTuple):
     """Data structure representing a modality in a dataset.
 
     Attributes:
-        name: Name of the directory that contains the modality data.
-        type: Albumentations target type for augmentations.
-        module: Tensor class that performs I/O operations.
-        train: If True, this modality is included in the train/val set.
-        test: If True, this modality is included in the test set.
-        primary: If True, this is the primary modality.
+        name (str): Name of the modality.
+        module (Any): The class associated with the modality.
+        type (str, optional): Type of the modality (e.g., "image", "text") for
+            albumentations augmentations.
+        test (bool): Indicates if the modality is available for testing
+            (i.e., ground-truth).
     """
 
-    name   : str
-    type   : str | None = None
-    module : Any        = None
-    train  : bool       = True
-    test   : bool       = False
-    primary: bool       = False
+    name: str
+    module: Any
+    type: str | None = None
+    test: bool = True
 
 
-Modalities: TypeAlias = Dict[str, Modality]
+Modalities: TypeAlias = OrderedDict[str, Modality]
 
 
 # --- Protocols ---
@@ -70,17 +68,14 @@ Modalities: TypeAlias = Dict[str, Modality]
 
 # --- Base Classes ---
 
-class Dataset(dataset.Dataset, abc.ABC):
+class Dataset(Dataset_, ABC):
     """Abstract class for all datasets.
 
     Subclass this abstract class to create specific dataset implementations.
 
     Attributes:
-        datapoints: Dictionary containing lists of datapoints for each modality.
-            `Must be initialized during subclass initialization.`
-        classlist: Dataset object classes. `Should be defined in subclasses or
-            set during initialization.`
-        verbose: If True, enable verbose output.
+        classlist (ClassList, optional): Class definitions for the dataset.
+            `Should be defined in subclasses or set during initialization.`
     """
 
     classlist: ClassList | None = None
@@ -88,21 +83,17 @@ class Dataset(dataset.Dataset, abc.ABC):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        datapoints: dict[str, list[Any]] | None = None,
-        classlist : Path | ClassList     | None = None,
-        verbose   : bool                        = True,
+        classlist: ClassList | Path | str | None = None,
+        verbose: bool = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            datapoints: Dictionary containing lists of datapoints for each
-                modality. Defaults to None.
-            classlist: Either a .yaml file containing the classes definitions,
-                or a ClassList instance. Defaults to None.
-            verbose: Verbosity mode. Defaults to True.
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
+            classlist (ClassList | Path | str, optional): Class definitions for
+                the dataset. Can be a ``ClassList`` instance or a path to a
+                .yaml file. Defaults to None.
+            verbose (bool): Verbosity mode. Defaults to True.
 
         Raises:
             TypeError: If ``datapoints`` is not a dict or None.
@@ -110,24 +101,12 @@ class Dataset(dataset.Dataset, abc.ABC):
         """
         super().__init__(*args, **kwargs)
 
-        # Validate inputs
-        if datapoints is not None and not isinstance(datapoints, dict):
-            raise TypeError(
-                f"Expected 'datapoints' to be a dict or None, "
-                f"but got {type(datapoints).__name__}."
-            )
-        if not isinstance(verbose, bool):
-            raise TypeError(
-                f"Expected 'verbose' to be a bool, "
-                f"but got {type(verbose).__name__}."
-            )
-
         # Assign attributes
-        self.verbose    = verbose
-        self.datapoints = datapoints or {}
+        self.verbose = verbose
+        self.datapoints: OrderedDict[str, list[Any]] = OrderedDict()
         self.set_classlist(classlist)
 
-    @abc.abstractmethod
+    @abstractmethod
     def __del__(self):
         """Finalize the object.
 
@@ -136,24 +115,29 @@ class Dataset(dataset.Dataset, abc.ABC):
         pass
 
     # --- Representation ---
+    @override
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
-        lines  = [f"Dataset {self.__class__.__name__}"]
+        lines = [f"Dataset {self.__class__.__name__}"]
         lines += [f"Number of datapoints: {len(self)}"]
         return "\n".join(lines)
 
     # --- Container / Sequence Methods ---
-    @abc.abstractmethod
+    @abstractmethod
     def __len__(self) -> int:
         """Return the length of the container."""
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def __getitem__(self, index: int) -> dict[str, Any]:
         """Return an item at the given ``index``.
 
         Args:
-            index: Index to access.
+            index (int): Index of datapoint.
+
+        Returns:
+            dict[str, Any]: A datapoint dictionary containing all modalities,
+                each associated with a 'key'.
         """
         pass
 
@@ -163,26 +147,27 @@ class Dataset(dataset.Dataset, abc.ABC):
             yield self[i]
 
     # --- Properties ---
-    def set_classlist(self, value: Path | ClassList | None):
+    def set_classlist(self, classlist: ClassList | Path | str | None):
         """Set the dataset's class definitions.
 
         Args:
-            value: Either a .yaml file containing the classes definitions,
-                or a ClassList instance. Defaults to None.
+            classlist (ClassList | Path | str, optional): Class definitions for
+                the dataset. Can be a ``ClassList`` instance or a path to a
+                .yaml file. Defaults to None.
 
         Raises:
             TypeError: If ``value`` is not a valid type.
         """
-        if value is None:
+        if classlist is None:
             self.classlist = None
-        elif isinstance(value, (Path, ClassList)):
-            self.classlist = ClassList(value)
+        elif isinstance(classlist, (ClassList, Path, str)):
+            self.classlist = ClassList(classlist)
             if self.verbose:
                 log(f"'classlist' set with {len(self.classlist)} classes.")
         else:
             raise TypeError(
-                f"Expected 'value' to be a Path, ClassList, or None, "
-                f"but got {type(value).__name__}."
+                f"Expected 'value' to be a ClassList or Path, but got "
+                f"{type(classlist).__name__}."
             )
 
     @property
@@ -191,80 +176,75 @@ class Dataset(dataset.Dataset, abc.ABC):
         return not self.verbose
 
     # --- Access ---
-    @abc.abstractmethod
-    def _get_datapoint(self, index: int) -> dict[str, Any]:
+    @abstractmethod
+    def get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
 
         Args:
-            index: Index of datapoint.
+            index (int): Index of datapoint.
+
+        Returns:
+            dict[str, Any]: A datapoint dictionary containing all modalities,
+                each associated with a 'key'.
+
+        Raises:
+            IndexError: If ``index`` is out of range.
         """
         pass
 
-    def _get_underlying_data(self, index: int) -> dict[str, Any]:
+    def get_underlying_data(self, index: int) -> dict[str, Any]:
         """Get the underlying data of a datapoint at the specified ``index``.
 
         Args:
-            index: Index of datapoint.
+            index (int): Index of datapoint.
 
-        Raises:
-            TypeError: If ``index`` is not an int.
-            IndexError: If ``index`` is out of range.
+        Returns:
+            dict[str, Any]: A datapoint dictionary containing all modalities,
+                each associated with a 'key'.
         """
-        if not isinstance(index, int):
-            raise TypeError(f"Expected 'index' to be an int, but got {type(index).__name__}.")
-        if index < 0 or index >= len(self):
-            raise IndexError(f"Index {index} out of range for dataset of size {len(self)}.")
+        datapoint = self.get_datapoint(index=index)
+        for k, v in datapoint.items():
+            if v is not None and hasattr(v, "data"):
+                datapoint[k] = v.data
 
-        datapoint = self._get_datapoint(index=index)
-        # Optimized 'data' extraction using dictionary comprehension
-        return {
-            k: getattr(v, "data", v) if v is not None else None
-            for k, v in datapoint.items()
-        }
+        return datapoint
 
 
 # --- Mixins ---
 
-class RegistrableMixin(abc.ABC):
+class RegistrableMixin(ABC):
     """A mixin class that adds metadata attribute to datasets for factory
     registration purposes.
 
     Attributes:
-        name: Name of the data container. `Must be defined in subclasses or set
-            during initialization.`
-        tasks: List of supported tasks. `Must be defined in subclasses or set
-            during initialization.`
+        name (str): Name of the data container. `Must be defined in subclasses
+            or set during initialization.`
+        tasks (list[Task]): List of supported tasks. `Must be defined in
+            subclasses or set during initialization.`
     """
 
-    name : str | None = None
-    tasks: list[Task] = []
+    name: str
+    tasks: list[Task]
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name : str        | None = None,
+        name: str | None = None,
         tasks: list[Task] | None = None,
-        *args, **kwargs
+        *args, **kwargs,
     ):
         """Initialize a new instance.
 
         Args:
-            name: Name of the data container. If provided, it overrides the
-                class-level default. Defaults to None.
-            tasks: List of supported tasks. If provided, it overrides the
-                class-level default. Defaults to None.
+            name (str): Name of the data container. If provided, it overrides
+                the class-level default. Defaults to None.
+            tasks (list[Task]): List of supported tasks. If provided, it overrides
+                the class-level default. Defaults to None.
         """
-        # Validate inputs
-        if name is not None and not isinstance(name, str):
-            raise TypeError(f"Expected 'name' to be a str, but got {type(name).__name__}.")
-        if tasks is not None and not isinstance(tasks, list):
-            raise TypeError(f"Expected 'tasks' to be a list, but got {type(tasks).__name__}.")
-
         # Assign attributes
-        # If provided, these instance variables will override the class-level defaults
-        if name is not None:
+        if isinstance(name, str):
             self.name = name
-        if tasks is not None:
+        if isinstance(tasks, list) and all(isinstance(t, Task) for t in tasks):
             # We use list() to create a copy, preventing shared state bugs
             self.tasks = list(tasks)
 

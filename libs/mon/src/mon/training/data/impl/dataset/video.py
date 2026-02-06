@@ -13,14 +13,14 @@ __all__ = [
     "is_video_dataset",
 ]
 
-from typing import Any
+from typing import Any, override
 
 import box
 import cv2
 import numpy as np
 import torch
 
-from mon.core import log, Path, EXT, Split, Task
+from mon.core import EXT, log, Path, Split, Task
 from mon.core.dtypes import ClassList, Frame
 from mon.training.augment import albumentations as A
 from ...base import Dataset
@@ -34,100 +34,104 @@ from ...comp import BatchCollateMixin, RootLoadMixin
 class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
     """Video or stream loader using OpenCV.
 
-    Extend ``Dataset`` to handle video data as the primary modality. Use OpenCV
-    to read video files or streams and extract frames on-the-fly during data
-    retrieval.
+    Extend ``Dataset`` with ``RootLoadMixin`` and ``BatchCollateMixin`` to
+    load video data from a specified ``root``. Use OpenCV to read video frames
+    on-the-fly.
 
     Attributes:
-        subset: Name of the dataset's subset directory. `Should be defined in
-            subclasses`.
-        splits: List of supported splits. `Should be defined in subclasses`.
-        num_frames: Number of frames in the video.
-        shape: Shape of video frames.
-        video_capture: OpenCV video capture object.
-        video_meta: Video metadata.
-        curr_index: Track the last accessed frame to avoid unnecessary seeks.
-        transform: Transformations for input and target.
+        subroot (str, optional): Name of the subdirectory within the dataset's
+            ``root`` (i.e., ``root/subroot``). Use this if the current dataset
+            is a subset of another dataset. `Should be defined in subclasses.`
+        splits (list[Split]): List of supported splits. `Must be defined in
+            subclasses.`
     """
 
-    subset: str | None  = None
+    subroot: str = ""
     splits: list[Split] = [Split.PREDICT]
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        root     : Path,
-        split    : Split                   = Split.PREDICT,
-        transform: A.Compose        | None = None,
-        classlist: Path | ClassList | None = None,
-        verbose  : bool                    = True,
+        root: Path | str,
+        split: Split | str = Split.TRAIN,
+        transform: A.Compose | dict | None = None,
+        classlist: ClassList | Path | str | None = None,
+        verbose: bool = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            root: Absolute path to the dataset root directory.
-            split: Data split subset to use. Defaults to Split.PREDICT.
-            transform: Transformations to apply. Defaults to None.
-            classlist: Either a .yaml file containing the classes definitions,
-                or a ClassList instance. Defaults to None.
-            verbose: Verbosity mode. Defaults to True.
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
+            root (Path | str): Absolute path to the dataset root directory.
+            split (Split | str): Data split subset to use. Must be one of the
+                supported ``splits``. Defaults to Split.PREDICT.
+            transform (A.Compose | dict, optional): Transformations to apply.
+                Defaults to None.
+            classlist (ClassList | Path | str, optional): Class definitions for
+                the dataset. Can be a ``ClassList`` instance or a path to a
+                .yaml file. Defaults to None.
+            verbose (bool): Verbosity mode. Defaults to True.
         """
         # Define default values to avoid potential attribute errors during
         # the initialization chain
-        self.num_frames    = 0
-        self.shape         = ()
         self.video_capture = None
-        self.video_meta    = {}
-        self.curr_index    = -1
+        self.meta = box.Box()
+        self.curr_index = -1
 
         # Continue the initialization chain
         super().__init__(
-            root      = root,
-            split     = split,
-            classlist = classlist,
-            verbose   = verbose,
-            *args, **kwargs
+            root=root,
+            split=split,
+            classlist=classlist,
+            verbose=verbose,
+            *args, **kwargs,
         )
 
         # Assign attributes
-        self.transform = None
-        self.set_transform(value=transform)
+        self.transform = transform
 
+    @override
     def __del__(self):
-        """Close the dataset loading mechanism and release resources."""
+        """Finalize the object.
+
+        Close the dataset loading mechanism and release resources.
+        """
         if self.video_capture and self.video_capture.isOpened():
             self.video_capture.release()
 
     # --- Container / Sequence Methods ---
+    @override
     def __len__(self) -> int:
-        """Return the length of the dataset."""
-        return self.num_frames
+        """Return the length of the container."""
+        return self.meta.num_frames
 
+    @override
     def __iter__(self):
-        """Initialize a new iterator."""
+        """Return an iterator for the container."""
         self.curr_index = 0
         if isinstance(self.video_capture, cv2.VideoCapture):
             self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
         return self
 
+    @override
     def __getitem__(self, index: int) -> dict[str, Any]:
-        """Return the item at the specified ``index``.
+        """Return an item at the given ``index``.
 
         Args:
-            index: Index of the item.
+            index (int): Index of datapoint.
+
+        Returns:
+            dict[str, Any]: A datapoint dictionary containing all modalities,
+                each associated with a 'key'.
         """
         # Fetch datapoint
-        data = self._get_underlying_data(index=index)
-        meta = data.pop("meta")  # Remove metadata from datapoint for easier augmentation ops.
+        data = self.get_underlying_data(index=index)
+        meta = data.pop("meta")
 
         transform = self.transform
 
-        if transform is not None:
-            # Albumentations usually uses the key 'image'
-            augmented     = transform(image=data["frame"])
+        if transform:
+            augmented = transform(image=data["frame"])
             data["frame"] = augmented["image"]
 
             # Vectorized-style type casting
@@ -142,47 +146,57 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         return {**data, "meta": meta}
 
     # --- Properties ---
-    def set_transform(self, value: Any):
+    @property
+    def transform(self) -> A.Compose | None:
+        """Return the transformation pipeline."""
+        return self._transform
+
+    @transform.setter
+    def transform(self, transform: A.Compose | dict | None):
         """Set the transformation operations.
 
         Args:
-            value: Transformations for input and target.
+            transform (A.Compose | dict, optional): Transformations to apply.
+                Defaults to None.
 
         Raises:
-            TypeError: If ``value`` is not an instance of albumentations.Compose.
+            TypeError: If ``transform`` is not an instance of albumentations.Compose.
         """
-        if isinstance(value, (dict, box.Box)):
-            value = A.Compose(**value)
-        if value is not None and not isinstance(value, A.Compose):
+        if transform is None:
+            self._transform = None
+            return
+
+        if isinstance(transform, dict):
+            transform = A.Compose(**transform)
+        if not isinstance(transform, A.Compose):
             raise TypeError(
-                f"Expected 'transform' to be an instance of albumentations.Compose, "
-                f"but got {type(value).__name__}."
+                f"Expected 'transform' to be an instance of "
+                f"albumentations.Compose, but got {type(transform).__name__}."
             )
 
-        self.transform = value
+        self._transform = transform
 
     @property
     def is_stream(self) -> bool:
         """Check if the video source is a stream."""
-        return self.root.is_video_stream() or self.num_frames == -1
+        return self.root.is_video_stream() or self.meta.num_frames == -1
 
     @property
     def imgsz(self) -> tuple[int, int]:
         """Return the size of video frames."""
-        return (
-            int(self.shape[0]),
-            int(self.shape[1])
-        )
+        return self.meta.imgsz
 
     # --- Initialize ---
-    def _load_data(self) -> dict[str, Any]:
-        """Load core data for the dataset.
+    @override
+    def _load_data(self) -> dict[str, list[Any]]:
+        """Load the core data of the dataset.
 
         Returns:
-            Empty dictionary as frames are loaded on-the-fly.
+            dict[str, list[Any]]: Dictionary containing lists of datapoints for
+                each modality.
 
         Raises:
-            RuntimeError: If the video source cannot be opened.
+            RuntimeError: If ``video_capture`` cannot be opened.
         """
         # Validate video source
         root = self.root
@@ -192,33 +206,30 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         if not self.video_capture.isOpened():
             raise RuntimeError(f"Failed to open video source at: {root}")
 
-        # Cache values to avoid repeated C-calls
-        self.num_frames = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
-
         h = int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         w = int(self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.shape = (h, w, 3)
 
         # Retrieve video metadata
-        self.video_meta = {
-            "video_path"   : root,
-            "orig_shape"   : self.shape,
-            "shape"        : self.shape,
-            "format"       : self.video_capture.get(cv2.CAP_PROP_FORMAT),
-            "fourcc"       : str(self.video_capture.get(cv2.CAP_PROP_FOURCC)),
-            "fps"          : int(self.video_capture.get(cv2.CAP_PROP_FPS)),
-            "mode"         : self.video_capture.get(cv2.CAP_PROP_MODE),
-            "num_frames"   : self.num_frames,
+        self.meta = box.Box({
+            "video_path": root,
+            "shape": (h, w, 3),
+            "imgsz": (h, w),
+            "format": self.video_capture.get(cv2.CAP_PROP_FORMAT),
+            "fourcc": str(self.video_capture.get(cv2.CAP_PROP_FOURCC)),
+            "fps": int(self.video_capture.get(cv2.CAP_PROP_FPS)),
+            "mode": self.video_capture.get(cv2.CAP_PROP_MODE),
+            "num_frames": int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT)),
             "pos_avi_ratio": int(self.video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO)),
-            "pos_frames"   : int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES)),
-            "pos_msec"     : int(self.video_capture.get(cv2.CAP_PROP_POS_MSEC)),
-            "hash"         : root.stat().st_size if isinstance(root, Path) else None,
-        }
+            "pos_frames": int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES)),
+            "pos_msec": int(self.video_capture.get(cv2.CAP_PROP_POS_MSEC)),
+            "hash": root.stat().st_size if isinstance(root, Path) else None,
+        }, frozen_box=True)
 
         # Return empty dict since frames are loaded on-the-fly via the
         # ``_get_datapoint()`` method.
         return {}
 
+    @override
     def verify(self):
         """Verify dataset integrity.
 
@@ -226,17 +237,24 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
             RuntimeError: If no datapoints are found.
         """
         if len(self) == 0:
-            raise RuntimeError(f"No datapoints in the dataset: {self.__class__.__name__}.")
+            raise RuntimeError(
+                f"No datapoints in the dataset: {self.__class__.__name__}."
+            )
 
         if self.verbose:
             log(f"Number of {self.split_str} datapoints: {len(self)}.")
 
     # --- Data Retrieval ---
-    def _get_datapoint(self, index: int) -> dict[str, Any]:
+    @override
+    def get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
 
         Args:
-            index: Index of datapoint.
+            index (int): Index of datapoint.
+
+        Returns:
+            dict[str, Any]: A datapoint dictionary containing all modalities,
+                each associated with a 'key'.
 
         Raises:
             RuntimeError: If ``VideoCapture`` is not initialized.
@@ -255,7 +273,9 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         if not success:
             if self.is_stream:
                 raise StopIteration
-            raise IndexError(f"Index {index} out of range for dataset of size {len(self)}.")
+            raise IndexError(
+                f"Index {index} out of range for dataset of size {len(self)}."
+            )
 
         self.curr_index = index
 
@@ -263,15 +283,23 @@ class VideoLoader(Dataset, RootLoadMixin, BatchCollateMixin):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Wrap in your Frame/Image object (assuming it handles metadata)
-        frame_obj = Frame(data=frame, index=index, path=self.root, root=self.root.parent)
+        frame_obj = Frame(
+            data=frame,
+            index=index,
+            path=self.root,
+            root=self.root.parent
+        )
 
         # Build datapoint dictionary
         path = self.root
         meta = {
             "index": index,
-            "path" : path.parent / path.stem / f"{path.stem}_{index}{EXT.IMAGE}",
-        } | self.video_meta
-        return {"frame": frame_obj, "meta": meta}
+            "path": path.parent / path.stem / f"{path.stem}_{index}{EXT.IMAGE}",
+        } | self.meta
+        return {
+            "frame": frame_obj,
+            "meta": meta,
+        }
 
 # endregion
 
@@ -284,14 +312,14 @@ def is_video_dataset(dataset: Dataset) -> bool:
     """Check if a dataset is a video dataset.
 
     Args:
-        dataset: Dataset to check.
+        dataset (Dataset): Dataset to check.
 
     Returns:
-        True if the dataset is a video dataset, False otherwise.
+        bool: True if the dataset is a video dataset, False otherwise.
     """
     if dataset is None:
         return False
-    if hasattr(dataset, "tasks") and isinstance(dataset.tasks, list | tuple):
+    if hasattr(dataset, "tasks") and isinstance(dataset.tasks, (list, tuple)):
         return Task.VIDEO in dataset.tasks
     return isinstance(dataset, VideoLoader)
 

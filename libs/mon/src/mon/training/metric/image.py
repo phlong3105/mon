@@ -11,16 +11,10 @@ from __future__ import annotations
 
 __all__ = [
     "ImageQualityAssessment",
-    "scale_gt_mean",
 ]
 
-import cv2
-import kornia
-import numpy as np
 import torch
-import torch.nn as nn
-
-from mon.core import TensorOrArray
+from torch import nn, Tensor
 
 
 # ==============================================================================
@@ -34,10 +28,6 @@ class ImageQualityAssessment(nn.Module):
 
     References:
         - Code: https://github.com/VinAIResearch/PSENet-Image-Enhancement/blob/main/source/iqa.py
-
-    Attributes:
-        exposed_level (float): Target exposedness level.
-        eps (float): Small constant for numerical stability.
     """
 
     # --- Lifecycle & Initialization ---
@@ -65,16 +55,16 @@ class ImageQualityAssessment(nn.Module):
         self.avg_pool = nn.AvgPool2d(pool_size, stride=1)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Compute the IQA score for input.
 
         Args:
-            x (torch.Tensor): Input image, formatted as a torch.Tensor of shape
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
+            x (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: IQA score, formatted as a torch.Tensor of shape
-                (B, 1, 1, 1) with values ranging from 0.0 to 1.0.
+            Tensor: IQA tensor of shape (B, 1, 1, 1) with values ranging from
+                0.0 to 1.0.
         """
         # Saturation (Varying intensities across channels)
         max_rgb, _ = torch.max(x, dim=1, keepdim=True)
@@ -100,55 +90,6 @@ class ImageQualityAssessment(nn.Module):
         # Reduce spatial dimensions to get a per-image score
         quality_map = (saturation * contrast) / exposedness
         return quality_map.mean(dim=[1, 2, 3], keepdim=True)
-
-
-# endregion
-
-
-# ==============================================================================
-# region UTILITIES
-# ==============================================================================
-
-def scale_gt_mean(
-    image: TensorOrArray,
-    target: TensorOrArray,
-    eps: float = 1e-6,
-) -> TensorOrArray:
-    """Scale image to match target's mean intensity.
-
-    References:
-        - Code: https://github.com/Fediory/HVI-CIDNet/blob/master/measure.py
-
-    Args:
-        image (torch.Tensor, np.ndarray): Input image, formatted as a torch.Tensor
-            of shape (B, C, H, W) and values ranging from 0.0 to 1.0; or as a
-            np.ndarray of shape (H, W, C) with values ranging from 0 to 255.
-        target (torch.Tensor, np.ndarray): Target image, formatted as a torch.Tensor
-            of shape (B, C, H, W) and values ranging from 0.0 to 1.0; or as a
-            np.ndarray of shape (H, W, C) with values ranging from 0 to 255.
-        eps (float): Small constant for numerical stability. Defaults to 1e-6.
-
-    Returns:
-        torch.Tensor or np.ndarray: Scaled image with the same type as input.
-
-    Raises:
-        TypeError: If input types are not torch.Tensor or np.ndarray.
-    """
-    if isinstance(image, torch.Tensor) and isinstance(target, torch.Tensor):
-        mean_image = kornia.color.rgb_to_grayscale(image).mean()
-        mean_target = kornia.color.rgb_to_grayscale(target).mean()
-        scale = (mean_target + eps) / (mean_image + eps)
-        return torch.clamp(image * scale, 0, 1)
-    elif isinstance(image, np.ndarray) and isinstance(target, np.ndarray):
-        mean_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY).mean()
-        mean_target = cv2.cvtColor(target, cv2.COLOR_RGB2GRAY).mean()
-        scale = (mean_target + eps) / (mean_image + eps)
-        return np.clip(image * scale, 0, 255)
-    else:
-        raise TypeError(
-            f"Expected torch.Tensor or np.ndarray, but got {type(image)} and "
-            f"{type(target)}.",
-        )
 
 
 # endregion

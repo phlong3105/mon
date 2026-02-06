@@ -33,13 +33,6 @@ class SEBlock(nn.Module):
     References:
         - Paper: "Squeeze-and-Excitation Networks," CVPR 2018.
         - Code: https://github.com/hujie-frank/SENet
-
-    Attributes:
-        avg_pool: Adaptive average pooling layer.
-        reduce: 1x1 convolutional layer for channel reduction.
-        expand: 1x1 convolutional layer for channel expansion.
-        act: ReLU activation function.
-        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -47,28 +40,30 @@ class SEBlock(nn.Module):
         """Initialize a new instance.
 
         Args:
-            in_channels: Number of input channels.
-            rd_ratio: Reduction ratio for the intermediate channels. Defaults to 0.0625.
+            in_channels (int): Number of input channels.
+            rd_ratio (float): Reduction ratio for intermediate channels.
+                Defaults to 0.0625.
         """
         super().__init__()
-        mid_channels  = int(in_channels * rd_ratio)
+        # Assign attributes
+        mid_channels = int(in_channels * rd_ratio)
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.reduce   = nn.Conv2d(in_channels, mid_channels, 1, 1, bias=True)
-        self.expand   = nn.Conv2d(mid_channels, in_channels, 1, 1, bias=True)
-        self.act      = nn.ReLU(inplace=True)
-        self.sigmoid  = nn.Sigmoid()
+        self.reduce = nn.Conv2d(in_channels, mid_channels, 1, 1, bias=True)
+        self.expand = nn.Conv2d(mid_channels, in_channels, 1, 1, bias=True)
+        self.act = nn.ReLU(inplace=True)
+        self.sigmoid = nn.Sigmoid()
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor with dimensions (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor with dimensions (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            torch.Tensor: Output tensor with dimensions (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
         """
         y = self.avg_pool(x)
         y = self.reduce(y)
@@ -87,10 +82,6 @@ class SimAM(nn.Module):
 
     References:
         - Code: https://github.com/ZjjConan/SimAM
-
-    Attributes:
-        e_lambda: A small constant to avoid division by zero.
-        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -98,29 +89,33 @@ class SimAM(nn.Module):
         """Initialize a new instance.
 
         Args:
-            e_lambda: A small constant to avoid division by zero. Defaults to 1e-4.
+            e_lambda (float): Lambda parameter for the exponential term.
+                Defaults to 1e-4.
         """
         super().__init__()
         self.e_lambda = e_lambda
-        self.sigmoid  = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
 
     # --- Callable & Context Manager ---
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
         """
         b, c, h, w = x.shape
-        n          = w * h - 1
+        n = w * h - 1
         x_minus_mu = x - x.mean(dim=[2, 3], keepdim=True)
-        d          = x_minus_mu.pow(2)
-        v          = d.sum(dim=[2, 3], keepdim=True) / n
-        e_inv      = d / (4 * (v + self.e_lambda)) + 0.5
+        d = x_minus_mu.pow(2)
+        v = d.sum(dim=[2, 3], keepdim=True) / n
+        e_inv = d / (4 * (v + self.e_lambda)) + 0.5
         return x * self.sigmoid(e_inv)
+
 
 # endregion
 

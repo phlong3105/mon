@@ -35,12 +35,14 @@ class DAF(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
-            residual: Residual tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            residual (torch.Tensor): Residual tensor of shape (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            torch.Tensor: Fused output tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
         """
         return x + residual
 
@@ -53,11 +55,6 @@ class MS_CAM(nn.Module):
     References:
         - Paper: "Attentional Feature Fusion," WACV 2021.
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
-
-    Attributes:
-        local_att: Local attention module.
-        global_att: Global attention module.
-        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -65,11 +62,12 @@ class MS_CAM(nn.Module):
         """Initialize a new instance.
 
         Args:
-            channels: Number of input channels. Defaults to 64.
-            ratio: Reduction ratio for the intermediate channels. Defaults to 4.
+            channels (int): Number of input channels. Defaults to 64.
+            ratio (int): Reduction ratio for the intermediate channels.
+                Defaults to 4.
         """
         super().__init__()
-        mid_channels   = int(channels // ratio)
+        mid_channels = int(channels // ratio)
         self.local_att = nn.Sequential(
             nn.Conv2d(channels, mid_channels, kernel_size=1, stride=1, padding=0),
             nn.BatchNorm2d(mid_channels),
@@ -92,15 +90,17 @@ class MS_CAM(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
         """
-        x_l  = self.local_att(x)
-        x_g  = self.global_att(x)
+        x_l = self.local_att(x)
+        x_g = self.global_att(x)
         x_lg = x_l + x_g
-        w    = self.sigmoid(x_lg)
+        w = self.sigmoid(x_lg)
         return x * w
 
 
@@ -112,11 +112,6 @@ class AFF(nn.Module):
     References:
         - Paper: "Attentional Feature Fusion," WACV 2021.
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
-
-    Attributes:
-        local_att: Local attention module.
-        global_att: Global attention module.
-        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -124,11 +119,12 @@ class AFF(nn.Module):
         """Initialize a new instance.
 
         Args:
-            channels: Number of input channels. Defaults to 64.
-            ratio: Reduction ratio for the intermediate channels. Defaults to 4.
+            channels (int): Number of input channels. Defaults to 64.
+            ratio (int): Reduction ratio for the intermediate channels.
+                Defaults to 4.
         """
         super().__init__()
-        mid_channels   = int(channels // ratio)
+        mid_channels = int(channels // ratio)
         self.local_att = nn.Sequential(
             nn.Conv2d(channels, mid_channels, kernel_size=1, stride=1, padding=0),
             nn.BatchNorm2d(mid_channels),
@@ -151,19 +147,20 @@ class AFF(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
-            residual: Residual tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            residual (torch.Tensor): Residual tensor of shape (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
 
         Returns:
-            Fused output tensor of shape (B, C, H, W) and values ranging
-            from 0.0 to 1.0.
+            torch.Tensor: Fused output tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
         """
-        x_a  = x + residual
-        x_l  = self.local_att(x_a)
-        x_g  = self.global_att(x_a)
+        x_a = x + residual
+        x_l = self.local_att(x_a)
+        x_g = self.global_att(x_a)
         x_lg = x_l + x_g
-        w    = self.sigmoid(x_lg)
+        w = self.sigmoid(x_lg)
         # x_o = 2 * input * w + 2 * residual * (1 - w)
         # Simplified: 2 * (input * w + residual * (1 - w))
         return 2 * (x * w + residual * (1 - w))
@@ -178,13 +175,6 @@ class iAFF(nn.Module):
     References:
         - Paper: "Attentional Feature Fusion," WACV 2021.
         - Code: https://github.com/YimianDai/open-aff/tree/master/aff_pytorch
-
-    Attributes:
-        local_att: First local attention module.
-        global_att: First global attention module.
-        local_att2: Second local attention module.
-        global_att2: Second global attention module.
-        sigmoid: Sigmoid activation function.
     """
 
     # --- Lifecycle & Initialization ---
@@ -192,11 +182,12 @@ class iAFF(nn.Module):
         """Initialize a new instance.
 
         Args:
-            channels: Number of input channels. Defaults to 64.
-            ratio: Reduction ratio for the intermediate channels. Defaults to 4.
+            channels (int): Number of input channels. Defaults to 64.
+            ratio (int): Reduction ratio for the intermediate channels.
+                Defaults to 4.
         """
         super().__init__()
-        mid_channels   = int(channels // ratio)
+        mid_channels = int(channels // ratio)
         self.local_att = nn.Sequential(
             nn.Conv2d(channels, mid_channels, kernel_size=1, stride=1, padding=0),
             nn.BatchNorm2d(mid_channels),
@@ -235,26 +226,28 @@ class iAFF(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
-            residual: Residual tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            residual (torch.Tensor): Residual tensor of shape (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
 
         Returns:
-            Fused output tensor of shape (B, C, H, W) and values ranging
-            from 0.0 to 1.0.
+            torch.Tensor: Fused output tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
         """
-        x_a   = x + residual
-        x_l1  = self.local_att(x_a)
-        x_g1  = self.global_att(x_a)
+        x_a = x + residual
+        x_l1 = self.local_att(x_a)
+        x_g1 = self.global_att(x_a)
         x_lg1 = x_l1 + x_g1
-        w1    = self.sigmoid(x_lg1)
-        x_i   = x * w1 + residual * (1 - w1)
+        w1 = self.sigmoid(x_lg1)
+        x_i = x * w1 + residual * (1 - w1)
 
-        x_l2  = self.local_att2(x_i)
-        x_g2  = self.global_att2(x_i)
+        x_l2 = self.local_att2(x_i)
+        x_g2 = self.global_att2(x_i)
         x_lg2 = x_l2 + x_g2
-        w2    = self.sigmoid(x_lg2)
+        w2 = self.sigmoid(x_lg2)
         return x * w2 + residual * (1 - w2)
+
 
 # endregion
 

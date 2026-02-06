@@ -98,10 +98,12 @@ class SimpleGate(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, 2*C, ...) and values ranging from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, ...) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, ...) and values ranging from 0.0 to 1.0.
+            torch.Tensor: Output tensor of shape (B, C, ...) and values ranging
+                from 0.0 to 1.0.
         """
         x1, x2 = x.chunk(chunks=2, dim=1)
         return x1 * x2
@@ -115,9 +117,6 @@ class Sine(nn.Module):
 
     References:
         - Code: https://github.com/lucidrains/siren-pytorch/blob/master/siren_pytorch/siren_pytorch.py
-
-    Attributes:
-        w0: The frequency scaling factor.
     """
 
     # --- Lifecycle & Initialization ---
@@ -125,7 +124,7 @@ class Sine(nn.Module):
         """Initialize a new instance.
 
         Args:
-            w0: The frequency scaling factor. Defaults to 1.0.
+            w0 (float): Frequency factor. Defaults to 1.0.
         """
         super().__init__()
         self.w0 = w0
@@ -135,12 +134,15 @@ class Sine(nn.Module):
         """Forward the input through the layer.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            Output tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+                from -1.0 to 1.0.
         """
         return torch.sin(self.w0 * x)
+
 
 # endregion
 

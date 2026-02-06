@@ -10,5 +10,4 @@ collection utilities, and dictionary operations.
 from __future__ import annotations
 
 from .humps import *
-from .types_alias import *
 from .types_extension import *

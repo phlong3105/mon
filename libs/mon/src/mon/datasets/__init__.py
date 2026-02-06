@@ -10,7 +10,5 @@ from __future__ import annotations
 
 __all__ = []  # Prevent accidental imports of submodules.
 
-from .ai_systems import *
-from .challenges import *
+from .benchmark import *
 from .cv import *
-from .efficiency import *

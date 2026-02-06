@@ -76,7 +76,7 @@ class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
         Returns:
             A dictionary containing the datapoint and its metadata.
         """
-        data = self._get_underlying_data(index=index)
+        data = self.get_underlying_data(index=index)
         return data
 
     # --- Data Loading ---
@@ -157,7 +157,7 @@ class ImageDataPool(Dataset, InputTargetLoadMixin, BatchCollateMixin):
             log(f"Number of datapoints: {self.__len__()}.")
 
     # --- Access ---
-    def _get_datapoint(self, index: int) -> dict[str, Any]:
+    def get_datapoint(self, index: int) -> dict[str, Any]:
         """Get a datapoint at the specified ``index``.
 
         Args:

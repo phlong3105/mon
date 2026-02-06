@@ -20,7 +20,7 @@ import time
 
 import thop
 import torch
-import torch.nn as nn
+from torch import nn
 
 from mon.core import image as I, log
 
@@ -30,23 +30,21 @@ from mon.core import image as I, log
 # ==============================================================================
 
 def compute_model_stats(
-    model   : nn.Module,
-    imgsz   : int = 512,
-    channels: int = 3
+    model: nn.Module,
+    imgsz: int | tuple[int, int] = 512,
+    channels: int = 3,
 ) -> tuple[float, float, float]:
     """Compute the number of parameters, MACs, and FLOPs of a model.
 
     Args:
-        model: PyTorch model to profile.
-        imgsz: Input image size. Defaults to 512.
-        channels: Number of input channels. Defaults to 3.
+        model (nn.Module): PyTorch model to profile.
+        imgsz (int | tuple[int, int]): Input image size. Defaults to 512.
+        channels (int): Number of input channels. Defaults to 3.
 
     Returns:
-        - params: Number of parameters in the model.
-        - macs: Multiply-Accumulate Operations of the model.
-        - flops: Floating Point Operations of the model.
+        tuple[float, float, float]: Number of parameters, MACs, and FLOPs.
     """
-    h, w   = I.imgsz(imgsz)
+    h, w = I.imgsz(imgsz)
     device = next(model.parameters()).device
 
     # Use a dummy input
@@ -58,7 +56,7 @@ def compute_model_stats(
     with torch.no_grad():
         # thop.profile often modifies the model with hooks;
         # deepcopy protects the original object
-        model_copy   = copy.deepcopy(model)
+        model_copy = copy.deepcopy(model)
         macs, params = thop.profile(model_copy, inputs=(input_data,), verbose=False)
 
     flops = 2 * macs
@@ -66,25 +64,25 @@ def compute_model_stats(
 
 
 def benchmark(
-    model   : nn.Module,
-    imgsz   : int = 512,
+    model: nn.Module,
+    imgsz: int | tuple[int, int] = 512,
     channels: int = 3,
-    num_runs: int = 10
+    num_runs: int = 10,
 ):
     """Measure and log the complexity of a model.
 
     Args:
-        model: PyTorch model to benchmark.
-        imgsz: Input image size. Defaults to 512.
-        channels: Number of input channels. Defaults to 3.
-        num_runs: Number of inference runs to average over. Defaults to 10.
+        model (nn.Module): PyTorch model to benchmark.
+        imgsz (int | tuple[int, int]): Input image size. Defaults to 512.
+        channels (int): Number of input channels. Defaults to 3.
+        num_runs (int): Number of runs for latency measurement. Defaults to 10.
     """
     # Compute complexity stats
     params, macs, flops = compute_model_stats(model=model, imgsz=imgsz, channels=channels)
 
     # Measure Latency (Inference speed)
-    h, w        = I.imgsz(imgsz)
-    device      = next(model.parameters()).device
+    h, w = I.imgsz(imgsz)
+    device = next(model.parameters()).device
     dummy_input = torch.randn(1, channels, h, w).to(device)
     model.eval()
 
@@ -115,6 +113,7 @@ def benchmark(
     # log(f"MACs      : {macs:.4f}")
     # log(f"FLOPs     : {flops:.4f}")
 
+
 # endregion
 
 
@@ -127,6 +126,7 @@ def _format_unit(val: float, target: str = "M") -> str:
     if target == "G":
         return f"{val / 1e9:.2f} G"
     return f"{val / 1e6:.2f} M"
+
 
 # endregion
 

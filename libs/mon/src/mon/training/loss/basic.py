@@ -15,8 +15,10 @@ __all__ = [
     "ExtendedL1Loss",
 ]
 
+from typing import override
+
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
 
 from .base import BaseLoss
 
@@ -26,36 +28,33 @@ from .base import BaseLoss
 # ==============================================================================
 
 class CharbonnierLoss(BaseLoss):
-    """Differentiable variant of L1 loss.
-
-    Attributes:
-        eps2: Small constant for numerical stability.
-    """
+    """Differentiable variant of L1 loss."""
 
     # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-6, reduction: str = "mean"):
         """Initialize a new instance.
 
         Args:
-            eps: Small constant for numerical stability. Defaults to 1e-6.
-            reduction: Reduction method to apply to the loss. Can be one of
-                ["none", "mean", "sum"]. Defaults to "mean".
+            eps (float): Small constant for numerical stability. Defaults to 1e-6.
+            reduction (str): Reduction method to apply to the loss. One of:
+                ["mean", "sum", "none"]. Defaults to "mean".
         """
         super().__init__(reduction=reduction)
         self.eps2 = eps ** 2
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        """Calculate the Charbonnier loss between ``input`` and ``target``.
+    @override
+    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        """Calculate the loss between ``input`` and ``target``.
 
         Args:
-           input: Input (predictions), formatted as a torch.Tensor of shape
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
-           target: Target (ground truth), formatted as a torch.Tensor of shape
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
+            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
 
         Returns:
-            Loss value.
+            Tensor: Loss value.
         """
         diff = input - target
         loss = torch.sqrt(diff * diff + self.eps2)
@@ -64,39 +63,41 @@ class CharbonnierLoss(BaseLoss):
 
 
 class CosineSimilarityLoss(BaseLoss):
-    """Cosine Similarity loss function.
-
-    Attributes:
-        cos: Cosine similarity module.
-    """
+    """Cosine Similarity loss function."""
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, dim: int = 1, eps: float = 1e-6, reduction: str = "mean"):
+    def __init__(
+        self,
+        dim: int = 1,
+        eps: float = 1e-6,
+        reduction: str = "mean",
+    ):
         """Initialize a new instance.
 
         Args:
-            dim: Dimension along which to compute cosine similarity.
+            dim (int): Dimension along which to compute the cosine similarity.
                 Defaults to 1.
-            eps: Small constant for numerical stability. Defaults to 1e-6.
-            reduction: Reduction method to apply to the loss. Can be one of
-                ["none", "mean", "sum"]. Defaults to "mean".
+            eps (float): Small constant for numerical stability. Defaults to 1e-6.
+            reduction (str): Reduction method to apply to the loss. One of:
+                ["mean", "sum", "none"]. Defaults to "mean".
         """
         super().__init__(reduction=reduction)
         # dim=1 is standard for (B, C, H, W) images to compare color/feature vectors
         self.cos = nn.CosineSimilarity(dim=dim, eps=eps)
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        """Calculate the Cosine Similarity loss between ``input`` and ``target``.
+    @override
+    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        """Calculate the loss between ``input`` and ``target``.
 
         Args:
-            input: Input (predictions), formatted as a torch.Tensor of shape
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
-            target: Target (ground truth), formatted as a torch.Tensor of shape
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
+            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
 
         Returns:
-            Loss value.
+            Tensor: Loss value.
         """
         # cos() returns (B, H, W).
         # Loss is 1 - similarity, so similarity=1 means loss=0.
@@ -106,45 +107,35 @@ class CosineSimilarityLoss(BaseLoss):
 
 
 class ExtendedL1Loss(BaseLoss):
-    """Extended L1 loss function that applies a mask to the input and target.
-
-    Attributes:
-        eps: Small constant for numerical stability.
-    """
+    """Extended L1 loss function that applies a mask to the input and target."""
 
     # --- Lifecycle & Initialization ---
     def __init__(self, eps: float = 1e-8, reduction: str = "mean"):
         """Initialize a new instance.
 
         Args:
-            eps: Small constant for numerical stability. Defaults to 1e-8.
-            reduction: Reduction method to apply to the loss. Can be one of
-                ["none", "mean", "sum"]. Defaults to "mean".
+            eps (float): Small constant for numerical stability. Defaults to 1e-8.
+            reduction (str): Reduction method to apply to the loss. One of:
+                ["mean", "sum", "none"]. Defaults to "mean".
         """
         super().__init__(reduction=reduction)
         self.eps = eps
 
     # --- Callable & Context Manager ---
-    # noinspection PyMethodOverriding
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor,
-        mask  : torch.Tensor
-    ) -> torch.Tensor:
-        """Calculate the Extended L1 loss between ``input`` and ``target``.
+    @override
+    def forward(self, input: Tensor, target: Tensor, mask: Tensor) -> Tensor:
+        """Calculate the loss between ``input`` and ``target``.
 
         Args:
-            input: Input (predictions), formatted as a torch.Tensor of shape
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
-            target: Target (ground truth), formatted as a torch.Tensor of shape
-                (B, C, H, W) and values ranging from 0.0 to 1.0.
-            mask: Mask, formatted as a torch.Tensor of shape (B, 1, H, W)
-                with binary values indicating the regions to consider in the
-                loss calculation.
+            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            mask (Tensor): Mask tensor of shape (B, 1, H, W) with binary values
+                indicating the regions to consider in the loss calculation.
 
         Returns:
-            Loss value.
+            Tensor: Loss value.
         """
         # Calculate absolute difference
         abs_diff = torch.abs(input - target)
@@ -158,12 +149,13 @@ class ExtendedL1Loss(BaseLoss):
         if self.reduction == "mean":
             # Sum of active pixels
             denom = torch.sum(mask) + self.eps
-            loss  = torch.sum(masked_diff) / denom
+            loss = torch.sum(masked_diff) / denom
         else:
             # If reduction is 'none' or 'sum', use the base reduction logic
-            loss  = self.reduce(masked_diff)
+            loss = self.reduce(masked_diff)
 
         return loss
+
 
 # endregion
 

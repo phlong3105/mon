@@ -12,9 +12,11 @@ __all__ = [
     "BaseLoss",
 ]
 
-import abc
+from abc import ABC, abstractmethod
+from typing import override
 
 import torch
+from torch import Tensor
 from torch.nn.modules.loss import _Loss
 
 from mon.core import depascalize
@@ -47,21 +49,16 @@ from mon.core import depascalize
 
 # --- Base Classes ---
 
-class BaseLoss(_Loss, abc.ABC):
-    """Loss function base class.
-
-    Attributes:
-        _reduce_fn: Function to reduce the loss tensor based on the specified
-            ``reduction`` method.
-    """
+class BaseLoss(_Loss, ABC):
+    """Loss function base class."""
 
     # --- Lifecycle & Initialization ---
     def __init__(self, reduction: str = "mean"):
         """Initialize a new instance.
 
         Args:
-            reduction: Reduction method to apply to the loss. Can be one of
-                ["none", "mean", "sum"]. Defaults to "mean".
+            reduction (str): Reduction method to apply to the loss. One of:
+                ["mean", "sum", "none"]. Defaults to "mean".
 
         Raises:
             ValueError: If the provided ``reduction`` method is not supported.
@@ -70,18 +67,19 @@ class BaseLoss(_Loss, abc.ABC):
         # Assign the function once to avoid repeated dict lookups
         self._reduce_fn = {
             "mean": torch.mean,
-            "sum" : torch.sum,
+            "sum": torch.sum,
             "none": lambda x: x,
         }[reduction]
 
     # --- Representation ---
+    @override
     def __str__(self):
         """Return the string representation of the loss class."""
         return depascalize(self.__class__.__name__).lower()
 
     # --- Callable & Context Manager ---
-    @abc.abstractmethod
-    def forward(self, *args, **kwargs) -> torch.Tensor:
+    @abstractmethod
+    def forward(self, *args, **kwargs) -> Tensor:
         """Calculate the loss.
 
         Args:
@@ -89,18 +87,18 @@ class BaseLoss(_Loss, abc.ABC):
             **kwargs: Keyword arguments.
 
         Returns:
-            Loss value.
+            Tensor: Loss value.
         """
         pass
 
-    def reduce(self, loss: torch.Tensor) -> torch.Tensor:
+    def reduce(self, loss: Tensor) -> Tensor:
         """Reduce the loss tensor according to the specified reduction method.
 
         Args:
-            loss: Loss tensor to be reduced.
+            loss (Tensor): Loss tensor to reduce.
 
         Returns:
-            Reduced loss tensor.
+            Tensor: Reduced loss tensor.
         """
         return self._reduce_fn(loss)
 

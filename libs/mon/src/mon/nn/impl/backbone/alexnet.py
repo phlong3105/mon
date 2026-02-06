@@ -23,7 +23,7 @@ from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from mon.nn.base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
-current_dir  = current_file.parents[0]
+current_dir = current_file.parents[0]
 
 
 # ==============================================================================
@@ -33,40 +33,32 @@ current_dir  = current_file.parents[0]
 # --- Base Classes ---
 
 class AlexNetBackBone(nn.Module, RegistrableMixin):
-    """AlexNet backbone.
+    """AlexNet backbone."""
 
-    Attributes:
-        features: The feature extraction layers.
-        out_indices: List of layer indices to extract features from.
-        out_channels: List of output channels for each extracted layer.
-        verbose: Verbosity mode.
-    """
-
-    arch     : str          = "alexnet"
-    name     : str          = None
-    tasks    : list[Task]   = [Task.BACKBONE]
-    mltypes  : list[MLType] = []
-    model_dir: Path         = current_dir
+    arch: str = "alexnet"
+    name: str = None
+    tasks: list[Task] = [Task.BACKBONE]
+    mltypes: list[MLType] = []
+    model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name       : str,
-        weights    : WeightsType | None = None,
-        out_indices: list[int]   | None = None,
-        verbose    : bool               = True,
+        name: str,
+        weights: WeightsType | None = None,
+        out_indices: list[int] | None = None,
+        verbose: bool = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            name: Name of the backbone.
-            weights: Pre-trained weights to load. Defaults to None.
-            out_indices: List of layer indices to extract features from.
-                If None, defaults to [2, 5, 8, 10, 12].
-            verbose: Verbosity mode. Defaults to True.
-            *args: Additional positional arguments for the ResNet model.
-            **kwargs: Additional keyword arguments for the ResNet model.
+            name (str): Name of the model variant.
+            weights (WeightsType, optional): Pre-trained weights to load.
+                Defaults to None.
+            out_indices (list[int], optional): List of layer indices to extract
+                features from. If None, defaults to [2, 5, 8, 10, 12].
+            verbose (bool): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__()
@@ -91,8 +83,8 @@ class AlexNetBackBone(nn.Module, RegistrableMixin):
                 log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, AlexNet already has a 'features' block
-        self.features     = base_model.features
-        self.out_indices  = out_indices or [2, 5, 8, 10, 12]
+        self.features = base_model.features
+        self.out_indices = out_indices or [2, 5, 8, 10, 12]
         self.out_channels = [64, 192, 384, 256, 256]
 
     # --- Callable & Context Manager ---
@@ -100,10 +92,11 @@ class AlexNetBackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            A list of feature maps from the specified layers.
+            list[torch.Tensor]: List of feature maps from the specified layers.
         """
         # If you need multiscale features for a Neck (FPN):
         outputs = []
@@ -130,24 +123,24 @@ class AlexNetBackBone(nn.Module, RegistrableMixin):
 class AlexNet_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 61100840,
-            "min_size"  : (63, 63),
+            "min_size": (63, 63),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#alexnet-and-vgg",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 56.522,
                     "acc@5": 79.066,
                 }
             },
-            "_ops"      : 0.714,
+            "_ops": 0.714,
             "_file_size": 233.087,
-            "_docs"     : """These weights reproduce closely the results of the paper using a simplified training recipe.""",
+            "_docs": """These weights reproduce closely the results of the paper using a simplified training recipe.""",
         }
     )
     DEFAULT = IMAGENET1K_V1
@@ -157,22 +150,22 @@ class AlexNet_Weights(WeightsEnum):
 
 @BACKBONES.register(name="alexnet", metaclass=AlexNetBackBone)
 def alexnet(
-    weights    : WeightsEnum | str = AlexNet_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
+    weights: WeightsEnum | str = AlexNet_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
     *args, **kwargs
 ) -> AlexNetBackBone:
     """Create an AlexNet backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to AlexNet_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to AlexNet_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return AlexNetBackBone(
-        name        = "alexnet",
-        weights     = AlexNet_Weights(weights),
-        out_indices = out_indices,
+        name="alexnet",
+        weights=AlexNet_Weights(weights),
+        out_indices=out_indices,
         *args, **kwargs
     )
 

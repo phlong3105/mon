@@ -23,7 +23,7 @@ from mon.core.dtypes import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()
-current_dir  = current_file.parents[0]
+current_dir = current_file.parents[0]
 
 
 # ==============================================================================
@@ -33,40 +33,32 @@ current_dir  = current_file.parents[0]
 # --- Base Classes ---
 
 class MobileNetV2BackBone(nn.Module, RegistrableMixin):
-    """MobileNetV2 backbone.
+    """MobileNetV2 backbone."""
 
-    Attributes:
-        features: The feature extraction layers.
-        out_indices: List of layer indices to extract features from.
-        out_channels: List of output channels for each extracted layer.
-        verbose: Verbosity mode.
-    """
-
-    arch     : str          = "mobilenet"
-    name     : str          = None
-    tasks    : list[Task]   = [Task.BACKBONE]
-    mltypes  : list[MLType] = []
-    model_dir: Path         = current_dir
+    arch: str = "mobilenet"
+    name: str = None
+    tasks: list[Task] = [Task.BACKBONE]
+    mltypes: list[MLType] = []
+    model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name       : str,
-        weights    : WeightsType | None = None,
-        out_indices: list[int]   | None = None,
-        verbose    : bool               = True,
-        *args, **kwargs
+        name: str,
+        weights: WeightsType | None = None,
+        out_indices: list[int] | None = None,
+        verbose: bool = True,
+        *args, **kwargs,
     ):
         """Initialize a new instance.
 
         Args:
-            name: Name of the backbone.
-            weights: Pre-trained weights to load.
-            out_indices: List of layer indices to extract features from.
-                If None, defaults to [3, 6, 13, 18].
-            verbose: Verbosity mode. Defaults to True.
-            *args: Additional positional arguments for the ResNet model.
-            **kwargs: Additional keyword arguments for the ResNet model
+            name (str): Name of the model variant.
+            weights (WeightsType, optional): Pre-trained weights to load.
+                Defaults to None.
+            out_indices (list[int], optional): List of layer indices to extract
+                features from. If None, defaults to [3, 6, 13, 18].
+            verbose (bool): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__()
@@ -91,8 +83,8 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
                 log(f"Initialized '{name}' from scratch.")
 
         # In torchvision, MobileNetV2 already has a 'features' block
-        self.features     = base_model.features
-        self.out_indices  = out_indices or [3, 6, 13, 18]
+        self.features = base_model.features
+        self.out_indices = out_indices or [3, 6, 13, 18]
         self.out_channels = [24, 32, 96, 1280]
 
     # --- Callable & Context Manager ---
@@ -100,10 +92,11 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
         """Forward the input through the network.
 
         Args:
-            x: Input tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            A list of feature maps from the specified layers.
+            list[torch.Tensor]: List of feature maps from the specified layers.
         """
         # If you need multiscale features for a Neck (FPN):
         outputs = []
@@ -130,50 +123,50 @@ class MobileNetV2BackBone(nn.Module, RegistrableMixin):
 class MobileNet_V2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pth",
-        url         = "https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pth",
+        url="https://download.pytorch.org/models/mobilenet_v2-b0353104.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 3504872,
-            "min_size"  : (1, 1),
+            "min_size": (1, 1),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/tree/main/references/classification#mobilenetv2",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/tree/main/references/classification#mobilenetv2",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 71.878,
                     "acc@5": 90.286,
-                }
+                },
             },
-            "_ops"      : 0.301,
+            "_ops": 0.301,
             "_file_size": 13.555,
-            "_docs"     : """These weights reproduce closely the results of the paper using a simple training recipe.""",
-        }
+            "_docs": """These weights reproduce closely the results of the paper using a simple training recipe.""",
+        },
     )
     IMAGENET1K_V2 = Weights(
-        path        = ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v2/mobilenet_v2_imagenet1k_v2.pth",
-        url         = "https://download.pytorch.org/models/mobilenet_v2-7ebf99e0.pth",
-        num_classes = 1000,
-        transforms  = None,
-        meta        = {
+        path=ZOO_DIR / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v2/mobilenet_v2_imagenet1k_v2.pth",
+        url="https://download.pytorch.org/models/mobilenet_v2-7ebf99e0.pth",
+        num_classes=1000,
+        transforms=None,
+        meta={
             "num_params": 3504872,
-            "min_size"  : (1, 1),
+            "min_size": (1, 1),
             "categories": _IMAGENET_CATEGORIES,
-            "recipe"    : "https://github.com/pytorch/vision/issues/3995#new-recipe-with-reg-tuning",
-            "_metrics"  : {
+            "recipe": "https://github.com/pytorch/vision/issues/3995#new-recipe-with-reg-tuning",
+            "_metrics": {
                 "ImageNet-1K": {
                     "acc@1": 72.154,
                     "acc@5": 90.822,
-                }
+                },
             },
-            "_ops"      : 0.301,
+            "_ops": 0.301,
             "_file_size": 13.598,
-            "_docs"     : """
+            "_docs": """
                 These weights improve upon the results of the original paper by using a modified version of TorchVision's
                 `new training recipe
                 <https://pytorch.org/blog/how-to-train-state-of-the-art-models-using-torchvision-latest-primitives/>`_.
             """,
-        }
+        },
     )
     DEFAULT = IMAGENET1K_V2
 
@@ -182,24 +175,25 @@ class MobileNet_V2_Weights(WeightsEnum):
 
 @BACKBONES.register(name="mobilenet_v2", metaclass=MobileNetV2BackBone)
 def mobilenet_v2(
-    weights    : WeightsEnum | str = MobileNet_V2_Weights.DEFAULT,
-    out_indices: list[int] | None  = None,
-    *args, **kwargs
+    weights: WeightsEnum | str = MobileNet_V2_Weights.DEFAULT,
+    out_indices: list[int] | None = None,
+    *args, **kwargs,
 ) -> MobileNetV2BackBone:
     """Create a MobileNetV2 backbone.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to MobileNet_V2_Weights.DEFAULT.
-        out_indices: List of layer indices to extract features from. Defaults to None.
-        args: Additional positional arguments for the ResNet model.
-        kwargs: Additional keyword arguments for the ResNet model.
+        weights (WeightsEnum | str): Pre-trained weights to load.
+            Defaults to MobileNet_V2_Weights.DEFAULT.
+        out_indices (list[int], optional): List of layer indices to extract
+            features from. Defaults to None.
     """
     return MobileNetV2BackBone(
-        name        = "mobilenet_v2",
-        weights     = MobileNet_V2_Weights(weights),
-        out_indices = out_indices,
-         *args, **kwargs
+        name="mobilenet_v2",
+        weights=MobileNet_V2_Weights(weights),
+        out_indices=out_indices,
+        *args, **kwargs,
     )
+
 
 # endregion
 
