@@ -1,5 +1,0 @@
-run: default
-eval_time: 3
-batch_size: 8
-lr: 1e-5
-num_epochs: 100

@@ -16,7 +16,7 @@ __all__ = [
 import math
 
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
 
 
 # ==============================================================================
@@ -48,15 +48,15 @@ class PosEncodingFourier(nn.Module):
             self.register_buffer("B", torch.randn((self.in_features, 2)) * B)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (..., in_features) and
-                values ranging from -1.0 to 1.0.
+            x (Tensor): Input tensor of shape (..., in_features) and values
+                ranging from -1.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from -1.0 to 1.0.
         """
         if self.B is None:

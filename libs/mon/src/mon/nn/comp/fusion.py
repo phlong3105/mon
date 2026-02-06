@@ -16,8 +16,7 @@ __all__ = [
     "iAFF",
 ]
 
-import torch
-import torch.nn as nn
+from torch import nn, Tensor
 
 
 # ==============================================================================
@@ -31,17 +30,17 @@ class DAF(nn.Module):
     """
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor, residual: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            residual (Tensor): Residual tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            residual (torch.Tensor): Residual tensor of shape (B, C, H, W) and
-                values ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Fused output tensor of shape (B, C, H, W) and values
+            Tensor: Fused output tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
         """
         return x + residual
@@ -86,15 +85,15 @@ class MS_CAM(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+            Tensor: Output tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
         x_l = self.local_att(x)
@@ -143,17 +142,17 @@ class AFF(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor, residual: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            residual (Tensor): Residual tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            residual (torch.Tensor): Residual tensor of shape (B, C, H, W) and
-                values ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Fused output tensor of shape (B, C, H, W) and values
+            Tensor: Fused output tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
         """
         x_a = x + residual
@@ -222,17 +221,17 @@ class iAFF(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor, residual: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor, residual: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            residual (Tensor): Residual tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            residual (torch.Tensor): Residual tensor of shape (B, C, H, W) and
-                values ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Fused output tensor of shape (B, C, H, W) and values
+            Tensor: Fused output tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
         """
         x_a = x + residual

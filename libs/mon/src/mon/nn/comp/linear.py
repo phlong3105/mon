@@ -21,7 +21,7 @@ __all__ = [
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
 from torch.nn.modules.linear import Bilinear, Identity, LazyLinear, Linear
 
 
@@ -93,18 +93,18 @@ class SineLinear(nn.Module):
                 self.linear.weight.uniform_(-b, b)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Apply an affine linear transformation with sine activation to the
         incoming data. If this is the last layer, no activation is applied.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (..., in_features) and
-                values ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (..., in_features) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from 0.0 to 1.0.
         """
         x = self.linear(x)
@@ -167,18 +167,18 @@ class SineLinearBN(nn.Module):
                 self.linear.weight.uniform_(-b, b)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Apply an affine linear transformation with sine activation to the
         incoming data. If this is the last layer, no activation is applied.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (..., in_features) and
-                values ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (..., in_features) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from 0.0 to 1.0.
         """
         x = self.linear(x)
@@ -265,14 +265,14 @@ class FINERLinear(nn.Module):
             if self.is_first:
                 self.linear.bias.uniform_(-self.first_bias_scale, self.first_bias_scale)
 
-    def scale(self, linear: torch.Tensor) -> torch.Tensor:
+    def scale(self, linear: Tensor) -> Tensor:
         """Generate the scaling factor after linear transformation.
 
         Args:
-            linear (torch.Tensor): Output of the linear transformation.
+            linear (Tensor): Output of the linear transformation.
 
         Returns:
-            torch.Tensor: Scaling factor.
+            Tensor: Scaling factor.
         """
         if self.scale_req_grad:
             return torch.abs(linear) + 1
@@ -280,18 +280,18 @@ class FINERLinear(nn.Module):
             return torch.abs(linear) + 1
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Apply an affine linear transformation with sine activation to the
         incoming data. If this is the last layer, no activation is applied.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (..., in_features) and
-                values ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (..., in_features) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from 0.0 to 1.0.
         """
         x = self.linear(x)

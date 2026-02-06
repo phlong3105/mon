@@ -44,38 +44,8 @@ __all__ = [
 ]
 
 import torch
-import torch.nn as nn
-from torch.nn.modules.activation import (
-    CELU,
-    ELU,
-    GELU,
-    GLU,
-    Hardshrink,
-    Hardsigmoid,
-    Hardswish,
-    Hardtanh,
-    LeakyReLU,
-    LogSigmoid,
-    LogSoftmax,
-    Mish,
-    MultiheadAttention,
-    PReLU,
-    RReLU,
-    ReLU,
-    ReLU6,
-    SELU,
-    SiLU,
-    Sigmoid,
-    Softmax,
-    Softmax2d,
-    Softmin,
-    Softplus,
-    Softshrink,
-    Softsign,
-    Tanh,
-    Tanhshrink,
-    Threshold,
-)
+from torch import nn, Tensor
+from torch.nn.modules.activation import (CELU, ELU, GELU, GLU, Hardshrink, Hardsigmoid, Hardswish, Hardtanh, LeakyReLU, LogSigmoid, LogSoftmax, Mish, MultiheadAttention, PReLU, ReLU, ReLU6, RReLU, SELU, Sigmoid, SiLU, Softmax, Softmax2d, Softmin, Softplus, Softshrink, Softsign, Tanh, Tanhshrink, Threshold)
 
 
 # ==============================================================================
@@ -94,16 +64,16 @@ class SimpleGate(nn.Module):
     """
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, ...) and values
-                ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, C, ...) and values ranging
+                from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, C, ...) and values ranging
-                from 0.0 to 1.0.
+            Tensor: Output tensor of shape (B, C, ...) and values ranging from
+                0.0 to 1.0.
         """
         x1, x2 = x.chunk(chunks=2, dim=1)
         return x1 * x2
@@ -130,15 +100,15 @@ class Sine(nn.Module):
         self.w0 = w0
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+            Tensor: Output tensor of shape (B, C, H, W) and values ranging
                 from -1.0 to 1.0.
         """
         return torch.sin(self.w0 * x)

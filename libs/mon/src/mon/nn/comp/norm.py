@@ -34,7 +34,7 @@ __all__ = [
 ]
 
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
 from torch.nn import (
     BatchNorm1d,
     BatchNorm2d,
@@ -99,15 +99,15 @@ class AdaptiveBatchNorm2d(nn.Module):
         self.bn = nn.BatchNorm2d(num_features, eps, momentum, *args, **kwargs)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+            Tensor: Output tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
         return self.w0 * x + self.w1 * self.bn(x)
@@ -145,15 +145,15 @@ class AdaptiveInstanceNorm2d(nn.Module):
         self.norm = nn.InstanceNorm2d(num_features, eps, momentum, *args, **kwargs)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+            Tensor: Output tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
         return self.w0 * x + self.w1 * self.norm(x)
@@ -203,15 +203,15 @@ class HalfInstanceNorm2d(nn.Module):
         )
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, 2C, H, W) and values
-                ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, 2C, H, W) and values ranging
+                from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, 2C, H, W) and values ranging
+            Tensor: Output tensor of shape (B, 2C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
         y1, y2 = torch.chunk(x, chunks=2, dim=1)
@@ -242,18 +242,17 @@ class PositionalNorm(nn.Module):
     # --- Callable & Context Manager ---
     def forward(
         self,
-        x: torch.Tensor,
-    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        x: Tensor,
+    ) -> tuple[Tensor, Tensor, Tensor]:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
 
         Returns:
-            tuple[torch.Tensor, torch.Tensor, torch.Tensor]: Tuple containing
-                the normalized tensor, the mean tensor, and the standard
-                deviation tensor.
+            tuple[Tensor, Tensor, Tensor]: Tuple containing the normalized tensor,
+                the mean tensor, and the standard deviation tensor.
         """
         mean = x.mean(dim=1, keepdim=True)
         std = (x.var(dim=1, keepdim=True) + self.eps).sqrt()
@@ -267,22 +266,22 @@ class MomentShortcut(nn.Module):
     # --- Callable & Context Manager ---
     def forward(
         self,
-        x: torch.Tensor,
-        beta: torch.Tensor | None = None,
-        gamma: torch.Tensor | None = None,
-    ) -> torch.Tensor:
+        x: Tensor,
+        beta: Tensor | None = None,
+        gamma: Tensor | None = None,
+    ) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
-            beta (torch.Tensor, optional): The beta tensor of shape (B, 1, H, W)
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            beta (Tensor, optional): The beta tensor of shape (B, 1, H, W)
                 and values ranging from -1.0 to 1.0. Defaults to None.
-            gamma (torch.Tensor, optional): The gamma tensor of shape (B, 1, H, W)
+            gamma (Tensor, optional): The gamma tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, C, H, W) and values ranging
+            Tensor: Output tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
         """
         if gamma is not None:

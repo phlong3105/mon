@@ -1,4 +1,0 @@
-run: rand_normal_final_state
-batch_size: 8
-lr: 1e-5
-num_epochs: 100

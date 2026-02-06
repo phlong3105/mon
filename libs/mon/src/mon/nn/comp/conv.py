@@ -25,8 +25,7 @@ __all__ = [
     "LazyConvTranspose3d",
 ]
 
-import torch
-import torch.nn as nn
+from torch import nn, Tensor
 from torch.nn.common_types import _size_2_t
 from torch.nn.modules.conv import (
     Conv1d,
@@ -109,16 +108,16 @@ class DSConv2d(nn.Module):
         )
 
     # --- Callable & Context Manager ---
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Forward the input through the layer.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, C_in, H_in, W_in) and
-                values ranging from 0.0 to 1.0.
+            x (Tensor): Input tensor of shape (B, C_in, H_in, W_in) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (B, C_out, H_out, W_out) and
-                values ranging from 0.0 to 1.0.
+            Tensor: Output tensor of shape (B, C_out, H_out, W_out) and values
+                ranging from 0.0 to 1.0.
         """
         return self.pw_conv(self.dw_conv(x))
 

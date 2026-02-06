@@ -27,7 +27,6 @@ from torch.nn.modules.container import (
 from torch.nn.modules.module import Module
 
 from mon.core import MLType, Path, Task
-from mon.core.types_alias import PathLike
 
 
 # ==============================================================================
@@ -77,11 +76,11 @@ class RegistrableMixin:
             defined in subclasses or set during initialization.`
     """
 
-    arch: str = ""
-    name: str = ""
-    tasks: list[Task] = []
-    mltypes: list[MLType] = []
-    model_dir: Path = None
+    arch: str
+    name: str
+    tasks: list[Task]
+    mltypes: list[MLType]
+    model_dir: Path
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -90,7 +89,7 @@ class RegistrableMixin:
         name: str | None = None,
         tasks: list[Task] | None = None,
         mltypes: list[MLType] | None = None,
-        model_dir: PathLike | None = None,
+        model_dir: Path | str | None = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -106,47 +105,22 @@ class RegistrableMixin:
             mltypes (list[MLType], optional): A list of learning types that the
                 model can perform. If provided, it overrides the class-level
                 default. Defaults to None.
-            model_dir (PathLike, optional): The directory where the model is
+            model_dir (Path | str, optional): The directory where the model is
                 stored. If provided, it overrides the class-level default.
                 Defaults to None.
         """
-        # Validate inputs
-        if arch is not None and not isinstance(name, str):
-            raise TypeError(
-                f"Expected 'arch' to be a str, but got {type(name).__name__}."
-            )
-        if name is not None and not isinstance(name, str):
-            raise TypeError(
-                f"Expected 'name' to be a str, but got {type(name).__name__}."
-            )
-        if tasks is not None and not isinstance(tasks, list):
-            raise TypeError(
-                f"Expected 'tasks' to be a list, but got {type(tasks).__name__}."
-            )
-        if mltypes is not None and not isinstance(mltypes, list):
-            raise TypeError(
-                f"Expected 'mltypes' to be a list, "
-                f"but got {type(mltypes).__name__}."
-            )
-        if model_dir is not None and not isinstance(model_dir, (Path, str)):
-            raise TypeError(
-                f"Expected 'model_dir' to be a Path, "
-                f"but got {type(model_dir).__name__}."
-            )
-
         # Assign attributes
-        # If provided, these instance variables will override the class-level defaults
-        if arch is not None:
+        if isinstance(arch, str):
             self.arch = arch
-        if name is not None:
+        if isinstance(name, str):
             self.name = name
-        if tasks is not None:
+        if isinstance(tasks, list) and all(isinstance(t, Task) for t in tasks):
             # We use list() to create a copy, preventing shared state bugs
             self.tasks = list(tasks)
-        if mltypes is not None:
+        if isinstance(mltypes, list) and all(isinstance(m, MLType) for m in mltypes):
             # We use list() to create a copy, preventing shared state bugs
             self.mltypes = list(mltypes)
-        if model_dir is not None:
+        if isinstance(model_dir, (Path, str)):
             self.model_dir = Path(model_dir).normalize()
 
         # Continue the initialization chain

@@ -23,8 +23,8 @@ __all__ = [
 
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import nn, Tensor
+from torch.nn import functional as F
 
 from mon.core import image as I
 from mon.core.types_alias import int_2_t
@@ -88,15 +88,15 @@ class FFN(nn.Module):
         self.net = nn.Sequential(*net)
 
     # --- Callable & Context Manager ---
-    def forward(self, coords: torch.Tensor) -> torch.Tensor:
+    def forward(self, coords: Tensor) -> Tensor:
         """Forward the input through the network.
 
         Args:
-            coords (torch.Tensor): Input tensor of shape (..., in_features) and
+            coords (Tensor): Input tensor of shape (..., in_features) and
                 values ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from 0.0 to 1.0.
         """
         return self.net(self.encoding(coords))
@@ -156,15 +156,15 @@ class Siren(nn.Module):
         self.net = nn.Sequential(*net)
 
     # --- Callable & Context Manager ---
-    def forward(self, coords: torch.Tensor) -> torch.Tensor:
+    def forward(self, coords: Tensor) -> Tensor:
         """Forward the input through the network.
 
         Args:
-            coords (torch.Tensor): Input tensor of shape (..., in_features) and
+            coords (Tensor): Input tensor of shape (..., in_features) and
                 values ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from 0.0 to 1.0.
         """
         return self.net(coords)
@@ -236,15 +236,15 @@ class Finer(nn.Module):
         self.net = nn.Sequential(*net)
 
     # --- Callable & Context Manager ---
-    def forward(self, coords: torch.Tensor) -> torch.Tensor:
+    def forward(self, coords: Tensor) -> Tensor:
         """Forward the input through the network.
 
         Args:
-            coords (torch.Tensor): Input tensor of shape (..., in_features) and
+            coords (Tensor): Input tensor of shape (..., in_features) and
                 values ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from 0.0 to 1.0.
         """
         return self.net(coords)
@@ -317,15 +317,15 @@ class Finer_PP(nn.Module):
         self.net = nn.Sequential(*net)
 
     # --- Callable & Context Manager ---
-    def forward(self, coords: torch.Tensor) -> torch.Tensor:
+    def forward(self, coords: Tensor) -> Tensor:
         """Forward the input through the network.
 
         Args:
-            coords (torch.Tensor): Input tensor of shape (..., in_features) and
+            coords (Tensor): Input tensor of shape (..., in_features) and
                 values ranging from 0.0 to 1.0.
 
         Returns:
-            torch.Tensor: Output tensor of shape (..., out_features) and values
+            Tensor: Output tensor of shape (..., out_features) and values
                 ranging from 0.0 to 1.0.
         """
         output = self.net(coords)
@@ -341,7 +341,7 @@ class Finer_PP(nn.Module):
 
 # --- Coordinate Generation & Embedding ---
 
-def create_coords(size: int_2_t, device: torch.device) -> torch.Tensor:
+def create_coords(size: int_2_t, device: torch.device) -> Tensor:
     """Create a normalized square coordinates grid.
 
     Args:
@@ -349,8 +349,8 @@ def create_coords(size: int_2_t, device: torch.device) -> torch.Tensor:
         device (torch.device): Device to place the coordinates on.
 
     Returns:
-        torch.Tensor: A tensor of shape (1, H, W, 2) and values ranging from
-            0.0 to 1.0.
+        Tensor: Coordinates of shape (1, H, W, 2) and values ranging from
+            -1.0 to 1.0.
     """
     h, w = I.imgsz(size)
     # TODO: Old code normalize from 0 to 1. Delete later
@@ -366,16 +366,16 @@ def create_coords(size: int_2_t, device: torch.device) -> torch.Tensor:
 
 # --- Spatial Context & Patch Extraction ---
 
-def create_patches(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
+def create_patches(image: Tensor, kernel_size: int = 7) -> Tensor:
     """Create a tensor where the channel contains patch information.
 
     Args:
-        image (torch.Tensor): Image, formatted as a torch.Tensor of shape
+        image (Tensor): Image, formatted as a Tensor of shape
             (1, C, H, W) and pixel values ranging from 0.0 to 1.0.
         kernel_size (int): Size of square patches. Defaults to 7.
 
     Returns:
-        torch.Tensor: A tensor of shape (1, H', W', K^2) where H' and W' are the
+        Tensor: A tensor of shape (1, H', W', K^2) where H' and W' are the
             height and width after patch extraction, and K is the ``kernel_size``.
 
     Raises:
@@ -402,24 +402,24 @@ def create_patches(image: torch.Tensor, kernel_size: int = 7) -> torch.Tensor:
 
 
 def create_depth_aware_patches(
-    image: torch.Tensor,
-    depth: torch.Tensor,
+    image: Tensor,
+    depth: Tensor,
     kernel_size: int = 7,
     alpha: float = 8.3
-) -> torch.Tensor:
+) -> Tensor:
     """Create depth-aware patches for the given image and depth map.
 
     Args:
-        image (torch.Tensor): Image, formatted as a torch.Tensor of shape
+        image (Tensor): Image, formatted as a Tensor of shape
             (1, C, H, W) and values ranging from 0.0 to 1.0.
-        depth (torch.Tensor): Depth map, formatted as a torch.Tensor of shape
+        depth (Tensor): Depth map, formatted as a Tensor of shape
             (1, 1, H, W) and values ranging from 0.0 to 1.0.
         kernel_size (int): Size of square patches. Defaults to 7.
         alpha (float): Exponential decay factor for depth-aware weighting.
             Defaults to 8.3.
 
     Returns:
-        torch.Tensor: A tensor of shape (1, H', W', K^2) where H' and W' are the
+        Tensor: A tensor of shape (1, H', W', K^2) where H' and W' are the
             height and width after patch extraction, and K is the ``kernel_size``.
     """
     b, c, h, w = image.shape
@@ -455,16 +455,16 @@ def create_depth_aware_patches(
 
 # --- Multi-scale & Sampling Operations ---
 
-def pair_downsampler(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+def pair_downsampler(image: Tensor) -> tuple[Tensor, Tensor]:
     """Downsample the image into two sub-images using learned filters.
 
     Args:
-        image (torch.Tensor): Image, formatted as a torch.Tensor of shape
+        image (Tensor): Image, formatted as a Tensor of shape
             (1, C, H, W) and pixel values ranging from 0.0 to 1.0.
 
     Returns:
-        tuple[torch.Tensor, torch.Tensor]: Two downsampled images, each
-            formatted as a torch.Tensor of shape (1, C, H/2, W/2) and pixel
+        tuple[Tensor, Tensor]: Two downsampled images, each
+            formatted as a Tensor of shape (1, C, H/2, W/2) and pixel
             values ranging from 0.0 to 1.0.
     """
     c = image.shape[1]
@@ -478,16 +478,16 @@ def pair_downsampler(image: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     return output1, output2
 
 
-def interpolate_image(image: torch.Tensor, size: int) -> torch.Tensor:
+def interpolate_image(image: Tensor, size: int) -> Tensor:
     """Resize the image to the specified size.
 
     Args:
-        image (torch.Tensor): Image, formatted as a torch.Tensor of shape
+        image (Tensor): Image, formatted as a Tensor of shape
             (B, C, H, W) and pixel values ranging from 0.0 to 1.0.
         size (int): Desired output size.
 
     Returns:
-        torch.Tensor: Resized image, formatted as a torch.Tensor of shape
+        Tensor: Resized image, formatted as a Tensor of shape
             (B, C, size, size) and pixel values ranging from 0.0 to 1.0.
     """
     # return F.interpolate(image, size=(down_size, down_size), mode="bicubic")
