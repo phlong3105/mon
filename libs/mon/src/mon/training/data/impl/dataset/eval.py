@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 from mon.core import create_progress_bar, log, Path
-from mon.core.dtypes import ClassList, Image
+from mon.core.types import ClassList, Image
 from mon.training.augment import albumentations as A
 from ...base import Dataset
 from ...comp import BatchCollateMixin, InputTargetLoadMixin

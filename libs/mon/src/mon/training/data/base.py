@@ -18,7 +18,7 @@ from typing import Any, NamedTuple, OrderedDict, override, TypeAlias
 from torch.utils.data.dataset import Dataset as Dataset_
 
 from mon.core import log, Path, Task
-from mon.core.dtypes import ClassList
+from mon.core.types import ClassList
 
 
 # ==============================================================================

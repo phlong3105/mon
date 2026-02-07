@@ -47,7 +47,7 @@ from torchvision.models.efficientnet import (
 )
 
 from mon.core import BACKBONES, log, MLType, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum, WeightsType
+from mon.core.types import Weights, WeightsEnum, WeightsType
 from ...base import RegistrableMixin
 
 current_file = Path(__file__).normalize()

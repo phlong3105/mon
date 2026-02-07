@@ -36,7 +36,7 @@ from rich import prompt
 from mon.core.console import console, log, log_error, pprint_dict, rprint_dict
 from mon.core.constants import ZOO_DIR
 from mon.core.device import list_devices, parse_device
-from mon.core.dtypes import image as I, weights as w
+from mon.core.types import image as I, weights as w
 from mon.core.enum import RunMode, Task, TRTPrecision
 from mon.core.factory import DATASETS, MODELS
 from mon.core.filesystem import (

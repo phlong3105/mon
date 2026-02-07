@@ -21,7 +21,7 @@ import numpy as np
 import torch
 
 from mon.core import EXT, log, Path, Split, Task
-from mon.core.dtypes import ClassList, Frame
+from mon.core.types import ClassList, Frame
 from mon.training.augment import albumentations as A
 from ...base import Dataset
 from ...comp import BatchCollateMixin, RootLoadMixin

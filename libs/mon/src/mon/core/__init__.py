@@ -9,11 +9,20 @@ configuration parsers, runtime utilities, and other common helpers.
 
 from __future__ import annotations
 
-from . import types_alias
 from .console import *
 from .constants import *
 from .device import *
-from .dtypes import (
+from .enum import *
+from .factory import *
+from .fileio import *
+from .filesystem import *
+from .logging import *
+from .pathlib import *
+from .rich import *
+from .runtime import *
+from .system import *
+from .timer import *
+from .types import (
     array,
     bbox,
     classes,
@@ -26,14 +35,4 @@ from .dtypes import (
     video,
     weights,
 )
-from .enum import *
-from .factory import *
-from .fileio import *
-from .filesystem import *
-from .logging import *
-from .pathlib import *
-from .rich import *
-from .runtime import *
-from .system import *
-from .timer import *
 from .utils import *

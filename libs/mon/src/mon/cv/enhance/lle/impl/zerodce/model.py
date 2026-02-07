@@ -35,7 +35,7 @@ from mon.core import (
     WEIGHTS,
     ZOO_DIR,
 )
-from mon.core.dtypes import Weights, WeightsEnum, WeightsType
+from mon.core.types import Weights, WeightsEnum, WeightsType
 
 current_file = Path(__file__).normalize()
 current_dir  = current_file.parents[0]

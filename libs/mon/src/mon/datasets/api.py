@@ -63,7 +63,7 @@ from mon.core import (
     Split,
     Task,
 )
-from mon.core.dtypes import (
+from mon.core.types import (
     BBox,
     BBoxList,
     Class,

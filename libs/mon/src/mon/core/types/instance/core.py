@@ -14,7 +14,7 @@ __all__ = [
 
 import numpy as np
 
-from mon.core.dtypes import bbox as B, image as I
+from mon.core.types import bbox as B, image as I
 from mon.core.pathlib import Path
 from ..array import TensorOrArray
 

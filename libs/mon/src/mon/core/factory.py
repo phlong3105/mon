@@ -26,7 +26,7 @@ import inspect
 from typing import Any, Callable
 
 from mon.core.console import log_error
-from mon.core.dtypes import Weights, WeightsEnum
+from mon.core.types import Weights, WeightsEnum
 from mon.core.enum import MLType, Split, Task
 from mon.core.pathlib import Path
 from mon.core.utils import depascalize

@@ -47,7 +47,7 @@ from typing import Union
 import cv2
 import numpy as np
 
-from mon.core.dtypes import image as I
+from mon.core.types import image as I
 from mon.core.enum import BBoxFormat
 
 

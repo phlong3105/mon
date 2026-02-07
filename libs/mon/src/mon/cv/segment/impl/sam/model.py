@@ -39,7 +39,7 @@ __all__ = [
 
 from mon import nn
 from mon.core import MLType, MODELS, Path, Task, WEIGHTS, ZOO_DIR
-from mon.core.dtypes import Weights, WeightsEnum, WeightsType
+from mon.core.types import Weights, WeightsEnum, WeightsType
 
 try:
     import ultralytics

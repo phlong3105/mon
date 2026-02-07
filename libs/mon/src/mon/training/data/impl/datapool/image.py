@@ -14,7 +14,7 @@ __all__ = [
 from typing import Any
 
 from mon.core import BBoxFormat, create_progress_bar, log, Path
-from mon.core.dtypes import bbox as B, ClassList, Image, Instance
+from mon.core.types import bbox as B, ClassList, Image, Instance
 from ...base import Dataset
 from ...comp import BatchCollateMixin, InputTargetLoadMixin
 

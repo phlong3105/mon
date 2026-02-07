@@ -19,14 +19,14 @@ __all__ = [
     "rprint_list_dicts",
 ]
 
+from box import Box
 from rich import pretty
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.theme import Theme
 
-from mon.core.utils import DictType, to_dict
-
+from mon.core.utils import to_dict
 
 # ==============================================================================
 # region CONSTANTS
@@ -36,10 +36,10 @@ from mon.core.utils import DictType, to_dict
 
 rich_console_theme = Theme(
     {
-        "debug"   : "dark_green",
-        "info"    : "green",
-        "warning" : "yellow",
-        "error"   : "bright_red",
+        "debug": "dark_green",
+        "info": "green",
+        "warning": "yellow",
+        "error": "bright_red",
         "critical": "bold red",
     },
 )
@@ -77,20 +77,17 @@ log_error = error_console.log
 
 # --- Basic Logging ---
 
-def pprint_dict(a_dict: DictType, title: str = ""):
-    """Pretty-print a mapping inside a panel.
+def pprint_dict(value: dict, title: str = ""):
+    """Pretty-print a dictionary inside a ``rich`` Panel.
 
     Args:
-        a_dict (DictType): Mapping to print.
+        value (Box | dict): Dictionary to print.
         title (str): Panel title. Defaults to "".
-
-    Raises:
-        TypeError: If ``a_dict`` is not a dict or box.Box.
     """
-    a_dict = to_dict(a_dict)
+    # value = to_dict(value)
     # Create a Pretty object for structured rendering
     pr = pretty.Pretty(
-        a_dict,
+        value,
         expand_all=True,
         indent_guides=True,
         insert_line=True,
@@ -100,17 +97,14 @@ def pprint_dict(a_dict: DictType, title: str = ""):
     console.log(p)
 
 
-def rprint_dict(a_dict: DictType, title: str = ""):
-    """Pretty-print a mapping as a two-column table.
+def rprint_dict(value: dict, title: str = ""):
+    """Pretty-print a dictionary as a two-column table.
 
     Args:
-        a_dict (DictType): Mapping to print.
+        value (dict): Dictionary to print.
         title (str): Panel title. Defaults to "".
-
-    Raises:
-        TypeError: If ``a_dict`` is not a dict or box.Box.
     """
-    a_dict = to_dict(a_dict)
+    # value = to_dict(value)
     # Initialize a two-column table
     tab = Table(
         title=title,
@@ -123,49 +117,46 @@ def rprint_dict(a_dict: DictType, title: str = ""):
     tab.add_column("Value", justify="left")
 
     # Let rich handle rendering of keys and values for better formatting.
-    for k, v in a_dict.items():
+    for k, v in value.items():
         tab.add_row(str(k), v)
     console.log(tab)
 
 
-def rprint_list_dicts(list_of_dicts: list[dict]):
+def rprint_list_dicts(values: list[dict]):
     """Pretty-print a list of dictionaries as a table with shared columns.
 
     Args:
-        list_of_dicts (list[dict]): List of dictionaries to print.
+        values (list[dict]): List of dictionaries to print.
 
     Raises:
-        ValueError: If ``list_of_dicts`` is not a non-empty list, or if the
-        dictionaries do not share identical keys.
+        ValueError: If ``values`` is not a non-empty list, or if the dictionaries
+            do not share identical keys.
     """
-    if not isinstance(list_of_dicts, list) or not list_of_dicts:
+    if not isinstance(values, list) or any(not isinstance(d, dict) for d in values):
         raise ValueError(
-            f"Expected 'list_of_dicts' to be a non-empty list, "
-            f"but got {type(list_of_dicts).__name__}.",
+            f"Expected 'values' to be a non-empty list, "
+            f"but got {type(values).__name__}.",
         )
 
     # Extract headers from the first dictionary and create a set for quick key
-    # comparison.
-    headers = list(list_of_dicts[0].keys())
+    # comparison
+    table = Table(show_header=True, header_style="bold magenta")
+    headers = list(values[0].keys())
     header_set = set(headers)
-    tab = Table(
-        show_header=True,
-        header_style="bold magenta",
-    )
 
     for k in headers:
-        tab.add_column(str(k), no_wrap=True)
+        table.add_column(str(k), no_wrap=True)
 
-    for d in list_of_dicts:
+    for d in values:
         if set(d.keys()) != header_set:
             raise ValueError(
                 f"All dicts must have the same keys. Expected keys "
                 f"{header_set}, but got {set(d.keys())} in dict: {d}.",
             )
         # Let rich handle rendering of values for better formatting.
-        tab.add_row(*(d[k] for k in headers))
+        table.add_row(*(d[k] for k in headers))
 
-    console.log(tab)
+    console.log(table)
 
 
 # endregion

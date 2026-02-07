@@ -24,14 +24,13 @@ from typing import Any
 import yaml
 
 from mon.core.pathlib import Path
-from mon.core.utils import PathLike
 
 
 # ==============================================================================
 # region INPUT
 # ==============================================================================
 
-def load_json(path: PathLike) -> dict | list:
+def load_json(path: Path | str) -> dict | list:
     """Load data from a JSON file."""
     path = Path(path).normalize(exist=True)
 
@@ -42,7 +41,7 @@ def load_json(path: PathLike) -> dict | list:
         return json.load(f)
 
 
-def load_yaml(path: PathLike) -> dict | list:
+def load_yaml(path: Path | str) -> dict | list:
     """Load data from a YAML file."""
     path = Path(path).normalize(exist=True)
 
@@ -53,7 +52,7 @@ def load_yaml(path: PathLike) -> dict | list:
         return yaml.safe_load(f)
 
 
-def load_txt(path: PathLike) -> list[str]:
+def load_txt(path: Path | str) -> list[str]:
     """Read lines from a text file."""
     path = Path(path).normalize(exist=True)
 
@@ -71,42 +70,54 @@ def load_txt(path: PathLike) -> list[str]:
 # region OUTPUT
 # ==============================================================================
 
-def save_json(
-    data: Any,
-    path: PathLike,
-    indent: int = 4,
-    overwrite: bool = True,
-):
-    """Save data to a JSON file."""
+def save_json(data: Any, path: Path | str, indent: int = 4, overwrite: bool = True):
+    """Save data to a JSON file.
+
+    Args:
+        data (Any): Data to save.
+        path (Path | str): Destination path to save the file.
+        indent (int): Indentation level for JSON output. Defaults to 4.
+        overwrite (bool): If True, overwrite the destination file if it exists.
+    """
     path = Path(path).normalize(mkdir=True)
+
     if not overwrite and path.exists():
         return
+
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=indent)
 
 
-def save_yaml(
-    data: Any,
-    path: PathLike,
-    overwrite: bool = True,
-):
-    """Save data to a YAML file."""
+def save_yaml(data: Any, path: Path | str, overwrite: bool = True):
+    """Save data to a YAML file.
+
+    Args:
+        data (Any): Data to save.
+        path (Path | str): Destination path to save the file.
+        overwrite (bool): If True, overwrite the destination file if it exists.
+    """
     path = Path(path).normalize(mkdir=True)
+
     if not overwrite and path.exists():
         return
+
     with open(path, "w", encoding="utf-8") as f:
         yaml.safe_dump(data, f, sort_keys=False)
 
 
-def save_txt(
-    data: list[str] | str,
-    path: PathLike,
-    overwrite: bool = True,
-):
-    """Save strings to a text file."""
+def save_txt(data: list[str] | str, path: Path | str, overwrite: bool = True):
+    """Save strings to a text file.
+
+    Args:
+        data (list[str] | str): Lines or string to save.
+        path (Path | str): Destination path to save the file.
+        overwrite (bool): If True, overwrite the destination file if it exists.
+    """
     path = Path(path).normalize(mkdir=True)
+
     if not overwrite and path.exists():
         return
+
     if isinstance(data, str):
         data = [data]
     with open(path, "w", encoding="utf-8") as f:

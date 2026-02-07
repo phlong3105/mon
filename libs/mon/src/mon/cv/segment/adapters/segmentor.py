@@ -28,7 +28,7 @@ from mon.core import (
     Path,
     Task,
 )
-from mon.core.dtypes import bbox as B, image as I, WeightsType
+from mon.core.types import bbox as B, image as I, WeightsType
 
 try:
     import ultralytics
