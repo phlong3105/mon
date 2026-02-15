@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""System-wise utilities.
+"""System-wise Utility.
 
 This module provides helpers for terminal control and random seed management.
 """
@@ -9,31 +9,31 @@ This module provides helpers for terminal control and random seed management.
 from __future__ import annotations
 
 __all__ = [
-    "clear_terminal",
     "set_random_seed",
 ]
 
 import os
-import platform
 import random
 from typing import Sequence
 
 import numpy as np
 import torch
 
+from mon.core.typing import int_2_t
+
 
 # ==============================================================================
 # region CONTROL
 # ==============================================================================
 
-def set_random_seed(seed: int | tuple[int, int], deterministic: bool = False):
+def set_random_seed(seed: int_2_t, deterministic: bool = False):
     """Set random seeds for Python, NumPy, and PyTorch.
 
     Args:
-        seed (int | tuple[int, int]): Single seed value or a range of [min, max]
-            from which a seed will be randomly sampled.
-        deterministic (bool): If True, configures PyTorch for deterministic
-            behavior. Defaults to False.
+        seed (int_2_t): Single seed value or a range of [min, max] from which a
+            seed will be randomly sampled.
+        deterministic (bool, optional): If True, configures PyTorch for
+            deterministic behavior. Defaults to False.
     """
     if isinstance(seed, Sequence):
         # If a range is provided, sample a seed from it.
@@ -53,26 +53,6 @@ def set_random_seed(seed: int | tuple[int, int], deterministic: bool = False):
         torch.backends.cudnn.benchmark = False
         # Use deterministic algorithms, warning if they are not available.
         torch.use_deterministic_algorithms(True, warn_only=True)
-
-
-# endregion
-
-
-# ==============================================================================
-# region BASIC LOGGING
-# ==============================================================================
-
-def clear_terminal():
-    """Clear the terminal screen."""
-    if platform.system() == "Windows":
-        # For Windows, 'cls' is the standard command.
-        os.system("cls")
-    else:
-        # For POSIX systems, use ANSI escape codes for efficiency.
-        # \033[H moves the cursor to the top-left corner.
-        # \033[2J clears the entire screen.
-        print("\033[H\033[2J", end="", flush=True)
-
 
 # endregion
 

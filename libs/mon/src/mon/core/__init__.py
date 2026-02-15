@@ -1,38 +1,49 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Core utilities and consolidated public API.
+"""Core.
 
-This package contains foundational data types, device and logging helpers,
-configuration parsers, runtime utilities, and other common helpers.
+This package contains the core functionalities of the ``mon`` package.
+
+File Structure:
+::
+
+    mon.core/
+    ├── __init__.py
+    ├── data/           # Generic containers
+    ├── config.py       # YAML/Json config parsers
+    ├── constants.py    # Global hardcoded values
+    ├── device.py       # Hardware auto-detection & management
+    ├── enum.py         # Global Enums
+    ├── factory.py      # Register & Factory
+    ├── fileio.py       # Atomic and optimized read/write operations
+    ├── filesystem.py   # Filesystem operations
+    ├── logger.py       # Unified terminal (Rich) and file-based logging
+    ├── path.py         # Path manipulation
+    ├── patterns.py     # Design patterns (Singleton, Factory, etc.)
+    ├── profile.py      # Benchmark, FLOPs, MACs
+    ├── singleton.py    # Singleton pattern
+    ├── system.py       # Seeding, environment auditing, and process control
+    ├── typing.py       # Type hints
+    ├── ui.py           # Terminal & GUI
+    └── utils.py        # General purpose helpers
 """
 
 from __future__ import annotations
 
-from .console import *
+from .config import *
 from .constants import *
-from .device import *
+from .data import *
+# from .device import *
 from .enum import *
 from .factory import *
 from .fileio import *
 from .filesystem import *
-from .logging import *
-from .pathlib import *
-from .rich import *
-from .runtime import *
+from .logger import *
+from .path import *
+from .profile import *
+from .singleton import *
 from .system import *
-from .timer import *
-from .types import (
-    array,
-    bbox,
-    classes,
-    contour,
-    depth,
-    image,
-    instance,
-    mask,
-    thermal,
-    video,
-    weights,
-)
+from .typing import *
+from .ui import *
 from .utils import *

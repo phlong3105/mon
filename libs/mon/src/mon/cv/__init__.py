@@ -1,21 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Computer vision.
+"""Computer Vision.
 
-This package contains various computer vision algorithms, including both
-traditional and deep learning approaches.
+This package contains computer vision functionalities of the ``mon`` package.
 
-References:
-    - Definition: https://www.ibm.com/think/topics/computer-vision#691946467
+File Structure:
+::
+
+    mon.core/
+    ├── __init__.py
+    ├── feature/        # Traditional CV (Edges, Corners, SIFT)
+    ├── geometry/       # Camera calibration & 3D projections
+    ├── io/             # I/O operations
+    ├── models/         # CV-specific architectures & backbones
+    ├── ops/            # Atomic operations
+    └── utils/          # General purpose helpers
 """
 
-__all__ = []
+from __future__ import annotations
 
-# from .bgsubtract import *
-# from .classify import *
-# from .detect import *
-from .enhance import *
-# from .monodepth import *
-# from .restore import *
-from .segment import *
+from .feature import *
+from .geometry import *
+from .io import *
+from .models import *
+from .ops import *
+from .utils import *

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Filesystem utilities.
+"""Filesystem.
 
-This module provides filesystem-related utilities.
+This module provides filesystem utilities.
 """
 
 from __future__ import annotations
@@ -11,21 +11,26 @@ from __future__ import annotations
 __all__ = [
     "delete_files",
     "download_url_to_file",
+    "list_weights_files",
     "parse_model_fullname",
     "resolve_config_file",
-    "resolve_data_dir",
+    "resolve_data_root",
     "resolve_model_dir",
     "resolve_output_dir",
     "resolve_save_dir",
+    "resolve_weights",
+    "resolve_weights_dir",
+    "resolve_weights_file",
 ]
-
-from typing import Optional
 
 import requests
 
-from mon.core.console import log, log_error
-from mon.core.constants import MONO_ROOT_DIR, ROOT_DIR
-from mon.core.pathlib import Path
+from mon.core.constants import MODELS, MONO_ROOT, ROOT, WEIGHTS, ZOO_ROOT
+from mon.core.data import Weights
+from mon.core.logger import log, log_error
+from mon.core.path import Path
+from mon.core.typing import PathLike
+from mon.core.ui import create_download_bar
 from mon.core.utils import depascalize, is_valid_str
 
 
@@ -33,18 +38,19 @@ from mon.core.utils import depascalize, is_valid_str
 # region FILESYSTEM
 # ==============================================================================
 
-def delete_files(path: str | Path, regex: str = None, recursive: bool = False):
+def delete_files(path: PathLike, regex: str = "", recursive: bool = False):
     """Delete files matching a pattern under a given path.
 
     Args:
-        path: Path or directory to delete from.
-        regex: Glob pattern to match files. Defaults to None.
-        recursive: If True, search recursively for matches. Defaults to False.
+        path (PathLike): File or directory path to search under.
+        regex (str, optional): Glob pattern to match files. Defaults to ".
+        recursive (bool, optional): If True, search subdirectories recursively.
+            Defaults to False.
     """
-    path = Path(path)
+    path = Path(path).normalize()
 
+    # If no pattern, delete the single path if it's a file.
     if not regex:
-        # If no pattern, delete the single path if it's a file.
         try:
             if path.is_file():
                 path.unlink(missing_ok=True)
@@ -56,10 +62,9 @@ def delete_files(path: str | Path, regex: str = None, recursive: bool = False):
         return
 
     # If a pattern is given, search for matching files and delete them.
-    search_root     = path if path.is_dir() else path.parent
-    files_to_delete = search_root.rglob(regex) if recursive else search_root.glob(regex)
-
-    for f in files_to_delete:
+    root = path if path.is_dir() else path.parent
+    files = root.rglob(regex) if recursive else root.glob(regex)
+    for f in files:
         try:
             if f.is_file():
                 f.unlink()
@@ -67,43 +72,72 @@ def delete_files(path: str | Path, regex: str = None, recursive: bool = False):
             log_error(f"Failed to delete {f}: {err}")
 
 
-def download_url_to_file(url: str, path: str | Path, overwrite: bool = False) -> Path:
+def download_url_to_file(
+    url: PathLike,
+    path: PathLike,
+    overwrite: bool = False
+) -> Path:
     """Download a file from a URL to the local filesystem.
 
     Args:
-        url: Source URL to download from.
-        path: Destination path to save the file.
-        overwrite: If True, overwrite the destination file if it exists.
-            Defaults to False.
+        url (PathLike): URL to download the file from.
+        path (PathLike): Destination path to save the file.
+        overwrite (bool, optional): If True, overwrite the destination file if
+            it exists. Defaults to False.
 
     Raises:
         ValueError: If ``url`` is not a valid URL.
         requests.HTTPError: If the download fails.
     """
-    dest_path = Path(path)
-    if dest_path.exists() and not overwrite:
-        return dest_path
+    path = Path(path).normalize()
+    if path.exists() and not overwrite:
+        return path
 
+    # Check URL
     if not Path(url).is_url():
         raise ValueError(f"Expected a valid URL, but got '{url}'.")
 
-    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    # Create parent directories if needed
+    path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Import rich locally to avoid circular dependencies and keep it optional.
-    from mon.core.rich import create_download_bar
-
-    response   = requests.get(url, stream=True, timeout=30)
+    # Download file in chunks
+    response = requests.get(url, stream=True, timeout=30)
     response.raise_for_status()  # Raise an exception for bad status codes
     total_size = int(response.headers.get("content-length", 0))
 
     with create_download_bar() as pbar:
-        task_id = pbar.add_task(f"[cyan]Downloading {dest_path.name}", total=total_size)
-        with open(dest_path, "wb") as f:
+        task_id = pbar.add_task(f"[cyan]Downloading {path.name}", total=total_size)
+        with open(path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
                     pbar.update(task_id, advance=len(chunk))
-    return dest_path
+
+    return path
+
+# endregion
+
+
+# ==============================================================================
+# region DISCOVERY
+# ==============================================================================
+
+def list_weights_files(dir_path: PathLike) -> list[Path]:
+    """List all weights files in the given ``root`` directory.
+
+    Args:
+        dir_path (PathLike): Directory path to search for weights files.
+
+    Returns:
+        list[Path]: List of paths to weights files.
+    """
+    dir_path = Path(dir_path).normalize()
+    if not dir_path.exists():
+        return []
+
+    # Optimization: rglob with specific extensions if is_weights_file permits
+    # Otherwise, stick to * but ensure it's a file
+    return [f for f in dir_path.rglob("*") if f.is_weights_file(exist=True)]
 
 # endregion
 
@@ -114,21 +148,132 @@ def download_url_to_file(url: str, path: str | Path, overwrite: bool = False) ->
 
 # --- Accessing ---
 
-def parse_model_fullname(name: str, data: str, suffix: str | None = None) -> str:
-    """Compose a model fullname from name, data, and optional suffix.
+def resolve_config_file(
+    config: PathLike,
+    project_dir: PathLike,
+    model_dir: PathLike | None = None,
+) -> Path | None:
+    """Resolve the absolute path to a config file.
 
-    Build a normalized fullname string by appending dataset and an
-    optional suffix if not already present.
+    Search project and model config directories and return the first
+    matching config file if found.
 
     Args:
-        name: Base model name.
-        data: Dataset or data identifier to append.
-        suffix: Optional suffix to append. Defaults to None.
+        config (PathLike): Config name or path.
+        project_dir (PathLike): Project root directory.
+        model_dir (PathLike, optional): Model root directory. Defaults to None.
 
     Returns:
-        Composed fullname string.
+        Path: Resolved config file path if found, otherwise None.
     """
-    if not name or str(name).lower() == "none":
+    # Validate inputs
+    if not is_valid_str(config):
+        return None
+
+    config_path = Path(config).normalize()
+
+    # Direct path check (if the user provided a valid absolute/relative path)
+    if config_path.exists() and config_path.is_file():
+        return config_path
+
+    # Define search hierarchy (model-specific first, then project-wide)
+    search_roots = []
+    if model_dir:
+        search_roots.append(Path(model_dir) / "config")
+    if project_dir:
+        search_roots.append(Path(project_dir) / "config")
+
+    # Search loop
+    for root in search_roots:
+        if not root.is_dir():
+            continue
+
+        # Check the root of the config dir, then all subdirectories
+        # We search for the exact name or the name with common config suffixes
+        for candidate in root.rglob("*"):
+            if candidate.is_config_file(exist=True):
+                # Check if it matches the name or the stem (if no suffix was provided)
+                if config_path.stem == candidate.stem:
+                    return candidate
+
+    # Failure State
+    log_error(f"Config not found: {config}. Searched in {search_roots}")
+    return None
+
+
+def resolve_data_root(root: PathLike | None, data_dir: PathLike = "") -> Path:
+    """Resolve an absolute data directory path from candidates.
+
+    Try a series of candidate locations and return the first existing
+    directory. Raise an error if no candidate exists.
+
+    Args:
+        root (PathLike): Project root directory. Defaults to None.
+        data_dir (PathLike, optional): Data directory name or path. Defaults to "".
+
+    Returns:
+        Path: Resolved absolute data directory path.
+
+    Raises:
+        FileNotFoundError: If no candidate data directory is found.
+    """
+    # Use global ROOT_DIR if no project root is provided
+    root_path = Path(root).normalize() if root else ROOT
+
+    # Identify the target name/path
+    target = Path(data_dir).normalize() if data_dir else None
+
+    # Build Ordered Candidates
+    candidates = []
+
+    if target:
+        # If target is absolute, Path logic will prioritize it during joins
+        candidates.extend(
+            [
+                target,                            # Direct path
+                root_path / target,            # Relative to project root
+                root_path / "data" / target,   # Inside project data folder
+                ROOT / "data" / target,   # Inside "mon" data folder
+                MONO_ROOT / "data" / target,   # Inside global data folder (monorepo)
+            ]
+        )
+
+    # Fallback search locations
+    candidates.extend(
+        [
+            root_path / "data",
+            ROOT / "data",
+        ],
+    )
+
+    # Validation Loop
+    # Use unique paths only to avoid multiple disk IO checks on the same location
+    seen = set()
+    for d in candidates:
+        d = d.nomralize()
+        if d not in seen and d.is_dir():
+            return d
+        seen.add(d)
+
+    raise FileNotFoundError(
+        f"Could not resolve data directory. "
+        f"Looked in: {[str(c) for c in candidates]}."
+    )
+
+
+def parse_model_fullname(name: str, data: str = "", suffix: str = "") -> str:
+    """Compose a model fullname from name, data, and optional suffix.
+
+    Args:
+        name (str): Base architecture/model name.
+        data (str, optional): Dataset identifier. Defaults to "".
+        suffix (str, optional): Optional suffix (e.g., 'nano', 'v2').
+            Defaults to "".
+
+    Returns:
+        str: Full model name.
+    """
+    if not is_valid_str(name):
         # Using a default or raising is often better than just logging
         return "unnamed_model"
 
@@ -136,97 +281,35 @@ def parse_model_fullname(name: str, data: str, suffix: str | None = None) -> str
     fullname = str(name).strip()
 
     # Append dataset identifier
-    if data and str(data).lower() != "none":
-        data_tag = str(data).strip()
-        if data_tag not in fullname:
-            fullname = f"{fullname}_{data_tag}"
+    if is_valid_str(data):
+        data = depascalize(str(data).strip())
+        if data not in fullname:
+            fullname = f"{fullname}_{data}"
 
-    # Append optional suffix (e.g., 'nano', 'pretrained', 'v2')
-    if suffix and str(suffix).lower() != "none":
-        # Normalize casing (e.g., 'Nano' -> 'nano')
-        clean_suffix = depascalize(str(suffix).strip())
-
-        # Avoid duplicate tags
-        if clean_suffix not in fullname:
-            fullname = f"{fullname}_{clean_suffix}"
+    # Append optional suffix
+    if is_valid_str(suffix):
+        suffix = depascalize(str(suffix).strip())
+        if suffix not in fullname:
+            fullname = f"{fullname}_{suffix}"
 
     return fullname
 
 
-def resolve_data_dir(root: Path | None, data_dir: Path | str = "") -> Path:
-    """Resolve an absolute data directory path from candidates.
-
-    Try a series of candidate locations and return the first existing
-    directory. Raise an error if no candidate exists.
-
-    Args:
-        root: Project root.
-        data_dir: Candidate data directory name or path. Defaults to "".
-
-    Returns:
-        First candidate directory path that exists.
-
-    Raises:
-        FileNotFoundError: If no candidate data directory is found.
-    """
-    # Standardize Inputs
-    # Use global ROOT_DIR if no project root is provided
-    root_path = Path(root).normalize(exist=True) if root else ROOT_DIR
-
-    # Identify the target name/path
-    target = Path(data_dir).normalize(exist=True) if data_dir else None
-
-    # Build Ordered Candidates
-    candidates = []
-
-    if target:
-        # If target is absolute, Path logic will prioritize it during joins
-        candidates.extend([
-            target,                            # Direct path
-            root_path     / target,            # Relative to project root
-            root_path     / "data" / target,   # Inside project data folder
-            ROOT_DIR      / "data" / target,   # Inside "mon" data folder
-            MONO_ROOT_DIR / "data" / target,   # Inside global data folder (monorepo)
-        ])
-
-    # Fallback search locations
-    candidates.extend([
-        root_path / "data",
-        ROOT_DIR  / "data"
-    ])
-
-    # Validation Loop
-    # Use unique paths only to avoid multiple disk IO checks on the same location
-    seen = set()
-    for d in candidates:
-        abs_d = d.resolve() if d.is_absolute() else d.absolute()
-        if abs_d not in seen:
-            if abs_d.is_dir():
-                return abs_d
-            seen.add(abs_d)
-
-    raise FileNotFoundError(
-        f"Could not resolve data directory. Looked in: {[str(c) for c in candidates]}"
-    )
-
-
-def resolve_model_dir(arch: str, model: str) -> Optional[Path]:
+def resolve_model_dir(arch: str, model: str) -> Path | None:
     """Return the model directory for the given arch and model.
 
     Args:
-        arch: Architecture name.
-        model: Model name.
+        arch (str): Architecture name.
+        model (str): Model name.
 
     Returns:
-        Path to the model directory, or None if unspecified.
+        Path: Model directory path if found, otherwise None.
     """
-    from mon.core.factory import MODELS
-
-    # Validation & Normalization
+    # Validate inputs
     if not arch or not model:
         return None
 
-    # Registry Lookup with Safety
+    # Look up the model directory in the registry
     try:
         # Access nested registry.
         # Using .get() allows for a more graceful failure than raw brackets.
@@ -238,11 +321,11 @@ def resolve_model_dir(arch: str, model: str) -> Optional[Path]:
         if model_entry is None:
             return None
 
-        # Path Resolution
-        model_dir = model_entry.get("_model_dir") or model_entry.get("model_dir")
-
+        # Path resolution
+        model_dir = model_entry.get("model_dir")
         if model_dir:
             return Path(model_dir)
+
     except Exception as e:
         # If logging is available, log the registry access failure
         return None
@@ -251,10 +334,10 @@ def resolve_model_dir(arch: str, model: str) -> Optional[Path]:
 
 
 def resolve_save_dir(
-    root : Path | str,
-    arch : str | None = None,
-    model: str | None = None,
-    data : str | None = None,
+    root: PathLike,
+    arch: str = "",
+    model: str = "",
+    data: str = "",
 ) -> Path:
     """Build a save directory path from components.
 
@@ -262,43 +345,41 @@ def resolve_save_dir(
     save directory path suitable for storing run outputs.
 
     Args:
-        root: Base root path.
-        arch: Optional architecture name. Defaults to None.
-        model: Optional model name. Defaults to None.
-        data: Optional data name or path. Defaults to None.
+        root (PathLike): Project root directory.
+        arch (str, optional): Architecture name. Defaults to "".
+        model (str, optional): Model name. Defaults to "".
+        data (str, optional): Dataset name. Defaults to "".
 
     Returns:
-        Constructed save directory path.
+        Path: Resolved save directory path.
     """
     # Start with the base root (e.g., 'project/runs/train')
     save_dir = Path(root).normalize()
 
-    # Add Architecture level (e.g., 'yolov8')
-    if arch and str(arch).lower() != "none":
-        save_dir /= str(arch).lower().strip()
+    # Add architecture level (e.g., 'yolov8')
+    if is_valid_str(arch):
+        save_dir /= depascalize(str(arch).strip())
 
-    # Add Model level (e.g., 'yolov8n')
-    if model and str(model).lower() != "none":
-        save_dir /= str(model).lower().strip()
+    # Add model level (e.g., 'yolov8n')
+    if is_valid_str(model):
+        save_dir /= depascalize(str(model).strip())
 
-        # Add Dataset level inside the model folder
-        if data and str(data).lower() != "none":
-            data_path = Path(data)
-            # If it's a real path, take the filename (stem);
-            # otherwise, use the string directly
-            folder_name = data_path.stem if (data_path.suffix or data_path.exists()) else str(data)
-            save_dir   /= folder_name.lower().strip()
+    # Add dataset level inside the model folder
+    if is_valid_str(data):
+        data_path = Path(data)
+        # If it's a real path, take the filename (stem); otherwise, use the string directly
+        folder_name = data_path.stem if (data_path.suffix or data_path.exists()) else str(data)
+        save_dir /= depascalize(str(folder_name).strip())
 
     return save_dir
 
 
 def resolve_output_dir(
-    root        : Path | str,
-    dirname     : Path | str,
-    subdir_name : Path | str,
-    src_path    : Path | str,
+    root: PathLike,
+    dirname: PathLike,
+    subdir: PathLike,
+    src_path: PathLike | None = None,
     keep_subdirs: bool = False,
-    save_nearby : bool = False,
 ) -> Path:
     """Compute the output directory for a source path.
 
@@ -306,111 +387,143 @@ def resolve_output_dir(
     preserving subdirectory structure or saving outputs near the source.
 
     Args:
-        root: Base save root.
-        dirname: Directory name used in save structure.
-        subdir_name: Optional subdirectory under root to place outputs.
-        src_path: Source file path used to preserve subdir structure.
-        keep_subdirs: If True, preserve subdirectories from src_path.
-            Defaults to False.
-        save_nearby: If True, save outputs near the source path instead.
-            Defaults to False.
+        root (PathLike): Project root directory.
+        dirname (PathLike): Directory under root to place outputs.
+        subdir (PathLike): Subdirectory under dirname to place outputs.
+        src_path (PathLike, optional): Source path to determine the
+            subdirectory hierarchy. Defaults to None.
+        keep_subdirs (bool, optional): If True, preserve the subdirectory
+            structure of ``src_path`` relative to ``dirname``. Defaults to False.
 
     Returns:
-        Resolved output directory path.
+        Path: Resolved output directory path.
     """
-    root        = Path(root).normalize()
-    dirname     = Path(dirname)
-    subdir_name = str(subdir_name) if is_valid_str(subdir_name) else None
-    src_path    = Path(src_path).normalize() if src_path else None
+    root = Path(root).normalize()
+    dirname = Path(dirname)
+    subdir = Path(subdir) if is_valid_str(subdir) else None
+    src_path = Path(src_path).normalize() if is_valid_str(src_path) else None
 
-    # Logic for saving results next to the source file
-    if save_nearby and src_path:
-        # Create a folder like: path/to/image_results
-        # Uses the stem of the root (e.g., 'predict') as a suffix
-        suffix      = root.stem if root.stem != dirname.stem else root.parent.stem
-        output_root = src_path.parent / f"{src_path.stem}_{suffix}"
-        return output_root
-
-    # Structure Preservation Logic
+    # Preserve subdirectory structure if requested
     if keep_subdirs and src_path:
         try:
             # Get path relative to the input root (dirname)
             # e.g., src: 'data/val/class1/img.jpg', dir: 'data' -> 'val/class1'
-            rel_path    = src_path.parent.relative_to(dirname)
+            rel_path = src_path.parent.relative_to(dirname)
             target_path = root / rel_path
         except ValueError:
             # Fallback if src_path is not under dirname
             target_path = root / src_path.parent.name
 
-        if subdir_name:
-            return target_path / subdir_name
+        if subdir:
+            return target_path / subdir.stem
         return target_path
 
-    # Default Centralized Logic
-    # Nest by dirname if it's not already the root's name
+    # Default behavior: just use root + dirname stem + optional subdir
     final_root = root
     if dirname.stem != root.stem:
         final_root = root / dirname.stem
-
-    if subdir_name:
-        return final_root / subdir_name
+    if subdir:
+        return final_root / subdir.stem
     return final_root
 
 
-def resolve_config_file(
-    config      : Path | str,
-    project_root: Path | str,
-    model_root  : Path | None = None
-) -> Path | None:
-    """Resolve a config file path from given components.
-
-    Search project and model config directories and return the first
-    matching config file if found.
+def resolve_weights_dir(root: PathLike, weights: PathLike) -> Path | None:
+    """Resolve the weight directory from the given root and weights name or
+    relative path.
 
     Args:
-        config: Candidate config name or path.
-        project_root: Project root to search under.
-        model_root: Optional model root to search under. Defaults to None.
+        root (PathLike): Project root directory.
+        weights (PathLike): Weights name or relative path.
 
     Returns:
-        Resolved config path if found, otherwise None.
+        Path: Absolute weights directory path or None if nothing was found.
     """
-    if not config or str(config).lower() == "none":
-        return None
+    root = Path(root).normalize()
+    # Ensure weights is always a Path object
+    weights = Path(weights) if is_valid_str(weights) else None
 
-    config_path = Path(config).normalize()
+    # Check if the weight provided is already an absolute path
+    if weights.is_absolute() and weights.is_dir():
+        return weights
 
-    # Direct Path Check: If the user provided a valid absolute/relative path
-    if config_path.exists() and config_path.is_file():
-        return config_path
+    # Check local project root (Highest priority)
+    local_dir = root / weights
+    if local_dir.is_dir():
+        return local_dir
 
-    # Define Search Hierarchy (Model-specific first, then Project-wide)
-    search_roots = []
-    if model_root:
-        search_roots.append(Path(model_root) / "config")
-    if project_root:
-        search_roots.append(Path(project_root) / "config")
+    # Check global zoo directory
+    global_dir = ZOO_ROOT / weights
+    if global_dir.is_dir():
+        return global_dir
 
-    # Search Loop
-    for root in search_roots:
-        if not root.is_dir():
-            continue
+    # Return None if not found
+    return None
 
-        # Check the root of the config dir, then all subdirectories
-        # Using rglob is more Pythonic for finding a specific filename recursively
-        # We search for the exact name or the name with common config suffixes
-        for candidate in root.rglob("*"):
-            if candidate.is_file():
-                # Check if it matches the name or the stem (if no suffix was provided)
-                if candidate.name == config_path.name or candidate.stem == config_path.name:
-                    # Assuming .is_config_file() validates the suffix internally
-                    if hasattr(candidate, "is_config_file") and candidate.is_config_file():
-                        return candidate
-                    elif candidate.suffix in [".yaml", ".yml", ".py", ".json"]:
-                        return candidate
 
-    # Failure State
-    log_error(f"Config not found: {config}. Searched in {search_roots}")
+def resolve_weights_file(root: PathLike, weights: PathLike) -> Path | None:
+    """Resolve the weight file from the given root and weights name or
+    relative path.
+
+    Args:
+        root (PathLike): Project root directory.
+        weights (PathLike): Weights name or relative path.
+
+    Returns:
+        Path: Absolute weight file path or None if nothing was found.
+    """
+    root = Path(root).normalize()
+    # Ensure weights is always a Path object
+    weights = Path(weights) if is_valid_str(weights) else None
+
+    # Check if the weight provided is already an absolute path
+    if weights.is_absolute() and weights.is_weights_file():
+        return weights
+
+    # Check local project root (Highest priority)
+    # Search specifically for the file in the project's training runs
+    local_file = root / weights
+    if local_file.is_weights_file(exist=True):
+        return local_file
+
+    # Check global zoo directory
+    from mon.core.constants import ZOO_ROOT
+    global_file = ZOO_ROOT / weights
+    if global_file.is_weights_file(exist=True):
+        return weights
+
+    # Return None if not found
+    return None
+
+
+def resolve_weights(
+    root: PathLike,
+    weights: PathLike,
+    num_classes: int | None = None,
+) -> Weights | None:
+    """Resolve a ``Weights`` object from the given root and weights name or
+    relative path.
+
+    Args:
+        root (PathLike): Project root directory.
+        weights (PathLike): Weights name or relative path.
+        num_classes (int, optional): Number of classes to set in the ``Weights``
+            object if found. Defaults to None.
+
+    Returns:
+        Weights: ``Weights`` object if found, otherwise None.
+    """
+    weights = resolve_weights_file(root=root, weights=weights)
+
+    # If a valid weights file was found, wrap it in a Weights object
+    if weights:
+        # Check if the weights object is already registered in WEIGHTS
+        if WEIGHTS.has(weights_path=weights):
+            return WEIGHTS.find_weights_objs(weights_path=weights)
+        # Otherwise, the weights object has not been registered yet.
+        else:
+            return Weights(path=weights, num_classes=num_classes)
+
+    # Return None if not found
     return None
 
 

@@ -1,63 +1,82 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Project-wide constant definitions.
+"""Constant.
 
-This module provides project-wide constants and default directory and file
-extensions.
+This module defines various global constants used throughout the ``mon`` package.
 """
 
 from __future__ import annotations
 
 __all__ = [
+    "ALBUMENTATIONS",
+    "BACKBONES",
+    "DATASETS",
     "DIRS",
     "EXT",
-    "MONO_ROOT_DIR",
-    "ROOT_DIR",
-    "SOURCE",
+    "MODELS",
+    "MONO_ROOT",
+    "ROOT",
     "VERBOSE",
-    "ZOO_DIR",
+    "WEIGHTS",
+    "ZOO_ROOT",
 ]
 
 from types import SimpleNamespace
 
-from mon.core.enum import (
-    DepthSource,
-    ImageExtension,
-    InfraredSource,
-    WeightExtension,
+from mon.core.enum import ImageExtension, WeightExtension
+from mon.core.factory import (
+    DatasetFactory,
+    Factory,
+    ModelFactory,
+    WeightsFactory,
 )
-from mon.core.pathlib import Path
-
+from mon.core.path import Path
 
 # ==============================================================================
-# region CONSTANTS
+# region PATHS
 # ==============================================================================
-
-# --- Paths ---
 
 # Robustly find the project root (first pyproject.toml up)
 current_file = Path(__file__).normalize()
-ROOT_DIR = current_file
+ROOT = current_file
 
 for parent in current_file.parents:
     if (parent / "pyproject.toml").exists():
-        ROOT_DIR = parent
+        ROOT = parent
         break
 
 # Find the monorepo root (highest pyproject.toml up)
-_all_roots = [p for p in ROOT_DIR.parents if (p / "pyproject.toml").exists()]
-MONO_ROOT_DIR = _all_roots[-1] if _all_roots else ROOT_DIR
+_all_roots = [p for p in ROOT.parents if (p / "pyproject.toml").exists()]
+MONO_ROOT = _all_roots[-1] if _all_roots else ROOT
 
 # Zoo directory (prefer root-level zoo if it exists)
-_zoo_dir_in_root = ROOT_DIR / "zoo"
+_zoo_dir_in_root = ROOT / "zoo"
 
 if _zoo_dir_in_root.exists():
-    ZOO_DIR = _zoo_dir_in_root
+    ZOO_ROOT = _zoo_dir_in_root
 else:
-    ZOO_DIR = MONO_ROOT_DIR / "zoo"
+    ZOO_ROOT = MONO_ROOT / "zoo"
 
-# --- Values ---
+# endregion
+
+
+# ==============================================================================
+# region FACTORIES
+# ==============================================================================
+
+ALBUMENTATIONS = Factory(name="Albumentations", decamelize=False)
+DATASETS = DatasetFactory(name="Datasets", decamelize=True)
+BACKBONES = ModelFactory(name="Backbones", decamelize=True)
+MODELS = ModelFactory(name="Models", decamelize=True)
+WEIGHTS = WeightsFactory(name="Weights", decamelize=True)
+
+# endregion
+
+
+# ==============================================================================
+# region VALUES
+# ==============================================================================
 
 DIRS = SimpleNamespace(
     DEBUG="debug",
@@ -69,18 +88,11 @@ DIRS = SimpleNamespace(
 )
 
 EXT = SimpleNamespace(
-    CKPT=WeightExtension.CKPT.value,
-    IMAGE=ImageExtension.JPG.value,
+    CKPT=WeightExtension.CKPT,
+    IMAGE=ImageExtension.JPG,
     POINTCLOUD=".ply",
-    WEIGHTS=WeightExtension.PT.value,
+    WEIGHTS=WeightExtension.PT,
 )
-
-SOURCE = SimpleNamespace(
-    DEPTH=DepthSource.DAv2_ViTB,
-    INFRARED=InfraredSource.INFRARED,
-)
-
-# --- Execution Flags  ---
 
 VERBOSE = True  # Global verbosity flag for internal logging
 

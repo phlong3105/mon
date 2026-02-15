@@ -154,10 +154,24 @@ class Foo:
 
     # --- Mathematical Operators ---
     def __add__(self, other: Foo) -> Foo:
+        """Implement the addition operator (a + b)."""
         return Foo(self.value + other.value)
 
+    def __iadd__(self, other: Foo) -> Foo:
+        """Implement the in-place addition operator (a += b)."""
+        pass
+
     def __sub__(self, other: Foo) -> Foo:
+        """Implement the subtraction operator (a - b)."""
         return Foo(self.value - other.value)
+
+    def __or__(self, other: Foo) -> Foo:
+        """Implement the union operator (a | b)."""
+        pass
+
+    def __ior__(self, other: Foo) -> Foo:
+        """Implement the in-place operator (a |= b)."""
+        pass
 
     # --- Type Conversion ---
     def __bool__(self) -> bool:
@@ -181,9 +195,7 @@ class Foo:
         return len(self._data)
 
     def __getitem__(self, index: int) -> Any:
-        """Return an item at the given ``index``.
-
-        """
+        """Return an item at the given ``index``."""
         return self._data[index]
 
     def __setitem__(self, index: int, value: Any):
@@ -226,275 +238,32 @@ class Foo:
 # endregion
 
 
-# ==============================================================================
-# region FUNCTION TAXONOMY
-# ==============================================================================
-pass
-
-# --- Discovery (Explore what exists on the disk) ---
-"""
-- list  : Retrieve a list of items.
-- scan  : Scan the filesystem for new files.
-- find  : Return the first item matching specific criteria.
-- search: Return all items matching specific criteria (return empty by default).
-"""
-
-
-# --- Connection (Establish the connection) ---
-"""
-- open      : Open a file or connection.
-- close     : Close a file or connection.
-- connect   : Start a network or database session.
-- disconnect: End a network or database session.
-- attach    : Add a component to an object or process.
-- detach    : Remove a component from an object or process.
-"""
-
-
-# --- Input (Bring data into memory) ---
-"""
-- stream  : Read data in chunks.
-- buffer  : Read data into a buffer.
-- read    : Read data from a file.
-- load    : Parse data into a structured format.
-- fetch   : Retrieve a single batch of data.
-- prefetch: Load the next batch ahead of time.
-- gather  : Gather data from multiple sources into one.
-"""
-
-
-# --- Output (Push data to disk/network) ---
-"""
-- persist: Temporarily save data to disk or memory so it doesn't have to be recomputed.
-- write  : Store a small chunk of data to disk.
-- save   : Store data in its native format (e.g., image to .png)
-- export : Convert and store data in a different format.
-"""
-
-
-# --- Filesystem (Organize files and directories) ---
-"""
-- rename      : Change the name of a resource.
-- duplicate   : Create a clone of a resource.
-- move        : Move a resource to a new location.
-- copy        : Create a clone of a resource and move it to a new location.
-- archive     : Move old resource to cold storage.
-- unlink      : Destroy files.
-- remove / rm_: Destroy directories.
-- delete      : General destroy all, combine unlink and remove.
-- download    : Retrieve a resource from the network and store to disk.
-- scrape      : Specifically used for retrieving resources from web pages.
-- upload      : Push a resource from disk to network.
-"""
-
-
-# --- Creation (Create and return a new object) ---
-"""
-- create  : Standard for making new instances.
-- build   : A more complex, multistep process of making new instances.
-- generate: Often used for Generators or Iterators (e.g., generate_batches). It implies data is created on-the-fly.
-"""
-
-
-# --- Validation (Always returns True or False) ---
-"""
-- is_ / has_      : The standard for Boolean properties
-- match           : Check if two patterns or objects are equal (often used with Regex)
-- check / validate: Ensure data meets the criteria. validate usually raises an error if it fails; check might just return a bool
-- verify          : Check the authenticity or integrity of something (e.g., verify_signature).
-"""
-
-
-# --- Retrieval (Read-only; no side effects) ---
-"""
-# Accessing
-- get    : Retrieve a single value (logical units).
-- query  : Retrieve multiple values (logical units).
-- extract: Extract specific parts from the data.
-- parse  : Extract and convert specific parts from a string or a text into a structured format.
-- resolve: Convert an identifier or reference into the actual object or value it points to.
-
-# Selection (Find specific values in a collection)
-- filter : Select elements that meet specific criteria (return all by default).
-- unique : Find the unique values in a collection.
-- sample : Randomly select a subset of data.
-- comb   : Generate all possible combinations of elements.
-- perm   : Generate all possible permutations of elements.
-
-# Aggregation (Summarize collections)
-- count  : Count the number of elements in a collection.
-- sum    : Add up all values in a collection.
-- avg    : Calculate the average value of a collection.
-- min    : Find the minimum value in a collection.
-- max    : Find the maximum value in a collection.
-- mean   : Calculate the arithmetic mean of a collection.
-- median : Find the median value in a collection.
-"""
-
-
-# --- Mutation (Modifies self; usually returns None) ---
-"""
-# Alternation
-- set    : Change a single value.
-- update : Change multiple values at once.
-- replace: Replace an existing element with a new one.
-
-# Rearrangement
-- sort   : Rearrange the elements of a container in-place.
-- reverse: Reverse the order of the elements in a container.
-- shuffle: Randomly rearrange the elements of a container.
-
-# Addition
-- append : Add a new element to the end of a container.
-- extend : Add multiple elements to the end of a container.
-- insert : Insert a new element at a specific position in a container.
-- upsert : A "smart" update; inserts the record if it is new, updates it if it exists.
-
-# Removal
-- remove : Delete a specific element from a container.
-- pop    : Remove and return an element from a container.
-- clear  : Remove all elements from a container.
-- reset  : Return an object to its original state.
-"""
-
-
-# --- Computation (Return a new value without modifying self) ---
-"""
-# Arithmetic (Basic mathematical operations).
-- add      : Sum two values.
-- subtract : Subtract one value from another.
-- multiply : Multiply two values.
-- divide   : Divide one value by another.
-- power    : Raise a value to the power of another.
-- modulus  : Compute the remainder of division between two values.
-
-# Comparison (Compare two values).
-...
-
-# Logical (Boolean operations).
-
-# Geometric (Spatial calculations).
-- distance : Calculate the distance between two points.
-- angle    : Calculate the angle between two vectors.
-- area     : Calculate the area of a shape.
-- volume   : Calculate the volume of a 3D object.
-"""
-
-
-# --- Transformation (Return a new, modified copy) ---
-"""
-# Casting (Convert data types or formats; same internal representation).
-- ..._to_... : Specifically convert one type/format to another.
-- as_...     : Convert an object into a different type/format.
-
-# Encoding (Convert data into a different representation).
-- ..._to_... : Convert a data to another representation.
-- serialize  : Convert a data structure or object into a series of bytes or string.
-- deserialize: Convert a series of bytes or string to a data structure or object.
-
-# Standardization (Clean up data).
-- normalize  : Standardize the format or structure of data.
-- sanitize   : Remove or mask sensitive information from data.
-
-# Structural (Modify the layout of data).
-- reshape    : Change the shape or dimensions of a multidimensional array.
-- transpose  : Swap or reorder the axes of a multidimensional array.
-- flatten    : Convert a multidimensional array into a single dimension.
-- join       : Combine multiple containers of the same type into one.
-- merge      : Combine multiple objects into one.
-- split      : Split a single container into multiple ones.
-
-# Statistical (Modify the statistical properties of data).
-- scale      : Adjust the range of data.
-- normalize  : Adjust the mean and variance of data.
-- denormalize: Adjust the inverse of the normalization process.
-- discretize : Group continuous values into categories or bins.
-- binarize   : Convert data into the binary format (0s and 1s).
-
-# Geometric (Modify spatial properties of data).
-- translate  : Move data in space.
-- rotate     : Rotate data around a point or axis.
-- scale      : Resize data proportionally.
-...
-"""
-
-
-# --- Destruction (Free memory or reset state) ---
-"""
-- delete: Destroy all traces of the object.
-- purge : Permanently remove data that cannot be recovered.
-"""
-
-
-# --- Execution (Used for triggers and workflows) ---
-"""
-# Control
-- run / exec: Start a process, script, or task.
-- trigger   : Start a pipeline based on an event.
-- retry     : Re-run a failed task.
-- schedule  : Set up a task to run at a specific time or interval.
-
-# Processing
-- apply     : Take a function and running it against data.
-- map       : Apply a function to every element in a collection.
-- dispatch  : Send a task or event to a specific handler or worker.
-
-# Transaction
-- commit    : Finalize a transaction or saving changes permanently.
-- handle    : Process an incoming request or event.
-- drop      : Discard an incoming request or event.
-"""
-
-
-# --- Debugging (Prints or logs internal state) ---
-"""
-# Basic Logging
-- print  : Standard for debugging.
-- log    : Log internal state to a file or logging system.
-- trace  : Print a detailed stack trace for debugging.
-- monitor: Continuously track and report the state of an object over time.
-
-# Visualization
-- vis    : Visualize the internal state of an object for debugging.
-- plot   : Create plots or graphs to represent internal data.
-"""
-
-
-# endregion
-
-
 """HEADER BLOCKS"""
 
 # ==============================================================================
 # region CONSTANTS
 # ==============================================================================
 
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS
+# ==============================================================================
 
 # endregion
 
 
 # ==============================================================================
-# region TYPE DEFINITIONS & PROTOCOLS
+# region BASE CLASSES
 # ==============================================================================
-
-# --- Type Aliases ---
-
-
-# --- Protocols ---
-
 
 # endregion
 
 
 # ==============================================================================
-# region BASE CLASSES & MIXINS
+# region MIXINS
 # ==============================================================================
-
-# --- Base Classes ---
-
-
-# --- Mixins ---
-
 
 # endregion
 
@@ -503,14 +272,12 @@ pass
 # region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-
 # endregion
 
 
 # ==============================================================================
 # region DISCOVERY
 # ==============================================================================
-
 
 # endregion
 
@@ -519,14 +286,12 @@ pass
 # region CONNECTION
 # ==============================================================================
 
-
 # endregion
 
 
 # ==============================================================================
 # region INPUT
 # ==============================================================================
-
 
 # endregion
 
@@ -535,7 +300,6 @@ pass
 # region OUTPUT
 # ==============================================================================
 
-
 # endregion
 
 
@@ -543,14 +307,12 @@ pass
 # region CREATION
 # ==============================================================================
 
-
 # endregion
 
 
 # ==============================================================================
 # region VALIDATION
 # ==============================================================================
-
 
 # endregion
 
@@ -566,7 +328,6 @@ pass
 
 
 # --- Aggregation ---
-
 
 # endregion
 
@@ -586,7 +347,6 @@ pass
 
 # --- Removal ---
 
-
 # endregion
 
 
@@ -604,7 +364,6 @@ pass
 
 
 # --- Geometric ---
-
 
 # endregion
 
@@ -630,14 +389,12 @@ pass
 
 # --- Geometric ---
 
-
 # endregion
 
 
 # ==============================================================================
 # region DESTRUCTION
 # ==============================================================================
-
 
 # endregion
 
@@ -646,14 +403,12 @@ pass
 # region PROCESSING
 # ==============================================================================
 
-
 # endregion
 
 
 # ==============================================================================
 # region TRANSACTION
 # ==============================================================================
-
 
 # endregion
 
@@ -662,14 +417,12 @@ pass
 # region CONTROL
 # ==============================================================================
 
-
 # endregion
 
 
 # ==============================================================================
 # region BASIC LOGGING
 # ==============================================================================
-
 
 # endregion
 
@@ -678,14 +431,12 @@ pass
 # region VISUALIZATION
 # ==============================================================================
 
-
 # endregion
 
 
 # ==============================================================================
 # region UTILITIES
 # ==============================================================================
-
 
 # endregion
 

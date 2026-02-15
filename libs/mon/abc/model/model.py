@@ -27,7 +27,7 @@ from mon.core import (
     Path,
     Task,
     WEIGHTS,
-    ZOO_DIR,
+    ZOO_ROOT,
 )
 from mon.core.types import Weights, WeightsEnum, WeightsType
 
@@ -131,7 +131,7 @@ class BaseModel(nn.Module, nn.RegistrableMixin):
 class Weights(WeightsEnum):
 
     DATASET = Weights(
-        path        = ZOO_DIR / "",
+        path        =ZOO_ROOT / "",
         url         = "",
         num_classes = None,
         transforms  = None,
