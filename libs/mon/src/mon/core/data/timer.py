@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Profiling Utility.
+"""Timer.
 
-This module provides various profiling utilities.
+This module provides data structures for timing and profiling code execution.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import time
 
 from rich.table import Table
 
-from mon.core.logger import console
+from mon.core.ui import console
 
 
 # ==============================================================================

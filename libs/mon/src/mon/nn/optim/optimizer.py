@@ -3,7 +3,7 @@
 
 """Optimizers.
 
-This package contains various optimizers for training neural networks.
+This package contains various custom optimizers for training neural networks.
 """
 
 from __future__ import annotations

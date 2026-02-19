@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Constant.
+"""Constants.
 
 This module defines various global constants used throughout the ``mon`` package.
 """
@@ -24,14 +24,9 @@ __all__ = [
 
 from types import SimpleNamespace
 
-from mon.core.enum import ImageExtension, WeightExtension
-from mon.core.factory import (
-    DatasetFactory,
-    Factory,
-    ModelFactory,
-    WeightsFactory,
-)
-from mon.core.path import Path
+from .dtype import ImageExtension, WeightExtension
+from .factory import DatasetFactory, Factory, ModelFactory, WeightsFactory
+from .path import Path
 
 # ==============================================================================
 # region PATHS
@@ -65,11 +60,11 @@ else:
 # region FACTORIES
 # ==============================================================================
 
-ALBUMENTATIONS = Factory(name="Albumentations", decamelize=False)
-DATASETS = DatasetFactory(name="Datasets", decamelize=True)
-BACKBONES = ModelFactory(name="Backbones", decamelize=True)
-MODELS = ModelFactory(name="Models", decamelize=True)
-WEIGHTS = WeightsFactory(name="Weights", decamelize=True)
+ALBUMENTATIONS: Factory = Factory(name="Albumentations", decamelize=False)
+DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=True)
+BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=True)
+MODELS: ModelFactory = ModelFactory(name="Models", decamelize=True)
+WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=True)
 
 # endregion
 

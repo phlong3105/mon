@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Device Data Structure.
+"""Device Data Structures.
 
 This module provides data structures for handling devices.
 """
@@ -9,6 +9,7 @@ This module provides data structures for handling devices.
 from __future__ import annotations
 
 __all__ = [
+    "DEVICE_MANAGER",
     "Device",
     "DeviceList",
     "DeviceManager",
@@ -24,10 +25,9 @@ import psutil
 import torch
 from torch import nn
 
-from mon.core.data.structs import IndexList
-from mon.core.enum import DeviceType, MemoryUnit
-from mon.core.singleton import singleton
-from mon.core.typing import DeviceLike
+from mon.core.base import IndexList, singleton
+from mon.core.dtype import DeviceType, MemoryUnit
+from mon.core.typing import DeviceLike, Float3
 
 try:
     import pynvml
@@ -168,8 +168,14 @@ class DeviceList(IndexList[Device]):
     @property
     def names(self) -> list[str]:
         """Return a list of names."""
-        return self.keys()
+        return [d.name for d in self]
 
+# endregion
+
+
+# ==============================================================================
+# region CONTROL
+# ==============================================================================
 
 @singleton
 class DeviceManager:
@@ -179,16 +185,31 @@ class DeviceManager:
     def __init__(self):
         """Initialize a new instance."""
         self.devices = DeviceList()
-        self.list_devices()
+        self.list()
 
     # --- Properties ---
     @property
-    def all_devices(self) -> list[str]:
-        """Return a list of all devices in the system."""
-        return self.devices.keys
+    def cpu(self) -> Device:
+        """Return the CPU device."""
+        return self.devices["cpu"]
+
+    @property
+    def mps(self) -> Device:
+        """Return the MPS device if available, otherwise "cpu"."""
+        return self.get(device="mps")
+
+    @property
+    def cudas(self) -> list[Device]:
+        """Return a list of all CUDA devices in the system."""
+        return [d for d in self.devices.values() if d.is_cuda]
+
+    @property
+    def names(self) -> list[str]:
+        """Return a list of all device names."""
+        return self.devices.names
 
     # --- Discovery ---
-    def list_devices(self) -> DeviceList:
+    def list(self) -> DeviceList:
         """List all devices in the current system.
 
         After calling this method, the ``devices`` property will be populated.
@@ -215,7 +236,7 @@ class DeviceManager:
         return self.devices
 
     # --- Retrieval ---
-    def get_device(self, device: DeviceLike = _MISSING) -> Device:
+    def get(self, device: DeviceLike = _MISSING) -> Device:
         """Return the device object for the specified device.
 
         Args:
@@ -232,14 +253,22 @@ class DeviceManager:
         elif device is None:
             return self.devices["cpu"]
         elif isinstance(device, torch.device):
-            return self.devices[str(device)]
+            return self.devices.get(str(device), self.devices["cpu"])
         elif isinstance(device, str):
-            return self.devices[device]
+            return self.devices.get(device, self.devices["cpu"])
         elif isinstance(device, int):
             key = f"cuda:{device}" if device >= 0 else "cpu"
             return self.devices[key] if key in self.devices else self.devices["cpu"]
         else:
             raise ValueError(f"Unsupported device specifier: {device}")
+
+    def get_device(self, device: DeviceLike = _MISSING) -> torch.device:
+        """Return the torch device object for the specified device."""
+        return self.get(device).torch_device
+
+
+# A constant-like singleton instance for convenience access
+DEVICE_MANAGER = DeviceManager()
 
 # endregion
 
@@ -272,10 +301,7 @@ def inspect_model_device(model: nn.Module) -> torch.device:
             return torch.device("cpu")
 
 
-def query_vram_usage(
-    device: int = 0,
-    unit: MemoryUnit = "GB"
-) -> tuple[float, float, float]:
+def query_vram_usage(device: int = 0, unit: MemoryUnit = "GB") -> Float3:
     """Query NVML for the specified CUDA device memory usage.
 
     Args:
@@ -309,7 +335,7 @@ def query_vram_usage(
             pass
 
 
-def query_ram_usages(unit: MemoryUnit = "GB") -> tuple[float, float, float]:
+def query_ram_usages(unit: MemoryUnit = "GB") -> Float3:
     """Query system RAM usage.
 
     Args:
@@ -334,7 +360,6 @@ def query_ram_usages(unit: MemoryUnit = "GB") -> tuple[float, float, float]:
 
 # --- Aggregation ---
 
-
 # endregion
 
 
@@ -343,6 +368,9 @@ def query_ram_usages(unit: MemoryUnit = "GB") -> tuple[float, float, float]:
 # ==============================================================================
 
 if __name__ == "__main__":
-    pass
+    foo = DeviceManager()
+    bar = DeviceManager()
+    print(foo)
+    print(bar)
 
 # endregion

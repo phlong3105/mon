@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Custom Path.
+"""Path.
 
 This module provides custom Path implementations using pathlib.
 """
@@ -27,14 +27,15 @@ from pathlib import (
     PureWindowsPath,
     WindowsPath,
 )
-from typing import Iterable, Optional
+from typing import Iterable, Literal, Optional
 
-from mon.core.enum import (
+from .dtype import (
     ConfigExtension,
     ImageExtension,
     VideoExtension,
     WeightExtension,
 )
+from .utils import truncate_string
 
 
 # ==============================================================================
@@ -43,6 +44,13 @@ from mon.core.enum import (
 
 class Path(type(Path_())):  # Dynamic inheritance based on OS
     """Custom Path."""
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, *args):
+        """Override constructor to allow empty path components."""
+        if args and args[0] is None:
+            args = ("",) + args[1:]
+        super().__init__(*args)
 
     # --- Properties---
     @property
@@ -96,20 +104,27 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         return self.sibling(".onnx")
 
     # --- Discovery ---
-    def files(self, pattern: str = "*", recursive: bool = False) -> list["Path"]:
+    def files(self, *patterns, recursive: bool = False) -> list["Path"]:
         """List files in this directory. Safe against non-existent paths.
 
         Args:
-            pattern (str, optional): Glob pattern to filter files. Defaults to "*".
+            *patterns: Glob patterns to filter files (e.g. "*.jpg"). If empty,
+                returns an empty list.
             recursive (bool, optional): If True, include files in subdirectories.
                 Defaults to False.
         """
+        # Check if the directory exists first
         root = self._get_search_root()
         if not root.exists():
             return []
 
-        iterator = root.rglob(pattern) if recursive else root.glob(pattern)
-        return [p for p in iterator if p.is_file()]
+        # Loop over patterns
+        files = []
+        for pattern in patterns:
+            iterator = root.rglob(pattern) if recursive else root.glob(pattern)
+            files += [p for p in iterator if p.is_file()]
+
+        return files
 
     def subdirs(self, recursive: bool = False) -> list["Path"]:
         """List subdirectories.
@@ -127,7 +142,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
 
     def latest_file(self) -> Optional["Path"]:
         """Return the most recently modified file."""
-        files = self.files()
+        files = self.files("*")
         if not files:
             return None
         return max(files, key=lambda f: f.stat().st_mtime)
@@ -168,6 +183,13 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         return self
 
     # --- Validation ---
+    def has_name(self, name: str, exist: bool = False) -> bool:
+        """Check if the path has the given name (either stem or full name)."""
+        if exist and not self.exists():
+            return False
+
+        return self.name == name or self.stem == name
+
     def has_ext(self, *extensions: str | Iterable[str], exist: bool = False) -> bool:
         """Robust extension check.
 
@@ -186,7 +208,9 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
                 exts.update(item)
             else:
                 exts.add(item)
+
         # Normalize to lowercase
+        exts = {str(e) for e in exts}
         exts = {e.lower() if e.startswith(".") else f".{e.lower()}" for e in exts}
 
         return self.suffix.lower() in exts
@@ -198,7 +222,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             exist (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(ImageExtension, exist=exist)
+        return self.has_ext(ImageExtension.values(), exist=exist)
 
     def is_raw_image_file(self, exist: bool = True) -> bool:
         """Check if the path is a raw image format.
@@ -216,7 +240,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             exist (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(VideoExtension, exist=exist)
+        return self.has_ext(VideoExtension.values(), exist=exist)
 
     def is_weights_file(self, exist: bool = True) -> bool:
         """Check if the path matches known weight file extensions.
@@ -225,7 +249,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             exist (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(WeightExtension, exist=exist)
+        return self.has_ext(WeightExtension.values(), exist=exist)
 
     def is_config_file(self, exist: bool = True) -> bool:
         """Check if the path matches known config extensions.
@@ -234,7 +258,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             exist (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(ConfigExtension, exist=exist)
+        return self.has_ext(ConfigExtension.values(), exist=exist)
 
     def is_url(self) -> bool:
         """Fast check for URL scheme without external dependencies."""
@@ -270,6 +294,30 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             return self
         return self / dirname
 
+    # --- Mutation ---
+    def append(self, path: "Path" | str):
+        """Append a path to the current path, ensuring no duplicate parts."""
+        # If path is empty or None, return self
+        if not path:
+            return self
+
+        # Normalize inputs
+        path = Path(path)
+
+        # If path is a file, use its stem as the new path
+        if path.is_file():
+            path = path.stem if path.suffix else path.name
+            path = str(path).strip()
+            if path and self.name != path:
+                return self / path
+
+        # If the first part of the path is the same as self.name, skip it to
+        # avoid duplication
+        if path.parts[0] == self.name:
+            return self.parent / path
+        else:
+            return self / path
+
     # --- Computation ---
     def commonpath_to(self, other: "Path") -> "Path":
         """Return the longest common path prefix between two paths.
@@ -279,6 +327,18 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         """
         return Path(os.path.commonpath([str(self), str(other)]))
 
+    def unique_path_from(self, other: "Path") -> "Path":
+        """Return a unique path based on the current path and another path.
+
+        Args:
+            other (Path): Another path to compare with.
+        """
+        commonpath = self.commonpath_to(other)
+        if commonpath == self:
+            return Path()
+        else:
+            return self.replace_part(str(commonpath), "")
+
     def relative_path_to(self, start_part: str) -> "Path":
         """Return a new Path starting from the first occurrence of ``start_part``.
 
@@ -287,6 +347,9 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         Args:
             start_part (str): Substring to start the new relative path from.
         """
+        # Normalize inputs
+        start_part = str(start_part).strip()
+
         try:
             # Find the index of the folder in the path parts tuple
             # This ensures we match exact folder names, not substrings
@@ -299,6 +362,21 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
     def normalize(self) -> "Path":
         """Resolves symlinks, '..', and expands user."""
         return self.expanduser().resolve()
+
+    def truncate(
+        self,
+        max_length: int = 80,
+        side: Literal["left", "middle", "right"] = "middle"
+    ) -> str:
+        """Return a truncated string representation of the path.
+
+        Args:
+            max_length (int, optional): Maximum length of the truncated string.
+                Defaults to 80.
+            side (Literal["left", "middle", "right"], optional): Which side to
+                truncate. Defaults to "middle".
+        """
+        return truncate_string(str(self), max_length=max_length, side=side)
 
     def ensure_dir(self, is_file: bool = False) -> "Path":
         """Creates the directory for this path.
@@ -330,8 +408,9 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             old (str): Substring to replace.
             new (str): Replacement substring.
         """
-        new_name = self.name.replace(old, new)
-        return self.with_name(new_name)
+        tmp = str(self)
+        tmp = tmp.replace(str(old), str(new))
+        return Path(tmp)
 
     # --- Filesystem ---
     def copy_to(self, dst: "Path" | str, replace: bool = True):
@@ -345,9 +424,11 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         Raises:
             NotImplementedError: If ``dst`` is a URL.
         """
+        # Validate inputs
         if not self.exists():
             raise FileNotFoundError(f"{self} does not exist.")
 
+        # Normalize inputs
         dst = Path(dst)
 
         # If dst is an existing directory, copy inside it
@@ -379,27 +460,6 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             shutil.rmtree(self)
         else:
             super().rmdir()
-
-
-    # --- Discovery ---
-    def data_dir(self) -> Optional["Path"]:
-        """Go up the directory tree to find a ``data`` directory."""
-        current_dir = self.parent if self.is_file() else self
-        for parent in current_dir.parents:
-            if (parent / "data").exists():
-                return parent / "data"
-        return None
-
-    def image_dirs(self, recursive: bool = False) -> list["Path"]:
-        """Return an iterator over image directories under this path.
-
-        Args:
-            recursive (bool): If True, include nested subdirectories.
-                Defaults to False.
-        """
-        root = self.parent if self.is_file() else self
-        search_paths = root.rglob("image") if recursive else root.iterdir()
-        return [p for p in search_paths if p.is_dir() and p.stem == "image"]
 
 # endregion
 

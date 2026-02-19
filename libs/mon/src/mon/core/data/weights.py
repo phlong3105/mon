@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Weights Data Structure.
+"""Weights Data Structures.
 
-This module provides data structures for handling model weights.
+This module provides data structures and utilities for handling model weights.
 """
 
 from __future__ import annotations
@@ -11,17 +11,22 @@ from __future__ import annotations
 __all__ = [
     "Weights",
     "WeightsEnum",
+    "WeightsEnumLike",
+    "WeightsLike",
+    "create_weights",
+    "is_weights_type",
 ]
 
 from dataclasses import dataclass, field
 from functools import partial
-from typing import Any, Callable, Mapping, override
+from typing import Any, Callable, Mapping, override, TypeAlias, Union
 
 import torch
 
-from mon.core.enum import Enum
-from mon.core.logger import log
+from mon.core.base import Enum
 from mon.core.path import Path
+from mon.core.typing import PathLike
+from mon.core.ui import log
 from mon.core.utils import is_valid_str
 
 
@@ -66,7 +71,7 @@ class Weights:
         # Validate inputs
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
-            if not self.path.is_weight_file(exist=False):
+            if not self.path.is_weights_file(exist=False):
                 # We only care about the validity of the path, not its existence
                 raise ValueError(f"Weights file not found at: '{self.path}'")
         if is_valid_str(self.url):
@@ -213,10 +218,47 @@ class WeightsEnum(Enum):
             RuntimeError: If loading the weights fails.
         """
         return self.value.state_dict(
-            overwrite=overwrite,
-            weights_only=weights_only,
-            *args, **kwargs
+            overwrite=overwrite, weights_only=weights_only, *args, **kwargs
         )
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS
+# ==============================================================================
+
+WeightsEnumLike: TypeAlias = Union[WeightsEnum, str]
+WeightsLike: TypeAlias = Union[Weights, WeightsEnum]
+
+# endregion
+
+
+# ==============================================================================
+# region CREATION
+# ==============================================================================
+
+def create_weights(weights: Weights | PathLike, *args, **kwargs) -> Weights | None:
+    """Create a ``Weights`` object from a path or a ``Weights`` object."""
+    if isinstance(weights, Weights):
+        return weights
+    elif isinstance(weights, (Path, str)):
+        weights = Path(weights).normalize()
+        if weights.is_weights_file(exist=True):
+            return Weights(path=weights, *args, **kwargs)
+
+    return None
+
+# endregion
+
+
+# ==============================================================================
+# region VALIDATION
+# ==============================================================================
+
+def is_weights_type(value: Any) -> bool:
+    """Check if a value is of type ``WeightsType``."""
+    return isinstance(value, (Weights, WeightsEnum))
 
 # endregion
 

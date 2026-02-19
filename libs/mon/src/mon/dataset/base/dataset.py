@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Dataset Data Structure.
+"""Dataset Data Structures.
 
 This module provides generic data structures for handling datasets.
 """
@@ -30,9 +30,8 @@ from mon.core import (
     PathLike,
     Split,
     SplitLike,
-    build_classlist
 )
-from mon.dataset.base.modality import Modality, ModalityList, build_modality_list
+from .modality import Modality, ModalityList
 
 
 # ==============================================================================
@@ -105,9 +104,9 @@ class Dataset(Dataset_, ABC):
         self.verbose = verbose
 
         # Override class-level defaults if provided
-        if modalities:
+        if isinstance(modalities, ModalityList):
             self.modalities = modalities
-        if classes:
+        if isinstance(classes, ClassList):
             self.classes = classes
 
         if metapoints:
@@ -268,6 +267,13 @@ class Dataset(Dataset_, ABC):
 
         return metadata
 
+    # --- Creation ---
+    @classmethod
+    @abstractmethod
+    def from_config(cls, config: dict[str, Any]) -> Dataset:
+        """Create a new instance from a configuration dictionary."""
+        pass
+
     # --- Validation ---
     def verify(self):
         """Verify dataset integrity after loading.
@@ -350,15 +356,19 @@ class StandardDataset(Dataset, ABC):
     placed under a common root directory.
 
     Attributes:
+        dirname (str, optional): Name of the dataset directory within the root.
+            Use this if the given ``root`` directory does not contain the
+            dataset directory itself. Defaults to an empty string, meaning the
+            dataset is located directly at the given ``root``.
         subdir (str, optional): Name of the subdirectory within the dataset's
             ``root``. (i.e., ``root/subdir``). Use this if the current dataset
             is a subset of another dataset. If provided, it will be automatically
-            appended to the ``root`` path. Defaults to an empty string, meaning
-            no subdirectory.
+            appended to the ``root`` path. Defaults to an "", meaning no subdirectory.
         splits (list[Split]): List of supported data splits. Defaults to an empty
             list, which must be overridden in subclasses.
     """
 
+    dirname: str = ""
     subdir: str = ""
     splits: list[Split] = []
 
@@ -367,6 +377,7 @@ class StandardDataset(Dataset, ABC):
         self,
         root: PathLike,
         split: SplitLike,
+        dirname: str = "",
         subdir: str = "",
         *args, **kwargs
     ):
@@ -376,6 +387,9 @@ class StandardDataset(Dataset, ABC):
             root (PathLike): Path to the root directory of the dataset.
             split (SplitType): Data split subset to use. Must be one of the
                 options defined in ``splits``.
+            dirname (str, optional): Name of the dataset directory within the
+                root path. Use this if the given ``root`` path does not contain
+                the dataset directory itself. Defaults to "".
             subdir (str, optional): Name of the subdirectory within the dataset's
                 ``root`` (i.e., ``root/subdir``). Use this if the current
                 dataset is a subset of another dataset. If provided, it
@@ -388,6 +402,8 @@ class StandardDataset(Dataset, ABC):
         """
         # Assign attributes
         # Override class-level default if provided
+        if is_valid_str(dirname):
+            self.dirname = dirname
         if is_valid_str(subdir):
             self.subdir = subdir
 
@@ -400,6 +416,22 @@ class StandardDataset(Dataset, ABC):
 
         # Continue the initialization chain
         super().__init__(*args, **kwargs)
+
+    def __init_subclass__(cls, *args, **kwargs):
+        """Validate subclass attributes on inheritance.
+
+        Raises:
+            AttributeError: If ``name`` or ``splits`` is not defined in the subclass.
+        """
+        super().__init_subclass__(*args, **kwargs)
+
+        # Check for EXPLICIT definition in the subclass (not inherited)
+        for attr in ["splits"]:
+            if not getattr(cls, attr):
+                raise AttributeError(
+                    f"Class {cls.__name__} must define '{attr}' attribute "
+                    f"(defined locally or inherited)."
+                )
 
     # --- Properties ---
     @property
@@ -417,15 +449,22 @@ class StandardDataset(Dataset, ABC):
         Raises:
             FileNotFoundError: If the ``root`` directory does not exist.
         """
-        root = Path(root).normalize()  # Ensure an absolute, clean path
+        root = Path(root).normalize()
+
+        # Append dirname if specified
+        if is_valid_str(self.dirname):
+            # Check if the current root ends with a dataset directory; if not,
+            # try to append
+            dataset_dir = root.append(self.dirname)
+            if dataset_dir.is_dir():
+                root = dataset_dir
 
         # Append subdir if specified
         if is_valid_str(self.subdir):
             # Check if the current root ends with a subset; if not, try to append
-            if root.name != self.subdir:
-                sub_path = root / self.subdir
-                if sub_path.is_dir():
-                    root = sub_path
+            subdir = root.append(self.subdir)
+            if subdir.is_dir():
+                root = subdir
 
         # Validate inputs
         if not root.is_dir():
@@ -496,6 +535,8 @@ class StandardDataset(Dataset, ABC):
             else:
                 # Else, set all metapoints to None
                 metapoints[m.name] = [None] * len(pk_metadata)
+
+        self.metapoints = metapoints
 
 
 class InputTargetDataset(Dataset, ABC):
@@ -618,6 +659,8 @@ class InputTargetDataset(Dataset, ABC):
             else:
                 # If no target data is available, set all metapoints to None
                 metapoints[m.name] = [None] * len(pk_metadata)
+
+        self.metapoints = metapoints
 
 # endregion
 

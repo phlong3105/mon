@@ -1,10 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Data Structure.
+"""Data Structures.
 
 This package contains the containers that carry information throughout the
 ``mon`` package.
+
+File Structure:
+::
+
+    data/
+    ├── __init__.py
+    ├── bbox.py         #
+    ├── class_def.py    #
+    ├── data.py         #
+    ├── device.py       # Hardware auto-detection & management
+    ├── image.py        #
+    ├── mask.py         #
+    ├── prob.py         #
+    ├── timer.py        #
+    └── weights.py      # General purpose helpers
 """
 
 from __future__ import annotations
@@ -15,7 +30,6 @@ from .data import *
 from .device import *
 from .image import *
 from .mask import *
-from .model import *
 from .prob import *
-from .structs import *
+from .timer import *
 from .weights import *

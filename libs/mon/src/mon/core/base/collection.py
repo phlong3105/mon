@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Generic Data Structures.
+"""Generic Collections.
 
-This module provides generic data structures.
+This module provides generic collection containers with enhanced features.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Modality Data Structure.
+"""Modality Data Structures.
 
 This module provides data structures for handling modality data in datasets.
 """
@@ -10,18 +10,26 @@ from __future__ import annotations
 
 __all__ = [
     "DepthModality",
+    "FrameModality",
     "ImageModality",
     "ModalitiesLike",
     "Modality",
     "ModalityList",
-    "build_modality_list",
+    "build_modalities",
 ]
 
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, Iterable, TypeAlias, Union
 
-from mon.core import AlbumTargetType, Image, IndexList, is_valid_str, Loader
+from mon.core import (
+    AlbumTargetType,
+    Frame,
+    Image,
+    IndexList,
+    is_valid_str,
+    Loader,
+)
 from mon.cv import ImageLoader, MaskLoader
 
 
@@ -99,6 +107,25 @@ class ModalityList(IndexList[Modality]):
         """Return a list of names."""
         return self.keys()
 
+    # --- Creation ---
+    @classmethod
+    def from_list(cls, modalities: list[ModalityType], **kwargs) -> "ModalityList":
+        """Create a new instance from a list of modality configurations."""
+        # Validate inputs
+        if not isinstance(modalities, list):
+            raise TypeError(
+                f"Expected a list of modality configurations, "
+                f"but got {type(modalities).__name__}."
+            )
+
+        # Build the object
+        for i, m in enumerate(modalities):
+            if isinstance(m, dict):
+                modalities[i] = Modality(**m)
+
+        # Return the new instance
+        return cls(modalities, **kwargs)
+
 # endregion
 
 
@@ -107,6 +134,7 @@ class ModalityList(IndexList[Modality]):
 # ==============================================================================
 
 ImageModality = partial(Modality, ext=".jpg", module=Image, loader=ImageLoader(), type=AlbumTargetType.IMAGE)
+FrameModality = partial(Modality, ext=".jpg", module=Frame, loader=None, type=AlbumTargetType.IMAGE)
 DepthModality = partial(Modality, ext=".jpg", module=Image, loader=MaskLoader(), type=AlbumTargetType.MASK)
 
 # endregion
@@ -116,50 +144,40 @@ DepthModality = partial(Modality, ext=".jpg", module=Image, loader=MaskLoader(),
 # region TYPE DEFINITIONS
 # ==============================================================================
 
-ModalitiesLike: TypeAlias = Union[
-    ModalityList,
-    list[Union[Modality, dict[str, Any]]],
-    dict[str, Union[Modality, dict[str, Any]]],
-]
+ModalityType: TypeAlias = Union[Modality, dict[str, Any]]
+ModalitiesLike: TypeAlias = Union[ModalityList, list[ModalityType]]
 
 # endregion
 
 
 # ==============================================================================
-# region REGISTRY & FACTORY
+# region CREATION
 # ==============================================================================
 
-def build_modality_list(modalities: ModalitiesLike | None, *args, **kwargs) -> ModalityList:
-    """Build a ``ModalityList`` instance from the given input.
+def build_modalities(value: ModalitiesLike | None) -> ModalityList:
+    """Build a ``ModalityList`` from a given value.
 
     Args:
-        modalities (ModalitiesType, optional): Either a ``ModalityList`` instance,
-            a list of ``Modality`` instances or dictionaries, a dictionary
-            mapping modality names to ``Modality`` instances or dictionaries,
-            or None.
-        *args: Positional arguments for ``ModalityList`` constructor.
-        **kwargs: Keyword arguments for ``ModalityList`` constructor.
+        value (ModalitiesLike | None): Either a ``ModalityList`` instance or a
+            list of modality configurations.
 
     Returns:
         ModalityList: A ``ModalityList`` instance.
 
     Raises:
-        TypeError: If the input type is not supported.
+        TypeError: If the input value is not a valid type for building a
+            ``ModalityList``.
     """
-    if modalities is None:
-        return ModalityList(*args, **kwargs)
-    elif isinstance(modalities, ModalityList):
-        return modalities
-    elif isinstance(modalities, (list, dict)):
-        # Convert dict to list
-        if isinstance(modalities, dict):
-            modalities = list(modalities.values())
-        for i, m in enumerate(modalities):
-            # Convert dict to Modality instance
-            modalities[i] = Modality(**m) if isinstance(m, dict) else m
-        return ModalityList(modalities, *args, **kwargs)
+    if value is None:
+        return ModalityList()
+    elif isinstance(value, ModalityList):
+        return value
+    elif isinstance(value, list):
+        return ModalityList.from_list(value)
     else:
-        raise TypeError(f"Unsupported type: {type(modalities).__name__}")
+        raise TypeError(
+            f"Unsupported ModalityList type: {type(value).__name__}."
+        )
 
 # endregion
 

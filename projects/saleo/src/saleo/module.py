@@ -38,7 +38,7 @@ class ResidualINR(nn.Module):
         patch_dim (int): Input dimension of the patch branch.
         hidden_dim (int): Hidden dimension of the networks.
         coords_dim (int): Output dimension of the coordinate branch.
-        ff (nn.PosEncodingFourier): Fourier feature mapping for coordinates.
+        ff (nn.FourierPE): Fourier feature mapping for coordinates.
         coord_net (nn.Sequential): SIREN network for processing coordinates.
         patch_net (nn.Sequential): SIREN network for processing patches.
         output_net (nn.Sequential): Output network for combining features.
@@ -78,7 +78,7 @@ class ResidualINR(nn.Module):
 
         # Define networks
         if pos_encode:
-            self.ff         = nn.PosEncodingFourier(mapping_size=mapping_size, B=B)
+            self.ff         = nn.FourierPE(mapping_size=mapping_size, B=B)
             self.coords_dim = self.ff.out_features
         else:
             self.ff         = None
@@ -140,7 +140,7 @@ class ReflectanceINR(nn.Module):
     Attributes:
         hidden_dim (int): Hidden dimension of the networks.
         coords_dim (int): Output dimension of the coordinate branch.
-        ff (nn.PosEncodingFourier): Fourier feature mapping for coordinates.
+        ff (nn.FourierPE): Fourier feature mapping for coordinates.
         coord_net (nn.Sequential): SIREN network for processing coordinates.
     """
 
@@ -173,7 +173,7 @@ class ReflectanceINR(nn.Module):
 
         # Define networks
         if pos_encode:
-            self.ff         = nn.PosEncodingFourier(mapping_size=mapping_size, B=B)
+            self.ff         = nn.FourierPE(mapping_size=mapping_size, B=B)
             self.coords_dim = self.ff.out_features
         else:
             self.ff         = None

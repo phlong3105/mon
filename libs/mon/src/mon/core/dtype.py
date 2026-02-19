@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Global Enum.
+"""Global Enums.
 
 This module provides global Enums.
 """
@@ -14,15 +14,9 @@ __all__ = [
     "ConfigExtension",
     "DefaultEnumMeta",
     "DeviceType",
-    "Enum",
-    "EnumType",
-    "Flag",
     "ImageExtension",
-    "IntEnum",
-    "IntFlag",
     "MemoryUnit",
     "Precision",
-    "ReprEnum",
     "RunMode",
     "Split",
     "StrEnum",
@@ -31,41 +25,7 @@ __all__ = [
     "WeightExtension",
 ]
 
-from enum import (
-    Enum,
-    EnumMeta,
-    EnumType,
-    Flag,
-    IntEnum,
-    IntFlag,
-    ReprEnum,
-    StrEnum,
-)
-from typing import Any, override
-
-
-# ==============================================================================
-# region MIXINS
-# ==============================================================================
-
-class DefaultEnumMeta(EnumMeta):
-    """Metaclass for Enums with default member support."""
-
-    # --- Callable & Context Manager ---
-    @override
-    def __call__(cls, value: Any, *args, **kwargs):
-        # If no value is passed, return the first member
-        if value is None:
-            return list(cls)[0]
-
-        # If the value is "default", return the DEFAULT member
-        if value == "default":
-            return getattr(cls, "DEFAULT", list(cls)[0])
-
-        # Otherwise, behave like a normal Enum
-        return super().__call__(value, *args, **kwargs)
-
-# endregion
+from .base import DefaultEnumMeta, StrEnum
 
 
 # ==============================================================================
@@ -230,6 +190,9 @@ class Split(StrEnum, metaclass=DefaultEnumMeta):
 class Task(StrEnum, metaclass=DefaultEnumMeta):
     """Enum for common ML tasks."""
 
+    # --- Benchmark ---
+    BENCHMARK = "benchmark"
+
     # --- Neural Networks ---
     BACKBONE = "backbone"
 
@@ -257,5 +220,15 @@ class Precision(StrEnum, metaclass=DefaultEnumMeta):
     INT8 = "int8"  # 8-bit integer
     INT4 = "int4"  # 4-bit integer
     DEFAULT = FP32
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

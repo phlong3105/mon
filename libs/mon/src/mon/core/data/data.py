@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Data Structure.
+"""Data Structures.
 
 This module provides data structures for handling various data types.
 """
@@ -23,9 +23,9 @@ from typing import Any, Union
 import torch
 from numpy import ndarray
 
-from mon.core.data.structs import DictList
+from mon.core.base import DictList
 from mon.core.path import Path
-from mon.core.typing import int_any_t
+from mon.core.typing import IntOrTuple
 from mon.core.utils import is_valid_str
 
 
@@ -64,7 +64,7 @@ class Data(ABC):
 
     @property
     @abstractmethod
-    def shape(self) -> int_any_t:
+    def shape(self) -> IntOrTuple:
         """Return the data shape."""
         pass
 

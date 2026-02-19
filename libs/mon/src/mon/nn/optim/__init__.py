@@ -3,8 +3,8 @@
 
 """Optimizers & Schedulers.
 
-This package contains optimizers and learning rate schedulers for training
-neural networks.
+This package contains custom optimizers and learning rate schedulers for
+training neural networks.
 
 File Structure:
 ::

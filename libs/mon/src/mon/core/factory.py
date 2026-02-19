@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Factory Data Structure.
+"""Factory.
 
-This module provides data structures for handling factories.
+This module provides factory classes.
 """
 
 from __future__ import annotations
@@ -16,13 +16,14 @@ __all__ = [
 ]
 
 import inspect
+from collections import UserDict
 from typing import Any, Callable
 
 from mon.core.data import Weights, WeightsEnum
-from mon.core.enum import Split, Task
-from mon.core.logger import log_error
+from mon.core.dtype import Split, Task
 from mon.core.path import Path
 from mon.core.typing import PathLike, RunModeLike, TaskLike
+from mon.core.ui import log_error
 from mon.core.utils import depascalize
 
 
@@ -30,7 +31,7 @@ from mon.core.utils import depascalize
 # region BASE CLASSES
 # ==============================================================================
 
-class Factory(dict):
+class Factory(UserDict[str, Any | Callable[..., Any]]):
     """Generic Factory class based on a dictionary.
 
     Maintain a mapping of registered classes and their names.
@@ -241,7 +242,12 @@ class Factory(dict):
             Any: The attribute value if found, else None.
         """
         try:
-            return getattr(module, f"{attr}") or getattr(metaclass, f"{attr}")
+            value = getattr(module, f"{attr}")
+        except AttributeError:
+            value = None
+
+        try:
+            return value or getattr(metaclass, f"{attr}")
         except AttributeError:
             return None
 
@@ -359,12 +365,11 @@ class ModelFactory(Factory):
     @property
     def models(self) -> list[str]:
         """Return a flattened list of all registered model names."""
-        return list(self.flatten.keys())
+        return list(self.models_flat.keys())
 
     @property
-    def flatten(self) -> dict[str, dict[str, dict]]:
-        """Return a flattened dictionary of all models
-        (i.e., {'model_name': metadata}).
+    def models_flat(self) -> dict[str, dict[str, dict]]:
+        """Return a flattened dictionary of all models (i.e., {'model_name': metadata}).
         """
         flatten_dict = {}
         for arch, models in self.items():
@@ -456,7 +461,7 @@ class ModelFactory(Factory):
             "arch": arch,
             "name": model,
             "tasks": self._get_attr(module, metaclass, "tasks"),
-            "mltypes": self._get_attr(module, metaclass, "mltypes"),
+            # "mltypes": self._get_attr(module, metaclass, "mltypes"),
             "model_dir": self._get_attr(module, metaclass, "model_dir"),
             "module": module,
         }
@@ -486,7 +491,7 @@ class ModelFactory(Factory):
                 f"Cannot build from an empty name in the '{self.name}' factory."
             )
 
-        flatten = self.flatten
+        flatten = self.models_flat
 
         # Normalize name
         key = depascalize(name) if self.decamelize else name
@@ -540,7 +545,7 @@ class ModelFactory(Factory):
         models = self.search(task=task)
 
         # Resolve architecture names from the registry
-        flatten = self.flatten
+        flatten = self.models_flat
         archs = set()  # Use set to automatically handle duplicates
 
         for m in models:
@@ -568,7 +573,7 @@ class ModelFactory(Factory):
         key = depascalize(name) if self.decamelize else name
 
         # Find the module for the given name
-        flatten = self.flatten
+        flatten = self.models_flat
 
         if key in flatten:
             return flatten[key].get("module")
@@ -584,9 +589,40 @@ class ModelFactory(Factory):
         """
         # Normalize key
         key = depascalize(name) if self.decamelize else name
-        return key in self.flatten
+        return key in self.models_flat
 
     # --- Retrieval ---
+    def get_model(self, name: str) -> dict[str, Any] | None:
+        """Return the metadata for a registered model by name."""
+        # Normalize key
+        key = depascalize(name) if self.decamelize else name
+
+        # Look up the model metadata in the registry
+        flatten = self.models_flat
+        if key in flatten:
+            return flatten[key]
+
+        return None
+
+    def get_model_dir(self, name: str) -> Path | None:
+        """Return the absolute path to the model definition directory."""
+        # Check if the model is registered
+        model_entry = self.get_model(name=name)
+        if not model_entry:
+            return None
+
+        # Get the model directory
+        model_dir = model_entry.get("model_dir")
+        if not model_dir:
+            return None
+
+        # Check if the directory exists
+        model_dir = Path(model_dir).normalize()
+        if model_dir.is_dir():
+            return Path(model_dir)
+        else:
+            return None
+
     def filter(self, arch: str = "", task: TaskLike | None = None) -> list[str]:
         """Filter and return all available model names matching an architecture,
         or task.
@@ -601,8 +637,8 @@ class ModelFactory(Factory):
             list[str]: Sorted list of model names.
         """
         # Global discovery
-        flatten = self.flatten
-        models = list(self.flatten.keys())
+        flatten = self.models_flat
+        models = list(self.models_flat.keys())
 
         # Filter by Architecture
         if arch:

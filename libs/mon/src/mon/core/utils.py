@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""String & Basic Type Utility.
+"""String & Basic Type Utilities.
 
 This package contains helpers for string case conversion, type coercion,
 collection utilities, and dictionary operations.
@@ -38,15 +38,16 @@ __all__ = [
     "to_list",
     "to_ntuple",
     "to_str",
+    "truncate_string",
 ]
 
+import collections
 import itertools
 import re
 from collections.abc import Mapping
-from typing import Any, Callable, Iterable, Sequence
+from typing import Any, Callable, Iterable, Literal, Sequence
 
-from mon.core.path import Path
-
+from box import Box
 
 # ==============================================================================
 # region CONSTANTS
@@ -95,10 +96,12 @@ def is_float(value: Any) -> bool:
 
 def is_valid_str(value: Any) -> bool:
     """Check if the input value is a valid string."""
-    if not isinstance(value, (Path, str)):
+    try:
+        value = str(value)
+        value = _WHITESPACE_RE.sub("", str(value))
+        return value.lower() not in ["", "none", "null", "nan", "inf"]
+    except (ValueError, TypeError):
         return False
-    value = _WHITESPACE_RE.sub("", value)
-    return value.lower() not in ["", "none", "null", "nan", "inf"]
 
 
 def is_camelcase(value: Any) -> bool:
@@ -378,7 +381,9 @@ def snakecase(value: Any) -> Any:
 # --- Structural ---
 
 def merge_dicts(*dicts) -> dict:
-    """Merge multiple dictionaries, filtering out None-like values.
+    """Merge multiple dictionaries. Use the first dictionary as the base
+    dictionary and update it with the remaining dictionaries, filtering out
+    None-like values.
 
     Args:
         *dicts: Sequence of dictionaries to merge.
@@ -386,17 +391,57 @@ def merge_dicts(*dicts) -> dict:
     Returns:
         dict: Merged dictionary.
     """
+    # If no dictionaries are provided, return an empty dictionary.
     if not dicts:
         return {}
 
     merged = dicts[0].copy()
-    invalid_vals = {None, "None", ""}
+    invalid_vals = [None, "None", "", [], ()]
 
-    for d in dicts[1:]:
-        # Use a dictionary comprehension for a concise, single-pass update.
-        merged.update({k: v for k, v in d.items() if v not in invalid_vals})
+    # Iterate through all dictionaries provided after the first one
+    for update_dict in dicts[1:]:
+        for key, value in update_dict.items():
+            if isinstance(value, collections.abc.Mapping):
+                # The recursive call uses the existing nested dict (or a new empty one) as the base
+                merged[key] = merge_dicts(merged.get(key, {}), value)
+            else:
+                if value in invalid_vals:
+                    continue
+                merged[key] = value
 
     return merged
+
+
+def truncate_string(
+    value: str,
+    max_length: int = 80,
+    side: Literal["left", "middle", "right"] = "middle"
+) -> str:
+    """Shortens a string for display purposes with an ellipsis in the middle.
+
+    Args:
+        value (str): The string to be truncated.
+        max_length (int, optional): The maximum allowed length of the string
+            including the ellipsis. Defaults to 80.
+        side (Literal["left", "middle", "right"], optional): Where to place the
+            ellipsis if truncation is needed. Defaults to "middle".
+    """
+    # Normalize inputs
+    value = str(value)
+
+    # Validate inputs
+    if len(value) <= max_length:
+        return value
+
+    # Calculate how much to keep on each side of the "..."
+    keep_len = (max_length - 3) // 2
+
+    if side == "left":
+        return "..." + value[-keep_len:]
+    elif side == "right":
+        return value[:keep_len] + "..."
+    else:  # middle
+        return value[:keep_len] + "..." + value[-keep_len:]
 
 
 # --- Aliases for backward compatibility ---

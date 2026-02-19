@@ -20,14 +20,19 @@ import cv2
 from numpy import ndarray
 from torch import Tensor
 
-from mon.core import int_2_t, Path, PathLike, TensorOrArray
-from mon.cv.ops import parse_imgsz, to_image_array
+from mon.core import (
+    IntOrTuple2,
+    parse_imgsz,
+    Path,
+    PathLike,
+    TensorOrArray,
+    to_image_array,
+)
 
 
 # ==============================================================================
 # region CONSTANTS
 # ==============================================================================
-
 
 # endregion
 
@@ -36,14 +41,12 @@ from mon.cv.ops import parse_imgsz, to_image_array
 # region DISCOVERY
 # ==============================================================================
 
-
 # endregion
 
 
 # ==============================================================================
 # region INPUT
 # ==============================================================================
-
 
 # endregion
 
@@ -59,7 +62,7 @@ class VideoWriter(ABC):
     def __init__(
         self,
         path: PathLike,
-        imgsz: int_2_t = (480, 640),
+        imgsz: IntOrTuple2 = (480, 640),
         frame_rate: float = 24,
         verbose: bool = False,
         *args, **kwargs,
@@ -171,7 +174,7 @@ class VideoWriterCV(VideoWriter):
     def __init__(
         self,
         path: PathLike,
-        imgsz: int_2_t = (480, 640),
+        imgsz: IntOrTuple2 = (480, 640),
         frame_rate: float = 24,
         fourcc: str = "mp4v",
         verbose: bool = False,

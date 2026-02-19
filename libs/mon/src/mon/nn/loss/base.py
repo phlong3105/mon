@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base classes and mixins for loss functions.
+"""Base Losses.
 
-This module provides base classes and mixins for loss functions.
+This module provides base losses.
 """
 
 from __future__ import annotations
@@ -19,10 +19,8 @@ from torch.nn.modules.loss import _Loss
 
 
 # ==============================================================================
-# region BASE CLASSES & MIXINS
+# region BASE CLASSES
 # ==============================================================================
-
-# --- Base Classes ---
 
 class Loss(_Loss, ABC):
     """Base class for loss functions.
@@ -36,8 +34,8 @@ class Loss(_Loss, ABC):
         """Initialize a new instance.
 
         Args:
-            reduction (str): Reduction method to apply to the loss. One of:
-                ["mean", "sum", "none"]. Defaults to "mean".
+            reduction (str, optional): Reduction method to apply to the loss.
+                One of: ["mean", "sum", "none"]. Defaults to "mean".
         """
         super().__init__(reduction=reduction)
 
@@ -59,10 +57,6 @@ class Loss(_Loss, ABC):
             Tensor: Reduced loss tensor.
         """
         return self._reduce_fn(loss)
-
-
-# --- Mixins ---
-
 
 # endregion
 

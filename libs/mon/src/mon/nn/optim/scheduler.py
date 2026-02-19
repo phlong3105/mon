@@ -3,8 +3,8 @@
 
 """Schedulers.
 
-This package contains various learning rate schedulers for training neural
-networks.
+This package contains various custom learning rate schedulers for training
+neural networks.
 """
 
 from __future__ import annotations

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Singleton.
+"""Decorator.
 
-This module provides singleton utilities.
+This module provides generic decorators.
 """
 
 from __future__ import annotations
@@ -34,5 +34,15 @@ def singleton(cls):
         return instances[cls]
 
     return get_instance
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
 
 # endregion

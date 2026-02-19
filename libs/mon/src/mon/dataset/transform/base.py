@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base Transform.
+"""Base Transforms.
 
 This module provides base transformations.
 """
@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
+from typing import Any, TypeAlias, Union
 
 import albumentations as A
 from albumentations import *
@@ -30,11 +31,18 @@ def __register_transforms(module, prefix: str = ""):
         module (ModuleType): The module to inspect for transformation classes.
         prefix (str, optional): The prefix for submodule names. Defaults to "".
     """
+
     def is_transform_class(obj):
         return (
             inspect.isclass(obj) and
             issubclass(obj, BasicTransform) and
-            obj not in [BasicTransform, DualTransform, ImageOnlyTransform, NoOp, Transform3D] and
+            obj not in [
+                BasicTransform,
+                DualTransform,
+                ImageOnlyTransform,
+                NoOp,
+                Transform3D
+            ] and
             not inspect.isabstract(obj)
         )
 
@@ -61,6 +69,20 @@ def __register_transforms(module, prefix: str = ""):
 
 __register_transforms(A)
 ALBUMENTATIONS.sort()
+
+# endregion
+
+
+# ==============================================================================
+# region TYPE DEFINITIONS
+# ==============================================================================
+
+TransformLike: TypeAlias = Union[BasicTransform, dict[str, Any]]
+ComposeLike: TypeAlias = Union[
+    Compose,
+    list[TransformLike],
+    dict[str, TransformLike],
+]
 
 # endregion
 

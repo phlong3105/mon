@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Probabilities Data Structure.
+"""Probabilities Data Structures.
 
-This module provides data structures for handling probabilities.
+This module provides data structures and utilities for handling probabilities.
 """
 
 from __future__ import annotations
@@ -13,12 +13,12 @@ __all__ = [
 ]
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from numpy import ndarray
 
-from mon.core.data.data import Data
-from mon.core.typing import int_3_t
+from .data import Data
 
 
 # ==============================================================================
@@ -71,7 +71,7 @@ class Prob(Data):
         return self.prob
 
     @property
-    def shape(self) -> int_3_t:
+    def shape(self) -> int:
         """Return the data shape."""
         return len(self.prob)
 
@@ -101,7 +101,7 @@ class Prob(Data):
         return self.prob[self.top5_idxes]
 
     @property
-    def meta(self) -> dict:
+    def meta(self) -> dict[str, Any]:
         """Return metadata describing the data."""
         return {
             "shape": self.shape,

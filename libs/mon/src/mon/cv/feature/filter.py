@@ -16,11 +16,10 @@ __all__ = [
 
 import cv2
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from numpy import ndarray
-from torch import Tensor
+from torch import nn, Tensor
 from torch.autograd import Variable
+from torch.nn import functional as F
 
 
 # ==============================================================================
@@ -123,18 +122,22 @@ def sobel_filter(image: ndarray, kernel_size: int = 3) -> ndarray:
     """Apply Sobel filter to detect edges in an image.
 
     Args:
-        image: An RGB or grayscale image, formatted as a numpy.ndarray of shape
-            (H, W, C) and pixel values ranging from 0 to 255.
-        kernel_size: Sobel kernel size. Must be odd and greater than 1. Defaults to 3.
+        image (ndarray): An RGB or grayscale image, formatted as an array of
+            shape (H, W, C) and pixel values ranging from 0 to 255.
+        kernel_size (int, optional): Sobel kernel size. Must be odd and greater
+            than 1. Defaults to 3.
 
     Returns:
-        The image after applying Sobel filter.
+        ndarray: A single-channel image array of shape (H, W) with values
+            ranging from 0 to 255, where higher values indicate stronger edges.
 
     Raises:
         TypeError: If ``image`` is not a numpy.ndarray with 2 or 3 dimensions.
     """
     if image.ndim not in [2, 3]:
-        raise TypeError(f"Expected 'image' to have 2 or 3 dimensions, but got {image.ndim}.")
+        raise TypeError(
+            f"Expected 'image' to have 2 or 3 dimensions, but got {image.ndim}."
+        )
 
     # Automatic Color Handling
     # If the image is (H, W, 3), convert to gray.
@@ -178,8 +181,8 @@ class FastGuidedFilter(nn.Module):
 
         Args:
             r (int): Radius of the filter.
-            eps (float): Regularization parameter to avoid division by zero.
-                Defaults to 1e-8.
+            eps (float, optional): Regularization parameter to avoid division
+                by zero. Defaults to 1e-8.
         """
         super().__init__()
         # Assign attributes

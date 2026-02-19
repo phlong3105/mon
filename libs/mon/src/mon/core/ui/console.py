@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Logging Utility.
+"""Custom Console.
 
-This module provides various utilities for logging.
+This module extends the ``rich.console`` module with custom consoles and
+logging utilities.
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.theme import Theme
+
 from mon.core.utils import is_list_of
 
 
@@ -188,6 +190,9 @@ def pprint_dict(value: Box | dict, title: str = ""):
         value (Box | dict): Dictionary to print.
         title (str, optional): Panel title. Defaults to "".
     """
+    # Normalize inputs
+    value = value.to_dict() if isinstance(value, Box) else value
+
     # Create a Pretty object for structured rendering
     pr = pretty.Pretty(
         value,
@@ -207,6 +212,9 @@ def rprint_dict(value: Box | dict, title: str = ""):
         value (Box | dict): Dictionary to print.
         title (str, optional): Panel title. Defaults to "".
     """
+    # Normalize inputs
+    value = value.to_dict() if isinstance(value, Box) else value
+
     # Initialize a two-column table
     tab = Table(
         title=title,

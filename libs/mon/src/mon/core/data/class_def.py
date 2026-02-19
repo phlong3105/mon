@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Class Definition Data Structure.
+"""Class Definition Data Structures.
 
-This module provides data structures for handling class definitions in datasets.
+This module provides data structures and utilities for handling class
+definitions in datasets.
 """
 
 from __future__ import annotations
@@ -18,11 +19,10 @@ __all__ = [
 from dataclasses import dataclass
 from typing import Any, Iterable, TypeAlias, Union
 
-from mon.core.data.structs import IndexList
+from mon.core.base import IndexList
 from mon.core.fileio import load_yaml, save_yaml
 from mon.core.path import Path
 from mon.core.typing import PathLike
-from mon.core.utils import is_valid_str
 
 
 # ==============================================================================
@@ -98,7 +98,7 @@ class ClassList(IndexList[Class]):
     @property
     def names(self) -> list[str]:
         """Return a list of class names."""
-        return self.keys()
+        return [item.name for item in self.data]
 
     @property
     def ids(self) -> list[int]:
@@ -122,8 +122,7 @@ class ClassList(IndexList[Class]):
             ClassList: A new instance of ``ClassList`` populated with the
                 loaded class definitions.
         """
-        if is_valid_str(path):
-            path = Path(path).normalize()
+        path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exist=True):
             raise ValueError(f"YAML file not found at '{path}'.")
 
@@ -141,8 +140,7 @@ class ClassList(IndexList[Class]):
         Raises:
             ValueError: If ``path`` is not a YAML file.
         """
-        if is_valid_str(path):
-            path = Path(path).normalize()
+        path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exist=False):
             raise ValueError(f"Expected a valid YAML file, but got '{path}'.")
 
@@ -164,56 +162,46 @@ class ClassList(IndexList[Class]):
 # region TYPE DEFINITIONS
 # ==============================================================================
 
-ClassListLike: TypeAlias = Union[
-    ClassList,
-    list[Union[Class, dict[str, Any]]],
-    dict[str, Union[Class, dict[str, Any]]],
-    PathLike,
-]
+ClassLike: TypeAlias = Union[Class, dict[str, Any]]
+ClassListLike: TypeAlias = Union[ClassList, list[ClassLike], PathLike]
 
 # endregion
 
 
 # ==============================================================================
-# region REGISTRY & FACTORY
+# region CREATION
 # ==============================================================================
 
-def build_classlist(classlist: ClassListLike | None, *args, **kwargs) -> ClassList:
-    """Build a ``Classes`` instance from the given input.
+def build_classlist(value: ClassListLike | None) -> ClassList:
+    """Build a ``ClassList`` instance from a given value.
 
     Args:
-        classlist (ClassListLike): Either a ``ClassList`` instance, a list of
-            ``Class`` instances or dictionaries, a dictionary mapping class names
-            to ``Class`` instances or dictionaries, or a path to a YAML file
-            containing class definitions.
-        *args: Positional arguments for ``ClassList`` constructor.
-        **kwargs: Keyword arguments for ``ClassList`` constructor.
+        value (ClassListLike | None): Either a ``ClassList`` instance, a list
+            of class definitions, or a path to a YAML file containing class
+            definitions.
 
     Returns:
         ClassList: A ``ClassList`` instance.
 
     Raises:
-        TypeError: If the input type is unsupported.
+        TypeError: If the input value is not a valid type for building a
+            ``ClassList``.
     """
-    if classlist is None:
-        return ClassList(*args, **kwargs)
-    elif isinstance(classlist, ClassList):
-        return classlist
-    elif isinstance(classlist, (list, dict)):
-        # Convert dict to list
-        if isinstance(classlist, dict):
-            classlist = list(classlist.values())
-        for i, c in enumerate(classlist):
-            # Convert dict to Class instance
-            classlist[i] = Class(**c) if isinstance(c, dict) else c
-        return ClassList(classlist, *args, **kwargs)
-    elif isinstance(classlist, (Path, str)):
-        return ClassList.load(path=classlist, *args, **kwargs)
+    if value is None:
+        return ClassList()
+    elif isinstance(value, ClassList):
+        return value
+    elif isinstance(value, list):
+        return ClassList(value)
+    elif isinstance(value, (Path, str)):
+        return ClassList.from_file(value)
     else:
-        raise TypeError(f"Unsupported type: {type(classlist).__name__}")
+        raise TypeError(
+            f"Unsupported ClassList type: {type(value).__name__}."
+        )
+
 
 # endregion
-
 
 # ==============================================================================
 # region UNIT TEST

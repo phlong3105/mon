@@ -23,8 +23,8 @@ from typing import Any
 
 import yaml
 
-from mon.core.path import Path
-from mon.core.typing import PathLike
+from .path import Path
+from .typing import PathLike
 
 
 # ==============================================================================
@@ -54,7 +54,7 @@ def load_yaml(path: PathLike) -> dict | list:
     """
     path = Path(path).normalize()
 
-    if not path.has_suffix(".yaml", ".yml"):
+    if not path.has_ext(".yaml", ".yml"):
         raise ValueError(f"Expected a valid YAML file, but got '{path}'.")
 
     with open(path, "r", encoding="utf-8") as f:

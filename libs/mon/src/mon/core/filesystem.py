@@ -11,27 +11,23 @@ from __future__ import annotations
 __all__ = [
     "delete_files",
     "download_url_to_file",
-    "list_weights_files",
     "parse_model_fullname",
     "resolve_config_file",
-    "resolve_data_root",
-    "resolve_model_dir",
+    "resolve_dataset_dir",
     "resolve_output_dir",
+    "resolve_project_root",
     "resolve_save_dir",
-    "resolve_weights",
     "resolve_weights_dir",
     "resolve_weights_file",
 ]
 
 import requests
 
-from mon.core.constants import MODELS, MONO_ROOT, ROOT, WEIGHTS, ZOO_ROOT
-from mon.core.data import Weights
-from mon.core.logger import log, log_error
-from mon.core.path import Path
-from mon.core.typing import PathLike
-from mon.core.ui import create_download_bar
-from mon.core.utils import depascalize, is_valid_str
+from .constants import ZOO_ROOT
+from .path import Path
+from .typing import PathLike
+from .ui import create_download_bar, log, log_error
+from .utils import depascalize, is_valid_str
 
 
 # ==============================================================================
@@ -119,147 +115,10 @@ def download_url_to_file(
 
 
 # ==============================================================================
-# region DISCOVERY
-# ==============================================================================
-
-def list_weights_files(dir_path: PathLike) -> list[Path]:
-    """List all weights files in the given ``root`` directory.
-
-    Args:
-        dir_path (PathLike): Directory path to search for weights files.
-
-    Returns:
-        list[Path]: List of paths to weights files.
-    """
-    dir_path = Path(dir_path).normalize()
-    if not dir_path.exists():
-        return []
-
-    # Optimization: rglob with specific extensions if is_weights_file permits
-    # Otherwise, stick to * but ensure it's a file
-    return [f for f in dir_path.rglob("*") if f.is_weights_file(exist=True)]
-
-# endregion
-
-
-# ==============================================================================
 # region RETRIEVAL
 # ==============================================================================
 
 # --- Accessing ---
-
-def resolve_config_file(
-    config: PathLike,
-    project_dir: PathLike,
-    model_dir: PathLike | None = None,
-) -> Path | None:
-    """Resolve the absolute path to a config file.
-
-    Search project and model config directories and return the first
-    matching config file if found.
-
-    Args:
-        config (PathLike): Config name or path.
-        project_dir (PathLike): Project root directory.
-        model_dir (PathLike, optional): Model root directory. Defaults to None.
-
-    Returns:
-        Path: Resolved config file path if found, otherwise None.
-    """
-    # Validate inputs
-    if not is_valid_str(config):
-        return None
-
-    config_path = Path(config).normalize()
-
-    # Direct path check (if the user provided a valid absolute/relative path)
-    if config_path.exists() and config_path.is_file():
-        return config_path
-
-    # Define search hierarchy (model-specific first, then project-wide)
-    search_roots = []
-    if model_dir:
-        search_roots.append(Path(model_dir) / "config")
-    if project_dir:
-        search_roots.append(Path(project_dir) / "config")
-
-    # Search loop
-    for root in search_roots:
-        if not root.is_dir():
-            continue
-
-        # Check the root of the config dir, then all subdirectories
-        # We search for the exact name or the name with common config suffixes
-        for candidate in root.rglob("*"):
-            if candidate.is_config_file(exist=True):
-                # Check if it matches the name or the stem (if no suffix was provided)
-                if config_path.stem == candidate.stem:
-                    return candidate
-
-    # Failure State
-    log_error(f"Config not found: {config}. Searched in {search_roots}")
-    return None
-
-
-def resolve_data_root(root: PathLike | None, data_dir: PathLike = "") -> Path:
-    """Resolve an absolute data directory path from candidates.
-
-    Try a series of candidate locations and return the first existing
-    directory. Raise an error if no candidate exists.
-
-    Args:
-        root (PathLike): Project root directory. Defaults to None.
-        data_dir (PathLike, optional): Data directory name or path. Defaults to "".
-
-    Returns:
-        Path: Resolved absolute data directory path.
-
-    Raises:
-        FileNotFoundError: If no candidate data directory is found.
-    """
-    # Use global ROOT_DIR if no project root is provided
-    root_path = Path(root).normalize() if root else ROOT
-
-    # Identify the target name/path
-    target = Path(data_dir).normalize() if data_dir else None
-
-    # Build Ordered Candidates
-    candidates = []
-
-    if target:
-        # If target is absolute, Path logic will prioritize it during joins
-        candidates.extend(
-            [
-                target,                            # Direct path
-                root_path / target,            # Relative to project root
-                root_path / "data" / target,   # Inside project data folder
-                ROOT / "data" / target,   # Inside "mon" data folder
-                MONO_ROOT / "data" / target,   # Inside global data folder (monorepo)
-            ]
-        )
-
-    # Fallback search locations
-    candidates.extend(
-        [
-            root_path / "data",
-            ROOT / "data",
-        ],
-    )
-
-    # Validation Loop
-    # Use unique paths only to avoid multiple disk IO checks on the same location
-    seen = set()
-    for d in candidates:
-        d = d.nomralize()
-        if d not in seen and d.is_dir():
-            return d
-        seen.add(d)
-
-    raise FileNotFoundError(
-        f"Could not resolve data directory. "
-        f"Looked in: {[str(c) for c in candidates]}."
-    )
-
 
 def parse_model_fullname(name: str, data: str = "", suffix: str = "") -> str:
     """Compose a model fullname from name, data, and optional suffix.
@@ -295,243 +154,309 @@ def parse_model_fullname(name: str, data: str = "", suffix: str = "") -> str:
     return fullname
 
 
-def resolve_model_dir(arch: str, model: str) -> Path | None:
-    """Return the model directory for the given arch and model.
+def resolve_project_root(cwd: PathLike) -> Path | None:
+    """Resolve the absolute path to the project root directory.
 
     Args:
-        arch (str): Architecture name.
-        model (str): Model name.
+        cwd (PathLike): Current working directory to resolve from. This can be
+            any location within the project.
 
     Returns:
-        Path: Model directory path if found, otherwise None.
+        Path | None: Path to the project root directory if found, otherwise None.
     """
-    # Validate inputs
-    if not arch or not model:
-        return None
+    # Normalize inputs
+    cwd = Path(cwd).normalize()
 
-    # Look up the model directory in the registry
-    try:
-        # Access nested registry.
-        # Using .get() allows for a more graceful failure than raw brackets.
-        arch_entry = MODELS.get(arch)
-        if arch_entry is None:
-            return None
-
-        model_entry = arch_entry.get(model)
-        if model_entry is None:
-            return None
-
-        # Path resolution
-        model_dir = model_entry.get("model_dir")
-        if model_dir:
-            return Path(model_dir)
-
-    except Exception as e:
-        # If logging is available, log the registry access failure
-        return None
+    # Look for pyproject.toml in parent directories
+    for parent in cwd.parents:
+        if (parent / "pyproject.toml").exists():
+            return parent.normalize()
 
     return None
 
 
-def resolve_save_dir(
-    root: PathLike,
-    arch: str = "",
-    model: str = "",
-    data: str = "",
-) -> Path:
-    """Build a save directory path from components.
-
-    Combine root, architecture, model and optional data to construct a
-    save directory path suitable for storing run outputs.
+def resolve_dataset_dir(dataset_name: str, data_root: PathLike) -> Path | None:
+    """Resolve the absolute path to one specific dataset.
 
     Args:
-        root (PathLike): Project root directory.
-        arch (str, optional): Architecture name. Defaults to "".
-        model (str, optional): Model name. Defaults to "".
-        data (str, optional): Dataset name. Defaults to "".
+        dataset_name (str): Specific dataset name.
+        data_root (PathLike, optional): The absolute path to all datasets in
+            the current project. If the given path is invalid, it will trigger
+            resolution to the project root directory and then resolve to the
+            'data' subdirectory.
 
     Returns:
-        Path: Resolved save directory path.
+        Path | None: Path to the dataset directory if found, otherwise None.
+
+    Raises:
+        ValueError: If neither ``data_root`` nor ``cwd`` are provided.
     """
-    # Start with the base root (e.g., 'project/runs/train')
-    save_dir = Path(root).normalize()
+    # Normalize inputs
+    data_root = Path(data_root).normalize()
+    if not data_root.has_name("data", exist=True):
+        data_root = resolve_project_root(data_root)
+        data_root = data_root / "data"
 
-    # Add architecture level (e.g., 'yolov8')
-    if is_valid_str(arch):
-        save_dir /= depascalize(str(arch).strip())
+    # Resolve the dataset root
+    dataset_dir = data_root / dataset_name
+    if dataset_dir.is_dir():
+        return dataset_dir
 
-    # Add model level (e.g., 'yolov8n')
-    if is_valid_str(model):
-        save_dir /= depascalize(str(model).strip())
-
-    # Add dataset level inside the model folder
-    if is_valid_str(data):
-        data_path = Path(data)
-        # If it's a real path, take the filename (stem); otherwise, use the string directly
-        folder_name = data_path.stem if (data_path.suffix or data_path.exists()) else str(data)
-        save_dir /= depascalize(str(folder_name).strip())
-
-    return save_dir
+    return None
 
 
-def resolve_output_dir(
+def resolve_config_file(
+    config: PathLike,
     root: PathLike,
-    dirname: PathLike,
-    subdir: PathLike,
-    src_path: PathLike | None = None,
-    keep_subdirs: bool = False,
-) -> Path:
-    """Compute the output directory for a source path.
+    model_dir: PathLike | None = None,
+) -> Path | None:
+    """Resolve the absolute path to a config file.
 
-    Determine where to place outputs for a given source path, optionally
-    preserving subdirectory structure or saving outputs near the source.
+    Search project and model config directories and return the first matching
+    config file if found.
 
     Args:
+        config (PathLike): Config's filename or path.
         root (PathLike): Project root directory.
-        dirname (PathLike): Directory under root to place outputs.
-        subdir (PathLike): Subdirectory under dirname to place outputs.
-        src_path (PathLike, optional): Source path to determine the
-            subdirectory hierarchy. Defaults to None.
-        keep_subdirs (bool, optional): If True, preserve the subdirectory
-            structure of ``src_path`` relative to ``dirname``. Defaults to False.
+        model_dir (PathLike, optional): Model root directory. Defaults to None.
 
     Returns:
-        Path: Resolved output directory path.
+        Path | None: Path to the config file if found, otherwise None.
     """
-    root = Path(root).normalize()
-    dirname = Path(dirname)
-    subdir = Path(subdir) if is_valid_str(subdir) else None
-    src_path = Path(src_path).normalize() if is_valid_str(src_path) else None
+    # Validate inputs
+    if not is_valid_str(config):
+        return None
 
-    # Preserve subdirectory structure if requested
-    if keep_subdirs and src_path:
-        try:
-            # Get path relative to the input root (dirname)
-            # e.g., src: 'data/val/class1/img.jpg', dir: 'data' -> 'val/class1'
-            rel_path = src_path.parent.relative_to(dirname)
-            target_path = root / rel_path
-        except ValueError:
-            # Fallback if src_path is not under dirname
-            target_path = root / src_path.parent.name
+    # Normalize inputs
+    config_path = Path(config).normalize()
 
-        if subdir:
-            return target_path / subdir.stem
-        return target_path
+    # Direct path check (if the user provided a valid absolute/relative path)
+    if config_path.is_config_file(exist=True):
+        return config_path
 
-    # Default behavior: just use root + dirname stem + optional subdir
-    final_root = root
-    if dirname.stem != root.stem:
-        final_root = root / dirname.stem
-    if subdir:
-        return final_root / subdir.stem
-    return final_root
+    # Define search hierarchy (model-specific first, then project-wide)
+    search_dirs = []
+    if model_dir:
+        model_dir = Path(model_dir).normalize()
+        search_dirs.append(Path(model_dir) / "config")
+    if root:
+        root = Path(root).normalize()
+        search_dirs.append(Path(root) / "config")
+
+    # Search loop
+    for d in search_dirs:
+        if not d.is_dir():
+            continue
+        # Check the root of the config dir, then all subdirectories
+        # We search for the exact name or the name with common config suffixes
+        for candidate in d.rglob("*"):
+            if candidate.is_config_file(exist=True):
+                # Check if it matches the name or the stem (if no suffix was provided)
+                if config_path.stem == candidate.stem:
+                    return candidate
+
+    # Failure State
+    return None
 
 
-def resolve_weights_dir(root: PathLike, weights: PathLike) -> Path | None:
-    """Resolve the weight directory from the given root and weights name or
+def resolve_weights_dir(root: PathLike, weights_path: PathLike) -> Path | None:
+    """Resolve the weight directory from the project root and weights' name or
     relative path.
 
     Args:
         root (PathLike): Project root directory.
-        weights (PathLike): Weights name or relative path.
+        weights_path (PathLike): Weights' file or directory.
 
     Returns:
-        Path: Absolute weights directory path or None if nothing was found.
+        Path | None: Path to the weight directory if found, otherwise None.
     """
-    root = Path(root).normalize()
     # Ensure weights is always a Path object
-    weights = Path(weights) if is_valid_str(weights) else None
+    if is_valid_str(weights_path):
+        weights_path = Path(weights_path).normalize()
+    else:
+        return None
 
-    # Check if the weight provided is already an absolute path
-    if weights.is_absolute() and weights.is_dir():
-        return weights
+    # Check if the weight provided is already a directory
+    if weights_path.is_dir():
+        return weights_path
+    elif weights_path.is_weights_file(exist=True):
+        return weights_path.parent
 
     # Check local project root (Highest priority)
-    local_dir = root / weights
+    local_dir = Path(root) / weights_path
     if local_dir.is_dir():
         return local_dir
 
     # Check global zoo directory
-    global_dir = ZOO_ROOT / weights
+    global_dir = ZOO_ROOT / weights_path
     if global_dir.is_dir():
         return global_dir
 
-    # Return None if not found
     return None
 
 
-def resolve_weights_file(root: PathLike, weights: PathLike) -> Path | None:
-    """Resolve the weight file from the given root and weights name or
+def resolve_weights_file(root: PathLike, weights_file: PathLike) -> Path | None:
+    """Resolve the weight file from the project root and weights' name or
     relative path.
 
     Args:
         root (PathLike): Project root directory.
-        weights (PathLike): Weights name or relative path.
+        weights_file (PathLike): Weights' filename or path.
 
     Returns:
-        Path: Absolute weight file path or None if nothing was found.
+        Path | None: Path to the weight file if found, otherwise None.
     """
-    root = Path(root).normalize()
     # Ensure weights is always a Path object
-    weights = Path(weights) if is_valid_str(weights) else None
+    if is_valid_str(weights_file):
+        weights_file = Path(weights_file).normalize()
+    else:
+        return None
 
-    # Check if the weight provided is already an absolute path
-    if weights.is_absolute() and weights.is_weights_file():
-        return weights
+    # Check if the weight provided is already a directory
+    if weights_file.is_weights_file(exist=True):
+        return weights_file
 
     # Check local project root (Highest priority)
-    # Search specifically for the file in the project's training runs
-    local_file = root / weights
+    local_file = Path(root) / weights_file
     if local_file.is_weights_file(exist=True):
         return local_file
 
     # Check global zoo directory
-    from mon.core.constants import ZOO_ROOT
-    global_file = ZOO_ROOT / weights
+    global_file = ZOO_ROOT / weights_file
     if global_file.is_weights_file(exist=True):
-        return weights
+        return global_file
 
-    # Return None if not found
     return None
 
 
-def resolve_weights(
+def resolve_output_dir(
     root: PathLike,
-    weights: PathLike,
-    num_classes: int | None = None,
-) -> Weights | None:
-    """Resolve a ``Weights`` object from the given root and weights name or
-    relative path.
+    dirname: str = "",
+    arch: str = "",
+    model: str = "",
+    data: PathLike | None = None,
+) -> Path:
+    """Construct an output directory path based on the project root and
+    optional components.
+
+    The path is constructed in the following order:
+        ``<root>``/``<dirname>``/``<arch>``/``<model>``/``<data>/``
+
+    Each component is only appended if it is a valid string.
 
     Args:
         root (PathLike): Project root directory.
-        weights (PathLike): Weights name or relative path.
-        num_classes (int, optional): Number of classes to set in the ``Weights``
-            object if found. Defaults to None.
+        dirname (str, optional): Directory name to append to the output path.
+            Defaults to "".
+        arch (str, optional): Architecture name to append to the output path.
+            Defaults to "".
+        model (str, optional): Model name to append to the output path.
+            Defaults to "".
+        data (PathLike, optional): Dataset name to append to the output path.
+            Defaults to None.
 
     Returns:
-        Weights: ``Weights`` object if found, otherwise None.
+        Path: Constructed save directory path.
     """
-    weights = resolve_weights_file(root=root, weights=weights)
+    # Start with the base root (e.g., 'project/')
+    output_dir = Path(root).normalize()
+    # Append dirname (e.g., 'runs/train', 'runs/predict')
+    output_dir = output_dir.append(dirname)
+    # Append architecture (e.g., 'yolov8/')
+    output_dir = output_dir.append(arch)
+    # Append model (e.g., 'yolov8n/')
+    output_dir = output_dir.append(model)
+    # Append dataset (e.g., 'coco128/')
+    output_dir = output_dir.append(data)
+    # Return the final path
+    return output_dir
 
-    # If a valid weights file was found, wrap it in a Weights object
-    if weights:
-        # Check if the weights object is already registered in WEIGHTS
-        if WEIGHTS.has(weights_path=weights):
-            return WEIGHTS.find_weights_objs(weights_path=weights)
-        # Otherwise, the weights object has not been registered yet.
+
+def resolve_save_dir(
+    output_dir: PathLike,
+    dirname: str,
+    subdirname: PathLike,
+    src_path: PathLike | None = None,
+    keep_subdirs: bool = False,
+    near_src: bool = False,
+) -> Path:
+    """Compute the saving directory for an output type based on the output
+    directory and optional components.
+
+    The path is computed in the following order:
+        ``<output_dir>``/``<dirname>``/``<sub_dirname>``/
+
+    Examples:
+        >>> output_dir = "/Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm"
+        >>> dirname = "pred"
+        >>> subdirname = ""
+        >>> src_path = "/Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image/01.jpg"
+        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, False)
+        >>> print(save_dir)
+        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/pred
+        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, False)
+        >>> print(save_dir)
+        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/test/image
+        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, True)
+        >>> print(save_dir)
+        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/pred
+        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, True)
+        >>> print(save_dir)
+        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image_zerodce
+
+    Args:
+        output_dir (PathLike): Path to the output directory.
+        dirname (str): Directory name to append to the output path
+            (e.g., 'pred', 'debug').
+        subdirname (str): Subdirectory name to append to the output path
+            (e.g., 'debug'/'mask').
+        src_path (PathLike, optional): Source path to determine the subdirectory
+            hierarchy. Defaults to None.
+        keep_subdirs (bool, optional): If True, preserve the subdirectory
+            structure of ``src_path`` relative to ``dirname``. Defaults to False.
+        near_src (bool, optional): If True, change the ``output_dir`` to the
+            same level as ``src_path``. Defaults to False.
+
+    Returns:
+        Path: Computed output directory path.
+    """
+    # 1. Normalize inputs
+    output_dir = Path(output_dir).normalize()
+    dirname = Path(dirname)
+    subdirname = Path(subdirname) if is_valid_str(subdirname) else ""
+    src_path = Path(src_path).normalize() if is_valid_str(src_path) else None
+
+    # 2. Save near source location if requested
+    if near_src and src_path:
+        if keep_subdirs:
+            if output_dir.name != dirname.name:
+                root_suffix = output_dir.parent.name
+            else:
+                root_suffix = output_dir.name
+            output_dir = src_path.parent.parent
+            return output_dir.append(f"{src_path.parent.name}_{root_suffix}")
         else:
-            return Weights(path=weights, num_classes=num_classes)
+            output_dir = src_path.parent.parent
+            return output_dir.append(dirname)
 
-    # Return None if not found
-    return None
+    # 3. Preserve subdirectory structure if requested
+    if keep_subdirs and src_path:
+        data_name = output_dir.name
+        rel_path = src_path.relative_path_to(data_name)
+        return output_dir.append(rel_path.parent)
+
+    # 4. Otherwise, return the default save directory
+    output_dir = output_dir.append(dirname)
+    if subdirname:
+        return output_dir.append(subdirname)
+    else:
+        return output_dir
 
 
 # --- Selection ---
 
 
 # --- Aggregation ---
-
 
 # endregion
 

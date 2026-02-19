@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Bounding Box Data Structure.
+"""Bounding Box Data Structures.
 
-This module provides data structures for handling bounding boxes in images.
+This module provides data structures and utilities for handling bounding boxes.
 """
 
 from __future__ import annotations
@@ -11,17 +11,19 @@ from __future__ import annotations
 __all__ = [
     "BBox",
     "BBoxes",
+    "to_2d_bbox",
 ]
 
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from numpy import ndarray
 
-from mon.core.data.data import Data
 from mon.core.path import Path
-from mon.core.typing import int_2_t, PathLike
+from mon.core.typing import Int2, PathLike
 from mon.core.utils import is_valid_str
+from .data import Data
 
 
 # ==============================================================================
@@ -114,7 +116,7 @@ class BBox(Data):
     @property
     def angle(self) -> float:
         """Return the rotation angle."""
-        return float(self.bbox[4])
+        return self.bbox[4]
 
     @property
     def class_id(self) -> int:
@@ -124,7 +126,7 @@ class BBox(Data):
     @property
     def conf(self) -> float:
         """Return the confidence score."""
-        return float(self.bbox[6])
+        return self.bbox[6]
 
     @property
     def track_id(self) -> int:
@@ -132,7 +134,7 @@ class BBox(Data):
         return int(self.bbox[7])
 
     @property
-    def meta(self) -> dict:
+    def meta(self) -> dict[str, Any]:
         """Return metadata describing the data."""
         return {
             "path": self.path,
@@ -358,7 +360,7 @@ class BBoxes(Data):
                 f"Expected 'bbox' to be a 2D array of shape (N, 8+), "
                 f"but got {self.bbox.shape}D array."
             )
-        if self.bbox[:, 4:].any() < 0:
+        if (self.bbox[:, 4:] < 0).any():
             raise ValueError(
                 f"Expected all elements of 'bbox' to be non-negative."
             )
@@ -394,7 +396,7 @@ class BBoxes(Data):
         return self.bbox
 
     @property
-    def shape(self) -> int_2_t:
+    def shape(self) -> Int2:
         """Return the data shape."""
         return self.bbox.shape
 
@@ -497,7 +499,7 @@ class BBoxes(Data):
         w = bbox[:, 2] / (imgsz[1] + eps)
         h = bbox[:, 3] / (imgsz[0] + eps)
         return cls(
-            bbox=ndarray([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
+            bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
             imgsz=imgsz,
             path=path,
             base_dir=base_dir
@@ -538,7 +540,7 @@ class BBoxes(Data):
             imgsz (tuple[int, int], optional): Image size as (H, W). If None,
                 use the stored ``imgsz``. Defaults to None.
         """
-        _, _, w, h = self.coords
+        _, _, w, h = self.coords.T
         imgsz = imgsz or self.imgsz
         h = h * imgsz[0]
         w = w * imgsz[1]
@@ -640,28 +642,72 @@ class BBoxes(Data):
 
 
 # ==============================================================================
+# region TRANSFORMATION
+# ==============================================================================
+
+# --- Casting ---
+
+
+# --- Encoding ---
+
+
+# --- Standardization ---
+
+
+# --- Structural ---
+
+def to_2d_bbox(bbox: ndarray | list | tuple) -> ndarray:
+    """Standardize bounding boxes as a 2D array.
+
+    Args:
+        bbox (ndarray | list | tuple): Bounding boxes to standardize. Can be a
+            single or a batch of bounding boxes.
+
+    Returns:
+        ndarray: Standardized bounding boxes of shape (N, M).
+
+    Raises:
+        ValueError: If ``bbox``'s type is unsupported.
+        TypeError: If list/tuple elements have inconsistent shapes.
+    """
+    # Convert a list or tuple into an array
+    if isinstance(bbox, (list, tuple)):
+        try:
+            bbox = np.array(bbox, dtype=np.float32)
+        except ValueError:
+            # Handle jagged arrays (e.g., one box has 7 elements, another has 8)
+            raise ValueError(
+                "Expected all elements in 'bbox' to have the same shape."
+            )
+
+    # Validate inputs
+    if not isinstance(bbox, ndarray):
+        raise TypeError(
+            f"Expected 'bbox' to be an array, but got {type(bbox).__name__}."
+        )
+
+    # Handle various shapes
+    if bbox.ndim == 1:
+        return bbox[np.newaxis, :]   # [5+] -> [1, 5+]
+    elif bbox.ndim == 3:
+        return np.squeeze(bbox)      # [1, N, 5+] -> [N, 5+]
+
+    return bbox
+
+
+# --- Statistical ---
+
+
+# --- Geometric ---
+
+# endregion
+
+
+# ==============================================================================
 # region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
-    _imgsz = (100, 100)
-
-    _b1 = np.array([0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0])
-    _b1 = BBox(bbox=_b1, imgsz=_imgsz, index=0)
-    print(_b1)
-    print(_b1.xyxy())
-    print(_b1.xywh())
-    print(_b1.area())
-    print(_b1.center())
-
-    _b2 = np.array([25, 25, 75, 75, 0, 0, 0, 0])
-    _b2 = BBox.from_xyxy(bbox=_b2, imgsz=_imgsz, index=1)
-    print(_b2)
-
-    _b3 = np.array([[0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0],
-                    [0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0]])
-    _b3 = BBoxes(bbox=_b3, imgsz=_imgsz)
-    print(_b3)
-    print(_b3.xyxy())
+    pass
 
 # endregion

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Dataset Mixin.
+"""Dataset Mixins.
 
 This module defines mixins for datasets to extend their functionality.
 """
@@ -21,7 +21,7 @@ import torch
 from numpy import ndarray
 from torch import Tensor
 
-from mon.core import is_list_of, Task
+from mon.core import is_list_of, is_valid_str, Task
 
 
 # ==============================================================================
@@ -32,10 +32,10 @@ class DatasetRegisterMixin(ABC):
     """A mixin class for datasets that can be registered in a factory.
 
     Attributes:
-        name (str, optional): Name of the dataset. `Must be defined in subclasses
-            or set during initialization.`
-        tasks (list[Task]): List of supported tasks. `Must be defined in
-            subclasses or set during initialization.`
+        name (str, optional): Name of the dataset. Defaults to "" and should be
+            overridden in subclasses or set during initialization.
+        tasks (list[Task]): List of supported tasks. Defaults to an empty list
+            and should be overridden in subclasses or set during initialization.
     """
 
     name: str = ""
@@ -52,14 +52,14 @@ class DatasetRegisterMixin(ABC):
 
         Args:
             name (str, optional): Name of the data container. If provided, it
-                overrides the class-level default. Defaults to None.
+                overrides the class-level default. Defaults to "".
             tasks (list[Task], optional): List of supported tasks. If provided,
                 it overrides the class-level default. Defaults to None.
             *args: Positional arguments to forward to the superclass constructor.
             **kwargs: Keyword arguments to forward to the superclass constructor.
         """
         # Assign attributes
-        if isinstance(name, str):
+        if is_valid_str(name):
             self.name = name
         if is_list_of(tasks, Task):
             # We use list() to create a copy, preventing shared state bugs
@@ -68,6 +68,22 @@ class DatasetRegisterMixin(ABC):
         # Continue the initialization chain
         super().__init__(*args, **kwargs)
 
+    def __init_subclass__(cls, *args, **kwargs):
+        """Validate subclass attributes on inheritance.
+
+        Raises:
+            AttributeError: If the subclass does not define ``name`` or ``tasks``
+                attributes (either locally or inherited).
+        """
+        super().__init_subclass__(*args, **kwargs)
+
+        # Check for EXPLICIT definition in the subclass (not inherited)
+        for attr in ["name", "tasks"]:
+            if not getattr(cls, attr):
+                raise AttributeError(
+                    f"Class {cls.__name__} must define '{attr}' attribute "
+                    f"(defined locally or inherited)."
+                )
 
 # endregion
 

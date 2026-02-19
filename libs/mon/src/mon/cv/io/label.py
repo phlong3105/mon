@@ -22,15 +22,14 @@ from mon.core import (
     BBoxFormat,
     BBoxFormatLike,
     DictLike,
-    int_2_t,
+    IntOrTuple2,
     load_yaml,
     log_error,
+    parse_imgsz,
     Path,
     PathLike,
 )
 from mon.cv.io import read_imgsz
-from mon.cv.ops import parse_imgsz
-
 
 # ==============================================================================
 # region CONSTANTS
@@ -40,14 +39,12 @@ _DEFAULT_ANGLE = 0.0
 _DEFAULT_SCORE = 0.0
 _DEFAULT_TRACK_ID = -1.0
 
-
 # endregion
 
 
 # ==============================================================================
 # region DISCOVERY
 # ==============================================================================
-
 
 # endregion
 
@@ -180,7 +177,7 @@ def load_bbox(
     path: PathLike,
     fmt: BBoxFormatLike,
     remap: DictLike | PathLike | None = None,
-    imgsz: int_2_t | None = None,
+    imgsz: IntOrTuple2 | None = None,
     image_file: PathLike | None = None,
     as_array: bool = False,
     verbose: bool = False,
@@ -243,14 +240,12 @@ def load_bbox(
 
     return bbox
 
-
 # endregion
 
 
 # ==============================================================================
 # region OUTPUT
 # ==============================================================================
-
 
 # endregion
 

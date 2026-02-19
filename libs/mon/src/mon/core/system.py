@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""System-wise Utility.
+"""System-wise Utilities.
 
 This module provides helpers for terminal control and random seed management.
 """
@@ -19,19 +19,19 @@ from typing import Sequence
 import numpy as np
 import torch
 
-from mon.core.typing import int_2_t
+from .typing import IntOrTuple2
 
 
 # ==============================================================================
 # region CONTROL
 # ==============================================================================
 
-def set_random_seed(seed: int_2_t, deterministic: bool = False):
+def set_random_seed(seed: IntOrTuple2, deterministic: bool = False):
     """Set random seeds for Python, NumPy, and PyTorch.
 
     Args:
-        seed (int_2_t): Single seed value or a range of [min, max] from which a
-            seed will be randomly sampled.
+        seed (IntOr2Tuple): Single seed value or a range of [min, max] from
+            which a seed will be randomly sampled.
         deterministic (bool, optional): If True, configures PyTorch for
             deterministic behavior. Defaults to False.
     """
