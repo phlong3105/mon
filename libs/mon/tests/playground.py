@@ -31,8 +31,7 @@ print(weights1.unique_path_from(root).truncate())
 print(weights2.unique_path_from(root).truncate())
 """
 
-config = mon.ConfigManager(
-    root=current_dir,
-    config_file="alexnet_v2.yaml"
-).train(True)
+
+config_manager = mon.ConfigManager(root=current_dir, config_file="alexnet_v2.yaml")
+config = config_manager.get_config("predict")
 print(config)

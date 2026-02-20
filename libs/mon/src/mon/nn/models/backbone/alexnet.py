@@ -66,7 +66,7 @@ class AlexNetBackBone(ModelRegisterMixin, nn.Module):
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [2, 5, 8, 10, 12].
-            verbose (bool, bool): Verbosity mode. Defaults to True.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)

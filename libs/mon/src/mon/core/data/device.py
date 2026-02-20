@@ -9,10 +9,8 @@ This module provides data structures for handling devices.
 from __future__ import annotations
 
 __all__ = [
-    "DEVICE_MANAGER",
     "Device",
     "DeviceList",
-    "DeviceManager",
     "inspect_model_device",
     "query_ram_usages",
     "query_vram_usage",
@@ -25,9 +23,9 @@ import psutil
 import torch
 from torch import nn
 
-from mon.core.base import IndexList, singleton
+from mon.core.base import IndexList
 from mon.core.dtype import DeviceType, MemoryUnit
-from mon.core.typing import DeviceLike, Float3
+from mon.core.typing import Float3
 
 try:
     import pynvml
@@ -42,15 +40,6 @@ except ImportError:
     # Define a placeholder for the exception if pynvml is not installed
     class NVMLError(Exception):
         pass
-
-
-# ==============================================================================
-# region CONSTANTS
-# ==============================================================================
-
-_MISSING = object()
-
-# endregion
 
 
 # ==============================================================================
@@ -174,106 +163,6 @@ class DeviceList(IndexList[Device]):
 
 
 # ==============================================================================
-# region CONTROL
-# ==============================================================================
-
-@singleton
-class DeviceManager:
-    """A singleton class for managing all devices in the system."""
-
-    # --- Lifecycle & Initialization ---
-    def __init__(self):
-        """Initialize a new instance."""
-        self.devices = DeviceList()
-        self.list()
-
-    # --- Properties ---
-    @property
-    def cpu(self) -> Device:
-        """Return the CPU device."""
-        return self.devices["cpu"]
-
-    @property
-    def mps(self) -> Device:
-        """Return the MPS device if available, otherwise "cpu"."""
-        return self.get(device="mps")
-
-    @property
-    def cudas(self) -> list[Device]:
-        """Return a list of all CUDA devices in the system."""
-        return [d for d in self.devices.values() if d.is_cuda]
-
-    @property
-    def names(self) -> list[str]:
-        """Return a list of all device names."""
-        return self.devices.names
-
-    # --- Discovery ---
-    def list(self) -> DeviceList:
-        """List all devices in the current system.
-
-        After calling this method, the ``devices`` property will be populated.
-
-        Returns:
-            DeviceList: A list of available devices.
-        """
-        devices = DeviceList()
-
-        # CPU is always available
-        devices.append(Device(name="cpu", type=DeviceType.CPU))
-
-        # Check for MPS (Apple Silicon) support
-        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-            devices.append(Device(name="mps", type=DeviceType.MPS))
-
-        # Check for CUDA support and list all available CUDA devices
-        if torch.cuda.is_available():
-            num_devices = torch.cuda.device_count()
-            for i in range(num_devices):
-                devices.append(Device(name=f"cuda:{i}", type=DeviceType.CUDA, index=i))
-
-        self.devices = devices
-        return self.devices
-
-    # --- Retrieval ---
-    def get(self, device: DeviceLike = _MISSING) -> Device:
-        """Return the device object for the specified device.
-
-        Args:
-            device (DeviceLike, optional): Device to retrieve. Defaults to _MISSING.
-
-        Returns:
-            Device: The corresponding Device object.
-
-        Raises:
-            ValueError: If the ``device`` specifier is unsupported.
-        """
-        if device is _MISSING:
-            return self.devices["cpu"]
-        elif device is None:
-            return self.devices["cpu"]
-        elif isinstance(device, torch.device):
-            return self.devices.get(str(device), self.devices["cpu"])
-        elif isinstance(device, str):
-            return self.devices.get(device, self.devices["cpu"])
-        elif isinstance(device, int):
-            key = f"cuda:{device}" if device >= 0 else "cpu"
-            return self.devices[key] if key in self.devices else self.devices["cpu"]
-        else:
-            raise ValueError(f"Unsupported device specifier: {device}")
-
-    def get_device(self, device: DeviceLike = _MISSING) -> torch.device:
-        """Return the torch device object for the specified device."""
-        return self.get(device).torch_device
-
-
-# A constant-like singleton instance for convenience access
-DEVICE_MANAGER = DeviceManager()
-
-# endregion
-
-
-# ==============================================================================
 # region RETRIEVAL
 # ==============================================================================
 
@@ -368,9 +257,6 @@ def query_ram_usages(unit: MemoryUnit = "GB") -> Float3:
 # ==============================================================================
 
 if __name__ == "__main__":
-    foo = DeviceManager()
-    bar = DeviceManager()
-    print(foo)
-    print(bar)
+    pass
 
 # endregion

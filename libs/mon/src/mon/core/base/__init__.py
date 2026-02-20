@@ -11,12 +11,12 @@ File Structure:
     mon.core/
     ├── __init__.py
     ├── collection.py   # Generic collection data structures
-    ├── decorator.py    # Generic decorators
-    └── enum.py         # Custom Enum classes
+    ├── enum.py         # Custom Enum classes
+    └── singleton.py    # Singleton mechanism
 """
 
 from __future__ import annotations
 
 from .collection import *
-from .decorator import *
 from .enum import *
+from .singleton import *

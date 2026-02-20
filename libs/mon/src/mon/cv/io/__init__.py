@@ -3,7 +3,7 @@
 
 """I/O Operations for Computer Vision Tasks.
 
-This package provides input and output operations for computer vision tasks.
+This package contains input and output operations for computer vision tasks.
 """
 
 from __future__ import annotations

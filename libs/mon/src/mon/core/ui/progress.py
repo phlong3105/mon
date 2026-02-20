@@ -36,7 +36,7 @@ from rich.progress import (
 from rich.table import Column
 from rich.text import Text
 
-from mon.core.data import DEVICE_MANAGER
+from mon.core.context import sys_ctx
 from mon.core.dtype import MemoryUnit
 from mon.core.typing import MemoryUnitLike
 from .console import console
@@ -82,7 +82,7 @@ class MemoryUsageColumn(ProgressColumn):
     @property
     def machine_memory_text(self) -> Text:
         """Return formatted system RAM usage as a Text object."""
-        cpu = DEVICE_MANAGER.cpu
+        cpu = sys_ctx.cpu
         total, used, _ = cpu.usages(self.unit)
         memory_status = f"{used:.1f}/{total:.1f}{self.unit.value} (CPU)"
         return Text(memory_status, style="bright_yellow")
@@ -90,7 +90,7 @@ class MemoryUsageColumn(ProgressColumn):
     @property
     def gpu_memory_text(self) -> Text:
         """Return formatted GPU VRAM usage as a Text object."""
-        cudas = DEVICE_MANAGER.cudas
+        cudas = sys_ctx.cudas
         total_mem, used_mem = 0.0, 0.0
         for d in cudas:
             total, used, _ = d.usages(self.unit)

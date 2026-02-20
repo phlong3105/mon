@@ -27,6 +27,7 @@ __all__ = [
     "IntOrTuple2",
     "IntOrTuple3",
     "IntOrTuple4",
+    "MISSING",
     "MemoryUnitLike",
     "PathLike",
     "RunModeLike",
@@ -73,6 +74,8 @@ FloatOrTuple: TypeAlias = _scalar_or_tuple_any_t[float]
 FloatOrTuple2: TypeAlias = _scalar_or_tuple_2_t[float]
 FloatOrTuple3: TypeAlias = _scalar_or_tuple_3_t[float]
 FloatOrTuple4: TypeAlias = _scalar_or_tuple_4_t[float]
+
+MISSING = object()
 
 StrOrList: TypeAlias = Union[str, list[str]]
 

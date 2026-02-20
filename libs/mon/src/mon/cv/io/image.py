@@ -27,9 +27,16 @@ import torchvision
 from numpy import ndarray
 from torch import Tensor
 
-from mon import Metadata
-from mon.core import Loader, Image, Path, PathLike, singleton, TensorOrArray
-
+from mon.core import (
+    Image,
+    Loader,
+    Metadata,
+    Path,
+    PathLike,
+    singleton,
+    SingletonMeta,
+    TensorOrArray,
+)
 
 # ==============================================================================
 # region CONSTANTS
@@ -284,6 +291,9 @@ def write_image(image: TensorOrArray, path: PathLike):
 # ==============================================================================
 
 if __name__ == "__main__":
-    pass
+    # Test singleton loader
+    foo = ImageLoader()
+    bar = ImageLoader()
+    print(f"foo: {foo}\nbar: {bar}\nfoo == bar: {foo == bar}")
 
 # endregion

@@ -18,7 +18,6 @@ __all__ = [
 ]
 
 import argparse
-import copy
 import socket
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, TypeVar
@@ -27,7 +26,8 @@ import torch
 from box import Box
 
 from mon.core.constants import DATASETS, MODELS, ZOO_ROOT
-from mon.core.data import create_weights, DEVICE_MANAGER
+from mon.core.data import create_weights
+from mon.core.context import sys_ctx
 from mon.core.dtype import RunMode, Task
 from mon.core.filesystem import resolve_output_dir, resolve_weights_file
 from mon.core.path import Path
@@ -35,13 +35,13 @@ from mon.core.typing import DeviceLike, PathLike, RunModeLike, TaskLike
 from mon.core.ui import (
     Confirm,
     console,
+    log_error,
     OptionPrompt,
     PathPrompt,
     pprint_dict,
     Prompt,
 )
 from mon.core.utils import is_valid_str, merge_dicts
-
 
 # ==============================================================================
 # region CONSTANTS
@@ -165,8 +165,8 @@ ARGUMENTS = Box({
     "device": {
         "default": None,
         "type": _str_or_none,
-        "choices": [None] + DEVICE_MANAGER.names,
-        "help": f"Running device: {[None] + DEVICE_MANAGER.names}.",
+        "choices": [None] + sys_ctx.device_names,
+        "help": f"Running device: {[None] + sys_ctx.device_names}.",
         "prompt_only": False,
         "prompt_text": "Device",
     },
@@ -298,6 +298,7 @@ class ExperimentConfig:
     # --- Data ---
     train_dataloader: DataLoaderConfig = field(default_factory=DataLoaderConfig)
     val_dataloader: DataLoaderConfig = field(default_factory=DataLoaderConfig)
+    data: list[PathLike] = field(default_factory=list)
 
     # --- Training ---
     epochs: int = 100
@@ -456,9 +457,22 @@ class ConfigHandler:
     def root(self, value: PathLike | None):
         """Set the project root directory."""
         # root = resolve_project_root(value)
-        root = Path(value).normalize() if value else None
+        root = Path(value).normalize() if is_valid_str(value) else None
         if root and root.is_dir():
+            # If the given value is a valid directory, set it as the root
            self.config.root = root
+
+    @property
+    def output_dir(self) -> Path | None:
+        """Return the output directory."""
+        return self.config.output_dir
+
+    @output_dir.setter
+    def output_dir(self, value: PathLike | None):
+        """Set the output directory."""
+        output_dir = Path(value).normalize() if is_valid_str(value) else None
+        if output_dir and output_dir.is_dir():
+            self.config.output_dir = output_dir
 
     @property
     def config_dir(self) -> Path:
@@ -494,20 +508,20 @@ class ConfigHandler:
         self.config.mode = RunMode(value) if value else None
 
     @property
-    def arch(self) -> str | None:
+    def arch(self) -> str:
         return self.config.model.arch
 
     @arch.setter
     def arch(self, value: str | None):
-        self.config.model.arch = value
+        self.config.model.arch = value or ""
 
     @property
-    def model(self) -> str | None:
+    def model(self) -> str:
         return self.config.model.name
 
     @model.setter
     def model(self, value: str | None):
-        self.config.model.name = value
+        self.config.model.name = value or ""
 
     @property
     def model_dir(self) -> Path | None:
@@ -554,12 +568,36 @@ class ConfigHandler:
         return weights_files
 
     @property
-    def data(self) -> str | None:
-        return self.config.get("data")
+    def finetune(self) -> Path | None:
+        return self.config.model.finetune
+
+    @finetune.setter
+    def finetune(self, value: PathLike | None):
+        self.config.model.finetune = Path(value) if value else None
+
+    @property
+    def data(self) -> list[PathLike]:
+        return self.config.data
 
     @data.setter
-    def data(self, value: str | None):
-        self.config["data"] = value
+    def data(self, value: list[PathLike] | PathLike | None):
+        # Normalize inputs
+        data = []
+        if isinstance(value, (Path, str)):
+            data = [value]
+        elif isinstance(value, list):
+            data = value
+
+        for i, d in enumerate(data):
+            d_path = Path(d).normalize()
+            if d_path.exists():
+                # Path to a directory or file
+                data[i] = d_path
+            else:
+                # Dataset name
+                data[i] = d
+
+        self.config.data = data
 
     @property
     def device(self) -> DeviceLike:
@@ -567,7 +605,7 @@ class ConfigHandler:
 
     @device.setter
     def device(self, value: DeviceLike):
-        self.config.device = DEVICE_MANAGER.get_device(value)
+        self.config.device = sys_ctx.get_torch_device(value)
 
     @property
     def benchmark(self) -> bool:
@@ -657,6 +695,164 @@ class ConfigHandler:
         """Update the current configuration with values from another config Box."""
         merged_config = merge_dicts(self.config, value)
         self.config = Box(merged_config)
+
+    def prepare_train(self) -> Box:
+        """Prepare the current configuration for training.
+
+        We utilize the setters to resolve the attributes in the correct values
+        and types; and in the order of dependencies (e.g., model before weights).
+        """
+        # Add additional attributes
+        self.config["hostname"] = socket.gethostname()
+
+        # 1. Resolve standalone attributes first
+        # 1.1. Resolve root
+        self.root = self.root
+        if not self.root or not self.root.is_dir():
+            log_error(
+                f"Project root not found at: {self.root}.\n"
+                f"Set to the current working directory: {Path.cwd()}."
+            )
+            self.root = Path.cwd()
+
+        # 1.2. Resolve config file
+        self.config_file = self.config_file
+
+        # 1.3. Resolve task and run mode
+        self.task = self.task
+        self.mode = self.mode
+
+        # 1.4. Resolve model's arch and name
+        self.arch = self.arch
+        self.model = self.model
+
+        # 1.5. Resolve device
+        if not isinstance(self.device, torch.device):
+            self.device = sys_ctx.get_torch_device(self.device)
+
+        # 2. Resolve attributes that depend on other attributes
+        # 2.1. Resolve dataloaders
+        if self.config.train_dataloader:
+            data_dir = self.config.train_dataloader.dataset.root
+            data_dir = Path(data_dir).normalize() if data_dir else None
+            if not data_dir or not data_dir.is_dir():
+                self.config.train_dataloader.dataset.root = self.data_dir
+
+        if self.config.val_dataloader:
+            data_dir = self.config.val_dataloader.dataset.root
+            data_dir = Path(data_dir).normalize() if data_dir else None
+            if not data_dir or not data_dir.is_dir():
+                self.config.val_dataloader.dataset.root = self.data_dir
+
+        # 2.2. Resolve experiment name
+        if not self.exp_name:
+            config_file = self.config_file
+            if config_file and config_file.is_config_file():
+                # If no experiment name is given, use the config file name
+                self.exp_name = config_file.stem
+            else:
+                # Otherwise, use the model name and train dataset name
+                data = self.config.train_dataloader.dataset.name
+                self.exp_name = f"{self.model}_{data}"
+
+        # 2.3. Resolve the output directory
+        output_dir = Path(self.output_dir) if self.output_dir else None
+        if not output_dir or not output_dir.is_dir():
+            self.output_dir = resolve_output_dir(
+                root=self.run_dir,
+                dirname="train",
+                arch=self.arch,
+                model=self.model,
+                data=self.exp_name
+            )
+        else:
+            self.output_dir = output_dir.normalize()
+        if not self.exist_ok and self.output_dir.is_dir():
+            self.output_dir.rmdir(recursive=True)
+
+        # 2.4. Resolve weights
+        if self.weights:
+            weights = resolve_weights_file(self.root, self.weights)
+            self.weights = create_weights(weights)
+        if self.finetune:
+            finetune = resolve_weights_file(self.root, self.finetune)
+            self.finetune = create_weights(finetune)
+
+        # Return the updated configuration
+        return self.config
+
+    def prepare_predict(self) -> Box:
+        """Prepare the current configuration for prediction.
+
+        We utilize the setters to resolve the attributes in the correct values
+        and types; and in the order of dependencies (e.g., model before weights).
+        """
+        # Add additional attributes
+        self.config["hostname"] = socket.gethostname()
+
+        # 1. Resolve standalone attributes first
+        # 1.1. Resolve root
+        self.root = self.root
+        if not self.root or not self.root.is_dir():
+            log_error(
+                f"Project root not found at: {self.root}.\n"
+                f"Set to the current working directory: {Path.cwd()}."
+            )
+            self.root = Path.cwd()
+
+        # 1.2. Resolve config file
+        self.config_file = self.config_file
+
+        # 1.3. Resolve task and run mode
+        self.task = self.task
+        self.mode = self.mode
+
+        # 1.4. Resolve model's arch and name
+        self.arch = self.arch
+        self.model = self.model
+
+        # 1.5. Resolve device
+        if not isinstance(self.device, torch.device):
+            self.device = sys_ctx.get_torch_device(self.device)
+
+        # 2. Resolve attributes that depend on other attributes
+        # 2.1 Resolve data
+        self.data = self.data
+
+        # 2.2. Resolve experiment name
+        if not self.exp_name:
+            config_file = self.config_file
+            if config_file and config_file.is_config_file():
+                # If no experiment name is given, use the config file name
+                self.exp_name = config_file.stem
+            else:
+                # Otherwise, use the model name and train dataset name
+                self.exp_name = self.model
+
+        # 2.3. Resolve the output directory
+        output_dir = Path(self.output_dir) if self.output_dir else None
+        if not output_dir or not output_dir.is_dir():
+            self.output_dir = resolve_output_dir(
+                root=self.run_dir,
+                dirname="predict",
+                arch=self.arch,
+                model=self.model
+            )
+        else:
+            self.output_dir = output_dir.normalize()
+        if not self.exist_ok and self.output_dir.is_dir():
+            self.output_dir.rmdir(recursive=True)
+
+        # 2.4. Resolve weights
+        if self.weights:
+            weights = resolve_weights_file(self.root, self.weights)
+            self.weights = create_weights(weights)
+        if self.finetune:
+            finetune = resolve_weights_file(self.root, self.finetune)
+            self.finetune = create_weights(finetune)
+
+        # Return the updated configuration
+        return self.config
 
 
 class ConfigManager(ConfigHandler):
@@ -748,126 +944,34 @@ class ConfigManager(ConfigHandler):
         return cls(root=root, config_file=config_file, prompt=prompt, **args)
 
     # --- Retrieval ---
-    def train(self, prompt: bool = False) -> Box:
-        """Resolve the current configuration for a training run.
+    def get_config(self, mode: RunModeLike, prompt: bool = False) -> Box:
+        """Get the resolved configuration for a specific run mode, optionally
+        enabling interactive prompting.
 
         Args:
-            prompt (bool, optional): If True, enable interactive prompting
-                before returning the configuration. Defaults to False.
+            mode (RunModeLike): The run mode for which to retrieve the configuration.
+            prompt (bool, optional): If True, enable interactive prompting before
+                returning the configuration. Defaults to False.
 
         Returns:
-            Box: The resolved configuration for training.
+            Box: The resolved configuration for the specified run mode.
         """
+        # Normalize inputs
+        mode = RunMode(mode)
+
+        # Update run mode
+        self.mode = mode
+
         # If prompting is enabled, run the interactive menu to update the config
         self.prompt() if prompt else None
 
-        # Retrieve attributes
-        config = copy.deepcopy(self.config)
-        config_file = self.config_file
-
-        # Add additional attributes
-        config["hostname"] = socket.gethostname()
-        config["config"] = config_file
-
-        # Resolve experiment name
-        if not config.exp_name:
-            if config_file.is_config_file():
-                # If no experiment name is given, use the config file name
-                config.exp_name = config_file.stem
-            else:
-                # Otherwise, use the model name and train dataset name
-                model = config.model.name
-                data = config.train_dataloader.dataset.name
-                config.exp_name = f"{model}_{data}"
-
-        # Update project root
-        config.root = self.root
-
-        # Resolve the output directory
-        output_dir = Path(config.output_dir) if config.output_dir else None
-        if not output_dir.is_dir():
-            config.output_dir = resolve_output_dir(
-                root=self.run_dir,
-                dirname="train",
-                arch=config.model.arch,
-                model=config.model.name,
-                data=config.exp_name
-            )
+        # Return the resolved configuration based on the run mode
+        if mode in [RunMode.TRAIN]:
+            return self.prepare_train()
+        elif mode in [RunMode.PREDICT]:
+            return self.prepare_predict()
         else:
-            config.output_dir = output_dir.normalize()
-        if not config.exist_ok and config.output_dir.is_dir():
-            config.output_dir.rmdir(recursive=True)
-
-        # Resolve device
-        if not isinstance(config.device, torch.device):
-            device = config.device
-            config.device = DEVICE_MANAGER.get_device(device)
-
-        # Resolve weights
-        if config.model.weights:
-            weights = config.model.weights
-            weights = resolve_weights_file(self.root, weights)
-            config.model.weights = create_weights(weights)
-
-        # Return the updated configuration
-        return config
-
-    def predict(self, prompt: bool = False) -> Box:
-        """Resolve the current configuration for a prediction run.
-
-        Args:
-            prompt (bool, optional): If True, enable interactive prompting
-                before returning the configuration. Defaults to False.
-
-        Returns:
-            Box: The resolved configuration for prediction.
-        """
-        # If prompting is enabled, run the interactive menu to update the config
-        self.prompt() if prompt else None
-
-        # Retrieve attributes
-        config = copy.deepcopy(self.config)
-        config_file = self.config_file
-
-        # Add additional attributes
-        config["hostname"] = socket.gethostname()
-        config["config"] = config_file
-
-        # Resolve experiment name
-        if not config.exp_name:
-            if config_file.is_config_file():
-                # If no experiment name is given, use the config file name
-                config.exp_name = config_file.stem
-            else:
-                # Otherwise, use the model name and train dataset name
-                model = config.model.name
-                data = config.train_dataloader.dataset.name
-                config.exp_name = f"{model}_{data}"
-
-        # Update project root
-        config.root = self.root
-
-        # Resolve the output directory
-        output_dir = Path(config.output_dir) if config.output_dir else None
-        if not output_dir.is_dir():
-            config.output_dir = resolve_output_dir(
-                root=self.run_dir,
-                dirname="predict",
-                arch=config.model.arch,
-                model=config.model.name,
-            )
-        else:
-            config.output_dir = output_dir.normalize()
-        if not config.exist_ok and config.output_dir.is_dir():
-            config.output_dir.rmdir(recursive=True)
-
-        # Resolve device
-        if not isinstance(config.device, torch.device):
-            device = config.device
-            config.device = DEVICE_MANAGER.get_device(device)
-
-        # Return the updated configuration
-        return config
+            raise ValueError(f"Invalid run mode: {mode}")
 
     # --- Prompting ---
     def prompt(self) -> Box:
@@ -891,7 +995,7 @@ class ConfigManager(ConfigHandler):
             self.task = OptionPrompt.ask(
                 prompt=ARGUMENTS.task.prompt_text,
                 default=self.task,
-                choices=sorted(Task.values()),
+                choices=ARGUMENTS.task.choices,
             )
             # print(f"Task: {self.task}")
         if self._index == 1:
@@ -899,7 +1003,7 @@ class ConfigManager(ConfigHandler):
             self.mode = OptionPrompt.ask(
                 prompt=ARGUMENTS.mode.prompt_text,
                 default=self.mode,
-                choices=sorted(RunMode.values()),
+                choices=ARGUMENTS.mode.choices,
             )
             # print(f"Mode: {self.mode}")
         if self._index == 2:
@@ -970,8 +1074,8 @@ class ConfigManager(ConfigHandler):
             # Device
             self.device = OptionPrompt.ask(
                 prompt=ARGUMENTS.device.prompt_text,
-                default=DEVICE_MANAGER.get(self.device).name,
-                choices=DEVICE_MANAGER.names,
+                default=sys_ctx.get_device(self.device).name,
+                choices=ARGUMENTS.device.choices,
             )
             # print(f"Device: {self.device}")
         if self._index == 9:

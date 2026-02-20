@@ -60,6 +60,8 @@ val_dataloader:
   num_workers: 1  # (int) Number of workers for data loading.
   drop_last: False  # (bool) Drop the last incomplete batch.
 
+data: ~  # (list[str]) List of data names or paths for prediction.
+
 # --- Training ---
 epochs: 100  # (int) Number of epochs to train.
 

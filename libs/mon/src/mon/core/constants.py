@@ -28,14 +28,14 @@ from .dtype import ImageExtension, WeightExtension
 from .factory import DatasetFactory, Factory, ModelFactory, WeightsFactory
 from .path import Path
 
+
 # ==============================================================================
 # region PATHS
 # ==============================================================================
 
-# Robustly find the project root (first pyproject.toml up)
+# Find the ``mon`` package root (first pyproject.toml up)
 current_file = Path(__file__).normalize()
 ROOT = current_file
-
 for parent in current_file.parents:
     if (parent / "pyproject.toml").exists():
         ROOT = parent
@@ -45,11 +45,10 @@ for parent in current_file.parents:
 _all_roots = [p for p in ROOT.parents if (p / "pyproject.toml").exists()]
 MONO_ROOT = _all_roots[-1] if _all_roots else ROOT
 
-# Zoo directory (prefer root-level zoo if it exists)
-_zoo_dir_in_root = ROOT / "zoo"
-
-if _zoo_dir_in_root.exists():
-    ZOO_ROOT = _zoo_dir_in_root
+# Find the model zoo directory (prefer root-level zoo if it exists)
+_zoo_dir = ROOT / "zoo"
+if _zoo_dir.exists():
+    ZOO_ROOT = _zoo_dir
 else:
     ZOO_ROOT = MONO_ROOT / "zoo"
 
