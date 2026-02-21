@@ -24,7 +24,7 @@ import torch
 from box import Box
 
 import mon
-from mon import sys_ctx, Path
+from mon import sys_ctx, Path, Config
 from mon.dataset import transform as T
 
 current_file = Path(__file__).normalize()
@@ -47,50 +47,50 @@ except ImportError:
 # ==============================================================================
 
 @torch.no_grad()
-def run(args: Box):
+def run(config: Config):
     # 1. Summarize the current run
-    if args.verbose:
-        mon.print_run_summary(args)
+    if config.verbose:
+        config.log_summary()
 
     # 2. Setup environment
-    device = sys_ctx.get_torch_device(args.device)
-    sys_ctx.set_random_seed(args.seed)
+    device = config.device
+    sys_ctx.set_random_seed(config.seed)
 
     # 3. Resolve pre-trained weights
-    weights = args.weights or args.tuning
+    weights = config.weights or config.finetune
 
     # 4. Define model
-    model = zero_dce(weights=weights, *args.network)
+    model = zero_dce(weights=weights, *config.network)
     model = model.to(device)
     model.eval()
 
     # 5. Run benchmark
-    if args.benchmark:
+    if config.benchmark:
         mon.metrics.benchmark(model)
 
     # 6. Resolve I/O
-    imgsz = args.imgsz if args.resize else (0, 0)
+    imgsz = config.imgsz if config.resize else (0, 0)
     transform = T.Compose([
         T.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
         T.Normalize(normalization="min_max"),
         T.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataset = mon.build_dataset(src=args.data, root=args.root, transform=transform)
+    data_name, dataset = mon.build_dataset(src=config.data, root=config.root, transform=transform)
     resolve_output_dir = partial(
         mon.resolve_output_dir,
-        root=args.save_dir,
+        root=config.save_dir,
         dirname=data_name,
         subdir_name=mon.DIRS.PRED,
-        keep_subdirs=args.keep_subdirs,
-        save_nearby=args.save_nearby,
+        keep_subdirs=config.keep_subdirs,
+        save_nearby=config.save_nearby,
     )
     resolve_debug_dir = partial(
         mon.resolve_output_dir,
-        root=args.save_dir,
+        root=config.save_dir,
         dirname=data_name,
         subdir_name=mon.DIRS.DEBUG,
-        keep_subdirs=args.keep_subdirs,
-        save_nearby=args.save_nearby,
+        keep_subdirs=config.keep_subdirs,
+        save_nearby=config.save_nearby,
     )
 
     # 7. Processing loop
@@ -113,7 +113,7 @@ def run(args: Box):
 
             # 7.2. Inference
             timers.infer.tick()
-            outputs = model(image, save_debug=args.save_debug)
+            outputs = model(image, save_debug=config.save_debug)
             timers.infer.tock()
 
             # 7.3. Post-process
@@ -126,7 +126,7 @@ def run(args: Box):
             timers.postprocess.tock()
 
             # 7.4. Save
-            if args.save:
+            if config.save:
                 # Save to: ".../pred/"
                 out_dir = resolve_output_dir(src_path=path)
                 out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"

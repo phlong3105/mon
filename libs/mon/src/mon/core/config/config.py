@@ -11,30 +11,39 @@ from __future__ import annotations
 
 __all__ = [
     # "ARGUMENTS",
-    "ConfigHandler",
-    "ConfigManager",
-    "create_default_config",
-    "load_config",
+    "Config",
+    "ConfigContext",
 ]
 
 import argparse
+import copy
 import socket
-from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, TypeVar
 
 import torch
 from box import Box
 
 from mon.core.constants import DATASETS, MODELS, ZOO_ROOT
-from mon.core.data import create_weights
 from mon.core.context import sys_ctx
+from mon.core.data import create_weights
 from mon.core.dtype import RunMode, Task
-from mon.core.filesystem import resolve_output_dir, resolve_weights_file
+from mon.core.filesystem import (
+    resolve_output_dir,
+    resolve_save_dir,
+    resolve_weights_file,
+)
 from mon.core.path import Path
-from mon.core.typing import DeviceLike, PathLike, RunModeLike, TaskLike
+from mon.core.typing import (
+    DeviceLike,
+    DictLike,
+    PathLike,
+    RunModeLike,
+    TaskLike,
+)
 from mon.core.ui import (
     Confirm,
     console,
+    log,
     log_error,
     OptionPrompt,
     PathPrompt,
@@ -223,174 +232,116 @@ ARGUMENTS = Box({
 # region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-# --- Data Structures ---
+class Config:
+    """A wrapper class for the configuration Box-like dictionary to provide
+    a default schema and validation for the configuration attributes.
+    """
 
-@dataclass
-class ModelConfig:
-    """Data structure for storing model configuration."""
+    _DEFAULT_SCHEMA: dict = {
+        # --- General ---
+        "config_file": None,
+        "hostname": "localhost",
+        "exp_name": "",
+        "root": None,
+        "output_dir": None,
+        "task": "",
+        "mode": "",
+        "device": None,
+        "seed": 0,
 
-    name: str = ""
-    arch: str = ""
-    weights: Path | None = None
-    finetune: Path | None = None
+        # --- Model ---
+        "model": {
+            "name": "",
+            "arch": "",
+            "weights": None,
+            "finetune": None,
+        },
 
+        # --- Data ---
+        "train_dataloader": {
+            "dataset": {
+                "name": "",
+                "root": None,
+                "dirname": "",
+                "subdir": "",
+                "split": "train",
+                "transforms": {
+                    "ops": [],
+                    "p": 1.0,
+                    "seed": None,
+                },
+                "modalities": [],
+                "classes": None,
+                "verbose": True,
+            }
+        },
+        "val_dataloader": {
+            "dataset": {
+                "name": "",
+                "root": None,
+                "dirname": "",
+                "subdir": "",
+                "split": "val",
+                "transforms": {
+                    "ops": [],
+                    "p": 1.0,
+                }
+            }
+        },
+        "data": [],
 
-@dataclass
-class TransformConfig:
-    """Data structure for storing transform configuration."""
+        # --- Training ---
+        "epochs": 100,
+        "optimizer": {
+            "name": "adam",
+            "lr": 1e-4,
+            "weight_decay": 0.0,
+        },
+        "lr_scheduler": {},
+        "lr_warmup_scheduler": {},
 
-    ops: list = field(default_factory=list)
-    p: float = 1.0
-    seed: int | None = None
+        # --- Prediction ---
+        "benchmark": False,
 
-
-@dataclass
-class DatasetConfig:
-    """Data structure for storing dataset configuration."""
-
-    name: str = ""
-    root: Path | None = None
-    dirname: str = ""
-    subdir: str = ""
-    split: str = "train"
-    transforms: TransformConfig = field(default_factory=TransformConfig)
-    modalities: list = field(default_factory=list)
-    classes: Path | None = None
-    verbose: bool = True
-
-
-@dataclass
-class DataLoaderConfig:
-    """Data structure for storing dataloader configuration."""
-
-    dataset: DatasetConfig = field(default_factory=DatasetConfig)
-    batch_size: int = 1
-    shuffle: bool = True
-    num_workers: int = 4
-    drop_last: bool = False
-
-
-@dataclass
-class OptimizerConfig:
-    """Data structure for storing optimizer configuration."""
-
-    name: str = "adam"
-    lr: float = 1e-4
-    weight_decay: float = 0.0
-
-
-@dataclass
-class ExperimentConfig:
-    """Data structure for storing experiment configuration."""
-
-    # --- General ---
-    exp_name: str = ""
-    root: Path | None = None
-    output_dir: Path | None = None
-    task: str = ""
-    mode: str = ""
-    device: str | int = 0
-    seed: int = 0
-
-    # --- Model ---
-    model: ModelConfig = field(default_factory=ModelConfig)
-
-    # --- Data ---
-    train_dataloader: DataLoaderConfig = field(default_factory=DataLoaderConfig)
-    val_dataloader: DataLoaderConfig = field(default_factory=DataLoaderConfig)
-    data: list[PathLike] = field(default_factory=list)
-
-    # --- Training ---
-    epochs: int = 100
-    optimizer: OptimizerConfig = field(default_factory=OptimizerConfig)
-    lr_scheduler: dict = field(default_factory=dict)
-    lr_warmup_scheduler: dict = field(default_factory=dict)
-
-    # --- Prediction ---
-    benchmark: bool = False
-
-    # --- Saving & Visualization ---
-    save: bool = True
-    save_debug: bool = False
-    keep_subdirs: bool = False
-    near_src: bool = False
-    exist_ok: bool = True
-    verbose: bool = True
-
-# endregion
-
-
-# ==============================================================================
-# region INPUT
-# ==============================================================================
-
-def load_config(path: PathLike, **kwargs: Any) -> Box:
-    """Load a configuration file and return a Box-like dictionary."""
-    # Normalize inputs
-    path = Path(path).normalize()
-
-    # Validate inputs
-    if not path.has_ext(".yaml", ".yml", exist=True):
-        raise TypeError(
-            f"Expected 'path' to be a valid configuration file path, "
-            f"but got {type(path).__name__}."
-        )
-
-    # Create a default configuration
-    config = Box(asdict(ExperimentConfig()))
-    # Update with .yaml file contents
-    config.update(Box.from_yaml(filename=path), **kwargs)
-    return config
-
-# endregion
-
-
-# ==============================================================================
-# region CREATION
-# ==============================================================================
-
-def create_default_config() -> Box:
-    """Create a default configuration Box-like dictionary."""
-    return Box(asdict(ExperimentConfig()))
-
-# endregion
-
-
-# ==============================================================================
-# region CONTROL
-# ==============================================================================
-
-class ConfigHandler:
-    """A helper class for managing configuration access and updates."""
+        # --- Saving & Visualization ---
+        "save": True,
+        "save_debug": False,
+        "keep_subdirs": False,
+        "near_src": False,
+        "exist_ok": True,
+        "verbose": True,
+    }
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        config: Box | None = None,
+        config: DictLike | None = None,
         config_file: PathLike | None = None,
         root: PathLike | None = None,
         **kwargs
     ):
         """Initialize a new instance.
 
-        The configuration initialization pipeline is as follows:
-            ``default`` -> ``config`` -> ``config_file`` -> ``kwargs``
-
         Args:
-            config (Box, optional): Initial configuration to override the
-                default config. Defaults to None.
-            config_file (PathLike, optional): Path to the configuration file.
+            config (DictLike | None): A Box-like dictionary containing the
+                initial configuration. Defaults to None.
+            config_file (PathLike | None): Path to the configuration file.
                 If given, it will be loaded and used to override the default
                 configuration. Defaults to None.
-            root (PathLike): Project root directory.
+            root (PathLike | None): Project root directory. Defaults to None.
             **kwargs: Additional keyword arguments for configuration updates.
         """
         # Allocate resources
-        # Create a default configuration
-        self.config = create_default_config()
-        if config:
-            # If an initial configuration is given, update the default config
-            self.update_from_config(config)
+        if not config:
+            config = Box(self._DEFAULT_SCHEMA)
+        elif isinstance(config, dict):
+            config = Box(config)
+        if not isinstance(config, Box):
+            raise TypeError(
+                f"Expected 'value' to be a Box-like dictionary, "
+                f"but got {type(config).__name__}."
+            )
+        self._config: Box = config
 
         # Assign attributes
         self.root = root
@@ -406,47 +357,44 @@ class ConfigHandler:
 
     # --- Properties ---
     @property
+    def config(self) -> Box:
+        return self._config
+
+    @property
     def config_file(self) -> Path | None:
-        """Return the path to the configuration file."""
-        return self.config.get("config", None)
+        return self.config.config_file
 
     @config_file.setter
     def config_file(self, value: PathLike | None):
-        """Set the path to the configuration file."""
         # Validate inputs
         if not is_valid_str(value):
-            self.config["config"] = None
             return
 
         # Check if the given value is a valid path
         config_file = Path(value).normalize()
         if config_file.has_ext(".yaml", ".yml", exist=True):
-            self.config["config"] = config_file
+            self._config.config_file = config_file
             return
 
         # Look for the configuration file in the project config directory
         if self.config_dir:
             config_file = self.config_dir / value
             if config_file.has_ext(".yaml", ".yml", exist=True):
-                self.config["config"] = config_file
+                self._config.config_file = config_file
                 return
 
     @property
-    def exp_name(self) -> str | None:
-        """Return the experiment name."""
+    def exp_name(self) -> str:
         if self.config.exp_name:
             return self.config.exp_name
         elif self.config_file:
             return self.config_file.stem
-        elif self.data:
-            return f"{self.model}_{self.data}"
         else:
             return self.model
 
     @exp_name.setter
-    def exp_name(self, value: str | None):
-        """Set the experiment name."""
-        self.config.exp_name = value
+    def exp_name(self, value: str):
+        self._config.exp_name = value
 
     @property
     def root(self) -> Path:
@@ -460,20 +408,167 @@ class ConfigHandler:
         root = Path(value).normalize() if is_valid_str(value) else None
         if root and root.is_dir():
             # If the given value is a valid directory, set it as the root
-           self.config.root = root
+           self._config.root = root
 
     @property
     def output_dir(self) -> Path | None:
         """Return the output directory."""
-        return self.config.output_dir
+        return self._config.output_dir
 
     @output_dir.setter
     def output_dir(self, value: PathLike | None):
         """Set the output directory."""
         output_dir = Path(value).normalize() if is_valid_str(value) else None
         if output_dir and output_dir.is_dir():
-            self.config.output_dir = output_dir
+            self._config.output_dir = output_dir
 
+    @property
+    def task(self) -> Task | None:
+        return self._config.task
+
+    @task.setter
+    def task(self, value: TaskLike | None):
+        if value in Task:
+            self._config.task = Task(value)
+
+    @property
+    def mode(self) -> RunMode | None:
+        return self._config.mode
+
+    @mode.setter
+    def mode(self, value: RunModeLike | None):
+        if value in RunMode:
+            self._config.mode = RunMode(value)
+
+    @property
+    def arch(self) -> str:
+        return self._config.model.arch
+
+    @arch.setter
+    def arch(self, value: str | None):
+        if is_valid_str(value):
+            self._config.model.arch = value
+
+    @property
+    def model(self) -> str:
+        return self._config.model.name
+
+    @model.setter
+    def model(self, value: str | None):
+        if is_valid_str(value):
+            self._config.model.name = value
+
+    @property
+    def weights(self) -> Path | None:
+        return self.config.model.weights
+
+    @weights.setter
+    def weights(self, value: PathLike | None):
+        if is_valid_str(value):
+            self.config.model.weights = Path(value)
+
+    @property
+    def finetune(self) -> Path | None:
+        return self._config.model.finetune
+
+    @finetune.setter
+    def finetune(self, value: PathLike | None):
+        if is_valid_str(value):
+            self._config.model.finetune = Path(value)
+
+    @property
+    def data(self) -> list[PathLike]:
+        return self._config.data
+
+    @data.setter
+    def data(self, value: list[PathLike] | PathLike | None):
+        # Normalize inputs
+        data = []
+        if isinstance(value, (Path, str)):
+            data = [value]
+        elif isinstance(value, list):
+            data = value
+
+        for i, d in enumerate(data):
+            d_path = Path(d).normalize()
+            if d_path.exists():
+                # Path to a directory or file
+                data[i] = d_path
+            else:
+                # Dataset name
+                data[i] = d
+
+        self._config.data = data
+
+    @property
+    def device(self) -> torch.device:
+        return self._config.device
+
+    @device.setter
+    def device(self, value: DeviceLike):
+        self._config.device = sys_ctx.get_torch_device(value)
+
+    @property
+    def seed(self) -> int:
+        return self._config.seed
+
+    @property
+    def benchmark(self) -> bool:
+        return self._config.benchmark
+
+    @benchmark.setter
+    def benchmark(self, value: bool):
+        self._config.benchmark = value
+
+    @property
+    def save(self) -> bool:
+        return self._config.save
+
+    @save.setter
+    def save(self, value: bool):
+        self._config.save = value
+
+    @property
+    def save_debug(self) -> bool:
+        return self._config.save_debug
+
+    @save_debug.setter
+    def save_debug(self, value: bool):
+        self._config.save_debug = value
+
+    @property
+    def keep_subdirs(self) -> bool:
+        return self._config.keep_subdirs
+
+    @keep_subdirs.setter
+    def keep_subdirs(self, value: bool):
+        self._config.keep_subdirs = value
+
+    @property
+    def near_src(self) -> bool:
+        return self._config.near_src
+
+    @near_src.setter
+    def near_src(self, value: bool):
+        self._config.near_src = value
+
+    @property
+    def exist_ok(self) -> bool:
+        return self._config.exist_ok
+
+    @exist_ok.setter
+    def exist_ok(self, value: bool):
+        self._config.exist_ok = value
+
+    @property
+    def verbose(self) -> bool:
+        return self._config.verbose
+
+    @verbose.setter
+    def verbose(self, value: bool):
+        self._config.verbose = value
+
+    # --- Retrieval ---
     @property
     def config_dir(self) -> Path:
         """Return the root directory of all configuration files in the current
@@ -490,38 +585,6 @@ class ConfigHandler:
     def run_dir(self) -> Path:
         """Return the root directory of all runs in the current project."""
         return self.root / "run"
-
-    @property
-    def task(self) -> Task | None:
-        return self.config.task
-
-    @task.setter
-    def task(self, value: TaskLike | None):
-        self.config.task = Task(value) if value else None
-
-    @property
-    def mode(self) -> RunMode | None:
-        return self.config.mode
-
-    @mode.setter
-    def mode(self, value: RunModeLike | None):
-        self.config.mode = RunMode(value) if value else None
-
-    @property
-    def arch(self) -> str:
-        return self.config.model.arch
-
-    @arch.setter
-    def arch(self, value: str | None):
-        self.config.model.arch = value or ""
-
-    @property
-    def model(self) -> str:
-        return self.config.model.name
-
-    @model.setter
-    def model(self, value: str | None):
-        self.config.model.name = value or ""
 
     @property
     def model_dir(self) -> Path | None:
@@ -545,14 +608,6 @@ class ConfigHandler:
         return config_files
 
     @property
-    def weights(self) -> Path | None:
-        return self.config.model.weights
-
-    @weights.setter
-    def weights(self, value: PathLike | None):
-        self.config.model.weights = Path(value) if value else None
-
-    @property
     def weights_files(self) -> list[Path]:
         model = self.model
         run_dir = self.run_dir
@@ -567,108 +622,80 @@ class ConfigHandler:
         ) if ZOO_ROOT else []
         return weights_files
 
-    @property
-    def finetune(self) -> Path | None:
-        return self.config.model.finetune
+    def resolve_save_dir(
+        self,
+        dirname: str,
+        subdirname: str = "",
+        src_path: PathLike | None = None,
+    ) -> Path:
+        """Compute the saving directory for an output type based on the output
+        directory and optional components.
 
-    @finetune.setter
-    def finetune(self, value: PathLike | None):
-        self.config.model.finetune = Path(value) if value else None
+        The path is computed in the following order:
+            ``<output_dir>``/``<dirname>``/``<sub_dirname>``/
 
-    @property
-    def data(self) -> list[PathLike]:
-        return self.config.data
+        Examples:
+            >>> output_dir = "/Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm"
+            >>> dirname = "pred"
+            >>> subdirname = ""
+            >>> src_path = "/Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image/01.jpg"
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, False)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/pred
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, False)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/test/image
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, True)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/pred
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, True)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image_zerodce
 
-    @data.setter
-    def data(self, value: list[PathLike] | PathLike | None):
-        # Normalize inputs
-        data = []
-        if isinstance(value, (Path, str)):
-            data = [value]
-        elif isinstance(value, list):
-            data = value
+        Args:
+            output_dir (PathLike): Path to the output directory.
+            dirname (str): Directory name to append to the output path
+                (e.g., 'pred', 'debug').
+            subdirname (str): Subdirectory name to append to the output path
+                (e.g., 'debug'/'mask'). Defaults to "".
+            src_path (PathLike, optional): Source path to determine the subdirectory
+                hierarchy. Defaults to None.
+            keep_subdirs (bool, optional): If True, preserve the subdirectory
+                structure of ``src_path`` relative to ``dirname``. Defaults to False.
+            near_src (bool, optional): If True, change the ``output_dir`` to the
+                same level as ``src_path``. Defaults to False.
 
-        for i, d in enumerate(data):
-            d_path = Path(d).normalize()
-            if d_path.exists():
-                # Path to a directory or file
-                data[i] = d_path
-            else:
-                # Dataset name
-                data[i] = d
+        Returns:
+            Path: Computed output directory path.
+        """
+        return resolve_save_dir(
+            output_dir=self.output_dir,
+            dirname=dirname,
+            subdirname=subdirname,
+            src_path=src_path,
+            keep_subdirs=self.keep_subdirs,
+            near_src=self.near_src,
+        )
 
-        self.config.data = data
-
-    @property
-    def device(self) -> DeviceLike:
-        return self.config.device
-
-    @device.setter
-    def device(self, value: DeviceLike):
-        self.config.device = sys_ctx.get_torch_device(value)
-
-    @property
-    def benchmark(self) -> bool:
-        return self.config.benchmark
-
-    @benchmark.setter
-    def benchmark(self, value: bool):
-        self.config.benchmark = value
-
-    @property
-    def save(self) -> bool:
-        return self.config.save
-
-    @save.setter
-    def save(self, value: bool):
-        self.config.save = value
-
-    @property
-    def save_debug(self) -> bool:
-        return self.config.save_debug
-
-    @save_debug.setter
-    def save_debug(self, value: bool):
-        self.config.save_debug = value
-
-    @property
-    def keep_subdirs(self) -> bool:
-        return self.config.keep_subdirs
-
-    @keep_subdirs.setter
-    def keep_subdirs(self, value: bool):
-        self.config.keep_subdirs = value
-
-    @property
-    def near_src(self) -> bool:
-        return self.config.near_src
-
-    @near_src.setter
-    def near_src(self, value: bool):
-        self.config.near_src = value
-
-    @property
-    def exist_ok(self) -> bool:
-        return self.config.exist_ok
-
-    @exist_ok.setter
-    def exist_ok(self, value: bool):
-        self.config.exist_ok = value
-
-    @property
-    def verbose(self) -> bool:
-        return self.config.verbose
-
-    @verbose.setter
-    def verbose(self, value: bool):
-        self.config.verbose = value
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._config.get(key, default)
 
     # --- Mutation ---
     def update_from_yaml(self, path: PathLike):
         """Update the current configuration with values from a YAML file."""
-        loaded_config = load_config(path)
-        merged_config = merge_dicts(self.config, loaded_config)
-        self.config = Box(merged_config)
+        # Normalize inputs
+        path = Path(path).normalize()
+
+        # Validate inputs
+        if not path.has_ext(".yaml", ".yml", exist=True):
+            raise TypeError(
+                f"Expected 'path' to be a valid configuration file path, "
+                f"but got {type(path).__name__}."
+            )
+
+        new_config = Box.from_yaml(filename=path)
+        merged_config = merge_dicts(self._config, new_config)
+        self._config = Box(merged_config)
         self.config_file = path
 
     def update_from_cli(self, value: dict):
@@ -676,7 +703,6 @@ class ConfigHandler:
         for k, v in value.items():
             if v is None:
                 continue
-
             if k == "arch":
                 self.arch = v
             elif k == "model":
@@ -687,15 +713,16 @@ class ConfigHandler:
                 self.config_file = v
             elif k == "data":
                 # Prediction data
-                self.config["data"] = v
+                self.data = v
             else:
-                self.config[k] = v
+                self._config[k] = v
 
-    def update_from_config(self, value: Box):
-        """Update the current configuration with values from another config Box."""
+    def update_from_dict(self, value: DictLike):
+        """Update the current configuration with values from a dictionary."""
         merged_config = merge_dicts(self.config, value)
-        self.config = Box(merged_config)
+        self._config = Box(merged_config)
 
+    # --- Transformation ---
     def prepare_train(self) -> Box:
         """Prepare the current configuration for training.
 
@@ -703,7 +730,7 @@ class ConfigHandler:
         and types; and in the order of dependencies (e.g., model before weights).
         """
         # Add additional attributes
-        self.config["hostname"] = socket.gethostname()
+        self._config.hostname = socket.gethostname()
 
         # 1. Resolve standalone attributes first
         # 1.1. Resolve root
@@ -788,7 +815,7 @@ class ConfigHandler:
         and types; and in the order of dependencies (e.g., model before weights).
         """
         # Add additional attributes
-        self.config["hostname"] = socket.gethostname()
+        self._config.hostname = socket.gethostname()
 
         # 1. Resolve standalone attributes first
         # 1.1. Resolve root
@@ -854,9 +881,51 @@ class ConfigHandler:
         # Return the updated configuration
         return self.config
 
+    # --- Logging ---
+    def log_summary(self, full: bool = False):
+        """Log a summary of the current configuration for the current run.
 
-class ConfigManager(ConfigHandler):
-    """A class for managing configuration and performing interactive prompts."""
+        Args:
+            full (bool, optional): If True, print the full configuration.
+                Otherwise, print a concise summary. Defaults to False.
+        """
+        config = self._config.to_dict()
+
+        if full:
+            console.rule("[bold yellow]Full Configuration")
+            # Ensure we have a standard dict for pretty printing
+            pprint_dict(config)
+        else:
+            exp_name = config.get("exp_name", "Unnamed Run")
+            console.rule(f"[bold red]{exp_name}")
+            summary_fields = {
+                "Machine": config.get("hostname", "local"),
+                "Device": config.get("device"),
+                "Task": config.get("task"),
+                "Mode": config.get("mode"),
+                "Data": config.get("data"),
+                "Weights": config.get("weights"),
+                "Save Dir": config.get("output_dir"),
+                "Config": config.get("config"),
+            }
+            for label, value in summary_fields.items():
+                if value:
+                    # Formatting paths to be cleaner strings
+                    display_val = str(value) if not isinstance(value, list) else f"{len(value)} files"
+                    log(f"{label:<10}: {display_val}")
+            console.rule() # Add a closing line for visual polish
+
+# endregion
+
+
+# ==============================================================================
+# region CONTROL
+# ==============================================================================
+
+class ConfigContext(Config):
+    """A class for managing configuration and performing run-time interactive
+    prompting to update the configuration.
+    """
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -879,6 +948,9 @@ class ConfigManager(ConfigHandler):
             prompt (bool, optional): If True, enable interactive prompting.
                 Defaults to False.
             **kwargs: Additional keyword arguments for configuration updates.
+
+        Raises:
+            FileNotFoundError: If the project root directory is not found.
         """
         # Validate inputs
         if not root.is_dir():
@@ -900,7 +972,7 @@ class ConfigManager(ConfigHandler):
 
     # --- Creation ---
     @classmethod
-    def from_cli(cls, name: str = "main") -> "ConfigManager":
+    def from_cli(cls, name: str = "main") -> "ConfigContext":
         """Create a new instance from CLI arguments."""
         # 1. Prepare argument parser
         parser = argparse.ArgumentParser(description=name)
@@ -944,7 +1016,7 @@ class ConfigManager(ConfigHandler):
         return cls(root=root, config_file=config_file, prompt=prompt, **args)
 
     # --- Retrieval ---
-    def get_config(self, mode: RunModeLike, prompt: bool = False) -> Box:
+    def config_for(self, mode: RunModeLike, prompt: bool = False) -> Box:
         """Get the resolved configuration for a specific run mode, optionally
         enabling interactive prompting.
 
@@ -972,6 +1044,11 @@ class ConfigManager(ConfigHandler):
             return self.prepare_predict()
         else:
             raise ValueError(f"Invalid run mode: {mode}")
+
+    # --- Transformation ---
+    def as_config(self) -> Config:
+        """Extracts the data and returns a pure ``Config`` object."""
+        return Config(copy.deepcopy(self.config))
 
     # --- Prompting ---
     def prompt(self) -> Box:
@@ -1143,7 +1220,7 @@ class ConfigManager(ConfigHandler):
 # ==============================================================================
 
 if __name__ == "__main__":
-    ConfigManager(root=Path.cwd(), prompt=True)
+    ConfigContext(root=Path.cwd(), prompt=True)
 
 
 # endregion

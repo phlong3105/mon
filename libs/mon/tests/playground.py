@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """Playground."""
+from dataclasses import dataclass, field
 
 # noinspection PyUnusedImports
 import mon
@@ -32,6 +33,28 @@ print(weights2.unique_path_from(root).truncate())
 """
 
 
+"""
 config_manager = mon.ConfigManager(root=current_dir, config_file="alexnet_v2.yaml")
-config = config_manager.get_config("predict")
+config = config_manager.config_for("predict")
 print(config)
+"""
+
+
+@dataclass
+class Foo:
+    a: int
+    _a: int = field(init=False, repr=False)
+
+    @property
+    def a(self):
+        return self._a
+
+    @a.setter
+    def a(self, value):
+        self._a = value
+
+
+foo = Foo(a=3)
+bar = Foo(a=2)
+print(foo.a)
+print(bar.a)

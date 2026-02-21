@@ -375,7 +375,7 @@ def resolve_output_dir(
 def resolve_save_dir(
     output_dir: PathLike,
     dirname: str,
-    subdirname: PathLike,
+    subdirname: str = "",
     src_path: PathLike | None = None,
     keep_subdirs: bool = False,
     near_src: bool = False,
@@ -409,7 +409,7 @@ def resolve_save_dir(
         dirname (str): Directory name to append to the output path
             (e.g., 'pred', 'debug').
         subdirname (str): Subdirectory name to append to the output path
-            (e.g., 'debug'/'mask').
+            (e.g., 'debug'/'mask'). Defaults to "".
         src_path (PathLike, optional): Source path to determine the subdirectory
             hierarchy. Defaults to None.
         keep_subdirs (bool, optional): If True, preserve the subdirectory
