@@ -335,15 +335,15 @@ class Swin_V2_B_Weights(WeightsEnum):
 
 @BACKBONES.register(name="swin_t", metaclass=SwinBackBone)
 def swin_t(
-    weights: WeightsEnumLike = Swin_T_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> SwinBackBone:
     """Create a Swin-T backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Swin_T_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -363,15 +363,15 @@ def swin_t(
 
 @BACKBONES.register(name="swin_s", metaclass=SwinBackBone)
 def swin_s(
-    weights: WeightsEnumLike = Swin_S_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> SwinBackBone:
     """Create a Swin-S backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Swin_S_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -391,15 +391,15 @@ def swin_s(
 
 @BACKBONES.register(name="swin_b", metaclass=SwinBackBone)
 def swin_b(
-    weights: WeightsEnumLike = Swin_B_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> SwinBackBone:
     """Create a Swin-B backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Swin_B_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -419,15 +419,15 @@ def swin_b(
 
 @BACKBONES.register(name="swin_v2_t", metaclass=SwinBackBone)
 def swin_v2_t(
-    weights: WeightsEnumLike = Swin_V2_T_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> SwinBackBone:
     """Create a Swin-V2-T backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Swin_V2_T_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -447,15 +447,15 @@ def swin_v2_t(
 
 @BACKBONES.register(name="swin_v2_s", metaclass=SwinBackBone)
 def swin_v2_s(
-    weights: WeightsEnumLike = Swin_V2_S_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> SwinBackBone:
     """Create a Swin-V2-S backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Swin_V2_S_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -475,15 +475,15 @@ def swin_v2_s(
 
 @BACKBONES.register(name="swin_v2_b", metaclass=SwinBackBone)
 def swin_v2_b(
-    weights: WeightsEnumLike = Swin_V2_B_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> SwinBackBone:
     """Create a Swin-V2-B backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Swin_V2_B_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

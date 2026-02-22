@@ -603,15 +603,15 @@ class Wide_ResNet101_2_Weights(WeightsEnum):
 
 @BACKBONES.register(name="resnet18", metaclass=ResNetBackBone)
 def resnet18(
-    weights: WeightsEnumLike = ResNet18_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNet-18 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNet18_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -627,15 +627,15 @@ def resnet18(
 
 @BACKBONES.register(name="resnet34", metaclass=ResNetBackBone)
 def resnet34(
-    weights: WeightsEnumLike = ResNet34_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNet-34 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNet34_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -651,15 +651,15 @@ def resnet34(
 
 @BACKBONES.register(name="resnet50", metaclass=ResNetBackBone)
 def resnet50(
-    weights: WeightsEnumLike = ResNet50_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNet-50 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNet50_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -675,15 +675,15 @@ def resnet50(
 
 @BACKBONES.register(name="resnet101", metaclass=ResNetBackBone)
 def resnet101(
-    weights: WeightsEnumLike = ResNet101_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNet-101 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNet101_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -699,15 +699,15 @@ def resnet101(
 
 @BACKBONES.register(name="resnet152", metaclass=ResNetBackBone)
 def resnet152(
-    weights: WeightsEnumLike = ResNet152_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNet-152 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNet152_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -723,15 +723,15 @@ def resnet152(
 
 @BACKBONES.register(name="resnext50_32x4d", metaclass=ResNetBackBone)
 def resnext50_32x4d(
-    weights: WeightsEnumLike = ResNeXt50_32X4D_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNeXt-50 32x4d backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNeXt50_32X4D_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -749,15 +749,15 @@ def resnext50_32x4d(
 
 @BACKBONES.register(name="resnext101_32x8d", metaclass=ResNetBackBone)
 def resnext101_32x8d(
-    weights: WeightsEnumLike = ResNeXt101_32X8D_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNeXt-101 32x8d backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNeXt101_32X8D_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -775,15 +775,15 @@ def resnext101_32x8d(
 
 @BACKBONES.register(name="resnext101_64x4d", metaclass=ResNetBackBone)
 def resnext101_64x4d(
-    weights: WeightsEnumLike = ResNeXt101_64X4D_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a ResNeXt-101 64x4d backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ResNeXt101_64X4D_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -801,15 +801,15 @@ def resnext101_64x4d(
 
 @BACKBONES.register(name="wide_resnet50_2", metaclass=ResNetBackBone)
 def wide_resnet50_2(
-    weights: WeightsEnumLike = Wide_ResNet50_2_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a Wide-ResNet-50-2 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Wide_ResNet50_2_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -826,15 +826,15 @@ def wide_resnet50_2(
 
 @BACKBONES.register(name="wide_resnet101_2", metaclass=ResNetBackBone)
 def wide_resnet101_2(
-    weights: WeightsEnumLike = Wide_ResNet101_2_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ResNetBackBone:
     """Create a Wide-ResNet-101-2 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to Wide_ResNet101_2_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

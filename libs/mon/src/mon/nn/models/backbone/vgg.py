@@ -361,15 +361,15 @@ class VGG19_BN_Weights(WeightsEnum):
 
 @BACKBONES.register(name="vgg11", metaclass=VGGBackBone)
 def vgg11(
-    weights: WeightsEnumLike = VGG11_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG11 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG11_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -385,15 +385,15 @@ def vgg11(
 
 @BACKBONES.register(name="vgg11_bn", metaclass=VGGBackBone)
 def vgg11_bn(
-    weights: WeightsEnumLike = VGG11_BN_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG11-BN backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG11_BN_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -409,15 +409,15 @@ def vgg11_bn(
 
 @BACKBONES.register(name="vgg13", metaclass=VGGBackBone)
 def vgg13(
-    weights: WeightsEnumLike = VGG13_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG13 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG13_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -433,15 +433,15 @@ def vgg13(
 
 @BACKBONES.register(name="vgg13_bn", metaclass=VGGBackBone)
 def vgg13_bn(
-    weights: WeightsEnumLike = VGG13_BN_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG13-BN backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG13_BN_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -457,15 +457,15 @@ def vgg13_bn(
 
 @BACKBONES.register(name="vgg16", metaclass=VGGBackBone)
 def vgg16(
-    weights: WeightsEnumLike = VGG16_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG16 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG16_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -481,15 +481,15 @@ def vgg16(
 
 @BACKBONES.register(name="vgg16_bn", metaclass=VGGBackBone)
 def vgg16_bn(
-    weights: WeightsEnumLike = VGG16_BN_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG16-BN backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG16_BN_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -505,15 +505,15 @@ def vgg16_bn(
 
 @BACKBONES.register(name="vgg19", metaclass=VGGBackBone)
 def vgg19(
-    weights: WeightsEnumLike = VGG19_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG19 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG19_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -529,15 +529,15 @@ def vgg19(
 
 @BACKBONES.register(name="vgg19_bn", metaclass=VGGBackBone)
 def vgg19_bn(
-    weights: WeightsEnumLike = VGG19_BN_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> VGGBackBone:
     """Create a VGG19-BN backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to VGG19_BN_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

@@ -23,10 +23,11 @@ __all__ = [
 
 import requests
 
+from .console import log, log_error
 from .constants import ZOO_ROOT
 from .path import Path
 from .typing import PathLike
-from .ui import create_download_bar, log, log_error
+from .ui import create_download_bar
 from .utils import depascalize, is_valid_str
 
 
@@ -312,7 +313,7 @@ def resolve_weights_file(root: PathLike, weights_file: PathLike) -> Path | None:
     else:
         return None
 
-    # Check if the weight provided is already a directory
+    # Check if the weight provided is already a file
     if weights_file.is_weights_file(exist=True):
         return weights_file
 

@@ -17,7 +17,7 @@ import time
 
 from rich.table import Table
 
-from mon.core.ui import console
+from mon.core.console import console
 
 
 # ==============================================================================

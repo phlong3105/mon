@@ -507,15 +507,15 @@ class EfficientNet_V2_L_Weights(WeightsEnum):
 
 @BACKBONES.register(name="efficientnet_b0", metaclass=EfficientNetBackBone)
 def efficientnet_b0(
-    weights: WeightsEnumLike = EfficientNet_B0_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B0 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B0_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -537,15 +537,15 @@ def efficientnet_b0(
 
 @BACKBONES.register(name="efficientnet_b1", metaclass=EfficientNetBackBone)
 def efficientnet_b1(
-    weights: WeightsEnumLike = EfficientNet_B1_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B1 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B1_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -567,15 +567,15 @@ def efficientnet_b1(
 
 @BACKBONES.register(name="efficientnet_b2", metaclass=EfficientNetBackBone)
 def efficientnet_b2(
-    weights: WeightsEnumLike = EfficientNet_B2_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B2 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B2_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -597,15 +597,15 @@ def efficientnet_b2(
 
 @BACKBONES.register(name="efficientnet_b3", metaclass=EfficientNetBackBone)
 def efficientnet_b3(
-    weights: WeightsEnumLike = EfficientNet_B3_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B3 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B3_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -627,15 +627,15 @@ def efficientnet_b3(
 
 @BACKBONES.register(name="efficientnet_b4", metaclass=EfficientNetBackBone)
 def efficientnet_b4(
-    weights: WeightsEnumLike = EfficientNet_B4_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B4 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B4_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -657,15 +657,15 @@ def efficientnet_b4(
 
 @BACKBONES.register(name="efficientnet_b5", metaclass=EfficientNetBackBone)
 def efficientnet_b5(
-    weights: WeightsEnumLike = EfficientNet_B5_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B5 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B5_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -688,15 +688,15 @@ def efficientnet_b5(
 
 @BACKBONES.register(name="efficientnet_b6", metaclass=EfficientNetBackBone)
 def efficientnet_b6(
-    weights: WeightsEnumLike = EfficientNet_B6_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B6 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B6_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -719,15 +719,15 @@ def efficientnet_b6(
 
 @BACKBONES.register(name="efficientnet_b7", metaclass=EfficientNetBackBone)
 def efficientnet_b7(
-    weights: WeightsEnumLike = EfficientNet_B7_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-B7 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_B7_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -750,15 +750,15 @@ def efficientnet_b7(
 
 @BACKBONES.register(name="efficientnet_v2_s", metaclass=EfficientNetBackBone)
 def efficientnet_v2_s(
-    weights: WeightsEnumLike = EfficientNet_V2_S_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-V2-S backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_V2_S_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -777,15 +777,15 @@ def efficientnet_v2_s(
 
 @BACKBONES.register(name="efficientnet_v2_m", metaclass=EfficientNetBackBone)
 def efficientnet_v2_m(
-    weights: WeightsEnumLike = EfficientNet_V2_M_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-V2-M backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_V2_M_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -804,15 +804,15 @@ def efficientnet_v2_m(
 
 @BACKBONES.register(name="efficientnet_v2_l", metaclass=EfficientNetBackBone)
 def efficientnet_v2_l(
-    weights: WeightsEnumLike = EfficientNet_V2_L_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> EfficientNetBackBone:
     """Create an EfficientNet-V2-L backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to EfficientNet_V2_L_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

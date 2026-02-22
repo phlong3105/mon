@@ -12,20 +12,18 @@ __all__ = [
     "AlbumTargetType",
     "BBoxFormat",
     "ConfigExtension",
-    "DefaultEnumMeta",
     "DeviceType",
     "ImageExtension",
     "MemoryUnit",
     "Precision",
     "RunMode",
     "Split",
-    "StrEnum",
     "Task",
     "VideoExtension",
     "WeightExtension",
 ]
 
-from .base import DefaultEnumMeta, StrEnum
+from .base.enum import MultiStrEnum
 
 
 # ==============================================================================
@@ -34,13 +32,13 @@ from .base import DefaultEnumMeta, StrEnum
 
 # --- Units ---
 
-class MemoryUnit(StrEnum, metaclass=DefaultEnumMeta):
+class MemoryUnit(MultiStrEnum):
     """Enum for memory units."""
 
     B = "B"
     KB = "KB"
     MB = "MB"
-    GB = "GB"
+    GB = "GB", "default"
     TB = "TB"
     PB = "PB"
 
@@ -59,77 +57,68 @@ class MemoryUnit(StrEnum, metaclass=DefaultEnumMeta):
 
 # --- File Extensions ---
 
-class ConfigExtension(StrEnum, metaclass=DefaultEnumMeta):
+class ConfigExtension(MultiStrEnum):
     """Enum for configuration file extensions."""
 
-    CFG = ".cfg"
-    CONFIG = ".config"
+    YAML = ".yaml", ".yml", "default"
+    CFG =  ".cfg", ".config"
     JSON = ".json"
     TXT = ".txt"
-    YAML = ".yaml"
-    YML = ".yml"
-    DEFAULT = YAML
 
 
-class ImageExtension(StrEnum, metaclass=DefaultEnumMeta):
+class ImageExtension(MultiStrEnum):
     """Enum for common image file extensions."""
 
     ARW = ".arw"
     BMP = ".bmp"
     DNG = ".dng"
-    JPEG = ".jpeg"
-    JPG = ".jpg"
+    JPG = ".jpg", ".jpeg", "default"
     PNG = ".png"
     PPM = ".ppm"
     RAF = ".raf"
     TIF = ".tif"
     TIFF = ".tiff"
-    DEFAULT = JPG
 
 
-class VideoExtension(StrEnum, metaclass=DefaultEnumMeta):
+class VideoExtension(MultiStrEnum):
     """Enum for common video file extensions."""
 
     AVI = ".avi"
     M4V = ".m4v"
     MKV = ".mkv"
     MOV = ".mov"
-    MP4 = ".mp4"
+    MP4 = ".mp4", "default"
     MPEG = ".mpeg"
     MPG = ".mpg"
     WMV = ".wmv"
-    DEFAULT = MP4
 
 
-class WeightExtension(StrEnum, metaclass=DefaultEnumMeta):
+class WeightExtension(MultiStrEnum):
     """Enum for common model weight file extensions."""
 
     CKPT = ".ckpt"
     ONNX = ".onnx"
-    PT = ".pt"
-    PTH = ".pth"
+    PT = ".pt", ".pth", "default"
     TAR = ".tar"
     WEIGHTS = ".weights"
-    DEFAULT = PT
 
 
 # --- Data ---
 
-class BBoxFormat(StrEnum, metaclass=DefaultEnumMeta):
+class BBoxFormat(MultiStrEnum):
     """Enum for bounding box formats and conversion codes."""
 
     # Formats
-    XYWH = "xywh"  # COCO format: [x, y, w, h]
-    XYXY = "xyxy"  # VOC format: [x1, y1, x2, y2]
-    CXCYWHN = "cxcywhn"  # YOLO format: [cx, cy, w, h] normalized
+    CXCYWHN = "cxcywhn", "yolo", "default"            # YOLO format: [cx, cy, w, h] normalized
+    XYWH = "xywh", "coco"                             # COCO format: [x, y, w, h]
+    XYXY = "xyxy", "voc"                              # VOC format: [x1, y1, x2, y2]
     # Conversion Codes
-    XYWH2XYXY = "xywh_to_xyxy"  # Convert from COCO to VOC
-    XYWH2CXCYWHN = "xywh_to_cxcywhn"  # Convert from COCO to YOLO
-    XYXY2XYWH = "xyxy_to_xywh"  # Convert from VOC to COCO
-    XYXY2CXCYWHN = "xyxy_to_cxcywhn"  # Convert from VOC to YOLO
-    CXCYWHN2XYXY = "cxcywhn_to_xyxy"  # Convert from YOLO to VOC
-    CXCYWHN2XYWH = "cxcywhn_to_xywh"  # Convert from YOLO to COCO
-    DEFAULT = CXCYWHN
+    XYWH2XYXY = "xywh_to_xyxy", "coco_to_voc"         # Convert from COCO to VOC
+    XYWH2CXCYWHN = "xywh_to_cxcywhn", "coco_to_yolo"  # Convert from COCO to YOLO
+    XYXY2XYWH = "xyxy_to_xywh", "voc_to_coco"         # Convert from VOC to COCO
+    XYXY2CXCYWHN = "xyxy_to_cxcywhn", "voc_to_yolo"   # Convert from VOC to YOLO
+    CXCYWHN2XYXY = "cxcywhn_to_xyxy", "yolo_to_voc"   # Convert from YOLO to VOC
+    CXCYWHN2XYWH = "cxcywhn_to_xywh", "yolo_to_coco"  # Convert from YOLO to COCO
 
     @classmethod
     def formats(cls) -> list:
@@ -141,17 +130,16 @@ class BBoxFormat(StrEnum, metaclass=DefaultEnumMeta):
         ]
 
 
-class DeviceType(StrEnum, metaclass=DefaultEnumMeta):
+class DeviceType(MultiStrEnum):
     """Enum for device types."""
 
-    CPU = "cpu"
+    CPU = "cpu", "default"
     CUDA = "cuda"
     MPS = "mps"
     AUTO = "auto"
-    DEFAULT = CPU
 
 
-class AlbumTargetType(StrEnum, metaclass=DefaultEnumMeta):
+class AlbumTargetType(MultiStrEnum):
     """Enum for albumentations target types."""
 
     IMAGE = "image"          # The primary input image(s) (e.g., (H, W, C)). Receives geometric, color, and intensity transforms. Uses standard interpolation for geometric transforms.
@@ -163,31 +151,28 @@ class AlbumTargetType(StrEnum, metaclass=DefaultEnumMeta):
     MASKS3D = "masks3d"      # Multiple 3D masks (e.g., (N, D, H, W)). Processed like mask3d across the first dimension.
     VOLUME = "volume"        # A 3D volume (e.g., (D, H, W, C)). Receives 3D geometric transforms, and applicable 2D transforms slice-wise. Color/intensity transforms applied if treated as 'image'.
     VOLUMES = "volumes"      # Multiple 3D volumes (e.g., (N, D, H, W, C)). Processed like volume across the first dimension.
-    DEFAULT = IMAGE
 
 
 # --- Machine Learning ---
 
-class RunMode(StrEnum, metaclass=DefaultEnumMeta):
+class RunMode(MultiStrEnum):
     """Enum for common ML run modes."""
 
-    TRAIN = "train"
+    TRAIN = "train", "default"
     PREDICT = "predict"
     METRIC = "metric"
-    DEFAULT = PREDICT
 
 
-class Split(StrEnum, metaclass=DefaultEnumMeta):
+class Split(MultiStrEnum):
     """Enum for common dataset splits."""
 
-    TRAIN = "train"
+    TRAIN = "train", "default"
     VAL = "val"
     TEST = "test"
     PREDICT = "predict"
-    DEFAULT = TRAIN
 
 
-class Task(StrEnum, metaclass=DefaultEnumMeta):
+class Task(MultiStrEnum):
     """Enum for common ML tasks."""
 
     # --- Benchmark ---
@@ -197,29 +182,28 @@ class Task(StrEnum, metaclass=DefaultEnumMeta):
     BACKBONE = "backbone"
 
     # --- Generative AI ---
-    IMG2IMG = "img2img"  # Image-to-Image Translation
+    IMG2IMG = "img2img"        # Image-to-Image Translation
 
     # --- Computer Vision ---
     BGSUBTRACT = "bgsubtract"  # Background Subtraction
-    CLASSIFY = "classify"  # Classification
-    DETECT = "detect"  # Object Detection
-    ENHANCE = "enhance"  # Image Enhancement
-    MONODEPTH = "monodepth"  # Monocular-Depth Estimation
-    POSE = "pose"  # Pose Estimation
-    RESTORE = "restore"  # Image Restoration
-    SEGMENT = "segment"  # Semantic Segmentation
-    TRACK = "track"  # Tracking
+    CLASSIFY = "classify"      # Classification
+    DETECT = "detect"          # Object Detection
+    ENHANCE = "enhance"        # Image Enhancement
+    MONODEPTH = "monodepth"    # Monocular-Depth Estimation
+    POSE = "pose"              # Pose Estimation
+    RESTORE = "restore"        # Image Restoration
+    SEGMENT = "segment"        # Semantic Segmentation
+    TRACK = "track"            # Tracking
 
 
-class Precision(StrEnum, metaclass=DefaultEnumMeta):
+class Precision(MultiStrEnum):
     """Enum for common numerical precisions."""
 
-    FP32 = "fp32"  # 32-bit floating point
-    FP16 = "fp16"  # 16-bit floating point
-    FP8 = "fp8"  # 8-bit floating point
-    INT8 = "int8"  # 8-bit integer
-    INT4 = "int4"  # 4-bit integer
-    DEFAULT = FP32
+    FP32 = "fp32", "default"  # 32-bit floating point
+    FP16 = "fp16"             # 16-bit floating point
+    FP8 = "fp8"               # 8-bit floating point
+    INT8 = "int8"             # 8-bit integer
+    INT4 = "int4"             # 4-bit integer
 
 # endregion
 

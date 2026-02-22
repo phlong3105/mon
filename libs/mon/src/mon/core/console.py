@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Custom Console.
+"""Custom Console & Logging.
 
 This module extends the ``rich.console`` module with custom consoles and
 logging utilities.

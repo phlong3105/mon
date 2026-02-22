@@ -25,13 +25,11 @@ from typing import Sequence
 
 import numpy as np
 import torch
-from box import Box
 
 from .base import singleton
 from .data import Device, DeviceList
 from .dtype import DeviceType
 from .typing import DeviceLike, IntOrTuple2, MISSING
-from .ui import console, log, pprint_dict, rprint_dict
 
 
 # ==============================================================================
@@ -161,41 +159,6 @@ class SystemContext:
             torch.backends.cudnn.benchmark = False
             # Use deterministic algorithms, warning if they are not available.
             torch.use_deterministic_algorithms(True, warn_only=True)
-
-    # --- Logging ---
-    @staticmethod
-    def log_run_info(config: Box, full: bool = False):
-        """Log a summary of the current run to the console.
-
-        Args:
-            config (Box): The configuration object containing run parameters.
-            full (bool, optional): If True, print the full configuration.
-                Otherwise, print a concise summary. Defaults to False.
-        """
-        if full:
-            console.rule("[bold yellow]Full Configuration")
-            # Ensure we have a standard dict for pretty printing
-            info = config.to_dict() if isinstance(config, Box) else config
-            pprint_dict(info)
-        else:
-            exp_name = config.get("exp_name", "Unnamed Run")
-            console.rule(f"[bold red]{exp_name}")
-            summary_fields = {
-                "Machine": config.get("hostname", "local"),
-                "Device": config.get("device"),
-                "Task": config.get("task"),
-                "Mode": config.get("mode"),
-                "Data": config.get("data"),
-                "Weights": config.get("weights"),
-                "Save Dir": config.get("output_dir"),
-                "Config": config.get("config"),
-            }
-            for label, value in summary_fields.items():
-                if value:
-                    # Formatting paths to be cleaner strings
-                    display_val = str(value) if not isinstance(value, list) else f"{len(value)} files"
-                    log(f"{label:<10}: {display_val}")
-            console.rule() # Add a closing line for visual polish
 
 
 sys_ctx = SystemContext()

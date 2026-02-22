@@ -9,9 +9,14 @@ This module provides factory classes.
 from __future__ import annotations
 
 __all__ = [
+    "ALBUMENTATIONS",
+    "BACKBONES",
+    "DATASETS",
     "DatasetFactory",
     "Factory",
+    "MODELS",
     "ModelFactory",
+    "WEIGHTS",
     "WeightsFactory",
 ]
 
@@ -19,12 +24,12 @@ import inspect
 from collections import UserDict
 from typing import Any, Callable
 
+from mon.core.console import log_error
 from mon.core.data import Weights, WeightsEnum
 from mon.core.dtype import Split, Task
 from mon.core.path import Path
 from mon.core.typing import PathLike, RunModeLike, TaskLike
-from mon.core.ui import log_error
-from mon.core.utils import depascalize
+from mon.core.utils import depascalize, is_valid_str
 
 
 # ==============================================================================
@@ -521,7 +526,7 @@ class ModelFactory(Factory):
         Returns:
             list[str]: Sorted list of model names.
         """
-        if not any([arch, task]):
+        if not arch and not task:
             if self.verbose:
                 log_error(
                     f"Expected at least one of 'arch' or 'task',"
@@ -686,7 +691,7 @@ class WeightsFactory(Factory):
         # Return None if no match is found
         return None
 
-    def find_weights_objs(self, weights_path: PathLike) -> Weights | None:
+    def find_weights_obj(self, weights_path: PathLike) -> Weights | None:
         """Find the ``Weights`` object for a given path.
 
         Args:
@@ -695,12 +700,12 @@ class WeightsFactory(Factory):
         Returns:
             Weights: ``Weights`` object if found, None otherwise.
         """
-        weights_path = Path(weights_path).normalize() if weights_path else None
+        weights_path = Path(weights_path).normalize() if is_valid_str(weights_path) else None
 
         # Global Discovery
         if weights_path:
             for w in self.weights_objs:
-                if weights_path == w.path:
+                if w.path == weights_path:
                     return w
 
         # Return None if no match is found
@@ -714,6 +719,19 @@ class WeightsFactory(Factory):
             weights_path (PathLike): Path to look for the weights enum.
         """
         return self.find(weights_path) is not None
+
+# endregion
+
+
+# ==============================================================================
+# region CONSTANTS
+# ==============================================================================
+
+ALBUMENTATIONS: Factory = Factory(name="Albumentations", decamelize=False)
+DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=True)
+BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=True)
+MODELS: ModelFactory = ModelFactory(name="Models", decamelize=True)
+WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=True)
 
 # endregion
 

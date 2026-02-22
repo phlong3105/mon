@@ -443,15 +443,15 @@ class ViT_H_14_Weights(WeightsEnum):
 
 @BACKBONES.register(name="vit_b_16", metaclass=ViTBackBone)
 def vit_b_16(
-    weights: WeightsEnumLike = ViT_B_16_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ViTBackBone:
     """Create a ViT-B/16 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ViT_B_16_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -470,15 +470,15 @@ def vit_b_16(
 
 @BACKBONES.register(name="vit_b_32", metaclass=ViTBackBone)
 def vit_b_32(
-    weights: WeightsEnumLike = ViT_B_32_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ViTBackBone:
     """Create a ViT-B/32 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ViT_B_32_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -497,15 +497,15 @@ def vit_b_32(
 
 @BACKBONES.register(name="vit_l_16", metaclass=ViTBackBone)
 def vit_l_16(
-    weights: WeightsEnumLike = ViT_L_16_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ViTBackBone:
     """Create a ViT-L/16 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ViT_L_16_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -524,15 +524,15 @@ def vit_l_16(
 
 @BACKBONES.register(name="vit_l_32", metaclass=ViTBackBone)
 def vit_l_32(
-    weights: WeightsEnumLike = ViT_L_32_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ViTBackBone:
     """Create a ViT-L/32 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ViT_L_32_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -551,15 +551,15 @@ def vit_l_32(
 
 @BACKBONES.register(name="vit_h_14", metaclass=ViTBackBone)
 def vit_h_14(
-    weights: WeightsEnumLike = ViT_H_14_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ViTBackBone:
     """Create a ViT-H/14 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ViT_H_14_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

@@ -23,10 +23,11 @@ from typing import Any, Callable, Mapping, override, TypeAlias, Union
 
 import torch
 
-from mon.core.base import Enum
+from mon.core.base.enum import Enum
+from mon.core.console import log
+from mon.core.constants import ZOO_ROOT
 from mon.core.path import Path
 from mon.core.typing import PathLike
-from mon.core.ui import log
 from mon.core.utils import is_valid_str
 
 
@@ -59,7 +60,8 @@ class Weights:
             needed to use the model. Defaults to an empty dictionary.
     """
 
-    path: Path
+    name: str = ""
+    path: Path | None = None
     url: Path | None = None
     num_classes: int | None = None
     transforms: Callable | None = None
@@ -96,9 +98,11 @@ class Weights:
         # Validate inputs
         if not isinstance(other, Weights):
             return NotImplemented
-        if self.url != other.url:
+        if self.name != other.name:
             return False
         if self.path != other.path:
+            return False
+        if self.url != other.url:
             return False
         if self.meta != other.meta:
             return False
@@ -158,6 +162,36 @@ class Weights:
         except Exception as e:
             raise RuntimeError(f"Failed to load weights from {path}: {e}")
 
+    # --- Mutation ---
+    def rectify_path(self, root: PathLike):
+        """Check if the path is valid and rectify it if not.
+
+        The search order is as follows:
+            1. Check if the path is valid (if it already points to a file, do nothing).
+            2. Check the local project root (Highest priority).
+            3. Check the global zoo directory.
+
+        Args:
+            root (PathLike): The local project root to check for the weights file.
+        """
+        # Check if the path is valid
+        if self.path is None:
+            return
+
+        # Check if the path is already a file
+        if self.path.is_weights_file(exist=True):
+            return
+
+        # Check local project root (Highest priority)
+        local_file = Path(root) / self.path
+        if local_file.is_weights_file(exist=True):
+            self.path = local_file
+
+        # Check global zoo directory
+        global_file = ZOO_ROOT / self.path
+        if global_file.is_weights_file(exist=True):
+            self.path = global_file
+
 
 class WeightsEnum(Enum):
     """A base class for enumerations of pre-trained model weights.
@@ -166,6 +200,34 @@ class WeightsEnum(Enum):
     its associated pre-trained weights. It inherits from `Enum` and its values
     should be of the type ``Weights``.
     """
+
+    # --- Lifecycle & Initialization ---
+    @classmethod
+    def _missing_(cls, value) -> Weights | PathLike:
+        # 1. If no value is passed (None), return the first member
+        if value is None:
+            return list(cls)[0]
+
+        # 2. If the user explicitly passes the string "default",
+        # return the first member if "DEFAULT" is not defined, otherwise return
+        # the "DEFAULT" member
+        if value == "default":
+            if "DEFAULT" in cls.__members__:
+                return cls.DEFAULT
+            else:
+                return list(cls)[0]
+
+        # 3. If the value is already of the correct type, return it directly
+        if isinstance(value, Weights):
+            return value
+
+        # 4. If the value is a path or a string, try to create a Weights object
+        # from it. If it fails, return the value as-is.
+        if isinstance(value, (Path, str)):
+            return create_weights(weights=value) or value
+
+        # 4. Otherwise, it's an invalid extension
+        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
 
     # --- Properties ---
     @property
@@ -229,7 +291,7 @@ class WeightsEnum(Enum):
 # ==============================================================================
 
 WeightsEnumLike: TypeAlias = Union[WeightsEnum, str]
-WeightsLike: TypeAlias = Union[Weights, WeightsEnum]
+WeightsLike: TypeAlias = Union[Weights, WeightsEnum, PathLike]
 
 # endregion
 
@@ -241,12 +303,15 @@ WeightsLike: TypeAlias = Union[Weights, WeightsEnum]
 def create_weights(weights: Weights | PathLike, *args, **kwargs) -> Weights | None:
     """Create a ``Weights`` object from a path or a ``Weights`` object."""
     if isinstance(weights, Weights):
+        # If it's already a Weights object, return it directly
         return weights
     elif isinstance(weights, (Path, str)):
+        # If it's a path, try to load it as a Weights object'
         weights = Path(weights).normalize()
         if weights.is_weights_file(exist=True):
             return Weights(path=weights, *args, **kwargs)
 
+    # Otherwise, return None
     return None
 
 # endregion

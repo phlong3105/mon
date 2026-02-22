@@ -36,10 +36,10 @@ from rich.progress import (
 from rich.table import Column
 from rich.text import Text
 
+from mon.core.console import console
 from mon.core.context import sys_ctx
 from mon.core.dtype import MemoryUnit
 from mon.core.typing import MemoryUnitLike
-from .console import console
 
 
 # ==============================================================================

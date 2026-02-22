@@ -17,6 +17,6 @@ File Structure:
 
 from __future__ import annotations
 
+from . import enum
 from .collection import *
-from .enum import *
 from .singleton import *

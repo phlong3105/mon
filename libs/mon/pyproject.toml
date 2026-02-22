@@ -34,6 +34,7 @@ classifiers     = [
 dependencies    = [
     # ----- Core -----
     "PyYAML",                           # YAML parser and emitter for Python.
+    "aenum",                            # Advanced Enumerations for Python
     "emoji",                            # Emoji for Python.
     "fjson",                            # Python JSON writer with formatted floats
     "loguru",                           # Python logging made (stupidly) simple.

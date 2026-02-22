@@ -47,7 +47,6 @@ import re
 from collections.abc import Mapping
 from typing import Any, Callable, Iterable, Literal, Sequence
 
-from box import Box
 
 # ==============================================================================
 # region CONSTANTS

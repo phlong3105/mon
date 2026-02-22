@@ -276,15 +276,15 @@ class ConvNeXt_Large_Weights(WeightsEnum):
 
 @BACKBONES.register(name="convnext_tiny", metaclass=ConvNeXtBackBone)
 def convnext_tiny(
-    weights: WeightsEnumLike = ConvNeXt_Tiny_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs
 ) -> ConvNeXtBackBone:
     """Create a ConvNeXt-Tiny backbone.
 
     Args:
-         weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ConvNeXt_Tiny_Weights.DEFAULT.
+         weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -307,15 +307,15 @@ def convnext_tiny(
 
 @BACKBONES.register(name="convnext_small", metaclass=ConvNeXtBackBone)
 def convnext_small(
-    weights: WeightsEnumLike = ConvNeXt_Small_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs
 ) -> ConvNeXtBackBone:
     """Create a ConvNeXt-Small backbone.
 
     Args:
-         weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ConvNeXt_Small_Weights.DEFAULT.
+         weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -338,15 +338,15 @@ def convnext_small(
 
 @BACKBONES.register(name="convnext_base", metaclass=ConvNeXtBackBone)
 def convnext_base(
-    weights: WeightsEnumLike = ConvNeXt_Base_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ConvNeXtBackBone:
     """Create a ConvNeXt-Base backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ConvNeXt_Base_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -369,15 +369,15 @@ def convnext_base(
 
 @BACKBONES.register(name="convnext_large", metaclass=ConvNeXtBackBone)
 def convnext_large(
-    weights: WeightsEnumLike = ConvNeXt_Large_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> ConvNeXtBackBone:
     """Create a ConvNeXt-Large backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ConvNeXt_Large_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

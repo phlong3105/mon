@@ -154,15 +154,15 @@ class AlexNet_Weights(WeightsEnum):
 
 @BACKBONES.register(name="alexnet", metaclass=AlexNetBackBone)
 def alexnet(
-    weights: WeightsEnumLike = AlexNet_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs
 ) -> AlexNetBackBone:
     """Create an AlexNet backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to AlexNet_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

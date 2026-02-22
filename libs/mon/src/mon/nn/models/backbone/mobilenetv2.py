@@ -177,15 +177,15 @@ class MobileNet_V2_Weights(WeightsEnum):
 
 @BACKBONES.register(name="mobilenet_v2", metaclass=MobileNetV2BackBone)
 def mobilenet_v2(
-    weights: WeightsEnumLike = MobileNet_V2_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> MobileNetV2BackBone:
     """Create a MobileNetV2 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to MobileNet_V2_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

@@ -263,14 +263,14 @@ class DenseNet201_Weights(WeightsEnum):
 
 @BACKBONES.register(name="densenet121", metaclass=DenseNetBackBone)
 def densenet121(
-    weights: WeightsEnumLike = DenseNet121_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> DenseNetBackBone:
     """Create a DenseNet-121 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
+        weights (WeightsLike, optional): Pre-trained weights to load.
             Defaults to DenseNet121_Weights.DEFAULT.
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -288,15 +288,15 @@ def densenet121(
 
 @BACKBONES.register(name="densenet161", metaclass=DenseNetBackBone)
 def densenet161(
-    weights: WeightsEnumLike = DenseNet161_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> DenseNetBackBone:
     """Create a DenseNet-161 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to DenseNet161_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -313,15 +313,15 @@ def densenet161(
 
 @BACKBONES.register(name="densenet169", metaclass=DenseNetBackBone)
 def densenet169(
-    weights: WeightsEnumLike = DenseNet169_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> DenseNetBackBone:
     """Create a DenseNet-169 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to DenseNet169_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -338,15 +338,15 @@ def densenet169(
 
 @BACKBONES.register(name="densenet201", metaclass=DenseNetBackBone)
 def densenet201(
-    weights: WeightsEnumLike = DenseNet201_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> DenseNetBackBone:
     """Create a DenseNet-201 backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to DenseNet201_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

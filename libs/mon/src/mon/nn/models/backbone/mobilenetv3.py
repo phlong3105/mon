@@ -224,15 +224,15 @@ class MobileNet_V3_Small_Weights(WeightsEnum):
 
 @BACKBONES.register(name="mobilenet_v3_large", metaclass=MobileNetV3BackBone)
 def mobilenet_v3_large(
-    weights: WeightsEnumLike = MobileNet_V3_Large_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> MobileNetV3BackBone:
     """Create a MobileNetV3-Large backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to MobileNet_V3_Large_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """
@@ -252,15 +252,15 @@ def mobilenet_v3_large(
 
 @BACKBONES.register(name="mobilenet_v3_small", metaclass=MobileNetV3BackBone)
 def mobilenet_v3_small(
-    weights: WeightsEnumLike = MobileNet_V3_Small_Weights.DEFAULT,
+    weights: WeightsLike = "default",
     out_indices: list[int] | None = None,
     *args, **kwargs,
 ) -> MobileNetV3BackBone:
     """Create a MobileNetV3 Small backbone.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to MobileNet_V3_Small_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
     """

@@ -201,12 +201,12 @@ class ZeroDCE_Weights(WeightsEnum):
 # --- Model Variants ---
 
 @MODELS.register(name="zero_dce", metaclass=ZeroDCE)
-def zero_dce(weights: WeightsEnumLike = ZeroDCE_Weights.DEFAULT, *args, **kwargs):
+def zero_dce(weights: WeightsLike = "default", *args, **kwargs):
     """Create a Zero-DCE model.
 
     Args:
-        weights (WeightsEnumLike, optional): Pre-trained weights to load.
-            Defaults to ZeroDCE_Weights.DEFAULT.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
     """
     return ZeroDCE(
         name="zero_dce",

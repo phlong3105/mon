@@ -9,25 +9,18 @@ This module defines various global constants used throughout the ``mon`` package
 from __future__ import annotations
 
 __all__ = [
-    "ALBUMENTATIONS",
-    "BACKBONES",
-    "DATASETS",
     "DIRS",
     "EXT",
-    "MODELS",
     "MONO_ROOT",
     "ROOT",
     "VERBOSE",
-    "WEIGHTS",
     "ZOO_ROOT",
 ]
 
 from types import SimpleNamespace
 
 from .dtype import ImageExtension, WeightExtension
-from .factory import DatasetFactory, Factory, ModelFactory, WeightsFactory
 from .path import Path
-
 
 # ==============================================================================
 # region PATHS
@@ -51,19 +44,6 @@ if _zoo_dir.exists():
     ZOO_ROOT = _zoo_dir
 else:
     ZOO_ROOT = MONO_ROOT / "zoo"
-
-# endregion
-
-
-# ==============================================================================
-# region FACTORIES
-# ==============================================================================
-
-ALBUMENTATIONS: Factory = Factory(name="Albumentations", decamelize=False)
-DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=True)
-BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=True)
-MODELS: ModelFactory = ModelFactory(name="Models", decamelize=True)
-WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=True)
 
 # endregion
 

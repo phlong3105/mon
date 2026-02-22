@@ -23,10 +23,12 @@ from typing import Any, Callable, TypeVar
 import torch
 from box import Box
 
-from mon.core.constants import DATASETS, MODELS, ZOO_ROOT
+from mon.core.console import console, log, log_error, pprint_dict
+from mon.core.constants import ZOO_ROOT
 from mon.core.context import sys_ctx
-from mon.core.data import create_weights
+from mon.core.data import Weights
 from mon.core.dtype import RunMode, Task
+from mon.core.factory import DATASETS, MODELS, WEIGHTS
 from mon.core.filesystem import (
     resolve_output_dir,
     resolve_save_dir,
@@ -40,16 +42,7 @@ from mon.core.typing import (
     RunModeLike,
     TaskLike,
 )
-from mon.core.ui import (
-    Confirm,
-    console,
-    log,
-    log_error,
-    OptionPrompt,
-    PathPrompt,
-    pprint_dict,
-    Prompt,
-)
+from mon.core.ui import Confirm, OptionPrompt, PathPrompt, Prompt
 from mon.core.utils import is_valid_str, merge_dicts
 
 # ==============================================================================
@@ -237,7 +230,7 @@ class Config:
     a default schema and validation for the configuration attributes.
     """
 
-    _DEFAULT_SCHEMA: dict = {
+    _DEFAULT_SCHEMA: Box = Box({
         # --- General ---
         "config_file": None,
         "hostname": "localhost",
@@ -246,15 +239,15 @@ class Config:
         "output_dir": None,
         "task": "",
         "mode": "",
-        "device": None,
+        "device": torch.device("cpu"),
         "seed": 0,
 
         # --- Model ---
         "model": {
             "name": "",
             "arch": "",
-            "weights": None,
-            "finetune": None,
+            "weights": Weights(path=None),
+            "finetune": Weights(path=None),
         },
 
         # --- Data ---
@@ -310,7 +303,7 @@ class Config:
         "near_src": False,
         "exist_ok": True,
         "verbose": True,
-    }
+    })
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -332,28 +325,64 @@ class Config:
             **kwargs: Additional keyword arguments for configuration updates.
         """
         # Allocate resources
-        if not config:
-            config = Box(self._DEFAULT_SCHEMA)
-        elif isinstance(config, dict):
-            config = Box(config)
-        if not isinstance(config, Box):
-            raise TypeError(
-                f"Expected 'value' to be a Box-like dictionary, "
-                f"but got {type(config).__name__}."
-            )
-        self._config: Box = config
+        self._config: Box = copy.deepcopy(self._DEFAULT_SCHEMA)
 
         # Assign attributes
         self.root = root
         self.config_file = config_file
         self.cli_kwargs = kwargs
 
+        if config:
+            self.update_from_dict(config)
         if self.config_file:
             # If a config file is given, load it and update the default config
             self.update_from_yaml(self.config_file)
         if self.cli_kwargs:
             # If arguments are given from CLI, update the config
             self.update_from_cli(self.cli_kwargs)
+
+    # --- Attribute Access ---
+    def __getattr__(self, name: str) -> Any:
+        """Called only if the attribute was not found in the usual places.
+
+        Triggered ONLY when an attribute is NOT found via normal lookup
+        (i.e., it's not a @property and not a standard attribute).
+        We catch it here and forward it to the internal Box.
+        """
+        # Guard against Python's internal checks before ``self._config`` is
+        # initialized
+        if "_config" not in self.__dict__:
+            raise AttributeError(name)
+
+        # Delegate the lookup to the internal Box
+        try:
+            return getattr(self._config, name)
+        except AttributeError:
+            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{name}'")
+
+    def __setattr__(self, name: str, value: Any):
+        """Intercept every attribute assignment.
+
+        Intercepts ALL assignments to route data correctly between the wrapper
+        class and the internal Box.
+        """
+        # 1. Is it a defined @property? Let the base class trigger your setter.
+        if isinstance(getattr(self.__class__, name, None), property):
+            super().__setattr__(name, value)
+            return
+
+        # 2. Are we still inside __init__? Let the standard assignment happen.
+        # (This prevents infinite loops when setting ``self._config`` the first
+        # time)
+        if name == "_config" or "_config" not in self.__dict__:
+            super().__setattr__(name, value)
+            return
+
+        # 3. Otherwise, inject it directly into the inner Box!
+        self._config[name] = value
+
+    def get(self, key: str, default: Any = None) -> Any:
+        return self._config.get(key, default)
 
     # --- Properties ---
     @property
@@ -390,7 +419,7 @@ class Config:
         elif self.config_file:
             return self.config_file.stem
         else:
-            return self.model
+            return self.model_name
 
     @exp_name.setter
     def exp_name(self, value: str):
@@ -404,11 +433,12 @@ class Config:
     @root.setter
     def root(self, value: PathLike | None):
         """Set the project root directory."""
-        # root = resolve_project_root(value)
         root = Path(value).normalize() if is_valid_str(value) else None
         if root and root.is_dir():
             # If the given value is a valid directory, set it as the root
-           self._config.root = root
+            self._config.root = root
+        # else:
+            # self._config.root = resolve_project_root(Path.cwd())
 
     @property
     def output_dir(self) -> Path | None:
@@ -450,31 +480,41 @@ class Config:
             self._config.model.arch = value
 
     @property
-    def model(self) -> str:
+    def model_name(self) -> str:
         return self._config.model.name
 
-    @model.setter
-    def model(self, value: str | None):
+    @model_name.setter
+    def model_name(self, value: str | None):
         if is_valid_str(value):
             self._config.model.name = value
 
     @property
-    def weights(self) -> Path | None:
-        return self.config.model.weights
+    def weights(self) -> Weights | None:
+        return self._config.model.weights
 
     @weights.setter
-    def weights(self, value: PathLike | None):
-        if is_valid_str(value):
-            self.config.model.weights = Path(value)
+    def weights(self, value: Weights | PathLike | None):
+        if isinstance(value, Weights):
+            # If the value is already a Weights object, set it directly
+            self._config.model.weights = value
+        elif WEIGHTS.find_weights_obj(weights_path=value):
+            # If the value matches a registered weights object in WEIGHTS, use it
+            self._config.model.weights = WEIGHTS.find_weights_obj(weights_path=value)
+        elif is_valid_str(value):
+            # If the value is a valid string, treat it as a path and create a
+            # Weights object
+            self._config.model.weights = Weights(path=value)
 
     @property
-    def finetune(self) -> Path | None:
+    def finetune(self) -> Weights | None:
         return self._config.model.finetune
 
     @finetune.setter
-    def finetune(self, value: PathLike | None):
-        if is_valid_str(value):
-            self._config.model.finetune = Path(value)
+    def finetune(self, value: Weights | PathLike | None):
+        if isinstance(value, Weights):
+            self._config.model.finetune = value
+        elif is_valid_str(value):
+            self._config.model.finetune = Weights(path=value)
 
     @property
     def data(self) -> list[PathLike]:
@@ -507,10 +547,6 @@ class Config:
     @device.setter
     def device(self, value: DeviceLike):
         self._config.device = sys_ctx.get_torch_device(value)
-
-    @property
-    def seed(self) -> int:
-        return self._config.seed
 
     @property
     def benchmark(self) -> bool:
@@ -588,11 +624,11 @@ class Config:
 
     @property
     def model_dir(self) -> Path | None:
-        return MODELS.get_model_dir(self.model)
+        return MODELS.get_model_dir(self.model_name)
 
     @property
     def config_files(self) -> list[Path]:
-        model = self.model
+        model = self.model_name
         config_dir = self.config_dir
         config_files = config_dir.files(
             f"*{model}*.yaml", f"*{model}*.yml",
@@ -609,7 +645,7 @@ class Config:
 
     @property
     def weights_files(self) -> list[Path]:
-        model = self.model
+        model = self.model_name
         run_dir = self.run_dir
         weights_files = run_dir.files(
             f"*{model}*.pt", f"*{model}*.pth",
@@ -677,9 +713,6 @@ class Config:
             near_src=self.near_src,
         )
 
-    def get(self, key: str, default: Any = None) -> Any:
-        return self._config.get(key, default)
-
     # --- Mutation ---
     def update_from_yaml(self, path: PathLike):
         """Update the current configuration with values from a YAML file."""
@@ -694,8 +727,9 @@ class Config:
             )
 
         new_config = Box.from_yaml(filename=path)
-        merged_config = merge_dicts(self._config, new_config)
-        self._config = Box(merged_config)
+        # merged_config = merge_dicts(self._config, new_config)
+        # self._config = Box(merged_config)
+        self.update_from_dict(new_config)
         self.config_file = path
 
     def update_from_cli(self, value: dict):
@@ -703,10 +737,11 @@ class Config:
         for k, v in value.items():
             if v is None:
                 continue
+
             if k == "arch":
                 self.arch = v
             elif k == "model":
-                self.model = v
+                self.model_name = v
             elif k == "weights":
                 self.weights = v
             elif k == "config":
@@ -719,8 +754,44 @@ class Config:
 
     def update_from_dict(self, value: DictLike):
         """Update the current configuration with values from a dictionary."""
+        """
         merged_config = merge_dicts(self.config, value)
         self._config = Box(merged_config)
+        """
+
+        for key, val in value.items():
+            if val is None:
+                continue
+
+            # Check if this key has a dedicated @property setter in this class
+            if hasattr(self.__class__, key) and isinstance(getattr(self.__class__, key), property):
+                # This perfectly triggers your validation! (e.g., self.device = val)
+                setattr(self, key, val)
+            else:
+                # If no setter exists, just update the Box dynamically
+                if isinstance(val, dict) and key in self._config:
+                    # self._config[key].merge_update(val) # Box's built-in deep merge
+                    self._config[key] = Box(merge_dicts(self._config[key], val))
+                else:
+                    self._config[key] = val
+
+    def _force_validation(self, *properties):
+        """Forces existing config values to pass through their property setters.
+
+        Args:
+            *properties: The names of the @property attributes to validate
+                (e.g., 'root', 'arch', 'model_name').
+        """
+        for prop in properties:
+            # Check if this string actually corresponds to a @property on the class
+            if (
+                hasattr(self.__class__, prop)
+                and isinstance(getattr(self.__class__, prop), property)
+            ):
+                # getattr(self, prop) uses your custom getter to find the value (even nested ones!)
+                # setattr(self, prop, ...) routes it through your custom setter for validation
+                current_value = getattr(self, prop)
+                setattr(self, prop, current_value)
 
     # --- Transformation ---
     def prepare_train(self) -> Box:
@@ -742,16 +813,10 @@ class Config:
             )
             self.root = Path.cwd()
 
-        # 1.2. Resolve config file
-        self.config_file = self.config_file
-
-        # 1.3. Resolve task and run mode
-        self.task = self.task
-        self.mode = self.mode
-
-        # 1.4. Resolve model's arch and name
-        self.arch = self.arch
-        self.model = self.model
+        # 1.2. Clean, explicit, and lint-friendly!
+        self._force_validation(
+            "config_file", "task", "mode", "arch", "model"
+        )
 
         # 1.5. Resolve device
         if not isinstance(self.device, torch.device):
@@ -780,7 +845,7 @@ class Config:
             else:
                 # Otherwise, use the model name and train dataset name
                 data = self.config.train_dataloader.dataset.name
-                self.exp_name = f"{self.model}_{data}"
+                self.exp_name = f"{self.model_name}_{data}"
 
         # 2.3. Resolve the output directory
         output_dir = Path(self.output_dir) if self.output_dir else None
@@ -789,7 +854,7 @@ class Config:
                 root=self.run_dir,
                 dirname="train",
                 arch=self.arch,
-                model=self.model,
+                model=self.model_name,
                 data=self.exp_name
             )
         else:
@@ -799,11 +864,13 @@ class Config:
 
         # 2.4. Resolve weights
         if self.weights:
-            weights = resolve_weights_file(self.root, self.weights)
-            self.weights = create_weights(weights)
+            # weights = resolve_weights_file(self.root, self.weights.path)
+            # self.weights = create_weights(weights)
+            self.weights.rectify_path(root=self.root)
         if self.finetune:
-            finetune = resolve_weights_file(self.root, self.finetune)
-            self.finetune = create_weights(finetune)
+            # finetune = resolve_weights_file(self.root, self.finetune.path)
+            # self.finetune = create_weights(finetune)
+            self.finetune.rectify_path(root=self.root)
 
         # Return the updated configuration
         return self.config
@@ -827,16 +894,10 @@ class Config:
             )
             self.root = Path.cwd()
 
-        # 1.2. Resolve config file
-        self.config_file = self.config_file
-
-        # 1.3. Resolve task and run mode
-        self.task = self.task
-        self.mode = self.mode
-
-        # 1.4. Resolve model's arch and name
-        self.arch = self.arch
-        self.model = self.model
+        # 1.2. Clean, explicit, and lint-friendly!
+        self._force_validation(
+            "config_file", "task", "mode", "arch", "model"
+        )
 
         # 1.5. Resolve device
         if not isinstance(self.device, torch.device):
@@ -854,7 +915,7 @@ class Config:
                 self.exp_name = config_file.stem
             else:
                 # Otherwise, use the model name and train dataset name
-                self.exp_name = self.model
+                self.exp_name = self.model_name
 
         # 2.3. Resolve the output directory
         output_dir = Path(self.output_dir) if self.output_dir else None
@@ -863,7 +924,7 @@ class Config:
                 root=self.run_dir,
                 dirname="predict",
                 arch=self.arch,
-                model=self.model
+                model=self.model_name
             )
         else:
             self.output_dir = output_dir.normalize()
@@ -872,11 +933,9 @@ class Config:
 
         # 2.4. Resolve weights
         if self.weights:
-            weights = resolve_weights_file(self.root, self.weights)
-            self.weights = create_weights(weights)
+            self.weights.rectify_path(root=self.root)
         if self.finetune:
-            finetune = resolve_weights_file(self.root, self.finetune)
-            self.finetune = create_weights(finetune)
+            self.finetune.rectify_path(root=self.root)
 
         # Return the updated configuration
         return self.config
@@ -1093,12 +1152,12 @@ class ConfigContext(Config):
             # print(f"Architecture: {self.arch}")
         if self._index == 3:
             # Model
-            self.model = OptionPrompt.ask(
+            self.model_name = OptionPrompt.ask(
                 prompt=ARGUMENTS.model.prompt_text,
-                default=self.model,
+                default=self.model_name,
                 choices=MODELS.search(self.arch, self.task)
             )
-            # print(f"Model: {self.model}")
+            # print(f"Model: {self.model_name}")
         if self._index == 4:
             # Config file
             self.config_file = PathPrompt.ask(
@@ -1119,7 +1178,7 @@ class ConfigContext(Config):
             # Weights
             self.weights = PathPrompt.ask(
                 prompt=ARGUMENTS.weights.prompt_text,
-                default=resolve_weights_file(self.root, self.weights),
+                default=resolve_weights_file(self.root, self.weights.path),
                 choices=self.weights_files,
                 truncate_length=60,
                 truncate_side="middle",

@@ -60,7 +60,7 @@ def run(config: Config):
     weights = config.weights or config.finetune
 
     # 4. Define model
-    model = zero_dce(weights=weights, *config.network)
+    model = zero_dce(weights=weights, **config.model)
     model = model.to(device)
     model.eval()
 

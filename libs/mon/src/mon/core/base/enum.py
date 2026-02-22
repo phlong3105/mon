@@ -9,27 +9,97 @@ This module provides enhanced Enum classes with additional functionality.
 from __future__ import annotations
 
 __all__ = [
-    "DefaultEnumMeta",
+    "AddValue",
+    "AddValueEnum",
+    "AutoNumberEnum",
+    "Constant",
+    "EJECT",
     "Enum",
+    "EnumMeta",
     "EnumType",
     "Flag",
+    "FlagBoundary",
     "IntEnum",
     "IntFlag",
+    "KEEP",
+    "LowerStrEnum",
+    "MagicValue",
+    "Member",
+    "MultiStrEnum",
+    "MultiValue",
+    "MultiValueEnum",
+    "NamedConstant",
+    "NamedTuple",
+    "NoAlias",
+    "NoAliasEnum",
+    "NonMember",
+    "OrderedEnum",
     "ReprEnum",
+    "SqliteEnum",
     "StrEnum",
+    "Unique",
+    "UniqueEnum",
+    "UpperStrEnum",
+    "add_stdlib_integration",
+    "bin",
+    "constant",
+    "enum",
+    "enum_property",
+    "extend_enum",
+    "member",
+    "no_arg",
+    "nonmember",
+    "property",
+    "remove_stdlib_integration",
+    "skip",
+    "unique",
 ]
 
-from enum import (
+from aenum import (
+    add_stdlib_integration,
+    AddValue,
+    AddValueEnum,
+    AutoNumberEnum,
+    bin,
+    Constant,
+    constant,
+    EJECT,
     Enum,
+    enum,
+    enum_property,
     EnumMeta,
     EnumType,
+    extend_enum,
     Flag,
+    FlagBoundary,
     IntEnum,
     IntFlag,
+    KEEP,
+    LowerStrEnum,
+    MagicValue,
+    Member,
+    member,
+    MultiValue,
+    MultiValueEnum,
+    NamedConstant,
+    NamedTuple,
+    no_arg,
+    NoAlias,
+    NoAliasEnum,
+    NonMember,
+    nonmember,
+    OrderedEnum,
+    property,
+    remove_stdlib_integration,
     ReprEnum,
+    skip,
+    SqliteEnum,
     StrEnum as StrEnum_,
+    Unique,
+    unique,
+    UniqueEnum,
+    UpperStrEnum,
 )
-from typing import Any, override
 
 
 # ==============================================================================
@@ -37,6 +107,25 @@ from typing import Any, override
 # ==============================================================================
 
 class StrEnum(StrEnum_):
+
+    # --- Lifecycle & Initialization ---
+    @classmethod
+    def _missing_(cls, value):
+        # 1. If no value is passed (None), return the first member
+        if value is None:
+            return list(cls)[0]
+
+        # 2. If the user explicitly passes the string "default",
+        # return the first member if "DEFAULT" is not defined, otherwise return
+        # the "DEFAULT" member
+        if value == "default":
+            if "DEFAULT" in cls.__members__:
+                return cls.DEFAULT
+            else:
+                return list(cls)[0]
+
+        # 3. Otherwise, it's an invalid extension
+        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
 
     # --- Retrieval ---
     @classmethod
@@ -49,29 +138,45 @@ class StrEnum(StrEnum_):
         """Returns a list of all enum member values."""
         return [member.value for member in cls]
 
-# endregion
 
+class MultiStrEnum(str, MultiValueEnum):
 
-# ==============================================================================
-# region MIXINS
-# ==============================================================================
-
-class DefaultEnumMeta(EnumMeta):
-    """Metaclass for Enums with default member support."""
-
-    # --- Callable & Context Manager ---
-    @override
-    def __call__(cls, value: Any, *args, **kwargs):
-        # If no value is passed, return the first member
+    # --- Lifecycle & Initialization ---
+    @classmethod
+    def _missing_(cls, value):
         if value is None:
-            return list(cls)[0]
+            # 1. Route 'None' to act exactly as if the user typed "default"
+            try:
+                return cls("default")
+            except ValueError:
+                # 2. Safety net: If this specific Enum doesn't have a "default" alias,
+                # safely fall back to the very first item in the Enum.
+                return list(cls)[0]
 
-        # If the value is "default", return the DEFAULT member
-        if value == "default":
-            return getattr(cls, "DEFAULT", list(cls)[0])
+        # 3. If it's not None, and not a valid string, crash cleanly.
+        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
 
-        # Otherwise, behave like a normal Enum
-        return super().__call__(value, *args, **kwargs)
+    # --- Representation ---
+    def __str__(self) -> str:
+        """Informal string representation for end-users (print)."""
+        return self.value
+
+    def __format__(self, format_spec: str) -> str:
+        """Custom behavior for f-string formatting."""
+        return str.__format__(self.value, format_spec)
+
+    # --- Retrieval ---
+    @classmethod
+    def names(cls) -> list[str]:
+        """Returns a list of all enum member names."""
+        return [member.name for member in cls]
+
+    @classmethod
+    def values(cls) -> list[str]:
+        """Returns a list of all primary enum member values."""
+        # return [member.value for member in cls]
+        # _value2member_map_ contains every primary value and alias as its keys
+        return list(cls._value2member_map_.keys())
 
 # endregion
 
