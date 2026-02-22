@@ -24,7 +24,7 @@ import torch
 from box import Box
 
 from mon.core.console import console, log, log_error, pprint_dict
-from mon.core.constants import ZOO_ROOT
+from mon.core.constants import K
 from mon.core.context import sys_ctx
 from mon.core.data import Weights
 from mon.core.dtype import RunMode, Task
@@ -512,8 +512,14 @@ class Config:
     @finetune.setter
     def finetune(self, value: Weights | PathLike | None):
         if isinstance(value, Weights):
+            # If the value is already a Weights object, set it directly
             self._config.model.finetune = value
+        elif WEIGHTS.find_weights_obj(weights_path=value):
+            # If the value matches a registered weights object in WEIGHTS, use it
+            self._config.model.finetune = WEIGHTS.find_weights_obj(weights_path=value)
         elif is_valid_str(value):
+            # If the value is a valid string, treat it as a path and create a
+            # Weights object
             self._config.model.finetune = Weights(path=value)
 
     @property
@@ -652,10 +658,10 @@ class Config:
             recursive=True
         ) if run_dir else []
 
-        weights_files += ZOO_ROOT.files(
+        weights_files += K.ZOO_ROOT.files(
             f"*{model}*.pt", f"*{model}*.pth",
             recursive=True
-        ) if ZOO_ROOT else []
+        ) if K.ZOO_ROOT else []
         return weights_files
 
     def resolve_save_dir(

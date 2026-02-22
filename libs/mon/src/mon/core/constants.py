@@ -9,12 +9,7 @@ This module defines various global constants used throughout the ``mon`` package
 from __future__ import annotations
 
 __all__ = [
-    "DIRS",
-    "EXT",
-    "MONO_ROOT",
-    "ROOT",
-    "VERBOSE",
-    "ZOO_ROOT",
+    "K",
 ]
 
 from types import SimpleNamespace
@@ -52,23 +47,28 @@ else:
 # region VALUES
 # ==============================================================================
 
-DIRS = SimpleNamespace(
-    DEBUG="debug",
-    DEPTH="depth",
-    IMAGE="image",
-    LABEL="label",
-    PRED="pred",
-    VISUALIZE="visualize",
-)
+class K(SimpleNamespace):
+    """Class for constants."""
 
-EXT = SimpleNamespace(
-    CKPT=WeightExtension.CKPT,
-    IMAGE=ImageExtension.JPG,
-    POINTCLOUD=".ply",
-    WEIGHTS=WeightExtension.PT,
-)
+    # --- Directories ---
+    ROOT = ROOT
+    MONO_ROOT = MONO_ROOT
+    ZOO_ROOT = ZOO_ROOT
 
-VERBOSE = True  # Global verbosity flag for internal logging
+    DEBUG_DIR = "debug"
+    DEPTH_DIR = "depth"
+    IMAGE_DIR = "image"
+    LABEL_DIR = "label"
+    PRED_DIR = "pred"
+    VIS_DIR = "vis"
+
+    # --- Extensions ---
+    CKPT_EXT = WeightExtension.CKPT
+    IMAGE_EXT = ImageExtension.JPG
+    WEIGHTS_EXT = WeightExtension.PT
+
+    # --- Logging ---
+    VERBOSE = True
 
 # endregion
 

@@ -57,10 +57,10 @@ def run(config: Config):
     sys_ctx.set_random_seed(config.seed)
 
     # 3. Resolve pre-trained weights
-    weights = config.weights or config.finetune
+    # weights = config.weights or config.finetune
 
     # 4. Define model
-    model = zero_dce(weights=weights, **config.model)
+    model = zero_dce(**config.model)
     model = model.to(device)
     model.eval()
 

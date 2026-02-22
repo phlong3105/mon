@@ -58,7 +58,7 @@ class Device:
     """
 
     name: str
-    type: DeviceType
+    type: DeviceType | str
     index: int = -1
 
     # --- Lifecycle & Initialization ---

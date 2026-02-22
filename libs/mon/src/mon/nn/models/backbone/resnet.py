@@ -40,15 +40,14 @@ from torchvision.models.resnet import BasicBlock, Bottleneck, ResNet
 from mon.core import (
     BACKBONES,
     is_weights_type,
+    K,
     log,
     Path,
     Task,
     WEIGHTS,
     Weights,
     WeightsEnum,
-    WeightsEnumLike,
     WeightsLike,
-    ZOO_ROOT,
 )
 from mon.nn.models.mixins import ModelRegisterMixin
 
@@ -162,7 +161,7 @@ class ResNetBackBone(ModelRegisterMixin, nn.Module):
 class ResNet18_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet18/imagenet1k_v1/resnet18_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/resnet18-f37072fd.pth"),
         num_classes=1000,
         transforms=None,
@@ -189,7 +188,7 @@ class ResNet18_Weights(WeightsEnum):
 class ResNet34_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet34/imagenet1k_v1/resnet34_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/resnet34-b627a593.pth"),
         num_classes=1000,
         transforms=None,
@@ -216,7 +215,7 @@ class ResNet34_Weights(WeightsEnum):
 class ResNet50_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet50/imagenet1k_v1/resnet50_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/resnet50-0676ba61.pth"),
         num_classes=1000,
         transforms=None,
@@ -237,7 +236,7 @@ class ResNet50_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet50/imagenet1k_v2/resnet50_imagenet1k_v2.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet50/imagenet1k_v2/resnet50_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/resnet50-11ad3fa6.pth"),
         num_classes=1000,
         transforms=None,
@@ -267,7 +266,7 @@ class ResNet50_Weights(WeightsEnum):
 class ResNet101_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet101/imagenet1k_v1/resnet101_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/resnet101-63fe2227.pth"),
         num_classes=1000,
         transforms=None,
@@ -288,7 +287,7 @@ class ResNet101_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet101/imagenet1k_v2/resnet101_imagenet1k_v2.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet101/imagenet1k_v2/resnet101_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/resnet101-cd907fc2.pth"),
         num_classes=1000,
         transforms=None,
@@ -318,7 +317,7 @@ class ResNet101_Weights(WeightsEnum):
 class ResNet152_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet152/imagenet1k_v1/resnet152_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/resnet152-394f9c45.pth"),
         num_classes=1000,
         transforms=None,
@@ -339,7 +338,7 @@ class ResNet152_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnet152/imagenet1k_v2/resnet152_imagenet1k_v2.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnet152/imagenet1k_v2/resnet152_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/resnet152-f82ba261.pth"),
         num_classes=1000,
         transforms=None,
@@ -369,7 +368,7 @@ class ResNet152_Weights(WeightsEnum):
 class ResNeXt50_32X4D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v1/resnext50_32x4d_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth"),
         num_classes=1000,
         transforms=None,
@@ -390,7 +389,7 @@ class ResNeXt50_32X4D_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v2/resnext50_32x4d_imagenet1k_v2.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnext50_32x4d/imagenet1k_v2/resnext50_32x4d_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/resnext50_32x4d-1a0047aa.pth"),
         num_classes=1000,
         transforms=None,
@@ -420,7 +419,7 @@ class ResNeXt50_32X4D_Weights(WeightsEnum):
 class ResNeXt101_32X8D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v1/resnext101_32x8d_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth"),
         num_classes=1000,
         transforms=None,
@@ -441,7 +440,7 @@ class ResNeXt101_32X8D_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v2/resnext101_32x8d_imagenet1k_v2.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnext101_32x8d/imagenet1k_v2/resnext101_32x8d_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/resnext101_32x8d-110c445d.pth"),
         num_classes=1000,
         transforms=None,
@@ -471,7 +470,7 @@ class ResNeXt101_32X8D_Weights(WeightsEnum):
 class ResNeXt101_64X4D_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/resnext101_64x4d/imagenet1k_v1/resnext101_64x4d_imagenet1k_v1.pt",
         url=Path("ttps://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth"),
         num_classes=1000,
         transforms=None,
@@ -501,7 +500,7 @@ class ResNeXt101_64X4D_Weights(WeightsEnum):
 class Wide_ResNet50_2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v1/wide_resnet50_2_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v1/wide_resnet50_2_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth"),
         num_classes=1000,
         transforms=None,
@@ -522,7 +521,7 @@ class Wide_ResNet50_2_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/wide_resnet50_2-9ba9bcbe.pth"),
         num_classes=1000,
         transforms=None,
@@ -552,7 +551,7 @@ class Wide_ResNet50_2_Weights(WeightsEnum):
 class Wide_ResNet101_2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/wide_resnet101_2/imagenet1k_v1/wide_resnet101_2_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/wide_resnet101_2/imagenet1k_v1/wide_resnet101_2_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth"),
         num_classes=1000,
         transforms=None,
@@ -573,7 +572,7 @@ class Wide_ResNet101_2_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=ZOO_ROOT / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pth",
+        path=K.ZOO_ROOT / "nn/backbone/resnet/wide_resnet50_2/imagenet1k_v2/wide_resnet50_2_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/wide_resnet101_2-d733dc28.pth"),
         num_classes=1000,
         transforms=None,

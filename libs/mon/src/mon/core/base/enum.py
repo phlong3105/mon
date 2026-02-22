@@ -64,8 +64,8 @@ from aenum import (
     Constant,
     constant,
     EJECT,
-    Enum,
     enum,
+    Enum as Enum_,
     enum_property,
     EnumMeta,
     EnumType,
@@ -105,6 +105,39 @@ from aenum import (
 # ==============================================================================
 # region BASE CLASSES
 # ==============================================================================
+
+class Enum(Enum_):
+
+    # --- Lifecycle & Initialization ---
+    @classmethod
+    def _missing_(cls, value):
+        # 1. If no value is passed (None), return the first member
+        if value is None:
+            return list(cls)[0]
+
+        # 2. If the user explicitly passes the string "default",
+        # return the first member if "DEFAULT" is not defined, otherwise return
+        # the "DEFAULT" member
+        if value == "default":
+            if "DEFAULT" in cls.__members__:
+                return cls.DEFAULT
+            else:
+                return list(cls)[0]
+
+        # 3. Otherwise, it's an invalid extension
+        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
+
+    # --- Retrieval ---
+    @classmethod
+    def names(cls):
+        """Returns a list of all enum member names."""
+        return [member.name for member in cls]
+
+    @classmethod
+    def values(cls):
+        """Returns a list of all enum member values."""
+        return [member.value for member in cls]
+
 
 class StrEnum(StrEnum_):
 
@@ -174,7 +207,11 @@ class MultiStrEnum(str, MultiValueEnum):
     @classmethod
     def values(cls) -> list[str]:
         """Returns a list of all primary enum member values."""
-        # return [member.value for member in cls]
+        return [member.value for member in cls]
+
+    @classmethod
+    def all_values(cls) -> list[str]:
+        """Returns a list of all enum member values, including aliases."""
         # _value2member_map_ contains every primary value and alias as its keys
         return list(cls._value2member_map_.keys())
 

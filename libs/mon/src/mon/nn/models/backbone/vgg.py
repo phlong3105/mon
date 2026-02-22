@@ -34,15 +34,14 @@ from torchvision.models.vgg import cfgs, make_layers, VGG
 from mon.core import (
     BACKBONES,
     is_weights_type,
+    K,
     log,
     Path,
     Task,
     WEIGHTS,
     Weights,
     WeightsEnum,
-    WeightsEnumLike,
     WeightsLike,
-    ZOO_ROOT,
 )
 from mon.nn.models.mixins import ModelRegisterMixin
 
@@ -145,7 +144,7 @@ class VGGBackBone(ModelRegisterMixin, nn.Module):
 class VGG11_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg11/imagenet1k_v1/vgg11_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg11-8a719046.pth"),
         num_classes=1000,
         transforms=None,
@@ -172,7 +171,7 @@ class VGG11_Weights(WeightsEnum):
 class VGG11_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg11_bn/imagenet1k_v1/vgg11_bn_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg11_bn-6002323d.pth"),
         num_classes=1000,
         transforms=None,
@@ -199,7 +198,7 @@ class VGG11_BN_Weights(WeightsEnum):
 class VGG13_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg13/imagenet1k_v1/vgg13_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg13-19584684.pth"),
         num_classes=1000,
         transforms=None,
@@ -226,7 +225,7 @@ class VGG13_Weights(WeightsEnum):
 class VGG13_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg13_bn/imagenet1k_v1/vgg13_bn_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg13_bn-abd245e5.pth"),
         num_classes=1000,
         transforms=None,
@@ -253,7 +252,7 @@ class VGG13_BN_Weights(WeightsEnum):
 class VGG16_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg16/imagenet1k_v1/vgg16_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg16-397923af.pth"),
         num_classes=1000,
         transforms=None,
@@ -280,7 +279,7 @@ class VGG16_Weights(WeightsEnum):
 class VGG16_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg16_bn/imagenet1k_v1/vgg16_bn_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg16_bn-6c64b313.pth"),
         num_classes=1000,
         transforms=None,
@@ -307,7 +306,7 @@ class VGG16_BN_Weights(WeightsEnum):
 class VGG19_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg19/imagenet1k_v1/vgg19_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg19-dcbb9e9d.pth"),
         num_classes=1000,
         transforms=None,
@@ -334,7 +333,7 @@ class VGG19_Weights(WeightsEnum):
 class VGG19_BN_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/vgg/vgg19_bn/imagenet1k_v1/vgg19_bn_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/vgg19_bn-c79401a0.pth"),
         num_classes=1000,
         transforms=None,

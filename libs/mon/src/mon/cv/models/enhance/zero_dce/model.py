@@ -88,8 +88,10 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            in_channels (int, optional): Number of input channels. Defaults to 3.
-            out_channels (int, optional): Number of output channels. Defaults to 24.
+            in_channels (int, optional): Number of input channels.
+                Defaults to 3.
+            out_channels (int, optional): Number of output channels.
+                Defaults to 24.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             weights (WeightsType, optional): Pre-trained weights to load.
                 Defaults to None.
@@ -189,7 +191,7 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
 class ZeroDCE_Weights(WeightsEnum):
 
     SICE_ME = Weights(
-        path=ZOO_ROOT / "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pth",
+        path=ZOO_ROOT / "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt",
         url=None,
         num_classes=None,
         transforms=None,

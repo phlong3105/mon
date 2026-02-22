@@ -20,16 +20,14 @@ from torchvision.models.alexnet import AlexNet
 from mon.core import (
     BACKBONES,
     is_weights_type,
+    K,
     log,
     Path,
     Task,
     WEIGHTS,
     Weights,
     WeightsEnum,
-    WeightsEnumLike,
     WeightsLike,
-    ZOO_ROOT,
-    MODELS,
 )
 from mon.nn.models.mixins import ModelRegisterMixin
 
@@ -127,7 +125,7 @@ class AlexNetBackBone(ModelRegisterMixin, nn.Module):
 class AlexNet_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=ZOO_ROOT / "nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pth",
+        path=K.ZOO_ROOT / "nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/alexnet-owt-7be5be79.pth"),
         num_classes=1000,
         transforms=None,
