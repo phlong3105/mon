@@ -108,6 +108,7 @@ class ResNetBackBone(ModelRegisterMixin, nn.Module):
 
         base_model = ResNet(block=block, layers=layers, *args, **kwargs)
 
+        # Load weights
         if is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:

@@ -79,6 +79,7 @@ class MobileNetV2BackBone(ModelRegisterMixin, nn.Module):
 
         base_model = MobileNetV2(*args, **kwargs)
 
+        # Load weights
         if isinstance(weights, WeightsEnum):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:

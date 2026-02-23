@@ -15,7 +15,7 @@ model:
   name: "zero_dce++"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "zero_dce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
-  out_channels: 24
+  out_channels: 3
   hidden_dim: 32
   scale_factor: 1.0
   weights: "cv/enhance/zero_dce/zero_dce++/sice_me/zero_dce++_sice_me.pt"  # (str) Path to model weights.

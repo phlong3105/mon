@@ -361,11 +361,14 @@ def zero_dce(weights: WeightsLike = "default", *args, **kwargs):
         weights (WeightsLike, optional): Pre-trained weights to load.
             Defaults to "default".
     """
+    in_channels = kwargs.pop("in_channels", 3)
+    out_channels = kwargs.pop("out_channels", 24)
+    hidden_dim = kwargs.pop("hidden_dim", 32)
     return ZeroDCE(
         name="zero_dce",
-        in_channels=3,
-        out_channels=24,
-        hidden_dim=32,
+        in_channels=in_channels,
+        out_channels=out_channels,
+        hidden_dim=hidden_dim,
         weights=ZeroDCE_Weights(weights),
         *args, **kwargs,
     )
@@ -379,12 +382,16 @@ def zero_dce_pp(weights: WeightsLike = "default", *args, **kwargs):
         weights (WeightsLike, optional): Pre-trained weights to load.
             Defaults to "default".
     """
+    in_channels = kwargs.pop("in_channels", 3)
+    out_channels = kwargs.pop("out_channels", 3)
+    hidden_dim = kwargs.pop("hidden_dim", 32)
+    scale_factor = kwargs.pop("scale_factor", 1)
     return ZeroDCEPP(
         name="zero_dce++",
-        in_channels=3,
-        out_channels=24,
-        hidden_dim=32,
-        scale_factor=1,
+        in_channels=in_channels,
+        out_channels=out_channels,
+        hidden_dim=hidden_dim,
+        scale_factor=scale_factor,
         weights=ZeroDCEPP_Weights(weights),
         *args, **kwargs,
     )

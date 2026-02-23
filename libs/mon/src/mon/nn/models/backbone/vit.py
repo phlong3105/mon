@@ -107,6 +107,7 @@ class ViTBackBone(ModelRegisterMixin, nn.Module):
             *args, **kwargs,
         )
 
+        # Load weights
         if is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:

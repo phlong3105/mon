@@ -136,7 +136,7 @@ def predict(config: Config):
                 # 7.2.5. Save debug
                 if config.save_debug:
                     # Save to: ".../debug/"
-                    save_dir = config.resolve_save_dir(K.PRED_DIR, src_path=path)
+                    save_dir = config.resolve_save_dir(K.DEBUG_DIR, src_path=path)
                     for k, v in debug.items():
                         save_path = save_dir / f"{path.stem}_{k}{K.IMAGE_EXT}"
                         write_image(v, save_path)

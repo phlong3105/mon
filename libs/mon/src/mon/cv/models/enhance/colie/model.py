@@ -30,8 +30,6 @@ current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 extern_path = current_dir / "extern" / "colie"
 if str(extern_path) not in sys.path:
-    # Add the project root to sys.path so 'import zero_dce' works
-    # even if you run this script from inside the folder
     sys.path.append(str(extern_path))
 
 try:
@@ -231,12 +229,16 @@ class CoLIE(ModelRegisterMixin, nn.Module):
 @MODELS.register(name="colie", metaclass=CoLIE)
 def colie(*args, **kwargs):
     """Create a CoLIE model."""
+    window_size = kwargs.get("window_size", 7)
+    hidden_dim = kwargs.get("hidden_dim", 256)
+    num_layers = kwargs.get("num_layers", 4)
+    add_layers = kwargs.get("add_layers", 2)
     return CoLIE(
         name="colie",
-        window_size=7,
-        hidden_dim=256,
-        num_layers=4,
-        add_layers=2,
+        window_size=window_size,
+        hidden_dim=hidden_dim,
+        num_layers=num_layers,
+        add_layers=add_layers,
         *args, **kwargs
     )
 
