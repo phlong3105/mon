@@ -15,6 +15,7 @@ __all__ = [
 from typing import Any
 
 import cv2
+from box import Box
 from torch.utils.data.dataloader import DataLoader as DataLoader_
 
 from .dataset import Dataset
@@ -99,7 +100,7 @@ class DataLoader(DataLoader_):
         dataset = config.pop("dataset", None)
 
         # Validate inputs
-        if not isinstance(dataset, dict):
+        if not isinstance(dataset, (Box, dict)):
             raise TypeError(
                 f"Expected 'dataset' to be a dictionary, "
                 f"but got {type(dataset).__name__}."

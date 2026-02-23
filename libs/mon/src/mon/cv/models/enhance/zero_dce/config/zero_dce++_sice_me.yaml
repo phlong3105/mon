@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "zero_dce_sice_me"  # (str) Experiment name.
+exp_name: "zero_dce++_sice_me"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -12,12 +12,13 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "zero_dce"  # (str) Model name (e.g., resnet50, yolov8n).
+  name: "zero_dce++"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "zero_dce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   out_channels: 24
   hidden_dim: 32
-  weights: "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt"  # (str) Path to model weights.
+  scale_factor: 1.0
+  weights: "cv/enhance/zero_dce/zero_dce++/sice_me/zero_dce++_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
@@ -80,7 +81,7 @@ lr_scheduler: ~
 lr_warmup_scheduler: ~
 
 loss:
-  L_tv_w: 200
+  L_tv_w: 1600
   L_spa_w: 1
   L_col_w: 5
   L_exp_w: 10

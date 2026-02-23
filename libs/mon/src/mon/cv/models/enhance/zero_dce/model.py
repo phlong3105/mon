@@ -9,14 +9,21 @@ References:
     - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
       Enhancement," CVPR 2020.
     - Code: https://github.com/Li-Chongyi/Zero-DCE
+
+    - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
+      Estimation," IEEE TPAMI 2022.
+    - Code: https://github.com/Li-Chongyi/Zero-DCE_extension
 """
 
 from __future__ import annotations
 
 __all__ = [
     "ZeroDCE",
+    "ZeroDCEPP",
+    "ZeroDCEPP_Weights",
     "ZeroDCE_Weights",
     "zero_dce",
+    "zero_dce_pp",
 ]
 
 import sys
@@ -48,9 +55,11 @@ if str(current_dir) not in sys.path:
 
 try:
     # Works when running as a module: python -m zero_dce.predict
+    from .module import DSConv
     from .utils import weights_init
 except ImportError:
     # Works when running as a script: python predict.py
+    from module import DSConv
     from utils import weights_init
 
 
@@ -163,10 +172,140 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
         y8 = y7 + r8 * (torch.pow(y7, 2) - y7)
 
         # Return final and intermediate results for debugging
-        outputs = { "enhanced": y8 }
+        outputs = { "enhanced": y8, "r": r }
         if save_debug:
             outputs |= {
-                "r": r,
+                "y1": y1,
+                "y2": y2,
+                "y3": y3,
+                "y4": y4,
+                "y5": y5,
+                "y6": y6,
+                "y7": y7,
+            }
+        return outputs
+
+
+class ZeroDCEPP(ModelRegisterMixin, nn.Module):
+    """ZeroDCE++ model for low-light image enhancement.
+
+    References:
+        - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
+          Estimation," IEEE TPAMI 2022.
+        - Code: https://github.com/Li-Chongyi/Zero-DCE_extension
+    """
+
+    arch: str = "zero_dce"
+    name: str = "zero_dce++"
+    tasks: list[Task] = [Task.ENHANCE]
+    model_dir: Path = current_dir
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        name: str,
+        in_channels: int = 3,
+        out_channels: int = 3,
+        hidden_dim: int = 32,
+        scale_factor: float = 1.0,
+        weights: WeightsLike | None = None,
+        verbose: bool = True,
+        *args, **kwargs
+    ):
+        """Initialize a new instance.
+
+        Args:
+            name (str): Name of the model variant.
+            in_channels (int, optional): Number of input channels.
+                Defaults to 3.
+            out_channels (int, optional): Number of output channels.
+                Defaults to 3.
+            hidden_dim (int, optional): Hidden dimension. Defaults to 32.
+            scale_factor (float, optional): Upsampling scale factor.
+                Defaults to 1.0.
+            weights (WeightsType, optional): Pre-trained weights to load.
+                Defaults to None.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
+        """
+        # Satisfy PyTorch's empty signature first.
+        super().__init__(name=name)
+        # Initialize RegistrableMixin
+        # ModelRegisterMixin.__init__(self, name=name)
+
+        # Assign attributes
+        self.verbose = verbose
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.hidden_dim = hidden_dim
+        self.scale_factor = scale_factor
+
+        # Define network
+        self.e_conv1 = DSConv(in_channels, hidden_dim)
+        self.e_conv2 = DSConv(hidden_dim, hidden_dim)
+        self.e_conv3 = DSConv(hidden_dim, hidden_dim)
+        self.e_conv4 = DSConv(hidden_dim, hidden_dim)
+        self.e_conv5 = DSConv(hidden_dim * 2, hidden_dim)
+        self.e_conv6 = DSConv(hidden_dim * 2, hidden_dim)
+        self.e_conv7 = DSConv(hidden_dim * 2, out_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool2d(2, 2, return_indices=False, ceil_mode=False)
+        self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
+
+        # Load weights
+        if is_weights_type(weights):
+            self.load_state_dict(weights.state_dict())
+            if self.verbose:
+                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+        else:
+            if self.verbose:
+                log(f"Initialized '{name}' from scratch.")
+
+    # --- Callable & Context Manager ---
+    def forward(self, image: Tensor, save_debug: bool = False) -> dict:
+        """Forward the input through the network.
+
+        Args:
+            image (Tensor): Image tensor of shape (B, 3, H, W) and values
+                ranging from 0.0 to 1.0.
+            save_debug (bool, optional): If True, return intermediate results
+                for debugging. Defaults to False.
+
+        Returns:
+            dict: Dictionary containing the enhanced image tensor and
+                intermediate results for debugging.
+        """
+        if self.scale_factor == 1:
+            x_down = image
+        else:
+            x_down = F.interpolate(image, scale_factor=1 / self.scale_factor, mode="bilinear")
+
+        x1 = self.relu(self.e_conv1(x_down))
+        x2 = self.relu(self.e_conv2(x1))
+        x3 = self.relu(self.e_conv3(x2))
+        x4 = self.relu(self.e_conv4(x3))
+        x5 = self.relu(self.e_conv5(torch.cat([x3, x4], 1)))
+        x6 = self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
+        r = F.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
+
+        if self.scale_factor == 1:
+            r = r
+        else:
+            r = self.upsample(r)
+
+        y0 = image
+        y1 = y0 + r * (torch.pow(y0, 2) - y0)
+        y2 = y1 + r * (torch.pow(y1, 2) - y1)
+        y3 = y2 + r * (torch.pow(y2, 2) - y2)
+        y4 = y3 + r * (torch.pow(y3, 2) - y3)
+        y5 = y4 + r * (torch.pow(y4, 2) - y4)
+        y6 = y5 + r * (torch.pow(y5, 2) - y5)
+        y7 = y6 + r * (torch.pow(y6, 2) - y6)
+        y8 = y7 + r * (torch.pow(y7, 2) - y7)
+
+        # Return final and intermediate results for debugging
+        outputs = { "enhanced": y8, "r": r }
+        if save_debug:
+            outputs |= {
                 "y1": y1,
                 "y2": y2,
                 "y3": y3,
@@ -199,6 +338,19 @@ class ZeroDCE_Weights(WeightsEnum):
     DEFAULT = SICE_ME
 
 
+@WEIGHTS.register(name="zero_dce++")
+class ZeroDCEPP_Weights(WeightsEnum):
+
+    SICE_ME = Weights(
+        path=K.ZOO_ROOT / "cv/enhance/zero_dce/zero_dce++/sice_me/zero_dce++_sice_me.pt",
+        url=None,
+        num_classes=None,
+        transforms=None,
+        meta={}
+    )
+    DEFAULT = SICE_ME
+
+
 # --- Model Variants ---
 
 @MODELS.register(name="zero_dce", metaclass=ZeroDCE)
@@ -215,6 +367,25 @@ def zero_dce(weights: WeightsLike = "default", *args, **kwargs):
         out_channels=24,
         hidden_dim=32,
         weights=ZeroDCE_Weights(weights),
+        *args, **kwargs,
+    )
+
+
+@MODELS.register(name="zero_dce++", metaclass=ZeroDCEPP)
+def zero_dce_pp(weights: WeightsLike = "default", *args, **kwargs):
+    """Create a Zero-DCE++ model.
+
+    Args:
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
+    """
+    return ZeroDCEPP(
+        name="zero_dce++",
+        in_channels=3,
+        out_channels=24,
+        hidden_dim=32,
+        scale_factor=1,
+        weights=ZeroDCEPP_Weights(weights),
         *args, **kwargs,
     )
 

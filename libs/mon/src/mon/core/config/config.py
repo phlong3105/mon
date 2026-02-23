@@ -810,11 +810,6 @@ class Config:
 
     def update_from_dict(self, value: DictLike):
         """Update the current configuration with values from a dictionary."""
-        """
-        merged_config = merge_dicts(self.config, value)
-        self._config = Box(merged_config)
-        """
-
         for key, val in value.items():
             if val is None:
                 continue
@@ -830,6 +825,10 @@ class Config:
                     self._config[key] = Box(merge_dicts(self._config[key], val))
                 else:
                     self._config[key] = val
+
+        self._force_validation(
+            "task", "mode", "arch", "model", "weights", "finetune"
+        )
 
     def prepare_for_train(self):
         """Prepare the current configuration for training.
@@ -909,7 +908,7 @@ class Config:
             # self.finetune = create_weights(finetune)
             self.finetune.rectify_path(root=self.root)
 
-    def prepare_for_predict(self) -> Config:
+    def prepare_for_predict(self):
         """Prepare the current configuration for prediction.
 
         We utilize the setters to resolve the attributes in the correct values

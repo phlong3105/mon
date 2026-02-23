@@ -9,6 +9,10 @@ References:
     - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
       Enhancement," CVPR 2020.
     - Code: https://github.com/Li-Chongyi/Zero-DCE
+
+    - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
+      Estimation," IEEE TPAMI 2022.
+    - Code: https://github.com/Li-Chongyi/Zero-DCE_extension
 """
 
 from __future__ import annotations
@@ -26,8 +30,10 @@ from mon import (
     create_progress_bar,
     K,
     metrics,
+    MODELS,
     parse_imgsz,
     Path,
+    RunMode,
     sys_ctx,
     TimeProfiler,
     to_image_array,
@@ -45,10 +51,10 @@ if str(current_dir) not in sys.path:
 
 try:
     # Works when running as a module: python -m zero_dce.predict
-    from .model import zero_dce
+    from .model import zero_dce, zero_dce_pp
 except ImportError:
     # Works when running as a script: python predict.py
-    from model import zero_dce
+    from model import zero_dce, zero_dce_pp
 
 
 # ==============================================================================
@@ -69,23 +75,27 @@ def predict(config: Config):
     # weights = config.weights or config.finetune
 
     # 4. Define model
-    model = zero_dce(**config.model)
+    imgsz = parse_imgsz(config.eval_imgsz)
+    scale_factor = config.model.get("scale_factor")
+    if scale_factor:
+         imgsz = (imgsz[0] // scale_factor, imgsz[1] // scale_factor)
+
+    model = MODELS.build(**config.model)
     model = model.to(device)
     model.eval()
 
     # 5. Run benchmark
     if config.benchmark:
-        metrics.benchmark(model)
+        metrics.benchmark(model, imgsz=imgsz)
 
     # 6. Define transforms
-    imgsz = parse_imgsz(config.eval_imgsz)
     transforms = T.Compose([
         T.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
         T.Normalize(normalization="min_max"),
         T.ToTensorV2(transpose_mask=True),
     ])
 
-    # 7. Process data
+    # 7. Prediction loop
     for src in config.data:
         # 7.1. Build dataset
         data_name, dataset = build_dataset(
@@ -153,7 +163,7 @@ def main():
         root=current_dir,
         config_file="zero_dce_sice_me.yaml",
     )
-    config = config_ctx.config_for("predict")
+    config = config_ctx.config_for(RunMode.PREDICT)
     predict(config)
 
 
