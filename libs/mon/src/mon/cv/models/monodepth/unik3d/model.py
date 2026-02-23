@@ -24,20 +24,23 @@ __all__ = [
 
 import sys
 
-from mon import nn
+from torch import nn
+
 from mon.core import (
-    MLType,
+    K,
     MODELS,
     Path,
     Task,
     WEIGHTS,
-    ZOO_ROOT,
+    Weights,
+    WeightsEnum,
+    WeightsLike,
 )
-from mon.core.types import Weights, WeightsEnum, WeightsType
+from mon.nn import ModelRegisterMixin
 
 current_file = Path(__file__).normalize()
-current_dir  = current_file.parents[0]
-extern_path  = current_dir / "extern" / "unik3d"
+current_dir = current_file.parents[0]
+extern_path = current_dir / "extern" / "unik3d"
 if str(extern_path) not in sys.path:
     sys.path.append(str(extern_path))
 
@@ -49,12 +52,10 @@ except ImportError:
 
 
 # ==============================================================================
-# region BASE CLASSES & MIXINS
+# region BASE CLASSES
 # ==============================================================================
 
-# --- Base Classes ---
-
-class UniK3D(nn.Module, nn.RegistrableMixin):
+class UniK3D(ModelRegisterMixin, nn.Module):
     """UniK3D model for monocular depth estimation.
 
     References:
@@ -62,42 +63,40 @@ class UniK3D(nn.Module, nn.RegistrableMixin):
         - Code: https://github.com/lpiccinelli-eth/UniK3D
     """
 
-    arch     : str          = "unik3d"
-    name     : str          = None
-    tasks    : list[Task]   = [Task.MONODEPTH]
-    mltypes  : list[MLType] = [MLType.SUPERVISED]
-    model_dir: Path         = current_dir
+    arch: str = "unik3d"
+    name: str = "unik3d"
+    tasks: list[Task] = [Task.MONODEPTH]
+    model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name   : str,
-        weights: WeightsType  | None = None,
-        verbose: bool                = True,
+        name: str,
+        weights: WeightsLike | None = None,
+        verbose: bool = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            name: Name of the model variant.
-            weights: Pre-trained weights to load. Defaults to None.
-            verbose: Verbosity mode. Defaults to True.
-            *args: Additional positional arguments for the base model.
-            **kwargs: Additional keyword arguments for the base model.
+            name (str): Name of the model.
+            weights (WeightsLike, optional): Pre-trained weights to load.
+                Defaults to None.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
-        super().__init__()
+        super().__init__(name=name)
         # Initialize RegistrableMixin
-        nn.RegistrableMixin.__init__(self, name=name)
+        # ModelRegisterMixin.__init__(self, name=name)
 
+        # Assign attributes
         self.verbose = verbose
 
-        # Load the base model
+        # Define model
         # UniK3D can be initialized with the weights path directly
-
         hf_model_name = name.replace("_", "-")
-        base_model    = unik3d.UniK3D.from_pretrained(f"lpiccinelli/{hf_model_name}")
-        # base_model    = unik3d.UniK3D.from_pretrained(model_id=str(weights.path))
+        base_model = unik3d.UniK3D.from_pretrained(f"lpiccinelli/{hf_model_name}")
+        # base_model = unik3d.UniK3D.from_pretrained(model_id=str(weights.path))
 
         # Assign the base model
         self.model = base_model
@@ -109,10 +108,6 @@ class UniK3D(nn.Module, nn.RegistrableMixin):
         Simply delegates the call to the underlying model.
         """
         return self.model.infer(*args, **kwargs)
-
-
-# --- Mixins ---
-
 
 # endregion
 
@@ -127,11 +122,11 @@ class UniK3D(nn.Module, nn.RegistrableMixin):
 class UniK3D_ViTS_Weights(WeightsEnum):
 
     PRETRAINED = Weights(
-        path        =ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vits/",
-        url         = None,
-        num_classes = None,
-        transforms  = None,
-        meta        = {}
+        path=K.ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vits/",
+        url=None,
+        num_classes=None,
+        transforms=None,
+        meta={}
     )
     DEFAULT = PRETRAINED
 
@@ -140,11 +135,11 @@ class UniK3D_ViTS_Weights(WeightsEnum):
 class UniK3D_ViTB_Weights(WeightsEnum):
 
     PRETRAINED = Weights(
-        path        =ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vitb",
-        url         = None,
-        num_classes = None,
-        transforms  = None,
-        meta        = {}
+        path=K.ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vitb",
+        url=None,
+        num_classes=None,
+        transforms=None,
+        meta={}
     )
     DEFAULT = PRETRAINED
 
@@ -153,11 +148,11 @@ class UniK3D_ViTB_Weights(WeightsEnum):
 class UniK3D_ViTL_Weights(WeightsEnum):
 
     PRETRAINED = Weights(
-        path        =ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vitl",
-        url         = None,
-        num_classes = None,
-        transforms  = None,
-        meta        = {}
+        path=K.ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vitl",
+        url=None,
+        num_classes=None,
+        transforms=None,
+        meta={}
     )
     DEFAULT = PRETRAINED
 
@@ -165,59 +160,47 @@ class UniK3D_ViTL_Weights(WeightsEnum):
 # --- Model Variants ---
 
 @MODELS.register(name="unik3d_vits", metaclass=UniK3D)
-def unik3d_vits(weights: WeightsEnum | str | None = UniK3D_ViTS_Weights.DEFAULT, *args, **kwargs):
+def unik3d_vits(weights: WeightsLike = "default", *args, **kwargs):
     """Create an UniK3D model.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to UniK3D_ViTS_Weights.DEFAULT.
-        args: Additional positional arguments for the SAM model.
-        kwargs: Additional keyword arguments for the SAM model.
-
-    Returns:
-        An UniK3D model instance.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
     """
     return UniK3D(
-        name    = "unik3d_vits",
-        weights = UniK3D_ViTS_Weights(weights),
+        name="unik3d_vits",
+        weights=UniK3D_ViTS_Weights(weights),
         *args, **kwargs
     )
 
 
 @MODELS.register(name="unik3d_vitb", metaclass=UniK3D)
-def unik3d_vitb(weights: WeightsEnum | str | None = UniK3D_ViTB_Weights.DEFAULT, *args, **kwargs):
+def unik3d_vitb(weights: WeightsLike = "default", *args, **kwargs):
     """Create an UniK3D model.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to UniK3D_ViT_B_Weights.DEFAULT.
-        args: Additional positional arguments for the SAM model.
-        kwargs: Additional keyword arguments for the SAM model.
-
-    Returns:
-        An UniK3D model instance.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
     """
     return UniK3D(
-        name    = "unik3d_vitb",
-        weights = UniK3D_ViTB_Weights(weights),
-        *args, **kwargs
+        name="unik3d_vitb",
+        weights=UniK3D_ViTB_Weights(weights),
+        *args, **kwargs,
     )
 
 
 @MODELS.register(name="unik3d_vitl", metaclass=UniK3D)
-def unik3d_vitl(weights: WeightsEnum | str | None = UniK3D_ViTL_Weights.DEFAULT, *args, **kwargs):
+def unik3d_vitl(weights: WeightsLike = "default", *args, **kwargs):
     """Create an UniK3D model.
 
     Args:
-        weights: Pre-trained weights to load. Defaults to UniK3D_ViT_L_Weights.DEFAULT.
-        args: Additional positional arguments for the SAM model.
-        kwargs: Additional keyword arguments for the SAM model.
-
-    Returns:
-        An UniK3D model instance.
+        weights (WeightsLike, optional): Pre-trained weights to load.
+            Defaults to "default".
     """
     return UniK3D(
-        name    = "unik3d_vitl",
-        weights = UniK3D_ViTL_Weights(weights),
-        *args, **kwargs
+        name="unik3d_vitl",
+        weights=UniK3D_ViTL_Weights(weights),
+        *args, **kwargs,
     )
 
 # endregion

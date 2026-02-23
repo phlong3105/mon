@@ -6,7 +6,6 @@
 This script provides a CLI for running Depth Anything V2 prediction on a given
 dataset.
 
-
 References:
     - Paper: "Depth Anything V2. A More Capable Foundation Model for Monocular
       Depth Estimation," NeurIPS 2024.
@@ -19,6 +18,7 @@ __all__ = []
 
 import sys
 
+import matplotlib
 import numpy as np
 import torch
 
@@ -101,6 +101,8 @@ def predict(config: Config):
         )
 
         # 7.2. Main processing loop
+        cmap = matplotlib.colormaps.get_cmap("Spectral_r")
+
         timers = TimeProfiler()
         timers.total.tick()
         with create_progress_bar() as pbar:
@@ -128,7 +130,7 @@ def predict(config: Config):
                     (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
                 ).astype("uint8")
                 depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-                # depth_c = depth.to_color(depth)
+                depth_c = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
                 timers.postprocess.tock()
 
                 # 7.2.4. Save
@@ -143,7 +145,7 @@ def predict(config: Config):
                     # Save to: ".../debug/"
                     save_path = config.resolve_save_file(K.DEBUG_DIR, src_path=path)
                     # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
-                    # write_image(depth_c, save_path)
+                    write_image(depth_c, save_path)
         timers.total.tock()
 
         # 7.3. Finish

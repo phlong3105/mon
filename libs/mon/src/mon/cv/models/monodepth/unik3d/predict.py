@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""UniK3D prediction script.
+"""Prediction Script.
 
 This script provides a command-line interface for running UniK3D prediction on
- given dataset.
+a given dataset.
 
 References:
     - Paper: "UniK3D: Universal Camera Monocular 3D Estimation," CVPR 2025.
@@ -15,21 +15,31 @@ from __future__ import annotations
 
 __all__ = []
 
-import copy
 import sys
-from functools import partial
 
-import box
+import matplotlib
 import numpy as np
 import torch
 
-import mon
-from mon.training import albumentations as A
+from mon import (
+    Config,
+    ConfigContext,
+    create_progress_bar,
+    K,
+    metrics,
+    MODELS,
+    parse_imgsz,
+    Path,
+    RunMode,
+    sys_ctx,
+    TimeProfiler,
+    transform as T,
+)
+from mon.cv import write_image
+from mon.dataset import build_dataset
 
-mon.preload()
-
-current_file = mon.Path(__file__).normalize()
-current_dir  = current_file.parents[0]
+current_file = Path(__file__).normalize()
+current_dir = current_file.parents[0]
 if str(current_dir) not in sys.path:
     # Add the project root to sys.path so 'import unik3d' works
     # even if you run this script from inside the folder
@@ -48,114 +58,99 @@ except ImportError:
 # ==============================================================================
 
 @torch.no_grad()
-def run(args: box.Box):
+def predict(config: Config):
     # 1. Summarize the current run
-    if args.verbose:
-        mon.print_run_summary(args)
+    if config.verbose:
+        config.log_summary()
 
     # 2. Setup environment
-    device = mon.create_device(args.device)
-    mon.set_random_seed(args.seed)
+    device = config.device
+    sys_ctx.set_random_seed(config.seed)
 
     # 3. Resolve pre-trained weights
-    weights = args.weights or args.resume or args.tuning
+    # weights = config.weights or config.finetune
 
     # 4. Define model
-    model = mon.MODELS.build(
-        name    = args.model,
-        arch    = args.arch,
-        weights = weights,
-        device  = device,
-        verbose = args.verbose,
-        **args.network,
-    )
+    imgsz = parse_imgsz(config.eval_imgsz)
+
+    model = MODELS.build(device=device, **config.model)
     model = model.to(device)
     model.eval()
 
     # 5. Run benchmark
-    if args.benchmark:
-        mon.metric.benchmark(model)
+    if config.benchmark:
+        metrics.benchmark(model, imgsz=imgsz)
 
-    # 6. Define I/O
-    imgsz     = args.imgsz if args.resize else (0, 0)
-    transform = A.Compose([
-        # A.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=1),
-        # A.Normalize(normalization="min_max"),  # Normalization will be taken care of by the model
-        A.ToTensorV2(transpose_mask=True),
+    # 6. Define transforms
+    transforms = T.Compose([
+        T.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataset = mon.build_dataset(src=args.data, root=args.root, transform=transform)
-    resolve_output_dir = partial(
-        mon.resolve_output_dir,
-        root         = args.save_dir,
-        dirname      = data_name,
-        subdir_name  = mon.DIRS.PRED,
-        keep_subdirs = args.keep_subdirs,
-        save_nearby  = args.save_nearby,
-    )
-    resolve_debug_dir = partial(
-        mon.resolve_output_dir,
-        root         = args.save_dir,
-        dirname      = data_name,
-        subdir_name  = mon.DIRS.DEBUG,
-        keep_subdirs = args.keep_subdirs,
-        save_nearby  = args.save_nearby,
-    )
 
-    # 7. Processing loop
-    timers = mon.TimeProfiler()
-    timers.total.tick()
-    with mon.create_progress_bar() as pbar:
-        for i, datapoint in pbar.track(
-            sequence    = enumerate(dataset),
-            total       = len(dataset),
-            description = f"[bright_yellow]Predicting"
-        ):
-            # 7.1. Pre-process
-            timers.preprocess.tick()
-            meta   = datapoint["meta"]
-            path   = mon.Path(meta["path"])
-            h0, w0 = mon.image.imgsz(meta["imgsz"])
-            image  = datapoint["image"]
-            timers.preprocess.tock()
+    # 7. Prediction loop
+    for src in config.data:
+        # 7.1. Build dataset
+        data_name, dataset = build_dataset(
+            src=src,
+            dataset_dir=config.data_dir,
+            transforms=transforms,
+        )
 
-            # 7.2. Inference
-            timers.infer.tick()
-            outputs = model(rgb=image, camera=None, normalize=True, rays=None)
-            timers.infer.tock()
+        # 7.2. Main processing loop
+        cmap = matplotlib.colormaps.get_cmap("Spectral_r")
 
-            # 7.3. Post-process
-            timers.postprocess.tick()
-            # Metric Depth Estimation
-            depth   = outputs["depth"]
-            depth   = depth.cpu().numpy().squeeze()
-            depth   = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-            depth_c = mon.depth.to_color(depth)
-            # Point Cloud in Camera Coordinate
-            points  = outputs["points"]
-            points  = points.permute(0, 2, 3, 1).reshape(-1, 3).cpu().numpy()
-            # Unprojected rays
-            rays    = outputs["rays"]
-            rays    = ((rays + 1) * 127.5).clip(0, 255)
-            rays    = rays.squeeze().permute(1, 2, 0).byte().cpu().numpy()
-            timers.postprocess.tock()
+        timers = TimeProfiler()
+        timers.total.tick()
+        with create_progress_bar() as pbar:
+            for i, datapoint in pbar.track(
+                sequence=enumerate(dataset),
+                total=len(dataset),
+                description=f"[bright_yellow]Predicting"
+            ):
+                # 7.2.1. Preprocess
+                timers.preprocess.tick()
+                meta = datapoint["meta"]
+                path = Path(meta["path"])
+                image = datapoint["image"]
+                timers.preprocess.tock()
 
-            # 7.4. Save
-            if args.save:
-                # Save to: ".../pred/"
-                out_dir  = resolve_output_dir(src_path=path)
-                out_path = out_dir / mon.DIRS.DEPTH / f"{path.stem}{mon.EXT.IMAGE}"
-                mon.image.write(depth, out_path)
+                # 7.2.2. Inference
+                timers.infer.tick()
+                outputs = model(rgb=image, camera=None, normalize=True, rays=None)
+                timers.infer.tock()
 
-            # 7.5. Save debug
-            if args.save_debug:
-                # Save to: ".../debug/"
-                out_dir  = resolve_debug_dir(src_path=path)
-                out_path = out_dir / mon.DIRS.DEPTH / f"{path.stem}{mon.EXT.IMAGE}"
-                mon.image.write(depth_c, out_path)
-    timers.total.tock()
+                # 7.2.3. Postprocess
+                timers.postprocess.tick()
+                # Metric depth estimation
+                depth = outputs["depth"]
+                depth = depth.cpu().numpy().squeeze()
+                depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
+                depth_c = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
+                # Point cloud in camera coordinate
+                points = outputs["points"]
+                points = points.permute(0, 2, 3, 1).reshape(-1, 3).cpu().numpy()
+                # Unprojected rays
+                rays = outputs["rays"]
+                rays = ((rays + 1) * 127.5).clip(0, 255)
+                rays = rays.squeeze().permute(1, 2, 0).byte().cpu().numpy()
+                timers.postprocess.tock()
 
-    # 8. Finish
-    timers.print()
+                # 7.2.4. Save
+                if config.save:
+                    # Save to: ".../pred/"
+                    save_path = config.resolve_save_file(K.DEPTH_DIR, src_path=path)
+                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
+                    write_image(depth, save_path)
+
+                # 7.2.5. Save debug
+                if config.save_debug:
+                    # Save to: ".../debug/"
+                    save_path = config.resolve_save_file(K.DEBUG_DIR, src_path=path)
+                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
+                    write_image(depth_c, save_path)
+        timers.total.tock()
+
+        # 7.3. Finish
+        timers.print()
 
 # endregion
 
@@ -165,20 +160,13 @@ def run(args: box.Box):
 # ==============================================================================
 
 def main():
-    # Parse CLI arguments
-    cli  = mon.parse_cli_args(root=current_file)
-    data = mon.to_list(cli.data)
-
-    # Run prediction for each dataset
-    for d in data:
-        cli_      = copy.deepcopy(cli)
-        cli_.data = d
-        args_     = mon.parse_predict_args(
-            cli        = cli_,
-            root       = current_dir,
-            model_root = current_dir,
-        )
-        run(args_)
+    # Load config
+    config_ctx = ConfigContext.from_cli(
+        root=current_dir,
+        config_file="unik3d_vitb.yaml",
+    )
+    config = config_ctx.config_for(RunMode.PREDICT)
+    predict(config)
 
 
 if __name__ == "__main__":

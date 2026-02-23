@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Depth Anything V2 models and pre-trained weights.
+"""Depth Anything V2.
 
 This module provides the Depth Anything V2 definition and pre-trained weights.
 
@@ -69,7 +69,7 @@ class DAV2(ModelRegisterMixin, nn.Module):
     """
 
     arch: str = "dav2"
-    name: str = ""
+    name: str = "dav2"
     tasks: list[Task] = [Task.MONODEPTH]
     model_dir: Path = current_dir
 
@@ -90,8 +90,20 @@ class DAV2(ModelRegisterMixin, nn.Module):
         """Initialize a new instance.
 
         Args:
-            name: Name of the model variant.
-            weights: Pre-trained weights to load. Defaults to None.
+            name (str): The name of the model.
+            encoder (str): The type of encoder to use (e.g., "vits", "vitb", "vitl").
+            features (int): The number of features in the encoder.
+            out_channels (list[int]): The number of output channels for each
+                stage.
+            use_bn (bool, optional): Whether to use batch normalization.
+                Defaults to False.
+            use_clstoken (bool, optional): Whether to use a CLS token.
+                Defaults to False.
+            device (torch.device, optional): The device to load the model on.
+                Defaults to CPU.
+            weights (WeightsLike, optional): Pre-trained weights to load.
+                Defaults to None.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)

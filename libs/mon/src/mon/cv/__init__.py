@@ -13,7 +13,7 @@ File Structure:
     ├── feature/        # Traditional CV (Edges, Corners, SIFT)
     ├── geometry/       # Camera calibration & 3D projections
     ├── io/             # I/O operations
-    ├── models/         # CV-specific architectures & backbones
+    ├── models/         # CV-specific architectures
     ├── ops/            # Operations
     └── utils/          # General purpose helpers
 """
