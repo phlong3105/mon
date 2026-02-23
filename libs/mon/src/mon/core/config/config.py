@@ -293,8 +293,10 @@ class Config:
         },
         "lr_scheduler": {},
         "lr_warmup_scheduler": {},
+        "loss": {},
 
         # --- Prediction ---
+        "eval_imgsz": None,
         "benchmark": False,
 
         # --- Saving & Visualization ---

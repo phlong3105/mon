@@ -101,7 +101,7 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
             out_channels (int, optional): Number of output channels.
                 Defaults to 24.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
-            weights (WeightsType, optional): Pre-trained weights to load.
+            weights (WeightsLike, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -223,7 +223,7 @@ class ZeroDCEPP(ModelRegisterMixin, nn.Module):
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             scale_factor (float, optional): Upsampling scale factor.
                 Defaults to 1.0.
-            weights (WeightsType, optional): Pre-trained weights to load.
+            weights (WeightsLike, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """

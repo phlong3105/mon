@@ -60,7 +60,7 @@ class AlexNetBackBone(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            weights (WeightsType, optional): Pre-trained weights to load.
+            weights (WeightsLike, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [2, 5, 8, 10, 12].
