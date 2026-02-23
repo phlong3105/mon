@@ -24,7 +24,7 @@ __all__ = [
 import requests
 
 from .console import log, log_error
-from .constants import ZOO_ROOT
+from .constants import zoo_root
 from .path import Path
 from .typing import PathLike
 from .ui import create_download_bar
@@ -289,7 +289,7 @@ def resolve_weights_dir(root: PathLike, weights_path: PathLike) -> Path | None:
         return local_dir
 
     # Check global zoo directory
-    global_dir = ZOO_ROOT / weights_path
+    global_dir = zoo_root / weights_path
     if global_dir.is_dir():
         return global_dir
 
@@ -323,7 +323,7 @@ def resolve_weights_file(root: PathLike, weights_file: PathLike) -> Path | None:
         return local_file
 
     # Check global zoo directory
-    global_file = ZOO_ROOT / weights_file
+    global_file = zoo_root / weights_file
     if global_file.is_weights_file(exist=True):
         return global_file
 

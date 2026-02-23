@@ -251,16 +251,16 @@ def write_image(image: TensorOrArray, path: PathLike):
     Raises:
         TypeError: If ``image`` is not a tensor or array.
     """
-    path = Path(path).normalize(exist=False, mkdir=True)
+    # Normalize inputs
+    path = Path(path).normalize()
 
-    # Handle tensor (B, C, H, W)
     if isinstance(image, Tensor):
+        # Handle tensor (B, C, H, W)
         # torchvision handles the [0, 1] -> [0, 255] conversion internally
         # We ensure it's on CPU before saving
         torchvision.utils.save_image(image.cpu(), str(path))
-
-    # Handle array (H, W, C)
     elif isinstance(image, ndarray):
+        # Handle array (H, W, C)
         # Ensure it's 8-bit for OpenCV
         if image.dtype != np.uint8:
             if image.max() <= 1.01:  # Check if it's normalized 0-1
@@ -276,7 +276,6 @@ def write_image(image: TensorOrArray, path: PathLike):
             elif image.shape[-1] == 4:
                 image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGRA)
         cv2.imwrite(str(path), image)
-
     else:
         raise TypeError(
             f"Expected 'image' to be a tensor or array, "

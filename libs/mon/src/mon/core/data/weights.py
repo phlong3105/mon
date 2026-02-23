@@ -25,7 +25,7 @@ import torch
 
 from mon.core.base.enum import Enum
 from mon.core.console import log
-from mon.core.constants import ZOO_ROOT
+from mon.core.constants import zoo_root
 from mon.core.path import Path
 from mon.core.typing import PathLike
 from mon.core.utils import is_valid_str
@@ -188,7 +188,7 @@ class Weights:
             self.path = local_file
 
         # Check global zoo directory
-        global_file = ZOO_ROOT / self.path
+        global_file = zoo_root / self.path
         if global_file.is_weights_file(exist=True):
             self.path = global_file
 

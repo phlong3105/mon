@@ -27,6 +27,7 @@ from torch.nn import functional as F
 
 from mon.core import (
     is_weights_type,
+    K,
     log,
     MODELS,
     Path,
@@ -34,9 +35,7 @@ from mon.core import (
     WEIGHTS,
     Weights,
     WeightsEnum,
-    WeightsEnumLike,
     WeightsLike,
-    ZOO_ROOT,
 )
 from mon.nn import ModelRegisterMixin
 
@@ -191,7 +190,7 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
 class ZeroDCE_Weights(WeightsEnum):
 
     SICE_ME = Weights(
-        path=ZOO_ROOT / "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt",
+        path=K.ZOO_ROOT / "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt",
         url=None,
         num_classes=None,
         transforms=None,

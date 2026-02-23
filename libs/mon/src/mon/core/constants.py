@@ -17,28 +17,27 @@ from types import SimpleNamespace
 from .dtype import ImageExtension, WeightExtension
 from .path import Path
 
+
 # ==============================================================================
 # region PATHS
 # ==============================================================================
 
 # Find the ``mon`` package root (first pyproject.toml up)
 current_file = Path(__file__).normalize()
-ROOT = current_file
+root = current_file
 for parent in current_file.parents:
     if (parent / "pyproject.toml").exists():
-        ROOT = parent
+        root = parent
         break
 
 # Find the monorepo root (highest pyproject.toml up)
-_all_roots = [p for p in ROOT.parents if (p / "pyproject.toml").exists()]
-MONO_ROOT = _all_roots[-1] if _all_roots else ROOT
+all_roots = [p for p in root.parents if (p / "pyproject.toml").exists()]
+mono_root = all_roots[-1] if all_roots else root
 
 # Find the model zoo directory (prefer root-level zoo if it exists)
-_zoo_dir = ROOT / "zoo"
-if _zoo_dir.exists():
-    ZOO_ROOT = _zoo_dir
-else:
-    ZOO_ROOT = MONO_ROOT / "zoo"
+zoo_root = root / "zoo"
+if not zoo_root.exists():
+    zoo_root = mono_root / "zoo"
 
 # endregion
 
@@ -51,9 +50,9 @@ class K(SimpleNamespace):
     """Class for constants."""
 
     # --- Directories ---
-    ROOT = ROOT
-    MONO_ROOT = MONO_ROOT
-    ZOO_ROOT = ZOO_ROOT
+    ROOT = root
+    MONO_ROOT = mono_root
+    ZOO_ROOT = zoo_root
 
     DEBUG_DIR = "debug"
     DEPTH_DIR = "depth"

@@ -15,17 +15,26 @@ from __future__ import annotations
 
 __all__ = []
 
-import copy
 import sys
-from functools import partial
 
 import cv2
 import torch
-from box import Box
 
-import mon
-from mon import sys_ctx, Path, Config
-from mon.dataset import transform as T
+from mon import (
+    Config,
+    ConfigContext,
+    create_progress_bar,
+    K,
+    metrics,
+    parse_imgsz,
+    Path,
+    sys_ctx,
+    TimeProfiler,
+    to_image_array,
+    transform as T,
+)
+from mon.cv import write_image
+from mon.dataset import build_dataset
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -47,7 +56,7 @@ except ImportError:
 # ==============================================================================
 
 @torch.no_grad()
-def run(config: Config):
+def predict(config: Config):
     # 1. Summarize the current run
     if config.verbose:
         config.log_summary()
@@ -66,78 +75,70 @@ def run(config: Config):
 
     # 5. Run benchmark
     if config.benchmark:
-        mon.metrics.benchmark(model)
+        metrics.benchmark(model)
 
-    # 6. Resolve I/O
-    imgsz = config.imgsz if config.resize else (0, 0)
-    transform = T.Compose([
+    # 6. Define transforms
+    imgsz = parse_imgsz(config.eval_imgsz)
+    transforms = T.Compose([
         T.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
         T.Normalize(normalization="min_max"),
         T.ToTensorV2(transpose_mask=True),
     ])
-    data_name, dataset = mon.build_dataset(src=config.data, root=config.root, transform=transform)
-    resolve_output_dir = partial(
-        mon.resolve_output_dir,
-        root=config.save_dir,
-        dirname=data_name,
-        subdir_name=mon.DIRS.PRED,
-        keep_subdirs=config.keep_subdirs,
-        save_nearby=config.save_nearby,
-    )
-    resolve_debug_dir = partial(
-        mon.resolve_output_dir,
-        root=config.save_dir,
-        dirname=data_name,
-        subdir_name=mon.DIRS.DEBUG,
-        keep_subdirs=config.keep_subdirs,
-        save_nearby=config.save_nearby,
-    )
 
-    # 7. Processing loop
-    timers = mon.TimeProfiler()
-    timers.total.tick()
-    with mon.create_progress_bar() as pbar:
-        for i, datapoint in pbar.track(
-            sequence=enumerate(dataset),
-            total=len(dataset),
-            description=f"[bright_yellow]Predicting"
-        ):
-            # 7.1. Preprocess
-            timers.preprocess.tick()
-            meta = datapoint["meta"]
-            path = mon.Path(meta["path"])
-            h0, w0 = mon.image.imgsz(meta["imgsz"])
-            image = datapoint["image"]
-            image = image.to(device)
-            timers.preprocess.tock()
+    # 7. Process data
+    for src in config.data:
+        # 7.1. Build dataset
+        data_name, dataset = build_dataset(
+            src=src,
+            dataset_dir=config.data_dir,
+            transforms=transforms,
+        )
 
-            # 7.2. Inference
-            timers.infer.tick()
-            outputs = model(image, save_debug=config.save_debug)
-            timers.infer.tock()
+        # 7.2. Main processing loop
+        timers = TimeProfiler()
+        timers.total.tick()
+        with create_progress_bar() as pbar:
+            for i, datapoint in pbar.track(
+                sequence=enumerate(dataset),
+                total=len(dataset),
+                description=f"[bright_yellow]Predicting"
+            ):
+                # 7.2.1. Preprocess
+                timers.preprocess.tick()
+                meta = datapoint["meta"]
+                path = Path(meta["path"])
+                h0, w0 = parse_imgsz(meta["imgsz"])
+                image = datapoint["image"]
+                image = image.to(device)
+                timers.preprocess.tock()
 
-            # 7.3. Post-process
-            timers.postprocess.tick()
-            enhanced = outputs["enhanced"]
-            enhanced = mon.image.to_array(enhanced)
-            h1, w1 = mon.image.imgsz(enhanced)
-            if (h1, w1) != (h0, w0):
-                enhanced = cv2.resize(enhanced, (w0, h0))
-            timers.postprocess.tock()
+                # 7.2.2. Inference
+                timers.infer.tick()
+                outputs = model(image, save_debug=config.save_debug)
+                timers.infer.tock()
 
-            # 7.4. Save
-            if config.save:
-                # Save to: ".../pred/"
-                out_dir = resolve_output_dir(src_path=path)
-                out_path = out_dir / f"{path.stem}{mon.EXT.IMAGE}"
-                mon.image.write(enhanced, out_path)
+                # 7.2.3. Postprocess
+                timers.postprocess.tick()
+                enhanced = outputs["enhanced"]
+                enhanced = to_image_array(enhanced)
+                h1, w1 = parse_imgsz(enhanced)
+                if (h1, w1) != (h0, w0):
+                    enhanced = cv2.resize(enhanced, (w0, h0))
+                timers.postprocess.tock()
 
-            # 7.5. Save debug
-            # Do nothing
-    timers.total.tock()
+                # 7.2.4. Save
+                if config.save:
+                    # Save to: ".../pred/"
+                    save_path = config.resolve_save_file(K.PRED_DIR, src_path=path)
+                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
+                    write_image(enhanced, save_path)
 
-    # 8. Finish
-    timers.print()
+                # 7.2.5. Save debug
+                # Do nothing
+        timers.total.tock()
+
+        # 7.3. Finish
+        timers.print()
 
 # endregion
 
@@ -147,20 +148,13 @@ def run(config: Config):
 # ==============================================================================
 
 def main():
-    # Parse CLI arguments
-    cli  = mon.parse_cli_args(root=current_file)
-    data = mon.to_list(cli.data)
-
-    # Run prediction for each dataset
-    for d in data:
-        cli_      = copy.deepcopy(cli)
-        cli_.data = d
-        args_     = mon.parse_predict_args(
-            cli        = cli_,
-            root       = current_dir,
-            model_root = current_dir,
-        )
-        run(args_)
+    # Load config
+    config_ctx = ConfigContext.from_cli(
+        root=current_dir,
+        config_file="zero_dce_sice_me.yaml",
+    )
+    config = config_ctx.config_for("predict")
+    predict(config)
 
 
 if __name__ == "__main__":

@@ -232,8 +232,9 @@ class Config:
 
     _DEFAULT_SCHEMA: Box = Box({
         # --- General ---
-        "config_file": None,
         "hostname": "localhost",
+        "config_file": None,
+
         "exp_name": "",
         "root": None,
         "output_dir": None,
@@ -695,17 +696,12 @@ class Config:
             >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image_zerodce
 
         Args:
-            output_dir (PathLike): Path to the output directory.
             dirname (str): Directory name to append to the output path
                 (e.g., 'pred', 'debug').
             subdirname (str): Subdirectory name to append to the output path
                 (e.g., 'debug'/'mask'). Defaults to "".
             src_path (PathLike, optional): Source path to determine the subdirectory
                 hierarchy. Defaults to None.
-            keep_subdirs (bool, optional): If True, preserve the subdirectory
-                structure of ``src_path`` relative to ``dirname``. Defaults to False.
-            near_src (bool, optional): If True, change the ``output_dir`` to the
-                same level as ``src_path``. Defaults to False.
 
         Returns:
             Path: Computed output directory path.
@@ -718,6 +714,60 @@ class Config:
             keep_subdirs=self.keep_subdirs,
             near_src=self.near_src,
         )
+
+    def resolve_save_file(
+        self,
+        dirname: str,
+        src_path: PathLike,
+        subdirname: str = "",
+    ) -> Path:
+        """Compute the saving file path for an output type based on the output
+        directory and optional components.
+
+        The path is computed in the following order:
+            ``<output_dir>``/``<dirname>``/``<sub_dirname>``/
+
+        Examples:
+            >>> output_dir = "/Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm"
+            >>> dirname = "pred"
+            >>> subdirname = ""
+            >>> src_path = "/Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image/01.jpg"
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, False)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/pred
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, False)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/test/image
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, True)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/pred
+            >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, True)
+            >>> print(save_dir)
+            >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image_zerodce
+
+        Args:
+            dirname (str): Directory name to append to the output path
+                (e.g., 'pred', 'debug').
+            src_path (PathLike): Source path to determine the subdirectory
+                hierarchy.
+            subdirname (str): Subdirectory name to append to the output path
+                (e.g., 'debug'/'mask'). Defaults to "".
+
+        Returns:
+            Path: Computed output directory path.
+        """
+        # Normalize inputs
+        src_path = Path(src_path).normalize()
+
+        save_dir = resolve_save_dir(
+            output_dir=self.output_dir,
+            dirname=dirname,
+            subdirname=subdirname,
+            src_path=src_path,
+            keep_subdirs=self.keep_subdirs,
+            near_src=self.near_src,
+        )
+        return save_dir / src_path.name
 
     # --- Mutation ---
     def update_from_yaml(self, path: PathLike):
@@ -781,26 +831,7 @@ class Config:
                 else:
                     self._config[key] = val
 
-    def _force_validation(self, *properties):
-        """Forces existing config values to pass through their property setters.
-
-        Args:
-            *properties: The names of the @property attributes to validate
-                (e.g., 'root', 'arch', 'model_name').
-        """
-        for prop in properties:
-            # Check if this string actually corresponds to a @property on the class
-            if (
-                hasattr(self.__class__, prop)
-                and isinstance(getattr(self.__class__, prop), property)
-            ):
-                # getattr(self, prop) uses your custom getter to find the value (even nested ones!)
-                # setattr(self, prop, ...) routes it through your custom setter for validation
-                current_value = getattr(self, prop)
-                setattr(self, prop, current_value)
-
-    # --- Transformation ---
-    def prepare_train(self) -> Box:
+    def prepare_for_train(self):
         """Prepare the current configuration for training.
 
         We utilize the setters to resolve the attributes in the correct values
@@ -878,10 +909,7 @@ class Config:
             # self.finetune = create_weights(finetune)
             self.finetune.rectify_path(root=self.root)
 
-        # Return the updated configuration
-        return self.config
-
-    def prepare_predict(self) -> Box:
+    def prepare_for_predict(self) -> Config:
         """Prepare the current configuration for prediction.
 
         We utilize the setters to resolve the attributes in the correct values
@@ -943,8 +971,23 @@ class Config:
         if self.finetune:
             self.finetune.rectify_path(root=self.root)
 
-        # Return the updated configuration
-        return self.config
+    def _force_validation(self, *properties):
+        """Forces existing config values to pass through their property setters.
+
+        Args:
+            *properties: The names of the @property attributes to validate
+                (e.g., 'root', 'arch', 'model_name').
+        """
+        for prop in properties:
+            # Check if this string actually corresponds to a @property on the class
+            if (
+                hasattr(self.__class__, prop)
+                and isinstance(getattr(self.__class__, prop), property)
+            ):
+                # getattr(self, prop) uses your custom getter to find the value (even nested ones!)
+                # setattr(self, prop, ...) routes it through your custom setter for validation
+                current_value = getattr(self, prop)
+                setattr(self, prop, current_value)
 
     # --- Logging ---
     def log_summary(self, full: bool = False):
@@ -1037,8 +1080,25 @@ class ConfigContext(Config):
 
     # --- Creation ---
     @classmethod
-    def from_cli(cls, name: str = "main") -> "ConfigContext":
-        """Create a new instance from CLI arguments."""
+    def from_cli(
+        cls,
+        root: PathLike | None = None,
+        config_file: PathLike | None = None,
+        name: str = "main"
+    ) -> "ConfigContext":
+        """Create a new instance from CLI arguments.
+
+        Args:
+            root (PathLike | None): Optional project root directory.
+                Defaults to None.
+            config_file (PathLike | None): Optional path to a configuration file.
+                Defaults to None.
+            name (str): Name for the argument parser. Defaults to "main".
+
+        Returns:
+            ConfigContext: A new instance of ConfigContext initialized with CLI
+                arguments.
+        """
         # 1. Prepare argument parser
         parser = argparse.ArgumentParser(description=name)
         parser.add_argument("--prompt", "--p", action="store_true", help="Enable interactive prompting.")
@@ -1076,12 +1136,12 @@ class ConfigContext(Config):
 
         # 3. Create a new instance
         prompt = args.pop("prompt")
-        root = args.pop("root") or Path.cwd()
-        config_file = args.pop("config")
+        root = args.pop("root") or root or Path.cwd()
+        config_file = args.pop("config") or args.pop("config_file") or config_file
         return cls(root=root, config_file=config_file, prompt=prompt, **args)
 
     # --- Retrieval ---
-    def config_for(self, mode: RunModeLike, prompt: bool = False) -> Box:
+    def config_for(self, mode: RunModeLike, prompt: bool = False) -> Config:
         """Get the resolved configuration for a specific run mode, optionally
         enabling interactive prompting.
 
@@ -1104,11 +1164,13 @@ class ConfigContext(Config):
 
         # Return the resolved configuration based on the run mode
         if mode in [RunMode.TRAIN]:
-            return self.prepare_train()
+            self.prepare_for_train()
         elif mode in [RunMode.PREDICT]:
-            return self.prepare_predict()
+            self.prepare_for_predict()
         else:
             raise ValueError(f"Invalid run mode: {mode}")
+
+        return self.as_config()
 
     # --- Transformation ---
     def as_config(self) -> Config:
