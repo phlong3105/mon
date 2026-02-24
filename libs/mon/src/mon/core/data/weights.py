@@ -73,9 +73,14 @@ class Weights:
         # Validate inputs
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
-            if not self.path.is_weights_file(exist=False):
+            if (
+                not self.path.is_weights_file(exist=False)
+                and not self.path.is_dir()
+            ):
                 # We only care about the validity of the path, not its existence
-                raise ValueError(f"Weights file not found at: '{self.path}'")
+                raise ValueError(
+                    f"Weights file or directory not found at: '{self.path}'"
+                )
         if is_valid_str(self.url):
             self.url = Path(self.url)
 

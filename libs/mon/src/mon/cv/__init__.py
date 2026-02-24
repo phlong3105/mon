@@ -14,7 +14,7 @@ File Structure:
     ├── geometry/       # Camera calibration & 3D projections
     ├── io/             # I/O operations
     ├── models/         # CV-specific architectures
-    ├── ops/            # Operations
+    ├── ops/            # CV operations
     └── utils/          # General purpose helpers
 """
 

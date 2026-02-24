@@ -59,11 +59,11 @@ class ConfidenceGatedDepthLoss(nn.Module):
 
         Args:
             image_v (Tensor): Input image Tensor of shape (B, 3, H, W) and
-                values in the range [0.0, 1.0].
+                values ranging from 0.0 to 1.0.
             depth (Tensor): Depth map tensor of shape (B, 1, H, W) and values
-                in the range [0.0, 1.0].
+                ranging from 0.0 to 1.0.
             illu (Tensor): Illumination map tensor of shape (B, 1, H, W) and
-                values in the range [0.0, 1.0].
+                values ranging from 0.0 to 1.0.
 
         Returns:
             Tensor: A scalar tensor representing the computed loss.

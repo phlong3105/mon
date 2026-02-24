@@ -49,11 +49,12 @@ if not zoo_root.exists():
 class K(SimpleNamespace):
     """Class for constants."""
 
-    # --- Directories ---
+    # --- Paths ---
     ROOT = root
     MONO_ROOT = mono_root
     ZOO_ROOT = zoo_root
 
+    # --- Directories ---
     DEBUG_DIR = "debug"
     DEPTH_DIR = "depth"
     IMAGE_DIR = "image"

@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Traditional Computer Vision.
+"""Vision Features.
 
-This package provides traditional computer vision algorithms.
+This package contains vision features extraction using computer vision algorithms.
 """
 
 from __future__ import annotations
-
-from .filter import *

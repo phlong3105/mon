@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Image Filtering.
+"""Image Filters.
 
-This module provides image filtering functionality.
+This module provides image filters.
 """
 
 from __future__ import annotations
@@ -164,7 +164,7 @@ def sobel_filter(image: ndarray, kernel_size: int = 3) -> ndarray:
 
 
 # ==============================================================================
-# region GUIDED FILTERS
+# region GUIDED FILTER
 # ==============================================================================
 
 class FastGuidedFilter(nn.Module):

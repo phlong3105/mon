@@ -26,7 +26,7 @@ from torch import Tensor
 from torch.nn import functional as F
 from torchvision.transforms import functional as TF
 
-from mon import parse_imgsz
+from mon.core import parse_imgsz
 
 
 # ==============================================================================

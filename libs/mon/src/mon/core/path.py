@@ -94,6 +94,11 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         return self.sibling(".yaml")
 
     @property
+    def image_file(self) -> "Path":
+        """Return a matching image file if present."""
+        return self.find_sibling_ext(ImageExtension.values())
+
+    @property
     def ckpt_file(self) -> "Path":
         """Return a matching .ckpt file if present."""
         return self.sibling(".ckpt")
