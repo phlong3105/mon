@@ -14,10 +14,4 @@ References:
 
 from __future__ import annotations
 
-__all__ = [
-    "Saleo",
-    "saleo_ffsiren",
-    "saleo_siren",
-]
-
 from .model import *
