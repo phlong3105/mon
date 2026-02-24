@@ -14,7 +14,7 @@ __all__ = [
 
 from torch import nn, Tensor
 
-from mon.core import Path, Task
+from mon.core import MODELS, Path, Task
 from mon.cv.ops import tv_denoise
 from mon.nn import ModelRegisterMixin
 
@@ -26,6 +26,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
+@MODELS.register(name="tv_denoise")
 class TVDenoise(ModelRegisterMixin, nn.Module):
     """TV-Denoise model for image denoising."""
 
@@ -37,7 +38,6 @@ class TVDenoise(ModelRegisterMixin, nn.Module):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name: str,
         weight: float = 0.1,
         num_iter: int = 50,
         verbose: bool = True,
@@ -52,7 +52,7 @@ class TVDenoise(ModelRegisterMixin, nn.Module):
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
-        super().__init__(name=name)
+        super().__init__()
         # Initialize RegistrableMixin
         # ModelRegisterMixin.__init__(self, name=name)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""TV-Denoise Models.
+"""TV-Denoise.
 
 This package contains TV-Denoise model implementations, pre-trained weights, and
 utilities for training and inference.
