@@ -450,7 +450,7 @@ class DictList(UserDict, Generic[K, V]):
         """Create a new instance from a list of keys. Set all values to empty
         lists.
         """
-        return cls(item_type=item_type, data={k: [] for k in keys})
+        return cls(data={k: [] for k in keys}, item_type=item_type)
 
     # --- Validation ---
     def verify(self):

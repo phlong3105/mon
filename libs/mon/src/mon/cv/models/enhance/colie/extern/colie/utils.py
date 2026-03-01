@@ -6,8 +6,10 @@ from __future__ import annotations
 __all__ = [
     "filter_up",
     "get_coords",
+    "get_h_component",
     "get_image",
     "get_patches",
+    "get_s_component",
     "get_v_component",
     "interpolate_image",
     "replace_v_component",
@@ -30,9 +32,19 @@ def get_image(path: str) -> Tensor:
     return image
 
 
+def get_h_component(img_hsv: Tensor) -> Tensor:
+    """Assumes (1, 3, H, W) HSV image."""
+    return img_hsv[:, -3].unsqueeze(0)
+
+
+def get_s_component(img_hsv: Tensor) -> Tensor:
+    """Assumes (1, 3, H, W) HSV image."""
+    return img_hsv[:, -2].unsqueeze(0)
+
+
 def get_v_component(img_hsv: Tensor) -> Tensor:
     """Assumes (1, 3, H, W) HSV image."""
-    return img_hsv[:,-1].unsqueeze(0)
+    return img_hsv[:, -1].unsqueeze(0)
 
 
 def replace_v_component(img_hsv: Tensor, v_new: Tensor) -> Tensor:

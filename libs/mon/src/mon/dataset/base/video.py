@@ -21,7 +21,7 @@ from mon.core import (
     build_classlist,
     ClassList,
     Frame,
-    Int2,
+    Size,
     MetadataDictList,
     Path,
     PathLike,
@@ -143,7 +143,7 @@ class VideoOnlyDataset(
         return self.root.is_url() or self.video_meta["num_frames"] == -1
 
     @property
-    def imgsz(self) -> Int2:
+    def imgsz(self) -> Size:
         """Return the size of video frames."""
         return self.video_meta["imgsz"]
 
@@ -174,7 +174,7 @@ class VideoOnlyDataset(
         self.video_meta = {
             "video_path": src,
             "shape": (h, w, 3),
-            "imgsz": (h, w),
+            "imgsz": Size(height=h, width=w),
             "format": self.video_capture.get(cv2.CAP_PROP_FORMAT),
             "fourcc": str(self.video_capture.get(cv2.CAP_PROP_FOURCC)),
             "fps": int(self.video_capture.get(cv2.CAP_PROP_FPS)),

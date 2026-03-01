@@ -29,9 +29,9 @@ from mon import (
     create_progress_bar,
     log,
     metrics,
-    parse_imgsz,
     Path,
     RunMode,
+    Size,
     sys_ctx,
 )
 from mon.dataset import DataLoader
@@ -70,10 +70,13 @@ def train(config: Config):
     weights = config.finetune
 
     # 4. Define model
-    imgsz = parse_imgsz(config.eval_imgsz)
+    imgsz = Size.from_value(config.eval_imgsz)
     scale_factor = config.model.get("scale_factor")
     if scale_factor:
-         imgsz = (imgsz[0] // scale_factor, imgsz[1] // scale_factor)
+        imgsz = Size(
+            height=imgsz.height // scale_factor,
+            width=imgsz.width // scale_factor,
+        )
 
     model = zero_dce(**config.model | { "weights": weights})
     model = model.to(device)

@@ -35,8 +35,11 @@ from mon.core import (
     PathLike,
     singleton,
     SingletonMeta,
+    Size,
+    SizeLike,
     TensorOrArray,
 )
+
 
 # ==============================================================================
 # region CONSTANTS
@@ -151,17 +154,17 @@ def read_image_shape(path: PathLike) -> tuple[int, int, int]:
     return h, w, c
 
 
-def read_imgsz(path: PathLike) -> tuple[int, int]:
+def read_imgsz(path: PathLike) -> Size:
     """Read the image's size as (H, W) from a file path.
 
     Args:
         path (PathLike): Absolute path to the image file.
 
     Returns:
-        tuple[int, int]: Height and width of the image.
+        Size: Height and width of the image.
     """
     h, w, _ = read_image_shape(path=path)
-    return h, w
+    return Size(height=h, width=w)
 
 
 @singleton
@@ -253,6 +256,10 @@ def write_image(image: TensorOrArray, path: PathLike):
     """
     # Normalize inputs
     path = Path(path).normalize()
+
+    # Create parent directory
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
 
     if isinstance(image, Tensor):
         # Handle tensor (B, C, H, W)

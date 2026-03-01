@@ -28,9 +28,9 @@ from mon import (
     K,
     metrics,
     MODELS,
-    parse_imgsz,
     Path,
     RunMode,
+    Size,
     sys_ctx,
     TimeProfiler,
     transform as T,
@@ -71,7 +71,7 @@ def predict(config: Config):
     # weights = config.weights or config.finetune
 
     # 4. Define model
-    imgsz = parse_imgsz(config.eval_imgsz)
+    imgsz = Size.from_value(config.eval_imgsz)
 
     model = MODELS.build(device=device, **config.model)
     model = model.to(device)

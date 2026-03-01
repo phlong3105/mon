@@ -452,7 +452,7 @@ class Config:
     def output_dir(self, value: PathLike | None):
         """Set the output directory."""
         output_dir = Path(value).normalize() if is_valid_str(value) else None
-        if output_dir and output_dir.is_dir():
+        if output_dir:  # and output_dir.is_dir():
             self._config.output_dir = output_dir
 
     @property
@@ -1085,7 +1085,8 @@ class ConfigContext(Config):
         cls,
         root: PathLike | None = None,
         config_file: PathLike | None = None,
-        name: str = "main"
+        name: str = "main",
+        **kwargs
     ) -> "ConfigContext":
         """Create a new instance from CLI arguments.
 
@@ -1109,7 +1110,7 @@ class ConfigContext(Config):
                 continue
 
             action = opt_params.get("action", "store")
-            kwargs = {
+            argument_kwargs = {
                 "action": action,
                 "help": opt_params.get("help", ""),
                 "required": opt_params.get("required", False),
@@ -1118,16 +1119,21 @@ class ConfigContext(Config):
             # Boolean actions (store_true/store_false) do not take 'type' or 'choices'
             if action in ["store_true", "store_false"]:
                 # Default is usually False for store_true, True for store_false
-                kwargs["default"] = opt_params.get("default", action == "store_false")
+                argument_kwargs["default"] = opt_params.get("default", action == "store_false")
             else:
                 if "type" in opt_params:
-                    kwargs["type"] = opt_params["type"]
+                    argument_kwargs["type"] = opt_params["type"]
                 if "choices" in opt_params:
-                    kwargs["choices"] = opt_params["choices"]
-                kwargs["default"] = opt_params.get("default", None)
+                    argument_kwargs["choices"] = opt_params["choices"]
+                argument_kwargs["default"] = opt_params.get("default", None)
+
+            # If a default value for this argument is provided in kwargs, it
+            # should override the default from ARGUMENTS
+            if opt_name in kwargs:
+                argument_kwargs["default"] = kwargs[opt_name]
 
             flag = f"--{opt_name.replace('_', '-')}"
-            parser.add_argument(flag, **kwargs)
+            parser.add_argument(flag, **argument_kwargs)
 
         parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Additional arguments")
 
@@ -1138,7 +1144,7 @@ class ConfigContext(Config):
         # 3. Create a new instance
         prompt = args.pop("prompt")
         root = args.pop("root") or root or Path.cwd()
-        config_file = args.pop("config") or args.pop("config_file") or config_file
+        config_file = args.pop("config") or config_file
         return cls(root=root, config_file=config_file, prompt=prompt, **args)
 
     # --- Retrieval ---
@@ -1176,7 +1182,9 @@ class ConfigContext(Config):
     # --- Transformation ---
     def as_config(self) -> Config:
         """Extracts the data and returns a pure ``Config`` object."""
-        return Config(copy.deepcopy(self.config))
+        new_config = Config()
+        new_config._config = self.config
+        return new_config
 
     # --- Prompting ---
     def prompt(self) -> Box:
@@ -1287,43 +1295,43 @@ class ConfigContext(Config):
             # Benchmark
             self.benchmark = Confirm.ask(
                 prompt=ARGUMENTS.benchmark.prompt_text,
-                default=self.config.benchmark,
+                default=self.benchmark,
             )
         if self._index == 10:
             # Save
             self.save = Confirm.ask(
                 prompt=ARGUMENTS.save.prompt_text,
-                default=self.config.save,
+                default=self.save,
             )
         if self._index == 11:
             # Save Debug
             self.save_debug = Confirm.ask(
                 prompt=ARGUMENTS.save_debug.prompt_text,
-                default=self.config.save_debug,
+                default=self.save_debug,
             )
         if self._index == 12:
             # Keep Subdirs
             self.keep_subdirs = Confirm.ask(
                 prompt=ARGUMENTS.keep_subdirs.prompt_text,
-                default=self.config.keep_subdirs,
+                default=self.keep_subdirs,
             )
         if self._index == 13:
             # Near Source
             self.near_src = Confirm.ask(
                 prompt=ARGUMENTS.near_src.prompt_text,
-                default=self.config.near_src,
+                default=self.near_src,
             )
         if self._index == 14:
             # Exist OK
             self.exist_ok = Confirm.ask(
                 prompt=ARGUMENTS.exist_ok.prompt_text,
-                default=self.config.exist_ok,
+                default=self.exist_ok,
             )
         if self._index == 15:
             # Verbose
             self.verbose = Confirm.ask(
                 prompt=ARGUMENTS.verbose.prompt_text,
-                default=self.config.verbose,
+                default=self.verbose,
             )
         if self._index == 16:
             # Finish

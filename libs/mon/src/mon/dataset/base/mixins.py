@@ -110,6 +110,18 @@ class DatasetCollationMixin:
     DataLoader.
     """
 
+    # --- Lifecycle & Initialization ---
+    def __init__(self, *args, **kwargs):
+        """Initialize a new instance.
+
+        Args:
+            *args: Positional arguments to forward to the superclass constructor.
+            **kwargs: Keyword arguments to forward to the superclass constructor.
+        """
+        # Continue the initialization chain
+        super().__init__()
+
+    # --- Callable & Context Manager ---
     # noinspection PyTypeChecker
     @staticmethod
     def collate_fn(batch: list[dict]) -> dict[str, Any]:

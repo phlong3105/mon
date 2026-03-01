@@ -124,10 +124,10 @@ class ZSN2N(ModelRegisterMixin, nn.Module):
         ).to(self.device)
 
         # 2. Move inputs to the corresponding device
-        image = image.to(self.device)
+        noisy_image = noisy_image.to(self.device)
 
         # 3. Define optimizer & losses
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.5)
         L = nn.MSELoss().to(self.device)
 
@@ -160,18 +160,17 @@ class ZSN2N(ModelRegisterMixin, nn.Module):
         model.eval()
         with torch.no_grad():
             restored = torch.clamp(noisy_image - model(noisy_image),0,1)
-            restored = restored.detach().cpu()
 
         # 6. Return final and intermediate results for debugging
         outputs = { "restored": restored }
         if save_debug:
             outputs |= {
-                "noisy1": noisy1.detach().cpu(),
-                "noisy2": noisy2.detach().cpu(),
-                "pred1": pred1.detach().cpu(),
-                "pred2": pred2.detach().cpu(),
-                "denoised1": denoised1.detach().cpu(),
-                "denoised2": denoised2.detach().cpu(),
+                "noisy1": noisy1,
+                "noisy2": noisy2,
+                "pred1": pred1,
+                "pred2": pred2,
+                "denoised1": denoised1,
+                "denoised2": denoised2,
             }
         return outputs
 

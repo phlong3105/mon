@@ -18,6 +18,7 @@ File Structure:
     ├── image.py        #
     ├── mask.py         #
     ├── prob.py         #
+    ├── size.py         #
     ├── timer.py        #
     └── weights.py      # General purpose helpers
 """
@@ -31,5 +32,6 @@ from .device import *
 from .image import *
 from .mask import *
 from .prob import *
+from .size import *
 from .timer import *
 from .weights import *

@@ -40,6 +40,7 @@ class ResidualINR(nn.Module):
     def __init__(
         self,
         patch_dim: int,
+        out_features: int = 1,
         hidden_dim: int = 256,
         num_layers: int = 4,
         add_layers: int = 2,
@@ -53,6 +54,8 @@ class ResidualINR(nn.Module):
 
         Args:
             patch_dim (int): Input dimension of the patch branch.
+            out_features (int, optional): Number of output features.
+                Defaults to 1.
             hidden_dim (int, optional): Hidden dimension of the networks.
                 Defaults to 256.
             num_layers (int, optional): Number of layers in each branch.
@@ -91,7 +94,7 @@ class ResidualINR(nn.Module):
         output_layers = []
         for _ in range(add_layers, num_layers - 1):
             output_layers.append(SineLinear(hidden_dim, hidden_dim))
-        output_layers.append(SineLinear(hidden_dim, 1, is_last=True))
+        output_layers.append(SineLinear(hidden_dim, out_features, is_last=True))
         output_layers.append(nn.Sigmoid())
 
         self.coord_net = nn.Sequential(*coord_layers)

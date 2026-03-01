@@ -21,9 +21,10 @@ import numpy as np
 from numpy import ndarray
 
 from mon.core.path import Path
-from mon.core.typing import Int2, PathLike
+from mon.core.typing import Int2, IntOrTuple2, PathLike
 from mon.core.utils import is_valid_str
 from .data import Data
+from .size import Size, SizeLike
 
 
 # ==============================================================================
@@ -38,7 +39,7 @@ class BBox(Data):
         bbox (ndarray): Bounding box array of shape (8+) and in CXCYWHN format
             (i.e., YOLO). The data format is: [cx, cy, w, h, angle, class_id,
             score, track_id].
-        imgsz (tuple[int, int]): Size of the corresponding image as (H, W).
+        imgsz (Size | IntOrTuple2): Size of the corresponding image as (H, W).
         index (int, optional): Index of the bounding box in the image.
             Defaults to -1.
         path (Path, optional): Path to the label file. Defaults to None.
@@ -47,7 +48,7 @@ class BBox(Data):
     """
 
     bbox: ndarray
-    imgsz: tuple[int, int]
+    imgsz: Size | IntOrTuple2
     index: int = -1
     path: Path | None = None
     base_dir: Path | None = None
@@ -78,11 +79,8 @@ class BBox(Data):
                 f"Expected all elements of 'bbox' to be non-negative, "
                 f"but got {self.bbox[4:]}.",
             )
-        if len(self.imgsz) != 2:
-            raise ValueError(
-                f"Expected 'imgsz' to be a tuple of length 2, "
-                f"but got {self.imgsz}."
-            )
+        if not isinstance(self.imgsz, Size):
+            self.imgsz = Size.from_value(self.imgsz)
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
         if is_valid_str(self.base_dir):
@@ -148,7 +146,7 @@ class BBox(Data):
     def from_xyxy(
         cls,
         bbox: ndarray,
-        imgsz: tuple[int, int],
+        imgsz: SizeLike,
         index: int = -1,
         path: PathLike | None = None,
         base_dir: PathLike | None = None,
@@ -157,7 +155,7 @@ class BBox(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (4+,) in XYXY format.
-            imgsz (tuple[int, int]): Size of the corresponding image as (H, W).
+            imgsz (SizeLike): Size of the corresponding image as (H, W).
             index (int, optional): Index of the bounding box in the image.
                 Defaults to -1.
             path (PathLike, optional): Path to the label file. Defaults to None.
@@ -167,24 +165,22 @@ class BBox(Data):
         Returns:
             BBox: Created bounding box instance.
         """
+        imgsz = Size.from_value(imgsz)
         eps = 1e-7  # to avoid division by zero
-        cx = ((bbox[0] + bbox[2]) / 2.0) / (imgsz[1] + eps)
-        cy = ((bbox[1] + bbox[3]) / 2.0) / (imgsz[0] + eps)
-        w = (bbox[2] - bbox[0]) / (imgsz[1] + eps)
-        h = (bbox[3] - bbox[1]) / (imgsz[0] + eps)
+        cx = ((bbox[0] + bbox[2]) / 2.0) / (imgsz.w + eps)
+        cy = ((bbox[1] + bbox[3]) / 2.0) / (imgsz.h + eps)
+        w = (bbox[2] - bbox[0]) / (imgsz.w + eps)
+        h = (bbox[3] - bbox[1]) / (imgsz.h + eps)
         return cls(
             bbox=np.array([cx, cy, w, h, *bbox[4:]], dtype=np.float32),
-            imgsz=imgsz,
-            index=index,
-            path=path,
-            base_dir=base_dir
+            imgsz=imgsz, index=index, path=path, base_dir=base_dir
         )
 
     @classmethod
     def from_xywh(
         cls,
         bbox: ndarray,
-        imgsz: tuple[int, int],
+        imgsz: SizeLike,
         index: int = -1,
         path: PathLike | None = None,
         base_dir: PathLike | None = None
@@ -193,7 +189,7 @@ class BBox(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (4+,) in XYWH format.
-            imgsz (tuple[int, int]): Size of the corresponding image as (H, W).
+            imgsz (SizeLike): Size of the corresponding image as (H, W).
             index (int, optional): Index of the bounding box in the image.
                 Defaults to -1.
             path (PathLike, optional): Path to the label file. Defaults to None.
@@ -203,65 +199,63 @@ class BBox(Data):
         Returns:
             BBox: Created bounding box instance.
         """
+        imgsz = Size.from_value(imgsz)
         eps = 1e-7  # to avoid division by zero
-        cx = (bbox[0] + bbox[2] / 2.0) / (imgsz[1] + eps)
-        cy = (bbox[1] + bbox[3] / 2.0) / (imgsz[0] + eps)
-        w = bbox[2] / (imgsz[1] + eps)
-        h = bbox[3] / (imgsz[0] + eps)
+        cx = (bbox[0] + bbox[2] / 2.0) / (imgsz.w + eps)
+        cy = (bbox[1] + bbox[3] / 2.0) / (imgsz.h + eps)
+        w = bbox[2] / (imgsz.w + eps)
+        h = bbox[3] / (imgsz.h + eps)
         return cls(
             bbox=np.array([cx, cy, w, h, *bbox[4:]], dtype=np.float32),
-            imgsz=imgsz,
-            index=index,
-            path=path,
-            base_dir=base_dir
+            imgsz=imgsz, index=index, path=path, base_dir=base_dir
         )
 
     # --- Computation ---
-    def area(self, imgsz: tuple[int, int] = None) -> float:
+    def area(self, imgsz: SizeLike | None = None) -> float:
         """Return the area of the bounding box.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
         _, _, w, h = self.coords
-        imgsz = imgsz or self.imgsz
-        h = h * imgsz[0]
-        w = w * imgsz[1]
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
+        h = h * imgsz.h
+        w = w * imgsz.w
         return h * w
 
-    def center(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def center(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box center of shape (2,).
 
          Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
-        imgsz = imgsz or self.imgsz
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
         cx, cy = self.coords[0:2]
-        cx = cx * imgsz[1]
-        cy = cy * imgsz[0]
+        cx = cx * imgsz.w
+        cy = cy * imgsz.h
         return np.array([cx, cy], dtype=np.float32)
 
-    def corners(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def corners(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box corners in [x1, y1, x2, y1, x2, y2, x1, y2]
         format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
         xyxy = self.xyxy(imgsz)
         x1, y1, x2, y2 = xyxy[0:4]
         # Standard order: top-left, top-right, bottom-right, bottom-left
         return np.array([x1, y1, x2, y1, x2, y2, x1, y2])
 
-    def corners_pts(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def corners_pts(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box corners as 4 points of shape (4, 2).
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
         corners = self.corners(imgsz)
         return corners.reshape(4, 2)
@@ -271,52 +265,49 @@ class BBox(Data):
         """Return the bounding box array of shape (8,) in CXCYWHN format."""
         return self.bbox
 
-    def cxcywh(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def cxcywh(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box array of shape (8,) in CXCYWH format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
         cx, cy, w, h = self.coords
-        imgsz = imgsz or self.imgsz
-        img_h, img_w = imgsz
-        cx = cx * img_w
-        cy = cy * img_h
-        w = w * img_w
-        h = h * img_h
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
+        cx = cx * imgsz.w
+        cy = cy * imgsz.h
+        w = w * imgsz.w
+        h = h * imgsz.h
         return np.array([cx, cy, w, h, *self.bbox[4:]], dtype=np.float32)
 
-    def xyxy(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def xyxy(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box array of shape (8,) in XYXY format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
+            imgsz (SizeLike, optional): Image size as (H, W). If None,
                 use the stored ``imgsz``. Defaults to None.
         """
         cx, cy, w, h = self.coords
-        imgsz = imgsz or self.imgsz
-        img_h, img_w = imgsz
-        x1 = (cx - w / 2.0) * img_w
-        y1 = (cy - h / 2.0) * img_h
-        x2 = (cx + w / 2.0) * img_w
-        y2 = (cy + h / 2.0) * img_h
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
+        x1 = (cx - w / 2.0) * imgsz.w
+        y1 = (cy - h / 2.0) * imgsz.h
+        x2 = (cx + w / 2.0) * imgsz.w
+        y2 = (cy + h / 2.0) * imgsz.h
         return np.array([x1, y1, x2, y2, *self.bbox[4:]], dtype=np.float32)
 
-    def xywh(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def xywh(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box array of shape (8,) in XYWH format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
+            imgsz (SizeLike, optional): Image size as (H, W). If None,
                 use the stored ``imgsz``. Defaults to None.
         """
         cx, cy, w, h = self.coords
-        imgsz = imgsz or self.imgsz
-        img_h, img_w = imgsz
-        x = (cx - w / 2.0) * img_w
-        y = (cy - h / 2.0) * img_h
-        w = w * img_w
-        h = h * img_h
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
+        x = (cx - w / 2.0) * imgsz.w
+        y = (cy - h / 2.0) * imgsz.h
+        w = w * imgsz.w
+        h = h * imgsz.h
         return np.array([x, y, w, h, *self.bbox[4:]], dtype=np.float32)
 
 
@@ -328,14 +319,14 @@ class BBoxes(Data):
         bbox (ndarray): Bounding box array of shape (N, 8+) and in CXCYWHN format.
            (i.e., YOLO). The data format is: [cx, cy, w, h, angle, class_id,
             score, track_id].
-        imgsz (tuple[int, int]): Size of the corresponding image as (H, W).
+        imgsz (Size | IntOrTuple2): Size of the corresponding image as (H, W).
         path (Path, optional): Path to the label file. Defaults to None.
         base_dir (Path, optional): Base directory for relative paths. This is
             useful to resolve other files related to the data. Defaults to None.
     """
 
     bbox: ndarray
-    imgsz: tuple[int, int]
+    imgsz: Size | IntOrTuple2
     path: Path | None = None
     base_dir: Path | None = None
 
@@ -364,11 +355,8 @@ class BBoxes(Data):
             raise ValueError(
                 f"Expected all elements of 'bbox' to be non-negative."
             )
-        if len(self.imgsz) != 2:
-            raise ValueError(
-                f"Expected 'imgsz' to be a tuple of length 2, "
-                f"but got {self.imgsz}."
-            )
+        if not isinstance(self.imgsz, Size):
+            self.imgsz = Size.from_value(self.imgsz)
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
         if is_valid_str(self.base_dir):
@@ -445,7 +433,7 @@ class BBoxes(Data):
     def from_xyxy(
         cls,
         bbox: ndarray,
-        imgsz: tuple[int, int],
+        imgsz: SizeLike,
         path: PathLike | None = None,
         base_dir: PathLike | None = None
     ) -> "BBoxes":
@@ -453,7 +441,7 @@ class BBoxes(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (N, 4+) in XYXY format.
-            imgsz (tuple[int, int]): Size of the corresponding image as (H, W).
+            imgsz (SizeLike): Size of the corresponding image as (H, W).
             path (PathLike, optional): Path to the label file. Defaults to None.
             base_dir (PathLike, optional): Base directory for relative paths.
                 Defaults to None.
@@ -461,6 +449,7 @@ class BBoxes(Data):
         Returns:
             BBoxes: Created bounding boxes instance.
         """
+        imgsz = Size.from_value(imgsz)
         eps = 1e-7  # to avoid division by zero
         cx = ((bbox[:, 0] + bbox[:, 2]) / 2.0) / (imgsz[1] + eps)
         cy = ((bbox[:, 1] + bbox[:, 3]) / 2.0) / (imgsz[0] + eps)
@@ -468,16 +457,14 @@ class BBoxes(Data):
         h = (bbox[:, 3] - bbox[:, 1]) / (imgsz[0] + eps)
         return cls(
             bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
-            imgsz=imgsz,
-            path=path,
-            base_dir=base_dir
+            imgsz=imgsz, path=path, base_dir=base_dir
         )
 
     @classmethod
     def from_xywh(
         cls,
         bbox: ndarray,
-        imgsz: tuple[int, int],
+        imgsz: SizeLike,
         path: PathLike | None = None,
         base_dir: PathLike | None = None
     ) -> "BBoxes":
@@ -485,7 +472,7 @@ class BBoxes(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (N, 4+) in XYWH format.
-            imgsz (tuple[int, int]): Size of the corresponding image as (H, W).
+            imgsz (Size): Size of the corresponding image as (H, W).
             path (PathLike, optional): Path to the label file. Defaults to None.
             base_dir (PathLike, optional): Base directory for relative paths.
                 Defaults to None.
@@ -493,6 +480,7 @@ class BBoxes(Data):
         Returns:
             BBoxes: Created bounding boxes instance.
         """
+        imgsz = Size.from_value(imgsz)
         eps = 1e-7  # to avoid division by zero
         cx = (bbox[:, 0] + bbox[:, 2] / 2.0) / (imgsz[1] + eps)
         cy = (bbox[:, 1] + bbox[:, 3] / 2.0) / (imgsz[0] + eps)
@@ -500,16 +488,14 @@ class BBoxes(Data):
         h = bbox[:, 3] / (imgsz[0] + eps)
         return cls(
             bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
-            imgsz=imgsz,
-            path=path,
-            base_dir=base_dir
+            imgsz=imgsz, path=path, base_dir=base_dir
         )
 
     @classmethod
     def from_bbox_list(
         cls,
         bbox_list: list[BBox],
-        imgsz: tuple[int, int],
+        imgsz: SizeLike,
         path: PathLike | None = None,
         base_dir: PathLike | None = None,
     ) -> "BBoxes":
@@ -517,7 +503,7 @@ class BBoxes(Data):
 
         Args:
             bbox_list (list[BBox]): List of BBox instances.
-            imgsz (tuple[int, int]): Size of the corresponding image as (H, W).
+            imgsz (Size): Size of the corresponding image as (H, W).
             path (PathLike, optional): Path to the label file. Defaults to None.
             base_dir (PathLike, optional): Base directory for relative paths.
                 Defaults to None.
@@ -527,57 +513,55 @@ class BBoxes(Data):
         """
         return cls(
             bbox=np.array([b.bbox for b in bbox_list], dtype=np.float32),
-            imgsz=imgsz,
-            path=path,
-            base_dir=base_dir
+            imgsz=imgsz, path=path, base_dir=base_dir
         )
 
     # --- Computation ---
-    def area(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def area(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the area of the bounding box.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
         _, _, w, h = self.coords.T
-        imgsz = imgsz or self.imgsz
-        h = h * imgsz[0]
-        w = w * imgsz[1]
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
+        h = h * imgsz.h
+        w = w * imgsz.w
         return h * w
 
-    def center(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def center(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box center of shape (N, 2).
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
-        imgsz = imgsz or self.imgsz
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
         cx, cy = self.coords[:, 0:2].T
-        cx = cx * imgsz[1]
-        cy = cy * imgsz[0]
+        cx = cx * imgsz.w
+        cy = cy * imgsz.h
         return np.array([cx, cy], dtype=np.float32).T
 
-    def corners(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def corners(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box corners in [x1, y1, x2, y1, x2, y2, x1, y2]
         format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
         xyxy = self.xyxy(imgsz)
         x1, y1, x2, y2 = xyxy[:, 0:4].T
         # Standard order: top-left, top-right, bottom-right, bottom-left
         return np.array([x1, y1, x2, y1, x2, y2, x1, y2], dtype=np.float32).T
 
-    def corners_pts(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def corners_pts(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box corners as 4 points of shape (N, 4, 2).
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
         corners = self.corners(imgsz)
         return corners.reshape(-1, 4, 2)
@@ -587,55 +571,52 @@ class BBoxes(Data):
         """Return the bounding box in CXCYWHN format."""
         return self.bbox
 
-    def cxcywh(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def cxcywh(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box array of shape (N, 8) in CXCYWH format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
-        imgsz = imgsz or self.imgsz
-        img_h, img_w = imgsz
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
         cx, cy, w, h = self.coords.T
         rest = self.bbox[:, 4:]
-        cx = cx * img_w
-        cy = cy * img_h
-        w = w * img_w
-        h = h * img_h
+        cx = cx * imgsz.w
+        cy = cy * imgsz.h
+        w = w * imgsz.w
+        h = h * imgsz.h
         return np.column_stack((cx, cy, w, h, rest)).astype(np.float32)
 
-    def xyxy(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def xyxy(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box array of shape (N, 8) in XYXY format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
-        imgsz = imgsz or self.imgsz
-        img_h, img_w = imgsz
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
         cx, cy, w, h = self.coords.T
         rest = self.bbox[:, 4:]
-        x1 = (cx - w / 2) * img_w
-        y1 = (cy - h / 2) * img_h
-        x2 = (cx + w / 2) * img_w
-        y2 = (cy + h / 2) * img_h
+        x1 = (cx - w / 2) * imgsz.w
+        y1 = (cy - h / 2) * imgsz.h
+        x2 = (cx + w / 2) * imgsz.w
+        y2 = (cy + h / 2) * imgsz.h
         return np.column_stack((x1, y1, x2, y2, rest)).astype(np.float32)
 
-    def xywh(self, imgsz: tuple[int, int] = None) -> ndarray:
+    def xywh(self, imgsz: SizeLike | None = None) -> ndarray:
         """Return the bounding box array of shape (N, 8) in XYWH format.
 
         Args:
-            imgsz (tuple[int, int], optional): Image size as (H, W). If None,
-                use the stored ``imgsz``. Defaults to None.
+            imgsz (SizeLike, optional): Image size as (H, W). If None, use the
+                stored ``imgsz``. Defaults to None.
         """
-        imgsz = imgsz or self.imgsz
-        img_h, img_w = imgsz
+        imgsz = Size.from_value(imgsz) if imgsz else self.imgsz
         cx, cy, w, h = self.coords.T
         rest = self.bbox[:, 4:]
-        x = (cx - w / 2) * img_w
-        y = (cy - h / 2) * img_h
-        h = h * img_h
-        w = w * img_w
+        x = (cx - w / 2) * imgsz.w
+        y = (cy - h / 2) * imgsz.h
+        h = h * imgsz.h
+        w = w * imgsz.w
         return np.column_stack((x, y, w, h, rest)).astype(np.float32)
 
 # endregion

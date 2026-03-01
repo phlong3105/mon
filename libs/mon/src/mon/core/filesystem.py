@@ -13,6 +13,7 @@ __all__ = [
     "download_url_to_file",
     "parse_model_fullname",
     "resolve_config_file",
+    "resolve_data_dir",
     "resolve_dataset_dir",
     "resolve_output_dir",
     "resolve_project_root",
@@ -24,7 +25,7 @@ __all__ = [
 import requests
 
 from .console import log, log_error
-from .constants import zoo_root
+from .constants import K
 from .path import Path
 from .typing import PathLike
 from .ui import create_download_bar
@@ -176,6 +177,29 @@ def resolve_project_root(cwd: PathLike) -> Path | None:
     return None
 
 
+def resolve_data_dir(cwd: PathLike) -> Path | None:
+    """Resolve the absolute path to the directory containing all datasets in
+    the current project.
+
+    Args:
+        cwd (PathLike): Current working directory to resolve from. This can be
+            any location within the project.
+
+    Returns:
+        Path | None: Path to the dataset directory if found, otherwise None.
+
+    Raises:
+        ValueError: If neither ``data_root`` nor ``cwd`` are provided.
+    """
+    # Normalize inputs
+    cwd = Path(cwd).normalize()
+    if not cwd.has_name("data", exist=True):
+        cwd = resolve_project_root(cwd)
+        cwd = cwd / "data"
+
+    return cwd
+
+
 def resolve_dataset_dir(dataset_name: str, data_root: PathLike) -> Path | None:
     """Resolve the absolute path to one specific dataset.
 
@@ -187,23 +211,21 @@ def resolve_dataset_dir(dataset_name: str, data_root: PathLike) -> Path | None:
             'data' subdirectory.
 
     Returns:
-        Path | None: Path to the dataset directory if found, otherwise None.
+        Path | None: Path to the dataset directory if found, otherwise the
+            "data" dir in the project.
 
     Raises:
         ValueError: If neither ``data_root`` nor ``cwd`` are provided.
     """
     # Normalize inputs
-    data_root = Path(data_root).normalize()
-    if not data_root.has_name("data", exist=True):
-        data_root = resolve_project_root(data_root)
-        data_root = data_root / "data"
+    data_root = resolve_data_dir(data_root)
 
     # Resolve the dataset root
     dataset_dir = data_root / dataset_name
     if dataset_dir.is_dir():
         return dataset_dir
 
-    return None
+    return data_root
 
 
 def resolve_config_file(
@@ -289,7 +311,7 @@ def resolve_weights_dir(root: PathLike, weights_path: PathLike) -> Path | None:
         return local_dir
 
     # Check global zoo directory
-    global_dir = zoo_root / weights_path
+    global_dir = K.ZOO_ROOT / weights_path
     if global_dir.is_dir():
         return global_dir
 
@@ -323,7 +345,7 @@ def resolve_weights_file(root: PathLike, weights_file: PathLike) -> Path | None:
         return local_file
 
     # Check global zoo directory
-    global_file = zoo_root / weights_file
+    global_file = K.ZOO_ROOT / weights_file
     if global_file.is_weights_file(exist=True):
         return global_file
 

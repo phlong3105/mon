@@ -26,12 +26,8 @@ import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
 
-from mon.core import IntOrTuple2, parse_imgsz
-from mon.nn.modules import (
-    FINERLinear,
-    FourierPE,
-    SineLinear,
-)
+from mon.core import Size, SizeLike
+from mon.nn.modules import FINERLinear, FourierPE, SineLinear
 
 
 # ==============================================================================
@@ -337,18 +333,19 @@ class Finer_PP(nn.Module):
 
 # --- Coordinate Generation & Embedding ---
 
-def create_coords(size: IntOrTuple2, device: torch.device) -> Tensor:
+def create_coords(size: SizeLike, device: torch.device) -> Tensor:
     """Create a normalized square coordinates grid.
 
     Args:
-        size (IntOrTuple2): Size of the grid.
+        size (SizeLike): Size of the grid.
         device (torch.device): Device to place the coordinates on.
 
     Returns:
         Tensor: Coordinates tensor of shape (1, H, W, 2) and values ranging from
             -1.0 to 1.0.
     """
-    h, w = parse_imgsz(size)
+    size = Size.from_value(SizeLike)
+    h, w = size.hw
     # TODO: Old code normalize from 0 to 1. Delete later
     # x_range = torch.linspace(0, 1, w, device=device)
     # y_range = torch.linspace(0, 1, h, device=device)

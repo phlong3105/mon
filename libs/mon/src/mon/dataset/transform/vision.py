@@ -28,7 +28,7 @@ from albumentations.core.type_definitions import ALL_TARGETS, Targets
 from numpy import ndarray
 from pydantic import Field, model_validator
 
-from mon.core import ALBUMENTATIONS, parse_imgsz
+from mon.core import ALBUMENTATIONS, Size
 
 
 # ==============================================================================
@@ -259,7 +259,7 @@ class NormalizeWithMask(BasicTransform):
 
 
 # ==============================================================================
-# region PIXEL
+# region RESIZE
 # ==============================================================================
 
 @ALBUMENTATIONS.register()
@@ -325,20 +325,19 @@ class ResizeDivisibleBy(DualTransform):
         Returns:
             ndarray: Resized image.
         """
-        h, w = img.shape[:2]
-
+        size = Size.from_value(img)
         if self._height > 0 or self._width > 0:
             new_h, new_w = self._height, self._width
         else:
-            new_h, new_w = h, w
-        new_h, new_w = parse_imgsz((new_h, new_w), divisor=self._divisor)
+            new_h, new_w = size.hw
+        new_size = Size.from_value((new_h, new_w), divisor=self._divisor)
 
-        is_downscale  = (new_h < h) or (new_w < w)
+        is_downscale  = new_size < size
         interpolation = self._interpolation
         if self._area_for_downscale in ["image", "image_mask"] and is_downscale:
             interpolation = cv2.INTER_AREA
 
-        return fgeometric.resize(img, (new_h, new_w), interpolation=interpolation)
+        return fgeometric.resize(img, new_size.hw, interpolation=interpolation)
 
     def apply_to_mask(self, mask: ndarray, **params: Any) -> ndarray:
         """Applies the resizing transformation to the input mask.
@@ -349,15 +348,14 @@ class ResizeDivisibleBy(DualTransform):
         Returns:
             ndarray: Resized mask.
         """
-        h, w = mask.shape[:2]
-
+        size = Size.from_value(mask)
         if self._height > 0 or self._width > 0:
             new_h, new_w = self._height, self._width
         else:
-            new_h, new_w = h, w
-        new_h, new_w = parse_imgsz((new_h, new_w), divisor=self._divisor)
+            new_h, new_w = size.hw
+        new_size = Size.from_value((new_h, new_w), divisor=self._divisor)
 
-        is_downscale  = (new_h < h) or (new_w < w)
+        is_downscale  = new_size < size
         interpolation = self._mask_interpolation
         if self._area_for_downscale == "image_mask" and is_downscale:
             interpolation = cv2.INTER_AREA
@@ -387,13 +385,11 @@ class ResizeDivisibleBy(DualTransform):
         Returns:
             ndarray: Resized keypoints.
         """
-        h, w = params["shape"][:2]
-
+        size = Size.from_value(params["shape"][:2])
         if self._height > 0 or self._width > 0:
             new_h, new_w = self._height, self._width
         else:
-            new_h, new_w = h, w
-        new_h, new_w = parse_imgsz((new_h, new_w), divisor=self._divisor)
+            new_h, new_w = size.hw
 
         scale_x = self._width / new_w
         scale_y = self._height / new_h

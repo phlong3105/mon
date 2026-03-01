@@ -105,7 +105,7 @@ class ModalityList(IndexList[Modality]):
     @property
     def names(self) -> list[str]:
         """Return a list of names."""
-        return self.keys()
+        return self.keys
 
     # --- Creation ---
     @classmethod
@@ -135,7 +135,7 @@ class ModalityList(IndexList[Modality]):
 
 ImageModality = partial(Modality, ext=".jpg", module=Image, loader=ImageLoader(), type=AlbumTargetType.IMAGE)
 FrameModality = partial(Modality, ext=".jpg", module=Frame, loader=None, type=AlbumTargetType.IMAGE)
-DepthModality = partial(Modality, ext=".jpg", module=Image, loader=MaskLoader(), type=AlbumTargetType.MASK)
+DepthModality = partial(Modality, ext=".jpg", module=Image, loader=MaskLoader(), type=AlbumTargetType.IMAGE)
 
 # endregion
 

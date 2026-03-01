@@ -31,9 +31,9 @@ from mon import (
     K,
     metrics,
     MODELS,
-    parse_imgsz,
     Path,
     RunMode,
+    Size,
     sys_ctx,
     TimeProfiler,
     to_image_array,
@@ -75,10 +75,13 @@ def predict(config: Config):
     # weights = config.weights or config.finetune
 
     # 4. Define model
-    imgsz = parse_imgsz(config.eval_imgsz)
+    imgsz = Size.from_value(config.eval_imgsz)
     scale_factor = config.model.get("scale_factor")
     if scale_factor:
-         imgsz = (imgsz[0] // scale_factor, imgsz[1] // scale_factor)
+        imgsz = Size(
+            height=imgsz.h // scale_factor,
+            width=imgsz.w // scale_factor,
+        )
 
     model = MODELS.build(**config.model)
     model = model.to(device)
@@ -90,7 +93,7 @@ def predict(config: Config):
 
     # 6. Define transforms
     transforms = T.Compose([
-        T.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
+        T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
         T.Normalize(normalization="min_max"),
         T.ToTensorV2(transpose_mask=True),
     ])
@@ -117,7 +120,7 @@ def predict(config: Config):
                 timers.preprocess.tick()
                 meta = datapoint["meta"]
                 path = Path(meta["path"])
-                h0, w0 = parse_imgsz(meta["imgsz"])
+                size0 = Size.from_value(meta["imgsz"])
                 image = datapoint["image"]
                 image = image.to(device)
                 timers.preprocess.tock()
@@ -131,9 +134,9 @@ def predict(config: Config):
                 timers.postprocess.tick()
                 enhanced = outputs["enhanced"]
                 enhanced = to_image_array(enhanced)
-                h1, w1 = parse_imgsz(enhanced)
-                if (h1, w1) != (h0, w0):
-                    enhanced = cv2.resize(enhanced, (w0, h0))
+                size1 = Size.from_value(enhanced)
+                if size1 != size0:
+                    enhanced = cv2.resize(enhanced, size0.wh)
                 timers.postprocess.tock()
 
                 # 7.2.4. Save

@@ -22,12 +22,12 @@ from mon.core import (
     BBoxFormat,
     BBoxFormatLike,
     DictLike,
-    IntOrTuple2,
     load_yaml,
     log_error,
-    parse_imgsz,
     Path,
     PathLike,
+    Size,
+    SizeLike,
 )
 from mon.cv.io import read_imgsz
 
@@ -177,7 +177,7 @@ def load_bbox(
     path: PathLike,
     fmt: BBoxFormatLike,
     remap: DictLike | PathLike | None = None,
-    imgsz: IntOrTuple2 | None = None,
+    imgsz: SizeLike | None = None,
     image_file: PathLike | None = None,
     as_array: bool = False,
     verbose: bool = False,
@@ -190,7 +190,7 @@ def load_bbox(
         fmt (BBoxFormatType): Format of the bounding boxes in the file.
         remap (DictType | PathLike | None, optional): Class ID remapping.
             Defaults to None.
-        imgsz (int_2_t | None, optional): Image size (width, height).
+        imgsz (SizeLike | None, optional): Image size (width, height).
             Required if `as_array` is False and `image_file` is not provided.
             Defaults to None.
         image_file (PathLike | None, optional): Path to the corresponding image
@@ -217,9 +217,9 @@ def load_bbox(
 
     # 4. Validate inputs
     if imgsz:
-        imgsz = parse_imgsz(imgsz)
+        imgsz = Size.from_value(imgsz)
     elif image_file:
-        image_file = Path(image_file).normalize(exist=True)
+        image_file = Path(image_file).normalize()
         if image_file.is_txt_file(exist=True):
             imgsz = read_imgsz(image_file)
     else:

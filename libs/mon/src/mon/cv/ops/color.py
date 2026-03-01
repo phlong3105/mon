@@ -108,7 +108,10 @@ class RgbToHvi(nn.Module):
         self.pi = 3.141592653589793
         self.eps = eps
         # Learnable 'k' controls the color gamut sensitivity relative to intensity
-        self.density_k = nn.Parameter(torch.full([1], 0.1), requires_grad=requires_grad)
+        self.density_k = nn.Parameter(
+            torch.full([1], 0.1),
+            requires_grad=requires_grad
+        )
 
     # --- Callable & Context Manager ---
     def rgb_to_hvi(self, rgb: Tensor) -> Tensor:

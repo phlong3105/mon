@@ -3,13 +3,12 @@
 
 """Prediction Script.
 
-This script provides a CLI for running Depth Anything V2 prediction on a given
-dataset.
+This script provides a CLI for running CoLIE prediction on a given dataset.
 
 References:
-    - Paper: "Depth Anything V2. A More Capable Foundation Model for Monocular
-      Depth Estimation," NeurIPS 2024.
-    - Code: https://github.com/DepthAnything/Depth-Anything-V2
+    - Paper: "Fast Context-Based Low-Light Image Enhancement via Neural Implicit
+      Representations," ECCV 2024.
+    - Code: https://github.com/ctom2/colie
 """
 
 from __future__ import annotations
@@ -18,46 +17,45 @@ __all__ = []
 
 import sys
 
-import matplotlib
-import numpy as np
-import torch
-
 from mon import (
     Config,
     ConfigContext,
     create_progress_bar,
     K,
     metrics,
-    MODELS,
     Path,
     RunMode,
-    Size,
+    Split,
     sys_ctx,
     TimeProfiler,
+    to_image_array,
+    transform as T,
 )
 from mon.cv import write_image
-from mon.dataset import build_dataset
+from mon.dataset import build_dataset, build_dataloader
+import saleo
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
+"""
 if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import dav2' works
+    # Add the project root to sys.path so 'import colie' works
     # even if you run this script from inside the folder
     sys.path.append(str(current_dir))
 
 try:
-    # Works when running as a module: python -m dav2.predict
-    from .model import DAV2
+    # Works when running as a module: python -m colie.predict
+    from .model import colie
 except ImportError:
     # Works when running as a script: python predict.py
-    from model import DAV2
+    from model import colie
+"""
 
 
 # ==============================================================================
 # region CONTROL
 # ==============================================================================
 
-@torch.no_grad()
 def predict(config: Config):
     # 1. Summarize the current run
     if config.verbose:
@@ -71,38 +69,33 @@ def predict(config: Config):
     # weights = config.weights or config.finetune
 
     # 4. Define model
-    imgsz = Size.from_value(config.eval_imgsz)
-
-    model = MODELS.build(device=device, **config.model)
+    model = saleo.saleo_ffsiren(device=device, **config.model)
     model = model.to(device)
-    model.eval()
 
     # 5. Run benchmark
     if config.benchmark:
-        metrics.benchmark(model, imgsz=imgsz)
+        metrics.benchmark(model)
 
     # 6. Define transforms
-    '''
     transforms = T.Compose([
-        T.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
         T.Normalize(normalization="min_max"),
         T.ToTensorV2(transpose_mask=True),
     ])
-    '''
-    transforms = None
 
     # 7. Prediction loop
+    epochs = config.epochs
+    E = config.loss.E
+
     for src in config.data:
         # 7.1. Build dataset
         data_name, dataset = build_dataset(
             src=src,
             dataset_dir=config.data_dir,
+            split=Split.TEST,
             transforms=transforms,
         )
 
         # 7.2. Main processing loop
-        cmap = matplotlib.colormaps.get_cmap("Spectral_r")
-
         timers = TimeProfiler()
         timers.total.tick()
         with create_progress_bar() as pbar:
@@ -116,36 +109,54 @@ def predict(config: Config):
                 meta = datapoint["meta"]
                 path = Path(meta["path"])
                 image = datapoint["image"]
+                depth = datapoint["depth"]
+                image = image.unsqueeze(0)
+                depth = depth.unsqueeze(0) if depth is not None else None
+                image = image.to(device)
+                depth = depth.to(device) if depth is not None else None
                 timers.preprocess.tock()
 
                 # 7.2.2. Inference
                 timers.infer.tick()
-                outputs = model(image, imgsz.height)
+                outputs = model(
+                    image=image,
+                    depth=depth,
+                    epochs=epochs,
+                    batch_size=8,
+                    E=E,
+                    color_func="hvi",
+                    save_debug=config.save_debug
+                )
                 timers.infer.tock()
 
                 # 7.2.3. Postprocess
                 timers.postprocess.tick()
-                depth = outputs
-                depth = (
-                    (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
-                ).astype("uint8")
-                depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-                depth_c = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
+                enhanced = outputs["enhanced"]
+                enhanced = to_image_array(enhanced)
+                debug = {}
+                if config.save_debug:
+                    debug = {
+                        "image_i": to_image_array(outputs["image_i"]),
+                        "image_i_res": to_image_array(outputs["image_i_res"]),
+                        "image_i_fixed": to_image_array(outputs["image_i_fixed"]),
+                        "image_r": to_image_array(outputs["image_r"]),
+                    }
                 timers.postprocess.tock()
 
                 # 7.2.4. Save
                 if config.save:
                     # Save to: ".../pred/"
-                    save_path = config.resolve_save_file(K.DEPTH_DIR, src_path=path)
+                    save_path = config.resolve_save_file(K.PRED_DIR, src_path=path)
                     # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
-                    write_image(depth, save_path)
+                    write_image(enhanced, save_path)
 
                 # 7.2.5. Save debug
                 if config.save_debug:
                     # Save to: ".../debug/"
-                    save_path = config.resolve_save_file(K.DEBUG_DIR, src_path=path)
-                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
-                    write_image(depth_c, save_path)
+                    save_dir = config.resolve_save_dir(K.DEBUG_DIR, src_path=path)
+                    for k, v in debug.items():
+                        save_path = save_dir / f"{path.stem}_{k}{K.IMAGE_EXT}"
+                        write_image(v, save_path)
         timers.total.tock()
 
         # 7.3. Finish
@@ -162,7 +173,10 @@ def main():
     # Load config
     config_ctx = ConfigContext.from_cli(
         root=current_dir,
-        config_file="dav2_vitb_da2k.yaml",
+        config_file="saleo_ffsiren.yaml",
+        save=True,
+        exist_ok=True,
+        verbose=True,
     )
     config = config_ctx.config_for(RunMode.PREDICT)
     predict(config)

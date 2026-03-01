@@ -17,7 +17,6 @@ __all__ = [
     "to_image_tensor",
 ]
 
-import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -27,9 +26,10 @@ from numpy import ndarray
 from torch import Tensor
 
 from mon.core.path import Path
-from mon.core.typing import Int2, Int3, PathLike, TensorOrArray
+from mon.core.typing import Int3, PathLike, TensorOrArray
 from mon.core.utils import is_valid_str
 from .data import Data
+from .size import Size
 
 
 # ==============================================================================
@@ -73,7 +73,7 @@ class Image(Data):
             )
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
-            if not self.path.image_file(exist=False):
+            if not self.path.is_image_file(exist=True):
                 # We only care about the validity of the path, not its existence
                 raise ValueError(f"Image file not found at: {self.path}")
         if is_valid_str(self.base_dir):
@@ -100,9 +100,9 @@ class Image(Data):
         return self.image.shape
 
     @property
-    def imgsz(self) -> tuple[int, int]:
+    def imgsz(self) -> Size:
         """Return the image size as (H, W)."""
-        return self.shape[0], self.shape[1]
+        return Size(height=self.shape[0], width=self.shape[1])
 
     @property
     def num_channels(self) -> int:
@@ -305,7 +305,7 @@ def parse_image_shape(image: TensorOrArray) -> Int3:
     raise ValueError(f"Could not get shape from {type(image)}.")
 
 
-def parse_imgsz(value: Any, divisor: int = None) -> Int2:
+def parse_imgsz(value: Any, divisor: int = None) -> Size:
     """Extract the size of an image as a tuple of (H, W).
 
     Args:
@@ -314,42 +314,9 @@ def parse_imgsz(value: Any, divisor: int = None) -> Int2:
             Defaults to None.
 
     Returns:
-        Int2: Image size as (H, W).
-
-    Raises:
-        TypeError: If ``image_or_size`` is not a supported type.
+        Size: Image size as (H, W).
     """
-    size = None
-
-    # Handle Tensors/Arrays
-    if isinstance(value, Tensor):
-        size = (int(value.shape[-2]), int(value.shape[-1]))
-    elif isinstance(value, ndarray):
-        size = (int(value.shape[-3]), int(value.shape[-2]))
-
-    # Handle scalars
-    elif isinstance(value, (int, float)):
-        size = (int(value), int(value))
-
-    # Handle Sequences
-    elif isinstance(value, (list, tuple)):
-        if len(value) >= 2:
-            # Take the first two elements assuming they represent (H, W)
-            size = (value[0], value[1])
-        elif len(value) == 1:
-            size = (value[0], value[0])
-
-    if size is None:
-        raise TypeError(f"Could not get size from {type(value)}.")
-
-    # Apply Divisor (Rounding up to the nearest multiple)
-    if divisor:
-        h, w = size
-        h = int(math.ceil(h / divisor) * divisor)
-        w = int(math.ceil(w / divisor) * divisor)
-        size = (h, w)
-
-    return size
+    return Size.from_value(value=value, divisor=divisor)
 
 
 # --- Selection ---

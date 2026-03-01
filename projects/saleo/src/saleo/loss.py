@@ -10,7 +10,6 @@ from __future__ import annotations
 
 __all__ = [
     "ConfidenceGatedDepthLoss",
-    "ExplicitSmoothnessLoss",
 ]
 
 import torch
@@ -78,38 +77,6 @@ class ConfidenceGatedDepthLoss(Loss):
         h_grad = x[:, :, :-1, :] - x[:, :, 1:, :]
         w_grad = x[:, :, :, :-1] - x[:, :, :, 1:]
         return h_grad, w_grad
-
-
-class ExplicitSmoothnessLoss(Loss):
-    """Loss function for smoothness via explicit gradient calculation.
-
-    Calculate TV loss for random point clouds using Gradient Penalty.
-    Minimize |∇f(x,y)| directly via autograd.
-    """
-
-    # --- Callable & Context Manager ---
-    def forward(self, image_i: Tensor, coords: Tensor) -> Tensor:
-        """Calculate the loss.
-
-        Args:
-            image_i (Tensor): Illumination map tensor of shape (B, 1, H, W) and
-                values ranging from 0.0 to 1.0.
-            coords (Tensor): Coordinates where the image is evaluated tensor of
-                shape (B, 2) with (x, y) positions.
-
-        Returns:
-            Tensor: Loss value.
-        """
-        grad_outputs = torch.ones_like(image_i)
-        gradients = torch.autograd.grad(
-            outputs=image_i,
-            inputs=coords,
-            grad_outputs=grad_outputs,
-            create_graph=True,
-            retain_graph=True,
-            only_inputs=True
-        )[0]
-        return torch.mean(gradients.pow(2))
 
 # endregion
 

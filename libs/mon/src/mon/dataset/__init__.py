@@ -129,17 +129,24 @@ def build_dataloader(
         tuple[str, DataLoader]: A tuple containing the dataset name and the
             corresponding ``DataLoader`` instance.
     """
+    split = kwargs.pop("split", None)
+
     name, dataset_ = build_dataset(
         src=src,
         dataset_dir=dataset_dir,
         cwd=cwd,
+        split=split,
         transforms=transforms,
         verbose=verbose,
         *args, **kwargs
     )
+
     dataloader_ = DataLoader(
-        dataset=dataset_, batch_size=batch_size, *args, **kwargs
+        dataset=dataset_,
+        batch_size=batch_size,
+        *args, **kwargs
     )
+
     return name, dataloader_
 
 # endregion

@@ -22,7 +22,7 @@ import thop
 import torch
 from torch import nn
 
-from mon.core import Float3, IntOrTuple2, log, parse_imgsz
+from mon.core import Float3, log, Size, SizeLike
 
 
 # ==============================================================================
@@ -31,20 +31,21 @@ from mon.core import Float3, IntOrTuple2, log, parse_imgsz
 
 def compute_model_stats(
     model: nn.Module,
-    imgsz: IntOrTuple2 = 512,
+    imgsz: SizeLike = 512,
     channels: int = 3,
 ) -> Float3:
     """Compute the number of parameters, MACs, and FLOPs of a model.
 
     Args:
         model (nn.Module): PyTorch model to profile.
-        imgsz (IntOrTuple2, optional): Input image size. Defaults to 512.
+        imgsz (SizeLike, optional): Input image size. Defaults to 512.
         channels (int): Number of input channels. Defaults to 3.
 
     Returns:
         Float3: Number of parameters, MACs, and FLOPs.
     """
-    h, w = parse_imgsz(imgsz)
+    imgsz = Size.from_value(imgsz)
+    h, w = imgsz.hw
     device = next(model.parameters()).device
 
     # Use a dummy input
@@ -65,7 +66,7 @@ def compute_model_stats(
 
 def benchmark(
     model: nn.Module,
-    imgsz: IntOrTuple2 = 512,
+    imgsz: SizeLike = 512,
     channels: int = 3,
     num_runs: int = 10,
 ):
@@ -73,16 +74,21 @@ def benchmark(
 
     Args:
         model (nn.Module): PyTorch model to benchmark.
-        imgsz (IntOrTuple2, optional): Input image size. Defaults to 512.
+        imgsz (SizeLike, optional): Input image size. Defaults to 512.
         channels (int, optional): Number of input channels. Defaults to 3.
         num_runs (int, optional): Number of runs for latency measurement.
             Defaults to 10.
     """
     # Compute complexity stats
-    params, macs, flops = compute_model_stats(model=model, imgsz=imgsz, channels=channels)
+    params, macs, flops = compute_model_stats(
+        model=model,
+        imgsz=imgsz,
+        channels=channels
+    )
 
     # Measure Latency (Inference speed)
-    h, w = parse_imgsz(imgsz)
+    imgsz = Size.from_value(imgsz)
+    h, w = imgsz.hw
     device = next(model.parameters()).device
     dummy_input = torch.randn(1, channels, h, w).to(device)
     model.eval()

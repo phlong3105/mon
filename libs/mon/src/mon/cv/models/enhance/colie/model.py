@@ -42,6 +42,8 @@ try:
         get_coords,
         get_patches,
         get_v_component,
+        get_h_component,
+        get_s_component,
         interpolate_image,
         replace_v_component,
     )
@@ -148,6 +150,8 @@ class CoLIE(ModelRegisterMixin, nn.Module):
 
         # 3. Convert the image to HSV color space
         image_hsv = rgb2hsv_torch(image).to(self.device)
+        image_h = get_h_component(image_hsv).to(self.device)
+        image_s = get_s_component(image_hsv).to(self.device)
         image_i = get_v_component(image_hsv).to(self.device)
         lr_image_i = interpolate_image(image_i, down_size, down_size).to(self.device)
 
@@ -207,6 +211,8 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             image_i_res = filter_up(lr_image_i, lr_image_i_res, image_i)
             image_i_fixed = filter_up(lr_image_i, lr_image_i_fixed, image_i)
             outputs |= {
+                "image_h": image_h,
+                "image_s": image_s,
                 "image_i": image_i,
                 "image_i_res": image_i_res,
                 "image_i_fixed": image_i_fixed,
@@ -229,10 +235,11 @@ class CoLIE(ModelRegisterMixin, nn.Module):
 @MODELS.register(name="colie", metaclass=CoLIE)
 def colie(*args, **kwargs):
     """Create a CoLIE model."""
-    window_size = kwargs.get("window_size", 7)
-    hidden_dim = kwargs.get("hidden_dim", 256)
-    num_layers = kwargs.get("num_layers", 4)
-    add_layers = kwargs.get("add_layers", 2)
+    name = kwargs.pop("name", "colie")
+    window_size = kwargs.pop("window_size", 7)
+    hidden_dim = kwargs.pop("hidden_dim", 256)
+    num_layers = kwargs.pop("num_layers", 4)
+    add_layers = kwargs.pop("add_layers", 2)
     return CoLIE(
         name="colie",
         window_size=window_size,

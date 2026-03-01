@@ -42,7 +42,7 @@ class ExposureControlLoss(Loss):
     def __init__(
         self,
         patch_size: int = 16,
-        mean_val: float = 0.6,
+        E: float = 0.6,
         required_grad: bool = True,
         channel_mean: bool = True,
         reduction: str = "mean",
@@ -52,7 +52,7 @@ class ExposureControlLoss(Loss):
         Args:
             patch_size (int, optional): Kernel size for pooling layer.
                 Defaults to 16.
-            mean_val (float, optional): Well-exposedness level E. Defaults to 0.6.
+            E (float, optional): Well-exposedness level E. Defaults to 0.6.
             required_grad (bool, optional): If True, ``mean_val`` is learnable.
                 Defaults to True.
             channel_mean (bool, optional): If True, compute the mean across
@@ -66,9 +66,9 @@ class ExposureControlLoss(Loss):
         # Registering as a buffer if not learnable to ensure it moves to the
         # correct device
         if not required_grad:
-            self.register_buffer("target_exposure", torch.tensor([mean_val]))
+            self.register_buffer("target_exposure", torch.tensor([E]))
         else:
-            self.target_exposure = nn.Parameter(torch.tensor([mean_val]))
+            self.target_exposure = nn.Parameter(torch.tensor([E]))
 
         self.pool = nn.AvgPool2d(kernel_size=patch_size, stride=patch_size)
 
@@ -85,7 +85,6 @@ class ExposureControlLoss(Loss):
         """
         # Compute local means
         x = torch.mean(input, dim=1, keepdim=True) if self.channel_mean else input
-        # Patch-wise average intensity
         local_mean = self.pool(x)
         # L2 distance to target exposure
         loss = torch.pow(local_mean - self.target_exposure, 2)
@@ -105,7 +104,7 @@ class ExposureValueControlLoss(Loss):
     def __init__(
         self,
         patch_size: int = 16,
-        mean_val: float = 0.6,
+        E: float = 0.6,
         eps: float = 1e-6,
         required_grad: bool = True,
         channel_mean: bool = True,
@@ -116,7 +115,7 @@ class ExposureValueControlLoss(Loss):
         Args:
             patch_size (int, optional): Kernel size for pooling layer.
                 Defaults to 16.
-            mean_val (float, optional): Well-exposedness level E. Defaults to 0.6.
+            E (float, optional): Well-exposedness level E. Defaults to 0.6.
             eps (float, optional): Small constant for numerical stability.
                 Defaults to 1e-6.
             required_grad (bool, optional): If True, ``mean_val`` is learnable.
@@ -132,9 +131,9 @@ class ExposureValueControlLoss(Loss):
 
         # Registering as a buffer if not learnable to ensure it moves to the correct device
         if not required_grad:
-            self.register_buffer("target_exposure", torch.tensor([mean_val]))
+            self.register_buffer("target_exposure", torch.tensor([E]))
         else:
-            self.target_exposure = nn.Parameter(torch.tensor([mean_val]))
+            self.target_exposure = nn.Parameter(torch.tensor([E]))
 
         self.pool = nn.AvgPool2d(kernel_size=patch_size, stride=patch_size)
 
@@ -151,12 +150,10 @@ class ExposureValueControlLoss(Loss):
         """
         # Compute local means
         x = torch.mean(input, dim=1, keepdim=True) if self.channel_mean else input
-        # Non-linear patch pooling
-        pooled_mean = self.pool(x)
-        # Adding eps prevents derivative issues at zero
-        non_linear_mean = torch.sqrt(pooled_mean + self.eps)
+        local_mean = self.pool(x)
+        local_mean = torch.sqrt(local_mean + self.eps)
         # L2 distance to target exposure
-        loss = torch.pow(non_linear_mean - self.target_exposure, 2)
+        loss = torch.pow(local_mean - self.target_exposure, 2)
         # Apply reduction
         loss = self.reduce(loss=loss)
         return loss

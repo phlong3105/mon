@@ -21,10 +21,10 @@ from numpy import ndarray
 from torch import Tensor
 
 from mon.core import (
-    IntOrTuple2,
-    parse_imgsz,
     Path,
     PathLike,
+    Size,
+    SizeLike,
     TensorOrArray,
     to_image_array,
 )
@@ -62,7 +62,7 @@ class VideoWriter(ABC):
     def __init__(
         self,
         path: PathLike,
-        imgsz: IntOrTuple2 = (480, 640),
+        imgsz: SizeLike = (480, 640),
         frame_rate: float = 24,
         verbose: bool = False,
         *args, **kwargs,
@@ -71,7 +71,7 @@ class VideoWriter(ABC):
 
         Args:
             path (PathLike): Video output file.
-            imgsz (int_2_t): Output video resolution as (H, W).
+            imgsz (SizeLike, optional): Output video resolution as (H, W).
                 Defaults to (480, 640).
             frame_rate (float): Output video frame rate. Defaults to 24.
             verbose (bool): Verbosity mode. Defaults to False.
@@ -96,7 +96,7 @@ class VideoWriter(ABC):
         # Assign attributes
         self.verbose = verbose
         self.path = path
-        self.imgsz = parse_imgsz(imgsz)
+        self.imgsz = Size.from_value(imgsz)
         self.frame_rate = frame_rate
         self.cur_idx = 0
         self.init()
@@ -174,7 +174,7 @@ class VideoWriterCV(VideoWriter):
     def __init__(
         self,
         path: PathLike,
-        imgsz: IntOrTuple2 = (480, 640),
+        imgsz: SizeLike = (480, 640),
         frame_rate: float = 24,
         fourcc: str = "mp4v",
         verbose: bool = False,
@@ -185,7 +185,7 @@ class VideoWriterCV(VideoWriter):
         Args:
             Args:
             path (PathLike): Video output file.
-            imgsz (int_2_t): Output video resolution as (H, W).
+            imgsz (SizeLike, optional): Output video resolution as (H, W).
                 Defaults to (480, 640).
             frame_rate (float): Output video frame rate. Defaults to 24.
             fourcc (str): FourCC code for the video codec. Defaults to "mp4v".
@@ -226,7 +226,7 @@ class VideoWriterCV(VideoWriter):
         video_file.parent.mkdir(parents=True, exist_ok=True)
 
         # 2. Initialize the video writer
-        h, w = self.imgsz
+        h, w = self.imgsz.hw
         self.video_writer = cv2.VideoWriter(
             filename=str(video_file),
             fourcc=cv2.VideoWriter_fourcc(*self.fourcc),
@@ -259,7 +259,7 @@ class VideoWriterCV(VideoWriter):
             frame = to_image_array(frame)
 
         # 2. Resize if the frame size doesn't match initialization
-        h, w = self.imgsz
+        h, w = self.imgsz.hw
         fh, fw = frame.shape[:2]
         if (fh, fw) != (h, w):
             frame = cv2.resize(frame, (w, h))

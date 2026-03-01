@@ -104,9 +104,9 @@ class Dataset(Dataset_, ABC):
         self.verbose = verbose
 
         # Override class-level defaults if provided
-        if isinstance(modalities, ModalityList):
+        if isinstance(modalities, ModalityList) and len(modalities) > 0:
             self.modalities = modalities
-        if isinstance(classes, ClassList):
+        if isinstance(classes, ClassList) and len(classes) > 0:
             self.classes = classes
 
         if metapoints:
@@ -285,14 +285,14 @@ class Dataset(Dataset_, ABC):
         modalities = self.modalities
         metapoints = self.metapoints
         keys = modalities.names
-        num_datapoints = self.__len__()
+        num_datapoints = len(self)
 
         if not isinstance(metapoints, MetadataDictList):
             raise TypeError(
                 f"Expected 'metapoints' to be a MetadataDictList, "
                 f"but got {type(metapoints).__name__}."
             )
-        if keys() != metapoints.keys():
+        if keys != list(metapoints.keys()):
             raise ValueError(
                 f"Modalities keys {keys} do not match "
                 f"metapoints keys {list(metapoints.keys())}."
@@ -331,7 +331,7 @@ class Dataset(Dataset_, ABC):
         # Get all metadata of the datapoint at the current index
         metapoint = self.get_metapoint(index)
         # Create an empty datapoint
-        datapoint = {k: None for k in self.modalities}
+        datapoint = {k: None for k in self.modalities.keys}
 
         # For each modality, use the corresponding loader to load the data from
         # the metadata
@@ -348,6 +348,14 @@ class Dataset(Dataset_, ABC):
         else:
             datapoint["meta"] = None
 
+        return datapoint
+
+    def get_underlying_data(self, index: int) -> dict[str, Any]:
+        """Get the underlying data of a datapoint at the specified ``index``."""
+        datapoint = self.get_datapoint(index)
+        for k, v in datapoint.items():
+            if hasattr(v, "data"):
+                datapoint[k] = v.data
         return datapoint
 
 
@@ -511,14 +519,12 @@ class StandardDataset(Dataset, ABC):
         After calling this method, ``self.metapoints`` must be populated.
         """
         # Initialize empty metapoints dictionary with modalities
-        metapoints = MetadataDictList.from_keys(self.modalities.keys)
+        metapoints = MetadataDictList.from_keys(keys=self.modalities.keys)
 
         # List primary modality metadata files
         pk, pm = self.primary
-        pk_metadata = self.list_modality_from_dir(
-            modality=pm,
-            base_dir=self.base_dir
-        )
+        pk_metadata = self.list_modality_from_dir(modality=pm, base_dir=self.base_dir)
+        metapoints[pk] = pk_metadata
 
         # List other modality metadata files
         for m in self.modalities:
@@ -640,10 +646,8 @@ class InputTargetDataset(Dataset, ABC):
 
         # List primary modality metadata files (inputs)
         pk, pm = self.primary
-        pk_metadata = self.list_modality_from_dir(
-            modality=pm,
-            base_dir=self.input_dir
-        )
+        pk_metadata = self.list_modality_from_dir(modality=pm, base_dir=self.input_dir)
+        metapoints[pk] = pk_metadata
 
         # List secondary modality metadata files (targets)
         for m in self.modalities:

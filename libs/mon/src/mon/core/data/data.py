@@ -133,6 +133,7 @@ class MetadataDictList(DictList[str, list[Metadata]]):
         """
         # We hardcode the item_type
         # Users just call MetadataDictList() without arguments
+        _ = kwargs.pop("item_type", Metadata)
         super().__init__(item_type=Metadata, data=data, **kwargs)
 
 

@@ -74,7 +74,7 @@ class AlbumentationsDataset(Dataset, ABC):
                 each associated with a 'key'.
         """
         # 1. Get the datapoint
-        datapoint = self.get_datapoint(index=index)
+        datapoint = self.get_underlying_data(index=index)
 
         # 2. Apply transformations
         compose = self.transforms
@@ -106,31 +106,26 @@ class AlbumentationsDataset(Dataset, ABC):
             TypeError: If ``transform`` is not an instance of albumentations.Compose.
         """
         # Validate inputs
-        if not isinstance(transforms, Compose):
-            raise TypeError(
-                f"Expected 'transforms' to be an instance of albumentations.Compose, "
-                f"but got '{type(transforms).__name__}'."
-            )
-
-        # Add additional targets to transform if needed
-        # Get the primary modality key
-        pk, _ = self.primary
-        # Get one sample of the metapoint
-        metapoint = self.get_metapoint(index=0)
-        # Create a dictionary of additional targets for later use in __getitem__()
-        for k, v in metapoint.items():
-            if (k != pk) and v is not None:
-                # If the modality is not primary and has a target type, add it
-                # to the Compose
-                transforms.add_targets(self.modalities[k].additional_target)
+        if isinstance(transforms, Compose):
+            # Add additional targets to transform if needed
+            # Get the primary modality key
+            pk, _ = self.primary
+            # Get one sample of the metapoint
+            metapoint = self.get_metapoint(index=0)
+            # Create a dictionary of additional targets for later use in __getitem__()
+            for k, v in metapoint.items():
+                if (k != pk) and v is not None:
+                    # If the modality is not primary and has a target type, add it
+                    # to the Compose
+                    transforms.add_targets(self.modalities[k].additional_target)
 
         self._transforms = transforms
 
 
 class ImageDataset(
-    DatasetCollationMixin,
+    StandardDataset,
     AlbumentationsDataset,
-    StandardDataset
+    DatasetCollationMixin,
 ):
     """Standard image dataset.
 
@@ -224,9 +219,9 @@ class ImageDataset(
 
 
 class ImageOnlyDataset(
-    DatasetCollationMixin,
+    StandardDataset,
     AlbumentationsDataset,
-    StandardDataset
+    DatasetCollationMixin,
 ):
     """Standard image-only dataset.
 
@@ -361,9 +356,9 @@ class ImageOnlyDataset(
 
 
 class IQADataset(
-    DatasetCollationMixin,
+    InputTargetDataset,
     AlbumentationsDataset,
-    InputTargetDataset
+    DatasetCollationMixin,
 ):
     """Image quality assessment (IQA) dataset.
 

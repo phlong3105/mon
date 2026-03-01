@@ -34,9 +34,11 @@ print(weights2.unique_path_from(root).truncate())
 """
 
 
+"""
 config_ctx = mon.ConfigContext(root=current_dir, config_file="alexnet_v2.yaml")
 config_ctx.config_for("predict", prompt=True)
 config_ctx.log_summary(full=True)
+"""
 
 
 """
@@ -58,3 +60,10 @@ bar = Foo(a=2)
 print(foo.a)
 print(bar.a)
 """
+
+
+size = mon.Size(100, 200)
+h, w = size
+print(h, w)
+print(size[0])
+print(size[1])
