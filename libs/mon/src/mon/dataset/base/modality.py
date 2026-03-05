@@ -54,6 +54,10 @@ class Modality:
             modality.
         type (str, optional): Type of the modality (e.g., "image", "text") for
             augmentations (e.g., albumentations). Defaults to "".
+        train (bool, optional): Indicates if the modality is available for
+            training. Defaults to True.
+        val (bool, optional): Indicates if the modality is available for
+            validation. Defaults to True.
         test (bool, optional): Indicates if the modality is available for testing
             (i.e., ground-truth). Defaults to True.
     """
@@ -64,6 +68,8 @@ class Modality:
     module: Any
     loader: Loader
     type: str = ""
+    train: bool = True
+    val: bool = True
     test: bool = True
 
     # --- Lifecycle & Initialization ---

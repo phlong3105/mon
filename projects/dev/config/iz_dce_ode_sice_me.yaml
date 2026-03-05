@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "zero_dce_sice_me"  # (str) Experiment name.
+exp_name: "iz_dce_ode_sice_me"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -12,12 +12,16 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "zero_dce"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "zero_dce"  # (str) Model architecture (e.g., resnet, yolo8).
+  name: "iz_dce_ode"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   out_channels: 3
   hidden_dim: 32
-  weights: "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt"  # (str) Path to model weights.
+  imgsz: 512
+  chunk_size: 100000
+  tol: 1e-5
+  adjoint: True
+  weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
@@ -38,7 +42,7 @@ train_dataloader:
     modalities: ~
     classes: ~
     verbose: True
-  batch_size: 8  # (int) Batch size.
+  batch_size: 4  # (int) Batch size.
   shuffle: True  # (bool) Shuffle the data each epoch.
   num_workers: 4  # (int) Number of workers for data loading.
   drop_last: False  # (bool) Drop the last incomplete batch.
@@ -72,7 +76,7 @@ epochs: 100  # (int) Number of epochs to train.
 
 optimizer:
   name: Adam  # (str) Optimizer name.
-  lr: 0.0001  # (float) Learning rate.
+  lr: 0.0001  # 0.0001 (float) Learning rate.
   weight_decay: 0.0001
 
 lr_scheduler: ~
@@ -80,11 +84,14 @@ lr_scheduler: ~
 lr_warmup_scheduler: ~
 
 loss:
-  L_tv_w: 200
+  E: 0.6  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
+  L_tv_A_w: 200
   L_spa_w: 1
-  L_col_w: 5
+  L_col_w: 20  # 0.8
+  L_col_pre_w: 10
   L_exp_w: 10
-  L_exp_mean: 0.5  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
+  L_enhance_w: 1
+  L_denoise_w: 1  # 50
 
 grad_clip_norm: 0.1
 

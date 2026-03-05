@@ -17,6 +17,7 @@ from typing import Any
 import cv2
 from box import Box
 from torch.utils.data.dataloader import DataLoader as DataLoader_
+from mon.core import DATASETS
 
 from .dataset import Dataset
 
@@ -100,14 +101,17 @@ class DataLoader(DataLoader_):
         dataset = config.pop("dataset", None)
 
         # Validate inputs
-        if not isinstance(dataset, (Box, dict)):
+        if isinstance(dataset, (Box, dict)):
+            name = dataset.get("name")
+            if name in DATASETS:
+                dataset = DATASETS.build(**dataset)
+            else:
+                dataset = Dataset.from_config(dataset)
+        if not isinstance(dataset, Dataset):
             raise TypeError(
-                f"Expected 'dataset' to be a dictionary, "
-                f"but got {type(dataset).__name__}."
+                f"Expected 'dataset' to be a configuration dict or an instance "
+                f"of Dataset, but got {type(dataset).__name__}."
             )
-
-        # Build the objects
-        dataset = Dataset.from_config(dataset)
 
         # Return the new instance
         config |= kwargs

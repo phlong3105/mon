@@ -15,8 +15,7 @@ from __future__ import annotations
 
 __all__ = []
 
-import sys
-
+import saleo
 from mon import (
     Config,
     ConfigContext,
@@ -24,6 +23,7 @@ from mon import (
     K,
     metrics,
     Path,
+    resolve_project_root,
     RunMode,
     Split,
     sys_ctx,
@@ -32,8 +32,7 @@ from mon import (
     transform as T,
 )
 from mon.cv import write_image
-from mon.dataset import build_dataset, build_dataloader
-import saleo
+from mon.dataset import build_dataset
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -110,10 +109,8 @@ def predict(config: Config):
                 path = Path(meta["path"])
                 image = datapoint["image"]
                 depth = datapoint["depth"]
-                image = image.unsqueeze(0)
-                depth = depth.unsqueeze(0) if depth is not None else None
-                image = image.to(device)
-                depth = depth.to(device) if depth is not None else None
+                image = image.unsqueeze(0).to(device)
+                depth = depth.unsqueeze(0).to(device) if depth is not None else None
                 timers.preprocess.tock()
 
                 # 7.2.2. Inference
@@ -171,9 +168,14 @@ def predict(config: Config):
 
 def main():
     # Load config
+    root = resolve_project_root(current_dir)
     config_ctx = ConfigContext.from_cli(
-        root=current_dir,
+        root=root,
         config_file="saleo_ffsiren.yaml",
+        task="enhance",
+        mode="predict",
+        arch="saleo",
+        model="saleo_ffsiren",
         save=True,
         exist_ok=True,
         verbose=True,

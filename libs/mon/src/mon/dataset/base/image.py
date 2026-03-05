@@ -19,6 +19,8 @@ import glob
 from abc import ABC
 from typing import Any, override
 
+from box import Box
+
 from mon.core import (
     build_classlist,
     ClassList,
@@ -106,6 +108,9 @@ class AlbumentationsDataset(Dataset, ABC):
             TypeError: If ``transform`` is not an instance of albumentations.Compose.
         """
         # Validate inputs
+        if isinstance(transforms, (Box, dict)):
+            transforms = Compose.from_config(config=transforms)
+
         if isinstance(transforms, Compose):
             # Add additional targets to transform if needed
             # Get the primary modality key

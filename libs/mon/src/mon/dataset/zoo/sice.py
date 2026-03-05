@@ -102,11 +102,11 @@ class SICE_ME(ImageDataset, DatasetRegisterMixin):
     tasks: list[Task] = [Task.ENHANCE]
     dirname: str = "sice"
     subdir: str = "me"
-    splits: list[Split] = [Split.TRAIN, Split.TEST]
+    splits: list[Split] = [Split.TRAIN, Split.VAL]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image_under"),
+        ImageModality(name="image", dirname="image"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target", test=False),
+        ImageModality(name="target", dirname="target", train=False, val=True, test=False),
     ])
     classes: ClassList = ClassList()
 

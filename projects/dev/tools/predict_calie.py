@@ -3,27 +3,19 @@
 
 """Prediction Script.
 
-This script provides a CLI for running Zero-DCE prediction on a given dataset.
+This script provides a CLI for running CALIE prediction on a given dataset.
 
 References:
-    - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
-      Enhancement," CVPR 2020.
-    - Code: https://github.com/Li-Chongyi/Zero-DCE
-
-    - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
-      Estimation," IEEE TPAMI 2022.
-    - Code: https://github.com/Li-Chongyi/Zero-DCE_extension
+    - Paper: "Continuously Adjustable Low-Light Implicit Enhancement"
+    - Code: https://github.com/phlong3105/calie
 """
 
 from __future__ import annotations
 
 __all__ = []
 
-import sys
-
-import cv2
-import torch
-
+# noinspection PyUnusedImports
+import calie
 from mon import (
     Config,
     ConfigContext,
@@ -32,11 +24,10 @@ from mon import (
     metrics,
     MODELS,
     Path,
+    resolve_project_root,
     RunMode,
-    Size,
     Split,
     sys_ctx,
-    Task,
     TimeProfiler,
     to_image_array,
     transform as T,
@@ -46,24 +37,25 @@ from mon.dataset import build_dataset
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
+"""
 if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import zero_dce' works
+    # Add the project root to sys.path so 'import colie' works
     # even if you run this script from inside the folder
     sys.path.append(str(current_dir))
 
 try:
-    # Works when running as a module: python -m zero_dce.predict
-    from .model import zero_dce, zero_dce_pp
+    # Works when running as a module: python -m colie.predict
+    from .model import colie
 except ImportError:
     # Works when running as a script: python predict.py
-    from model import zero_dce, zero_dce_pp
+    from model import colie
+"""
 
 
 # ==============================================================================
 # region CONTROL
 # ==============================================================================
 
-@torch.no_grad()
 def predict(config: Config):
     # 1. Summarize the current run
     if config.verbose:
@@ -77,30 +69,23 @@ def predict(config: Config):
     # weights = config.weights or config.finetune
 
     # 4. Define model
-    imgsz = Size.from_value(config.eval_imgsz)
-    scale_factor = config.model.get("scale_factor")
-    if scale_factor:
-        imgsz = Size(
-            height=imgsz.h // scale_factor,
-            width=imgsz.w // scale_factor,
-        )
-
-    model = MODELS.build(**config.model)
+    model = MODELS.build(device=device, **config.model)
     model = model.to(device)
-    model.eval()
 
     # 5. Run benchmark
     if config.benchmark:
-        metrics.benchmark(model, imgsz=imgsz)
+        metrics.benchmark(model)
 
     # 6. Define transforms
     transforms = T.Compose([
-        T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
         T.Normalize(normalization="min_max"),
         T.ToTensorV2(transpose_mask=True),
     ])
 
     # 7. Prediction loop
+    epochs = config.epochs
+    E = config.loss.E
+
     for src in config.data:
         # 7.1. Build dataset
         data_name, dataset = build_dataset(
@@ -123,23 +108,35 @@ def predict(config: Config):
                 timers.preprocess.tick()
                 meta = datapoint["meta"]
                 path = Path(meta["path"])
-                size0 = Size.from_value(meta["imgsz"])
                 image = datapoint["image"]
+                depth = datapoint["depth"]
                 image = image.unsqueeze(0).to(device)
+                depth = depth.unsqueeze(0).to(device) if depth is not None else None
                 timers.preprocess.tock()
 
                 # 7.2.2. Inference
                 timers.infer.tick()
-                outputs = model(image, save_debug=config.save_debug)
+                outputs = model(
+                    image=image,
+                    epochs=epochs,
+                    E=E,
+                    color_func="hvi",
+                    save_debug=config.save_debug
+                )
                 timers.infer.tock()
 
                 # 7.2.3. Postprocess
                 timers.postprocess.tick()
                 enhanced = outputs["enhanced"]
                 enhanced = to_image_array(enhanced)
-                size1 = Size.from_value(enhanced)
-                if size1 != size0:
-                    enhanced = cv2.resize(enhanced, size0.wh)
+                debug = {}
+                if config.save_debug:
+                    debug = {
+                        "image_i": to_image_array(outputs["image_i"]),
+                        "image_i_res": to_image_array(outputs["image_i_res"]),
+                        "image_i_fixed": to_image_array(outputs["image_i_fixed"]),
+                        "image_r": to_image_array(outputs["image_r"]),
+                    }
                 timers.postprocess.tock()
 
                 # 7.2.4. Save
@@ -150,7 +147,12 @@ def predict(config: Config):
                     write_image(enhanced, save_path)
 
                 # 7.2.5. Save debug
-                # Do nothing
+                if config.save_debug:
+                    # Save to: ".../debug/"
+                    save_dir = config.resolve_save_dir(K.DEBUG_DIR, src_path=path)
+                    for k, v in debug.items():
+                        save_path = save_dir / f"{path.stem}_{k}{K.IMAGE_EXT}"
+                        write_image(v, save_path)
         timers.total.tock()
 
         # 7.3. Finish
@@ -165,13 +167,14 @@ def predict(config: Config):
 
 def main():
     # Load config
+    root = resolve_project_root(current_dir)
     config_ctx = ConfigContext.from_cli(
-        root=current_dir,
-        config_file="zero_dce_sice_me.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.PREDICT,
-        arch="zero_dce",
-        model="zero_dce",
+        root=root,
+        config_file="calie_siren.yaml",
+        task="enhance",
+        mode="predict",
+        arch="calie",
+        model="calie_siren",
         save=True,
         exist_ok=True,
         verbose=True,

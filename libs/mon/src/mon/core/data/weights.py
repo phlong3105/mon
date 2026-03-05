@@ -74,7 +74,7 @@ class Weights:
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
             if (
-                not self.path.is_weights_file(exist=False)
+                not self.path.is_weights_file(exists=False)
                 and not self.path.is_dir()
             ):
                 # We only care about the validity of the path, not its existence
@@ -121,6 +121,12 @@ class Weights:
             )
         else:
             return self.transforms == other.transforms
+
+    # --- Properties ---
+    @property
+    def exists(self) -> bool:
+        """Return if the weights file exists."""
+        return self.path and self.path.is_weights_file(exists=True)
 
     # --- Retrieval ---
     def state_dict(
@@ -184,17 +190,17 @@ class Weights:
             return
 
         # Check if the path is already a file
-        if self.path.is_weights_file(exist=True):
+        if self.path.is_weights_file(exists=True):
             return
 
         # Check local project root (Highest priority)
         local_file = Path(root) / self.path
-        if local_file.is_weights_file(exist=True):
+        if local_file.is_weights_file(exists=True):
             self.path = local_file
 
         # Check global zoo directory
         global_file = zoo_root / self.path
-        if global_file.is_weights_file(exist=True):
+        if global_file.is_weights_file(exists=True):
             self.path = global_file
 
 
@@ -236,14 +242,19 @@ class WeightsEnum(Enum):
 
     # --- Properties ---
     @property
-    def url(self) -> Path:
-        """Return the URL of the pre-trained weights."""
-        return self.value.url
+    def exists(self) -> bool:
+        """Return if the weights file exists."""
+        return self.value.exists
 
     @property
     def path(self) -> Path:
         """Return the local path of the pre-trained weights."""
         return self.value.path
+
+    @property
+    def url(self) -> Path:
+        """Return the URL of the pre-trained weights."""
+        return self.value.url
 
     @property
     def num_classes(self) -> int:
@@ -313,7 +324,7 @@ def create_weights(weights: Weights | PathLike, *args, **kwargs) -> Weights | No
     elif isinstance(weights, (Path, str)):
         # If it's a path, try to load it as a Weights object'
         weights = Path(weights).normalize()
-        if weights.is_weights_file(exist=True):
+        if weights.is_weights_file(exists=True):
             return Weights(path=weights, *args, **kwargs)
 
     # Otherwise, return None
@@ -326,9 +337,13 @@ def create_weights(weights: Weights | PathLike, *args, **kwargs) -> Weights | No
 # region VALIDATION
 # ==============================================================================
 
-def is_weights_type(value: Any) -> bool:
+def is_weights_type(value: Any, exists: bool = True) -> bool:
     """Check if a value is of type ``WeightsType``."""
-    return isinstance(value, (Weights, WeightsEnum))
+    if isinstance(value, (Weights, WeightsEnum)):
+        return value.exists if exists else True
+    else:
+        return False
+
 
 # endregion
 

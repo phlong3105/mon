@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "zero_dce_sice_me"  # (str) Experiment name.
+exp_name: "saleo_ffsiren"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -12,25 +12,21 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "zero_dce"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "zero_dce"  # (str) Model architecture (e.g., resnet, yolo8).
-  in_channels: 3
-  out_channels: 3
-  hidden_dim: 32
-  weights: "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt"  # (str) Path to model weights.
+  name: "saleo_ffsiren"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "saleo"  # (str) Model architecture (e.g., resnet, yolo8).
+  weights: ~  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
 train_dataloader:
   dataset:
-    name: "sice_me"  # (str) Dataset name.
+    name: ~  # (str) Dataset name.
     root: ~  # (str) Root directory of the dataset.
-    dirname: "sice"  # (str) Directory name of the dataset within the root path.
-    subdir: "me"  # (str) Subdirectory name of the dataset.
+    dirname: ~  # (str) Directory name of the dataset within the root path.
+    subdir: ~  # (str) Subdirectory name of the dataset.
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -45,14 +41,13 @@ train_dataloader:
 
 val_dataloader:
   dataset:
-    name: "sice_me"  # (str) Dataset name.
+    name: ~  # (str) Dataset name.
     root: ~  # (str) Root directory of the dataset.
-    dirname: "sice"  # (str) Directory name of the dataset within the root path.
-    subdir: "me"  # (str) Subdirectory name of the dataset.
+    dirname: ~  # (str) Directory name of the dataset within the root path.
+    subdir: ~  # (str) Subdirectory name of the dataset.
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -72,24 +67,24 @@ epochs: 100  # (int) Number of epochs to train.
 
 optimizer:
   name: Adam  # (str) Optimizer name.
-  lr: 0.0001  # (float) Learning rate.
-  weight_decay: 0.0001
+  lr: 1e-4  # (float) Learning rate.
+  weight_decay: 3e-4
+  fused: True
 
 lr_scheduler: ~
 
 lr_warmup_scheduler: ~
 
 loss:
-  L_tv_w: 200
+  L_tv_w: 20
   L_spa_w: 1
-  L_col_w: 5
-  L_exp_w: 10
-  L_exp_mean: 0.5  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-
-grad_clip_norm: 0.1
+  l_spar_w: 5
+  L_exp_w: 8
+  L_de_w: 10
+  E: 0.3
 
 # --- Prediction ---
-eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
+eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

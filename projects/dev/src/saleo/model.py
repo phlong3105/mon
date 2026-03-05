@@ -371,8 +371,8 @@ class SALEO(ModelRegisterMixin, nn.Module):
                     l_spar = torch.mean(batch_r)              # Sparsity loss
                     l_de = L_de(batch_i, batch_d, batch_i_fixed) if batch_d is not None else 0.0
                     # loss = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar)  # Vanilla
-                    loss = l_spa + (20 * l_tv) + (16 * l_exp) + (5 * l_spar) + (10 * l_de)  # Best UHD-LL
-                    # loss = l_spa + (20 * l_tv) + (10 * l_exp) + (5 * l_spar) + (10 * l_de)  # Current
+                    # loss = l_spa + (20 * l_tv) + (16 * l_exp) + (5 * l_spar) + (10 * l_de)  # Best UHD-LL
+                    loss = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_spar) + (10 * l_de)  # Current
 
                 # Scale the loss, backpropagate, and step
                 scaler.scale(loss).backward()

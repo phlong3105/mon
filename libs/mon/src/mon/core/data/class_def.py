@@ -123,7 +123,7 @@ class ClassList(IndexList[Class]):
                 loaded class definitions.
         """
         path = Path(path).normalize()
-        if not path.has_ext(".yaml", ".yml", exist=True):
+        if not path.has_ext(".yaml", ".yml", exists=True):
             raise ValueError(f"YAML file not found at '{path}'.")
 
         classes = load_yaml(path=path)
@@ -141,7 +141,7 @@ class ClassList(IndexList[Class]):
             ValueError: If ``path`` is not a YAML file.
         """
         path = Path(path).normalize()
-        if not path.has_ext(".yaml", ".yml", exist=False):
+        if not path.has_ext(".yaml", ".yml", exists=False):
             raise ValueError(f"Expected a valid YAML file, but got '{path}'.")
 
         classes_dict = {

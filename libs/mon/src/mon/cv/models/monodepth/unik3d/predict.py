@@ -31,9 +31,11 @@ from mon import (
     Path,
     RunMode,
     Size,
+    Split,
     sys_ctx,
     TimeProfiler,
     transform as T,
+    Task,
 )
 from mon.cv import write_image
 from mon.dataset import build_dataset
@@ -92,6 +94,7 @@ def predict(config: Config):
         data_name, dataset = build_dataset(
             src=src,
             dataset_dir=config.data_dir,
+            split=Split.TEST,
             transforms=transforms,
         )
 
@@ -164,6 +167,13 @@ def main():
     config_ctx = ConfigContext.from_cli(
         root=current_dir,
         config_file="unik3d_vitb.yaml",
+        task=Task.MONODEPTH,
+        mode=RunMode.PREDICT,
+        arch="unik3d",
+        model="unik3d_vitb",
+        save=True,
+        exist_ok=True,
+        verbose=True,
     )
     config = config_ctx.config_for(RunMode.PREDICT)
     predict(config)

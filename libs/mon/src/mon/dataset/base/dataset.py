@@ -530,7 +530,11 @@ class StandardDataset(Dataset, ABC):
         for m in self.modalities:
             if m.name == pk:
                 continue
-            if self.split in [Split.TEST, Split.PREDICT] and m.test:
+            if (
+                (self.split == Split.TRAIN and m.train)
+                or (self.split == Split.VAL and m.val)
+                or (self.split in [Split.TEST, Split.PREDICT] and m.test)
+            ):
                 # If in test/predict split, include the modality if marked as test
                 metapoints[m.name] = self.list_modality_from_ref(
                     modality=m,

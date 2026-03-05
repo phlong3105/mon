@@ -73,7 +73,7 @@ class Image(Data):
             )
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
-            if not self.path.is_image_file(exist=True):
+            if not self.path.is_image_file(exists=True):
                 # We only care about the validity of the path, not its existence
                 raise ValueError(f"Image file not found at: {self.path}")
         if is_valid_str(self.base_dir):

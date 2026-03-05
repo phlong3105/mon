@@ -361,6 +361,10 @@ class DictList(UserDict, Generic[K, V]):
         if self.item_type is None:
             return item
 
+        # If it is None (i.e., empty), pass it through
+        if item is None:
+            return item
+
         # If it's already the correct type, pass it through
         if isinstance(item, self.item_type):
             return item
@@ -375,8 +379,8 @@ class DictList(UserDict, Generic[K, V]):
                 )
 
         raise TypeError(
-            f"Expected item of type '{self.item_type.__name__}' or a compatible "
-            f"dict, but got {type(item).__name__}."
+            f"Expected item of type '{self.item_type.__name__}', a compatible "
+            f"dict, or None, but got {type(item).__name__}."
         )
 
     # --- Mathematical Operators ---

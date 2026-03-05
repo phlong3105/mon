@@ -188,22 +188,22 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         return self
 
     # --- Validation ---
-    def has_name(self, name: str, exist: bool = False) -> bool:
+    def has_name(self, name: str, exists: bool = False) -> bool:
         """Check if the path has the given name (either stem or full name)."""
-        if exist and not self.exists():
+        if exists and not self.exists():
             return False
 
         return self.name == name or self.stem == name
 
-    def has_ext(self, *extensions: str | Iterable[str], exist: bool = False) -> bool:
+    def has_ext(self, *extensions: str | Iterable[str], exists: bool = False) -> bool:
         """Robust extension check.
 
         Args:
             *extensions (str | Iterable[str]): List of extensions to check.
-            exist (bool, optional): If True, check if the file exists.
+            exists (bool, optional): If True, check if the file exists.
                 Defaults to False.
         """
-        if exist and not self.is_file():
+        if exists and not self.is_file():
             return False
 
         # Flatten inputs
@@ -220,50 +220,50 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
 
         return self.suffix.lower() in exts
 
-    def is_image_file(self, exist: bool = True) -> bool:
+    def is_image_file(self, exists: bool = True) -> bool:
         """Check if the path has a recognized image extension.
 
         Args:
-            exist (bool, optional): If True, also check if the file exists.
+            exists (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(ImageExtension.values(), exist=exist)
+        return self.has_ext(ImageExtension.values(), exists=exists)
 
-    def is_raw_image_file(self, exist: bool = True) -> bool:
+    def is_raw_image_file(self, exists: bool = True) -> bool:
         """Check if the path is a raw image format.
 
         Args:
-            exist (bool, optional): If True, also check if the file exists.
+            exists (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext({".dng", ".arw"}, exist=exist)
+        return self.has_ext({".dng", ".arw"}, exists=exists)
 
-    def is_video_file(self, exist: bool = True) -> bool:
+    def is_video_file(self, exists: bool = True) -> bool:
         """Check if the path is a recognized video file.
 
         Args:
-            exist (bool, optional): If True, also check if the file exists.
+            exists (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(VideoExtension.values(), exist=exist)
+        return self.has_ext(VideoExtension.values(), exists=exists)
 
-    def is_weights_file(self, exist: bool = True) -> bool:
+    def is_weights_file(self, exists: bool = True) -> bool:
         """Check if the path matches known weight file extensions.
 
         Args:
-            exist (bool, optional): If True, also check if the file exists.
+            exists (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(WeightExtension.values(), exist=exist)
+        return self.has_ext(WeightExtension.values(), exists=exists)
 
-    def is_config_file(self, exist: bool = True) -> bool:
+    def is_config_file(self, exists: bool = True) -> bool:
         """Check if the path matches known config extensions.
 
         Args:
-            exist (bool, optional): If True, also check if the file exists.
+            exists (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(ConfigExtension.values(), exist=exist)
+        return self.has_ext(ConfigExtension.values(), exists=exists)
 
     def is_url(self) -> bool:
         """Fast check for URL scheme without external dependencies."""
@@ -297,7 +297,9 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         # We use .name instead of .stem to correctly handle folders with dots (e.g. "v1.0")
         if self.name == dirname:
             return self
-        return self / dirname
+        elif (self / dirname).is_dir():
+            return self / dirname
+        return self
 
     # --- Mutation ---
     def append(self, path: "Path" | str):

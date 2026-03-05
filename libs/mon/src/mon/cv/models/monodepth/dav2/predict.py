@@ -32,7 +32,9 @@ from mon import (
     Path,
     RunMode,
     Size,
+    Split,
     sys_ctx,
+    Task,
     TimeProfiler,
 )
 from mon.cv import write_image
@@ -97,6 +99,7 @@ def predict(config: Config):
         data_name, dataset = build_dataset(
             src=src,
             dataset_dir=config.data_dir,
+            split=Split.TEST,
             transforms=transforms,
         )
 
@@ -163,6 +166,13 @@ def main():
     config_ctx = ConfigContext.from_cli(
         root=current_dir,
         config_file="dav2_vitb_da2k.yaml",
+        task=Task.MONODEPTH,
+        mode=RunMode.PREDICT,
+        arch="dav2",
+        model="dav2_vitb",
+        save=True,
+        exist_ok=True,
+        verbose=True,
     )
     config = config_ctx.config_for(RunMode.PREDICT)
     predict(config)

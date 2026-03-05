@@ -86,7 +86,7 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
         self,
         name: str,
         in_channels: int = 3,
-        out_channels: int = 24,
+        out_channels: int = 3,
         hidden_dim: int = 32,
         weights: WeightsLike | None = None,
         verbose: bool = True,
@@ -99,7 +99,7 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
             in_channels (int, optional): Number of input channels.
                 Defaults to 3.
             out_channels (int, optional): Number of output channels.
-                Defaults to 24.
+                Defaults to 3.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             weights (WeightsLike, optional): Pre-trained weights to load.
                 Defaults to None.
@@ -123,7 +123,7 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
         self.e_conv4 = nn.Conv2d(hidden_dim, hidden_dim, 3, 1, 1)
         self.e_conv5 = nn.Conv2d(hidden_dim * 2, hidden_dim, 3, 1, 1)
         self.e_conv6 = nn.Conv2d(hidden_dim * 2, hidden_dim, 3, 1, 1)
-        self.e_conv7 = nn.Conv2d(hidden_dim * 2, out_channels, 3, 1, 1)
+        self.e_conv7 = nn.Conv2d(hidden_dim * 2, out_channels * 8, 3, 1, 1)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(2, 2, return_indices=False, ceil_mode=False)
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
@@ -229,8 +229,6 @@ class ZeroDCEPP(ModelRegisterMixin, nn.Module):
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
-        # Initialize RegistrableMixin
-        # ModelRegisterMixin.__init__(self, name=name)
 
         # Assign attributes
         self.verbose = verbose
@@ -361,8 +359,9 @@ def zero_dce(weights: WeightsLike = "default", *args, **kwargs):
         weights (WeightsLike, optional): Pre-trained weights to load.
             Defaults to "default".
     """
+    _ = kwargs.pop("name", "zero_dce")
     in_channels = kwargs.pop("in_channels", 3)
-    out_channels = kwargs.pop("out_channels", 24)
+    out_channels = kwargs.pop("out_channels", 3)
     hidden_dim = kwargs.pop("hidden_dim", 32)
     return ZeroDCE(
         name="zero_dce",

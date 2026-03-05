@@ -22,6 +22,8 @@ __all__ = [
     "resolve_weights_file",
 ]
 
+import os
+
 import requests
 
 from .console import log, log_error
@@ -193,7 +195,7 @@ def resolve_data_dir(cwd: PathLike) -> Path | None:
     """
     # Normalize inputs
     cwd = Path(cwd).normalize()
-    if not cwd.has_name("data", exist=True):
+    if not cwd.has_name("data", exists=True):
         cwd = resolve_project_root(cwd)
         cwd = cwd / "data"
 
@@ -225,7 +227,10 @@ def resolve_dataset_dir(dataset_name: str, data_root: PathLike) -> Path | None:
     if dataset_dir.is_dir():
         return dataset_dir
 
-    return data_root
+    if data_root.is_dir():
+        return data_root
+
+    return None
 
 
 def resolve_config_file(
@@ -254,7 +259,7 @@ def resolve_config_file(
     config_path = Path(config).normalize()
 
     # Direct path check (if the user provided a valid absolute/relative path)
-    if config_path.is_config_file(exist=True):
+    if config_path.is_config_file(exists=True):
         return config_path
 
     # Define search hierarchy (model-specific first, then project-wide)
@@ -273,7 +278,7 @@ def resolve_config_file(
         # Check the root of the config dir, then all subdirectories
         # We search for the exact name or the name with common config suffixes
         for candidate in d.rglob("*"):
-            if candidate.is_config_file(exist=True):
+            if candidate.is_config_file(exists=True):
                 # Check if it matches the name or the stem (if no suffix was provided)
                 if config_path.stem == candidate.stem:
                     return candidate
@@ -302,7 +307,7 @@ def resolve_weights_dir(root: PathLike, weights_path: PathLike) -> Path | None:
     # Check if the weight provided is already a directory
     if weights_path.is_dir():
         return weights_path
-    elif weights_path.is_weights_file(exist=True):
+    elif weights_path.is_weights_file(exists=True):
         return weights_path.parent
 
     # Check local project root (Highest priority)
@@ -336,17 +341,17 @@ def resolve_weights_file(root: PathLike, weights_file: PathLike) -> Path | None:
         return None
 
     # Check if the weight provided is already a file
-    if weights_file.is_weights_file(exist=True):
+    if weights_file.is_weights_file(exists=True):
         return weights_file
 
     # Check local project root (Highest priority)
     local_file = Path(root) / weights_file
-    if local_file.is_weights_file(exist=True):
+    if local_file.is_weights_file(exists=True):
         return local_file
 
     # Check global zoo directory
     global_file = K.ZOO_ROOT / weights_file
-    if global_file.is_weights_file(exist=True):
+    if global_file.is_weights_file(exists=True):
         return global_file
 
     return None
@@ -385,10 +390,10 @@ def resolve_output_dir(
     output_dir = Path(root).normalize()
     # Append dirname (e.g., 'runs/train', 'runs/predict')
     output_dir = output_dir.append(dirname)
-    # Append architecture (e.g., 'yolov8/')
+    # Append architecture and model (e.g., 'yolov8/yolov8n/')
+    # output_dir = output_dir.append(f"{arch}{os.sep}{model}")
     output_dir = output_dir.append(arch)
-    # Append model (e.g., 'yolov8n/')
-    output_dir = output_dir.append(model)
+    output_dir = output_dir / model
     # Append dataset (e.g., 'coco128/')
     output_dir = output_dir.append(data)
     # Return the final path

@@ -25,7 +25,9 @@ from mon import (
     metrics,
     Path,
     RunMode,
+    Split,
     sys_ctx,
+    Task,
     TimeProfiler,
     to_image_array,
     transform as T,
@@ -84,6 +86,7 @@ def predict(config: Config):
         data_name, dataset = build_dataset(
             src=src,
             dataset_dir=config.data_dir,
+            split=Split.TEST,
             transforms=transforms,
         )
 
@@ -104,7 +107,7 @@ def predict(config: Config):
                 meta = datapoint["meta"]
                 path = Path(meta["path"])
                 image = datapoint["image"]
-                image = image.to(device)
+                image = image.unsqueeze(0).to(device)
                 timers.preprocess.tock()
 
                 # 7.2.2. Inference
@@ -157,6 +160,13 @@ def main():
     config_ctx = ConfigContext.from_cli(
         root=current_dir,
         config_file="colie.yaml",
+        task=Task.ENHANCE,
+        mode=RunMode.PREDICT,
+        arch="colie",
+        model="colie",
+        save=True,
+        exist_ok=True,
+        verbose=True,
     )
     config = config_ctx.config_for(RunMode.PREDICT)
     predict(config)

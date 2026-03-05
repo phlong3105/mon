@@ -90,7 +90,7 @@ def read_image(path: PathLike, flags: int = cv2.IMREAD_COLOR) -> ndarray:
     """
     path = Path(path).normalize()
 
-    if path.is_raw_image_file(exist=True):
+    if path.is_raw_image_file(exists=True):
         # Handle RAW Images
         with rawpy.imread(str(path)) as raw:
             # use_camera_wb=True often provides a more natural look
@@ -134,7 +134,7 @@ def read_image_shape(path: PathLike) -> tuple[int, int, int]:
     """
     path = Path(path).normalize()
 
-    if path.is_raw_image_file(exist=True):
+    if path.is_raw_image_file(exists=True):
         # Handle RAW Images
         with rawpy.imread(str(path)) as raw:
             # Visible dimensions ignore the 'black' masked pixels at sensor edges

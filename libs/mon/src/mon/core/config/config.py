@@ -404,14 +404,14 @@ class Config:
 
         # Check if the given value is a valid path
         config_file = Path(value).normalize()
-        if config_file.has_ext(".yaml", ".yml", exist=True):
+        if config_file.has_ext(".yaml", ".yml", exists=True):
             self._config.config_file = config_file
             return
 
         # Look for the configuration file in the project config directory
         if self.config_dir:
             config_file = self.config_dir / value
-            if config_file.has_ext(".yaml", ".yml", exist=True):
+            if config_file.has_ext(".yaml", ".yml", exists=True):
                 self._config.config_file = config_file
                 return
 
@@ -778,7 +778,7 @@ class Config:
         path = Path(path).normalize()
 
         # Validate inputs
-        if not path.has_ext(".yaml", ".yml", exist=True):
+        if not path.has_ext(".yaml", ".yml", exists=True):
             raise TypeError(
                 f"Expected 'path' to be a valid configuration file path, "
                 f"but got {type(path).__name__}."
@@ -793,7 +793,11 @@ class Config:
     def update_from_cli(self, value: dict):
         """Update the current configuration with values from CLI arguments."""
         for k, v in value.items():
-            if v is None:
+            if (
+                (k in ARGUMENTS and v == ARGUMENTS[k].get("default"))
+                or v is None
+                or (isinstance(v, (list, tuple, dict)) and len(v) == 0)
+            ):
                 continue
 
             if k == "arch":
@@ -892,7 +896,7 @@ class Config:
                 root=self.run_dir,
                 dirname="train",
                 arch=self.arch,
-                model=self.model_name,
+                # model=self.model_name,
                 data=self.exp_name
             )
         else:
@@ -1210,7 +1214,6 @@ class ConfigContext(Config):
                 default=self.task,
                 choices=ARGUMENTS.task.choices,
             )
-            # print(f"Task: {self.task}")
         if self._index == 1:
             # Mode
             self.mode = OptionPrompt.ask(
@@ -1218,7 +1221,6 @@ class ConfigContext(Config):
                 default=self.mode,
                 choices=ARGUMENTS.mode.choices,
             )
-            # print(f"Mode: {self.mode}")
         if self._index == 2:
             # Arch
             self.arch = OptionPrompt.ask(
@@ -1226,7 +1228,6 @@ class ConfigContext(Config):
                 default=self.arch,
                 choices=MODELS.search_archs(self.task)
             )
-            # print(f"Architecture: {self.arch}")
         if self._index == 3:
             # Model
             self.model_name = OptionPrompt.ask(
@@ -1234,7 +1235,6 @@ class ConfigContext(Config):
                 default=self.model_name,
                 choices=MODELS.search(self.arch, self.task)
             )
-            # print(f"Model: {self.model_name}")
         if self._index == 4:
             # Config file
             self.config_file = PathPrompt.ask(
@@ -1246,11 +1246,19 @@ class ConfigContext(Config):
                 commonpath=self.root,
                 allow_empty=True,
             )
-            # print(f"Config file: {self.config_file}")
-            # print(f"{self.config}")
-            self.update_from_yaml(self.config_file)  # First, update from a new config file
-            self.update_from_cli(self.cli_kwargs)    # Then, add back CLI arguments
-            # print(f"{self.config}")
+            # First, update from a new config file
+            self.update_from_yaml(self.config_file)
+            # Then, add back CLI arguments
+            self.update_from_cli(self.cli_kwargs)
+            """
+            self.mode = self.cli_kwargs["mode"]
+            self.save = self.cli_kwargs["save"]
+            self.save_debug = self.cli_kwargs["save_debug"]
+            self.keep_subdirs = self.cli_kwargs["keep_subdirs"]
+            self.near_src = self.cli_kwargs["near_src"]
+            self.exist_ok = self.cli_kwargs["exist_ok"]
+            self.verbose = self.cli_kwargs["verbose"]
+            """
         if self._index == 5:
             # Weights
             self.weights = PathPrompt.ask(
@@ -1262,7 +1270,6 @@ class ConfigContext(Config):
                 commonpath=self.root,
                 allow_empty=True,
             )
-            print(f"Weights: {self.weights}")
         if self._index == 6:
             # Data
             if self.mode not in [RunMode.PREDICT]:
