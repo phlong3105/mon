@@ -11,13 +11,11 @@ from __future__ import annotations
 __all__ = [
     "Conv2dTime",
     "Decoder",
-    "DecoderTime",
     "DenoiseNet",
     "Encoder",
     "EncoderTime",
     "EnhanceFunction",
     "EnhanceFunctionTime",
-    "LinearTime",
     "ODEBlock",
 ]
 
@@ -438,33 +436,6 @@ class Conv2dTime(nn.Conv2d):
         return super(Conv2dTime, self).forward(t_and_x)
 
 
-class LinearTime(nn.Linear):
-    """Linear layer that takes in the time step as an additional input."""
-
-    # --- Lifecycle & Initialization ---
-    def __init__(self, in_features: int, *args, **kwargs):
-        """Initialize a new instance.
-
-        Args:
-            in_features (int): Number of features in the input (excluding
-                the time feature).
-        """
-        super().__init__(in_features + 1, *args, **kwargs)
-
-    # --- Callable & Context Manager ---
-    def forward(self, t: Tensor, x: Tensor) -> Tensor:
-        """Forward the input through the network.
-
-        Args:
-            t (Tensor): Time step tensor of shape (B,) or a scalar.
-            x (Tensor): Input tensor of shape (B, N, F) and values ranging
-                from 0.0 to 1.0.
-        """
-        t_feat = torch.ones_like(x[:, :, :1]) * t  # (B, N, 1)
-        t_and_x = torch.cat([t_feat, x], dim=-1)  # (B, N, F + 1)
-        return super(LinearTime, self).forward(t_and_x)
-
-
 class EncoderTime(nn.Module):
 
     # --- Lifecycle & Initialization ---
@@ -518,58 +489,6 @@ class EncoderTime(nn.Module):
         return y
 
 
-class DecoderTime(nn.Module):
-
-    # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        in_channels: int,
-        out_channels: int,
-        hidden_dim: int = 32,
-    ):
-        """Initialize a new instance.
-
-        Args:
-            in_channels (int): Number of input channels.
-            out_channels (int): Number of output channels.
-            hidden_dim (int, optional): Number of hidden channels. Defaults to 32.
-        """
-        super().__init__()
-        # Assign attributes
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.hidden_dim = hidden_dim
-
-        # Define network
-        self.linear_1 = LinearTime(self.in_channels + 1, self.hidden_dim)
-        self.linear_2 = LinearTime(self.hidden_dim, self.hidden_dim)
-        self.linear_3 = LinearTime(self.hidden_dim, self.hidden_dim)
-        self.linear_4 = LinearTime(self.hidden_dim, self.out_channels)
-        self.act = nn.ReLU(inplace=True)
-
-    # --- Callable & Context Manager ---
-    def forward(self, t: Tensor, feat: Tensor, coords: Tensor) -> Tensor:
-        """Forward the input through the network.
-
-        Args:
-            t (Tensor): Time step tensor of shape (B,) or a scalar.
-            feat (Tensor): Input feature tensor of shape (B, N, hidden_dim) and
-                values ranging from 0.0 to 1.0.
-            coords (Tensor): Input coordinate tensor of shape (B, N, 2) and
-                values ranging from 0.0 to 1.0.
-
-        Returns:
-            Tensor: Output tensor of shape (B, N, out_channels) and values
-                ranging from 0.0 to 1.0.
-        """
-        x = torch.cat([feat, coords], dim=-1)
-        y = self.act(self.linear_1(t, x))
-        y = self.act(self.linear_2(t, y))
-        y = self.act(self.linear_3(t, y))
-        y = F.tanh(self.linear_4(t, y))
-        return y
-
-
 class EnhanceFunctionTime(nn.Module):
     """A module for enhancing the input image with time conditioning."""
 
@@ -610,7 +529,7 @@ class EnhanceFunctionTime(nn.Module):
         self.encode = EncoderTime(in_channels=self.in_channels * 2 + 1, hidden_dim=self.hidden_dim)
         # Implicit Refiner (Siren/Continuous MLP)
         # Input: Features (32) + Coordinates (2) = 34
-        self.decode = DecoderTime(
+        self.decode = Decoder(
             in_channels=self.hidden_dim + 2,
             out_channels=self.out_channels,
             hidden_dim=self.hidden_dim,
@@ -664,7 +583,7 @@ class EnhanceFunctionTime(nn.Module):
             A = self.predict_curve_map_chunk(feat, h, w)
 
         # 6. Enhance
-        y = self.enhance(image, A)
+        y = A * (torch.pow(image, 2) - image)
 
         # 7. Return final and intermediate results for debugging
         self.last_A = A

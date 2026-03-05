@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "iz_dce_ode_sice_me"  # (str) Experiment name.
+exp_name: "clode_sice_me"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -8,20 +8,16 @@ task: "enhance"  # (str) Task name (e.g., detect, segment, classify).
 mode: "predict"  # (str) Run mode (e.g., train, predict).
 
 device: 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
-seed: 100  # (int) Random seed for reproducibility
+seed: 0  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "iz_dce_ode"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
-  in_channels: 3
-  out_channels: 3
-  hidden_dim: 32
-  imgsz: 512
-  chunk_size: 100000
+  name: "clode"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "clode"  # (str) Model architecture (e.g., resnet, yolo8).
+  num_filters: 32
   tol: 0.00001
   adjoint: True
-  weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.
+  weights: "cv/enhance/clode/clode/sice_me/clode_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
@@ -34,7 +30,7 @@ train_dataloader:
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
+        - { name: "Resize", height: 128, width : 128 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -42,7 +38,7 @@ train_dataloader:
     modalities: ~
     classes: ~
     verbose: True
-  batch_size: 4  # (int) Batch size.
+  batch_size: 8  # (int) Batch size.
   shuffle: True  # (bool) Shuffle the data each epoch.
   num_workers: 4  # (int) Number of workers for data loading.
   drop_last: False  # (bool) Drop the last incomplete batch.
@@ -56,7 +52,7 @@ val_dataloader:
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
+        - { name: "Resize", height: 128, width : 128 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -76,26 +72,24 @@ epochs: 100  # (int) Number of epochs to train.
 
 optimizer:
   name: Adam  # (str) Optimizer name.
-  lr: 0.0001  # 0.0001 (float) Learning rate.
-  weight_decay: 0.0001
+  lr: 0.00001  # (float) Learning rate.
+  weight_decay: 0.00001
 
 lr_scheduler: ~
 
 lr_warmup_scheduler: ~
 
 loss:
-  E: 0.6  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-  L_tv_A_w: 200
+  L_tv_w: 200
   L_spa_w: 1
-  L_col_w: 20  # 0.8
-  L_col_pre_w: 10
+  L_col_w: 20
   L_exp_w: 10
-  L_enhance_w: 1
-  L_denoise_w: 1  # 50
+  L_exp_mean: 0.6
 
 grad_clip_norm: 0.1
 
 # --- Prediction ---
+T: 2
 eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 

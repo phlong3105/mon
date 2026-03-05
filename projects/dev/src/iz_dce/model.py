@@ -300,7 +300,7 @@ def iz_dce_ode(*args, **kwargs):
     chunk_size = kwargs.pop("chunk_size", 100000)
     tol = kwargs.pop("tol", 1e-5)
     adjoint = kwargs.pop("adjoint", True)
-    return IZDCE(
+    return IZDCE_ODE(
         name="iz_dce_ode",
         in_channels=in_channels,
         out_channels=out_channels,

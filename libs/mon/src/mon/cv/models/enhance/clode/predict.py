@@ -3,16 +3,12 @@
 
 """Prediction Script.
 
-This script provides a CLI for running Zero-DCE prediction on a given dataset.
+This script provides a CLI for running CLODE prediction on a given dataset.
 
 References:
-    - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
-      Enhancement," CVPR 2020.
-    - Code: https://github.com/Li-Chongyi/Zero-DCE
-
-    - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
-      Estimation," IEEE TPAMI 2022.
-    - Code: https://github.com/Li-Chongyi/Zero-DCE_extension
+    - Paper: "Continuous Exposure Learning for Low-light Image Enhancement using
+      Neural ODEs," ICLR 2025.
+    - Code: https://github.com/dgjung0220/CLODE
 """
 
 from __future__ import annotations
@@ -47,16 +43,16 @@ from mon.dataset import build_dataset
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import zero_dce' works
+    # Add the project root to sys.path so 'import clode' works
     # even if you run this script from inside the folder
     sys.path.append(str(current_dir))
 
 try:
-    # Works when running as a module: python -m zero_dce.predict
-    from .model import zero_dce, zero_dce_pp
+    # Works when running as a module: python -m clode.predict
+    from .model import clode
 except ImportError:
     # Works when running as a script: python predict.py
-    from model import zero_dce, zero_dce_pp
+    from model import clode
 
 
 # ==============================================================================
@@ -78,12 +74,7 @@ def predict(config: Config):
 
     # 4. Define model
     imgsz = Size.from_value(config.eval_imgsz)
-    scale_factor = config.model.get("scale_factor")
-    if scale_factor:
-        imgsz = Size(
-            height=imgsz.h // scale_factor,
-            width=imgsz.w // scale_factor,
-        )
+    time_eval = torch.tensor([0, config.T]).float().to(device)
 
     model = MODELS.build(**config.model | { "weights": weights})
     model = model.to(device)
@@ -130,7 +121,7 @@ def predict(config: Config):
 
                 # 7.2.2. Inference
                 timers.infer.tick()
-                outputs = model(image, save_debug=config.save_debug)
+                outputs = model(image, T, inference=True)
                 timers.infer.tock()
 
                 # 7.2.3. Postprocess
@@ -167,11 +158,11 @@ def main():
     # Load config
     config_ctx = ConfigContext.from_cli(
         root=current_dir,
-        config_file="zero_dce_sice_me.yaml",
+        config_file="clode_sice_me.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,
-        arch="zero_dce",
-        model="zero_dce",
+        arch="clode",
+        model="clode",
         save=True,
         exist_ok=True,
         verbose=True,

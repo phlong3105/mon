@@ -3,20 +3,22 @@
 
 """Loss Functions.
 
-This module provides custom loss functions for Zero-DCE.
+This module provides custom loss functions for CLODE.
 """
 
 from __future__ import annotations
 
 __all__ = [
     "L_col",
+    "L_col_rate",
     "L_exp",
+    "L_exp_paired",
     "L_spa",
     "L_tv",
 ]
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torch.nn import functional as F
 
 from mon.nn import Loss
@@ -55,6 +57,36 @@ class L_col(Loss):
             torch.pow(d_gb, 2),
             0.5
         )
+        return k
+
+
+class L_col_rate(Loss):
+    """Loss function for color constancy based on mean RGB channel ratios.
+
+    Encourage the enhanced image to maintain color constancy by minimizing
+    the differences between the ratios of mean RGB channels in the input and
+    predicted images.
+    """
+
+    # --- Callable & Context Manager ---
+    def forward(self, pre: Tensor, cur: Tensor) -> Tensor:
+        """Calculate the color constancy loss based on mean RGB channel ratios.
+
+        Args:
+            pre (Tensor): Input (previous) image tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            cur (Tensor): Predicted (current) image tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Loss value.
+        """
+        mr_pre, mg_pre, mb_pre = torch.split(pre * 255, 1, dim=1)
+        mr_cur, mg_cur, mb_cur = torch.split(cur * 255, 1, dim=1)
+        d_rg = torch.pow(mr_pre.int() // mg_pre.int() - mr_cur.int() // mg_cur.int(), 2).sum() / 255.0 ** 2
+        d_rb = torch.pow(mr_pre.int() // mb_pre.int() - mr_cur.int() // mb_cur.int(), 2).sum() / 255.0 ** 2
+        d_gb = torch.pow(mg_pre.int() // mb_pre.int() - mg_cur.int() // mb_cur.int(), 2).sum() / 255.0 ** 2
+        k = torch.pow(d_rg + d_rb + d_gb, 0.5)
         return k
 
 
@@ -159,6 +191,47 @@ class L_exp(Loss):
         mean = self.pool(torch.mean(input, 1, keepdim=True))
         loss = torch.mean(torch.pow(mean - torch.FloatTensor([self.E]).to(input.device), 2))
         return loss
+
+
+class L_exp_paired(Loss):
+    """Loss function for exposure control based on paired input and target images.
+
+    Encourage well-exposedness in the predicted image by minimizing the
+    difference between local patch means of the predicted image and the target
+    image.
+    """
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, patch_size: int = 16, reduction: str = "mean"):
+        """Initialize a new instance.
+
+        Args:
+            patch_size (int): Size of the local patch to compute the mean.
+            reduction (str, optional): Reduction method to apply to the loss.
+                One of: ["mean", "sum", "none"]. Defaults to "mean".
+        """
+        super().__init__(reduction=reduction)
+        self.pool = nn.AvgPool2d(patch_size)
+
+    # --- Callable & Context Manager ---
+    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        """Calculate the loss between the ``input`` and the ``target``.
+
+        Args:
+            input (Tensor): Predicted image tensor of shape (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
+            target (Tensor): Target image tensor of shape (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Loss value.
+        """
+        input = torch.mean(input, 1, keepdim=True)
+        mean = self.pool(input)
+        e_map = torch.mean(target, 1, keepdim=True)
+        e_map = self.pool(e_map)
+        d = F.mse_loss(mean, e_map)
+        return d
 
 
 class L_tv(Loss):
