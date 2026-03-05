@@ -18,37 +18,28 @@ __all__ = [
     "colie",
 ]
 
-import sys
-
 import torch
 from torch import nn, Tensor
 
 from mon.core import log, MODELS, Path, Task
 from mon.nn import ModelRegisterMixin
+from . import loss as L
+from .module import ResidualINR
+from .utils import (
+    filter_up,
+    get_coords,
+    get_h_component,
+    get_patches,
+    get_s_component,
+    get_v_component,
+    hsv2rgb_torch,
+    interpolate_image,
+    replace_v_component,
+    rgb2hsv_torch,
+)
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
-extern_path = current_dir / "extern" / "colie"
-if str(extern_path) not in sys.path:
-    sys.path.append(str(extern_path))
-
-try:
-    # Now we can safely import from the original repository
-    import loss as L
-    from color import rgb2hsv_torch, hsv2rgb_torch
-    from siren import ResidualINR, ReflectanceINR
-    from utils import (
-        filter_up,
-        get_coords,
-        get_patches,
-        get_v_component,
-        get_h_component,
-        get_s_component,
-        interpolate_image,
-        replace_v_component,
-    )
-except ImportError:
-    raise ImportError(f"Failed to import modules from the 'extern/colie' directory.")
 
 
 # ==============================================================================

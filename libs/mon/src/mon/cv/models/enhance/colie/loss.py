@@ -13,6 +13,10 @@ import torch
 from torch import nn, Tensor
 
 
+# ==============================================================================
+# region LOSS FUNCTIONS
+# ==============================================================================
+
 class L_exp(nn.Module):
 
     def __init__(self, patch_size: int, mean_val: float):
@@ -101,3 +105,15 @@ class ConfidenceGatedDepthLoss(nn.Module):
         h_grad = x[:, :, :-1, :] - x[:, :, 1:, :]
         w_grad = x[:, :, :, :-1] - x[:, :, :, 1:]
         return h_grad, w_grad
+
+# endregion
+
+
+# ==============================================================================
+# region UNIT TEST
+# ==============================================================================
+
+if __name__ == "__main__":
+    pass
+
+# endregion

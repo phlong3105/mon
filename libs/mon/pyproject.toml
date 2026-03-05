@@ -56,7 +56,7 @@ dependencies    = [
     "einops",                           # A new flavor of deep learning operations.
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
     "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
-    "numpy (==2.2.6)",                  # The fundamental package for scientific computing with Python.
+    "numpy (==1.26.4)",                 # The fundamental package for scientific computing with Python.
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "scikit-image",                     # Image processing in Python.
     "scikit-learn",                     # A set of python modules for machine learning and data mining.
