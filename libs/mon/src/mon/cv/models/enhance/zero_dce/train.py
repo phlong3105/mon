@@ -22,6 +22,8 @@ __all__ = []
 import numpy as np
 import pyiqa
 import torch
+from rich.progress import Progress
+from torch import nn
 
 from mon import (
     Config,
@@ -105,11 +107,11 @@ def train(config: Config):
             description=f"[bright_yellow]Training"
         ):
             # 8.1. Train epoch
-            train_outputs = train_epoch(i, config, model, optimizer, train_dataloader, device)
+            train_outputs = train_epoch(i, config, model, optimizer, train_dataloader, pbar)
             loss = train_outputs.pop("loss")
 
             # 8.2. Val epoch
-            val_outputs = val_epoch(i, config, model, val_dataloader, device)
+            val_outputs = val_epoch(i, config, model, val_dataloader, pbar)
             psnr = val_outputs.pop("psnr")
             ssim = val_outputs.pop("ssim")
             ssimc = val_outputs.pop("ssimc")
@@ -151,7 +153,16 @@ def train(config: Config):
                 write_image(debug, save_path)
 
 
-def train_epoch(epoch, config, model, optimizer, train_dataloader, device) -> dict:
+def train_epoch(
+    epoch: int,
+    config: Config,
+    model: nn.Module,
+    optimizer: torch.optim.Optimizer,
+    train_dataloader: DataLoader,
+    pbar: Progress
+) -> dict:
+    device = config.device
+
     # 1. Define losses
     L_tv = L.L_tv().to(device)
     L_spa = L.L_spa().to(device)
@@ -164,11 +175,15 @@ def train_epoch(epoch, config, model, optimizer, train_dataloader, device) -> di
     L_exp_w = config.loss.L_exp_w
 
     # 2. Train loop
+    model.train()
     grad_clip_norm = config.grad_clip_norm
     train_outputs = {}
     losses = []
 
-    model.train()
+    task = pbar.add_task(
+        f"[bright_yellow]Train Epoch {epoch+1:03}",
+        total=len(train_dataloader)
+    )
     for j, datapoint in enumerate(train_dataloader):
         image = datapoint["image"]
         image = image.to(device)
@@ -190,8 +205,10 @@ def train_epoch(epoch, config, model, optimizer, train_dataloader, device) -> di
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm)
         optimizer.step()
-
         losses.append(loss.item())
+
+        pbar.update(task, advance=1)
+    pbar.remove_task(task)
 
     # 3. Output
     train_outputs |= {
@@ -200,19 +217,31 @@ def train_epoch(epoch, config, model, optimizer, train_dataloader, device) -> di
     return train_outputs
 
 
-def val_epoch(epoch, config, model, val_dataloader, device) -> dict:
+def val_epoch(
+    epoch: int,
+    config: Config,
+    model: nn.Module,
+    val_dataloader: DataLoader,
+    pbar: Progress
+) -> dict:
+    device = config.device
+
     # 1. Define metrics
     psnr_metric = pyiqa.create_metric("psnr", device=device)
     ssim_metric = pyiqa.create_metric("ssim", device=device)
     ssimc_metric = pyiqa.create_metric("ssimc", device=device)
 
     # 2. Val loop
+    model.eval()
     val_outputs = {}
     psnrs = []
     ssims = []
     ssimcs = []
 
-    model.eval()
+    task = pbar.add_task(
+        f"[bright_yellow]Val Epoch {epoch+1:03}",
+        total=len(val_dataloader)
+    )
     for j, datapoint in enumerate(val_dataloader):
         with torch.no_grad():
             image = datapoint["image"]
@@ -238,6 +267,9 @@ def val_epoch(epoch, config, model, val_dataloader, device) -> dict:
                     "image": image.cpu(),
                     "enhanced": enhanced.cpu(),
                 }
+
+            pbar.update(task, advance=1)
+    pbar.remove_task(task)
 
     # 3. Output
     val_outputs |= {

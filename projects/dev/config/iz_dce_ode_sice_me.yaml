@@ -17,11 +17,11 @@ model:
   in_channels: 3
   out_channels: 3
   hidden_dim: 32
-  imgsz: 512
+  imgsz: 256
   chunk_size: 100000
-  tol: 0.00001
+  tol: 0.001
   adjoint: True
-  weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.
+  weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
@@ -34,7 +34,7 @@ train_dataloader:
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
+        - { name: "Resize", height: 256, width : 256 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -42,7 +42,7 @@ train_dataloader:
     modalities: ~
     classes: ~
     verbose: True
-  batch_size: 4  # (int) Batch size.
+  batch_size: 8  # (int) Batch size.
   shuffle: True  # (bool) Shuffle the data each epoch.
   num_workers: 4  # (int) Number of workers for data loading.
   drop_last: False  # (bool) Drop the last incomplete batch.
@@ -56,7 +56,7 @@ val_dataloader:
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
+        - { name: "Resize", height: 256, width : 256 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -96,7 +96,7 @@ loss:
 grad_clip_norm: 0.1
 
 # --- Prediction ---
-eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
+eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

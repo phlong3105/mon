@@ -41,7 +41,7 @@ train_dataloader:
     modalities: ~
     classes: ~
     verbose: True
-  batch_size: 4  # (int) Batch size.
+  batch_size: 8  # (int) Batch size.
   shuffle: True  # (bool) Shuffle the data each epoch.
   num_workers: 4  # (int) Number of workers for data loading.
   drop_last: False  # (bool) Drop the last incomplete batch.

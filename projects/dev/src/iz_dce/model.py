@@ -139,7 +139,7 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
         hidden_dim: int = 32,
         imgsz: int = 512,
         chunk_size: int = 100000,
-        tol: float = 1e-5,
+        tol: float = 1e-3,
         adjoint: bool = True,
         weights: WeightsLike | None = None,
         verbose: bool = True,
@@ -155,7 +155,7 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
             imgsz (int, optional): Downsample the input image to this size for
                 encoding. Defaults to 512.
             chunk_size (int): Number of pixels to process at once. Defaults to 100,000.
-            tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-5.
+            tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-3.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to False.
             weights (WeightsLike, optional): Pre-trained weights to load.
@@ -227,7 +227,6 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
 
         return {
             "enhanced": pred[:, :3, :, :],
-            "denoised": pred[:, :3, :, :],
             "A": A,
             "l_denoise": pred[:, 4:7, :, :],
         }
@@ -276,7 +275,7 @@ def iz_dce_ode(*args, **kwargs):
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 512)
     chunk_size = kwargs.pop("chunk_size", 100000)
-    tol = kwargs.pop("tol", 1e-5)
+    tol = kwargs.pop("tol", 1e-3)
     adjoint = kwargs.pop("adjoint", True)
     return IZDCE_ODE(
         name="iz_dce_ode",

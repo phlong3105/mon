@@ -596,6 +596,9 @@ class EnhanceFunctionTime(nn.Module):
         # l_tv = torch.ones_like(A) * self.tv_loss(A, depth)
         l_denoise = torch.ones_like(A) * l_denoise
 
+        # Debug
+        # print(self.nfe)
+
         outputs = torch.cat([y, depth, l_denoise], dim=1)
         return outputs
 
@@ -718,14 +721,14 @@ class EnhanceFunctionTime(nn.Module):
 
 class ODEBlock(nn.Module):
 
-    max_num_steps = 1000  # 30 # 50 # 100
+    max_num_steps = 100  # 30 # 50 # 100 # 1000
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         ode_func: nn.Module,
         tol: float = 1e-3,
-        adjoint: bool = False,
+        adjoint: bool = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -734,7 +737,7 @@ class ODEBlock(nn.Module):
             ode_func (nn.Module): The ODE function defining the dynamics.
             tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-3.
             adjoint (bool, optional): Whether to use the adjoint method for
-                backpropagation. Defaults to False.
+                backpropagation. Defaults to True.
         """
         super().__init__()
         # Assign attributes
