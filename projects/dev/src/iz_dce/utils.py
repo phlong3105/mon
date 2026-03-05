@@ -13,13 +13,10 @@ __all__ = [
     "weights_init",
 ]
 
-import numpy as np
 import torch
-from torch import nn, Tensor
-from torch.nn import functional as F
+from torch import Tensor
 
 from mon.core import Size, SizeLike
-from mon.cv.ops import FastGuidedFilter
 
 
 # ==============================================================================

@@ -40,21 +40,6 @@ from mon.dataset import DataLoader
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
-"""
-if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import iz_dce' works
-    # even if you run this script from inside the folder
-    sys.path.append(str(current_dir))
-
-try:
-    # Works when running as a module: python -m iz_dce.train
-    from . import loss as L
-    from .model import iz_dce
-except ImportError:
-    # Works when running as a script: python train.py
-    from model import iz_dce
-    import loss as L
-"""
 
 
 # ==============================================================================

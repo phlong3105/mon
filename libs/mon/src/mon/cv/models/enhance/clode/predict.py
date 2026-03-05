@@ -15,8 +15,6 @@ from __future__ import annotations
 
 __all__ = []
 
-import sys
-
 import cv2
 import torch
 
@@ -42,17 +40,6 @@ from mon.dataset import build_dataset
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
-if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import clode' works
-    # even if you run this script from inside the folder
-    sys.path.append(str(current_dir))
-
-try:
-    # Works when running as a module: python -m clode.predict
-    from .model import clode
-except ImportError:
-    # Works when running as a script: python predict.py
-    from model import clode
 
 
 # ==============================================================================

@@ -19,7 +19,6 @@ __all__ = [
 ]
 
 import copy
-import sys
 
 import kornia
 import torch
@@ -28,42 +27,19 @@ from torch import nn, Tensor
 from mon.core import log, MODELS, Path, SizeLike, Task
 from mon.cv.models.restore import ZSN2N
 from mon.nn import loss as L, ModelRegisterMixin
+from .module import ResidualINR
+from .utils import (
+    filter_up,
+    get_coords,
+    get_patches,
+    interpolate_image,
+    replace_v_component,
+    RgbToHsv,
+    RgbToHvi,
+)
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
-if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import saleo' works
-    # even if you run this script from inside the folder
-    sys.path.append(str(current_dir))
-
-try:
-    # Works when running as a module: python -m zero_dce.predict
-    from .loss import ConfidenceGatedDepthLoss
-    from .module import ResidualINR
-    from .utils import (
-        RgbToHsv,
-        RgbToHvi,
-        filter_up,
-        get_coords,
-        get_patches,
-        get_v_component,
-        interpolate_image,
-        replace_v_component,
-    )
-except ImportError:
-    # Works when running as a script: python predict.py
-    from loss import ConfidenceGatedDepthLoss
-    from module import ResidualINR
-    from utils import (
-        RgbToHsv,
-        RgbToHvi,
-        filter_up,
-        get_coords,
-        get_patches,
-        get_v_component,
-        interpolate_image,
-        replace_v_component,
-    )
 
 # Allows PyTorch to use TF32 cores for matrix multiplications
 torch.set_float32_matmul_precision("high")

@@ -19,37 +19,15 @@ __all__ = [
     "iz_dce_ode",
 ]
 
-import sys
-
 import torch
 from torch import nn, Tensor
 
 from mon.core import is_weights_type, log, MODELS, Path, Task, WeightsLike
 from mon.nn import ModelRegisterMixin
+from .module import EnhanceFunction, EnhanceFunctionTime, ODEBlock
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
-if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import saleo' works
-    # even if you run this script from inside the folder
-    sys.path.append(str(current_dir))
-
-try:
-    # Works when running as a module: python -m zero_dce.predict
-    from .module import (
-        EnhanceFunction,
-        EnhanceFunctionTime,
-        ODEBlock,
-    )
-    from .utils import weights_init
-except ImportError:
-    # Works when running as a script: python predict.py
-    from module import (
-        EnhanceFunction,
-        EnhanceFunctionTime,
-        ODEBlock,
-    )
-    from utils import weights_init
 
 
 # ==============================================================================

@@ -14,7 +14,6 @@ from __future__ import annotations
 
 __all__ = []
 
-# noinspection PyUnusedImports
 import calie
 from mon import (
     Config,
@@ -22,7 +21,6 @@ from mon import (
     create_progress_bar,
     K,
     metrics,
-    MODELS,
     Path,
     resolve_project_root,
     RunMode,
@@ -37,19 +35,6 @@ from mon.dataset import build_dataset
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
-"""
-if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import colie' works
-    # even if you run this script from inside the folder
-    sys.path.append(str(current_dir))
-
-try:
-    # Works when running as a module: python -m colie.predict
-    from .model import colie
-except ImportError:
-    # Works when running as a script: python predict.py
-    from model import colie
-"""
 
 
 # ==============================================================================
@@ -69,7 +54,7 @@ def predict(config: Config):
     # weights = config.weights or config.finetune
 
     # 4. Define model
-    model = MODELS.build(device=device, **config.model)
+    model = calie(device=device, **config.model)
     model = model.to(device)
 
     # 5. Run benchmark

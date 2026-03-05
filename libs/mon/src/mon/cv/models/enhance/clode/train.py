@@ -15,8 +15,6 @@ from __future__ import annotations
 
 __all__ = []
 
-import sys
-
 import numpy as np
 import pyiqa
 import torch
@@ -27,6 +25,7 @@ from mon import (
     create_progress_bar,
     log,
     metrics,
+    MODELS,
     pascalize,
     Path,
     RunMode,
@@ -36,23 +35,11 @@ from mon import (
     to_image_array,
 )
 from mon.cv import draw_info, write_image
+from mon.cv.models.enhance.clode import loss as L
 from mon.dataset import DataLoader
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
-if str(current_dir) not in sys.path:
-    # Add the project root to sys.path so 'import clode' works
-    # even if you run this script from inside the folder
-    sys.path.append(str(current_dir))
-
-try:
-    # Works when running as a module: python -m clode.train
-    from . import loss as L
-    from .model import clode
-except ImportError:
-    # Works when running as a script: python train.py
-    from model import clode
-    import loss as L
 
 
 # ==============================================================================
@@ -74,7 +61,7 @@ def train(config: Config):
     # 4. Define model
     imgsz = Size.from_value(config.eval_imgsz)
 
-    model = clode(**config.model | { "weights": weights})
+    model = MODELS.build(**config.model | { "weights": weights})
     model = model.to(device)
     model.train()
 
