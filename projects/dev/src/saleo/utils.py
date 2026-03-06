@@ -29,7 +29,7 @@ from torch.nn import functional as F
 from torchvision.transforms import functional as TF
 
 from mon.core import Size, SizeLike
-from mon.cv.ops import FastGuidedFilter
+from mon.ops import FastGuidedFilter
 
 
 # ==============================================================================

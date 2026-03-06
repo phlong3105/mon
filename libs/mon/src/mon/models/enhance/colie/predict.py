@@ -1,38 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Prediction Script.
+"""Prediction Runners.
 
-This script provides a CLI for running CoLIE prediction on a given dataset.
-
-References:
-    - Paper: "Fast Context-Based Low-Light Image Enhancement via Neural Implicit
-      Representations," ECCV 2024.
-    - Code: https://github.com/ctom2/colie
+This module provides prediction runner classes for CoLIE models.
 """
 
 from __future__ import annotations
 
-__all__ = []
+__all__ = [
+    "CoLIE_Predictor",
+]
 
-from mon import (
-    Config,
-    ConfigContext,
-    create_progress_bar,
-    K,
-    metrics,
-    MODELS,
-    Path,
-    RunMode,
-    Split,
-    sys_ctx,
-    Task,
-    TimeProfiler,
-    to_image_array,
-    transform as T,
-)
-from mon.dataset import build_dataset
-from mon.ops import write_image
+from typing_extensions import override
+
+from mon.core import Path, Size, TimeProfiler
+from mon.dataset import transform as T
+from mon.runners import Predictor
+from .model import colie
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -42,99 +27,88 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-def predict(config: Config):
-    # 1. Summarize the current run
-    if config.verbose:
-        config.log_summary()
+class CoLIE_Predictor(Predictor):
+    """Predictor for CoLIE models."""
 
-    # 2. Setup environment
-    device = config.device
-    sys_ctx.set_random_seed(config.seed)
+    # --- Properties ---
+    @override
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
+        config = self.config
+        device = self.device
 
-    # 3. Resolve pre-trained weights
-    # weights = config.weights or config.finetune
+        model = colie(device=device, **config.model)
+        model = model.to(device)
+        model.train()
+        self._model = model
 
-    # 4. Define model
-    model = MODELS.build(device=device, **config.model)
-    model = model.to(device)
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute."""
+        self._transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
 
-    # 5. Run benchmark
-    if config.benchmark:
-        metrics.benchmark(model)
+    # --- Prediction ---
+    @override
+    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+        """Predict the output of the model for a single data point.
 
-    # 6. Define transforms
-    transforms = T.Compose([
-        T.Normalize(normalization="min_max"),
-        T.ToTensorV2(transpose_mask=True),
-    ])
+        Args:
+            datapoint (dict): The dictionary containing the data point to predict.
+            timers (TimeProfiler): The time profiler to record timing information
+                during prediction.
 
-    # 7. Prediction loop
-    for src in config.data:
-        # 7.1. Build dataset
-        data_name, dataset = build_dataset(
-            src=src,
-            dataset_dir=config.data_dir,
-            split=Split.TEST,
-            transforms=transforms,
-        )
-
-        # 7.2. Main processing loop
+        Returns:
+            dict: The dictionary containing the prediction results.
+        """
+        config = self.config
+        device = self.device
         epochs = config.epochs
         E = config.loss.E
+        save_debug = config.save_debug
 
-        timers = TimeProfiler()
-        timers.total.tick()
-        with create_progress_bar() as pbar:
-            for i, datapoint in pbar.track(
-                sequence=enumerate(dataset),
-                total=len(dataset),
-                description=f"[bright_yellow]Predicting"
-            ):
-                # 7.2.1. Preprocess
-                timers.preprocess.tick()
-                meta = datapoint["meta"]
-                path = Path(meta["path"])
-                image = datapoint["image"]
-                image = image.unsqueeze(0).to(device)
-                timers.preprocess.tock()
+        # 1. Prepare inputs
+        timers.preprocess.tick()
+        image = datapoint["image"]
+        image = image.to(device)
+        timers.preprocess.tock()
 
-                # 7.2.2. Inference
-                timers.infer.tick()
-                outputs = model(image, epochs=epochs, E=E, save_debug=config.save_debug)
-                timers.infer.tock()
+        # 2. Inference
+        timers.infer.tick()
+        outputs = self.model(image, epochs=epochs, E=E, save_debug=save_debug)
+        timers.infer.tock()
 
-                # 7.2.3. Postprocess
-                timers.postprocess.tick()
-                enhanced = outputs["enhanced"]
-                enhanced = to_image_array(enhanced)
-                debug = {}
-                if config.save_debug:
-                    debug = {
-                        "image_i": to_image_array(outputs["image_i"]),
-                        "image_i_res": to_image_array(outputs["image_i_res"]),
-                        "image_i_fixed": to_image_array(outputs["image_i_fixed"]),
-                        "image_r": to_image_array(outputs["image_r"]),
-                    }
-                timers.postprocess.tock()
+        return outputs
 
-                # 7.2.4. Save
-                if config.save:
-                    # Save to: ".../pred/"
-                    save_path = config.resolve_save_file(K.PRED_DIR, src_path=path)
-                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
-                    write_image(enhanced, save_path)
+    # --- Utilities ---
+    @override
+    def _save(self, outputs: dict, meta: dict):
+        """Save the main prediction results to a file.
 
-                # 7.2.5. Save debug
-                if config.save_debug:
-                    # Save to: ".../debug/"
-                    save_dir = config.resolve_save_dir(K.DEBUG_DIR, src_path=path)
-                    for k, v in debug.items():
-                        save_path = save_dir / f"{path.stem}_{k}{K.IMAGE_EXT}"
-                        write_image(v, save_path)
-        timers.total.tock()
+        Args:
+            outputs (dict): The dictionary containing the main prediction results.
+            meta (dict): The dictionary containing the metadata.
+        """
+        path = Path(meta["path"])
+        size = Size.from_value(meta["imgsz"])
+        self._save_image(outputs["enhanced"], size, path)
 
-        # 7.3. Finish
-        timers.print()
+    @override
+    def _save_debug(self, outputs: dict, meta: dict):
+        """Save debugging results for visualization.
+
+        Args:
+            outputs (dict): The dictionary containing the debugging results.
+            meta (dict): The dictionary containing the metadata.
+        """
+        path = Path(meta["path"])
+        size = Size.from_value(meta["imgsz"])
+        self._save_image(outputs["image_i"], size, path, "image_i")
+        self._save_image(outputs["image_i_res"], size, path, "image_i_res")
+        self._save_image(outputs["image_i_fixed"], size, path, "image_i_fixed")
+        self._save_image(outputs["image_r"], size, path, "image_r")
 
 # endregion
 

@@ -1,29 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Prediction Script.
+"""Prediction Runners.
 
-This script provides a CLI for running CLODE prediction on a given dataset.
-
-References:
-    - Paper: "Continuous Exposure Learning for Low-light Image Enhancement using
-      Neural ODEs," ICLR 2025.
-    - Code: https://github.com/dgjung0220/CLODE
+This module provides prediction runner classes for IZ-DCE and IZ-DCE-ODE models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "CLODE_Predictor",
+    "IZDCE_Predictor",
+    "IZDCE_ODE_Predictor",
 ]
 
 import torch
 from typing_extensions import override
 
-from mon.core import Path, Size, TimeProfiler
+from mon.core import MODELS, Path, Size, TimeProfiler
 from mon.dataset import transform as T
+from mon.metrics import benchmark
 from mon.runners import Predictor
-from .model import clode
+# noinspection PyUnusedImports
+from .model import iz_dce, iz_dce_ode
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -33,8 +31,8 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class CLODE_Predictor(Predictor):
-    """Predictor for CLODE models."""
+class IZDCE_Predictor(Predictor):
+    """Predictor for IZ-DCE models."""
 
     # --- Properties ---
     @override
@@ -44,7 +42,7 @@ class CLODE_Predictor(Predictor):
         device = self.device
         weights = config.weights or config.finetune
 
-        model = clode(**config.model | { "weights": weights})
+        model = iz_dce(**config.model | { "weights": weights})
         model = model.to(device)
         model.eval()
         self._model = model
@@ -77,17 +75,19 @@ class CLODE_Predictor(Predictor):
         """
         config = self.config
         device = self.device
+        save_debug = config.save_debug
 
         # 1. Prepare inputs
         timers.preprocess.tick()
         image = datapoint["image"]
         image = image.to(device)
-        time_eval = torch.tensor([0, config.T]).float().to(device)
+        depth = datapoint.get("depth", None)
+        depth = depth.to(device) if depth is not None else None
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, eval_time=time_eval, inference=True)
+        outputs = self.model(image, depth)
         timers.infer.tock()
 
         return outputs
@@ -114,6 +114,57 @@ class CLODE_Predictor(Predictor):
             meta (dict): The dictionary containing the metadata.
         """
         pass
+
+
+class IZDCE_ODE_Predictor(IZDCE_Predictor):
+    """Predictor for IZ-DCE-ODE models."""
+
+    # --- Properties ---
+    @override
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
+        config = self.config
+        device = self.device
+        weights = config.weights or config.finetune
+
+        model = iz_dce_ode(**config.model | { "weights": weights})
+        model = model.to(device)
+        model.eval()
+        self._model = model
+
+    # --- Prediction ---
+    @override
+    @torch.no_grad()
+    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+        """Predict the output of the model for a single data point.
+
+        Args:
+            datapoint (dict): The dictionary containing the data point to predict.
+            timers (TimeProfiler): The time profiler to record timing information
+                during prediction.
+
+        Returns:
+            dict: The dictionary containing the prediction results.
+        """
+        config = self.config
+        device = self.device
+        save_debug = config.save_debug
+
+        # 1. Prepare inputs
+        timers.preprocess.tick()
+        image = datapoint["image"]
+        image = image.to(device)
+        depth = datapoint.get("depth", None)
+        depth = depth.to(device) if depth is not None else None
+        time_eval = torch.tensor([0, config.T]).float().to(device)
+        timers.preprocess.tock()
+
+        # 2. Inference
+        timers.infer.tick()
+        outputs = self.model(image, depth, time_eval)
+        timers.infer.tock()
+
+        return outputs
 
 # endregion
 

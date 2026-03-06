@@ -12,6 +12,7 @@ __all__ = [
     "ZeroDCE_Predictor",
 ]
 
+import torch
 from typing_extensions import override
 
 from mon.core import MODELS, Path, Size, TimeProfiler
@@ -63,6 +64,7 @@ class ZeroDCE_Predictor(Predictor):
 
     # --- Prediction ---
     @override
+    @torch.no_grad()
     def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
         """Predict the output of the model for a single data point.
 
@@ -115,7 +117,7 @@ class ZeroDCE_Predictor(Predictor):
         """
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
-        self._save_image(path, outputs["enhanced"], size)
+        self._save_image(outputs["enhanced"], size, path)
 
     @override
     def _save_debug(self, outputs: dict, meta: dict):

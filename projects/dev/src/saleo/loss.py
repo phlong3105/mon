@@ -69,7 +69,7 @@ class ConfidenceGatedDepthLoss(Loss):
         loss_w = illu_w.abs() * weight_w * mask_w
 
         loss = loss_h.mean() + loss_w.mean()
-        return loss
+        return self.reduce(loss)
 
     @staticmethod
     def gradient(x: Tensor) -> tuple[Tensor, Tensor]:

@@ -167,7 +167,6 @@ class Predictor(ABC):
                 during prediction.
         """
         config = self.config
-        device = self.device
         save_debug = config.save_debug
 
         # 1. Build dataset
@@ -241,15 +240,24 @@ class Predictor(ABC):
         """
         pass
 
-    def _save_image(self, image: TensorOrArray, src_path: Path, size: Size):
+    def _save_image(
+        self,
+        image: TensorOrArray,
+        size: Size,
+        src_path: Path,
+        stem: str | None = None
+    ):
         """Save a debug image for visualization.
 
         Args:
             image (TensorOrArray): The image to be saved, which can be a tensor
                 or an array.
-            src_path (Path): The source path, used to determine the output file path.
             size (Size): The original size of the input image, used for resizing
                 the image if necessary.
+            src_path (Path): The source path, used to determine the output file path.
+            stem (str, optional): An optional string to be appended to the
+                output file name for differentiation. If None, the original
+                file name will be used.
         """
         config = self.config
 
@@ -268,7 +276,11 @@ class Predictor(ABC):
             image = cv2.resize(image, size.wh)
 
         # Save the image
-        save_path = config.resolve_save_file(dirname=K.PRED_DIR, src_path=src_path)
+        if stem:
+            save_dir = config.resolve_save_dir(dirname=K.PRED_DIR, src_path=src_path)
+            save_path = save_dir / f"{src_path.stem}_{stem}{K.IMAGE_EXT}"
+        else:
+            save_path = config.resolve_save_file(dirname=K.PRED_DIR, src_path=src_path)
         write_image(image=image, path=save_path)
 
 # endregion

@@ -101,8 +101,8 @@ class IZDCE_Trainer(Trainer):
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            depth = datapoint.get("depth", None)
             image = image.to(device)
+            depth = datapoint.get("depth", None)
             depth = depth.to(device) if depth is not None else None
 
             # 2.2. Forward pass
@@ -181,10 +181,10 @@ class IZDCE_Trainer(Trainer):
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            depth = datapoint.get("depth", None)
-            target = datapoint["target"]
             image = image.to(device)
+            depth = datapoint.get("depth", None)
             depth = depth.to(device) if depth is not None else None
+            target = datapoint["target"]
             target = target.to(device)
 
             # 2.2. Forward pass
@@ -337,8 +337,8 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            depth = datapoint.get("depth", None)
             image = image.to(device)
+            depth = datapoint.get("depth", None)
             depth = depth.to(device) if depth is not None else None
             eval_time = torch.tensor([0, 3]).float().to(device)
 
@@ -414,10 +414,10 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            depth = datapoint.get("depth", None)
-            target = datapoint["target"]
             image = image.to(device)
+            depth = datapoint.get("depth", None)
             depth = depth.to(device) if depth is not None else None
+            target = datapoint["target"]
             target = target.to(device)
             eval_time = torch.tensor([0, 3]).float().to(device)
 

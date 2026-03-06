@@ -96,6 +96,7 @@ loss:
 grad_clip_norm: 0.1
 
 # --- Prediction ---
+T: 2
 eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 

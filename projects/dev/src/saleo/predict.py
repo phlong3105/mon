@@ -1,29 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Prediction Script.
+"""Prediction Runners.
 
-This script provides a CLI for running CLODE prediction on a given dataset.
-
-References:
-    - Paper: "Continuous Exposure Learning for Low-light Image Enhancement using
-      Neural ODEs," ICLR 2025.
-    - Code: https://github.com/dgjung0220/CLODE
+This module provides prediction runner classes for SALEO models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "CLODE_Predictor",
+    "SALEO_Predictor",
 ]
 
-import torch
 from typing_extensions import override
 
-from mon.core import Path, Size, TimeProfiler
+from mon.core import MODELS, Path, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
-from .model import clode
+# noinspection PyUnusedImports
+from .model import saleo_ffsiren, saleo_siren
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -33,8 +28,8 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class CLODE_Predictor(Predictor):
-    """Predictor for CLODE models."""
+class SALEO_Predictor(Predictor):
+    """Predictor for SALEO models."""
 
     # --- Properties ---
     @override
@@ -42,28 +37,22 @@ class CLODE_Predictor(Predictor):
         """Initialize ``self._model`` attribute."""
         config = self.config
         device = self.device
-        weights = config.weights or config.finetune
 
-        model = clode(**config.model | { "weights": weights})
+        model = MODELS.build(device=device, **config.model)
         model = model.to(device)
-        model.eval()
+        model.train()
         self._model = model
 
     @override
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
-        config = self.config
-        imgsz = Size.from_value(config.eval_imgsz)
-
         self._transforms = T.Compose([
-            T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
         ])
 
     # --- Prediction ---
     @override
-    @torch.no_grad()
     def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
         """Predict the output of the model for a single data point.
 
@@ -77,17 +66,29 @@ class CLODE_Predictor(Predictor):
         """
         config = self.config
         device = self.device
+        epochs = config.epochs
+        E = config.loss.E
+        save_debug = config.save_debug
 
         # 1. Prepare inputs
         timers.preprocess.tick()
         image = datapoint["image"]
         image = image.to(device)
-        time_eval = torch.tensor([0, config.T]).float().to(device)
+        depth = datapoint["depth"]
+        depth = depth.to(device) if depth is not None else None
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, eval_time=time_eval, inference=True)
+        outputs = self.model(
+            image=image,
+            depth=depth,
+            epochs=epochs,
+            batch_size=8,
+            E=E,
+            color_func="hsv",
+            save_debug=save_debug,
+        )
         timers.infer.tock()
 
         return outputs
@@ -113,7 +114,12 @@ class CLODE_Predictor(Predictor):
             outputs (dict): The dictionary containing the debugging results.
             meta (dict): The dictionary containing the metadata.
         """
-        pass
+        path = Path(meta["path"])
+        size = Size.from_value(meta["imgsz"])
+        self._save_image(outputs["image_i"], size, path, "image_i")
+        self._save_image(outputs["image_i_res"], size, path, "image_i_res")
+        self._save_image(outputs["image_i_fixed"], size, path, "image_i_fixed")
+        self._save_image(outputs["image_r"], size, path, "image_r")
 
 # endregion
 

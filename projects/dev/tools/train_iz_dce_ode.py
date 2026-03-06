@@ -15,7 +15,7 @@ from __future__ import annotations
 __all__ = []
 
 from iz_dce import IZDCE_ODE_Trainer
-from mon import Path, resolve_project_root, RunMode, Task
+from mon.core import Path, resolve_project_root, RunMode, Task
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]

@@ -166,8 +166,8 @@ class CLODE_Trainer(Trainer):
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            target = datapoint["target"]
             image = image.to(device)
+            target = datapoint["target"]
             target = target.to(device)
             eval_time = torch.tensor([0, 3]).float().to(device)
 
